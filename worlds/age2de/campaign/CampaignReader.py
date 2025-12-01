@@ -1,5 +1,6 @@
 
 import os
+from pathlib import Path
 import struct
 import sys
 from typing_extensions import Buffer
@@ -27,6 +28,7 @@ class Scenario:
     name: str
     nameLen: int
     fileName: str
+    xsdatName: str
     fileNameLen: int
     
     def __init__(self, fp):
@@ -38,6 +40,7 @@ class Scenario:
         de_str = struct.unpack("H", fp.read(2))[0]
         self.fileNameLen = struct.unpack("H", fp.read(2))[0]
         self.fileName = struct.unpack(f"{str(self.fileNameLen)}s", fp.read(self.fileNameLen))[0]
+        self.xsdatName = Path(self.fileName.decode("utf-8")).stem + ".xsdat"
         
         
         

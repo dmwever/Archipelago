@@ -31,6 +31,7 @@ class Age2Context(CommonContext):
     game = Age2World.game
     command_processor = Age2CommandProcessor
     game_ctx = Age2GameContext
+    items_handling = 0b111
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
@@ -47,13 +48,6 @@ class Age2Context(CommonContext):
             self._handle_connected(args)
         elif cmd == "ReceivedItems":
             self._handle_received_items(args)
-            
-    def _handle_connected(self, args: dict) -> None:
-        self.generator_version = (args["slot_data"]["version_major"], args["slot_data"]["version_minor"])
-        
-    def _handle_received_items(self, args: dict):
-        pass
-    
     
 def main(connect: Optional[str] = None, password: Optional[str] = None, name: Optional[str] = None):
     Utils.init_logging("Age of Empires II: DE Client")
@@ -88,5 +82,6 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
     import colorama
 
     colorama.init()
+    
     asyncio.run(_main(connect, password, name))
     colorama.deinit()

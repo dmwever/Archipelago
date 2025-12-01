@@ -1,13 +1,19 @@
 import asyncio
 from asyncio.log import logger
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 import os
-from typing import Optional, Protocol
-import zipfile
+from pathlib import Path
+import struct
+import time
+from typing import List, Protocol
 
-from CommonClient import get_base_parser, server_loop
-import Utils
+from worlds.age2de.campaign import XsdatReader
+from worlds.age2de.campaign.CampaignReader import Campaign, Scenario
 
+AGE2_USER_PROFILE = os.path.join(os.environ["USERPROFILE"], "Games\\Age of Empires 2 DE\\76561199655318799\\profile\\")
+AP_VERSION = 6.5
+WORLD_ID = 2
 
 class APClientInterface(Protocol):
     def on_location_received(self, scenario_id: int, location_ids: list[int]):
@@ -17,7 +23,201 @@ class APClientInterface(Protocol):
         """Called when a new location is received"""
         pass
 
+class Age2Packet:
+    active: bool = 0
+    current_ping_id: int = -1
+    ap_version: float = 0.0
+    world_id: int = -1
+    latest_message_id: int = -1
+    item_ids = [-1 for _ in range(12)]
+    location_ids: List[int]
+    
+    def __init__(self, fp = None):
+        self.location_ids = []
+        if not fp:
+            return
+        self.active = XsdatReader.read_bool(fp)
+        self.current_ping_id = XsdatReader.read_int(fp)
+        self.ap_version = XsdatReader.read_float(fp)
+        self.world_id = XsdatReader.read_int(fp)
+        self.latest_message_id = XsdatReader.read_int(fp)
+        for num in range(len(self.item_ids)):
+            self.item_ids[num] = XsdatReader.read_int(fp)
+        XsdatReader.skip_int(fp, 31)
+        while True:
+            data = fp.read(4)
+            if not data:
+                break
+            s = struct.unpack("<i", data)
+            self.location_ids.append(s[0])
+
+class PacketStatus(Enum):
+    ACTIVE = 0
+    UPDATE = 1
+    REPEAT = 2
+    INACTIVE = 3
+    WRONG_VERSION = 4
+    WRONG_WORLD = 5
+    ERROR = 6
+
 @dataclass
 class Age2GameContext:
     running: bool
+    paused: bool
+    packet_repeat_count: int
+    current_packet: Age2Packet
     ap_client: APClientInterface
+    unlocked_scenarios: list[Scenario]
+    current_scenario: Scenario
+
+def find_active_scenario(ctx: Age2GameContext) -> Scenario:
+    for scenario in ctx.unlocked_scenarios:
+        try:
+            with open(AGE2_USER_PROFILE + scenario.xsdatName, "rb") as fp:
+                active = fp.peek(1)[:1]
+                if (active != b'\x00'):
+                    return scenario
+                else:
+                    print("Not active")
+        except:
+            continue
+    return None
+
+def deactivate_scenario(scn: Scenario) -> bool:
+    with open(AGE2_USER_PROFILE + scn.xsdatName, "wb") as fp:
+        fp.write(struct.pack("<?", False))
+
+def read_packet(scn: Scenario) -> Age2Packet:
+    try:
+        with open(AGE2_USER_PROFILE + scn.xsdatName, "rb") as fp:
+            return Age2Packet(fp)
+    except:
+        print(f"Age2Packet not properly formatted. Sent from {scn.fileName}")
+        return Age2Packet()
+
+def update_packet(ctx: Age2GameContext, new_pkt: Age2Packet) -> PacketStatus:
+    status: PacketStatus
+    
+    if (new_pkt.ap_version != AP_VERSION):
+        status = PacketStatus.WRONG_VERSION
+    elif (new_pkt.world_id != WORLD_ID):
+        status = PacketStatus.WRONG_WORLD
+    elif (not new_pkt.active):
+        status = PacketStatus.INACTIVE
+    elif (ctx.current_packet.current_ping_id == new_pkt.current_ping_id):
+        status = PacketStatus.REPEAT
+    elif (ctx.current_packet.latest_message_id != new_pkt.latest_message_id):
+        status = PacketStatus.UPDATE
+    else:
+        status = PacketStatus.ACTIVE
+    ctx.current_packet = new_pkt
+    return status
+
+async def short_sleep() -> None:
+    await asyncio.sleep(0.25)
+    await asyncio.sleep(0.25)
+
+
+async def long_sleep() -> None:
+    # Note(mm): One big sleep messes with the standalone stdout reader
+    # 2s
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.2)
+
+
+async def status_loop(ctx: Age2GameContext):
+    while ctx.running:
+        # Check all unlocked scenarios every 2 seconds to find active scenario.
+        if not ctx.current_scenario:
+            scn = find_active_scenario(ctx)
+            if not scn:
+                print("No active scenario found. Make sure the game is running and the scenario is unpaused.")
+                await long_sleep()
+                continue
+            ctx.current_scenario = scn
+        
+        # Check all unlocked scenarios every 2.5 seconds after scenario stops updating packet in case user has switched scenarios.
+        if ctx.paused and ctx.packet_repeat_count % 5 == 0:
+            scn = find_active_scenario(ctx)
+            if not scn:
+                print("No active scenario found. Make sure the game is running and the scenario is unpaused.")
+                await short_sleep()
+                continue
+            if scn != ctx.current_scenario:
+                ctx.current_scenario = scn
+        
+        packet: Age2Packet
+        try:
+            packet = read_packet(ctx.current_scenario)
+        except Exception as ex:
+            logger.exception(ex)
+            await long_sleep()
+            continue
+        
+        packetStatus = update_packet(ctx, packet)
+        
+        if packetStatus == PacketStatus.REPEAT:
+            ctx.packet_repeat_count += 1
+            print("REPEAT")
+            print(ctx.packet_repeat_count)
+        
+            if ctx.packet_repeat_count == 10:
+                print("The Current scenario has been paused or disconnected. Checking additional scenarios for active flag.")
+                ctx.paused = True
+            
+            if ctx.packet_repeat_count == 120:
+                print("The Current scenario has stopped sending signals. Deactivating Scenario.")
+                deactivate_scenario(ctx.current_scenario)
+                ctx.current_scenario = None
+                ctx.paused = False
+                await long_sleep()
+                continue
+            
+            await short_sleep()
+            continue
+        else:
+            ctx.packet_repeat_count = 0
+            ctx.paused = False
+            
+        if packetStatus == PacketStatus.INACTIVE:
+            print("The Current Scenario is no longer active.")
+            deactivate_scenario(ctx.current_scenario)
+            ctx.current_scenario = None
+            await long_sleep()
+            continue
+        if packetStatus == PacketStatus.WRONG_VERSION:
+            print("The Scenario is expecting a different version of the AP Client.")
+            deactivate_scenario(ctx.current_scenario)
+            ctx.current_scenario = None
+            await long_sleep()
+            continue
+        if packetStatus == PacketStatus.WRONG_WORLD:
+            print("The Scenario is expecting a different world ID.")
+            deactivate_scenario(ctx.current_scenario)
+            ctx.current_scenario = None
+            await long_sleep()
+            continue
+        if packetStatus == PacketStatus.UPDATE:
+            # Perform updates
+            print("UPDATE")
+            
+        if packetStatus == PacketStatus.ACTIVE:
+            print("ACTIVE")
+            print(packet.current_ping_id)
+        
+        await short_sleep()
+            
+            
+            
+
+cpn = Campaign("C:\\Program Files (x86)\\Steam\\steamapps\\common\\AoE2DE\\resources\\_common\\campaign\\xcam1.aoe2campaign", "output")
+ctx = Age2GameContext(True, False, 0, Age2Packet(), None, cpn.scenarios, None)
+asyncio.run(status_loop(ctx))
