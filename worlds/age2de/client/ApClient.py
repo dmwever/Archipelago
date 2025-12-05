@@ -1,10 +1,13 @@
 import asyncio
+from multiprocessing import Process
 from typing import Optional
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
 import Utils
 from kvui import GameManager
+from worlds.age2de.campaign.CampaignReader import Campaign
+from worlds.age2de.campaign.ScenarioPatcher import inject_ap
 from .ApGui import Age2Manager
-from .GameClient import Age2GameContext
+from .GameClient import Age2GameContext, Age2Packet, status_loop
 from .. import Age2World, logger
 
 class Age2CommandProcessor(ClientCommandProcessor):
@@ -74,6 +77,7 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         Age2Manager.start_ap_ui(ctx)
         await asyncio.sleep(1)
 
+        asyncio.create_task(test())
         await ctx.exit_event.wait()
         ctx.server_address = None
 
@@ -85,3 +89,17 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
     
     asyncio.run(_main(connect, password, name))
     colorama.deinit()
+
+async def test():        
+    cpn = Campaign("C:\\Program Files (x86)\\Steam\\steamapps\\common\\AoE2DE\\resources\\_common\\campaign\\xcam1.aoe2campaign", "output")
+    patchers: list[Process] = []
+    for scn in cpn.scenarios:
+        process = Process(target=inject_ap, args=(scn, ))
+        patchers.append(process)
+        process.start()
+    
+    for p in patchers:
+        p.join()
+    
+    ctx = Age2GameContext(True, False, 0, Age2Packet(), None, cpn.scenarios, None)
+    task = asyncio.create_task(status_loop(ctx))

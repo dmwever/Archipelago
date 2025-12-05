@@ -1,1 +1,2 @@
-AoE2ScenarioParser==0.6.4
+AoE2ScenarioParser==0.6.5
+

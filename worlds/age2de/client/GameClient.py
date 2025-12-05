@@ -1,15 +1,13 @@
 import asyncio
 from asyncio.log import logger
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 import os
-from pathlib import Path
 import struct
-import time
 from typing import List, Protocol
 
 from worlds.age2de.campaign import XsdatReader
-from worlds.age2de.campaign.CampaignReader import Campaign, Scenario
+from worlds.age2de.campaign.CampaignReader import Scenario
 
 AGE2_USER_PROFILE = os.path.join(os.environ["USERPROFILE"], "Games\\Age of Empires 2 DE\\76561199655318799\\profile\\")
 AP_VERSION = 6.5
@@ -73,26 +71,31 @@ class Age2GameContext:
 def find_active_scenario(ctx: Age2GameContext) -> Scenario:
     for scenario in ctx.unlocked_scenarios:
         try:
-            with open(AGE2_USER_PROFILE + scenario.xsdatName, "rb") as fp:
+            with open(AGE2_USER_PROFILE + scenario.xsdatname, "rb") as fp:
                 active = fp.peek(1)[:1]
                 if (active != b'\x00'):
                     return scenario
                 else:
                     print("Not active")
         except:
-            continue
+            pass
     return None
 
 def deactivate_scenario(scn: Scenario) -> bool:
-    with open(AGE2_USER_PROFILE + scn.xsdatName, "wb") as fp:
-        fp.write(struct.pack("<?", False))
+    try:
+        with open(AGE2_USER_PROFILE + scn.xsdatname, "wb") as fp:
+            fp.write(struct.pack("<?", False))
+    except Exception as ex:
+        logger.exception(ex)
+        print(f"{scn.fileName} unsuccessfully deactivated. .xsdat file may have been locked.")
 
 def read_packet(scn: Scenario) -> Age2Packet:
     try:
-        with open(AGE2_USER_PROFILE + scn.xsdatName, "rb") as fp:
+        with open(AGE2_USER_PROFILE + scn.xsdatname, "rb") as fp:
             return Age2Packet(fp)
-    except:
-        print(f"Age2Packet not properly formatted. Sent from {scn.fileName}")
+    except Exception as ex:
+        logger.exception(ex)
+        print(f"Age2Packet not properly opened. Sent from {scn.fileName}")
         return Age2Packet()
 
 def update_packet(ctx: Age2GameContext, new_pkt: Age2Packet) -> PacketStatus:
@@ -214,10 +217,3 @@ async def status_loop(ctx: Age2GameContext):
             print(packet.current_ping_id)
         
         await short_sleep()
-            
-            
-            
-
-cpn = Campaign("C:\\Program Files (x86)\\Steam\\steamapps\\common\\AoE2DE\\resources\\_common\\campaign\\xcam1.aoe2campaign", "output")
-ctx = Age2GameContext(True, False, 0, Age2Packet(), None, cpn.scenarios, None)
-asyncio.run(status_loop(ctx))

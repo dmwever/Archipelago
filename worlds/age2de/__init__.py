@@ -1,91 +1,11 @@
 # world/age2DE/__init__.py
 
 import logging
-import time
-import settings
-from typing import Any, Mapping
-from .Options import Age2Options  # the options we defined earlier
-from .Items import age2_items  # data used below to add items to the World
-from .Locations import age2_locations  # same as above
-from worlds.AutoWorld import World
-from Launcher import launch
-from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_component, launch_subprocess
-from BaseClasses import MultiWorld, Region, Location, Item
+from typing import Any
+from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_subprocess
+from .World import Age2World
 
 logger = logging.getLogger(__name__)
-
-AGE2_DE = "Age Of Empires II: Definitive Edition"
-
-VERSION_PUBLIC = 0
-VERSION_MAJOR = 0
-VERSION_MINOR = 1
-
-class Age2Item(Item):  # or from Items import MyGameItem
-    game = AGE2_DE  # name of the game/world this item is from
-
-
-class Age2Location(Location):  # or from Locations import MyGameLocation
-    game = AGE2_DE  # name of the game/world this location is in
-
-class Age2World(World):
-    """
-    Age of Empires II: Definitive Edition is a Real-Time Strategy game centered around the medieval
-    ages and the various battles, conquests, and wars of history.
-    """
-    game = AGE2_DE  # name of the game/world
-    options_dataclass = Age2Options  # options the player can set
-    options: Age2Options  # typing hints for option results
-    topology_present = True  # show path to required location checks in spoiler
-
-    # ID of first item and location, could be hard-coded but code may be easier
-    # to read with this as a property.
-    base_id = 1234
-    # instead of dynamic numbering, IDs could be part of data
-
-    # The following two dicts are required for the generation to know which
-    # items exist. They could be generated from json or something else. They can
-    # include events, but don't have to since events will be placed manually.
-    item_name_to_id = {name: id for
-                       id, name in enumerate(age2_items, base_id)}
-    location_name_to_id = {name: id for
-                           id, name in enumerate(age2_locations, base_id)}
-
-    # Items can be grouped using their names to allow easy checking if any item
-    # from that group has been collected. Group names can also be used for !hint
-    item_name_groups = {
-        "weapons": {"sword", "lance"},
-    }
-    
-    def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
-        super().__init__(multiworld, player)
-        # self.generation_info: generation.Generation | None = None
-
-    # def generate_early(self) -> None:
-    #     self.generation_info = generation.Generation()
-    #     self.generation_info.process_options(self)
-
-    # def create_regions(self) -> None:
-    #     assert self.generation_info is not None
-    #     self.generation_info.create_regions(self)
-    
-    # def create_items(self) -> None:
-    #     assert self.generation_info is not None
-    #     self.generation_info.create_items(self)
-    
-    # def set_rules(self) -> None:
-    #     rules.set_rules(self)
-    
-    # def get_filler_item_name(self) -> str:
-    #     return self.random.choices(tuple(self.filler_items_distribution), weights=self.filler_items_distribution.values())[0]  # type: ignore
-    
-    def fill_slot_data(self) -> Mapping[str, Any]:
-        return {
-            "version_public": VERSION_PUBLIC,
-            "version_major": VERSION_MAJOR,
-            "version_minor": VERSION_MINOR,
-            # New ID every ~0.13s; IDs loop once every 8.9 years
-            "world_id": ((time.time_ns() >> 17) + self.player) & 0x7fff_ffff,
-        }
 
 def run_client(*args: Any):
     print("Running Age of Empires II: Definitive Edition Client")

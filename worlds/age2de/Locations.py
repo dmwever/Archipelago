@@ -1,3 +1,0 @@
-age2_locations = {
-    
-}

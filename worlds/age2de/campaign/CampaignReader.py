@@ -28,7 +28,8 @@ class Scenario:
     name: str
     nameLen: int
     fileName: str
-    xsdatName: str
+    outfilename: str
+    xsdatname: str
     fileNameLen: int
     
     def __init__(self, fp):
@@ -39,8 +40,9 @@ class Scenario:
         self.name = struct.unpack(f"{str(self.nameLen)}s", fp.read(self.nameLen))[0]
         de_str = struct.unpack("H", fp.read(2))[0]
         self.fileNameLen = struct.unpack("H", fp.read(2))[0]
-        self.fileName = struct.unpack(f"{str(self.fileNameLen)}s", fp.read(self.fileNameLen))[0]
-        self.xsdatName = Path(self.fileName.decode("utf-8")).stem + ".xsdat"
+        self.fileName = (struct.unpack(f"{str(self.fileNameLen)}s", fp.read(self.fileNameLen))[0]).decode("utf-8")
+        self.outfilename = "out" + self.fileName
+        self.xsdatname = Path(self.outfilename).stem + ".xsdat"
         
         
         
@@ -60,7 +62,7 @@ class Campaign:
             os.makedirs(outFolder, exist_ok=True)
             
             for scn in self.scenarios:
-                with open(f"{outFolder}\\{scn.fileName.decode("utf-8")}", "wb") as out:
+                with open(f"{outFolder}\\{scn.fileName}", "wb") as out:
                     fp.seek(scn.offset)
                     scnFile = fp.read(scn.size)
                     out.write(scnFile)
