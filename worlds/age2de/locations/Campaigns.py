@@ -2,7 +2,7 @@
 import enum
 
 
-class Age2CampaignData(enum.IntEnum):
+class Age2CampaignData(enum.Enum):
     def __new__(cls, id: int, *args, **kwargs):
         obj = object.__new__(cls)
         obj._value_ = id
@@ -15,4 +15,4 @@ class Age2CampaignData(enum.IntEnum):
         self.campaign_name = name
         
     GENERAL =    10, "G", "General", "General Locations"
-    ATTILA  =     0, "H", "Huns", "Attila the Hun"
+    ATTILA  =     1, "H", "Huns", "Attila the Hun"

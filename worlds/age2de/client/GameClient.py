@@ -7,7 +7,7 @@ import struct
 from typing import List, Protocol
 
 from worlds.age2de.campaign import XsdatReader
-from worlds.age2de.campaign.CampaignReader import Scenario
+from worlds.age2de.locations.Scenarios import Age2ScenarioData
 
 AGE2_USER_PROFILE = os.path.join(os.environ["USERPROFILE"], "Games\\Age of Empires 2 DE\\76561199655318799\\profile\\")
 AP_VERSION = 6.5
@@ -65,13 +65,13 @@ class Age2GameContext:
     packet_repeat_count: int
     current_packet: Age2Packet
     ap_client: APClientInterface
-    unlocked_scenarios: list[Scenario]
-    current_scenario: Scenario
+    unlocked_scenarios: list[Age2ScenarioData]
+    current_scenario: Age2ScenarioData
 
-def find_active_scenario(ctx: Age2GameContext) -> Scenario:
+def find_active_scenario(ctx: Age2GameContext) -> Age2ScenarioData:
     for scenario in ctx.unlocked_scenarios:
         try:
-            with open(AGE2_USER_PROFILE + scenario.xsdatname, "rb") as fp:
+            with open(AGE2_USER_PROFILE + scenario.xsdat_name, "rb") as fp:
                 active = fp.peek(1)[:1]
                 if (active != b'\x00'):
                     return scenario
@@ -81,17 +81,17 @@ def find_active_scenario(ctx: Age2GameContext) -> Scenario:
             pass
     return None
 
-def deactivate_scenario(scn: Scenario) -> bool:
+def deactivate_scenario(scn: Age2ScenarioData) -> bool:
     try:
-        with open(AGE2_USER_PROFILE + scn.xsdatname, "wb") as fp:
+        with open(AGE2_USER_PROFILE + scn.xsdat_name, "wb") as fp:
             fp.write(struct.pack("<?", False))
     except Exception as ex:
         logger.exception(ex)
         print(f"{scn.fileName} unsuccessfully deactivated. .xsdat file may have been locked.")
 
-def read_packet(scn: Scenario) -> Age2Packet:
+def read_packet(scn: Age2ScenarioData) -> Age2Packet:
     try:
-        with open(AGE2_USER_PROFILE + scn.xsdatname, "rb") as fp:
+        with open(AGE2_USER_PROFILE + scn.xsdat_name, "rb") as fp:
             return Age2Packet(fp)
     except Exception as ex:
         logger.exception(ex)
@@ -110,6 +110,8 @@ def update_packet(ctx: Age2GameContext, new_pkt: Age2Packet) -> PacketStatus:
     elif (ctx.current_packet.current_ping_id == new_pkt.current_ping_id):
         status = PacketStatus.REPEAT
     elif (ctx.current_packet.latest_message_id != new_pkt.latest_message_id):
+        status = PacketStatus.UPDATE
+    elif (len(ctx.current_packet.location_ids) != 0):
         status = PacketStatus.UPDATE
     else:
         status = PacketStatus.ACTIVE

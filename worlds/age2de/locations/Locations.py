@@ -1,7 +1,7 @@
 
 import enum
+from typing import TYPE_CHECKING
 from BaseClasses import Location
-from worlds.age2de import AGE2_DE
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 
 class Age2LocationType(enum.Flag):
@@ -12,8 +12,7 @@ class Age2LocationType(enum.Flag):
 def global_location_id(scenario_id: int, local_location_id: int) -> int:
     return scenario_id * 100 + local_location_id
 
-class Age2Location(Location):  # or from Locations import MyGameLocation
-    game = AGE2_DE  # name of the game/world this location is in
+class Age2Location(enum.IntEnum):
     
     def __new__(cls, id: int, *args, **kwargs):
         value = id
@@ -36,15 +35,15 @@ class Age2Location(Location):  # or from Locations import MyGameLocation
         return f"{self.scenario.scenario_name}: {self.location_name}" 
     
     #Attila 2 specific locations
-    ATT2_VICTORY =          10200, "Attila, The Great Ride: Victory",                            Age2ScenarioData.C1_ATTILA_2, Age2LocationType.VICTORY
-    ATT2_RED_TC =           10201, "Attila, The Great Ride: Destroy the Red Town Center",        Age2ScenarioData.C1_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_GREEN_LUMBER =     10202, "Attila, The Great Ride: Destroy the Green Lumber Camp",      Age2ScenarioData.C1_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_PURPLE_VILS =      10203, "Attila, The Great Ride: Destroy the Purple Houses",          Age2ScenarioData.C1_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_GREY_MINING =      10204, "Attila, The Great Ride: Destroy the Grey Mining Camps",      Age2ScenarioData.C1_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_CYAN_TC =          10205, "Attila, The Great Ride: Destroy the Cyan Town Center",       Age2ScenarioData.C1_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_SCYTHIAN_VILS =    10206, "Attila, The Great Ride: Give 6 Villagers to the Scythians",  Age2ScenarioData.C1_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_BUILD_TC =         10207, "Attila, The Great Ride: Build a Town Center",                Age2ScenarioData.C1_ATTILA_2, Age2LocationType.OBJECTIVE
-    ATT2_BEAT_THE_ROMANS =  10207, "Attila, The Great Ride: Beat the Romans",                    Age2ScenarioData.C1_ATTILA_2, Age2LocationType.OBJECTIVE
+    ATT2_VICTORY =          10200, "Attila, The Great Ride: Victory",                            Age2ScenarioData.AP_ATTILA_2, Age2LocationType.VICTORY
+    ATT2_RED_TC =           10201, "Attila, The Great Ride: Destroy the Red Town Center",        Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_GREEN_LUMBER =     10202, "Attila, The Great Ride: Destroy the Green Lumber Camp",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_PURPLE_VILS =      10203, "Attila, The Great Ride: Destroy the Purple Houses",          Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_GREY_MINING =      10204, "Attila, The Great Ride: Destroy the Grey Mining Camps",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_CYAN_TC =          10205, "Attila, The Great Ride: Destroy the Cyan Town Center",       Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_SCYTHIAN_VILS =    10206, "Attila, The Great Ride: Give 6 Villagers to the Scythians",  Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_BUILD_TC =         10207, "Attila, The Great Ride: Build a Town Center",                Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
+    ATT2_BEAT_THE_ROMANS =  10207, "Attila, The Great Ride: Beat the Romans",                    Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
     
     
 location_from_id = {_location.id: _location for _location in Age2Location}

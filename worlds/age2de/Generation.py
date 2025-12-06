@@ -1,10 +1,13 @@
 import time
-from typing import Any, Callable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 from BaseClasses import CollectionState, Entrance, Item, ItemClassification, Location, Region
-from worlds.age2de.World import Age2World
 from worlds.age2de.locations import Campaigns, Locations, Scenarios
 from worlds.age2de.items import Items
+
+
+if TYPE_CHECKING:
+    from . import Age2World
 
 VERSION_PUBLIC = 0
 VERSION_MAJOR = 0
@@ -33,7 +36,7 @@ class Generation:
         self.included_campaigns: set[Campaigns.Age2CampaignData] = set()
 
     def process_options(self, world: 'Age2World') -> None:
-        self._options_randomize_empty_hero_names(world)
+        pass
 
 
     def create_regions(self, world: 'Age2World') -> None:
@@ -44,7 +47,7 @@ class Generation:
         self.included_campaigns = frozenset(
             campaign
             for campaign in Campaigns.Age2CampaignData
-            if campaign.title_faction in world.options.included_campaigns
+            # if campaign.civ in world.options.included_campaigns
         )
         for scenario in Scenarios.Age2ScenarioData:
             if scenario.campaign not in self.included_campaigns:

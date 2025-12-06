@@ -47,13 +47,13 @@ class Age2Item(enum.IntEnum):
         self.type = type
         
     # Scenario Progression Items
-    C1_ATTILA_2_WOOD =          1, "Attila, The Great Ride: Wood",               ScenarioItem(Age2ScenarioData.C1_ATTILA_2, Resources(1, 700))
-    C1_ATTILA_2_FOOD =          2, "Attila, The Great Ride: Food",               ScenarioItem(Age2ScenarioData.C1_ATTILA_2, Resources(2, 900))
-    C1_ATTILA_2_GOLD_STONE =    3, "Attila, The Great Ride: Gold and Stone",     ScenarioItem(Age2ScenarioData.C1_ATTILA_2, Resources(3, 300))
-    C1_ATTILA_2_VILLAGERS =     4, "Attila, The Great Ride: Gold and Stone",     ScenarioItem(Age2ScenarioData.C1_ATTILA_2, TriggerActivation(0))
+    C1_ATTILA_2_WOOD =          1, "Attila, The Great Ride: Wood",               ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(1, 700))
+    C1_ATTILA_2_FOOD =          2, "Attila, The Great Ride: Food",               ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(2, 900))
+    C1_ATTILA_2_GOLD_STONE =    3, "Attila, The Great Ride: Gold and Stone",     ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(3, 300))
+    C1_ATTILA_2_VILLAGERS =     4, "Attila, The Great Ride: Villagers",          ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(0))
     
     #Scenario Side Quest Items
-    C1_ATTILA_2_SCYTHIANS =     5, "Attila, The Great Ride: Scythian Troops",    ScenarioItem(Age2ScenarioData.C1_ATTILA_2, TriggerActivation(1))
+    C1_ATTILA_2_SCYTHIANS =     5, "Attila, The Great Ride: Scythian Troops",    ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(1))
     
     # Filler Resources
     FILLER_WOOD =             8,  "+100 Wood",  Resources(1, 100)

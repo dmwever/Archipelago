@@ -4,8 +4,9 @@ from typing import Optional
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
 import Utils
 from kvui import GameManager
-from worlds.age2de.campaign.CampaignReader import Campaign
-from worlds.age2de.campaign.ScenarioPatcher import inject_ap
+from worlds.age2de.campaign.CampaignReader import Campaign, Scenario
+from worlds.age2de.campaign.ScenarioPatcher import copy_ai, inject_ap
+from worlds.age2de.locations.Scenarios import Age2ScenarioData
 from .ApGui import Age2Manager
 from .GameClient import Age2GameContext, Age2Packet, status_loop
 from .. import Age2World, logger
@@ -91,15 +92,9 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
     colorama.deinit()
 
 async def test():        
-    cpn = Campaign("C:\\Program Files (x86)\\Steam\\steamapps\\common\\AoE2DE\\resources\\_common\\campaign\\xcam1.aoe2campaign", "output")
-    patchers: list[Process] = []
-    for scn in cpn.scenarios:
-        process = Process(target=inject_ap, args=(scn, ))
-        patchers.append(process)
-        process.start()
+    scn = Age2ScenarioData.AP_ATTILA_2
+
+    # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
     
-    for p in patchers:
-        p.join()
-    
-    ctx = Age2GameContext(True, False, 0, Age2Packet(), None, cpn.scenarios, None)
+    ctx = Age2GameContext(True, False, 0, Age2Packet(), None, [scn], None)
     task = asyncio.create_task(status_loop(ctx))
