@@ -6,9 +6,10 @@ import Utils
 from kvui import GameManager
 from worlds.age2de.campaign.CampaignReader import Campaign, Scenario
 from worlds.age2de.campaign.ScenarioPatcher import copy_ai, inject_ap
+from worlds.age2de.locations.Locations import global_location_id
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 from .ApGui import Age2Manager
-from .GameClient import Age2GameContext, Age2Packet, status_loop
+import worlds.age2de.client.GameClient as GameClient
 from .. import Age2World, logger
 
 class Age2CommandProcessor(ClientCommandProcessor):
@@ -34,11 +35,12 @@ class Age2CommandProcessor(ClientCommandProcessor):
 class Age2Context(CommonContext):
     game = Age2World.game
     command_processor = Age2CommandProcessor
-    game_ctx = Age2GameContext
+    game_ctx = GameClient.Age2GameContext
     items_handling = 0b111
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
+        self.comm_ctx = GameClient.Age2GameContext(True, client_interface=self)
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -48,10 +50,15 @@ class Age2Context(CommonContext):
         await self.send_connect() 
     
     def on_package(self, cmd: str, args: dict) -> None:
-        if cmd == "Connected":
-            self._handle_connected(args)
-        elif cmd == "ReceivedItems":
-            self._handle_received_items(args)
+        pass
+    
+    def on_location_received(self, scenario_id: int, location_ids: list[int]) -> None:
+        logger.info(f"Found location {scenario_id}:{','.join(map(str, location_ids))}")
+        if location_ids is not None:
+            Utils.async_start(self.send_msgs([{
+                "cmd": "LocationChecks",
+                "locations": [global_location_id(scenario_id, location_id) for location_id in location_ids],
+            }]))
     
 def main(connect: Optional[str] = None, password: Optional[str] = None, name: Optional[str] = None):
     Utils.init_logging("Age of Empires II: DE Client")
@@ -78,8 +85,16 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         Age2Manager.start_ap_ui(ctx)
         await asyncio.sleep(1)
 
-        asyncio.create_task(test())
+        scn = Age2ScenarioData.AP_ATTILA_2
+
+        # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
+        
+        ctx.comm_ctx.unlocked_scenarios = [scn]
+        
+        asyncio.create_task(GameClient.status_loop(ctx.comm_ctx))
+
         await ctx.exit_event.wait()
+        ctx.comm_ctx.running = False
         ctx.server_address = None
 
         await ctx.shutdown()
@@ -90,11 +105,3 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
     
     asyncio.run(_main(connect, password, name))
     colorama.deinit()
-
-async def test():        
-    scn = Age2ScenarioData.AP_ATTILA_2
-
-    # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
-    
-    ctx = Age2GameContext(True, False, 0, Age2Packet(), None, [scn], None)
-    task = asyncio.create_task(status_loop(ctx))

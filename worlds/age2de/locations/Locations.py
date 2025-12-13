@@ -35,15 +35,15 @@ class Age2Location(enum.IntEnum):
         return f"{self.scenario.scenario_name}: {self.location_name}" 
     
     #Attila 2 specific locations
-    ATT2_VICTORY =          10200, "Attila, The Great Ride: Victory",                            Age2ScenarioData.AP_ATTILA_2, Age2LocationType.VICTORY
-    ATT2_RED_TC =           10201, "Attila, The Great Ride: Destroy the Red Town Center",        Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_GREEN_LUMBER =     10202, "Attila, The Great Ride: Destroy the Green Lumber Camp",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_PURPLE_VILS =      10203, "Attila, The Great Ride: Destroy the Purple Houses",          Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_GREY_MINING =      10204, "Attila, The Great Ride: Destroy the Grey Mining Camps",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_CYAN_TC =          10205, "Attila, The Great Ride: Destroy the Cyan Town Center",       Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_SCYTHIAN_VILS =    10206, "Attila, The Great Ride: Give 6 Villagers to the Scythians",  Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_BUILD_TC =         10207, "Attila, The Great Ride: Build a Town Center",                Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
-    ATT2_BEAT_THE_ROMANS =  10207, "Attila, The Great Ride: Beat the Romans",                    Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
+    ATT2_VICTORY =          10200, "Victory",                            Age2ScenarioData.AP_ATTILA_2, Age2LocationType.VICTORY
+    ATT2_RED_TC =           10201, "Destroy the Red Town Center",        Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_GREEN_LUMBER =     10202, "Destroy the Green Lumber Camp",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_PURPLE_VILS =      10203, "Destroy the Purple Houses",          Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_GREY_MINING =      10204, "Destroy the Grey Mining Camps",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_CYAN_TC =          10205, "Destroy the Cyan Town Center",       Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_SCYTHIAN_VILS =    10206, "Give 6 Villagers to the Scythians",  Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_BUILD_TC =         10207, "Build a Town Center",                Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
+    ATT2_BEAT_THE_ROMANS =  10208, "Beat the Romans",                    Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
     
     
 location_from_id = {_location.id: _location for _location in Age2Location}

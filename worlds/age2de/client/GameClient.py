@@ -1,6 +1,6 @@
 import asyncio
 from asyncio.log import logger
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import os
 import struct
@@ -20,6 +20,16 @@ class APClientInterface(Protocol):
     def fetch_locations_collected(self, location_status: dict[int, int], new_scenario_id: int):
         """Called when a new location is received"""
         pass
+
+
+class DefaultClientInterface:
+    def on_location_received(self, mission_id: int, location_ids: list[int]) -> None:
+        pass
+
+    def fetch_locations_collected(self, location_status: dict[int, int], new_mission_id: int) -> None:
+        for k in location_status:
+            location_status[k] = 0
+
 
 class Age2Packet:
     active: bool = 0
@@ -60,13 +70,13 @@ class PacketStatus(Enum):
 
 @dataclass
 class Age2GameContext:
-    running: bool
-    paused: bool
-    packet_repeat_count: int
-    current_packet: Age2Packet
-    ap_client: APClientInterface
-    unlocked_scenarios: list[Age2ScenarioData]
-    current_scenario: Age2ScenarioData
+    running: bool = True
+    paused: bool = False
+    packet_repeat_count: int = 0
+    current_packet: Age2Packet = Age2Packet()
+    client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
+    unlocked_scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
+    current_scenario: Age2ScenarioData = None
 
 def find_active_scenario(ctx: Age2GameContext) -> Age2ScenarioData:
     for scenario in ctx.unlocked_scenarios:
@@ -95,7 +105,7 @@ def read_packet(scn: Age2ScenarioData) -> Age2Packet:
             return Age2Packet(fp)
     except Exception as ex:
         logger.exception(ex)
-        print(f"Age2Packet not properly opened. Sent from {scn.fileName}")
+        print(f"Age2Packet not properly opened. Sent from {scn.name}")
         return Age2Packet()
 
 def update_packet(ctx: Age2GameContext, new_pkt: Age2Packet) -> PacketStatus:
@@ -211,7 +221,7 @@ async def status_loop(ctx: Age2GameContext):
             await long_sleep()
             continue
         if packetStatus == PacketStatus.UPDATE:
-            # Perform updates
+            ctx.client_interface.on_location_received(ctx.current_scenario.value, ctx.current_packet.location_ids)
             print("UPDATE")
             
         if packetStatus == PacketStatus.ACTIVE:

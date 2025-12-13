@@ -1,7 +1,3 @@
-
-
-
-
 from dataclasses import dataclass
 import enum
 
@@ -45,21 +41,29 @@ class Age2Item(enum.IntEnum):
         self.id = id
         self.item_name = name
         self.type = type
-        
-    # Scenario Progression Items
-    C1_ATTILA_2_WOOD =          1, "Attila, The Great Ride: Wood",               ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(1, 700))
-    C1_ATTILA_2_FOOD =          2, "Attila, The Great Ride: Food",               ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(2, 900))
-    C1_ATTILA_2_GOLD_STONE =    3, "Attila, The Great Ride: Gold and Stone",     ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(3, 300))
-    C1_ATTILA_2_VILLAGERS =     4, "Attila, The Great Ride: Villagers",          ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(0))
     
-    #Scenario Side Quest Items
-    C1_ATTILA_2_SCYTHIANS =     5, "Attila, The Great Ride: Scythian Troops",    ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(1))
+    #1 - 999 = Resources (25), Ages (25), Civs (150), Buildings (100), Units (350), Techs (350) 
     
     # Filler Resources
-    FILLER_WOOD =             8,  "+100 Wood",  Resources(1, 100)
-    FILLER_FOOD =             7,  "+100 Food",  Resources(2, 100)
-    FILLER_GOLD =             9,  "+100 Gold",  Resources(3, 100)
-    FILLER_STONE =            10, "+100 Stone", Resources(4, 100)
+    FILLER_WOOD_SMALL =             1, "+100 Wood",  Resources(1, 100)
+    FILLER_FOOD_SMALL =             2, "+100 Food",  Resources(2, 100)
+    FILLER_GOLD_SMALL =             3, "+100 Gold",  Resources(3, 100)
+    FILLER_STONE_SMALL =            4, "+100 Stone", Resources(4, 100)
+    
+    #1000 - 2999 = Progression Items
+    
+    # Scenario Progression Items
+    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(1, 275))
+    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(2, 100))
+    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",  ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(0))
+    
+    #3000 - 3999 = Scenarios (500), Campaigns (100)
+    
+    #4000 - 4999 = Troops, Future Use
+    
+    #Troop Items
+    AP_ATTILA_2_SCYTHIAN_TROOP =     4000, "Attila, The Great Ride: Scythian Troops",    ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(1))
+    
 
         
 NAME_TO_ITEM: dict[str, Age2Item] = {}
