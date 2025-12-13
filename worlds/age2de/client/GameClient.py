@@ -7,6 +7,7 @@ import struct
 from typing import List, Protocol
 
 from worlds.age2de.campaign import XsdatReader
+from worlds.age2de.items.Items import Age2Item
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 
 AGE2_USER_PROFILE = os.path.join(os.environ["USERPROFILE"], "Games\\Age of Empires 2 DE\\76561199655318799\\profile\\")
@@ -76,6 +77,8 @@ class Age2GameContext:
     current_packet: Age2Packet = Age2Packet()
     client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
     unlocked_scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
+    unlocked_items: list[Age2Item] = field(default_factory=list[Age2Item])
+    acked_items: list[Age2Item] = field(default_factory=list[Age2Item])
     current_scenario: Age2ScenarioData = None
 
 def find_active_scenario(ctx: Age2GameContext) -> Age2ScenarioData:

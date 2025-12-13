@@ -2,10 +2,12 @@ import asyncio
 from multiprocessing import Process
 from typing import Optional
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
+from NetUtils import NetworkItem
 import Utils
 from kvui import GameManager
 from worlds.age2de.campaign.CampaignReader import Campaign, Scenario
 from worlds.age2de.campaign.ScenarioPatcher import copy_ai, inject_ap
+from worlds.age2de.items import Items
 from worlds.age2de.locations.Locations import global_location_id
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 from .ApGui import Age2Manager
@@ -50,7 +52,8 @@ class Age2Context(CommonContext):
         await self.send_connect() 
     
     def on_package(self, cmd: str, args: dict) -> None:
-        pass
+        if cmd == "ReceivedItems":
+            self._handle_received_items(args)
     
     def on_location_received(self, scenario_id: int, location_ids: list[int]) -> None:
         logger.info(f"Found location {scenario_id}:{','.join(map(str, location_ids))}")
@@ -59,6 +62,12 @@ class Age2Context(CommonContext):
                 "cmd": "LocationChecks",
                 "locations": [global_location_id(scenario_id, location_id) for location_id in location_ids],
             }]))
+    
+    def _handle_received_items(self, args: dict) -> None:
+        received_items: list[NetworkItem] = args["items"]
+        for received_item in received_items:
+            item_data = Items.ID_TO_ITEM[received_item.item]
+            self.game_ctx.unlocked_items.append(item_data)
     
 def main(connect: Optional[str] = None, password: Optional[str] = None, name: Optional[str] = None):
     Utils.init_logging("Age of Empires II: DE Client")
