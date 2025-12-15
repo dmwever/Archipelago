@@ -6,7 +6,7 @@ import os
 import struct
 from typing import List, Protocol
 
-from worlds.age2de.campaign import XsdatReader
+from worlds.age2de.campaign import XsdatFile
 from worlds.age2de.items.Items import Age2Item
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 
@@ -45,14 +45,14 @@ class Age2Packet:
         self.location_ids = []
         if not fp:
             return
-        self.active = XsdatReader.read_bool(fp)
-        self.current_ping_id = XsdatReader.read_int(fp)
-        self.ap_version = XsdatReader.read_float(fp)
-        self.world_id = XsdatReader.read_int(fp)
-        self.latest_message_id = XsdatReader.read_int(fp)
+        self.active = XsdatFile.read_bool(fp)
+        self.current_ping_id = XsdatFile.read_int(fp)
+        self.ap_version = XsdatFile.read_float(fp)
+        self.world_id = XsdatFile.read_int(fp)
+        self.latest_message_id = XsdatFile.read_int(fp)
         for num in range(len(self.item_ids)):
-            self.item_ids[num] = XsdatReader.read_int(fp)
-        XsdatReader.skip_int(fp, 31)
+            self.item_ids[num] = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 31)
         while True:
             data = fp.read(4)
             if not data:
@@ -78,7 +78,7 @@ class Age2GameContext:
     client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
     unlocked_scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
     unlocked_items: list[Age2Item] = field(default_factory=list[Age2Item])
-    acked_items: list[Age2Item] = field(default_factory=list[Age2Item])
+    acked_items: int = 0
     current_scenario: Age2ScenarioData = None
 
 def find_active_scenario(ctx: Age2GameContext) -> Age2ScenarioData:
@@ -97,7 +97,7 @@ def find_active_scenario(ctx: Age2GameContext) -> Age2ScenarioData:
 def deactivate_scenario(scn: Age2ScenarioData) -> bool:
     try:
         with open(AGE2_USER_PROFILE + scn.xsdat_name, "wb") as fp:
-            fp.write(struct.pack("<?", False))
+            XsdatFile.write_bool(fp, False)
     except Exception as ex:
         logger.exception(ex)
         print(f"{scn.fileName} unsuccessfully deactivated. .xsdat file may have been locked.")
@@ -130,6 +130,58 @@ def update_packet(ctx: Age2GameContext, new_pkt: Age2Packet) -> PacketStatus:
         status = PacketStatus.ACTIVE
     ctx.current_packet = new_pkt
     return status
+
+def ack_locations(ctx: Age2GameContext) -> None:
+    try:
+        with open(AGE2_USER_PROFILE + "locations.xsdat", "rb") as fp:
+            XsdatFile.write_int(fp, len(ctx.current_packet.location_ids))
+            for location_id in ctx.current_packet.location_ids:
+                XsdatFile.write_int(fp, location_id)
+    except Exception as ex:
+        logger.exception(ex)
+        print(f"locations.xsdat could not be opened. .xsdat file may have been locked.")
+
+def ack_items(ctx: Age2GameContext) -> None:
+    for item in ctx.current_packet.item_ids:
+        ctx.acked_items += 1
+
+def send_items(ctx: Age2GameContext) -> None:
+    num_items = len(ctx.unlocked_items) - ctx.acked_items
+    if num_items > 12:
+        num_items = 12
+    if num_items > 0:
+        try:
+            with open(AGE2_USER_PROFILE + "items.xsdat", "rb") as fp:
+                XsdatFile.write_int(fp, num_items)
+                for item in ctx.unlocked_items[ctx.acked_items:ctx.acked_items+num_items]:
+                    XsdatFile.write_int(fp, item.id)
+        except Exception as ex:
+            logger.exception(ex)
+            print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
+        
+def free_items(ctx: Age2GameContext) -> None:
+    try:
+        with open(AGE2_USER_PROFILE + "free_items.xsdat", "rb") as fp:
+            for item in ctx.current_packet.item_ids:
+                XsdatFile.write_int(fp, item)
+    except Exception as ex:
+        logger.exception(ex)
+        print(f"free_items.xsdat could not be opened. .xsdat file may have been locked.")
+
+def ping_game(ctx: Age2GameContext) -> None:
+    try:
+        with open(AGE2_USER_PROFILE + "AP.xsdat", "rb") as fp:
+            XsdatFile.write_int(fp, ctx.current_packet.current_ping_id)
+            XsdatFile.write_float(fp, AP_VERSION)
+            XsdatFile.write_int(fp, WORLD_ID)
+            XsdatFile.write_bool(fp, ctx.acked_items < len(ctx.unlocked_items))
+            XsdatFile.write_bool(fp, len(ctx.current_packet.item_ids) != 0)
+            XsdatFile.write_bool(fp, len(ctx.current_packet.location_ids) != 0)
+            XsdatFile.write_bool(fp, False)
+            XsdatFile.write_bool(fp, False)
+    except Exception as ex:
+        logger.exception(ex)
+        print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
 
 async def short_sleep() -> None:
     await asyncio.sleep(0.25)
@@ -230,5 +282,11 @@ async def status_loop(ctx: Age2GameContext):
         if packetStatus == PacketStatus.ACTIVE:
             print("ACTIVE")
             print(packet.current_ping_id)
+        
+        ack_locations(ctx)
+        ack_items(ctx)
+        send_items(ctx)
+        free_items(ctx)
+        ping_game(ctx)
         
         await short_sleep()

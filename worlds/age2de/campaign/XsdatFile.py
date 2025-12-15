@@ -20,3 +20,19 @@ def read_string(fp) -> str:
     
 def skip_int(fp, len):
     struct.unpack(f"{len*4}s", fp.read(len * 4))
+
+def write_bool(fp, flag: bool) -> None:
+    fp.write(struct.pack("<?xxx", flag))
+    
+def write_vector(fp, vector: tuple[float, float, float]) -> None:
+    fp.write(struct.pack("<fff", vector))
+
+def write_int(fp, i: int) -> None:
+    fp.write(struct.pack("<i", i))
+
+def write_float(fp, f: float) -> None:
+    fp.write(struct.pack("<f", f))
+
+def write_string(fp, s: str) -> None:
+    fp.write(struct.pack("<i", len(s)))
+    fp.write(struct.pack(f"{len(s)*4}", s))
