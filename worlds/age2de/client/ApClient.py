@@ -42,7 +42,7 @@ class Age2Context(CommonContext):
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
-        self.comm_ctx = GameClient.Age2GameContext(True, client_interface=self)
+        self.game_ctx = GameClient.Age2GameContext(True, client_interface=self, unlocked_scenarios=[], unlocked_items=[])
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -98,12 +98,12 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
 
         # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
         
-        ctx.comm_ctx.unlocked_scenarios = [scn]
+        ctx.game_ctx.unlocked_scenarios = [scn]
         
-        asyncio.create_task(GameClient.status_loop(ctx.comm_ctx))
+        asyncio.create_task(GameClient.status_loop(ctx.game_ctx))
 
         await ctx.exit_event.wait()
-        ctx.comm_ctx.running = False
+        ctx.game_ctx.running = False
         ctx.server_address = None
 
         await ctx.shutdown()

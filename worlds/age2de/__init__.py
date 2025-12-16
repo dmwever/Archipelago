@@ -3,7 +3,7 @@
 from worlds.age2de.Generation import Generation
 import logging
 from typing import Any
-from BaseClasses import MultiWorld
+from BaseClasses import Item, MultiWorld
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_subprocess
 from worlds.age2de.Options import Age2Options
@@ -37,7 +37,7 @@ class Age2World(World):
         self.generation_info: Generation | None = None
 
     def generate_early(self) -> None:
-        self.generation_info = Generation()
+        self.generation_info = Generation(self)
         self.generation_info.process_options(self)
 
     def create_regions(self) -> None:
@@ -48,11 +48,19 @@ class Age2World(World):
         assert self.generation_info is not None
         self.generation_info.create_items(self)
     
-    # def set_rules(self) -> None:
-    #     rules.set_rules(self)
+    def create_item(self, name: str) -> Item:
+        print(name)
+        print(Items.NAME_TO_ITEM[name])
+        item = self.generation_info.new_item(Items.NAME_TO_ITEM[name])
+        print(item)
+        return item
     
     def get_filler_item_name(self) -> str:
-        return self.random.choices(tuple(self.filler_items_distribution), weights=self.filler_items_distribution.values())[0]  # type: ignore
+        assert self.generation_info is not None
+        return self.generation_info.get_filler_name(self)
+    
+    # def set_rules(self) -> None:
+    #     rules.set_rules(self)
 
 
 def run_client(*args: Any):

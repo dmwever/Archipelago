@@ -9,6 +9,11 @@ class Resources:
     amount: int
 
 @dataclass
+class TC:
+    type: int
+    amount: int
+    
+@dataclass
 class TriggerActivation:
     trigger: int
 
@@ -24,9 +29,12 @@ class ScenarioItem:
     amount: int = 1
 
 
+type FillerItemType = (
+    Resources
+)
 
 type ItemType = (
-    ScenarioItem | Resources
+    ScenarioItem | Resources | TriggerActivation | TC
 )
 
 
@@ -53,8 +61,8 @@ class Age2Item(enum.IntEnum):
     #1000 - 2999 = Progression Items
     
     # Scenario Progression Items
-    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(1, 275))
-    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         ScenarioItem(Age2ScenarioData.AP_ATTILA_2, Resources(2, 100))
+    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TC(1, 275))
+    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TC(2, 100))
     AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",  ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(0))
     
     #3000 - 3999 = Scenarios (500), Campaigns (100)

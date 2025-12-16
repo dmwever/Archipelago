@@ -133,7 +133,7 @@ def update_packet(ctx: Age2GameContext, new_pkt: Age2Packet) -> PacketStatus:
 
 def ack_locations(ctx: Age2GameContext) -> None:
     try:
-        with open(AGE2_USER_PROFILE + "locations.xsdat", "rb") as fp:
+        with open(AGE2_USER_PROFILE + "locations.xsdat", "wb") as fp:
             XsdatFile.write_int(fp, len(ctx.current_packet.location_ids))
             for location_id in ctx.current_packet.location_ids:
                 XsdatFile.write_int(fp, location_id)
@@ -143,7 +143,8 @@ def ack_locations(ctx: Age2GameContext) -> None:
 
 def ack_items(ctx: Age2GameContext) -> None:
     for item in ctx.current_packet.item_ids:
-        ctx.acked_items += 1
+        if item != -1 and ctx.acked_items < len(ctx.unlocked_items):
+            ctx.acked_items += 1
 
 def send_items(ctx: Age2GameContext) -> None:
     num_items = len(ctx.unlocked_items) - ctx.acked_items
@@ -151,7 +152,7 @@ def send_items(ctx: Age2GameContext) -> None:
         num_items = 12
     if num_items > 0:
         try:
-            with open(AGE2_USER_PROFILE + "items.xsdat", "rb") as fp:
+            with open(AGE2_USER_PROFILE + "items.xsdat", "wb") as fp:
                 XsdatFile.write_int(fp, num_items)
                 for item in ctx.unlocked_items[ctx.acked_items:ctx.acked_items+num_items]:
                     XsdatFile.write_int(fp, item.id)
@@ -161,22 +162,23 @@ def send_items(ctx: Age2GameContext) -> None:
         
 def free_items(ctx: Age2GameContext) -> None:
     try:
-        with open(AGE2_USER_PROFILE + "free_items.xsdat", "rb") as fp:
+        with open(AGE2_USER_PROFILE + "free_items.xsdat", "wb") as fp:
             for item in ctx.current_packet.item_ids:
-                XsdatFile.write_int(fp, item)
+                if item != -1:
+                    XsdatFile.write_int(fp, item)
     except Exception as ex:
         logger.exception(ex)
         print(f"free_items.xsdat could not be opened. .xsdat file may have been locked.")
 
 def ping_game(ctx: Age2GameContext) -> None:
     try:
-        with open(AGE2_USER_PROFILE + "AP.xsdat", "rb") as fp:
+        with open(AGE2_USER_PROFILE + "AP.xsdat", "wb") as fp:
             XsdatFile.write_int(fp, ctx.current_packet.current_ping_id)
             XsdatFile.write_float(fp, AP_VERSION)
             XsdatFile.write_int(fp, WORLD_ID)
-            XsdatFile.write_bool(fp, ctx.acked_items < len(ctx.unlocked_items))
-            XsdatFile.write_bool(fp, len(ctx.current_packet.item_ids) != 0)
-            XsdatFile.write_bool(fp, len(ctx.current_packet.location_ids) != 0)
+            XsdatFile.write_bool(fp, ctx.acked_items < len(ctx.unlocked_items)) # Send Items
+            XsdatFile.write_bool(fp, not all(x == -1 for x in ctx.current_packet.item_ids)) # Free items
+            XsdatFile.write_bool(fp, len(ctx.current_packet.location_ids) != 0) # Free Locations
             XsdatFile.write_bool(fp, False)
             XsdatFile.write_bool(fp, False)
     except Exception as ex:
@@ -277,15 +279,19 @@ async def status_loop(ctx: Age2GameContext):
             continue
         if packetStatus == PacketStatus.UPDATE:
             ctx.client_interface.on_location_received(ctx.current_scenario.value, ctx.current_packet.location_ids)
+            ack_locations(ctx)
             print("UPDATE")
             
         if packetStatus == PacketStatus.ACTIVE:
             print("ACTIVE")
             print(packet.current_ping_id)
         
-        ack_locations(ctx)
-        ack_items(ctx)
-        send_items(ctx)
+        if (any(x != -1 for x in ctx.current_packet.item_ids)):
+            ack_items(ctx)
+        
+        if (ctx.acked_items < len(ctx.unlocked_items)):
+            send_items(ctx)
+            
         free_items(ctx)
         ping_game(ctx)
         

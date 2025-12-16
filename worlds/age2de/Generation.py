@@ -28,7 +28,8 @@ def connect_region(
     connection.connect(target)
     
 class Generation:
-    def __init__(self) -> None:
+    def __init__(self, world: 'Age2World') -> None:
+        self.player = world.player
         self.regions: list[Region] = []
         self.locations: list[Location] = []
         self.items: list[Item] = []
@@ -62,17 +63,59 @@ class Generation:
             self.included_civs |= scenario.civ
         world.multiworld.regions += self.regions
 
+    _item_type_to_classification = {
+        Items.ScenarioItem: ItemClassification.progression,
+        Items.TC: ItemClassification.progression,
+        Items.Resources: ItemClassification.filler,
+        Items.TriggerActivation: ItemClassification.progression,
+    }
+    
+    def new_item(self, item_type: Items.Age2Item) -> Item:
+        return Item(
+            item_type.item_name,
+            self._item_type_to_classification[item_type.type.__class__],
+            item_type.id,
+            self.player
+        )
+
+    def get_filler_name(self, world: 'Age2World') -> str:
+        filler = []
+        for item in Items.CATEGORY_TO_ITEMS[Items.Resources]:
+            filler.append(Items.item_id_to_name[item.id])
+        print(filler)
+        filler_item_name = world.random.choice(filler)
+        print(filler_item_name)
+        return filler_item_name
+
     def create_items(self, world: 'Age2World') -> None:
+        tentative_items: list[Item] = []
         for item_type in Items.Age2Item:
             if isinstance(item_type.type, Items.ScenarioItem):
                 if item_type.type.vanilla_scenario.scenario_name in [region.name for region in self.regions]:
-                    self.items.append(Item(item_type.item_name, ItemClassification.progression, item_type.id, world.player))
+                    self.items.append(self.new_item(item_type))
             elif isinstance(item_type.type, Items.Resources):
-                self.items.append(Item(item_type.item_name, ItemClassification.filler, item_type.id, world.player))
+                tentative_items.append(self.new_item(item_type))
+            elif isinstance(item_type.type, Items.TC):
+                self.items.append(self.new_item(item_type))
+            elif isinstance(item_type.type, Items.TriggerActivation):
+                self.items.append(self.new_item(item_type))
             else:
                 raise ValueError(f"Item {item_type} has unknown type {type(item_type.type)}")
+            
+        if len(self.items) < len(self.locations):
+            world.random.shuffle(tentative_items)
+            print('\n'.join(map(str, tentative_items[len(self.locations) - len(self.items):])))
+            self.items.extend(tentative_items[:len(self.locations) - len(self.items)])
 
         world.multiworld.itempool += self.items
+        
+        itempool = len(world.multiworld.itempool)
+        number_of_unfilled_locations = len(world.multiworld.get_unfilled_locations(world.player))
+        
+        needed_number_of_filler_items = number_of_unfilled_locations - itempool
+        
+        print(needed_number_of_filler_items)
+        world.multiworld.itempool += [world.create_filler() for _ in range(needed_number_of_filler_items)]
 
     
     def fill_slot_data(self) -> Mapping[str, Any]:
