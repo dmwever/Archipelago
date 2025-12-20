@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import logging
 from tkinter import filedialog
 from tkinter import *
 from multiprocessing import Process
@@ -16,12 +17,14 @@ from worlds.age2de.locations.Locations import global_location_id
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 from .ApGui import Age2Manager
 import worlds.age2de.client.GameClient as GameClient
-from .. import Age2World, logger
+from .. import Age2World
+
+logger = logging.getLogger("Client")
 
 async def set_user_folder(data: json):
     root = Tk()
     root.withdraw()
-    data['AGE2_USER_PROFILE'] = filedialog.askdirectory()
+    data['AGE2_USER_FOLDER'] = filedialog.askdirectory()
     with open('worlds/age2de/client/Age2ClientConfig.json', 'w') as file:
         json.dump(data, file)
 
@@ -68,8 +71,8 @@ class Age2Context(CommonContext):
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
-        self.game_ctx = GameClient.Age2GameContext(True)
-        self.game_ctx.client_status = GameClient.ClientStatus(client_interface=self, unlocked_scenarios=[], unlocked_items=[])
+        self.game_ctx = GameClient.Age2GameContext(True, client_interface=self)
+        self.game_ctx.client_status = GameClient.ClientStatus(unlocked_scenarios=[], unlocked_items=[])
         with open('worlds/age2de/client/Age2ClientConfig.json', 'r') as file:
             data = json.load(file)
             self.game_ctx.client_status.user_folder = data['AGE2_USER_FOLDER']

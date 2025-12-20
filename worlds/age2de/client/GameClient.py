@@ -1,5 +1,5 @@
 import asyncio
-from asyncio.log import logger
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 import os
@@ -11,7 +11,9 @@ from worlds.age2de.items import Items
 from worlds.age2de.items.Items import Age2Item
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 
-AGE2_USER_PROFILE = "profile/"
+logger = logging.getLogger("Client")
+
+AGE2_USER_PROFILE = "/profile/"
 AP_VERSION = 6.5
 WORLD_ID = 2
 
