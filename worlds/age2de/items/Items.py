@@ -24,9 +24,6 @@ type ScenarioItemType = (
 @dataclass
 class ScenarioItem:
     vanilla_scenario: Age2ScenarioData
-    """The scenario the player would require this item for victory"""
-    item: ScenarioItemType
-    amount: int = 1
 
 
 type FillerItemType = (
@@ -37,6 +34,11 @@ type ItemType = (
     ScenarioItem | Resources | TriggerActivation | TC
 )
 
+@dataclass
+class StartingItem:
+    """The scenario the player would require this item for victory"""
+    item: ItemType
+    amount: int = 1
 
 class Age2Item(enum.IntEnum):
     def __new__(cls, id: int, name: str, type: ItemType) -> 'Age2Item':
@@ -59,18 +61,18 @@ class Age2Item(enum.IntEnum):
     FILLER_STONE_SMALL =            4, "+100 Stone", Resources(4, 100)
     
     #1000 - 2999 = Progression Items
+    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          StartingItem(TC(1, 275))
+    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         StartingItem(TC(2, 100))
     
     # Scenario Progression Items
-    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TC(1, 275))
-    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TC(2, 100))
-    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",  ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(0))
+    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",  ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
     
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
     #4000 - 4999 = Troops, Future Use
     
     #Troop Items
-    AP_ATTILA_2_SCYTHIAN_TROOP =     4000, "Attila, The Great Ride: Scythian Troops",    ScenarioItem(Age2ScenarioData.AP_ATTILA_2, TriggerActivation(1))
+    AP_ATTILA_2_SCYTHIAN_TROOP =     4000, "Attila, The Great Ride: Scythian Troops",    ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
     
 
         

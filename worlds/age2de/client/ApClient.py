@@ -1,4 +1,8 @@
 import asyncio
+import json
+import os
+from tkinter import filedialog
+from tkinter import *
 from multiprocessing import Process
 from typing import Optional
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
@@ -14,8 +18,30 @@ from .ApGui import Age2Manager
 import worlds.age2de.client.GameClient as GameClient
 from .. import Age2World, logger
 
+async def set_user_folder(data: json):
+    root = Tk()
+    root.withdraw()
+    data['AGE2_USER_PROFILE'] = filedialog.askdirectory()
+    with open('worlds/age2de/client/Age2ClientConfig.json', 'w') as file:
+        json.dump(data, file)
+
 class Age2CommandProcessor(ClientCommandProcessor):
     ctx: 'Age2Context'
+    
+    def _cmd_set_user_folder(self) -> bool:
+        """
+        Set User Folder: Lets the user assign their local age2de user folder.
+        Usually located at:
+            "C:/Users/<USER>/Games/Age of Empires 2 DE/<STRING_OF_NUMBERS>/"
+        Select the <STRING_OF_NUMBERS> folder as the user folder.
+        """
+        data = None
+        with open('worlds/age2de/client/Age2ClientConfig.json', 'r') as file:
+            data = json.load(file)
+        set_user_folder(data)
+        self.ctx.game_ctx.client_status.user_folder = data['AGE2_USER_FOLDER']
+        self.output(f"User folder now assigned to {data['AGE2_USER_FOLDER']}")
+        return True
     
     def _cmd_debug(self, key: str) -> bool:
         """Debug: prints current value of age2 game client"""
@@ -42,14 +68,18 @@ class Age2Context(CommonContext):
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
-        self.game_ctx = GameClient.Age2GameContext(True, client_interface=self, unlocked_scenarios=[], unlocked_items=[])
+        self.game_ctx = GameClient.Age2GameContext(True)
+        self.game_ctx.client_status = GameClient.ClientStatus(client_interface=self, unlocked_scenarios=[], unlocked_items=[])
+        with open('worlds/age2de/client/Age2ClientConfig.json', 'r') as file:
+            data = json.load(file)
+            self.game_ctx.client_status.user_folder = data['AGE2_USER_FOLDER']
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
         if password_requested and not self.password:
            await super(Age2Context, self).server_auth(password_requested)
         await self.get_username()
-        await self.send_connect() 
+        await self.send_connect()
     
     def on_package(self, cmd: str, args: dict) -> None:
         if cmd == "ReceivedItems":
@@ -62,32 +92,20 @@ class Age2Context(CommonContext):
                 "cmd": "LocationChecks",
                 "locations": [global_location_id(scenario_id, location_id) for location_id in location_ids],
             }]))
-    
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
-            self.game_ctx.unlocked_items.append(item_data)
-    
+            self.game_ctx.client_status.unlocked_items.append(item_data)
+
 def main(connect: Optional[str] = None, password: Optional[str] = None, name: Optional[str] = None):
     Utils.init_logging("Age of Empires II: DE Client")
 
     async def _main(connect: Optional[str], password: Optional[str], name: Optional[str]):
         parser = get_base_parser()
-        parser.add_argument("age2de_folder", default="", type=str, nargs="?", help="Path to age2de folder")
         args = parser.parse_args()
         ctx = Age2Context(connect, password)
 
-        # if args.age2de_folder:
-        #     parent_dir: str = os.path.dirname(args.age2de_folder)
-        #     target_name: str = os.path.basename(args.age2de_folder)
-        #     target_path: str = os.path.join(parent_dir, target_name)
-        #     if not os.path.exists(target_path):
-        #         os.makedirs(target_path, exist_ok=True)
-        #         logger.info("Extracting campaign files to %s", target_path)
-        #         with zipfile.ZipFile(args.age2de_folder, "r") as zip_ref:
-        #             for member in zip_ref.namelist():
-        #                 zip_ref.extract(member, target_path)
         ctx.auth = name
         ctx.server_task = asyncio.create_task(
             server_loop(ctx), name="ServerLoop")
@@ -96,10 +114,18 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
 
         scn = Age2ScenarioData.AP_ATTILA_2
 
+        cwd = os.getcwd()
+        data = ''
+        with open('worlds/age2de/client/Age2ClientConfig.json', 'r') as file:
+            data = json.load(file)
+        if (not data['AGE2_USER_FOLDER']):
+            set_user_folder(data)
+            ctx.game_ctx.client_status.user_folder = data['AGE2_USER_FOLDER']
+                
         # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
         
-        ctx.game_ctx.unlocked_scenarios = [scn]
-        
+        ctx.game_ctx.client_status.unlocked_scenarios = [scn]
+
         asyncio.create_task(GameClient.status_loop(ctx.game_ctx))
 
         await ctx.exit_event.wait()
