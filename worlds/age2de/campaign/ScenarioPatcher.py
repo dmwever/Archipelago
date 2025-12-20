@@ -1,7 +1,7 @@
 from pathlib import Path
-from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
-from worlds.age2de.campaign.CampaignReader import Scenario
+from ..AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
+from .CampaignReader import Scenario
 
 def inject_ap(scn: Scenario):
     

@@ -1,12 +1,10 @@
 import struct
 
-from numpy import array
-
 def read_bool(fp) -> bool:
     return struct.unpack("<?xxx", fp.read(4))[0]
 
 def read_vector(fp) -> tuple[float, float, float]:
-    return array(struct.unpack("<fff", fp.read(12)))
+    return list(struct.unpack("<fff", fp.read(12)))
 
 def read_int(fp) -> int:
     return struct.unpack("<i", fp.read(4))[0]

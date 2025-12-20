@@ -2,9 +2,6 @@
 import os
 from pathlib import Path
 import struct
-import sys
-from typing_extensions import Buffer
-import numpy as np
 
 DE_DEPENDENCY_NUM = 7
 RGE_DE2_MAX_CHAR = 256
