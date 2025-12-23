@@ -2,7 +2,8 @@
 
 from worlds.age2de.Generation import Generation
 import logging
-from typing import Any
+import settings
+from typing import Any, ClassVar
 from BaseClasses import Item, MultiWorld
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_subprocess
@@ -13,13 +14,23 @@ from worlds.age2de.locations import Locations
 logger = logging.getLogger(__name__)
 
 AGE2_DE = "Age Of Empires II: Definitive Edition"
-
+class Age2Settings(settings.Group):
+    class UserDirectory(settings.UserFolderPath):
+        """The users local age2de user folder.
+        Usually located at:
+            "C:/Users/<USER>/Games/Age of Empires 2 DE/<STRING_OF_NUMBERS>/"
+        Select the <STRING_OF_NUMBERS> folder as the user folder."""
+        description = "Age of Empires II: Definitive Edition User Directory"
+    
+    user_folder: UserDirectory = UserDirectory(AGE2_DE)
+        
 class Age2World(World):
     """
     Age of Empires II: Definitive Edition is a Real-Time Strategy game centered around the medieval
     ages and the various battles, conquests, and wars of history.
     """
     game = AGE2_DE  # name of the game/world
+    settings: ClassVar[Age2Settings]
     options_dataclass = Age2Options  # options the player can set
     options: Age2Options  # typing hints for option results
     topology_present = True  # show path to required location checks in spoiler
@@ -74,6 +85,5 @@ components.append(
         "Age of Empires II: DE Client",
         func=run_client,
         component_type=Type.CLIENT,
-        file_identifier=SuffixIdentifier(".apcivvi"),
     )
 )
