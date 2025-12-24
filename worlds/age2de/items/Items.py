@@ -55,24 +55,49 @@ class Age2Item(enum.IntEnum):
     #1 - 999 = Resources (25), Ages (25), Civs (150), Buildings (100), Units (350), Techs (350) 
     
     # Filler Resources
-    FILLER_WOOD_SMALL =             1, "+100 Wood",  Resources(1, 100)
-    FILLER_FOOD_SMALL =             2, "+100 Food",  Resources(2, 100)
-    FILLER_GOLD_SMALL =             3, "+100 Gold",  Resources(3, 100)
-    FILLER_STONE_SMALL =            4, "+100 Stone", Resources(4, 100)
+    FILLER_WOOD_SMALL =             1, "+100 Wood",   Resources(1, 100)
+    FILLER_FOOD_SMALL =             2, "+100 Food",   Resources(2, 100)
+    FILLER_GOLD_SMALL =             3, "+100 Gold",   Resources(3, 100)
+    FILLER_STONE_SMALL =            4, "+50 Stone",   Resources(4, 50)
+    FILLER_WOOD_MEDIUM =            5, "+250 Wood",   Resources(1, 250)
+    FILLER_FOOD_MEDIUM =            6, "+250 Food",   Resources(2, 250)
+    FILLER_GOLD_MEDIUM =            7, "+250 Gold",   Resources(3, 250)
+    FILLER_STONE_MEDIUM =           8, "+125 Stone",  Resources(4, 125)
+    FILLER_WOOD_LARGE =             9, "+1000 Wood",  Resources(1, 1000)
+    FILLER_FOOD_LARGE =            10, "+1000 Food",  Resources(2, 1000)
+    FILLER_GOLD_LARGE =            11, "+1000 Gold",  Resources(3, 1000)
+    FILLER_STONE_LARGE =           12, "+500 Stone",  Resources(4, 500)
+    
+    #Starting Resources
+    STARTING_WOOD_SMALL =             13, "+50 Starting Wood",   StartingItem(Resources(1, 50))
+    STARTING_FOOD_SMALL =             14, "+50 Starting Food",   StartingItem(Resources(2, 50))
+    STARTING_GOLD_SMALL =             15, "+50 Starting Gold",   StartingItem(Resources(3, 50))
+    STARTING_STONE_SMALL =            16, "+25 Starting Stone",   StartingItem(Resources(4, 25))
+    STARTING_WOOD_MEDIUM =            17, "+100 Starting Wood",   StartingItem(Resources(1, 100))
+    STARTING_FOOD_MEDIUM =            18, "+100 Starting Food",   StartingItem(Resources(2, 100))
+    STARTING_GOLD_MEDIUM =            19, "+100 Starting Gold",   StartingItem(Resources(3, 100))
+    STARTING_STONE_MEDIUM =           20, "+50 Starting Stone",  StartingItem(Resources(4, 50))
+    STARTING_WOOD_LARGE =             21, "+250 Starting Wood",  StartingItem(Resources(1, 250))
+    STARTING_FOOD_LARGE =             22, "+250 Starting Food",  StartingItem(Resources(2, 250))
+    STARTING_GOLD_LARGE =             23, "+250 Starting Gold",  StartingItem(Resources(3, 250))
+    STARTING_STONE_LARGE =            24, "+125 Starting Stone",  StartingItem(Resources(4, 125))
     
     #1000 - 2999 = Progression Items
     TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          StartingItem(TC(1, 275))
     TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         StartingItem(TC(2, 100))
     
     # Scenario Progression Items
-    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",  ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",              ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_1_BLEDAS_CAMP_TRIGGER =   1003, "Attila, The Scourge of God: Bleda's Camp",       ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_1_ATTILAS_CAMP_TRIGGER =  1004, "Attila, The Scourge of God: Attila's Camp",      ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
     
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
     #4000 - 4999 = Troops, Future Use
     
     #Troop Items
-    AP_ATTILA_2_SCYTHIAN_TROOP =     4000, "Attila, The Great Ride: Scythian Troops",    ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_2_SCYTHIAN_TROOP =     4000, "Scythian Troops",       ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_1_MANGUDAI_TRIGGER =   4001, "Scythian Mangudai",     ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
     
 
         
