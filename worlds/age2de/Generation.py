@@ -2,6 +2,7 @@ import time
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 from BaseClasses import CollectionState, Entrance, Item, ItemClassification, Location, Region
+from worlds.age2de.Options import Age2Options
 from worlds.age2de.locations import Campaigns, Locations, Scenarios
 from worlds.age2de.items import Items
 
@@ -56,12 +57,21 @@ class Generation:
             new_region = Region(scenario.scenario_name, world.player, world.multiworld)
             connect_region(world, self.regions[-1], new_region)
             for location in REGION_TO_LOCATIONS.get(scenario.scenario_name, ()):
+                if not self.branching_option(world, location):
+                    continue
                 new_location = Location(world.player, location.global_name(), location.id, new_region)
                 new_region.locations.append(new_location)
                 self.locations.append(new_location)
             self.regions.append(new_region)
             self.included_civs |= scenario.civ
         world.multiworld.regions += self.regions
+
+    def branching_option(self, world, location):
+        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and world.options.scenarioBranching == Age2Options.ScenarioBranching.option_all:
+            return True
+        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ANY and world.options.scenarioBranching == Age2Options.ScenarioBranching.option_any:
+            return True
+        return False
 
     _item_type_to_classification = {
         Items.ScenarioItem: ItemClassification.progression,
