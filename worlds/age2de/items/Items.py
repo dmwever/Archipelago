@@ -9,7 +9,7 @@ class Resources:
     amount: int
 
 @dataclass
-class TC:
+class TCResources:
     type: int
     amount: int
     
@@ -17,28 +17,22 @@ class TC:
 class TriggerActivation:
     trigger: int
 
-type ScenarioItemType = (
-    Resources | TriggerActivation
-)
-
 @dataclass
 class ScenarioItem:
     vanilla_scenario: Age2ScenarioData
 
+@dataclass
+class StartingResources:
+    type: int
+    amount: int
 
 type FillerItemType = (
-    Resources
+    Resources | StartingResources
 )
 
 type ItemType = (
-    ScenarioItem | Resources | TriggerActivation | TC
+    ScenarioItem | StartingResources | Resources | TriggerActivation | TCResources
 )
-
-@dataclass
-class StartingItem:
-    """The scenario the player would require this item for victory"""
-    item: ItemType
-    amount: int = 1
 
 class Age2Item(enum.IntEnum):
     def __new__(cls, id: int, name: str, type: ItemType) -> 'Age2Item':
@@ -69,22 +63,22 @@ class Age2Item(enum.IntEnum):
     FILLER_STONE_LARGE =           12, "+500 Stone",  Resources(4, 500)
     
     #Starting Resources
-    STARTING_WOOD_SMALL =             13, "+50 Starting Wood",   StartingItem(Resources(1, 50))
-    STARTING_FOOD_SMALL =             14, "+50 Starting Food",   StartingItem(Resources(2, 50))
-    STARTING_GOLD_SMALL =             15, "+50 Starting Gold",   StartingItem(Resources(3, 50))
-    STARTING_STONE_SMALL =            16, "+25 Starting Stone",   StartingItem(Resources(4, 25))
-    STARTING_WOOD_MEDIUM =            17, "+100 Starting Wood",   StartingItem(Resources(1, 100))
-    STARTING_FOOD_MEDIUM =            18, "+100 Starting Food",   StartingItem(Resources(2, 100))
-    STARTING_GOLD_MEDIUM =            19, "+100 Starting Gold",   StartingItem(Resources(3, 100))
-    STARTING_STONE_MEDIUM =           20, "+50 Starting Stone",  StartingItem(Resources(4, 50))
-    STARTING_WOOD_LARGE =             21, "+250 Starting Wood",  StartingItem(Resources(1, 250))
-    STARTING_FOOD_LARGE =             22, "+250 Starting Food",  StartingItem(Resources(2, 250))
-    STARTING_GOLD_LARGE =             23, "+250 Starting Gold",  StartingItem(Resources(3, 250))
-    STARTING_STONE_LARGE =            24, "+125 Starting Stone",  StartingItem(Resources(4, 125))
+    STARTING_WOOD_SMALL =             13, "+50 Starting Wood",   StartingResources(1, 50)
+    STARTING_FOOD_SMALL =             14, "+50 Starting Food",   StartingResources(2, 50)
+    STARTING_GOLD_SMALL =             15, "+50 Starting Gold",   StartingResources(3, 50)
+    STARTING_STONE_SMALL =            16, "+25 Starting Stone",   StartingResources(4, 25)
+    STARTING_WOOD_MEDIUM =            17, "+100 Starting Wood",   StartingResources(1, 100)
+    STARTING_FOOD_MEDIUM =            18, "+100 Starting Food",   StartingResources(2, 100)
+    STARTING_GOLD_MEDIUM =            19, "+100 Starting Gold",   StartingResources(3, 100)
+    STARTING_STONE_MEDIUM =           20, "+50 Starting Stone",  StartingResources(4, 50)
+    STARTING_WOOD_LARGE =             21, "+250 Starting Wood",  StartingResources(1, 250)
+    STARTING_FOOD_LARGE =             22, "+250 Starting Food",  StartingResources(2, 250)
+    STARTING_GOLD_LARGE =             23, "+250 Starting Gold",  StartingResources(3, 250)
+    STARTING_STONE_LARGE =            24, "+125 Starting Stone",  StartingResources(4, 125)
     
     #1000 - 2999 = Progression Items
-    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          StartingItem(TC(1, 275))
-    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         StartingItem(TC(2, 100))
+    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          TCResources(1, 275)
+    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(2, 100)
     
     # Scenario Progression Items
     AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",              ScenarioItem(Age2ScenarioData.AP_ATTILA_2)

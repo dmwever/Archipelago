@@ -2,7 +2,7 @@ import time
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 from BaseClasses import CollectionState, Entrance, Item, ItemClassification, Location, Region
-from worlds.age2de.Options import Age2Options
+from worlds.age2de.Options import Age2Options, ScenarioBranching
 from worlds.age2de.locations import Campaigns, Locations, Scenarios
 from worlds.age2de.items import Items
 
@@ -67,16 +67,17 @@ class Generation:
         world.multiworld.regions += self.regions
 
     def branching_option(self, world, location):
-        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and world.options.scenarioBranching == Age2Options.ScenarioBranching.option_all:
-            return True
-        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ANY and world.options.scenarioBranching == Age2Options.ScenarioBranching.option_any:
-            return True
-        return False
+        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and world.options.scenarioBranching != ScenarioBranching.option_all:
+            return False
+        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ANY and world.options.scenarioBranching != ScenarioBranching.option_any:
+            return False
+        return True
 
     _item_type_to_classification = {
         Items.ScenarioItem: ItemClassification.progression,
-        Items.TC: ItemClassification.progression,
+        Items.TCResources: ItemClassification.progression,
         Items.Resources: ItemClassification.filler,
+        Items.StartingResources: ItemClassification.filler,
         Items.TriggerActivation: ItemClassification.progression,
     }
     
@@ -90,7 +91,7 @@ class Generation:
 
     def get_filler_name(self, world: 'Age2World') -> str:
         filler = []
-        for item in Items.CATEGORY_TO_ITEMS[Items.Resources]:
+        for item in Items.CATEGORY_TO_ITEMS[Items.FillerItemType]:
             filler.append(Items.item_id_to_name[item.id])
         print(filler)
         filler_item_name = world.random.choice(filler)
@@ -99,18 +100,20 @@ class Generation:
 
     def create_items(self, world: 'Age2World') -> None:
         tentative_items: list[Item] = []
-        for item_type in Items.Age2Item:
-            if isinstance(item_type.type, Items.ScenarioItem):
-                if item_type.type.vanilla_scenario.scenario_name in [region.name for region in self.regions]:
-                    self.items.append(self.new_item(item_type))
-            elif isinstance(item_type.type, Items.Resources):
-                tentative_items.append(self.new_item(item_type))
-            elif isinstance(item_type.type, Items.TC):
-                self.items.append(self.new_item(item_type))
-            elif isinstance(item_type.type, Items.TriggerActivation):
-                self.items.append(self.new_item(item_type))
+        for item in Items.Age2Item:
+            if isinstance(item.type, Items.ScenarioItem):
+                if item.type.vanilla_scenario.scenario_name in [region.name for region in self.regions]:
+                    self.items.append(self.new_item(item))
+            elif type(item.type) is Items.Resources:
+                tentative_items.append(self.new_item(item))
+            elif type(item.type) is Items.StartingResources:
+                tentative_items.append(self.new_item(item))
+            elif isinstance(item.type, Items.TCResources):
+                self.items.append(self.new_item(item))
+            elif isinstance(item.type, Items.TriggerActivation):
+                self.items.append(self.new_item(item))
             else:
-                raise ValueError(f"Item {item_type} has unknown type {type(item_type.type)}")
+                raise ValueError(f"Item {item} has unknown type {type(item.type)}")
             
         if len(self.items) < len(self.locations):
             world.random.shuffle(tentative_items)
