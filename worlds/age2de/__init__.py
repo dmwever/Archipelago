@@ -5,8 +5,8 @@ import logging
 import settings
 from typing import Any, ClassVar, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
-from AutoWorld import World
-from LauncherComponents import Component, Type, components, launch as launch_subprocess
+from worlds.AutoWorld import World
+from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
 from .Options import Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios

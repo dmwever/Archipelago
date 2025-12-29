@@ -16,7 +16,7 @@ from ..items import Items
 from ..locations.Locations import global_location_id
 from ..locations.Scenarios import Age2ScenarioData
 from .ApGui import Age2Manager
-from . import GameClient as GameClient
+import worlds.age2de.client.GameClient as GameClient
 from .. import Age2Settings, Age2World
 
 logger = logging.getLogger("Client")
