@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import enum
 
 from BaseClasses import ItemClassification
-from worlds.age2de.locations.Scenarios import Age2ScenarioData
+from ..locations.Scenarios import Age2ScenarioData
 
 @dataclass
 class Resources:

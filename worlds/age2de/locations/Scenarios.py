@@ -1,7 +1,7 @@
 
 import enum
-from worlds.age2de.locations.Campaigns import Age2CampaignData
-from worlds.age2de.locations.Civilizations import Age2Civ
+from .Campaigns import Age2CampaignData
+from .Civilizations import Age2Civ
 
 
 class Age2ScenarioData(enum.IntEnum):

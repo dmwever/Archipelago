@@ -10,13 +10,13 @@ from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser,
 from NetUtils import NetworkItem
 import Utils
 from kvui import GameManager
-from worlds.age2de.campaign.CampaignReader import Campaign, Scenario
-from worlds.age2de.campaign.ScenarioPatcher import copy_ai, inject_ap
-from worlds.age2de.items import Items
-from worlds.age2de.locations.Locations import global_location_id
-from worlds.age2de.locations.Scenarios import Age2ScenarioData
+from ..campaign.CampaignReader import Campaign, Scenario
+from ..campaign.ScenarioPatcher import copy_ai, inject_ap
+from ..items import Items
+from ..locations.Locations import global_location_id
+from ..locations.Scenarios import Age2ScenarioData
 from .ApGui import Age2Manager
-import worlds.age2de.client.GameClient as GameClient
+from . import GameClient as GameClient
 from .. import Age2Settings, Age2World
 
 logger = logging.getLogger("Client")

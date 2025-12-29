@@ -1,8 +1,11 @@
-from worlds.age2de import Age2World
-from worlds.age2de.items.Items import Age2Item
-from worlds.age2de.locations.Locations import Age2LocationData
+from typing import TYPE_CHECKING
+
+from ..items.Items import Age2Item
+from ..locations.Locations import Age2LocationData
 from worlds.generic.Rules import set_rule
 
+if TYPE_CHECKING:
+    from .. import Age2World
 
 def set_rules(world: Age2World) -> None:
     att1 = world.get_entrance("The Great Ride")

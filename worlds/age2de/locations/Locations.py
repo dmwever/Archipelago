@@ -1,8 +1,6 @@
 
 import enum
-from typing import TYPE_CHECKING
-from BaseClasses import Location
-from worlds.age2de.locations.Scenarios import Age2ScenarioData
+from .Scenarios import Age2ScenarioData
 
 class Age2LocationType(enum.Flag):
     VICTORY = enum.auto()

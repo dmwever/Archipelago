@@ -2,14 +2,13 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-import os
 import struct
 from typing import List, Protocol
 
-from worlds.age2de.campaign import XsdatFile
-from worlds.age2de.items import Items
-from worlds.age2de.items.Items import Age2Item
-from worlds.age2de.locations.Scenarios import Age2ScenarioData
+from ..campaign import XsdatFile
+from ..items import Items
+from ..items.Items import Age2Item
+from ..locations.Scenarios import Age2ScenarioData
 
 logger = logging.getLogger("Client")
 
