@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import enum
 
+from BaseClasses import ItemClassification
 from worlds.age2de.locations.Scenarios import Age2ScenarioData
 
 @dataclass
@@ -33,6 +34,14 @@ type FillerItemType = (
 type ItemType = (
     ScenarioItem | StartingResources | Resources | TriggerActivation | TCResources
 )
+
+item_type_to_classification = {
+    ScenarioItem: ItemClassification.progression,
+    TCResources: ItemClassification.progression,
+    Resources: ItemClassification.filler,
+    StartingResources: ItemClassification.filler,
+    TriggerActivation: ItemClassification.progression,
+}
 
 class Age2Item(enum.IntEnum):
     def __new__(cls, id: int, name: str, type: ItemType) -> 'Age2Item':

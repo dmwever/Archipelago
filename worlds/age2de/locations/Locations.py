@@ -14,7 +14,7 @@ class Age2LocationType(enum.Flag):
 def global_location_id(scenario_id: int, local_location_id: int) -> int:
     return scenario_id * 100 + local_location_id
 
-class Age2Location(enum.IntEnum):
+class Age2LocationData(enum.IntEnum):
     
     def __new__(cls, id: int, *args, **kwargs):
         value = id
@@ -66,9 +66,17 @@ class Age2Location(enum.IntEnum):
     ATT2_BEAT_THE_ROMANS =  10208, "Beat the Romans",                    Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
     
     
-location_from_id = {_location.id: _location for _location in Age2Location}
-location_name_to_id = {_location.global_name(): _location.id for _location in Age2Location}
-location_id_to_name = {_location.id: _location.global_name() for _location in Age2Location}
-SCENARIO_TO_LOCATIONS: dict[Age2ScenarioData, list[Age2Location]] = {_scenario: [] for _scenario in Age2ScenarioData}
-for _location in Age2Location:
+location_from_id = {_location.id: _location for _location in Age2LocationData}
+location_name_to_id = {_location.global_name(): _location.id for _location in Age2LocationData}
+location_id_to_name = {_location.id: _location.global_name() for _location in Age2LocationData}
+SCENARIO_TO_LOCATIONS: dict[Age2ScenarioData, list[Age2LocationData]] = {_scenario: [] for _scenario in Age2ScenarioData}
+for _location in Age2LocationData:
     SCENARIO_TO_LOCATIONS[_location.scenario].append(_location)
+
+REGION_TO_LOCATIONS: dict[str, list[Age2LocationData]] = {}
+for location in Age2LocationData:
+    REGION_TO_LOCATIONS.setdefault(location.scenario.scenario_name, []).append(location)
+
+TYPE_TO_LOCATIONS: dict[Age2LocationType, list[Age2LocationData]] = {}
+for location in Age2LocationData:
+    TYPE_TO_LOCATIONS.setdefault(location.type, []).append(location)
