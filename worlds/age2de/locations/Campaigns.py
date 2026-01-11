@@ -14,5 +14,4 @@ class Age2CampaignData(enum.Enum):
         self.civ = civ
         self.campaign_name = name
         
-    GENERAL =    10, "G", "General", "General Locations"
     ATTILA  =     1, "H", "Huns", "Attila the Hun"

@@ -68,6 +68,7 @@ class Age2Context(CommonContext):
         self.game_ctx = GameClient.Age2GameContext(True, client_interface=self)
         self.game_ctx.client_status = GameClient.ClientStatus(unlocked_scenarios=[], unlocked_items=[])
         self.game_ctx.client_status.user_folder = self.settings.user_folder
+        self.game_ctx.client_status.receieved_messages[0] = "Client Connected!"
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -87,11 +88,19 @@ class Age2Context(CommonContext):
                 "cmd": "LocationChecks",
                 "locations": [global_location_id(scenario_id, location_id) for location_id in location_ids],
             }]))
+
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
             self.game_ctx.client_status.unlocked_items.append(item_data)
+            if received_item.player == self.slot:
+                lastAddedMessageId = list(self.game_ctx.client_status.receieved_messages.keys())[-1]
+                self.game_ctx.client_status.receieved_messages[lastAddedMessageId + 1] = f"You have found your {item_data.item_name}"
+            else:
+                lastAddedMessageId = list(self.game_ctx.client_status.receieved_messages.keys())[-1]
+                self.game_ctx.client_status.receieved_messages[lastAddedMessageId + 1] = f"{self.player_names[received_item.player]} has found your {item_data.item_name}"
+                
 
 def main(connect: Optional[str] = None, password: Optional[str] = None, name: Optional[str] = None):
     Utils.init_logging("Age of Empires II: DE Client")
@@ -107,11 +116,12 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         Age2Manager.start_ap_ui(ctx)
         await asyncio.sleep(1)
 
-        scn = Age2ScenarioData.AP_ATTILA_2
+        scn = Age2ScenarioData.AP_ATTILA_1
+        scn2 = Age2ScenarioData.AP_ATTILA_2
                 
         # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
         
-        ctx.game_ctx.client_status.unlocked_scenarios = [scn]
+        ctx.game_ctx.client_status.unlocked_scenarios = [scn, scn2]
 
         asyncio.create_task(GameClient.status_loop(ctx.game_ctx))
 

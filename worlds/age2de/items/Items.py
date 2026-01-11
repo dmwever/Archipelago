@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import enum
 
 from BaseClasses import ItemClassification
+from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 
 @dataclass
@@ -23,6 +24,15 @@ class ScenarioItem:
     vanilla_scenario: Age2ScenarioData
 
 @dataclass
+class ProgressiveScenario:
+    vanilla_campaign: Age2CampaignData
+    num_additional_scenarios: int
+
+@dataclass
+class Campaign:
+    vanilla_campaign: Age2CampaignData
+
+@dataclass
 class StartingResources:
     type: int
     amount: int
@@ -32,11 +42,13 @@ type FillerItemType = (
 )
 
 type ItemType = (
-    ScenarioItem | StartingResources | Resources | TriggerActivation | TCResources
+    ScenarioItem | StartingResources | ProgressiveScenario | Campaign | Resources | TriggerActivation | TCResources
 )
 
 item_type_to_classification = {
     ScenarioItem: ItemClassification.progression,
+    ProgressiveScenario: ItemClassification.progression,
+    Campaign: ItemClassification.progression,
     TCResources: ItemClassification.progression,
     Resources: ItemClassification.filler,
     StartingResources: ItemClassification.filler,
@@ -96,6 +108,12 @@ class Age2Item(enum.IntEnum):
     
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
+    # Progressive Scenarios (Campaign Count - 1)
+    PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 1)
+    
+    #Campaign Unlocks (Unlocks first level)
+    ATTILA_THE_HUN = 3500, "Attila the Hun Campaign", Campaign(Age2CampaignData.ATTILA)
+    
     #4000 - 4999 = Troops, Future Use
     
     #Troop Items
@@ -107,6 +125,7 @@ class Age2Item(enum.IntEnum):
 NAME_TO_ITEM: dict[str, Age2Item] = {}
 ID_TO_ITEM: dict[int, Age2Item] = {}
 CATEGORY_TO_ITEMS: dict[type, list[Age2Item]] = {}
+filler_items: list[Age2Item] = []
 item_id_to_name: dict[int, str] = {}
 item_name_to_id: dict[str, int] = {}
 for item in Age2Item:
@@ -114,6 +133,8 @@ for item in Age2Item:
     assert item.id not in item_id_to_name, f"Duplicate item ID: {item.id}"
     NAME_TO_ITEM[item.item_name] = item
     ID_TO_ITEM[item.id] = item
+    if item_type_to_classification[item.type.__class__] == ItemClassification.filler:
+        filler_items.append(item)
     item_id_to_name[item.id] = item.item_name
     item_name_to_id[item.item_name] = item.id
     CATEGORY_TO_ITEMS.setdefault(item.type.__class__, []).append(item)

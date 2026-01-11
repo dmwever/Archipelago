@@ -78,3 +78,7 @@ for location in Age2LocationData:
 TYPE_TO_LOCATIONS: dict[Age2LocationType, list[Age2LocationData]] = {}
 for location in Age2LocationData:
     TYPE_TO_LOCATIONS.setdefault(location.type, []).append(location)
+
+VICTORY_LOCATIONS: dict[str, Age2LocationData] = {}
+for location in TYPE_TO_LOCATIONS.get(Age2LocationType.VICTORY):
+    VICTORY_LOCATIONS[location.scenario.scenario_name] = location

@@ -42,6 +42,9 @@ class Age2World(World):
     item_id_to_name = Items.item_id_to_name
     location_name_to_id = Locations.location_name_to_id
     location_id_to_name = Locations.location_id_to_name
+    
+    included_civs: Scenarios.Age2Civ = Scenarios.Age2Civ.NONE
+    included_campaigns: set[Campaigns.Age2CampaignData] = set()
 
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
@@ -55,21 +58,18 @@ class Age2World(World):
         return True
 
     def create_regions(self) -> None:
-        # if len(world.options.included_campaigns.value) == 0:
-        #     self.included_campaigns = options.IncludedCampaigns.default
-        # else:
-        self.included_campaigns = frozenset(
-            campaign
-            for campaign in Campaigns.Age2CampaignData
-            # if campaign.civ in world.options.included_campaigns
-        )
+        if len(self.options.enabled_campaigns.value) == 0:
+            self.included_campaigns = self.options.enabled_campaigns.default
+        else:
+            campaign_names = self.options.enabled_campaigns
+            self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
         regions = [Region(self.origin_region_name, self.player, self.multiworld)]
         for scenario in Scenarios.Age2ScenarioData:
             if scenario.campaign not in self.included_campaigns:
                 continue
             new_region = Region(scenario.scenario_name, self.player, self.multiworld)
             source = regions[-1]
-            connection = Entrance(self.player, f"{source.name} -> {new_region.name}", source)
+            connection = Entrance(self.player, f"{new_region.name}", source)
             source.exits.append(connection)
             connection.connect(new_region)
             for location in Locations.REGION_TO_LOCATIONS.get(scenario.scenario_name, ()):
@@ -77,29 +77,42 @@ class Age2World(World):
                     continue
                 new_location = Location(self.player, location.global_name(), location.id, new_region)
                 new_region.locations.append(new_location)
-            self.multiworld.regions.append(new_region)
+            regions.append(new_region)
             self.included_civs |= scenario.civ
         self.multiworld.regions += regions
     
     def create_items(self) -> None:
-        items = list[Item] = []
+        items: list[Item] = []
         tentative_items: list[Item] = []
         for item in Items.Age2Item:
             if isinstance(item.type, Items.ScenarioItem):
                 if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
-                    items.append(self.create_item(item))
-            elif type(item.type) is Items.Resources | Items.StartingResources:
-                tentative_items.append(self.create_item(item))
+                    items.append(self.create_item(item.item_name))
+            elif isinstance(item.type, Items.Campaign):
+                if item.type.vanilla_campaign in self.included_campaigns:
+                    ap_item = self.create_item(item.item_name)
+                    if item.type.vanilla_campaign.campaign_name in self.options.starting_campaigns:
+                        self.multiworld.push_precollected(ap_item)
+                    else:
+                        items.append(ap_item)
+            elif isinstance(item.type, Items.ProgressiveScenario):
+                if item.type.vanilla_campaign in self.included_campaigns:
+                    for i in range(item.type.num_additional_scenarios):
+                        items.append(self.create_item(item.item_name))
+            elif isinstance(item.type, Items.Resources):
+                tentative_items.append(self.create_item(item.item_name))
+            elif isinstance(item.type, Items.StartingResources):
+                tentative_items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.TCResources):
-                items.append(self.create_item(item))
+                items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.TriggerActivation):
-                items.append(self.create_item(item))
+                items.append(self.create_item(item.item_name))
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
 
         self.multiworld.itempool += items
         
-        itempool = len(self.multiworld.itempool)
+        itempool = len(items)
         number_of_unfilled_locations = len(self.multiworld.get_unfilled_locations(self.player))
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
@@ -120,7 +133,7 @@ class Age2World(World):
     
     def get_filler_item_name(self) -> str:
         filler = []
-        for item in Items.CATEGORY_TO_ITEMS[Items.FillerItemType]:
+        for item in Items.filler_items:
             filler.append(Items.item_id_to_name[item.id])
         filler_item_name = self.random.choice(filler)
         return filler_item_name

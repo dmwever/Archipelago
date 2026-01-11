@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from Options import Choice, PerGameCommonOptions, StartInventoryPool
+from Options import Choice, OptionSet, PerGameCommonOptions, StartInventoryPool
+from worlds.age2de.locations.Campaigns import Age2CampaignData
 
 class Goal(Choice):
     """Goal for this playthrough.
@@ -23,6 +24,22 @@ class ScenarioBranching(Choice):
     option_all = 1
     default = option_any
 
+class StartingCampaigns(OptionSet):
+    """
+    Determines which vanilla campaigns will start unlocked for the player.
+    """
+    display_name = "Enabled Campaigns"
+    valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
+    default = set((Age2CampaignData.ATTILA.campaign_name,))
+
+class EnabledCampaigns(OptionSet):
+    """
+    Determines which vanilla campaigns will be unlocked for the player.
+    """
+    display_name = "Enabled Campaigns"
+    valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
+    default = set((Age2CampaignData.ATTILA.campaign_name,))
+
 @dataclass
 class Age2Options(PerGameCommonOptions):
     """
@@ -31,4 +48,6 @@ class Age2Options(PerGameCommonOptions):
 
     startInventoryPool: StartInventoryPool
     scenarioBranching: ScenarioBranching
+    enabled_campaigns: EnabledCampaigns
+    starting_campaigns: StartingCampaigns
     goal: Goal

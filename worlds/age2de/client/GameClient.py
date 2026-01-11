@@ -2,6 +2,7 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
+import queue
 import struct
 from typing import List, Protocol
 
@@ -75,7 +76,9 @@ class PacketStatus(Enum):
 class ClientStatus:
     unlocked_scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
     unlocked_items: list[Age2Item] = field(default_factory=list[Age2Item])
+    receieved_messages: dict[int, str] = field(default_factory=dict[int, str])
     acked_items: int = 0
+    last_recieved_message_id = 0
     user_folder: str = ''
 
 @dataclass
@@ -152,7 +155,7 @@ def ack_locations(ctx: Age2GameContext) -> None:
 def ack_items(ctx: Age2GameContext) -> None:
     for item in ctx.current_packet.item_ids:
         if item != -1 and ctx.client_status.acked_items < len(ctx.client_status.unlocked_items):
-            ctx.acked_items += 1
+            ctx.client_status.acked_items += 1
 
 def send_items(ctx: Age2GameContext) -> None:
     num_items = len(ctx.client_status.unlocked_items) - ctx.client_status.acked_items
@@ -167,19 +170,33 @@ def send_items(ctx: Age2GameContext) -> None:
         except Exception as ex:
             logger.exception(ex)
             print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
+
+def send_messages(ctx: Age2GameContext) -> None:
+    num_to_send = ctx.client_status.last_recieved_message_id - list(ctx.client_status.receieved_messages.keys())[-1]
+    if num_to_send > 0:
+        try:
+            with open(user_folder(ctx) + "messages.xsdat", "wb") as fp:
+                XsdatFile.write_int(fp, num_to_send)
+            for i in range(num_to_send):
+                    XsdatFile.write_int(fp, i)
+                    XsdatFile.write_string(fp, ctx.client_status.receieved_messages[i])
+        except Exception as ex:
+            logger.exception(ex)
+            print(f"messages.xsdat could not be opened. .xsdat file may have been locked.")
             
 def update_scenario_items(ctx: Age2GameContext) -> None:
     try:
         scenario_items_dict: dict[str, list[int]] = []
         for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.ScenarioItem], ctx.client_status.unlocked_items)):
-            xsdat_name = item.type.vanilla_scenario
+            xsdat_name = item.type.vanilla_scenario.xsdat_write_name
+            if not xsdat_name in scenario_items_dict.keys():
+                scenario_items_dict[xsdat_name] = list()
             scenario_items_dict[xsdat_name].append(item.id)
         
-        for key, value in scenario_items_dict.items():
+        for key, value in scenario_items_dict:
             with open(user_folder(ctx) + key, "wb") as fp:
                 for item in value:
                     XsdatFile.write_int(fp, item)
-            
             
     except Exception as ex:
         logger.exception(ex)
@@ -208,7 +225,7 @@ def ping_game(ctx: Age2GameContext) -> None:
             XsdatFile.write_bool(fp, not all(x == -1 for x in ctx.current_packet.item_ids)) # Free items
             XsdatFile.write_bool(fp, len(ctx.current_packet.location_ids) != 0) # Free Locations
             XsdatFile.write_bool(fp, False)
-            XsdatFile.write_bool(fp, False)
+            XsdatFile.write_bool(fp, list(ctx.client_status.receieved_messages.keys())[-1] - ctx.client_status.last_recieved_message_id > 0)
     except Exception as ex:
         logger.exception(ex)
         print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
