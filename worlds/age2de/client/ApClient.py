@@ -87,11 +87,9 @@ class Age2Context(CommonContext):
             item_data = Items.ID_TO_ITEM[received_item.item]
             self.game_ctx.client_status.unlocked_items.append(item_data)
             if received_item.player == self.slot:
-                lastAddedMessageId = list(self.game_ctx.client_status.receieved_messages.keys())[-1]
-                self.game_ctx.client_status.receieved_messages[lastAddedMessageId + 1] = f"You have found your {item_data.item_name}"
+                self.game_ctx.message_handler.add_message(f"<GREEN>You have found your {item_data.item_name}!")
             else:
-                lastAddedMessageId = list(self.game_ctx.client_status.receieved_messages.keys())[-1]
-                self.game_ctx.client_status.receieved_messages[lastAddedMessageId + 1] = f"{self.player_names[received_item.player]} has found your {item_data.item_name}"
+                self.game_ctx.message_handler.add_message(f"<GREEN>{self.player_names[received_item.player]} has found your {item_data.item_name}!")
                 
 
 def main(connect: Optional[str] = None, password: Optional[str] = None, name: Optional[str] = None):
