@@ -172,12 +172,12 @@ def send_items(ctx: Age2GameContext) -> None:
             print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
 
 def send_messages(ctx: Age2GameContext) -> None:
-    num_to_send = ctx.client_status.last_recieved_message_id - list(ctx.client_status.receieved_messages.keys())[-1]
+    num_to_send = list(ctx.client_status.receieved_messages.keys())[-1] - ctx.client_status.last_recieved_message_id
     if num_to_send > 0:
         try:
             with open(user_folder(ctx) + "messages.xsdat", "wb") as fp:
                 XsdatFile.write_int(fp, num_to_send)
-            for i in range(num_to_send):
+                for i in range(ctx.client_status.last_recieved_message_id, num_to_send + ctx.client_status.last_recieved_message_id):
                     XsdatFile.write_int(fp, i)
                     XsdatFile.write_string(fp, ctx.client_status.receieved_messages[i])
         except Exception as ex:
@@ -186,14 +186,14 @@ def send_messages(ctx: Age2GameContext) -> None:
             
 def update_scenario_items(ctx: Age2GameContext) -> None:
     try:
-        scenario_items_dict: dict[str, list[int]] = []
+        scenario_items_dict: dict[str, list[int]] = dict()
         for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.ScenarioItem], ctx.client_status.unlocked_items)):
             xsdat_name = item.type.vanilla_scenario.xsdat_write_name
             if not xsdat_name in scenario_items_dict.keys():
                 scenario_items_dict[xsdat_name] = list()
             scenario_items_dict[xsdat_name].append(item.id)
         
-        for key, value in scenario_items_dict:
+        for key, value in scenario_items_dict.items():
             with open(user_folder(ctx) + key, "wb") as fp:
                 for item in value:
                     XsdatFile.write_int(fp, item)
@@ -323,6 +323,8 @@ async def status_loop(ctx: Age2GameContext):
             continue
         if packetStatus == PacketStatus.UPDATE:
             ctx.client_interface.on_location_received(ctx.current_scenario.value, ctx.current_packet.location_ids)
+            if packet.latest_message_id != -1:
+                ctx.client_status.last_recieved_message_id = packet.latest_message_id
             ack_locations(ctx)
             
         if packetStatus == PacketStatus.ACTIVE:
@@ -334,7 +336,8 @@ async def status_loop(ctx: Age2GameContext):
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             send_items(ctx)
             update_scenario_items(ctx)
-            
+        
+        send_messages(ctx)
         free_items(ctx)
         ping_game(ctx)
         

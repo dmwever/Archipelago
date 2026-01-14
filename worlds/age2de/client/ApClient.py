@@ -1,17 +1,10 @@
 import asyncio
-import json
 import os
 import logging
-from tkinter import filedialog
-from tkinter import *
-from multiprocessing import Process
 from typing import Optional
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
 from NetUtils import NetworkItem
 import Utils
-from kvui import GameManager
-from ..campaign.CampaignReader import Campaign, Scenario
-from ..campaign.ScenarioPatcher import copy_ai, inject_ap
 from ..items import Items
 from ..locations.Locations import global_location_id
 from ..locations.Scenarios import Age2ScenarioData
@@ -82,7 +75,6 @@ class Age2Context(CommonContext):
             self._handle_received_items(args)
     
     def on_location_received(self, scenario_id: int, location_ids: list[int]) -> None:
-        logger.info(f"Found location {scenario_id}:{','.join(map(str, location_ids))}")
         if location_ids is not None:
             Utils.async_start(self.send_msgs([{
                 "cmd": "LocationChecks",
