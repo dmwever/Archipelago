@@ -20,6 +20,17 @@ def set_user_folder(settings: Age2Settings):
 class Age2CommandProcessor(ClientCommandProcessor):
     ctx: 'Age2Context'
     
+    def _cmd_connect_to_game(self) -> bool:
+        """
+        Connect to Game: Starts up the game-to-client connection. Returns false if connection is running.
+        """
+        if self.ctx.game_ctx.game_loop.done():
+            self.ctx.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.ctx.game_ctx))
+            self.output(f"Game loop started.")
+            return True
+        self.output(f"Game loop is running.")
+        return False
+    
     def _cmd_set_user_folder(self) -> bool:
         """
         Set User Folder: Lets the user assign their local age2de user folder.
@@ -61,7 +72,7 @@ class Age2Context(CommonContext):
         self.game_ctx = GameClient.Age2GameContext(True, client_interface=self)
         self.game_ctx.client_status = GameClient.ClientStatus(unlocked_scenarios=[], unlocked_items=[])
         self.game_ctx.client_status.user_folder = self.settings.user_folder
-        self.game_ctx.client_status.receieved_messages[0] = "Client Connected!"
+        self.game_ctx.message_handler.add_message("Client Connected!")
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -113,7 +124,7 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         
         ctx.game_ctx.client_status.unlocked_scenarios = [scn, scn2]
 
-        asyncio.create_task(GameClient.status_loop(ctx.game_ctx))
+        ctx.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(ctx.game_ctx))
 
         await ctx.exit_event.wait()
         ctx.game_ctx.running = False

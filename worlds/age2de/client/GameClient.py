@@ -83,6 +83,7 @@ class ClientStatus:
 @dataclass
 class Age2GameContext:
     running: bool = True
+    game_loop: asyncio.Task[None]
     paused: bool = False
     packet_repeat_count: int = 0
     current_packet: Age2Packet = Age2Packet()
@@ -218,23 +219,13 @@ def ping_game(ctx: Age2GameContext) -> None:
         print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
 
 async def short_sleep() -> None:
-    await asyncio.sleep(0.25)
-    await asyncio.sleep(0.25)
+    await asyncio.sleep(0.5)
 
 
 async def long_sleep() -> None:
     # Note(mm): One big sleep messes with the standalone stdout reader
     # 2s
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
-    await asyncio.sleep(0.2)
+    await asyncio.sleep(2)
 
 
 async def status_loop(ctx: Age2GameContext):

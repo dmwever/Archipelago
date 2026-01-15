@@ -13,18 +13,19 @@ class MessageHandler:
     _sending_messages: list[Age2Message]
     
     def __init__(self):
-        self._unsent_messages = Queue(Age2Message)
+        self._unsent_messages = Queue()
         self._sending_messages = list[Age2Message]
     
     def add_message(self, msg: str):
-        self._unsent_messages.put([self._new_message_id, msg])
+        new_msg: Age2Message = (self._new_message_id, msg)
+        self._unsent_messages.put(new_msg)
         self._new_message_id += 1
     
     def try_write_to_folder(self, user_folder: str):
         if self.is_message_sending():   #Prevents overwrite
             return
         self.__dequeue_to_sending_messages()
-        num_to_send = self._sending_messages.count()
+        num_to_send = len(self._sending_messages)
         if num_to_send > 0:
             try:
                 with open(user_folder + "messages.xsdat", "wb") as fp:
@@ -39,7 +40,7 @@ class MessageHandler:
         return not self._unsent_messages.empty()
     
     def is_message_sending(self) -> bool:
-        return self._sending_messages.count() > 0
+        return len(self._sending_messages) > 0
     
     def confirm_messages_recieved(self):
         self._sending_messages.clear()
