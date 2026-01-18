@@ -14,22 +14,21 @@ from .. import Age2Settings, Age2World
 
 logger = logging.getLogger("Client")
 
+
 def set_user_folder(settings: Age2Settings):
     settings.user_folder = settings.user_folder.browse()
 
 class Age2CommandProcessor(ClientCommandProcessor):
     ctx: 'Age2Context'
     
-    def _cmd_connect_to_game(self) -> bool:
+    def _cmd_connect_to_game(self) -> None:
         """
         Connect to Game: Starts up the game-to-client connection. Returns false if connection is running.
         """
-        if self.ctx.game_ctx.game_loop.done():
-            self.ctx.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.ctx.game_ctx))
+        started: bool = self.ctx.try_startup_game_connection()
+        if started:
             self.output(f"Game loop started.")
-            return True
         self.output(f"Game loop is running.")
-        return False
     
     def _cmd_set_user_folder(self) -> bool:
         """
@@ -46,7 +45,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
     def _cmd_debug(self, key: str) -> bool:
         """Debug: prints current value of age2 game client"""
         parts = key.split('.')
-        current: dict|list|object = self.ctx.game_client
+        current: dict|list|object = self.ctx.game_ctx
         for part in parts:
             if part.isnumeric():
                 part = int(part)
@@ -82,6 +81,8 @@ class Age2Context(CommonContext):
         await self.send_connect()
     
     def on_package(self, cmd: str, args: dict) -> None:
+        if cmd == "Connected":
+            self.try_startup_game_connection()
         if cmd == "ReceivedItems":
             self._handle_received_items(args)
     
@@ -91,6 +92,13 @@ class Age2Context(CommonContext):
                 "cmd": "LocationChecks",
                 "locations": [global_location_id(scenario_id, location_id) for location_id in location_ids],
             }]))
+
+        
+    def try_startup_game_connection(self) -> bool:
+        if self.game_ctx.game_loop is None or self.game_ctx.game_loop.done():
+            self.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.game_ctx))
+            return True
+        return False
 
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
@@ -124,10 +132,10 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         
         ctx.game_ctx.client_status.unlocked_scenarios = [scn, scn2]
 
-        ctx.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(ctx.game_ctx))
-
         await ctx.exit_event.wait()
         ctx.game_ctx.running = False
+        GameClient.deactivate_scenario(ctx)
+        GameClient.flush_files(ctx)
         ctx.server_address = None
 
         await ctx.shutdown()

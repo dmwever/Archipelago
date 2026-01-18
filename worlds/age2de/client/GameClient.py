@@ -2,6 +2,7 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
+import os
 import struct
 from typing import List, Protocol
 
@@ -83,7 +84,7 @@ class ClientStatus:
 @dataclass
 class Age2GameContext:
     running: bool = True
-    game_loop: asyncio.Task[None]
+    game_loop: asyncio.Task[None] = None
     paused: bool = False
     packet_repeat_count: int = 0
     current_packet: Age2Packet = Age2Packet()
@@ -106,21 +107,19 @@ def find_active_scenario(ctx: Age2GameContext) -> Age2ScenarioData:
             pass
     return None
 
-def deactivate_scenario(scn: Age2ScenarioData, folder: str) -> bool:
+def deactivate_scenario(ctx: Age2GameContext) -> bool:
     try:
-        with open(folder + AGE2_USER_PROFILE + scn.xsdat_read_name, "wb") as fp:
+        with open(user_folder(ctx) + ctx.current_scenario.xsdat_read_name, "wb") as fp:
             XsdatFile.write_bool(fp, False)
     except Exception as ex:
-        logger.exception(ex)
-        print(f"{scn.name} unsuccessfully deactivated. .xsdat file may have been locked.")
+        print(ex)
 
-def read_packet(scn: Age2ScenarioData, folder: str) -> Age2Packet:
+def read_packet(ctx: Age2GameContext) -> Age2Packet:
     try:
-        with open(folder + AGE2_USER_PROFILE + scn.xsdat_read_name, "rb") as fp:
+        with open(user_folder(ctx) + ctx.current_scenario.xsdat_read_name, "rb") as fp:
             return Age2Packet(fp)
     except Exception as ex:
-        logger.exception(ex)
-        print(f"Age2Packet not properly opened. Sent from {scn.name}")
+        print(ex)
         return Age2Packet()
 
 def update_packet(ctx: Age2GameContext, new_pkt: Age2Packet) -> PacketStatus:
@@ -150,8 +149,7 @@ def ack_locations(ctx: Age2GameContext) -> None:
             for location_id in ctx.current_packet.location_ids:
                 XsdatFile.write_int(fp, location_id)
     except Exception as ex:
-        logger.exception(ex)
-        print(f"locations.xsdat could not be opened. .xsdat file may have been locked.")
+        print(ex)
 
 def ack_items(ctx: Age2GameContext) -> None:
     for item in ctx.current_packet.item_ids:
@@ -169,8 +167,7 @@ def send_items(ctx: Age2GameContext) -> None:
                 for item in ctx.client_status.unlocked_items[ctx.client_status.acked_items:ctx.client_status.acked_items+num_items]:
                     XsdatFile.write_int(fp, item.id)
         except Exception as ex:
-            logger.exception(ex)
-            print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
+            print(ex)
             
 def update_scenario_items(ctx: Age2GameContext) -> None:
     try:
@@ -183,12 +180,12 @@ def update_scenario_items(ctx: Age2GameContext) -> None:
         
         for key, value in scenario_items_dict.items():
             with open(user_folder(ctx) + key, "wb") as fp:
+                XsdatFile.write_int(fp, 0) # Change to completed
                 for item in value:
                     XsdatFile.write_int(fp, item)
             
     except Exception as ex:
-        logger.exception(ex)
-        print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
+        print(ex)
 
 def user_folder(ctx: Age2GameContext):
     return ctx.client_status.user_folder + AGE2_USER_PROFILE
@@ -200,8 +197,22 @@ def free_items(ctx: Age2GameContext) -> None:
                 if item != -1:
                     XsdatFile.write_int(fp, item)
     except Exception as ex:
-        logger.exception(ex)
-        print(f"free_items.xsdat could not be opened. .xsdat file may have been locked.")
+        print(ex)
+
+def flush_files(ctx: Age2GameContext) -> None:
+    try:
+        ctx.message_handler.try_flush_from_folder()
+        
+        if os.path.exists(user_folder(ctx) + "AP.xsdat"):
+            os.remove(user_folder(ctx) + "AP.xsdat")
+        if os.path.exists(user_folder(ctx) + "items.xsdat"):
+            os.remove(user_folder(ctx) + "items.xsdat")
+        if os.path.exists(user_folder(ctx) + "free_items.xsdat"):
+            os.remove(user_folder(ctx) + "free_items.xsdat")
+        if os.path.exists(user_folder(ctx) + "locations.xsdat"):
+            os.remove(user_folder(ctx) + "locations.xsdat")
+    except Exception as ex:
+        print(ex)
 
 def ping_game(ctx: Age2GameContext) -> None:
     try:
@@ -212,19 +223,17 @@ def ping_game(ctx: Age2GameContext) -> None:
             XsdatFile.write_bool(fp, ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)) # Send Items
             XsdatFile.write_bool(fp, not all(x == -1 for x in ctx.current_packet.item_ids)) # Free items
             XsdatFile.write_bool(fp, len(ctx.current_packet.location_ids) != 0) # Free Locations
-            XsdatFile.write_bool(fp, False)
-            XsdatFile.write_bool(fp, ctx.message_handler.is_message_sending())
+            XsdatFile.write_bool(fp, False) # Send Units
+            XsdatFile.write_bool(fp, ctx.message_handler.is_message_sending()) # Send Messages
     except Exception as ex:
-        logger.exception(ex)
+        print(ex)
         print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
 
 async def short_sleep() -> None:
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.525)
 
 
 async def long_sleep() -> None:
-    # Note(mm): One big sleep messes with the standalone stdout reader
-    # 2s
     await asyncio.sleep(2)
 
 
@@ -252,7 +261,7 @@ async def status_loop(ctx: Age2GameContext):
         
         packet: Age2Packet
         try:
-            packet = read_packet(ctx.current_scenario, ctx.client_status.user_folder)
+            packet = read_packet(ctx)
         except Exception as ex:
             logger.exception(ex)
             await long_sleep()
@@ -264,12 +273,12 @@ async def status_loop(ctx: Age2GameContext):
             ctx.packet_repeat_count += 1
         
             if ctx.packet_repeat_count == 10:
-                logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
+                logger.info("The current scenario has stopped sending signals for 7.5 seconds. The game may be paused.")
                 ctx.paused = True
             
             if ctx.packet_repeat_count == 120:
-                logger.warning("The current scenario has stopped sending signals for 60 seconds. The scenario has been disconnected.")
-                deactivate_scenario(ctx.current_scenario, ctx.client_status.user_folder)
+                logger.warning("The current scenario has stopped sending signals for 90 seconds. The scenario has been disconnected.")
+                deactivate_scenario(ctx)
                 ctx.current_scenario = None
                 ctx.paused = False
                 await long_sleep()
@@ -283,19 +292,19 @@ async def status_loop(ctx: Age2GameContext):
             
         if packetStatus == PacketStatus.INACTIVE:
             logger.info("The Current Scenario is no longer active.")
-            deactivate_scenario(ctx.current_scenario, ctx.client_status.user_folder)
+            deactivate_scenario(ctx)
             ctx.current_scenario = None
             await long_sleep()
             continue
         if packetStatus == PacketStatus.WRONG_VERSION:
             logger.warning("The Scenario is expecting a different version of the AP Client.")
-            deactivate_scenario(ctx.current_scenario, ctx.client_status.user_folder)
+            deactivate_scenario(ctx)
             ctx.current_scenario = None
             await long_sleep()
             continue
         if packetStatus == PacketStatus.WRONG_WORLD:
             logger.warning("The Scenario is expecting a different world ID.")
-            deactivate_scenario(ctx.current_scenario, ctx.client_status.user_folder)
+            deactivate_scenario(ctx)
             ctx.current_scenario = None
             await long_sleep()
             continue
@@ -315,7 +324,7 @@ async def status_loop(ctx: Age2GameContext):
             send_items(ctx)
             update_scenario_items(ctx)
         
-        ctx.message_handler.try_write_to_folder(ctx.client_status.user_folder)
+        ctx.message_handler.try_write_to_folder(user_folder(ctx))
         free_items(ctx)
         ping_game(ctx)
         
