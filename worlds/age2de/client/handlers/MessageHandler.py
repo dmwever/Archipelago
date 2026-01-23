@@ -8,7 +8,7 @@ from ...campaign import XsdatFile
 type Age2Message = tuple[int, str]
 
 class MessageHandler:
-    last_sent_message_id: int = 0
+    _last_sent_message_id: int = 0
     _new_message_id: int = 0
     _unsent_message_queue: Queue[Age2Message]
     _sending_messages: list[Age2Message]
@@ -50,12 +50,24 @@ class MessageHandler:
     def is_message_sending(self) -> bool:
         return len(self._sending_messages) > 0
     
-    def confirm_messages_recieved(self):
+    def is_packet_up_to_date(self, packet_message_id) -> bool:
+        if self._last_sent_message_id <= packet_message_id:
+            return True
+        return False
+    
+    def confirm_messages_recieved(self, packet_message_id):
+        # Ensure last sent message id is strictly the same or larger than last received message packet.
+        if self._last_sent_message_id < packet_message_id:
+            self._last_sent_message_id = packet_message_id
+        
+        # Ensure new message ids are strictly the same or larger than last sent message.
+        if self._new_message_id < self._last_sent_message_id:
+            self._new_message_id = self._last_sent_message_id
         self._sending_messages.clear()
     
     def __dequeue_to_sending_messages(self):
         for msg in self._drain_queue():
-            self._last_sent_message = msg[0]
+            self._last_sent_message_id = msg[0]
             self._sending_messages.append(msg)
 
     def _drain_queue(self):

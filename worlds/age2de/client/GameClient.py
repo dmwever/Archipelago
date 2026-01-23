@@ -227,10 +227,9 @@ def ping_game(ctx: Age2GameContext) -> None:
             XsdatFile.write_bool(fp, ctx.message_handler.is_message_sending()) # Send Messages
     except Exception as ex:
         print(ex)
-        print(f"items.xsdat could not be opened. .xsdat file may have been locked.")
 
 async def short_sleep() -> None:
-    await asyncio.sleep(0.525)
+    await asyncio.sleep(0.5)
 
 
 async def long_sleep() -> None:
@@ -273,11 +272,11 @@ async def status_loop(ctx: Age2GameContext):
             ctx.packet_repeat_count += 1
         
             if ctx.packet_repeat_count == 10:
-                logger.info("The current scenario has stopped sending signals for 7.5 seconds. The game may be paused.")
+                logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
                 ctx.paused = True
             
             if ctx.packet_repeat_count == 120:
-                logger.warning("The current scenario has stopped sending signals for 90 seconds. The scenario has been disconnected.")
+                logger.warning("The current scenario has stopped sending signals for 60 seconds. The scenario has been disconnected.")
                 deactivate_scenario(ctx)
                 ctx.current_scenario = None
                 ctx.paused = False
@@ -310,8 +309,6 @@ async def status_loop(ctx: Age2GameContext):
             continue
         if packetStatus == PacketStatus.UPDATE:
             ctx.client_interface.on_location_received(ctx.current_scenario.value, ctx.current_packet.location_ids)
-            if ctx.message_handler.last_sent_message_id == packet.latest_message_id:
-                ctx.message_handler.confirm_messages_recieved()
             ack_locations(ctx)
             
         if packetStatus == PacketStatus.ACTIVE:
@@ -324,6 +321,9 @@ async def status_loop(ctx: Age2GameContext):
             send_items(ctx)
             update_scenario_items(ctx)
         
+        if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
+            ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
+            
         ctx.message_handler.try_write_to_folder(user_folder(ctx))
         free_items(ctx)
         ping_game(ctx)
