@@ -1,9 +1,11 @@
 import asyncio
+import copy
 import os
 import logging
 from typing import Optional
+import typing
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
-from NetUtils import NetworkItem
+from NetUtils import JSONMessagePart, JSONtoTextParser, NetworkItem
 import Utils
 from ..items import Items
 from ..locations.Locations import global_location_id
@@ -72,6 +74,7 @@ class Age2Context(CommonContext):
         self.game_ctx.client_status = GameClient.ClientStatus(unlocked_scenarios=[], unlocked_items=[])
         self.game_ctx.client_status.user_folder = self.settings.user_folder
         self.game_ctx.message_handler.add_message("Client Connected!")
+        self.age2_json_text_parser = Age2JSONtoTextParser(self)
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -80,11 +83,17 @@ class Age2Context(CommonContext):
         await self.get_username()
         await self.send_connect()
     
+    def on_print_json(self, args):
+        if (not self.is_uninteresting_item_send(args)) and (not self.is_connection_change(args)) and not self.is_echoed_chat(args):
+            text = self.age2_json_text_parser(copy.deepcopy(args["data"]))
+            if not text.startswith(
+                    self.player_names[self.slot] + ":"):  # TODO: Remove string heuristic in the future.
+                self.game_ctx.message_handler.add_message(text)
+        return super().on_print_json(args)
+    
     def on_package(self, cmd: str, args: dict) -> None:
         if cmd == "Connected":
             self.try_startup_game_connection()
-        if cmd == "ReceivedItems":
-            self._handle_received_items(args)
     
     def on_location_received(self, scenario_id: int, location_ids: list[int]) -> None:
         if location_ids is not None:
@@ -100,16 +109,32 @@ class Age2Context(CommonContext):
             return True
         return False
 
-    def _handle_received_items(self, args: dict) -> None:
-        received_items: list[NetworkItem] = args["items"]
-        for received_item in received_items:
-            item_data = Items.ID_TO_ITEM[received_item.item]
-            self.game_ctx.client_status.unlocked_items.append(item_data)
-            if received_item.player == self.slot:
-                self.game_ctx.message_handler.add_message(f"<GREEN>You have found your {item_data.item_name}!")
-            else:
-                self.game_ctx.message_handler.add_message(f"<GREEN>{self.player_names[received_item.player]} has found your {item_data.item_name}!")
-                
+class Age2JSONtoTextParser(JSONtoTextParser):
+    color: str = "white"
+    color_codes = {
+        # not exact color names, close enough but decent looking
+        "black": "<GREY>",
+        "red": "<RED>",
+        "green": "<GREEN>",
+        "yellow": "<YELLOW>",
+        "blue": "<BLUE>",
+        "magenta": "<PURPLE>",
+        "cyan": "<AQUA>",
+        "slateblue": "<BLUE>",
+        "plum": "<PURPLE>",
+        "salmon": "<ORANGE>",
+        "white": "",
+        "orange": "<ORANGE>",
+    }
+    
+    def __call__(self, input_object: typing.List[JSONMessagePart]) -> str:
+        text = super().__call__(input_object)
+        return self.color_codes[self.color] + text
+    
+    def _handle_color(self, node: JSONMessagePart):
+        if node["type"] == "item_id" or node["type"] == "hint_status":
+            self.color = node["color"].split(";")[0]
+        return self._handle_text(node)
 
 def main(connect: Optional[str] = None, password: Optional[str] = None, name: Optional[str] = None):
     Utils.init_logging("Age of Empires II: DE Client")
@@ -137,6 +162,7 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         GameClient.deactivate_scenario(ctx)
         GameClient.flush_files(ctx)
         ctx.server_address = None
+        ctx.game_ctx.game_loop.cancel("Shutting down game loop")
 
         await ctx.shutdown()
 
