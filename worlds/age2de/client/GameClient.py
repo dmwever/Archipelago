@@ -168,8 +168,21 @@ def send_items(ctx: Age2GameContext) -> None:
                     XsdatFile.write_int(fp, item.id)
         except Exception as ex:
             print(ex)
-            
-def update_scenario_items(ctx: Age2GameContext) -> None:
+
+def sync_starting_resources(ctx: Age2GameContext) -> None:
+    item_ids: list[int] = []
+    for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.StartingResources], ctx.client_status.unlocked_items)):
+        item_ids.append(item.id)
+    for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.TCResources], ctx.client_status.unlocked_items)):
+        item_ids.append(item.id)
+    try:
+        with open(user_folder(ctx) + "startup.xsdat", "wb") as fp:
+            for id in item_ids:
+                XsdatFile.write_int(fp, id)
+    except Exception as ex:
+        print(ex)
+
+def sync_scenario_items(ctx: Age2GameContext) -> None:
     try:
         scenario_items_dict: dict[str, list[int]] = dict()
         for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.ScenarioItem], ctx.client_status.unlocked_items)):
@@ -211,6 +224,13 @@ def flush_files(ctx: Age2GameContext) -> None:
             os.remove(user_folder(ctx) + "free_items.xsdat")
         if os.path.exists(user_folder(ctx) + "locations.xsdat"):
             os.remove(user_folder(ctx) + "locations.xsdat")
+        if os.path.exists(user_folder(ctx) + "startup.xsdat"):
+            os.remove(user_folder(ctx) + "startup.xsdat")
+        for scn in ctx.client_status.unlocked_scenarios:
+            if os.path.exists(user_folder(ctx) + scn.xsdat_write_name):
+                os.remove(user_folder(ctx) + scn.xsdat_write_name)
+            if os.path.exists(user_folder(ctx) + scn.xsdat_read_name):
+                os.remove(user_folder(ctx) + scn.xsdat_read_name)
     except Exception as ex:
         print(ex)
 
@@ -319,7 +339,8 @@ async def status_loop(ctx: Age2GameContext):
         
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             send_items(ctx)
-            update_scenario_items(ctx)
+            sync_starting_resources(ctx)
+            sync_scenario_items(ctx)
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)

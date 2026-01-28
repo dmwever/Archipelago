@@ -20,6 +20,10 @@ class TriggerActivation:
     trigger: int
 
 @dataclass
+class Victory:
+    pass
+
+@dataclass
 class ScenarioItem:
     vanilla_scenario: Age2ScenarioData
 
@@ -42,7 +46,7 @@ type FillerItemType = (
 )
 
 type ItemType = (
-    ScenarioItem | StartingResources | ProgressiveScenario | Campaign | Resources | TriggerActivation | TCResources
+    ScenarioItem | StartingResources | ProgressiveScenario | Campaign | Resources | TriggerActivation | TCResources | Victory
 )
 
 item_type_to_classification = {
@@ -53,6 +57,7 @@ item_type_to_classification = {
     Resources: ItemClassification.filler,
     StartingResources: ItemClassification.filler,
     TriggerActivation: ItemClassification.progression,
+    Victory: ItemClassification.progression,
 }
 
 class Age2Item(enum.IntEnum):
@@ -66,6 +71,8 @@ class Age2Item(enum.IntEnum):
         self.id = id
         self.item_name = name
         self.type = type
+    
+    VICTORY =                       0, "Victory", Victory()
     
     #1 - 999 = Resources (25), Ages (25), Civs (150), Buildings (100), Units (350), Techs (350) 
     

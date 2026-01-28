@@ -94,6 +94,8 @@ class Age2Context(CommonContext):
     def on_package(self, cmd: str, args: dict) -> None:
         if cmd == "Connected":
             self.try_startup_game_connection()
+        if cmd == "ReceivedItems":
+            self._handle_received_items(args)
     
     def on_location_received(self, scenario_id: int, location_ids: list[int]) -> None:
         if location_ids is not None:
@@ -102,7 +104,12 @@ class Age2Context(CommonContext):
                 "locations": [global_location_id(scenario_id, location_id) for location_id in location_ids],
             }]))
 
-        
+    def _handle_received_items(self, args: dict) -> None:
+        received_items: list[NetworkItem] = args["items"]
+        for received_item in received_items:
+            item_data = Items.ID_TO_ITEM[received_item.item]
+            self.game_ctx.client_status.unlocked_items.append(item_data)
+
     def try_startup_game_connection(self) -> bool:
         if self.game_ctx.game_loop is None or self.game_ctx.game_loop.done():
             self.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.game_ctx))
