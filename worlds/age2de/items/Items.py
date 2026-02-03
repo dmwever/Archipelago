@@ -109,14 +109,16 @@ class Age2Item(enum.IntEnum):
     TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(2, 100)
     
     # Scenario Progression Items
-    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",              ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
-    AP_ATTILA_1_BLEDAS_CAMP_TRIGGER =   1003, "Attila, The Scourge of God: Bleda's Camp",       ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
-    AP_ATTILA_1_ATTILAS_CAMP_TRIGGER =  1004, "Attila, The Scourge of God: Attila's Camp",      ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",                  ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_1_BLEDAS_CAMP_TRIGGER =   1003, "Attila, The Scourge of God: Bleda's Camp",           ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_1_ATTILAS_CAMP_TRIGGER =  1004, "Attila, The Scourge of God: Attila's Camp",          ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_3_RED_GOLD =              1005, "Attila, The Walls of Constantinople: Red Gold",      ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_3_GREEN_GOLD =            1006, "Attila, The Walls of Constantinople: Green Gold",    ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
     
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
     # Progressive Scenarios (Campaign Count - 1)
-    PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 1)
+    PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 2)
     
     #Campaign Unlocks (Unlocks first level)
     ATTILA_THE_HUN = 3500, "Attila the Hun Campaign", Campaign(Age2CampaignData.ATTILA)

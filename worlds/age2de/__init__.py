@@ -7,7 +7,7 @@ from typing import Any, ClassVar, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
-from .Options import Age2Options, ScenarioBranching
+from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
 from .rules import Rules
@@ -85,7 +85,15 @@ class Age2World(World):
         items: list[Item] = []
         tentative_items: list[Item] = []
         for item in Items.Age2Item:
-            if isinstance(item.type, Items.ScenarioItem):
+            if isinstance(item.type, Items.Victory):
+                if self.options.goal == Goal.option_campaign_completion:
+                    *_, last = self.get_regions()
+                    location_data: Locations.Age2LocationData = Locations.VICTORY_LOCATIONS[last.name]
+                    location: Location = next(l for l in last.locations if l.name == location_data.global_name())
+                    victory = self.create_item(Items.Age2Item.VICTORY.item_name)
+                    location.place_locked_item(victory)
+                    self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
+            elif isinstance(item.type, Items.ScenarioItem):
                 if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
                     items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Campaign):

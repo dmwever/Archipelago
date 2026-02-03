@@ -5,6 +5,7 @@ from .Scenarios import Age2ScenarioData
 class Age2LocationType(enum.Flag):
     VICTORY = enum.auto()
     OBJECTIVE = enum.auto()
+    OBJECTIVE_SCENARIO_COLLECTION = enum.auto()
     OBJECTIVE_BRANCHING_ALL = enum.auto()
     OBJECTIVE_BRANCHING_ANY = enum.auto()
     SIDE_QUEST = enum.auto()
@@ -63,6 +64,22 @@ class Age2LocationData(enum.IntEnum):
     ATT2_BUILD_TC =         10207, "Build a Town Center",                Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
     ATT2_BEAT_THE_ROMANS =  10208, "Beat the Romans",                    Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
     
+    ATT3_VICTORY =              10300, "Victory",                           Age2ScenarioData.AP_ATTILA_3, Age2LocationType.VICTORY
+    ATT3_GREEN_DOCK_NORTH =     10301, "Destroy Green's Northern Dock.",    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_GREEN_DOCK_SOUTH =     10302, "Destroy Green's Southern Dock.",    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_FIND_GOLD =            10303, "Find Gold",                         Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_GREEN_TC =             10304, "Destroy Green's Town Center",       Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_BLUE_DOCK_NORTH =      10305, "Destroy Blue's Northern Dock",      Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_BLUE_DOCKS_SOUTH =     10306, "Destroy Blue's Southern Docks",     Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_BUILD_CASTLE =         10307, "Build a Castle",                    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_RED_TRADE_CARTS =      10308, "Destroy Red's Trade Carts",         Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_RED_TC =               10309, "Destroy Red's Town Center",         Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_BLUE_COGS =            10310, "Destroy Blue's Trade Cogs",         Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_RED_DOCK =             10311, "Destroy Red's Dock",                Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_RED_MARKET =           10312, "Destroy Red's Market",              Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_THREATEN_WONDER =      10313, "Threaten Wonder",                   Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_DESTROY_WONDER =       10314, "Destroy Wonder",                    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_BLUE_MONASTERY =       10315, "Destroy Blue's Monastery",          Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
     
 location_from_id = {_location.id: _location for _location in Age2LocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2LocationData}
