@@ -14,10 +14,6 @@ class Resources:
 class TCResources:
     type: int
     amount: int
-    
-@dataclass
-class TriggerActivation:
-    trigger: int
 
 @dataclass
 class Victory:
@@ -46,7 +42,7 @@ type FillerItemType = (
 )
 
 type ItemType = (
-    ScenarioItem | StartingResources | ProgressiveScenario | Campaign | Resources | TriggerActivation | TCResources | Victory
+    ScenarioItem | StartingResources | ProgressiveScenario | Campaign | Resources | TCResources | Victory
 )
 
 item_type_to_classification = {
@@ -56,7 +52,6 @@ item_type_to_classification = {
     TCResources: ItemClassification.progression,
     Resources: ItemClassification.filler,
     StartingResources: ItemClassification.filler,
-    TriggerActivation: ItemClassification.progression,
     Victory: ItemClassification.progression,
 }
 
@@ -118,7 +113,7 @@ class Age2Item(enum.IntEnum):
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
     # Progressive Scenarios (Campaign Count - 1)
-    PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 2)
+    PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 5)
     
     #Campaign Unlocks (Unlocks first level)
     ATTILA_THE_HUN = 3500, "Attila the Hun Campaign", Campaign(Age2CampaignData.ATTILA)

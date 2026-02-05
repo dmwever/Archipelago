@@ -81,6 +81,22 @@ class Age2LocationData(enum.IntEnum):
     ATT3_DESTROY_WONDER =       10314, "Destroy Wonder",                    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
     ATT3_BLUE_MONASTERY =       10315, "Destroy Blue's Monastery",          Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
     
+    ATT4_VICTORY =                      10400, "Victory",                       Age2ScenarioData.AP_ATTILA_4, Age2LocationType.VICTORY
+    ATT4_DEFEAT_BURGUNDY_ALL =          10401, "Defeat Burgundy",               Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    ATT4_DEFEAT_METZ =                  10402, "Defeat Metz",                   Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE
+    ATT4_DEFEAT_ORLEANS =               10403, "Defeat Orleans",                Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE
+    ATT4_DEFEAT_ROMAN_ARMY =            10404, "Defeat the Roman Army",         Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE
+    ATT4_TRIBUTE_BURGUNDY_ALL =         10405, "Tribute 500 Gold to Burgundy",  Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    ATT4_CASTLE_BURGUNDY_ALL =          10406, "Build a Castle for Burgundy",   Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY =  10407, "Defeat or Ally Burgundy",       Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ANY
+    
+    ATT5_VICTORY =          10500, "Victory",                  Age2ScenarioData.AP_ATTILA_5, Age2LocationType.VICTORY
+    ATT4_DEFEAT_ROMANS =    10401, "Defeat the Romans",        Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT4_DEFEAT_VISIGOTHS = 10402, "Defeat the Visigoths",     Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT4_DEFEAT_ALANS =     10403, "Defeat the Alans",         Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    
+    ATT6_VICTORY =              10600, "Victory",                           Age2ScenarioData.AP_ATTILA_6, Age2LocationType.VICTORY
+    
 location_from_id = {_location.id: _location for _location in Age2LocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2LocationData}
 location_id_to_name = {_location.id: _location.global_name() for _location in Age2LocationData}
