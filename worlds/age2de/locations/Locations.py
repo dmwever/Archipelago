@@ -91,11 +91,22 @@ class Age2LocationData(enum.IntEnum):
     ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY =  10407, "Defeat or Ally Burgundy",       Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ANY
     
     ATT5_VICTORY =          10500, "Victory",                  Age2ScenarioData.AP_ATTILA_5, Age2LocationType.VICTORY
-    ATT4_DEFEAT_ROMANS =    10401, "Defeat the Romans",        Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
-    ATT4_DEFEAT_VISIGOTHS = 10402, "Defeat the Visigoths",     Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
-    ATT4_DEFEAT_ALANS =     10403, "Defeat the Alans",         Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT4_DEFEAT_ROMANS =    10501, "Defeat the Romans",        Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT4_DEFEAT_VISIGOTHS = 10502, "Defeat the Visigoths",     Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT4_DEFEAT_ALANS =     10503, "Defeat the Alans",         Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
     
-    ATT6_VICTORY =              10600, "Victory",                           Age2ScenarioData.AP_ATTILA_6, Age2LocationType.VICTORY
+    ATT6_VICTORY =                  10600, "Victory",                                   Age2ScenarioData.AP_ATTILA_6, Age2LocationType.VICTORY
+    ATT6_DEFEAT_PATAVIUM =          10601, "Defeat Patavium",                           Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DEFEAT_MEDIOLANUM =        10602, "Defeat Mediolanum",                         Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DEFEAT_AQUILEIA =          10603, "Defeat Aquileia",                           Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DEFEAT_VERONA =            10604, "Defeat Verona",                             Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DEFEAT_THE_ITALIANS =      10605, "Defeat all four Italians",                  Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_MEET_THE_POPE =            10606, "Bring Attila to Rome",                      Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DESTROY_PURPLE_WONDER =    10607, "Prevent or Destroy Purple's First Wonder",  Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DESTROY_GREEN_WONDER =     10608, "Prevent or Destroy Green's Wonder",         Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DESTROY_RED_WONDER =       10609, "Prevent or Destroy Red's Wonder",           Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DESTROY_ORANGE_WONDER =    10610, "Prevent or Destroy Orange's Wonder",        Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
+    ATT6_DESTROY_PURPLE_WONDER_2 =  10611, "Prevent or Destroy Purple's Second Wonder", Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
     
 location_from_id = {_location.id: _location for _location in Age2LocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2LocationData}
