@@ -47,7 +47,6 @@ class Age2World(World):
     
     included_civs: Scenarios.Age2Civ = Scenarios.Age2Civ.NONE
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
-    explicit_indirect_conditions = False
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
