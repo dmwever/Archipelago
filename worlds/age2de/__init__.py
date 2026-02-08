@@ -149,10 +149,6 @@ class Age2World(World):
     
     def set_rules(self) -> None:
         Rules.set_rules(self)
-        state = self.multiworld.get_all_state(False)
-        state.update_reachable_regions(self.player)
-        visualize_regions(self.get_region("Menu"), "my_world.puml", show_entrance_names=True,
-                      regions_to_highlight=state.reachable_regions[self.player])
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         return {

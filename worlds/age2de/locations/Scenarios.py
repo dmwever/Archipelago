@@ -32,3 +32,6 @@ class Age2ScenarioData(enum.IntEnum):
     
     
 scenario_names: list[Age2ScenarioData] = [scn.scenario_name for scn in Age2ScenarioData]
+CAMPAIGN_TO_SCENARIOS: dict[Age2CampaignData, list[Age2ScenarioData]] = {_campaign: [] for _campaign in Age2CampaignData}
+for _scenario in Age2ScenarioData:
+    CAMPAIGN_TO_SCENARIOS[_scenario.campaign].append(_scenario)
