@@ -38,7 +38,7 @@ class Age2World(World):
     options: Age2Options  # typing hints for option results
     topology_present = True  # show path to required location checks in spoiler
 
-    item_names = set(item.item_name for item in Items.Age2Item)
+    item_names = set(item.item_name for item in Items.Age2ItemData)
     location_names = set(location.global_name() for location in Locations.Age2LocationData)
     item_name_to_id = Items.item_name_to_id
     item_id_to_name = Items.item_id_to_name
@@ -85,13 +85,13 @@ class Age2World(World):
     def create_items(self) -> None:
         items: list[Item] = []
         tentative_items: list[Item] = []
-        for item in Items.Age2Item:
+        for item in Items.Age2ItemData:
             if isinstance(item.type, Items.Victory):
                 if self.options.goal == Goal.option_campaign_completion:
                     *_, last = self.get_regions()
                     location_data: Locations.Age2LocationData = Locations.VICTORY_LOCATIONS[last.name]
                     location: Location = next(l for l in last.locations if l.name == location_data.global_name())
-                    victory = self.create_item(Items.Age2Item.VICTORY.item_name)
+                    victory = self.create_item(Items.Age2ItemData.VICTORY.item_name)
                     location.place_locked_item(victory)
                     self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
             elif isinstance(item.type, Items.ScenarioItem):
@@ -135,7 +135,7 @@ class Age2World(World):
         item = Items.NAME_TO_ITEM[name]
         return Item(
             item.item_name,
-            Items.item_type_to_classification[item.type.__class__],
+            Items.item_type_to_classification[item.type_data],
             item.id,
             self.player
         )

@@ -55,8 +55,8 @@ item_type_to_classification = {
     Victory: ItemClassification.progression,
 }
 
-class Age2Item(enum.IntEnum):
-    def __new__(cls, id: int, name: str, type: ItemType) -> 'Age2Item':
+class Age2ItemData(enum.IntEnum):
+    def __new__(cls, id: int, name: str, type: ItemType) -> 'Age2ItemData':
         value = id
         obj = int.__new__(cls, value)
         obj._value_ = value
@@ -66,6 +66,7 @@ class Age2Item(enum.IntEnum):
         self.id = id
         self.item_name = name
         self.type = type
+        self.type_data = self.type.__class__
     
     VICTORY =                       0, "Victory", Victory()
     
@@ -126,22 +127,22 @@ class Age2Item(enum.IntEnum):
     
 
         
-NAME_TO_ITEM: dict[str, Age2Item] = {}
-ID_TO_ITEM: dict[int, Age2Item] = {}
-CATEGORY_TO_ITEMS: dict[type, list[Age2Item]] = {}
-SCENARIO_TO_ITEMS: dict[Age2ScenarioData, list[Age2Item]] = {_scenario: [] for _scenario in Age2ScenarioData}
-filler_items: list[Age2Item] = []
+NAME_TO_ITEM: dict[str, Age2ItemData] = {}
+ID_TO_ITEM: dict[int, Age2ItemData] = {}
+CATEGORY_TO_ITEMS: dict[type, list[Age2ItemData]] = {}
+SCENARIO_TO_ITEMS: dict[Age2ScenarioData, list[Age2ItemData]] = {_scenario: [] for _scenario in Age2ScenarioData}
+filler_items: list[Age2ItemData] = []
 item_id_to_name: dict[int, str] = {}
 item_name_to_id: dict[str, int] = {}
-for item in Age2Item:
+for item in Age2ItemData:
     assert item.item_name not in item_name_to_id, f"Duplicate item name: {item.item_name}"
     assert item.id not in item_id_to_name, f"Duplicate item ID: {item.id}"
     NAME_TO_ITEM[item.item_name] = item
     ID_TO_ITEM[item.id] = item
-    if item_type_to_classification[item.type.__class__] == ItemClassification.filler:
+    if item_type_to_classification[item.type_data] == ItemClassification.filler:
         filler_items.append(item)
     item_id_to_name[item.id] = item.item_name
     item_name_to_id[item.item_name] = item.id
-    CATEGORY_TO_ITEMS.setdefault(item.type.__class__, []).append(item)
-    if item.type.__class__ == ScenarioItem:
+    CATEGORY_TO_ITEMS.setdefault(item.type_data, []).append(item)
+    if item.type_data == ScenarioItem:
         SCENARIO_TO_ITEMS[item.type.vanilla_scenario].append(item)

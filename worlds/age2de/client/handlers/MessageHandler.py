@@ -12,6 +12,7 @@ class MessageHandler:
     _new_message_id: int = 0
     _unsent_message_queue: Queue[Age2Message]
     _sending_messages: list[Age2Message]
+    _user_folder: str
     
     def __init__(self):
         self._unsent_message_queue = Queue()
@@ -22,14 +23,17 @@ class MessageHandler:
         self._unsent_message_queue.put(new_msg)
         self._new_message_id += 1
     
-    def try_write_to_folder(self, user_folder: str):
+    def set_user_folder(self, user_folder: str):
+        self._user_folder = user_folder
+    
+    def try_write_to_folder(self):
         if self.is_message_sending():   #Prevents overwrite
             return
         self.__dequeue_to_sending_messages()
         num_to_send = len(self._sending_messages)
         if num_to_send > 0:
             try:
-                with open(user_folder + "messages.xsdat", "wb") as fp:
+                with open(self._user_folder + "messages.xsdat", "wb") as fp:
                     XsdatFile.write_int(fp, num_to_send)
                     for msg in self._sending_messages:
                         XsdatFile.write_int(fp, msg[0])
@@ -37,10 +41,10 @@ class MessageHandler:
             except Exception as ex:
                 print(ex)
     
-    def try_flush_from_folder(self, user_folder: str):
+    def try_flush_from_folder(self):
         try:
-            if os.path.exists(user_folder + "messages.xsdat"):
-                os.remove(user_folder + "messages.xsdat")
+            if os.path.exists(self._user_folder + "messages.xsdat"):
+                os.remove(self._user_folder + "messages.xsdat")
         except Exception as ex:
             print(ex)
     

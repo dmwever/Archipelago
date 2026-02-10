@@ -6,12 +6,14 @@ import os
 import struct
 from typing import List, Protocol
 
+
+from .handlers.CampaignHandler import CampaignHandler
 from .handlers.MessageHandler import MessageHandler
 
 from ..campaign import XsdatFile
 from ..items import Items
-from ..items.Items import Age2Item
-from ..locations.Scenarios import Age2ScenarioData
+from ..items.Items import Age2ItemData, ScenarioItem
+from ..locations.Campaigns import Age2CampaignData
 
 logger = logging.getLogger("Client")
 
@@ -76,8 +78,7 @@ class PacketStatus(Enum):
 
 @dataclass
 class ClientStatus:
-    unlocked_scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
-    unlocked_items: list[Age2Item] = field(default_factory=list[Age2Item])
+    unlocked_items: list[Age2ItemData] = field(default_factory=list[Age2ItemData])
     acked_items: int = 0
     user_folder: str = ''
 
@@ -88,35 +89,18 @@ class Age2GameContext:
     paused: bool = False
     packet_repeat_count: int = 0
     current_packet: Age2Packet = Age2Packet()
-    current_scenario: Age2ScenarioData = None
     client_status: ClientStatus = None
+    campaign_handler: CampaignHandler = CampaignHandler([Age2CampaignData.ATTILA])
     message_handler: MessageHandler = MessageHandler()
     client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
-    
 
-def find_active_scenario(ctx: Age2GameContext) -> Age2ScenarioData:
-    for scenario in ctx.client_status.unlocked_scenarios:
-        try:
-            with open(user_folder(ctx) + scenario.xsdat_read_name, "rb") as fp:
-                active = fp.peek(1)[:1]
-                if (active != b'\x00'):
-                    return scenario
-                else:
-                    print("Not active")
-        except:
-            pass
-    return None
-
-def deactivate_scenario(ctx: Age2GameContext) -> bool:
-    try:
-        with open(user_folder(ctx) + ctx.current_scenario.xsdat_read_name, "wb") as fp:
-            XsdatFile.write_bool(fp, False)
-    except Exception as ex:
-        print(ex)
+def update_game_user_folder(ctx: Age2GameContext, user_folder: str):
+    ctx.message_handler.set_user_folder(user_folder)
+    ctx.campaign_handler.set_user_folder(user_folder)
 
 def read_packet(ctx: Age2GameContext) -> Age2Packet:
     try:
-        with open(user_folder(ctx) + ctx.current_scenario.xsdat_read_name, "rb") as fp:
+        with open(user_folder(ctx) + ctx.campaign_handler.active_scenario.data.xsdat_read_name, "rb") as fp:
             return Age2Packet(fp)
     except Exception as ex:
         print(ex)
@@ -182,24 +166,6 @@ def sync_starting_resources(ctx: Age2GameContext) -> None:
     except Exception as ex:
         print(ex)
 
-def sync_scenario_items(ctx: Age2GameContext) -> None:
-    try:
-        scenario_items_dict: dict[str, list[int]] = dict()
-        for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.ScenarioItem], ctx.client_status.unlocked_items)):
-            xsdat_name = item.type.vanilla_scenario.xsdat_write_name
-            if not xsdat_name in scenario_items_dict.keys():
-                scenario_items_dict[xsdat_name] = list()
-            scenario_items_dict[xsdat_name].append(item.id)
-        
-        for key, value in scenario_items_dict.items():
-            with open(user_folder(ctx) + key, "wb") as fp:
-                XsdatFile.write_int(fp, 0) # Change to completed
-                for item in value:
-                    XsdatFile.write_int(fp, item)
-            
-    except Exception as ex:
-        print(ex)
-
 def user_folder(ctx: Age2GameContext):
     return ctx.client_status.user_folder + AGE2_USER_PROFILE
         
@@ -215,6 +181,7 @@ def free_items(ctx: Age2GameContext) -> None:
 def flush_files(ctx: Age2GameContext) -> None:
     try:
         ctx.message_handler.try_flush_from_folder()
+        ctx.campaign_handler.try_flush_from_folder()
         
         if os.path.exists(user_folder(ctx) + "AP.xsdat"):
             os.remove(user_folder(ctx) + "AP.xsdat")
@@ -226,11 +193,6 @@ def flush_files(ctx: Age2GameContext) -> None:
             os.remove(user_folder(ctx) + "locations.xsdat")
         if os.path.exists(user_folder(ctx) + "startup.xsdat"):
             os.remove(user_folder(ctx) + "startup.xsdat")
-        for scn in ctx.client_status.unlocked_scenarios:
-            if os.path.exists(user_folder(ctx) + scn.xsdat_write_name):
-                os.remove(user_folder(ctx) + scn.xsdat_write_name)
-            if os.path.exists(user_folder(ctx) + scn.xsdat_read_name):
-                os.remove(user_folder(ctx) + scn.xsdat_read_name)
     except Exception as ex:
         print(ex)
 
@@ -259,24 +221,21 @@ async def long_sleep() -> None:
 async def status_loop(ctx: Age2GameContext):
     while ctx.running:
         # Check all unlocked scenarios every 2 seconds to find active scenario.
-        if not ctx.current_scenario:
+        if not ctx.campaign_handler.active_scenario:
             logger.info("Searching for active scenario.")
-            scn = find_active_scenario(ctx)
-            if not scn:
+            scn = ctx.campaign_handler.find_active_scenario()
+            if not ctx.campaign_handler.has_active_scenario():
                 logger.info("No active scenario found. Make sure the game is running and the scenario is unpaused.")
                 await long_sleep()
                 continue
-            ctx.current_scenario = scn
         
         # Check all unlocked scenarios every 2.5 seconds after scenario stops updating packet in case user has switched scenarios.
         if ctx.paused and ctx.packet_repeat_count % 5 == 0:
             logger.info("Searching for an active scenario. The game may be paused.")
-            scn = find_active_scenario(ctx)
-            if not scn:
+            scn = ctx.campaign_handler.find_active_scenario()
+            if not ctx.campaign_handler.has_active_scenario():
                 await short_sleep()
                 continue
-            if scn != ctx.current_scenario:
-                ctx.current_scenario = scn
         
         packet: Age2Packet
         try:
@@ -297,8 +256,7 @@ async def status_loop(ctx: Age2GameContext):
             
             if ctx.packet_repeat_count == 120:
                 logger.warning("The current scenario has stopped sending signals for 60 seconds. The scenario has been disconnected.")
-                deactivate_scenario(ctx)
-                ctx.current_scenario = None
+                ctx.campaign_handler.deactivate_scenario()
                 ctx.paused = False
                 await long_sleep()
                 continue
@@ -311,24 +269,21 @@ async def status_loop(ctx: Age2GameContext):
             
         if packetStatus == PacketStatus.INACTIVE:
             logger.info("The Current Scenario is no longer active.")
-            deactivate_scenario(ctx)
-            ctx.current_scenario = None
+            ctx.campaign_handler.deactivate_scenario()
             await long_sleep()
             continue
         if packetStatus == PacketStatus.WRONG_VERSION:
             logger.warning("The Scenario is expecting a different version of the AP Client.")
-            deactivate_scenario(ctx)
-            ctx.current_scenario = None
+            ctx.campaign_handler.deactivate_scenario()
             await long_sleep()
             continue
         if packetStatus == PacketStatus.WRONG_WORLD:
             logger.warning("The Scenario is expecting a different world ID.")
-            deactivate_scenario(ctx)
-            ctx.current_scenario = None
+            ctx.campaign_handler.deactivate_scenario()
             await long_sleep()
             continue
         if packetStatus == PacketStatus.UPDATE:
-            ctx.client_interface.on_location_received(ctx.current_scenario.value, ctx.current_packet.location_ids)
+            ctx.client_interface.on_location_received(ctx.campaign_handler.active_scenario.data.value, ctx.current_packet.location_ids)
             ack_locations(ctx)
             
         if packetStatus == PacketStatus.ACTIVE:
@@ -340,7 +295,7 @@ async def status_loop(ctx: Age2GameContext):
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             send_items(ctx)
             sync_starting_resources(ctx)
-            sync_scenario_items(ctx)
+            ctx.campaign_handler.sync_scenario_items(filter(item in Items.CATEGORY_TO_ITEMS[ScenarioItem] for item in ctx.client_status.unlocked_items))
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)

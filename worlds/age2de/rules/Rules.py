@@ -7,7 +7,7 @@ from worlds.age2de.Options import Goal
 
 from ..locations.Scenarios import Age2ScenarioData, scenario_names
 
-from ..items.Items import Age2Item
+from ..items.Items import Age2ItemData
 from ..items.Events import Event
 from ..locations.Locations import TYPE_TO_LOCATIONS, VICTORY_LOCATIONS, Age2LocationData, Age2LocationType
 from worlds.generic.Rules import CollectionRule, set_rule
@@ -61,7 +61,7 @@ def set_rules(world: Age2World) -> None:
 # starting tc rules
 
 def can_build_tc(world: Age2World) -> CollectionRule:
-    return lambda state: state.has_all([Age2Item.TOWN_CENTER_STONE.item_name, Age2Item.TOWN_CENTER_WOOD.item_name], world.player)
+    return lambda state: state.has_all([Age2ItemData.TOWN_CENTER_STONE.item_name, Age2ItemData.TOWN_CENTER_WOOD.item_name], world.player)
  
 # scenario-specific rules
 

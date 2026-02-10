@@ -10,6 +10,7 @@ import Utils
 from ..items import Items
 from ..locations.Locations import global_location_id
 from ..locations.Scenarios import Age2ScenarioData
+from ..locations.Campaigns import Age2CampaignData
 from .ApGui import Age2Manager
 import worlds.age2de.client.GameClient as GameClient
 from .. import Age2Settings, Age2World
@@ -41,6 +42,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         """
         set_user_folder(self.ctx.settings)
         self.ctx.game_ctx.client_status.user_folder = self.ctx.settings.user_folder
+        GameClient.update_game_user_folder(self.ctx.game_ctx)
         self.output(f"User folder now assigned to {self.ctx.game_ctx.client_status.user_folder}")
         return True
     
@@ -71,7 +73,7 @@ class Age2Context(CommonContext):
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
         self.game_ctx = GameClient.Age2GameContext(True, client_interface=self)
-        self.game_ctx.client_status = GameClient.ClientStatus(unlocked_scenarios=[], unlocked_items=[])
+        self.game_ctx.client_status = GameClient.ClientStatus(unlocked_items=[])
         self.game_ctx.client_status.user_folder = self.settings.user_folder
         self.game_ctx.message_handler.add_message("Client Connected!")
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
@@ -108,6 +110,8 @@ class Age2Context(CommonContext):
         received_items: list[NetworkItem] = args["items"]
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
+            if item_data.type_data is Items.ProgressiveScenario:
+                self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type_data.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)
 
     def try_startup_game_connection(self) -> bool:
@@ -156,13 +160,10 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
             server_loop(ctx), name="ServerLoop")
         Age2Manager.start_ap_ui(ctx)
         await asyncio.sleep(1)
-
-        scn = Age2ScenarioData.AP_ATTILA_1
-        scn2 = Age2ScenarioData.AP_ATTILA_2
                 
         # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
         
-        ctx.game_ctx.client_status.unlocked_scenarios = [scn, scn2]
+        ctx.game_ctx.campaign_handler.unlock_campaign(Age2CampaignData.ATTILA)
 
         await ctx.exit_event.wait()
         ctx.game_ctx.running = False
