@@ -24,6 +24,11 @@ class ScenarioItem:
     vanilla_scenario: Age2ScenarioData
 
 @dataclass
+class Mercenary:
+    vanilla_scenario: Age2ScenarioData
+    troop_count: dict[int, int] # UnitId, Count
+
+@dataclass
 class ProgressiveScenario:
     vanilla_campaign: Age2CampaignData
     num_additional_scenarios: int
@@ -42,7 +47,7 @@ type FillerItemType = (
 )
 
 type ItemType = (
-    ScenarioItem | StartingResources | ProgressiveScenario | Campaign | Resources | TCResources | Victory
+    ScenarioItem | StartingResources | ProgressiveScenario | Mercenary | Campaign | Resources | TCResources | Victory
 )
 
 item_type_to_classification = {
@@ -50,8 +55,9 @@ item_type_to_classification = {
     ProgressiveScenario: ItemClassification.progression,
     Campaign: ItemClassification.progression,
     TCResources: ItemClassification.progression,
+    Mercenary: ItemClassification.useful,
     Resources: ItemClassification.filler,
-    StartingResources: ItemClassification.filler,
+    StartingResources: ItemClassification.useful,
     Victory: ItemClassification.progression,
 }
 
@@ -105,11 +111,11 @@ class Age2ItemData(enum.IntEnum):
     TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(2, 100)
     
     # Scenario Progression Items
-    AP_ATTILA_2_VILLAGERS_TRIGGER =     1002, "Attila, The Great Ride: Villagers",                  ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
-    AP_ATTILA_1_BLEDAS_CAMP_TRIGGER =   1003, "Attila, The Scourge of God: Bleda's Camp",           ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
-    AP_ATTILA_1_ATTILAS_CAMP_TRIGGER =  1004, "Attila, The Scourge of God: Attila's Camp",          ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
-    AP_ATTILA_3_RED_GOLD =              1005, "Attila, The Walls of Constantinople: Red Gold",      ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
-    AP_ATTILA_3_GREEN_GOLD =            1006, "Attila, The Walls of Constantinople: Green Gold",    ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
+    AP_ATTILA_1_BLEDAS_CAMP =   1002, "Attila, The Scourge of God: Bleda's Camp",           ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_1_ATTILAS_CAMP =  1003, "Attila, The Scourge of God: Attila's Camp",          ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_2_VILLAGERS =     1004, "Attila, The Great Ride: Villagers",                  ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_3_RED_GOLD =      1005, "Attila, The Walls of Constantinople: Red Gold",      ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
+    AP_ATTILA_3_GREEN_GOLD =    1006, "Attila, The Walls of Constantinople: Green Gold",    ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
     
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
@@ -122,8 +128,10 @@ class Age2ItemData(enum.IntEnum):
     #4000 - 4999 = Troops, Future Use
     
     #Troop Items
-    AP_ATTILA_2_SCYTHIAN_TROOP =     4000, "Scythian Troops",       ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
-    AP_ATTILA_1_MANGUDAI_TRIGGER =   4001, "Scythian Mangudai",     ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_1_MANGUDAI =                  4000, "Scythian Mangudai",          Mercenary(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Roman Villagers",            Mercenary(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2)
     
 
         

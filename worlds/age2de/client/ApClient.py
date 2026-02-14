@@ -74,7 +74,7 @@ class Age2Context(CommonContext):
         super().__init__(server_address, password)
         self.game_ctx = GameClient.Age2GameContext(True, client_interface=self)
         self.game_ctx.client_status = GameClient.ClientStatus(unlocked_items=[])
-        self.game_ctx.client_status.user_folder = self.settings.user_folder
+        GameClient.update_game_user_folder(self.game_ctx, self.settings.user_folder)
         self.game_ctx.message_handler.add_message("Client Connected!")
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
         
@@ -95,6 +95,7 @@ class Age2Context(CommonContext):
     
     def on_package(self, cmd: str, args: dict) -> None:
         if cmd == "Connected":
+            GameClient.flush_files(self.game_ctx)
             self.try_startup_game_connection()
         if cmd == "ReceivedItems":
             self._handle_received_items(args)
@@ -111,7 +112,7 @@ class Age2Context(CommonContext):
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.type_data is Items.ProgressiveScenario:
-                self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type_data.vanilla_campaign)
+                self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)
 
     def try_startup_game_connection(self) -> bool:
@@ -167,7 +168,7 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
 
         await ctx.exit_event.wait()
         ctx.game_ctx.running = False
-        GameClient.deactivate_scenario(ctx)
+        ctx.game_ctx.campaign_handler.deactivate_scenario()
         GameClient.flush_files(ctx)
         ctx.server_address = None
         ctx.game_ctx.game_loop.cancel("Shutting down game loop")

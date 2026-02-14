@@ -27,9 +27,9 @@ class ManagedCampaign:
     unlocked: bool = False
     
 class CampaignHandler:
-    _campaigns: dict[Age2CampaignData, ManagedCampaign]
-    _scenarios: dict[Age2ScenarioData, ManagedScenario]
-    _scenario_items: dict[Age2ItemData, ManagedScenarioItem]
+    _campaigns: dict[Age2CampaignData, ManagedCampaign] = dict()
+    _scenarios: dict[Age2ScenarioData, ManagedScenario] = dict()
+    _scenario_items: dict[Age2ItemData, ManagedScenarioItem] = dict()
     
     active_scenario: ManagedScenario = None
     
@@ -40,10 +40,10 @@ class CampaignHandler:
                 items_as_data: list[Age2ItemData] = []
                 for item_data in SCENARIO_TO_ITEMS[scn_data]:
                     managed_item = ManagedScenarioItem(data=item_data, scenario=scn_data)
-                    items_as_data.append[item_data]
+                    items_as_data.append(item_data)
                     self._scenario_items[item_data] = managed_item
                 managed_scenario = ManagedScenario(data=scn_data, campaign=cpn_data, items=items_as_data)
-                scenarios_as_data.append[scn_data]
+                scenarios_as_data.append(scn_data)
                 self._scenarios[scn_data] = managed_scenario
             managed_campaign = ManagedCampaign(data=cpn_data, scenarios=scenarios_as_data)
             self._campaigns[cpn_data] = managed_campaign
@@ -92,8 +92,8 @@ class CampaignHandler:
                             return
                         else:
                             print("Not active")
-                except:
-                    pass
+                except Exception as ex:
+                    print(ex)
         self.active_scenario = None
     
     def has_active_scenario(self) -> bool:

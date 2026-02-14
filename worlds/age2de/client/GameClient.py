@@ -94,9 +94,10 @@ class Age2GameContext:
     message_handler: MessageHandler = MessageHandler()
     client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
 
-def update_game_user_folder(ctx: Age2GameContext, user_folder: str):
-    ctx.message_handler.set_user_folder(user_folder)
-    ctx.campaign_handler.set_user_folder(user_folder)
+def update_game_user_folder(ctx: Age2GameContext, folder: str):
+    ctx.client_status.user_folder = folder
+    ctx.message_handler.set_user_folder(user_folder(ctx))
+    ctx.campaign_handler.set_user_folder(user_folder(ctx))
 
 def read_packet(ctx: Age2GameContext) -> Age2Packet:
     try:
@@ -295,12 +296,12 @@ async def status_loop(ctx: Age2GameContext):
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             send_items(ctx)
             sync_starting_resources(ctx)
-            ctx.campaign_handler.sync_scenario_items(filter(item in Items.CATEGORY_TO_ITEMS[ScenarioItem] for item in ctx.client_status.unlocked_items))
+            ctx.campaign_handler.sync_scenario_items(list(set(ctx.client_status.unlocked_items).intersection(Items.CATEGORY_TO_ITEMS[ScenarioItem])))
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
             
-        ctx.message_handler.try_write_to_folder(user_folder(ctx))
+        ctx.message_handler.try_write_to_folder()
         free_items(ctx)
         ping_game(ctx)
         
