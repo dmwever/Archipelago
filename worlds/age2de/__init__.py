@@ -97,6 +97,9 @@ class Age2World(World):
             elif isinstance(item.type, Items.ScenarioItem):
                 if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
                     items.append(self.create_item(item.item_name))
+            elif isinstance(item.type, Items.Mercenary):
+                if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
+                    items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Campaign):
                 if item.type.vanilla_campaign in self.included_campaigns:
                     ap_item = self.create_item(item.item_name)

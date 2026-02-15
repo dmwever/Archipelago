@@ -5,7 +5,7 @@ import logging
 from typing import Optional
 import typing
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
-from NetUtils import JSONMessagePart, JSONtoTextParser, NetworkItem
+from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkItem
 import Utils
 from ..items import Items
 from ..locations.Locations import global_location_id
@@ -111,6 +111,8 @@ class Age2Context(CommonContext):
         received_items: list[NetworkItem] = args["items"]
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
+            if item_data.item_name is "Victory":
+                Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
             if item_data.type_data is Items.ProgressiveScenario:
                 self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)

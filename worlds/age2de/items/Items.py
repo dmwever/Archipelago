@@ -26,7 +26,7 @@ class ScenarioItem:
 @dataclass
 class Mercenary:
     vanilla_scenario: Age2ScenarioData
-    troop_count: dict[int, int] # UnitId, Count
+    # troop_count: dict[int, int] # UnitId, Count
 
 @dataclass
 class ProgressiveScenario:
