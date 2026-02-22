@@ -45,9 +45,9 @@ class Age2CommandProcessor(ClientCommandProcessor):
         GameClient.update_game_user_folder(self.ctx.game_ctx)
         self.output(f"User folder now assigned to {self.ctx.game_ctx.client_status.user_folder}")
     
-    def _cmd_deactivate_connection(self) -> None:
+    def _cmd_refresh(self) -> None:
         """
-        Deactivate Connection: Lets the user disconnect from a campaign or scenario connection manually. Usually only needed when quickly switching between campaigns.
+        Refresh: disconnects and reconnects to the campaign or scenario. Usually only needed when quickly switching between campaigns or standalone scenarios.
         """
         self.output(f"Disconnecting from {self.ctx.game_ctx.campaign_handler.active_file}")
         self.ctx.game_ctx.campaign_handler.active_file = None
