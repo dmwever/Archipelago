@@ -26,14 +26,14 @@ class Age2CommandProcessor(ClientCommandProcessor):
     
     def _cmd_connect_to_game(self) -> None:
         """
-        Connect to Game: Starts up the game-to-client connection. Returns false if connection is running.
+        Connect to Game: Starts up the game-to-client connection.
         """
         started: bool = self.ctx.try_startup_game_connection()
         if started:
             self.output(f"Game loop started.")
-        self.output(f"Game loop is running.")
+        self.output(f"Game loop already is running.")
     
-    def _cmd_set_user_folder(self) -> bool:
+    def _cmd_set_user_folder(self) -> None:
         """
         Set User Folder: Lets the user assign their local age2de user folder.
         Usually located at:
@@ -44,7 +44,13 @@ class Age2CommandProcessor(ClientCommandProcessor):
         self.ctx.game_ctx.client_status.user_folder = self.ctx.settings.user_folder
         GameClient.update_game_user_folder(self.ctx.game_ctx)
         self.output(f"User folder now assigned to {self.ctx.game_ctx.client_status.user_folder}")
-        return True
+    
+    def _cmd_deactivate_connection(self) -> None:
+        """
+        Deactivate Connection: Lets the user disconnect from a campaign or scenario connection manually. Usually only needed when quickly switching between campaigns.
+        """
+        self.output(f"Disconnecting from {self.ctx.game_ctx.campaign_handler.active_file}")
+        self.ctx.game_ctx.campaign_handler.active_file = None
     
     def _cmd_debug(self, key: str) -> bool:
         """Debug: prints current value of age2 game client"""

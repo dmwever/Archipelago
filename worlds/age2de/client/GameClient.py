@@ -46,6 +46,8 @@ class Age2Packet:
     world_id: int = -1
     latest_message_id: int = -1
     item_ids = [-1 for _ in range(12)]
+    completed: int = 0
+    scenario_id: int = 0
     location_ids: List[int]
     
     def __init__(self, fp = None):
@@ -59,7 +61,9 @@ class Age2Packet:
         self.latest_message_id = XsdatFile.read_int(fp)
         for num in range(len(self.item_ids)):
             self.item_ids[num] = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 31)
+        self.completed = XsdatFile.read_int(fp)
+        self.scenario_id = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 30)
         while True:
             data = fp.read(4)
             if not data:
@@ -101,7 +105,7 @@ def update_game_user_folder(ctx: Age2GameContext, folder: str):
 
 def read_packet(ctx: Age2GameContext) -> Age2Packet:
     try:
-        with open(user_folder(ctx) + ctx.campaign_handler.active_scenario.data.xsdat_read_name, "rb") as fp:
+        with open(user_folder(ctx) + ctx.campaign_handler.active_file.data.campaign.xsdat_read_name, "rb") as fp:
             return Age2Packet(fp)
     except Exception as ex:
         print(ex)
@@ -222,21 +226,25 @@ async def long_sleep() -> None:
 async def status_loop(ctx: Age2GameContext):
     while ctx.running:
         # Check all unlocked scenarios every 2 seconds to find active scenario.
-        if not ctx.campaign_handler.active_scenario:
+        if not ctx.campaign_handler.active_file:
             logger.info("Searching for active scenario.")
-            scn = ctx.campaign_handler.find_active_scenario()
+            ctx.campaign_handler.find_active_campaign()
             if not ctx.campaign_handler.has_active_scenario():
-                logger.info("No active scenario found. Make sure the game is running and the scenario is unpaused.")
-                await long_sleep()
-                continue
+                ctx.campaign_handler.find_active_scenario()
+                if not ctx.campaign_handler.has_active_scenario():
+                    logger.info("No active scenario found. Make sure the game is running and the scenario is unpaused.")
+                    await long_sleep()
+                    continue
         
         # Check all unlocked scenarios every 2.5 seconds after scenario stops updating packet in case user has switched scenarios.
         if ctx.paused and ctx.packet_repeat_count % 5 == 0:
             logger.info("Searching for an active scenario. The game may be paused.")
-            scn = ctx.campaign_handler.find_active_scenario()
+            ctx.campaign_handler.find_active_campaign()
             if not ctx.campaign_handler.has_active_scenario():
-                await short_sleep()
-                continue
+                ctx.campaign_handler.find_active_scenario()
+                if not ctx.campaign_handler.has_active_scenario():
+                    await short_sleep()
+                    continue
         
         packet: Age2Packet
         try:
@@ -284,7 +292,7 @@ async def status_loop(ctx: Age2GameContext):
             await long_sleep()
             continue
         if packetStatus == PacketStatus.UPDATE:
-            ctx.client_interface.on_location_received(ctx.campaign_handler.active_scenario.data.value, ctx.current_packet.location_ids)
+            ctx.client_interface.on_location_received(ctx.current_packet.scenario_id, ctx.current_packet.location_ids)
             ack_locations(ctx)
             
         if packetStatus == PacketStatus.ACTIVE:

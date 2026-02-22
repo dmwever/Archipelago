@@ -3,7 +3,7 @@ import os
 
 from ...campaign import XsdatFile
 from ...items.Items import Age2ItemData, SCENARIO_TO_ITEMS
-from ...locations.Scenarios import Age2ScenarioData, CAMPAIGN_TO_SCENARIOS
+from ...locations.Scenarios import Age2ScenarioData, CAMPAIGN_TO_SCENARIOS, scenario_from_id
 from ...locations.Campaigns import Age2CampaignData
 
 @dataclass
@@ -31,7 +31,7 @@ class CampaignHandler:
     _scenarios: dict[Age2ScenarioData, ManagedScenario] = dict()
     _scenario_items: dict[Age2ItemData, ManagedScenarioItem] = dict()
     
-    active_scenario: ManagedScenario = None
+    active_file: ManagedScenario = None
     
     def __init__(self, data: list[Age2CampaignData]):
         for cpn_data in data:
@@ -81,6 +81,23 @@ class CampaignHandler:
         
         print("All scenarios in this campaign are already unlocked.")
     
+    def find_active_campaign(self):
+        for campaign in self._campaigns.values():
+            if campaign.unlocked:
+                try:
+                    with open(self._user_folder + campaign.data.xsdat_read_name, "rb") as fp:
+                        active = fp.peek(1)[:1]
+                        if (active != b'\x00'):
+                            XsdatFile.skip_int(fp, 18)
+                            scenario_id = XsdatFile.read_int(fp)
+                            self.active_file = self._scenarios[scenario_from_id[scenario_id]]
+                            return
+                        else:
+                            print("Not active")
+                except Exception as ex:
+                    print(ex)
+        self.active_file = None
+    
     def find_active_scenario(self):
         for scenario in self._scenarios.values():
             if scenario.unlocked:
@@ -88,25 +105,25 @@ class CampaignHandler:
                     with open(self._user_folder + scenario.data.xsdat_read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
                         if (active != b'\x00'):
-                            self.active_scenario = scenario
+                            self.active_file = scenario
                             return
                         else:
                             print("Not active")
                 except Exception as ex:
                     print(ex)
-        self.active_scenario = None
+        self.active_file = None
     
     def has_active_scenario(self) -> bool:
-        return self.active_scenario is not None
+        return self.active_file is not None
     
     
     def deactivate_scenario(self) -> bool:
         try:
-            with open(self._user_folder + self.active_scenario.data.xsdat_read_name, "wb") as fp:
+            with open(self._user_folder + self.active_file.data.xsdat_read_name, "wb") as fp:
                 XsdatFile.write_bool(fp, False)
         except Exception as ex:
             print(ex)
-        self.active_scenario = None
+        self.active_file = None
     
     def sync_scenario_items(self, unlocked_items: list[Age2ItemData]) -> None:
         try:

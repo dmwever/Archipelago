@@ -30,7 +30,7 @@ class Age2ScenarioData(enum.IntEnum):
     AP_ATTILA_5 =        "The Catalunian Fields", "H5", "AP_Attila_5.xsdat", "ATT5.xsdat", Age2CampaignData.ATTILA, 5, Age2Civ.HUNS
     AP_ATTILA_6 =             "The Fall of Rome", "H6", "AP_Attila_6.xsdat", "ATT6.xsdat", Age2CampaignData.ATTILA, 6, Age2Civ.HUNS
     
-    
+scenario_from_id = {_scenario.id: _scenario for _scenario in Age2ScenarioData}
 scenario_names: list[Age2ScenarioData] = [scn.scenario_name for scn in Age2ScenarioData]
 CAMPAIGN_TO_SCENARIOS: dict[Age2CampaignData, list[Age2ScenarioData]] = {_campaign: [] for _campaign in Age2CampaignData}
 for _scenario in Age2ScenarioData:
