@@ -52,7 +52,7 @@ class MessageHandler:
         return not self._unsent_message_queue.empty()
     
     def is_message_sending(self) -> bool:
-        return len(self._sending_messages) > 0
+        return  os.path.exists(self._user_folder + "messages.xsdat") and len(self._sending_messages) > 0
     
     def is_packet_up_to_date(self, packet_message_id) -> bool:
         if self._last_sent_message_id <= packet_message_id:

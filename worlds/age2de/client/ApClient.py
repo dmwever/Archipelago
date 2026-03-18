@@ -41,8 +41,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         Select the <STRING_OF_NUMBERS> folder as the user folder.
         """
         set_user_folder(self.ctx.settings)
-        self.ctx.game_ctx.client_status.user_folder = self.ctx.settings.user_folder
-        GameClient.update_game_user_folder(self.ctx.game_ctx)
+        GameClient.update_game_user_folder(self.ctx.game_ctx, self.ctx.settings.user_folder)
         self.output(f"User folder now assigned to {self.ctx.game_ctx.client_status.user_folder}")
     
     def _cmd_refresh(self) -> None:
