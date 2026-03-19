@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 import os
 
+from .FolderHandler import FolderHandler
+
 from ...campaign import XsdatFile
 from ...items.Items import Age2ItemData, SCENARIO_TO_ITEMS
 from ...locations.Scenarios import Age2ScenarioData, CAMPAIGN_TO_SCENARIOS, scenario_from_id
@@ -26,7 +28,7 @@ class ManagedCampaign:
     scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
     unlocked: bool = False
     
-class CampaignHandler:
+class CampaignHandler(FolderHandler):
     _campaigns: dict[Age2CampaignData, ManagedCampaign] = dict()
     _scenarios: dict[Age2ScenarioData, ManagedScenario] = dict()
     _scenario_items: dict[Age2ItemData, ManagedScenarioItem] = dict()
@@ -47,17 +49,14 @@ class CampaignHandler:
                 self._scenarios[scn_data] = managed_scenario
             managed_campaign = ManagedCampaign(data=cpn_data, scenarios=scenarios_as_data)
             self._campaigns[cpn_data] = managed_campaign
-
-    def set_user_folder(self, user_folder: str):
-        self._user_folder = user_folder
         
     def unlock_campaign(self, campaign: Age2CampaignData):
         if campaign not in self._campaigns:
-            print("Campaign data not found in this AP World's Campaign Handler. Could not unlock campaign.")
+            print(f"Campaign data not found in this AP World's Campaign Handler. Could not unlock campaign {campaign.campaign_name}.")
             return
         first_scenario = self._campaigns[campaign].scenarios[0]
         if first_scenario is None:
-            print("Campaign contains no scenarios. Could not unlock campaign.")
+            print(f"Campaign contains no scenarios. Could not unlock campaign {campaign.campaign_name}.")
             return
         
         self._campaigns[campaign].unlocked = True
@@ -68,10 +67,10 @@ class CampaignHandler:
     
     def unlock_progressive_scenario(self, campaign: Age2CampaignData):
         if campaign not in self._campaigns:
-            print("Campaign data not found in this AP World's Campaign Handler. Could not unlock progressive scenario.")
+            print(f"Campaign data not found in this AP World's Campaign Handler. Could not unlock progressive scenario for {campaign.campaign_name}.")
             return
         if self._campaigns[campaign].unlocked is False:
-            print("Campaign is not unlocked. Could not unlock progressive scenario.")
+            print(f"Campaign is not unlocked. Could not unlock progressive scenario for {campaign.campaign_name}.")
             return
         
         for scn in self._campaigns[campaign].scenarios:
@@ -79,7 +78,7 @@ class CampaignHandler:
                 self._scenarios[scn].unlocked = True # Activate first scenario that is not active
                 return
         
-        print("All scenarios in this campaign are already unlocked.")
+        print(f"All scenarios in {campaign.campaign_name} are already unlocked.")
     
     def find_active_campaign(self):
         for campaign in self._campaigns.values():

@@ -3,16 +3,17 @@ import os
 from queue import Queue
 import queue
 
+from .FolderHandler import FolderHandler
+
 from ...campaign import XsdatFile
 
 type Age2Message = tuple[int, str]
 
-class MessageHandler:
+class MessageHandler(FolderHandler):
     _last_sent_message_id: int = 0
     _new_message_id: int = 0
     _unsent_message_queue: Queue[Age2Message]
     _sending_messages: list[Age2Message]
-    _user_folder: str
     
     def __init__(self):
         self._unsent_message_queue = Queue()
@@ -22,9 +23,6 @@ class MessageHandler:
         new_msg: Age2Message = (self._new_message_id, msg)
         self._unsent_message_queue.put(new_msg)
         self._new_message_id += 1
-    
-    def set_user_folder(self, user_folder: str):
-        self._user_folder = user_folder
     
     def try_write_to_folder(self):
         if self.is_message_sending():   #Prevents overwrite
