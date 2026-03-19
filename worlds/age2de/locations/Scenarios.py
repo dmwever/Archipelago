@@ -22,7 +22,7 @@ class Age2ScenarioData(enum.IntEnum):
         self.campaign = campaign
         self.chapter = chapter
         self.civ = civ
-        
+    
     AP_ATTILA_1 =           "The Scourge of God", "H1", "AP_Attila_1.xsdat", "ATT1.xsdat", Age2CampaignData.ATTILA, 1, Age2Civ.HUNS
     AP_ATTILA_2 =               "The Great Ride", "H2", "AP_Attila_2.xsdat", "ATT2.xsdat", Age2CampaignData.ATTILA, 2, Age2Civ.HUNS
     AP_ATTILA_3 =  "The Walls of Constantinople", "H3", "AP_Attila_3.xsdat", "ATT3.xsdat", Age2CampaignData.ATTILA, 3, Age2Civ.HUNS

@@ -5,20 +5,32 @@ from BaseClasses import ItemClassification
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 
+class Resource(enum.Enum):
+    WOOD = 1,
+    FOOD = 2,
+    GOLD = 3,
+    STONE = 4
+
 @dataclass
 class Resources:
-    type: int
+    type: Resource
     amount: int
 
 @dataclass
 class TCResources:
-    type: int
+    type: Resource
     amount: int
 
 @dataclass
 class Victory:
     pass
 
+@dataclass
+class Building:
+    game_id: int
+    total_cost: float
+    needed_resources: dict[Resource, float]
+    
 @dataclass
 class ScenarioItem:
     vanilla_scenario: Age2ScenarioData
@@ -39,7 +51,7 @@ class Campaign:
 
 @dataclass
 class StartingResources:
-    type: int
+    type: Resource
     amount: int
 
 type FillerItemType = (
@@ -47,7 +59,7 @@ type FillerItemType = (
 )
 
 type ItemType = (
-    ScenarioItem | StartingResources | ProgressiveScenario | Mercenary | Campaign | Resources | TCResources | Victory
+    ScenarioItem | StartingResources | ProgressiveScenario | Mercenary | Campaign | Resources | TCResources | Victory | Building
 )
 
 item_type_to_classification = {
@@ -55,6 +67,7 @@ item_type_to_classification = {
     ProgressiveScenario: ItemClassification.progression,
     Campaign: ItemClassification.progression,
     TCResources: ItemClassification.progression,
+    Building: ItemClassification.progression,
     Mercenary: ItemClassification.useful,
     Resources: ItemClassification.filler,
     StartingResources: ItemClassification.useful,
@@ -79,36 +92,73 @@ class Age2ItemData(enum.IntEnum):
     #1 - 999 = Resources (25), Ages (25), Civs (150), Buildings (100), Units (350), Techs (350) 
     
     # Filler Resources
-    FILLER_WOOD_SMALL =             1, "+100 Wood",   Resources(1, 100)
-    FILLER_FOOD_SMALL =             2, "+100 Food",   Resources(2, 100)
-    FILLER_GOLD_SMALL =             3, "+100 Gold",   Resources(3, 100)
-    FILLER_STONE_SMALL =            4, "+50 Stone",   Resources(4, 50)
-    FILLER_WOOD_MEDIUM =            5, "+250 Wood",   Resources(1, 250)
-    FILLER_FOOD_MEDIUM =            6, "+250 Food",   Resources(2, 250)
-    FILLER_GOLD_MEDIUM =            7, "+250 Gold",   Resources(3, 250)
-    FILLER_STONE_MEDIUM =           8, "+125 Stone",  Resources(4, 125)
-    FILLER_WOOD_LARGE =             9, "+1000 Wood",  Resources(1, 1000)
-    FILLER_FOOD_LARGE =            10, "+1000 Food",  Resources(2, 1000)
-    FILLER_GOLD_LARGE =            11, "+1000 Gold",  Resources(3, 1000)
-    FILLER_STONE_LARGE =           12, "+500 Stone",  Resources(4, 500)
+    FILLER_WOOD_SMALL =             1, "+100 Wood",   Resources(Resource.WOOD, 100)
+    FILLER_FOOD_SMALL =             2, "+100 Food",   Resources(Resource.FOOD, 100)
+    FILLER_GOLD_SMALL =             3, "+100 Gold",   Resources(Resource.GOLD, 100)
+    FILLER_STONE_SMALL =            4, "+50 Stone",   Resources(Resource.STONE, 50)
+    FILLER_WOOD_MEDIUM =            5, "+250 Wood",   Resources(Resource.WOOD, 250)
+    FILLER_FOOD_MEDIUM =            6, "+250 Food",   Resources(Resource.FOOD, 250)
+    FILLER_GOLD_MEDIUM =            7, "+250 Gold",   Resources(Resource.GOLD, 250)
+    FILLER_STONE_MEDIUM =           8, "+125 Stone",  Resources(Resource.STONE, 125)
+    FILLER_WOOD_LARGE =             9, "+1000 Wood",  Resources(Resource.WOOD, 1000)
+    FILLER_FOOD_LARGE =            10, "+1000 Food",  Resources(Resource.FOOD, 1000)
+    FILLER_GOLD_LARGE =            11, "+1000 Gold",  Resources(Resource.GOLD, 1000)
+    FILLER_STONE_LARGE =           12, "+500 Stone",  Resources(Resource.STONE, 500)
     
     #Starting Resources
-    STARTING_WOOD_SMALL =             13, "+50 Starting Wood",   StartingResources(1, 50)
-    STARTING_FOOD_SMALL =             14, "+50 Starting Food",   StartingResources(2, 50)
-    STARTING_GOLD_SMALL =             15, "+50 Starting Gold",   StartingResources(3, 50)
-    STARTING_STONE_SMALL =            16, "+25 Starting Stone",   StartingResources(4, 25)
-    STARTING_WOOD_MEDIUM =            17, "+100 Starting Wood",   StartingResources(1, 100)
-    STARTING_FOOD_MEDIUM =            18, "+100 Starting Food",   StartingResources(2, 100)
-    STARTING_GOLD_MEDIUM =            19, "+100 Starting Gold",   StartingResources(3, 100)
-    STARTING_STONE_MEDIUM =           20, "+50 Starting Stone",  StartingResources(4, 50)
-    STARTING_WOOD_LARGE =             21, "+250 Starting Wood",  StartingResources(1, 250)
-    STARTING_FOOD_LARGE =             22, "+250 Starting Food",  StartingResources(2, 250)
-    STARTING_GOLD_LARGE =             23, "+250 Starting Gold",  StartingResources(3, 250)
-    STARTING_STONE_LARGE =            24, "+125 Starting Stone",  StartingResources(4, 125)
+    STARTING_WOOD_SMALL =             13, "+50 Starting Wood",      StartingResources(Resource.WOOD, 50)
+    STARTING_FOOD_SMALL =             14, "+50 Starting Food",      StartingResources(Resource.FOOD, 50)
+    STARTING_GOLD_SMALL =             15, "+50 Starting Gold",      StartingResources(Resource.GOLD, 50)
+    STARTING_STONE_SMALL =            16, "+25 Starting Stone",     StartingResources(Resource.STONE, 25)
+    STARTING_WOOD_MEDIUM =            17, "+100 Starting Wood",     StartingResources(Resource.WOOD, 100)
+    STARTING_FOOD_MEDIUM =            18, "+100 Starting Food",     StartingResources(Resource.FOOD, 100)
+    STARTING_GOLD_MEDIUM =            19, "+100 Starting Gold",     StartingResources(Resource.GOLD, 100)
+    STARTING_STONE_MEDIUM =           20, "+50 Starting Stone",     StartingResources(Resource.STONE, 50)
+    STARTING_WOOD_LARGE =             21, "+250 Starting Wood",     StartingResources(Resource.WOOD, 250)
+    STARTING_FOOD_LARGE =             22, "+250 Starting Food",     StartingResources(Resource.FOOD, 250)
+    STARTING_GOLD_LARGE =             23, "+250 Starting Gold",     StartingResources(Resource.GOLD, 250)
+    STARTING_STONE_LARGE =            24, "+125 Starting Stone",    StartingResources(Resource.STONE, 125)
+    
+    #200 - 300 = Buildings
+    WONDER =                        200, "Wonder",              Building(276, 3000.0, { Resource.WOOD: 1000.0, Resource.GOLD: 1000.0, Resource.STONE: 1000.0 })
+    OUTPOST =                       201, "Outpost",             Building(598, 30.0, { Resource.WOOD: 25.0, Resource.STONE: 5.0 })
+    TOWN_CENTER =                   202, "Town Center",         Building(621, 375.0, { Resource.WOOD: 275.0, Resource.STONE: 100.0 })
+    # HOUSE =                         203, "House",               Building(70, 25.0, { Resource.WOOD: 25.0 })
+    # MILL =                          204, "Mill",                Building(68, 100.0, { Resource.WOOD: 100.0 })
+    # MINING_CAMP =                   205, "Mining Camp",         Building(584, 100.0, { Resource.WOOD: 100.0 })
+    # LUMBER_CAMP =                   206, "Lumber Camp",         Building(562, 100.0, { Resource.WOOD: 100.0 })
+    # FARM =                          207, "Farm",                Building(50, 60.0, { Resource.WOOD: 60.0 })
+    # FISH_TRAP =                     208, "Fish Trap",           Building(199, 100.0, { Resource.WOOD: 100.0 })
+    # DOCK =                          209, "Dock",                Building(45, 150.0, { Resource.WOOD: 150.0 })
+    # MARKET =                        210, "Market",              Building(84, 175.0, { Resource.WOOD: 175.0 })
+    # UNIVERSITY =                    211, "University",          Building(209, 200.0, { Resource.WOOD: 200.0 })
+    # BLACKSMITH =                    212, "Blacksmith",          Building(103, 150.0, { Resource.WOOD: 150.0 })
+    # MONASTERY =                     213, "Monastery",           Building(104, 175.0, { Resource.WOOD: 175.0 })
+    # BARRACKS =                      214, "Barracks",            Building(12, 175.0, { Resource.WOOD: 175.0 })
+    # ARCHERY_RANGE =                 215, "Archery Range",       Building(87, 175.0, { Resource.WOOD: 175.0 })
+    # STABLE =                        216, "Stable",              Building(101, 175.0, { Resource.WOOD: 175.0 })
+    # SIEGE_WORKSHOP =                217, "Siege Workshop",      Building(49, 200.0, { Resource.WOOD: 200.0 })
+    # CASTLE =                        218, "Castle",              Building(82, 650.0, { Resource.STONE: 650.0 })
+    # PALISADE_GATE =                 219, "Palisade Gate",       Building(792, 20.0, { Resource.WOOD: 20.0 })
+    # GATE =                          220, "Gate",                Building(487, 30.0, { Resource.STONE: 30.0 })
+    # PALISADE_WALL =                 221, "Palisade Wall",       Building(72, 3.0, { Resource.WOOD: 3.0 })
+    # STONE_WALL =                    222, "Stone Wall",          Building(117, 5.0, { Resource.STONE: 5.0 })
+    # WATCH_TOWER =                   223, "Watch Tower",         Building(79, 160.0, { Resource.WOOD: 35.0, Resource.STONE: 125.0 })
+    # BOMBARD_TOWER =                 224, "Bombard Tower",       Building(236, 225.0, { Resource.STONE: 125.0, Resource.GOLD: 100.0 })
+    # FOLWARK =                       225, "Folwark",             Building(1734, 100.0, { Resource.WOOD: 100.0 })
+    # MULE_CART =                     226, "Mule Cart",           Building(1808, 100.0, { Resource.FOOD: 20.0, Resource.WOOD: 80.0 })
+    # PASTURE =                       227, "Pasture",             Building(1889, 110.0, { Resource.WOOD: 110.0 })
+    # HARBOR =                        228, "Harbor",              Building(1189, 150.0, { Resource.WOOD: 150.0 })
+    # CARAVANSERAI =                  229, "Caravanserai",        Building(1754, 225.0, { Resource.WOOD: 175.0, Resource.STONE: 50.0 })
+    # FEITORIA =                      230, "Feitoria",            Building(1021, 650.0, { Resource.STONE: 300.0, Resource.GOLD: 350.0 })
+    # SETTLEMENT =                    231, "Settlement",          Building(2556, 125.0, { Resource.WOOD: 125.0 })
+    # FORTIFIED_CHURCH =              232, "Fortified Church",    Building(1806, 200.0, { Resource.WOOD: 200.0 })
+    # KREPOST =                       233, "Krepost",             Building(1251, 350.0, { Resource.STONE: 350.0 })
+    # DONJON =                        234, "Donjon",              Building(1665, 225.0, { Resource.WOOD: 50.0, Resource.STONE: 175 })
     
     #1000 - 2999 = Progression Items
-    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          TCResources(1, 275)
-    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(2, 100)
+    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          TCResources(Resource.WOOD, 275)
+    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(Resource.FOOD, 100)
     
     # Scenario Progression Items
     AP_ATTILA_1_BLEDAS_CAMP =   1002, "Attila, The Scourge of God: Bleda's Camp",           ScenarioItem(Age2ScenarioData.AP_ATTILA_1)

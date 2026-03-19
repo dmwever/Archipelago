@@ -8,6 +8,7 @@ class Age2LocationType(enum.Flag):
     OBJECTIVE_SCENARIO_COLLECTION = enum.auto()
     OBJECTIVE_BRANCHING_ALL = enum.auto()
     OBJECTIVE_BRANCHING_ANY = enum.auto()
+    BUILDING = enum.auto()
     SIDE_QUEST = enum.auto()
 
 def global_location_id(scenario_id: int, local_location_id: int) -> int:

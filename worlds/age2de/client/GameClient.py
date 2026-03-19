@@ -171,6 +171,15 @@ def sync_starting_resources(ctx: Age2GameContext) -> None:
     except Exception as ex:
         print(ex)
 
+def sync_buildings(ctx: Age2GameContext) -> None:
+    item_ids: list[int] = [filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.Building], ctx.client_status.unlocked_items)]
+    try:
+        with open(user_folder(ctx) + "buildings.xsdat", "wb") as fp:
+            for id in item_ids:
+                XsdatFile.write_int(fp, id)
+    except Exception as ex:
+        print(ex)
+
 def user_folder(ctx: Age2GameContext):
     return ctx.client_status.user_folder + AGE2_USER_PROFILE
         
@@ -304,6 +313,7 @@ async def status_loop(ctx: Age2GameContext):
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             send_items(ctx)
             sync_starting_resources(ctx)
+            sync_buildings(ctx)
             ctx.campaign_handler.sync_scenario_items(list(set(ctx.client_status.unlocked_items).intersection(Items.CATEGORY_TO_ITEMS[ScenarioItem])))
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):

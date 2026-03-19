@@ -9,6 +9,7 @@ from typing import Any, ClassVar, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
+from worlds.age2de.locations import Buildings
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
@@ -64,7 +65,19 @@ class Age2World(World):
         else:
             campaign_names = self.options.enabled_campaigns
             self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
+        
         regions = [Region(self.origin_region_name, self.player, self.multiworld)]
+        
+        buildings = Region("Can Build", self.player, self.multiworld)
+        source = regions[0]
+        connection = Entrance(self.player, f"{buildings.name}", source)
+        source.exits.append(connection)
+        connection.connect(buildings)
+        for building in Buildings.Age2BuildingData:
+            new_location = Location(self.player, building.name, building.id, buildings)
+            buildings.locations.append(new_location)
+        regions.append(buildings)
+        
         for scenario in Scenarios.Age2ScenarioData:
             if scenario.campaign not in self.included_campaigns:
                 continue
@@ -80,7 +93,9 @@ class Age2World(World):
                 new_region.locations.append(new_location)
             regions.append(new_region)
             self.included_civs |= scenario.civ
+        
         self.multiworld.regions += regions
+            
     
     def create_items(self) -> None:
         items: list[Item] = []
@@ -117,7 +132,7 @@ class Age2World(World):
                 tentative_items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.TCResources):
                 items.append(self.create_item(item.item_name))
-            elif isinstance(item.type, Items.TriggerActivation):
+            elif isinstance(item.type, Items.Building):
                 items.append(self.create_item(item.item_name))
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")

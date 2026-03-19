@@ -55,7 +55,7 @@ def set_rules(world: Age2World) -> None:
     # starting tc rules
 
     def can_build_tc(state: CollectionState) -> bool:
-        return state.has_all([Age2ItemData.TOWN_CENTER_STONE.item_name, Age2ItemData.TOWN_CENTER_WOOD.item_name], world.player)
+        return state.has_all([Age2ItemData.TOWN_CENTER_STONE.item_name, Age2ItemData.TOWN_CENTER_WOOD.item_name, Age2ItemData.TOWN_CENTER.item_name], world.player)
     
     # scenario-specific rules
 
@@ -83,3 +83,4 @@ def set_rules(world: Age2World) -> None:
     set_rule(world.get_location(Age2LocationData.ATT3_BLUE_DOCKS_SOUTH.global_name()), has_attila_3_gold)
     set_rule(world.get_location(Age2LocationData.ATT3_DESTROY_WONDER.global_name()), has_attila_3_gold)
     set_rule(world.get_location(Age2LocationData.ATT3_THREATEN_WONDER.global_name()), has_attila_3_gold)
+    set_rule(world.get_entrance(Age2ScenarioData.AP_ATTILA_4.scenario_name), can_build_tc)
