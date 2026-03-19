@@ -6,6 +6,9 @@ import os
 import struct
 from typing import List, Protocol
 
+from worlds.age2de.client.handlers.BuildingHandler import BuildingHandler
+from worlds.age2de.locations.Buildings import Age2BuildingData
+
 
 from .handlers.CampaignHandler import CampaignHandler
 from .handlers.MessageHandler import MessageHandler
@@ -95,12 +98,14 @@ class Age2GameContext:
     current_packet: Age2Packet = Age2Packet()
     client_status: ClientStatus = None
     campaign_handler: CampaignHandler = CampaignHandler([Age2CampaignData.ATTILA])
+    building_handler: BuildingHandler = BuildingHandler([building for building in Age2BuildingData])
     message_handler: MessageHandler = MessageHandler()
     client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
 
 def update_game_user_folder(ctx: Age2GameContext, folder: str):
     ctx.client_status.user_folder = folder
     ctx.message_handler.set_user_folder(user_folder(ctx))
+    ctx.building_handler.set_user_folder(user_folder(ctx))
     ctx.campaign_handler.set_user_folder(user_folder(ctx))
 
 def read_packet(ctx: Age2GameContext) -> Age2Packet:
@@ -166,15 +171,6 @@ def sync_starting_resources(ctx: Age2GameContext) -> None:
         item_ids.append(item.id)
     try:
         with open(user_folder(ctx) + "startup.xsdat", "wb") as fp:
-            for id in item_ids:
-                XsdatFile.write_int(fp, id)
-    except Exception as ex:
-        print(ex)
-
-def sync_buildings(ctx: Age2GameContext) -> None:
-    item_ids: list[int] = [filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.Building], ctx.client_status.unlocked_items)]
-    try:
-        with open(user_folder(ctx) + "buildings.xsdat", "wb") as fp:
             for id in item_ids:
                 XsdatFile.write_int(fp, id)
     except Exception as ex:
@@ -313,7 +309,7 @@ async def status_loop(ctx: Age2GameContext):
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             send_items(ctx)
             sync_starting_resources(ctx)
-            sync_buildings(ctx)
+            ctx.building_handler.try_sync_buildings()
             ctx.campaign_handler.sync_scenario_items(list(set(ctx.client_status.unlocked_items).intersection(Items.CATEGORY_TO_ITEMS[ScenarioItem])))
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
