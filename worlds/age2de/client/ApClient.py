@@ -8,7 +8,6 @@ from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser,
 from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkItem
 import Utils
 from ..items import Items
-from ..locations.Locations import global_location_id
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Campaigns import Age2CampaignData
 from .ApGui import Age2Manager
@@ -109,7 +108,7 @@ class Age2Context(CommonContext):
         if location_ids is not None:
             Utils.async_start(self.send_msgs([{
                 "cmd": "LocationChecks",
-                "locations": [global_location_id(scenario_id, location_id) for location_id in location_ids],
+                "locations": [location_id for location_id in location_ids],
             }]))
 
     def _handle_received_items(self, args: dict) -> None:

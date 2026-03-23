@@ -11,10 +11,7 @@ class Age2LocationType(enum.Flag):
     BUILDING = enum.auto()
     SIDE_QUEST = enum.auto()
 
-def global_location_id(scenario_id: int, local_location_id: int) -> int:
-    return scenario_id * 100 + local_location_id
-
-class Age2LocationData(enum.IntEnum):
+class Age2ScenarioLocationData(enum.IntEnum):
     
     def __new__(cls, id: int, *args, **kwargs):
         value = id
@@ -26,8 +23,6 @@ class Age2LocationData(enum.IntEnum):
         self, id: int, location_name: str, scenario: Age2ScenarioData, type: Age2LocationType, vanilla_item: str = ''
     ) -> None:
         self.id = id
-        assert id >= global_location_id(scenario.id, 0)
-        assert id < global_location_id(scenario.id + 1, 0)
         self.location_name = location_name
         self.scenario = scenario
         self.type = type
@@ -109,21 +104,21 @@ class Age2LocationData(enum.IntEnum):
     ATT6_DESTROY_ORANGE_WONDER =    10610, "Prevent or Destroy Orange's Wonder",        Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
     ATT6_DESTROY_PURPLE_WONDER_2 =  10611, "Prevent or Destroy Purple's Second Wonder", Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
     
-location_from_id = {_location.id: _location for _location in Age2LocationData}
-location_name_to_id = {_location.global_name(): _location.id for _location in Age2LocationData}
-location_id_to_name = {_location.id: _location.global_name() for _location in Age2LocationData}
-SCENARIO_TO_LOCATIONS: dict[Age2ScenarioData, list[Age2LocationData]] = {_scenario: [] for _scenario in Age2ScenarioData}
-for _location in Age2LocationData:
+location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
+location_name_to_id = {_location.global_name(): _location.id for _location in Age2ScenarioLocationData}
+location_id_to_name = {_location.id: _location.global_name() for _location in Age2ScenarioLocationData}
+SCENARIO_TO_LOCATIONS: dict[Age2ScenarioData, list[Age2ScenarioLocationData]] = {_scenario: [] for _scenario in Age2ScenarioData}
+for _location in Age2ScenarioLocationData:
     SCENARIO_TO_LOCATIONS[_location.scenario].append(_location)
 
-REGION_TO_LOCATIONS: dict[str, list[Age2LocationData]] = {}
-for location in Age2LocationData:
+REGION_TO_LOCATIONS: dict[str, list[Age2ScenarioLocationData]] = {}
+for location in Age2ScenarioLocationData:
     REGION_TO_LOCATIONS.setdefault(location.scenario.scenario_name, []).append(location)
 
-TYPE_TO_LOCATIONS: dict[Age2LocationType, list[Age2LocationData]] = {}
-for location in Age2LocationData:
+TYPE_TO_LOCATIONS: dict[Age2LocationType, list[Age2ScenarioLocationData]] = {}
+for location in Age2ScenarioLocationData:
     TYPE_TO_LOCATIONS.setdefault(location.type, []).append(location)
 
-VICTORY_LOCATIONS: dict[str, Age2LocationData] = {}
+VICTORY_LOCATIONS: dict[str, Age2ScenarioLocationData] = {}
 for location in TYPE_TO_LOCATIONS.get(Age2LocationType.VICTORY):
     VICTORY_LOCATIONS[location.scenario.scenario_name] = location

@@ -5,7 +5,7 @@ import logging
 from Utils import visualize_regions
 import Utils
 import settings
-from typing import Any, ClassVar, Mapping
+from typing import Any, ClassVar, Literal, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
@@ -17,7 +17,7 @@ from .rules import Rules
 
 logger = logging.getLogger(__name__)
 
-AGE2_DE = "Age Of Empires II: Definitive Edition"
+AGE2_DE: str = Literal["Age Of Empires II: Definitive Edition"]
 class Age2Settings(settings.Group):
     class UserDirectory(settings.UserFolderPath):
         """The users local age2de user folder.
@@ -40,7 +40,7 @@ class Age2World(World):
     topology_present = True  # show path to required location checks in spoiler
 
     item_names = set(item.item_name for item in Items.Age2ItemData)
-    location_names = set(location.global_name() for location in Locations.Age2LocationData)
+    location_names = set(location.global_name() for location in Locations.Age2ScenarioLocationData)
     item_name_to_id = Items.item_name_to_id
     item_id_to_name = Items.item_id_to_name
     location_name_to_id = Locations.location_name_to_id
@@ -104,7 +104,7 @@ class Age2World(World):
             if isinstance(item.type, Items.Victory):
                 if self.options.goal == Goal.option_campaign_completion:
                     *_, last = self.get_regions()
-                    location_data: Locations.Age2LocationData = Locations.VICTORY_LOCATIONS[last.name]
+                    location_data: Locations.Age2ScenarioLocationData = Locations.VICTORY_LOCATIONS[last.name]
                     location: Location = next(l for l in last.locations if l.name == location_data.global_name())
                     victory = self.create_item(Items.Age2ItemData.VICTORY.item_name)
                     location.place_locked_item(victory)
@@ -132,6 +132,8 @@ class Age2World(World):
                 tentative_items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.TCResources):
                 items.append(self.create_item(item.item_name))
+            elif isinstance(item.type, Items.Age):
+                continue
             elif isinstance(item.type, Items.Building):
                 items.append(self.create_item(item.item_name))
             else:
