@@ -2,8 +2,6 @@
 
 import time
 import logging
-from Utils import visualize_regions
-import Utils
 import settings
 from typing import Any, ClassVar, Literal, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
@@ -17,7 +15,7 @@ from .rules import Rules
 
 logger = logging.getLogger(__name__)
 
-AGE2_DE: str = Literal["Age Of Empires II: Definitive Edition"]
+AGE2_DE = "Age Of Empires II: Definitive Edition"
 class Age2Settings(settings.Group):
     class UserDirectory(settings.UserFolderPath):
         """The users local age2de user folder.
@@ -74,7 +72,7 @@ class Age2World(World):
         source.exits.append(connection)
         connection.connect(buildings)
         for building in Buildings.Age2BuildingData:
-            new_location = Location(self.player, building.name, building.id, buildings)
+            new_location = Location(self.player, building.location_name, building.id, buildings)
             buildings.locations.append(new_location)
         regions.append(buildings)
         

@@ -1,51 +1,22 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import override, TYPE_CHECKING
-from NetUtils import JSONMessagePart
-from rule_builder.rules import Has, HasAll, HasFromListUnique, Rule
-
-from BaseClasses import CollectionState
-
-from ..items.Items import Age2ItemData
+from typing import TYPE_CHECKING
+from rule_builder.rules import Has
 
 from ..locations.Buildings import Age2BuildingData
 
 
 if TYPE_CHECKING:
-    from . import AgeRules
     from .. import Age2World
 
-def set_rules(world: Age2World) -> None:
-    for building in Age2BuildingData:
-        world.set_rule(building.name, Has(building.item.item_name))
-
-two_from_dark_age: Rule = HasFromListUnique(
-        Age2ItemData.MILL.item_name,
-        Age2ItemData.LUMBER_CAMP.item_name,
-        Age2ItemData.MINING_CAMP.item_name,
-        Age2ItemData.DOCK.item_name,
-        Age2ItemData.BARRACKS.item_name, count=2)
-
-two_from_feudal_age: Rule = HasFromListUnique(
-        Age2ItemData.ARCHERY_RANGE.item_name,
-        Age2ItemData.STABLE.item_name,
-        Age2ItemData.MARKET.item_name,
-        Age2ItemData.BLACKSMITH.item_name, count=2)
-
-two_from_castle_age: Rule = HasFromListUnique(
-        Age2ItemData.MONASTERY.item_name,
-        Age2ItemData.UNIVERSITY.item_name,
-        Age2ItemData.SIEGE_WORKSHOP.item_name, count=2)
-
-can_build_tc = HasAll(
-        Age2ItemData.TOWN_CENTER_STONE.item_name,
-         Age2ItemData.TOWN_CENTER_WOOD.item_name,
-         Age2ItemData.TOWN_CENTER.item_name)
-
-def set_building_ages(world: Age2World) -> Rule:
-    for building in Age2BuildingData:
-        world.set_rule(building.item.item_name, AgeRules.building_age(building))
+class BuildingRules:
+    
+    def __init__(self):
+        pass
+        
+    def set_rules(self, world: Age2World) -> None:
+        for building in Age2BuildingData:
+            world.set_rule(world.get_location(building.location_name), Has(building.item.item_name))
 
 # @dataclass
 # class AgeUpBuildingRequirement(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
