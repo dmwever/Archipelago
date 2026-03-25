@@ -803,6 +803,19 @@ class Hatsanity(OptionSet):
         else:
             return typing.cast(bool, self.value == other)
 
+class LockBuildings(Choice):
+    """
+    Buildings in Stardew Valley that are normally available now require a key to enter.
+    This excludes Ginger Island, Calico Desert, and buildings that are already locked by other settings, such as Elliot's, the Community Center or the Wizard Tower.
+    Disabled: All buildings are unlocked, except for buildings that are already locked by other settings.
+    Enabled: Shuffles a key into the item pool that is required for access to respective buildings.
+    """
+    internal_name = "lock_buildings"
+    display_name = "Lock Buildings"
+    default = 1
+    option_disabled = 0
+    option_enabled = 1
+    alias_shuffled = option_enabled
 
 class IncludeEndgameLocations(Toggle):
     """Whether to include, as locations, several very expensive things that are usually purchased during the end-game in vanilla.
@@ -1217,6 +1230,7 @@ class StardewValleyOptions(PerGameCommonOptions):
     moviesanity: Moviesanity
     secretsanity: Secretsanity
     hatsanity: Hatsanity
+    lock_buildings: LockBuildings
     include_endgame_locations: IncludeEndgameLocations
     exclude_ginger_island: ExcludeGingerIsland
     quick_start: QuickStart

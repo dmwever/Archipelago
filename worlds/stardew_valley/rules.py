@@ -27,7 +27,7 @@ from .mods.mod_data import ModNames
 from .options import SpecialOrderLocations, Museumsanity, BackpackProgression, Shipsanity, \
     Monstersanity, Chefsanity, Craftsanity, ArcadeMachineLocations, Cooksanity, StardewValleyOptions, Walnutsanity
 from .options.options import FarmType, Moviesanity, Eatsanity, Friendsanity, ExcludeGingerIsland, \
-    IncludeEndgameLocations
+    IncludeEndgameLocations, LockBuildings
 from .stardew_rule import And, StardewRule, true_
 from .stardew_rule.indirect_connection import look_for_indirect_connection
 from .stardew_rule.rule_explain import explain
@@ -309,9 +309,31 @@ def set_entrance_rules(logic: StardewLogic, rule_collector: StardewRuleCollector
     rule_collector.set_entrance_rule(Entrance.feed_trash_bear, logic.received("Trash Bear Arrival"))
     rule_collector.set_entrance_rule(Entrance.enter_shorts_maze, logic.has(Craftable.staircase))
 
+    set_key_rules(logic, rule_collector, world_options)
     rule_collector.set_entrance_rule(Entrance.enter_mens_locker_room, logic.wallet.has_mens_locker_key())
     rule_collector.set_entrance_rule(Entrance.enter_womens_locker_room, logic.wallet.has_womens_locker_key())
 
+def set_key_rules(logic: StardewLogic, rule_collector: StardewRuleCollector, world_options: StardewValleyOptions):
+    lock_buildings = world_options.lock_buildings
+    if lock_buildings == LockBuildings.option_enabled:
+        rule_collector.set_entrance_rule(Entrance.town_to_alex_house, logic.wallet.has_river_road_1_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_trailer, logic.wallet.has_river_road_2_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_sam_house, logic.wallet.has_willow_lane_1_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_haley_house, logic.wallet.has_willow_lane_2_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_mayor_manor, logic.wallet.has_mayors_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_clint_blacksmith, logic.wallet.has_blacksmith_key())
+        rule_collector.set_entrance_rule(Entrance.mountain_to_carpenter_shop, logic.wallet.has_carpenters_key())
+        rule_collector.set_entrance_rule(Entrance.beach_to_willy_fish_shop, logic.wallet.has_willys_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_hospital, logic.wallet.has_hospital_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_jojamart, logic.wallet.has_jojamart_key())
+        rule_collector.set_entrance_rule(Entrance.forest_to_marnie_ranch, logic.wallet.has_marnies_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_pierre_general_store, logic.wallet.has_pierres_key())
+        rule_collector.set_entrance_rule(Entrance.town_to_saloon, logic.wallet.has_saloon_key())
+        rule_collector.set_entrance_rule(Entrance.mountain_to_adventurer_guild, logic.wallet.has_adventurers_key())
+        
+
+    rule_collector.set_entrance_rule(Entrance.enter_mens_locker_room, logic.wallet.has_mens_locker_key())
+    rule_collector.set_entrance_rule(Entrance.enter_womens_locker_room, logic.wallet.has_womens_locker_key())
 
 def set_bookseller_rules(logic, rule_collector):
     rule_collector.set_entrance_rule(LogicEntrance.buy_books, logic.received(Bookseller.days))

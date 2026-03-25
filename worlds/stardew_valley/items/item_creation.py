@@ -15,7 +15,7 @@ from ..mods.mod_data import ModNames
 from ..options import StardewValleyOptions, FestivalLocations, SpecialOrderLocations, SeasonRandomization, Museumsanity, \
     ElevatorProgression, BackpackProgression, ArcadeMachineLocations, Monstersanity, Goal, \
     Chefsanity, Craftsanity, BundleRandomization, EntranceRandomization, Shipsanity, Walnutsanity, Moviesanity
-from ..options.options import IncludeEndgameLocations, Friendsanity
+from ..options.options import IncludeEndgameLocations, Friendsanity, LockBuildings
 from ..strings.ap_names.ap_option_names import WalnutsanityOptionName, SecretsanityOptionName, EatsanityOptionName, ChefsanityOptionName, StartWithoutOptionName
 from ..strings.ap_names.ap_weapon_names import APWeapon
 from ..strings.ap_names.buff_names import Buff
@@ -130,8 +130,7 @@ def create_unique_items(item_factory: StardewItemFactory, options: StardewValley
     items.append(item_factory("Golden Egg"))
     items.append(item_factory(CommunityUpgrade.mr_qi_plane_ride))
 
-    items.append(item_factory(Wallet.mens_locker_key))
-    items.append(item_factory(Wallet.womens_locker_key))
+    create_key_items(item_factory, options, items)
 
     create_sve_special_items(item_factory, content, items)
     create_magic_mod_spells(item_factory, content, items)
@@ -613,6 +612,27 @@ def create_goal_items(item_factory: StardewItemFactory, options: StardewValleyOp
 
     items.append(item_factory(Wallet.metal_detector))
 
+def create_key_items(item_factory: StardewItemFactory, options: StardewValleyOptions, items: List[Item]):
+    lock_buildings = options.lock_buildings
+    if lock_buildings == LockBuildings.option_enabled:
+        items.append(item_factory(Wallet.river_road_1_key))
+        items.append(item_factory(Wallet.river_road_2_key))
+        items.append(item_factory(Wallet.willow_lane_1_key))
+        items.append(item_factory(Wallet.willow_lane_2_key))
+        items.append(item_factory(Wallet.mayors_key))
+        items.append(item_factory(Wallet.blacksmith_key))
+        items.append(item_factory(Wallet.carpenters_key))
+        items.append(item_factory(Wallet.willys_key))
+        items.append(item_factory(Wallet.hospital_key))
+        items.append(item_factory(Wallet.jojamart_key))
+        items.append(item_factory(Wallet.marnies_key))
+        items.append(item_factory(Wallet.pierres_key))
+        items.append(item_factory(Wallet.saloon_key))
+        items.append(item_factory(Wallet.adventurers_key))
+
+
+    items.append(item_factory(Wallet.mens_locker_key))
+    items.append(item_factory(Wallet.womens_locker_key))
 
 def create_archaeology_items(item_factory: StardewItemFactory, content: StardewContent, items: List[Item]):
     if ModNames.archaeology not in content.registered_packs:
