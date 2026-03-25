@@ -3,7 +3,7 @@
 import time
 import logging
 import settings
-from typing import Any, ClassVar, Literal, Mapping
+from typing import Any, ClassVar, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
@@ -11,7 +11,7 @@ from worlds.age2de.locations import Buildings
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
-from .rules import Rules
+from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ class Age2World(World):
     
     included_civs: Scenarios.Age2Civ = Scenarios.Age2Civ.NONE
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
+    rules: Rules = Rules()
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
@@ -166,7 +167,7 @@ class Age2World(World):
         return filler_item_name
     
     def set_rules(self) -> None:
-        Rules.set_rules(self)
+        self.rules.set_rules(self)
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         return {

@@ -8,11 +8,12 @@ from rule_builder.rules import HasAll, HasFromListUnique, Rule, True_
 
 if TYPE_CHECKING:
     from .. import Age2World
+    from .Rules import Rules
     
 class AgeRules:
     
-    def __init__(self):
-        pass
+    def __init__(self, rules: 'Rules'):
+        self.rules = rules
         
     two_from_dark_age: Rule = HasFromListUnique(
             Age2ItemData.MILL.item_name,
@@ -43,7 +44,7 @@ class AgeRules:
         
     can_reach_imperial: Rule = two_from_castle_age & can_build_tc
 
-    def building_age(self, building: Age2BuildingData) -> Rule:
+    def has_building_age(self, building: Age2BuildingData) -> Rule:
         if building.age is Age2AgeData.FEUDAL:
             return self.can_reach_feudal
         elif building.age is Age2AgeData.CASTLE:
@@ -52,7 +53,3 @@ class AgeRules:
             return self.can_reach_imperial
         else:
             return True_()
-
-    def set_building_ages(self, world: Age2World) -> Rule:
-        for building in Age2BuildingData:
-            world.set_rule(world.get_location(building.location_name), self.building_age(building))

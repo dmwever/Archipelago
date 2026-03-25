@@ -1,22 +1,25 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from rule_builder.rules import Has
+from rule_builder.rules import Has, Rule
 
 from ..locations.Buildings import Age2BuildingData
 
 
 if TYPE_CHECKING:
     from .. import Age2World
+    from .Rules import Rules
 
 class BuildingRules:
     
-    def __init__(self):
-        pass
+    def __init__(self, rules: 'Rules'):
+        self.rules = rules
         
     def set_rules(self, world: Age2World) -> None:
         for building in Age2BuildingData:
-            world.set_rule(world.get_location(building.location_name), Has(building.item.item_name))
+            has_building: Rule = Has(building.item.item_name)
+            has_building_age = self.rules.age_rules.has_building_age(building)
+            world.set_rule(world.get_location(building.location_name), has_building & has_building_age)
 
 # @dataclass
 # class AgeUpBuildingRequirement(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
