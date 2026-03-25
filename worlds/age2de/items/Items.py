@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import enum
 
 from BaseClasses import ItemClassification
+from ..locations.Civilizations import Age2Civ
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 
@@ -10,6 +11,20 @@ class Resource(enum.Enum):
     FOOD = 2,
     GOLD = 3,
     STONE = 4
+
+class Age(enum.Enum):
+    DARK = 0,
+    FEUDAL = 1,
+    CASTLE = 2,
+    IMPERIAL = 3
+
+class BuildingOption(enum.str):
+    ECONOMY = "Economy",
+    TECH = "Tech",
+    MILITARY = "Military",
+    DEFENSE = "Defense",
+    UNIQUE = "Unique",
+    WONDER = "Wonder"
 
 @dataclass
 class Resources:
@@ -26,13 +41,17 @@ class Victory:
     pass
 
 @dataclass
-class Age:
-    pass
+class BuildingType:
+    type: list[BuildingOption]
+    civ: Age2Civ = None
+    excluded_civ: list[Age2Civ] = []
 
 @dataclass
 class Building:
     game_id: int
     total_cost: float
+    age: Age
+    building_type: BuildingType
     needed_resources: dict[Resource, float]
     
 @dataclass
@@ -130,41 +149,41 @@ class Age2ItemData(enum.IntEnum):
     IMPERIAL_AGE =      28, "Imperial Age", Age()
     
     #200 - 300 = Buildings
-    WONDER =                        200, "Wonder",              Building(276, 3000.0, { Resource.WOOD: 1000.0, Resource.GOLD: 1000.0, Resource.STONE: 1000.0 })
-    OUTPOST =                       201, "Outpost",             Building(598, 30.0, { Resource.WOOD: 25.0, Resource.STONE: 5.0 })
-    TOWN_CENTER =                   202, "Town Center",         Building(621, 375.0, { Resource.WOOD: 275.0, Resource.STONE: 100.0 })
-    HOUSE =                         203, "House",               Building(70, 25.0, { Resource.WOOD: 25.0 })
-    MILL =                          204, "Mill",                Building(68, 100.0, { Resource.WOOD: 100.0 })
-    MINING_CAMP =                   205, "Mining Camp",         Building(584, 100.0, { Resource.WOOD: 100.0 })
-    LUMBER_CAMP =                   206, "Lumber Camp",         Building(562, 100.0, { Resource.WOOD: 100.0 })
-    FARM =                          207, "Farm",                Building(50, 60.0, { Resource.WOOD: 60.0 })
-    FISH_TRAP =                     208, "Fish Trap",           Building(199, 100.0, { Resource.WOOD: 100.0 })
-    DOCK =                          209, "Dock",                Building(45, 150.0, { Resource.WOOD: 150.0 })
-    MARKET =                        210, "Market",              Building(84, 175.0, { Resource.WOOD: 175.0 })
-    UNIVERSITY =                    211, "University",          Building(209, 200.0, { Resource.WOOD: 200.0 })
-    BLACKSMITH =                    212, "Blacksmith",          Building(103, 150.0, { Resource.WOOD: 150.0 })
-    MONASTERY =                     213, "Monastery",           Building(104, 175.0, { Resource.WOOD: 175.0 })
-    BARRACKS =                      214, "Barracks",            Building(12, 175.0, { Resource.WOOD: 175.0 })
-    ARCHERY_RANGE =                 215, "Archery Range",       Building(87, 175.0, { Resource.WOOD: 175.0 })
-    STABLE =                        216, "Stable",              Building(101, 175.0, { Resource.WOOD: 175.0 })
-    SIEGE_WORKSHOP =                217, "Siege Workshop",      Building(49, 200.0, { Resource.WOOD: 200.0 })
-    CASTLE =                        218, "Castle",              Building(82, 650.0, { Resource.STONE: 650.0 })
-    PALISADE_GATE =                 219, "Palisade Gate",       Building(792, 20.0, { Resource.WOOD: 20.0 })
-    GATE =                          220, "Stone Gate",          Building(487, 30.0, { Resource.STONE: 30.0 })
-    PALISADE_WALL =                 221, "Palisade Wall",       Building(72, 3.0, { Resource.WOOD: 3.0 })
-    STONE_WALL =                    222, "Stone Wall",          Building(117, 5.0, { Resource.STONE: 5.0 })
-    WATCH_TOWER =                   223, "Watch Tower",         Building(79, 160.0, { Resource.WOOD: 35.0, Resource.STONE: 125.0 })
-    BOMBARD_TOWER =                 224, "Bombard Tower",       Building(236, 225.0, { Resource.STONE: 125.0, Resource.GOLD: 100.0 })
-    FOLWARK =                       225, "Folwark",             Building(1734, 100.0, { Resource.WOOD: 100.0 })
-    MULE_CART =                     226, "Mule Cart",           Building(1808, 100.0, { Resource.FOOD: 20.0, Resource.WOOD: 80.0 })
-    PASTURE =                       227, "Pasture",             Building(1889, 110.0, { Resource.WOOD: 110.0 })
-    HARBOR =                        228, "Harbor",              Building(1189, 150.0, { Resource.WOOD: 150.0 })
-    CARAVANSERAI =                  229, "Caravanserai",        Building(1754, 225.0, { Resource.WOOD: 175.0, Resource.STONE: 50.0 })
-    FEITORIA =                      230, "Feitoria",            Building(1021, 650.0, { Resource.STONE: 300.0, Resource.GOLD: 350.0 })
-    SETTLEMENT =                    231, "Settlement",          Building(2556, 125.0, { Resource.WOOD: 125.0 })
-    FORTIFIED_CHURCH =              232, "Fortified Church",    Building(1806, 200.0, { Resource.WOOD: 200.0 })
-    KREPOST =                       233, "Krepost",             Building(1251, 350.0, { Resource.STONE: 350.0 })
-    DONJON =                        234, "Donjon",              Building(1665, 225.0, { Resource.WOOD: 50.0, Resource.STONE: 175 })
+    WONDER =                        200, "Wonder",              Building(276, 3000.0,   Age.IMPERIAL,   BuildingType([BuildingOption.WONDER]), { Resource.WOOD: 1000.0, Resource.GOLD: 1000.0, Resource.STONE: 1000.0 })
+    OUTPOST =                       201, "Outpost",             Building(598, 30.0,     Age.DARK,       BuildingType([BuildingOption.DEFENSE]), { Resource.WOOD: 25.0, Resource.STONE: 5.0 })
+    TOWN_CENTER =                   202, "Town Center",         Building(621, 375.0,    Age.DARK,       BuildingType([BuildingOption.ECONOMY]), { Resource.WOOD: 275.0, Resource.STONE: 100.0 })
+    HOUSE =                         203, "House",               Building(70, 25.0,      Age.DARK,       BuildingType([BuildingOption.ECONOMY], excluded_civ=[Age2Civ.HUNS]), { Resource.WOOD: 25.0 })
+    MILL =                          204, "Mill",                Building(68, 100.0,     Age.DARK,       BuildingType([BuildingOption.ECONOMY]), { Resource.WOOD: 100.0 })
+    MINING_CAMP =                   205, "Mining Camp",         Building(584, 100.0,    Age.DARK,       BuildingType([BuildingOption.ECONOMY]), { Resource.WOOD: 100.0 })
+    LUMBER_CAMP =                   206, "Lumber Camp",         Building(562, 100.0,    Age.DARK,       BuildingType([BuildingOption.ECONOMY]), { Resource.WOOD: 100.0 })
+    FARM =                          207, "Farm",                Building(50, 60.0,      Age.DARK,       BuildingType([BuildingOption.ECONOMY]), { Resource.WOOD: 60.0 })
+    FISH_TRAP =                     208, "Fish Trap",           Building(199, 100.0,    Age.FEUDAL,     BuildingType([BuildingOption.ECONOMY]), { Resource.WOOD: 100.0 })
+    DOCK =                          209, "Dock",                Building(45, 150.0,     Age.DARK,       BuildingType([BuildingOption.ECONOMY, BuildingOption.MILITARY]), { Resource.WOOD: 150.0 })
+    MARKET =                        210, "Market",              Building(84, 175.0,     Age.FEUDAL,     BuildingType([BuildingOption.ECONOMY]), { Resource.WOOD: 175.0 })
+    UNIVERSITY =                    211, "University",          Building(209, 200.0,    Age.CASTLE,     BuildingType([BuildingOption.TECH]), { Resource.WOOD: 200.0 })
+    BLACKSMITH =                    212, "Blacksmith",          Building(103, 150.0,    Age.FEUDAL,     BuildingType([BuildingOption.TECH]), { Resource.WOOD: 150.0 })
+    MONASTERY =                     213, "Monastery",           Building(104, 175.0,    Age.CASTLE,     BuildingType([BuildingOption.TECH]), { Resource.WOOD: 175.0 })
+    BARRACKS =                      214, "Barracks",            Building(12, 175.0,     Age.DARK,       BuildingType([BuildingOption.MILITARY]), { Resource.WOOD: 175.0 })
+    ARCHERY_RANGE =                 215, "Archery Range",       Building(87, 175.0,     Age.FEUDAL,     BuildingType([BuildingOption.MILITARY]), { Resource.WOOD: 175.0 })
+    STABLE =                        216, "Stable",              Building(101, 175.0,    Age.FEUDAL,     BuildingType([BuildingOption.MILITARY]), { Resource.WOOD: 175.0 })
+    SIEGE_WORKSHOP =                217, "Siege Workshop",      Building(49, 200.0,     Age.CASTLE,     BuildingType([BuildingOption.MILITARY]), { Resource.WOOD: 200.0 })
+    CASTLE =                        218, "Castle",              Building(82, 650.0,     Age.CASTLE,     BuildingType([BuildingOption.MILITARY, BuildingOption.DEFENSE]), { Resource.STONE: 650.0 })
+    PALISADE_GATE =                 219, "Palisade Gate",       Building(792, 20.0,     Age.DARK,       BuildingType([BuildingOption.DEFENSE]), { Resource.WOOD: 20.0 })
+    GATE =                          220, "Stone Gate",          Building(487, 30.0,     Age.FEUDAL,     BuildingType([BuildingOption.DEFENSE]), { Resource.STONE: 30.0 })
+    PALISADE_WALL =                 221, "Palisade Wall",       Building(72, 3.0,       Age.DARK,       BuildingType([BuildingOption.DEFENSE]), { Resource.WOOD: 3.0 })
+    STONE_WALL =                    222, "Stone Wall",          Building(117, 5.0,      Age.FEUDAL,     BuildingType([BuildingOption.DEFENSE]), { Resource.STONE: 5.0 })
+    WATCH_TOWER =                   223, "Watch Tower",         Building(79, 160.0,     Age.FEUDAL,     BuildingType([BuildingOption.DEFENSE]), { Resource.WOOD: 35.0, Resource.STONE: 125.0 })
+    BOMBARD_TOWER =                 224, "Bombard Tower",       Building(236, 225.0,    Age.IMPERIAL,   BuildingType([BuildingOption.DEFENSE]), { Resource.STONE: 125.0, Resource.GOLD: 100.0 })
+    FOLWARK =                       225, "Folwark",             Building(1734, 100.0,   Age.DARK,       BuildingType([BuildingOption.UNIQUE]), { Resource.WOOD: 100.0 })
+    MULE_CART =                     226, "Mule Cart",           Building(1808, 100.0,   Age.DARK,       BuildingType([BuildingOption.UNIQUE]), { Resource.FOOD: 20.0, Resource.WOOD: 80.0 })
+    PASTURE =                       227, "Pasture",             Building(1889, 110.0,   Age.DARK,       BuildingType([BuildingOption.UNIQUE]), { Resource.WOOD: 110.0 })
+    HARBOR =                        228, "Harbor",              Building(1189, 150.0,   Age.CASTLE,     BuildingType([BuildingOption.UNIQUE]), { Resource.WOOD: 150.0 })
+    CARAVANSERAI =                  229, "Caravanserai",        Building(1754, 225.0,   Age.IMPERIAL,   BuildingType([BuildingOption.UNIQUE]), { Resource.WOOD: 175.0, Resource.STONE: 50.0 })
+    FEITORIA =                      230, "Feitoria",            Building(1021, 650.0,   Age.IMPERIAL,   BuildingType([BuildingOption.UNIQUE]), { Resource.STONE: 300.0, Resource.GOLD: 350.0 })
+    SETTLEMENT =                    231, "Settlement",          Building(2556, 125.0,   Age.DARK,       BuildingType([BuildingOption.UNIQUE]), { Resource.WOOD: 125.0 })
+    FORTIFIED_CHURCH =              232, "Fortified Church",    Building(1806, 200.0,   Age.CASTLE,     BuildingType([BuildingOption.UNIQUE]), { Resource.WOOD: 200.0 })
+    KREPOST =                       233, "Krepost",             Building(1251, 350.0,   Age.CASTLE,     BuildingType([BuildingOption.UNIQUE]), { Resource.STONE: 350.0 })
+    DONJON =                        234, "Donjon",              Building(1665, 225.0,   Age.DARK,       BuildingType([BuildingOption.UNIQUE]), { Resource.WOOD: 50.0, Resource.STONE: 175 })
     
     #1000 - 2999 = Progression Items
     TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          TCResources(Resource.WOOD, 275)

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from Options import Choice, OptionSet, PerGameCommonOptions, StartInventoryPool
 from worlds.age2de.locations.Campaigns import Age2CampaignData
+from .items.Items import BuildingOption
 
 class Goal(Choice):
     """Goal for this playthrough.
@@ -23,6 +24,28 @@ class ScenarioBranching(Choice):
     option_any = 0
     option_all = 1
     default = option_any
+
+
+class ShuffleBuildings(OptionSet):
+    """
+    Determines which buildings to shuffle.
+    Economy: Shuffle houses, TC, market, resource buildings, farms. Includes dock.
+    Tech: Shuffle blacksmith, university, monastery.
+    Military: Shuffle military buildings. Includes dock and castle.
+    Defense: Shuffle defensive buildings. Includes castle.
+    Unique: Shuffle unique buildings, if applicable civilizations are in the pool. Other options apply to these buildings, 
+    e.g. if economy isn't shuffled, neither is folwark.
+    """
+    display_name = "Shuffle Buildings"
+    valid_keys = frozenset({
+        BuildingOption.ECONOMY,
+        BuildingOption.TECH,
+        BuildingOption.MILITARY,
+        BuildingOption.DEFENSE,
+        BuildingOption.UNIQUE,
+        BuildingOption.WONDER,
+    })
+    default = set((BuildingOption.ECONOMY, BuildingOption.TECH, BuildingOption.MILITARY))
 
 class StartingCampaigns(OptionSet):
     """
