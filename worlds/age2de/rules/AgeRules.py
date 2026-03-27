@@ -12,8 +12,9 @@ if TYPE_CHECKING:
     
 class AgeRules:
     
-    def __init__(self, rules: 'Rules'):
+    def __init__(self, rules: 'Rules', world: Age2World):
         self.rules = rules
+        self.world = world
         
     two_from_dark_age: Rule = HasFromListUnique(
             Age2ItemData.MILL.item_name,
@@ -43,6 +44,9 @@ class AgeRules:
     can_reach_castle: Rule = two_from_feudal_age & can_build_tc
         
     can_reach_imperial: Rule = two_from_castle_age & can_build_tc
+
+    def has_age(self, age: Age2AgeData) -> Rule:
+        return True_()
 
     def has_building_age(self, building: Age2BuildingData) -> Rule:
         if building.age is Age2AgeData.FEUDAL:

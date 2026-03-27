@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from rule_builder.rules import Has, Rule
+from rule_builder.rules import Has, Rule, True_
 
 from ..locations.Buildings import Age2BuildingData
 
@@ -12,14 +12,20 @@ if TYPE_CHECKING:
 
 class BuildingRules:
     
-    def __init__(self, rules: 'Rules'):
+    def __init__(self, rules: 'Rules', world: Age2World):
         self.rules = rules
+        self.world = world
         
-    def set_rules(self, world: Age2World) -> None:
-        for building in world.included_buildings:
+    def set_rules(self) -> None:
+        for building in self.world.included_buildings:
             has_building: Rule = Has(building.item.item_name)
             has_building_age = self.rules.age_rules.has_building_age(building)
-            world.set_rule(world.get_location(building.location_name), has_building & has_building_age)
+            self.world.set_rule(self.world.get_location(building.location_name), has_building & has_building_age)
+    
+    def has_building(self, building: Age2BuildingData) -> None:
+        if building not in self.world.included_buildings:
+            return True_()
+        return Has(building.item.item_name)
 
 # @dataclass
 # class AgeUpBuildingRequirement(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
