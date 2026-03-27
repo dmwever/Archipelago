@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+import typing
 
-from Options import Choice, OptionSet, PerGameCommonOptions, StartInventoryPool
+from Options import Choice, OptionList, OptionSet, PerGameCommonOptions, StartInventoryPool
 from worlds.age2de.locations.Campaigns import Age2CampaignData
-from .items.Items import BuildingOption
+from .locations.Buildings import BuildingOption
 
 class Goal(Choice):
     """Goal for this playthrough.
@@ -33,19 +34,27 @@ class ShuffleBuildings(OptionSet):
     Tech: Shuffle blacksmith, university, monastery.
     Military: Shuffle military buildings. Includes dock and castle.
     Defense: Shuffle defensive buildings. Includes castle.
-    Unique: Shuffle unique buildings, if applicable civilizations are in the pool. Other options apply to these buildings, 
-    e.g. if economy isn't shuffled, neither is folwark.
+    Unique: Shuffle unique buildings, if applicable civilizations are in the pool. Other options apply to these buildings, e.g. if economy isn't shuffled, neither is folwark.
+    Wonder: The wonder, the wonder, the... NO!
     """
     display_name = "Shuffle Buildings"
     valid_keys = frozenset({
-        BuildingOption.ECONOMY,
-        BuildingOption.TECH,
-        BuildingOption.MILITARY,
-        BuildingOption.DEFENSE,
-        BuildingOption.UNIQUE,
-        BuildingOption.WONDER,
+        BuildingOption.economy,
+        BuildingOption.tech,
+        BuildingOption.military,
+        BuildingOption.defense,
+        BuildingOption.unique,
+        BuildingOption.wonder,
     })
-    default = set((BuildingOption.ECONOMY, BuildingOption.TECH, BuildingOption.MILITARY))
+    default = set({BuildingOption.economy, BuildingOption.tech, BuildingOption.military})
+    
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, OptionSet):
+            return set(self.value) == other.value
+        if isinstance(other, OptionList):
+            return set(self.value) == set(other.value)
+        else:
+            return typing.cast(bool, self.value == other)
 
 class StartingCampaigns(OptionSet):
     """
@@ -71,6 +80,7 @@ class Age2Options(PerGameCommonOptions):
 
     startInventoryPool: StartInventoryPool
     scenarioBranching: ScenarioBranching
+    shuffle_buildings: ShuffleBuildings
     enabled_campaigns: EnabledCampaigns
     starting_campaigns: StartingCampaigns
     goal: Goal

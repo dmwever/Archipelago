@@ -16,7 +16,7 @@ class BuildingRules:
         self.rules = rules
         
     def set_rules(self, world: Age2World) -> None:
-        for building in Age2BuildingData:
+        for building in world.included_buildings:
             has_building: Rule = Has(building.item.item_name)
             has_building_age = self.rules.age_rules.has_building_age(building)
             world.set_rule(world.get_location(building.location_name), has_building & has_building_age)

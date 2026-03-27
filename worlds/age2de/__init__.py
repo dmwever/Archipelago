@@ -46,6 +46,7 @@ class Age2World(World):
     
     included_civs: Scenarios.Age2Civ = Scenarios.Age2Civ.NONE
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
+    included_buildings: list[Buildings.Age2BuildingData] = []
     rules: Rules = Rules()
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
@@ -73,8 +74,13 @@ class Age2World(World):
         source.exits.append(connection)
         connection.connect(buildings)
         for building in Buildings.Age2BuildingData:
-            new_location = Location(self.player, building.location_name, building.id, buildings)
-            buildings.locations.append(new_location)
+            if Buildings.BuildingOption.unique in building.building_options and Buildings.BuildingOption.unique not in self.options.shuffle_buildings:
+                continue # We skip unique altogether, else we sort by other building type.
+            if any(option in building.building_options for option in 
+                   [options for options in self.options.shuffle_buildings if not Buildings.BuildingOption.unique in options]):
+                new_location = Location(self.player, building.location_name, building.id, buildings)
+                buildings.locations.append(new_location)
+                self.included_buildings.append(building)
         regions.append(buildings)
         
         for scenario in Scenarios.Age2ScenarioData:
@@ -134,9 +140,12 @@ class Age2World(World):
             elif isinstance(item.type, Items.Age):
                 continue
             elif isinstance(item.type, Items.Building):
-                items.append(self.create_item(item.item_name))
+                continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
+
+        for building in self.included_buildings:
+            items.append(self.create_item(building.item.item_name))
 
         self.multiworld.itempool += items
         
