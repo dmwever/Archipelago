@@ -6,7 +6,7 @@ class Age2AgeData(enum.IntEnum):
     
     def __new__(cls, id: int, *args, **kwargs):
         value = id
-        obj = int.__new__(cls)
+        obj = int.__new__(cls, value)
         obj._value_ = value
         return obj
 

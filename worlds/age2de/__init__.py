@@ -47,7 +47,7 @@ class Age2World(World):
     included_civs: Scenarios.Age2Civ = Scenarios.Age2Civ.NONE
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
     included_buildings: list[Buildings.Age2BuildingData] = []
-    rules: Rules = Rules()
+    rules: Rules
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
@@ -176,7 +176,8 @@ class Age2World(World):
         return filler_item_name
     
     def set_rules(self) -> None:
-        self.rules.set_rules(self)
+        self.rules = Rules(self)
+        self.rules.set_rules()
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         return {

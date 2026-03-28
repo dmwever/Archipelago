@@ -1,10 +1,11 @@
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from ..locations.Buildings import Age2BuildingData
 
-from ....rule_builder.rules import False_, Rule, True_
+from rule_builder.rules import False_, Rule, True_
 
 from ..locations.Ages import Age2AgeData
 
@@ -15,12 +16,13 @@ if TYPE_CHECKING:
 
 @dataclass
 class ScenarioStartingState:
-    has_vils: Rule = True_()
-    has_tc: Rule = True_()
-    has_ages: dict[Age2AgeData, Rule] = field(default_factory=lambda: dict({ (age, False_()) for age in Age2AgeData }))
-    can_reach_age: dict[Age2AgeData, Rule] = field(default_factory=lambda: dict({ (age, False_()) for age in Age2AgeData }))
-    starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: dict({ (building, False_()) for building in Age2BuildingData }))
-    has_water_access: Rule = True_()
+    is_unlocked: Rule = field(default_factory=lambda: False_())
+    has_vils: Rule = field(default_factory=lambda: True_())
+    has_tc: Rule = field(default_factory=lambda: True_())
+    has_ages: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
+    can_reach_age: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
+    starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
+    has_water_access: Rule = field(default_factory=lambda: True_())
 
 class ScenarioRules:
     starting_state: ScenarioStartingState
@@ -37,11 +39,17 @@ class ScenarioRules:
     def has_tc(self) -> Rule:
         return self.starting_state.has_tc
     
-    def can_reach_age(self) -> Rule:
-        return self.starting_state.can_reach_age
+    def can_reach_age(self, age: Age2AgeData) -> Rule:
+        return self.starting_state.can_reach_age[age]
     
-    def has_age(self, age: Age2AgeData):
+    def has_age(self, age: Age2AgeData) -> Rule:
         return self.starting_state.has_ages[age]
     
-    def has_building(self, building: Age2BuildingData):
-        return self.starting_state.starts_with_building[building]
+    def has_building(self, building: Age2BuildingData) -> Rule:
+        return self.starting_state.starts_with_building[building] | self.rules.building_rules.has_building()
+    
+    def can_build_building(self, building: Age2BuildingData) -> Rule:
+        return self.rules.building_rules.has_building() & self.has_vils() & self.rules.age_rules.has_building_age(building)
+    
+    def is_unlocked(self) -> Rule:
+        return self.starting_state.is_unlocked
