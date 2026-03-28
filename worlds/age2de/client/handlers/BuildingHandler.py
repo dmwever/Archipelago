@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-import FolderHandler
+from .FolderHandler import FolderHandler
 from ...campaign import XsdatFile
 from ...items.Items import Age2ItemData
 from ...locations.Buildings import Age2BuildingData
