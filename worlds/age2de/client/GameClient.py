@@ -309,12 +309,12 @@ async def status_loop(ctx: Age2GameContext):
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             send_items(ctx)
             sync_starting_resources(ctx)
-            ctx.building_handler.try_sync_buildings()
             ctx.campaign_handler.sync_scenario_items(list(set(ctx.client_status.unlocked_items).intersection(Items.CATEGORY_TO_ITEMS[ScenarioItem])))
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
             
+        ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
         free_items(ctx)
         ping_game(ctx)
