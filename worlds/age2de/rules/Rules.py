@@ -10,7 +10,7 @@ from .attila_rules.Attila1StartingState import Attila1StartingState
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
-from rule_builder.rules import CanReachRegion, False_, Has, HasAll, Rule
+from rule_builder.rules import CanReachRegion, False_, Has, HasAll, Rule, True_
 
 from ..locations.Scenarios import Age2ScenarioData
 
@@ -76,8 +76,9 @@ class Rules:
 
         attila_3_gold = HasAll(Age2ItemData.AP_ATTILA_3_GREEN_GOLD.item_name, Age2ItemData.AP_ATTILA_3_RED_GOLD.item_name)
         
-        self.building_rules.set_rules()
-
+        for building in self.world.included_buildings:
+            self.world.set_rule(self.world.get_location(building.location_name), self.can_build_building(building))
+        
         self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_VICTORY.global_name()), attila_2_vils & self.age_rules.can_reach_feudal())
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), attila_2_vils & self.age_rules.can_reach_feudal())
         self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_BUILD_TC.global_name()), attila_2_vils & self.age_rules.can_reach_feudal())
@@ -86,11 +87,13 @@ class Rules:
         self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT3_BLUE_DOCKS_SOUTH.global_name()), attila_3_gold)
         self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT3_DESTROY_WONDER.global_name()), attila_3_gold)
         self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT3_THREATEN_WONDER.global_name()), attila_3_gold)
-        self.world.set_rule(self.world.get_entrance(Age2ScenarioData.AP_ATTILA_4.scenario_name), self.age_rules.can_build_tc())
+        self.world.set_rule(self.world.get_entrance(Age2ScenarioData.AP_ATTILA_4.scenario_name), self.building_rules.can_build_tc())
         
-    def can_build(self, building: Age2BuildingData) -> Rule:
-        can_build: Rule = False_()
-        for rule in self.scenario_rules:
-            if rule.is_unlocked():
-                can_build = can_build | (rule.is_unlocked() & rule.can_build_building(building))
-        return can_build
+    def can_build_building(self, building: Age2BuildingData) -> Rule:
+        can_build: Rule = self.building_rules.has_building(building) & self.age_rules.has_building_age(building) & self.building_rules.has_prerequisites(building)
+        has_vils: Rule = False_()
+        can_reach_age: Rule = False_()
+        for scenario in self.scenario_rules:
+            has_vils = has_vils | (scenario.is_unlocked() & scenario.has_vils(building))
+            can_reach_age = can_reach_age | ((scenario.is_unlocked) & scenario.can_reach_age(building.age))
+        return can_build & has_vils & can_reach_age

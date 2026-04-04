@@ -9,18 +9,19 @@ from ..locations.Buildings import Age2BuildingData
 
 if TYPE_CHECKING:
     from .. import Age2World
-    from .Rules import Rules
+    from .Logic import Logic
 
-class BuildingRules:
+class BuildingLogic:
     
-    def __init__(self, rules: 'Rules', world: Age2World):
-        self.rules = rules
+    def __init__(self, logic: 'Logic', world: Age2World):
+        self.logic = logic
         self.world = world
     
     def has_building(self, building: Age2BuildingData) -> Rule:
+        has_prerequisites = self.has_prerequisites(building)
         if building not in self.world.included_buildings:
-            return True_()
-        return Has(building.item.item_name)
+            return has_prerequisites
+        return has_prerequisites & Has(building.item.item_name)
     
     def has_prerequisites(self, building: Age2BuildingData) -> Rule:
         if building is Age2BuildingData.ARCHERY_RANGE or Age2BuildingData.STABLE:

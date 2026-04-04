@@ -11,7 +11,7 @@ from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
     from .. import Age2World
-    from .Rules import Rules
+    from .Logic import Logic
 
 @dataclass
 class ScenarioStartingState:
@@ -23,11 +23,11 @@ class ScenarioStartingState:
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     has_water_access: Rule = field(default_factory=lambda: True_())
 
-class ScenarioRules:
+class ScenarioLogic:
     starting_state: ScenarioStartingState
     
-    def __init__(self, rules: 'Rules', data: ScenarioStartingState):
-        self.rules = rules
+    def __init__(self, logic: 'Logic', data: ScenarioStartingState):
+        self.logic = logic
         self.starting_state = data
         self.starting_state.has_ages[Age2AgeData.DARK] = True_()
         self.starting_state.can_reach_age[Age2AgeData.DARK] = True_()
