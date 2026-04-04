@@ -20,8 +20,9 @@ class AgeRules:
         self.rules = rules
         self.world = world
         
-    def set_age_rules(self):
+    def set_rules(self):
         pass
+
 @dataclass
 class TwoBuildingsRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definitive Edition"):
     """A rule that checks that a player has at least two of the needed buildings to age up"""

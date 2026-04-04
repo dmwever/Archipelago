@@ -4,6 +4,7 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification, Location
+from .CounterLogic import CounterLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Ages import Age2AgeData
 from .attila.Attila1StartingState import Attila1StartingState
@@ -24,10 +25,24 @@ if TYPE_CHECKING:
 class Logic:
     buildings: BuildingLogic
     ages: AgeLogic
+    counters: CounterLogic
     scenarios: list[ScenarioLogic]
     
     def __init__(self, world: Age2World):
         self.buildings = BuildingLogic(self, world)
         self.ages =  AgeLogic(self, world)
         self.scenarios = []
+        self.counters = CounterLogic(self, world)
         self.world = world
+
+    def has_military(self) -> Rule:
+        return self.buildings.has_military_building()
+    
+    def can_build_building(self, building: Age2BuildingData) -> Rule:
+        can_build: Rule = self.buildings.has_building(building) & self.ages.has_building_age(building) & self.buildings.has_prerequisites(building)
+        has_vils: Rule = False_()
+        can_reach_age: Rule = False_()
+        for scenario in self.scenarios:
+            has_vils = has_vils | (scenario.is_unlocked() & scenario.has_vils(building))
+            can_reach_age = can_reach_age | ((scenario.is_unlocked) & scenario.can_reach_age(building.age))
+        return can_build & has_vils & can_reach_age

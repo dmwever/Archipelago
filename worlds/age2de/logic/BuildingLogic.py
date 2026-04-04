@@ -48,5 +48,20 @@ class BuildingLogic:
     def has_anti_building_building(self) -> Rule:
         return self.has_building(Age2BuildingData.BARRACKS) | self.has_building(Age2BuildingData.STABLE) | self.has_siege_building()
     
+    def has_anti_cav_building(self) -> Rule:
+        return self.has_building(Age2BuildingData.BARRACKS) | self.has_building(Age2BuildingData.STABLE)
+    
+    def has_anti_archer_building(self) -> Rule:
+        return self.has_building(Age2BuildingData.STABLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP) | self.has_building(Age2BuildingData.ARCHERY_RANGE)
+    
+    def has_anti_siege_building(self) -> Rule:
+        return self.has_building(Age2BuildingData.STABLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+    
+    def has_anti_inf_building(self) -> Rule:
+        return self.has_building(Age2BuildingData.STABLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP) | self.has_building(Age2BuildingData.ARCHERY_RANGE)
+    
+    def has_military_building(self) -> Rule:
+        return self.has_anti_building_building | self.has_building(Age2BuildingData.ARCHERY_RANGE)
+    
     def has_farms(self):
         return self.has_building(Age2BuildingData.FARM) & self.has_prerequisites(Age2BuildingData.FARM)

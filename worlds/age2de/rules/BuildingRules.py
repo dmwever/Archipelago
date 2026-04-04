@@ -8,44 +8,15 @@ from ..locations.Buildings import Age2BuildingData
 
 
 if TYPE_CHECKING:
-    from .. import Age2World
     from .Rules import Rules
 
 class BuildingRules:
     
-    def __init__(self, rules: 'Rules', world: Age2World):
+    def __init__(self, rules: 'Rules'):
         self.rules = rules
-        self.world = world
+        self.world = rules.world
+        self.logic = rules.logic
     
-    def has_building(self, building: Age2BuildingData) -> Rule:
-        if building not in self.world.included_buildings:
-            return True_()
-        return Has(building.item.item_name)
-    
-    def has_prerequisites(self, building: Age2BuildingData) -> Rule:
-        if building is Age2BuildingData.ARCHERY_RANGE or Age2BuildingData.STABLE:
-            return self.has_building(Age2BuildingData.BARRACKS)
-        
-        if building is Age2BuildingData.FARM or Age2BuildingData.MARKET:
-            return self.has_building(Age2BuildingData.MILL)
-        
-        if building is Age2BuildingData.SIEGE_WORKSHOP:
-            return self.has_building(Age2BuildingData.BLACKSMITH)
-        
-        if building is Age2BuildingData.FISH_TRAP:
-            return self.has_building(Age2BuildingData.DOCK)
-        
-        return True_()
-    
-    def can_build_tc(self) -> Rule:
-        return self.has_building(Age2BuildingData.TOWN_CENTER) & \
-            HasAll(Age2ItemData.TOWN_CENTER_WOOD.item_name, Age2ItemData.TOWN_CENTER_STONE.item_name)
-    
-    def has_siege_building(self) -> Rule:
-        return self.has_building(Age2BuildingData.CASTLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
-    
-    def has_anti_building_building(self) -> Rule:
-        return self.has_building(Age2BuildingData.BARRACKS) | self.has_building(Age2BuildingData.STABLE) | self.has_siege_building()
-    
-    def has_farms(self):
-        return self.has_building(Age2BuildingData.FARM) & self.has_prerequisites(Age2BuildingData.FARM)
+    def set_rules(self):
+        for building in self.world.included_buildings:
+            self.world.set_rule(self.world.get_location(building.location_name), self.logic.can_build_building(building))
