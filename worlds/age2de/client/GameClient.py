@@ -203,6 +203,8 @@ def flush_files(ctx: Age2GameContext) -> None:
             os.remove(user_folder(ctx) + "locations.xsdat")
         if os.path.exists(user_folder(ctx) + "startup.xsdat"):
             os.remove(user_folder(ctx) + "startup.xsdat")
+        if os.path.exists(user_folder(ctx) + "buildings.xsdat"):
+            os.remove(user_folder(ctx) + "buildings.xsdat")
     except Exception as ex:
         print(ex)
 
