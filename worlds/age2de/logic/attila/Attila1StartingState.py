@@ -22,7 +22,6 @@ class Attila1StartingState(ScenarioStartingState):
         self.has_vils = self.has_bledas_camp | self.alternate_vils
         self.has_tc = self.has_bledas_camp | (logic.buildings.can_build_tc() & 
             self.alternate_vils)
-        self.has_ages[Age2AgeData.DARK] = True_()
         self.can_reach_age[Age2AgeData.FEUDAL] = self.has_bledas_camp | (logic.ages.can_reach_feudal() & self.alternate_vils)
         self.can_reach_age[Age2AgeData.CASTLE] = self.has_bledas_camp | (logic.ages.can_reach_castle() & self.alternate_vils)
         self.starts_with_building[Age2BuildingData.STABLE] = self.has_bledas_camp | Has(Age2ItemData.AP_ATTILA_1_ATTILAS_CAMP.item_name)

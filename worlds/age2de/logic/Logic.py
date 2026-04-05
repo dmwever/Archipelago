@@ -4,6 +4,7 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification, Location
+from worlds.age2de.logic.attila import Attila2StartingState, Attila3StartingState, Attila4StartingState, Attila5StartingState, Attila6StartingState
 from .CounterLogic import CounterLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Ages import Age2AgeData
@@ -31,7 +32,14 @@ class Logic:
     def __init__(self, world: Age2World):
         self.buildings = BuildingLogic(self, world)
         self.ages =  AgeLogic(self, world)
-        self.scenarios = []
+        self.scenarios = [
+            ScenarioLogic(self, Attila1StartingState(self)),
+            ScenarioLogic(self, Attila2StartingState(self)),
+            ScenarioLogic(self, Attila3StartingState(self)),
+            ScenarioLogic(self, Attila4StartingState(self)),
+            ScenarioLogic(self, Attila5StartingState(self)),
+            ScenarioLogic(self, Attila6StartingState(self)),
+        ]
         self.counters = CounterLogic(self, world)
         self.world = world
 
