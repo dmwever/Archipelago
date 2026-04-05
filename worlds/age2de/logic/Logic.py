@@ -38,11 +38,14 @@ class Logic:
     def has_military(self) -> Rule:
         return self.buildings.has_military_building()
     
+    def has_siege(self) -> Rule:
+        return self.buildings.has_siege_building()
+    
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         can_build: Rule = self.buildings.has_building(building) & self.ages.has_building_age(building) & self.buildings.has_prerequisites(building)
         has_vils: Rule = False_()
         can_reach_age: Rule = False_()
         for scenario in self.scenarios:
-            has_vils = has_vils | (scenario.is_unlocked() & scenario.has_vils(building))
-            can_reach_age = can_reach_age | ((scenario.is_unlocked) & scenario.can_reach_age(building.age))
+            has_vils = has_vils | (scenario.is_unlocked() & scenario.has_vils())
+            can_reach_age = can_reach_age | (scenario.is_unlocked() & scenario.can_reach_age(building.age))
         return can_build & has_vils & can_reach_age

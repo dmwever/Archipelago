@@ -24,16 +24,16 @@ class BuildingLogic:
         return has_prerequisites & Has(building.item.item_name)
     
     def has_prerequisites(self, building: Age2BuildingData) -> Rule:
-        if building is Age2BuildingData.ARCHERY_RANGE or Age2BuildingData.STABLE:
+        if building == (Age2BuildingData.ARCHERY_RANGE or Age2BuildingData.STABLE):
             return self.has_building(Age2BuildingData.BARRACKS)
         
-        if building is Age2BuildingData.FARM or Age2BuildingData.MARKET:
+        if building == (Age2BuildingData.FARM or Age2BuildingData.MARKET):
             return self.has_building(Age2BuildingData.MILL)
         
-        if building is Age2BuildingData.SIEGE_WORKSHOP:
+        if building == Age2BuildingData.SIEGE_WORKSHOP:
             return self.has_building(Age2BuildingData.BLACKSMITH)
         
-        if building is Age2BuildingData.FISH_TRAP:
+        if building == Age2BuildingData.FISH_TRAP:
             return self.has_building(Age2BuildingData.DOCK)
         
         return True_()
@@ -61,7 +61,7 @@ class BuildingLogic:
         return self.has_building(Age2BuildingData.STABLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP) | self.has_building(Age2BuildingData.ARCHERY_RANGE)
     
     def has_military_building(self) -> Rule:
-        return self.has_anti_building_building | self.has_building(Age2BuildingData.ARCHERY_RANGE)
+        return self.has_anti_building_building() | self.has_building(Age2BuildingData.ARCHERY_RANGE)
     
     def has_farms(self):
         return self.has_building(Age2BuildingData.FARM) & self.has_prerequisites(Age2BuildingData.FARM)
