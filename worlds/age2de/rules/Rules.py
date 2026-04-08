@@ -76,6 +76,7 @@ def set_rules(world: Age2World) -> None:
     set_rule(world.get_location(Age2LocationData.ATT1_DEFEAT_FIRST_PLAYER.global_name()), lambda state: ((has_attila_1_attila_camp(state) and can_build_tc(state)) or has_attila_1_bleda_camp(state)))
     set_rule(world.get_location(Age2LocationData.ATT1_CAPTURE_HORSES_CAMP.global_name()), has_attila_1_bleda_camp)
     set_rule(world.get_location(Age2LocationData.ATT2_VICTORY.global_name()), lambda state: (has_attila_2_vils(state) and can_build_tc(state)))
+    set_rule(world.get_location(Age2LocationData.ATT2_SCYTHIAN_VILS.global_name()), lambda state: (has_attila_2_vils(state)))
     set_rule(world.get_location("Complete " + Age2LocationData.ATT2_VICTORY.scenario.scenario_name), lambda state: (has_attila_2_vils(state) and can_build_tc(state)))
     set_rule(world.get_location(Age2LocationData.ATT2_BUILD_TC.global_name()), lambda state: (has_attila_2_vils(state) and can_build_tc(state)))
     set_rule(world.get_location(Age2LocationData.ATT2_BEAT_THE_ROMANS.global_name()), lambda state: (has_attila_2_vils(state) and can_build_tc(state)))
