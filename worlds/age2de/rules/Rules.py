@@ -4,6 +4,8 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, Entrance, Item, ItemClassification, Location
+from .attila_rules.Attila3Rules import Attila3Rules
+from .attila_rules.Attila2Rules import Attila2Rules
 from .attila_rules.Attila1Rules import Attila1Rules
 from ..logic.Logic import Logic
 from ..locations.Buildings import Age2BuildingData
@@ -29,11 +31,11 @@ class Rules:
     logic: Logic
     
     def __init__(self, world: Age2World):
+        self.world = world
+        self.logic = Logic(world)
         self.building_rules = BuildingRules(self)
         self.age_rules =  AgeRules(self, world)
         self.scenario_rules = []
-        self.world = world
-        self.logic = Logic(world)
 
     def get_entrance(self, entrance_name: str):
         self.world.get_entrance(entrance_name)
@@ -50,6 +52,8 @@ class Rules:
 
         # Attila 1
         self.scenario_rules.append(Attila1Rules(self))
+        self.scenario_rules.append(Attila2Rules(self))
+        self.scenario_rules.append(Attila3Rules(self))
 
         for scenario in self.scenario_rules:
             scenario.set_rules()
@@ -75,18 +79,8 @@ class Rules:
         # scenario-specific rules
 
         attila_2_vils = Has(Age2ItemData.AP_ATTILA_2_VILLAGERS.item_name)
-
-        attila_3_gold = HasAll(Age2ItemData.AP_ATTILA_3_GREEN_GOLD.item_name, Age2ItemData.AP_ATTILA_3_RED_GOLD.item_name)
         
         self.age_rules.set_rules()
         self.building_rules.set_rules()
         
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_VICTORY.global_name()), attila_2_vils & self.logic.ages.can_reach_feudal())
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), attila_2_vils & self.logic.ages.can_reach_feudal())
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_BUILD_TC.global_name()), attila_2_vils & self.logic.ages.can_reach_feudal())
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_BEAT_THE_ROMANS.global_name()), attila_2_vils & self.logic.ages.can_reach_feudal())
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT3_BLUE_DOCK_NORTH.global_name()), attila_3_gold)
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT3_BLUE_DOCKS_SOUTH.global_name()), attila_3_gold)
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT3_DESTROY_WONDER.global_name()), attila_3_gold)
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT3_THREATEN_WONDER.global_name()), attila_3_gold)
         self.world.set_rule(self.world.get_entrance(Age2ScenarioData.AP_ATTILA_4.scenario_name), self.logic.buildings.can_build_tc())

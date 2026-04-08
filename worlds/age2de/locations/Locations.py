@@ -87,9 +87,9 @@ class Age2ScenarioLocationData(enum.IntEnum):
     ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY =  10407, "Defeat or Ally Burgundy",       Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ANY
     
     ATT5_VICTORY =          10500, "Victory",                  Age2ScenarioData.AP_ATTILA_5, Age2LocationType.VICTORY
-    ATT4_DEFEAT_ROMANS =    10501, "Defeat the Romans",        Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
-    ATT4_DEFEAT_VISIGOTHS = 10502, "Defeat the Visigoths",     Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
-    ATT4_DEFEAT_ALANS =     10503, "Defeat the Alans",         Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT5_DEFEAT_ROMANS =    10501, "Defeat the Romans",        Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT5_DEFEAT_VISIGOTHS = 10502, "Defeat the Visigoths",     Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
+    ATT5_DEFEAT_ALANS =     10503, "Defeat the Alans",         Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
     
     ATT6_VICTORY =                  10600, "Victory",                                   Age2ScenarioData.AP_ATTILA_6, Age2LocationType.VICTORY
     ATT6_DEFEAT_PATAVIUM =          10601, "Defeat Patavium",                           Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE

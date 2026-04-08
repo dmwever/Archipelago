@@ -12,15 +12,15 @@ from ..ScenarioRules import ScenarioRules
 class Attila1Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules)
+        self.entrance = self.world.get_entrance(Age2ScenarioData.AP_ATTILA_1.scenario_name)
         self.scenario_logic = ScenarioLogic(self.logic, Attila1StartingState(self.logic))
     
     def set_rules(self):
-        att1 = self.world.get_entrance(Age2ScenarioData.AP_ATTILA_1.scenario_name)
-        self.world.set_rule(att1, self.scenario_logic.is_unlocked())
+        super().set_rules()
         can_beat_purple: Rule = self.scenario_logic.has_tc() & self.logic.has_military()
         can_beat_blue: Rule = self.scenario_logic.can_reach_age(Age2AgeData.FEUDAL) & self.scenario_logic.has_tc() & self.logic.has_military()
-        can_beat_red: Rule = self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) & self.logic.buildings.has_siege_building() & self.logic.counters.has_anti_cav()
-        can_beat_green: Rule = self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) & self.logic.buildings.has_siege_building() & self.logic.counters.has_anti_archers()
+        can_beat_red: Rule = self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) & self.logic.buildings.has_siege() & self.logic.military.has_anti_cav()
+        can_beat_green: Rule = self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) & self.logic.buildings.has_siege() & self.logic.military.has_anti_archers()
         self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT1_VICTORY.global_name()),
                 can_beat_green | can_beat_red)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name),

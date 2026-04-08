@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification, Location
 from worlds.age2de.logic.attila import Attila2StartingState, Attila3StartingState, Attila4StartingState, Attila5StartingState, Attila6StartingState
-from .CounterLogic import CounterLogic
+from .MilitaryLogic import MilitaryLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Ages import Age2AgeData
 from .attila.Attila1StartingState import Attila1StartingState
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class Logic:
     buildings: BuildingLogic
     ages: AgeLogic
-    counters: CounterLogic
+    military: MilitaryLogic
     scenarios: list[ScenarioLogic]
     
     def __init__(self, world: Age2World):
@@ -40,14 +40,14 @@ class Logic:
             ScenarioLogic(self, Attila5StartingState(self)),
             ScenarioLogic(self, Attila6StartingState(self)),
         ]
-        self.counters = CounterLogic(self, world)
+        self.military = MilitaryLogic(self, world)
         self.world = world
 
     def has_military(self) -> Rule:
-        return self.buildings.has_military_building()
+        return self.buildings.has_military()
     
     def has_siege(self) -> Rule:
-        return self.buildings.has_siege_building()
+        return self.buildings.has_siege()
     
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         can_build: Rule = self.buildings.has_building(building) & self.ages.has_building_age(building) & self.buildings.has_prerequisites(building)
