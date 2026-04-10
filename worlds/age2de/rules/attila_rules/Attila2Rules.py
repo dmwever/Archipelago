@@ -30,7 +30,8 @@ class Attila2Rules(ScenarioRules):
         )
         can_build_tc = self.scenario_logic.has_tc()
         
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_VICTORY.global_name()), can_beat_blue & can_build_tc)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_beat_blue & can_build_tc)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_beat_blue & can_build_tc)
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_BUILD_TC.global_name()), can_build_tc)
-        self.world.set_rule(self.world.get_location(Age2ScenarioLocationData.ATT2_BEAT_THE_ROMANS.global_name()), can_beat_blue)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_SCYTHIAN_VILS], self.scenario_logic.has_vils())
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_BUILD_TC], can_build_tc)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_BEAT_THE_ROMANS], can_beat_blue)
