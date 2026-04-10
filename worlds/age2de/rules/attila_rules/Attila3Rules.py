@@ -20,8 +20,8 @@ class Attila3Rules(ScenarioRules):
         super().set_rules()
         can_beat_red: Rule = True_()
         can_beat_green: Rule = True_()
-        has_green_gold: Rule = can_beat_green & Has(Age2ItemData.AP_ATTILA_3_GREEN_GOLD)
-        has_red_gold: Rule = can_beat_red & Has(Age2ItemData.AP_ATTILA_3_RED_GOLD)
+        has_green_gold: Rule = can_beat_green & Has(Age2ItemData.AP_ATTILA_3_GREEN_GOLD.item_name)
+        has_red_gold: Rule = can_beat_red & Has(Age2ItemData.AP_ATTILA_3_RED_GOLD.item_name)
         has_some_gold: Rule = self.logic.buildings.can_mine() | has_green_gold | has_red_gold
         has_much_gold: Rule = self.logic.buildings.can_mine() & has_green_gold & has_red_gold
         can_win_water: Rule = self.logic.military.has_navy() & has_some_gold

@@ -4,11 +4,15 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification, Location
-from worlds.age2de.logic.attila import Attila2StartingState, Attila3StartingState, Attila4StartingState, Attila5StartingState, Attila6StartingState
+from .attila.Attila6StartingState import Attila6StartingState
+from .attila.Attila5StartingState import Attila5StartingState
+from .attila.Attila4StartingState import Attila4StartingState
+from .attila.Attila3StartingState import Attila3StartingState
 from .MilitaryLogic import MilitaryLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Ages import Age2AgeData
 from .attila.Attila1StartingState import Attila1StartingState
+from .attila.Attila2StartingState import Attila2StartingState
 from .ScenarioLogic import ScenarioLogic
 from .AgeLogic import AgeLogic
 from .BuildingLogic import BuildingLogic

@@ -45,29 +45,168 @@ class BuildingLogic:
     def can_build_multiple_tc(self) -> Rule:
         return self.can_build_tc() & self.logic.ages.can_reach_castle()
     
+    # Military
+    
+    def has_military(self) -> Rule:
+        return self.contains_building_counter() | self.has_building(Age2BuildingData.ARCHERY_RANGE)
+    
     def has_siege(self) -> Rule:
         return self.has_building(Age2BuildingData.CASTLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
     
-    def has_anti_building_building(self) -> Rule:
-        return self.has_building(Age2BuildingData.BARRACKS) | self.has_building(Age2BuildingData.STABLE) | self.has_siege()
+    # Counters
     
-    def has_anti_trash(self) -> Rule:
-        return self.has_military()
+    def contains_building_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_siege()
+        )
+
+    def contains_milita_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.ARCHERY_RANGE) |
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+
+
+    def contains_spear_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.ARCHERY_RANGE) |
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+
+
+    def contains_scout_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.STABLE)
+        )
+
+
+    def contains_knight_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.MONASTERY)
+        )
+
+
+    def contains_skirmisher_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP) |
+            self.has_building(Age2BuildingData.ARCHERY_RANGE)
+        )
+
+
+    def contains_archer_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP) |
+            self.has_building(Age2BuildingData.ARCHERY_RANGE)
+        )
+
+
+    def contains_cav_archer_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP) |
+            self.has_building(Age2BuildingData.ARCHERY_RANGE)
+        )
+
+
+    def contains_ram_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP) |
+            self.has_building(Age2BuildingData.STABLE)
+        )
+
+
+    def contains_scorpion_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+
+
+    def contains_mangonel_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+        
+
+    def contains_monk_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.ARCHERY_RANGE)
+        )
+
+    def contains_trebuchet_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP) |
+            self.has_building(Age2BuildingData.CASTLE)
+        )
+        
+    # Unique Counters
     
-    def has_anti_cav(self) -> Rule:
-        return self.has_building(Age2BuildingData.BARRACKS) | self.has_building(Age2BuildingData.STABLE)
+    def contains_centurion_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.MONASTERY) |
+            self.has_building(Age2BuildingData.BARRACKS)
+        )
+
+
+    def contains_huskarl_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.STABLE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+
+
+    def contains_legionary_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.ARCHERY_RANGE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+
+
+    def contains_longbowman_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.ARCHERY_RANGE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+
+
+    def contains_mangudai_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.BARRACKS) |
+            self.has_building(Age2BuildingData.ARCHERY_RANGE) |
+            self.has_building(Age2BuildingData.STABLE)
+        )
+
+
+    def contains_throwing_axeman_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.ARCHERY_RANGE) |
+            self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
+        )
+
+
+    def contains_war_elephant_counter(self) -> Rule:
+        return (
+            self.has_building(Age2BuildingData.MONASTERY) |
+            self.has_building(Age2BuildingData.BARRACKS)
+        )
     
-    def has_anti_archer(self) -> Rule:
-        return self.has_building(Age2BuildingData.STABLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP) | self.has_building(Age2BuildingData.ARCHERY_RANGE)
-    
-    def has_anti_siege(self) -> Rule:
-        return self.has_building(Age2BuildingData.STABLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP)
-    
-    def has_anti_infantry(self) -> Rule:
-        return self.has_building(Age2BuildingData.STABLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP) | self.has_building(Age2BuildingData.ARCHERY_RANGE)
-    
-    def has_military(self) -> Rule:
-        return self.has_anti_building_building() | self.has_building(Age2BuildingData.ARCHERY_RANGE)
+    # Resources
     
     def can_mine(self) -> Rule:
         return self.can_build_multiple_tc() | self.has_building(Age2BuildingData.MINING_CAMP)

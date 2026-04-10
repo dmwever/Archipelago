@@ -4,6 +4,9 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, Entrance, Item, ItemClassification, Location
+from .attila_rules.Attila6Rules import Attila6Rules
+from .attila_rules.Attila5Rules import Attila5Rules
+from .attila_rules.Attila4Rules import Attila4Rules
 from .attila_rules.Attila3Rules import Attila3Rules
 from .attila_rules.Attila2Rules import Attila2Rules
 from .attila_rules.Attila1Rules import Attila1Rules
@@ -13,7 +16,7 @@ from ..locations.Ages import Age2AgeData
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
-from rule_builder.rules import CanReachRegion, False_, Has, HasAll, Rule, True_
+from rule_builder.rules import CanReachRegion, False_, Has, Rule, True_
 
 from ..locations.Scenarios import Age2ScenarioData
 
@@ -54,33 +57,12 @@ class Rules:
         self.scenario_rules.append(Attila1Rules(self))
         self.scenario_rules.append(Attila2Rules(self))
         self.scenario_rules.append(Attila3Rules(self))
+        self.scenario_rules.append(Attila4Rules(self))
+        self.scenario_rules.append(Attila5Rules(self))
+        self.scenario_rules.append(Attila6Rules(self))
 
         for scenario in self.scenario_rules:
             scenario.set_rules()
-        
-        # Attila 2
-        att2 = self.world.get_entrance(Age2ScenarioData.AP_ATTILA_2.scenario_name)
-        self.world.set_rule(att2, Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario"))
-        
-        att3 = self.world.get_entrance(Age2ScenarioData.AP_ATTILA_3.scenario_name)
-        self.world.set_rule(att3, Has(Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 2))
-        
-        att4 = self.world.get_entrance(Age2ScenarioData.AP_ATTILA_4.scenario_name)
-        self.world.set_rule(att4, Has(Age2ScenarioLocationData.ATT3_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 3))
-        
-        att5 = self.world.get_entrance(Age2ScenarioData.AP_ATTILA_5.scenario_name)
-        self.world.set_rule(att5, Has(Age2ScenarioLocationData.ATT4_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 4))
-        
-        att6 = self.world.get_entrance(Age2ScenarioData.AP_ATTILA_6.scenario_name)
-        self.world.set_rule(att6, Has(Age2ScenarioLocationData.ATT5_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 5))
-        
-        # starting tc rules
-        
-        # scenario-specific rules
-
-        attila_2_vils = Has(Age2ItemData.AP_ATTILA_2_VILLAGERS.item_name)
-        
+                
         self.age_rules.set_rules()
         self.building_rules.set_rules()
-        
-        self.world.set_rule(self.world.get_entrance(Age2ScenarioData.AP_ATTILA_4.scenario_name), self.logic.buildings.can_build_tc())
