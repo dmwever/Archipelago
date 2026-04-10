@@ -40,7 +40,7 @@ class Age2ScenarioLocationData(enum.IntEnum):
     ATT1_CAPTURE_HORSE_RUINS =          10105, "Capture Horse at Ruins",                Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSES_LUMBER =        10106, "Capture Horses Near Lumber",            Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSES_BEHIND_BASE =   10107, "Capture Horses Behind Base",            Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
-    ATT1_CAPTURE_HORSES_WEST =          10108, "Cpature Horses to the West",            Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
+    ATT1_CAPTURE_HORSES_WEST =          10108, "Capture Horses to the West",            Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSES_ROMAN =         10109, "Capture Horses Near the Roman Base",    Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_KILL_THE_BOAR =                10110, "Kill the Iron Boar",                    Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL
     ATT1_BETRAY_BLEDA =                 10111, "Betray Bleda",                          Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL
