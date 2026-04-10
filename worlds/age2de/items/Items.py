@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import enum
 
 from BaseClasses import ItemClassification
-from ..locations.Civilizations import Age2Civ
+from ..locations.Civilizations import Age2CivData
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 

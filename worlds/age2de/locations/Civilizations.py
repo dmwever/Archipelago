@@ -1,6 +1,4 @@
 import enum
 
-class Age2Civ(enum.Flag):
-    NONE = 0
-    ANY = enum.auto()
+class Age2CivData(enum.Flag):
     HUNS = enum.auto()

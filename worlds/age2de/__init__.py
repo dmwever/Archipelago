@@ -44,7 +44,7 @@ class Age2World(World):
     location_name_to_id = Locations.location_name_to_id
     location_id_to_name = Locations.location_id_to_name
     
-    included_civs: Scenarios.Age2Civ = Scenarios.Age2Civ.NONE
+    included_civs: list[Scenarios.Age2CivData] = []
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
     included_buildings: list[Buildings.Age2BuildingData] = []
     rules: Rules
@@ -97,7 +97,8 @@ class Age2World(World):
                 new_location = Location(self.player, location.global_name(), location.id, new_region)
                 new_region.locations.append(new_location)
             regions.append(new_region)
-            self.included_civs |= scenario.civ
+            if scenario.civ not in self.included_civs:
+                self.included_civs.append(scenario.civ)
         
         self.multiworld.regions += regions
             

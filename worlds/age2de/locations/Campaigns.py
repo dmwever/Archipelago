@@ -1,6 +1,8 @@
 
 import enum
 
+from .Civilizations import Age2CivData
+
 
 class Age2CampaignData(enum.Enum):
     def __new__(cls, id: int, *args, **kwargs):
@@ -8,11 +10,9 @@ class Age2CampaignData(enum.Enum):
         obj._value_ = id
         return obj
 
-    def __init__(self, id: int, mnemonic: str, civ: str, name: str, xsdat_read_name) -> None:
+    def __init__(self, id: int, name: str, xsdat_read_name) -> None:
         self.id = id
-        self.mnemonic = mnemonic
-        self.civ = civ
         self.campaign_name = name
         self.xsdat_read_name = xsdat_read_name
     
-    ATTILA  =       1, "H", "Huns", "Attila the Hun", "AP Attila the Hun.xsdat"
+    ATTILA  =       1, "Attila the Hun", "AP Attila the Hun.xsdat"
