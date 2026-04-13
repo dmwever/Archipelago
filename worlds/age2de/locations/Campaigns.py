@@ -1,8 +1,4 @@
-
 import enum
-
-from .Civilizations import Age2CivData
-
 
 class Age2CampaignData(enum.Enum):
     def __new__(cls, id: int, *args, **kwargs):

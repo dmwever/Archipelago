@@ -19,6 +19,6 @@ class Age2AgeData(enum.IntEnum):
 
     DARK =                  25, "Reach Dark Age", None
     FEUDAL =                26, "Reach Feudal Age", Age2ItemData.FEUDAL_AGE
-    CASTLE =                27, "Build Outpost", Age2ItemData.CASTLE_AGE
-    IMPERIAL =              28, "Build Town Center", Age2ItemData.IMPERIAL_AGE
+    CASTLE =                27, "Reach Castle Age", Age2ItemData.CASTLE_AGE
+    IMPERIAL =              28, "Reach Imperial Age", Age2ItemData.IMPERIAL_AGE
     

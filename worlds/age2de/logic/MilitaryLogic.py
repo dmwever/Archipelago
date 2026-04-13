@@ -7,7 +7,6 @@ from ..items.Items import Age2ItemData
 
 from ..locations.Buildings import Age2BuildingData
 
-
 if TYPE_CHECKING:
     from .. import Age2World
     from .Logic import Logic
