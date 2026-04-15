@@ -12,6 +12,7 @@ from worlds.age2de.locations import Buildings
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
+from .locations.connections import CivilizationBuildings
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
@@ -69,21 +70,6 @@ class Age2World(World):
         
         regions = [Region(self.origin_region_name, self.player, self.multiworld)]
         
-        buildings = Region("Can Build", self.player, self.multiworld)
-        source = regions[0]
-        connection = Entrance(self.player, f"{buildings.name}", source)
-        source.exits.append(connection)
-        connection.connect(buildings)
-        for building in Buildings.Age2BuildingData:
-            if Buildings.BuildingOption.unique in building.building_options and Buildings.BuildingOption.unique not in self.options.shuffle_buildings:
-                continue # We skip unique altogether, else we sort by other building type.
-            if any(option in building.building_options for option in 
-                   [options for options in self.options.shuffle_buildings if not Buildings.BuildingOption.unique in options]):
-                new_location = Location(self.player, building.location_name, building.id, buildings)
-                buildings.locations.append(new_location)
-                self.included_buildings.append(building)
-        regions.append(buildings)
-        
         for scenario in Scenarios.Age2ScenarioData:
             if scenario.campaign not in self.included_campaigns:
                 continue
@@ -100,6 +86,23 @@ class Age2World(World):
             regions.append(new_region)
             if scenario.civ not in self.included_civs:
                 self.included_civs.append(scenario.civ)
+                
+        buildings = Region("Can Build", self.player, self.multiworld)
+        source = regions[0]
+        connection = Entrance(self.player, f"{buildings.name}", source)
+        source.exits.append(connection)
+        connection.connect(buildings)
+        for building in Buildings.Age2BuildingData:
+            if all(building in civ.excluded_buildings for civ in self.included_civs):
+                continue # No included civs have this building
+            if Buildings.BuildingOption.unique in building.building_options and Buildings.BuildingOption.unique not in self.options.shuffle_buildings:
+                continue # We skip unique altogether, else we sort by other building type.
+            if any(option in building.building_options for option in 
+                   [options for options in self.options.shuffle_buildings if not Buildings.BuildingOption.unique in options]):
+                new_location = Location(self.player, building.location_name, building.id, buildings)
+                buildings.locations.append(new_location)
+                self.included_buildings.append(building)
+        regions.append(buildings)
         
         self.multiworld.regions += regions
             
@@ -110,9 +113,8 @@ class Age2World(World):
         for item in Items.Age2ItemData:
             if isinstance(item.type, Items.Victory):
                 if self.options.goal == Goal.option_campaign_completion:
-                    *_, last = self.get_regions()
-                    location_data: Locations.Age2ScenarioLocationData = Locations.VICTORY_LOCATIONS[last.name]
-                    location: Location = next(l for l in last.locations if l.name == location_data.global_name())
+                    location_data: Locations.Age2ScenarioLocationData = Locations.VICTORY_LOCATIONS[Locations.Age2ScenarioLocationData.ATT6_VICTORY.scenario.scenario_name]
+                    location: Location = self.get_location(location_data.global_name())
                     victory = self.create_item(Items.Age2ItemData.VICTORY.item_name)
                     location.place_locked_item(victory)
                     self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
