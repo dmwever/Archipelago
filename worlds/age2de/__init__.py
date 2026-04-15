@@ -1,5 +1,6 @@
 # world/age2DE/__init__.py
 
+from math import ceil
 import time
 import logging
 import settings
@@ -155,12 +156,70 @@ class Age2World(World):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
+        starting_items = self.smart_add_starting_resources(needed_number_of_filler_items)
+        self.multiworld.itempool += starting_items
+        
+        itempool = len(items + starting_items)
+        
+        needed_number_of_filler_items = number_of_unfilled_locations - itempool
+        
         print(needed_number_of_filler_items)
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
     
+    def smart_add_starting_resources(self, locations_to_fill: int):
+        items: list[Item] = []
+        if locations_to_fill == 0:
+            return []
+        wood_amount: int = 1000
+        food_amount: int = 1000
+        gold_amount: int = 750
+        stone_amount: int = 500
+        starting_resource_choices = Items.CATEGORY_TO_ITEMS[Items.StartingResources]
+        while locations_to_fill > 0:
+            worst_case_wood_needed: int = ceil(wood_amount / Items.Age2ItemData.STARTING_WOOD_LARGE.type.amount)
+            worst_case_food_needed: int = ceil(food_amount / Items.Age2ItemData.STARTING_FOOD_LARGE.type.amount)
+            worst_case_gold_needed: int = ceil(gold_amount / Items.Age2ItemData.STARTING_GOLD_LARGE.type.amount)
+            worst_case_stone_needed: int = ceil(stone_amount / Items.Age2ItemData.STARTING_STONE_LARGE.type.amount)
+            worst_case_sum = worst_case_wood_needed + worst_case_food_needed + worst_case_gold_needed + worst_case_stone_needed
+            if worst_case_sum > locations_to_fill:
+                wood_amount = wood_amount / 2
+                food_amount = food_amount / 2
+                gold_amount= gold_amount / 2
+                stone_amount = stone_amount / 2
+                continue
+            if worst_case_sum == locations_to_fill:
+                for _ in range(worst_case_wood_needed):
+                    self.create_item(Items.Age2ItemData.STARTING_WOOD_LARGE.item_name)
+                for _ in range(worst_case_food_needed):
+                    self.create_item(Items.Age2ItemData.STARTING_FOOD_LARGE.item_name)
+                for _ in range(worst_case_gold_needed):
+                    self.create_item(Items.Age2ItemData.STARTING_GOLD_LARGE.item_name)
+                for _ in range(worst_case_stone_needed):
+                    self.create_item(Items.Age2ItemData.STARTING_STONE_LARGE.item_name)
+                return items
+            item_data = self.random.choice(starting_resource_choices)
+            if item_data.type.type == Items.Resource.WOOD:
+                wood_amount -= item_data.type.amount
+                if wood_amount < 0:
+                    wood_amount = 0
+            if item_data.type.type == Items.Resource.GOLD:
+                gold_amount -= item_data.type.amount
+                if gold_amount < 0:
+                    gold_amount = 0
+            if item_data.type.type == Items.Resource.FOOD:
+                food_amount -= item_data.type.amount
+                if food_amount < 0:
+                    food_amount = 0
+            if item_data.type.type == Items.Resource.STONE:
+                stone_amount -= item_data.type.amount
+                if stone_amount < 0:
+                    stone_amount = 0
+                
+            items.append(self.create_item(item_data.item_name))
+            locations_to_fill -= 1
+        return items
+    
     def create_item(self, name: str) -> Item:
-        print(name)
-        print(Items.NAME_TO_ITEM[name])
         item = Items.NAME_TO_ITEM[name]
         return Item(
             item.item_name,
