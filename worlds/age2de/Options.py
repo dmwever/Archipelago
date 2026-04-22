@@ -16,9 +16,9 @@ class Goal(Choice):
     
 
 class ScenarioBranching(Choice):
-    """What checks are added to the pool for branching scenario decisions.
-    Any: Each branching objective will contain a single check.
-    All: Every branching objective contains a check.
+    """If a story quest has multiple routes you can take depending on your decisions;
+        Any: Any decision made will send the check for that story quest.
+        All: Every individual decision will send it's own check, potentially requiring you to play the same scenario multiple times.
     """
     internal_name = "scenario_branching"
     display_name = "Scenario Branching"
