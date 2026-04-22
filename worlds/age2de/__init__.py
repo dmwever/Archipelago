@@ -242,13 +242,16 @@ class Age2World(World):
         self.rules.set_rules()
 
     def fill_slot_data(self) -> Mapping[str, Any]:
-        return {
+        mapping: Mapping[str, Any] = {
             "version_public": 0,
-            "version_major": 0,
-            "version_minor": 1,
-            # New ID every ~0.13s; IDs loop once every 8.9 years
+            "version_major": 2,
+            "version_minor": 0,
             "world_id": ((time.time_ns() >> 17) + self.player) & 0x7fff_ffff,
         }
+        for campaign in self.included_campaigns:
+            for scenario in Scenarios.CAMPAIGN_TO_SCENARIOS[campaign]:
+                mapping[scenario.scenario_name + "_completed"] = 0
+        return mapping
 
 
 def run_client(*args: Any):
