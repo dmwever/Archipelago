@@ -249,8 +249,7 @@ class Age2World(World):
             "world_id": ((time.time_ns() >> 17) + self.player) & 0x7fff_ffff,
         }
         for campaign in self.included_campaigns:
-            for scenario in Scenarios.CAMPAIGN_TO_SCENARIOS[campaign]:
-                mapping[scenario.scenario_name + "_completed"] = 0
+            mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns
         return mapping
 
 

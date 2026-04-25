@@ -2,7 +2,7 @@ import asyncio
 import copy
 import os
 import logging
-from typing import Optional
+from typing import ClassVar, Optional
 import typing
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
 from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkItem
@@ -40,7 +40,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         Select the <STRING_OF_NUMBERS> folder as the user folder.
         """
         set_user_folder(self.ctx.settings)
-        GameClient.update_game_user_folder(self.ctx.game_ctx, self.ctx.settings.user_folder)
+        self.ctx.game_ctx.update_game_user_folder(self.ctx.game_ctx, self.ctx.settings.user_folder)
         self.output(f"User folder now assigned to {self.ctx.game_ctx.client_status.user_folder}")
     
     def _cmd_refresh(self) -> None:
@@ -72,15 +72,15 @@ class Age2Context(CommonContext):
     command_processor = Age2CommandProcessor
     game_ctx = GameClient.Age2GameContext
     items_handling = 0b111
-    settings = Age2World.settings
+    settings: ClassVar[Age2Settings] = Age2World.settings
+    scenario_completion_key: str
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
-        self.game_ctx = GameClient.Age2GameContext(True, client_interface=self)
-        self.game_ctx.client_status = GameClient.ClientStatus(unlocked_items=[])
-        GameClient.update_game_user_folder(self.game_ctx, self.settings.user_folder)
-        self.game_ctx.message_handler.add_message("Client Connected!")
+        self.game_ctx = GameClient.Age2GameContext(client_interface=self)
+        self.game_ctx.update_game_user_folder(self.settings.user_folder)
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
+        self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -99,27 +99,65 @@ class Age2Context(CommonContext):
     
     def on_package(self, cmd: str, args: dict) -> None:
         if cmd == "Connected":
-            GameClient.flush_files(self.game_ctx)
-            self.try_startup_game_connection()
+            self._handle_connected()
+                
         if cmd == "ReceivedItems":
             self._handle_received_items(args)
-    
-    def on_location_received(self, scenario_id: int, location_ids: list[int]) -> None:
-        if location_ids is not None:
-            Utils.async_start(self.send_msgs([{
-                "cmd": "LocationChecks",
-                "locations": [location_id for location_id in location_ids],
-            }]))
+            
+        if cmd == "SetReply":
+            self._handle_set_reply(args)
+
+    def _handle_connected(self):
+        self.game_ctx.flush_files()
+        self.try_startup_game_connection()
+        Utils.async_start(self.send_msgs([
+        {
+            "cmd": "Set",
+            "key": self.scenario_completion_key,
+            "default": 0,
+            "want_reply": True,
+            "operations": [
+                {"operation": "default", "value": 0}
+            ]
+        }
+        ]))
+            
+        self.set_notify(self.scenario_completion_key)
 
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
-            if item_data.item_name is "Victory":
+            if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
             if item_data.type_data is Items.ProgressiveScenario:
                 self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)
+
+    def _handle_set_reply(self, args: dict) -> None:
+        for (scenario_data, managed_scenario) in self.game_ctx.campaign_handler.scenarios.items():
+            completed: int = self.stored_data.get(self.scenario_completion_key)
+            managed_scenario.completed = completed & (1 << scenario_data.completion_bit) != 0
+
+    def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
+        Utils.async_start(self.send_msgs([
+            {
+                "cmd": "Set",
+                "key": self.scenario_completion_key,
+                "default": False,
+                "want_reply": True,
+                "operations": [
+                    {"operation": "or", "value": 1 << scenario.completion_bit}
+                ]
+            }
+        ]))
+
+    def on_location_received(self, location_ids: list[int]) -> None:
+        if location_ids is not None:
+            Utils.async_start(self.send_msgs([{
+                "cmd": "LocationChecks",
+                "locations": [location_id for location_id in location_ids],
+            }]))
 
     def try_startup_game_connection(self) -> bool:
         if self.game_ctx.game_loop is None or self.game_ctx.game_loop.done():
@@ -167,15 +205,11 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
             server_loop(ctx), name="ServerLoop")
         Age2Manager.start_ap_ui(ctx)
         await asyncio.sleep(1)
-                
-        # copy_ai("C1_Attila_2.aoe2scenario", "C:\\Users\\dmwev\\Games\\Age of Empires 2 DE\\76561199655318799\\resources\\_common\\scenario\\AP_Attila_2.aoe2scenario")
         
-        ctx.game_ctx.campaign_handler.unlock_campaign(Age2CampaignData.ATTILA)
-
         await ctx.exit_event.wait()
         ctx.game_ctx.running = False
         ctx.game_ctx.campaign_handler.deactivate_scenario()
-        GameClient.flush_files(ctx)
+        ctx.game_ctx.flush_files()
         ctx.server_address = None
         ctx.game_ctx.game_loop.cancel("Shutting down game loop")
 

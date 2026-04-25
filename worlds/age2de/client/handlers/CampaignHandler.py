@@ -30,7 +30,7 @@ class ManagedCampaign:
     
 class CampaignHandler(FolderHandler):
     _campaigns: dict[Age2CampaignData, ManagedCampaign] = dict()
-    _scenarios: dict[Age2ScenarioData, ManagedScenario] = dict()
+    scenarios: dict[Age2ScenarioData, ManagedScenario] = dict()
     _scenario_items: dict[Age2ItemData, ManagedScenarioItem] = dict()
     
     active_file: ManagedScenario = None
@@ -46,7 +46,7 @@ class CampaignHandler(FolderHandler):
                     self._scenario_items[item_data] = managed_item
                 managed_scenario = ManagedScenario(data=scn_data, campaign=cpn_data, items=items_as_data)
                 scenarios_as_data.append(scn_data)
-                self._scenarios[scn_data] = managed_scenario
+                self.scenarios[scn_data] = managed_scenario
             managed_campaign = ManagedCampaign(data=cpn_data, scenarios=scenarios_as_data)
             self._campaigns[cpn_data] = managed_campaign
         
@@ -60,7 +60,7 @@ class CampaignHandler(FolderHandler):
             return
         
         self._campaigns[campaign].unlocked = True
-        self._scenarios[first_scenario].unlocked = True
+        self.scenarios[first_scenario].unlocked = True
     
     def unlock_scenario(self, scenario: Age2ScenarioData):
         pass
@@ -74,13 +74,13 @@ class CampaignHandler(FolderHandler):
             return
         
         for scn in self._campaigns[campaign].scenarios:
-            if self._scenarios[scn].unlocked is False:
-                self._scenarios[scn].unlocked = True # Activate first scenario that is not active
+            if self.scenarios[scn].unlocked is False:
+                self.scenarios[scn].unlocked = True # Activate first scenario that is not active
                 return
         
         print(f"All scenarios in {campaign.campaign_name} are already unlocked.")
     
-    def find_active_campaign(self):
+    def find_active_campaign(self) -> bool:
         for campaign in self._campaigns.values():
             if campaign.unlocked:
                 try:
@@ -89,16 +89,17 @@ class CampaignHandler(FolderHandler):
                         if (active != b'\x00'):
                             XsdatFile.skip_int(fp, 18)
                             scenario_id = XsdatFile.read_int(fp)
-                            self.active_file = self._scenarios[scenario_from_id[scenario_id]]
-                            return
+                            self.active_file = self.scenarios[scenario_from_id[scenario_id]]
+                            return True
                         else:
                             print("Not active")
+                            return False
                 except Exception as ex:
                     print(ex)
         self.active_file = None
     
     def find_active_scenario(self):
-        for scenario in self._scenarios.values():
+        for scenario in self.scenarios.values():
             if scenario.unlocked:
                 try:
                     with open(self._user_folder + scenario.data.xsdat_read_name, "rb") as fp:
@@ -115,6 +116,11 @@ class CampaignHandler(FolderHandler):
     def has_active_scenario(self) -> bool:
         return self.active_file is not None
     
+    def is_active_scenario_complete(self) -> bool:
+        return self.active_file.completed
+    
+    def complete_active_scenario(self) -> None:
+        self.active_file.completed = True
     
     def deactivate_scenario(self) -> bool:
         try:
@@ -132,10 +138,10 @@ class CampaignHandler(FolderHandler):
                     print(f"{item.name} is not in the list of scenario items for this AP World.")
                 managed_item.unlocked = True
             
-            for scenario in self._scenarios.values():
+            for scenario in self.scenarios.values():
                 if scenario.unlocked == True:
                     with open(self._user_folder + scenario.data.xsdat_write_name, "wb") as fp:
-                        XsdatFile.write_int(fp, scenario.completed) # Change to completed
+                        XsdatFile.write_int(fp, scenario.completed)
                         for item in scenario.items:
                             if self._scenario_items[item].unlocked == True:
                                 XsdatFile.write_int(fp, item.id)
@@ -144,7 +150,7 @@ class CampaignHandler(FolderHandler):
             print(ex)
             
     def try_flush_from_folder(self):
-        for scn in self._scenarios:
+        for scn in self.scenarios:
             if os.path.exists(self._user_folder + scn.xsdat_write_name):
                 os.remove(self._user_folder + scn.xsdat_write_name)
             if os.path.exists(self._user_folder + scn.xsdat_read_name):
