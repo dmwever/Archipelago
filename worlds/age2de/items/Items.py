@@ -180,21 +180,32 @@ class Age2ItemData(enum.IntEnum):
     AP_ATTILA_3_RED_GOLD =      1005, "Attila, The Walls of Constantinople: Red Gold",      ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
     AP_ATTILA_3_GREEN_GOLD =    1006, "Attila, The Walls of Constantinople: Green Gold",    ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
     
+    # Joan of Arc
+    AP_JOAN_1_TRANSPORT =       1007, "Joan of Arc, An Unlikely Messiah: Transport Ships",  ScenarioItem(Age2ScenarioData.AP_JOAN_1)
+    
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
     # Progressive Scenarios (Campaign Count - 1)
     PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 5)
+    PROGRESSIVE_JOAN_SCENARIO = 3001, "Progressive Joan of Arc Scenario", ProgressiveScenario(Age2CampaignData.JOAN, 5)
     
     #Campaign Unlocks (Unlocks first level)
     ATTILA_THE_HUN = 3500, "Attila the Hun Campaign", Campaign(Age2CampaignData.ATTILA)
+    JOAN_OF_ARC = 3501, "Joan of Arc Campaign", Campaign(Age2CampaignData.JOAN)
     
     #4000 - 4999 = Troops, Future Use
     
     #Troop Items
-    AP_ATTILA_1_MANGUDAI =                  4000, "Scythian Mangudai",          Mercenary(Age2ScenarioData.AP_ATTILA_1)
-    AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Roman Villagers",            Mercenary(Age2ScenarioData.AP_ATTILA_1)
-    AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2)
-    AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Attila, The Scourge of God: Roman Villagers",        Mercenary(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Attila, The Great Ride: Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Attila, The Great Ride: Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2)
+    
+    # Joan of Arc
+    AP_JOAN_1_RAM =             4004, "Joan of Arc, An Unlikely Messiah: Battering Ram Army",           Mercenary(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_SWORDSMEN =       4005, "Joan of Arc, An Unlikely Messiah: Starting Swordsmen",           Mercenary(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_CROSSBOWMEN =     4006, "Joan of Arc, An Unlikely Messiah: Starting Crossbowmen",         Mercenary(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_RECRUITS =        4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1)
     
 
         

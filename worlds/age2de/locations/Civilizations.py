@@ -16,3 +16,4 @@ class Age2CivData(enum.IntEnum):
         self.included_buildings = []
     
     HUNS = 0, "Huns"
+    FRANKS = 1, "Franks"

@@ -12,3 +12,4 @@ class Age2CampaignData(enum.Enum):
         self.xsdat_read_name = xsdat_read_name
     
     ATTILA  =       1, "Attila the Hun", "AP Attila the Hun.xsdat"
+    JOAN  =         2, "Joan of Arc", "AP Joan of Arc.xsdat"

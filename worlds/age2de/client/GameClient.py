@@ -104,7 +104,7 @@ class Age2GameContext:
     packet_repeat_count: int = 0
     current_packet: Age2Packet = Age2Packet()
     client_status: ClientStatus = None
-    campaign_handler: CampaignHandler = CampaignHandler([Age2CampaignData.ATTILA])
+    campaign_handler: CampaignHandler = CampaignHandler([campaign for campaign in Age2CampaignData])
     building_handler: BuildingHandler = BuildingHandler([building for building in Age2BuildingData])
     message_handler: MessageHandler = MessageHandler()
     client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
@@ -112,7 +112,6 @@ class Age2GameContext:
     def __init__(self, client_interface):
         self.running = True
         self.client_interface = client_interface
-        self.campaign_handler.unlock_campaign(Age2CampaignData.ATTILA)
         self.client_status = ClientStatus(unlocked_items=[])
         self.message_handler.add_message("Client Connected!")
 

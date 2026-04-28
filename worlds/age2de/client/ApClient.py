@@ -130,6 +130,8 @@ class Age2Context(CommonContext):
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
+            if item_data.type_data is Items.Campaign:
+                self.game_ctx.campaign_handler.unlock_campaign(item_data.type.vanilla_campaign)
             if item_data.type_data is Items.ProgressiveScenario:
                 self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)

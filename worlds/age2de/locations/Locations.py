@@ -104,6 +104,25 @@ class Age2ScenarioLocationData(enum.IntEnum):
     ATT6_DESTROY_ORANGE_WONDER =    10610, "Prevent or Destroy Orange's Wonder",        Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
     ATT6_DESTROY_PURPLE_WONDER_2 =  10611, "Prevent or Destroy Purple's Second Wonder", Age2ScenarioData.AP_ATTILA_6, Age2LocationType.OBJECTIVE
     
+    JOAN1_VICTORY =                 20100, "Victory",                                   Age2ScenarioData.AP_JOAN_1, Age2LocationType.VICTORY
+    JOAN1_SWORDSMEN =               20101, "Get Swordsmen to Join",                     Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_CROSSBOWS =               20102, "Get Crossbows to Join",                     Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_VENISON =                 20103, "Find Bertrand Some Venison",                Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_RAMS =                    20104, "Find the Battering Ram",                    Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_DOCK =                    20105, "Find the Dock for the River Crossing",      Age2ScenarioData.AP_JOAN_1, Age2LocationType.OBJECTIVE
+    JOAN1_RECRUITS =                20106, "Find Recruits Across the River",            Age2ScenarioData.AP_JOAN_1, Age2LocationType.OBJECTIVE
+    JOAN1_FIGHT_HIGHWAYMEN =        20107, "Fight the Highwaymen in Front of Burgundy", Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    
+    JOAN2_VICTORY =                  20200, "Victory",                                   Age2ScenarioData.AP_JOAN_2, Age2LocationType.VICTORY
+    
+    JOAN3_VICTORY =                  20300, "Victory",                                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.VICTORY
+
+    JOAN4_VICTORY =                  20400, "Victory",                                   Age2ScenarioData.AP_JOAN_4, Age2LocationType.VICTORY
+    
+    JOAN5_VICTORY =                  20500, "Victory",                                   Age2ScenarioData.AP_JOAN_5, Age2LocationType.VICTORY
+    
+    JOAN6_VICTORY =                  20600, "Victory",                                   Age2ScenarioData.AP_JOAN_6, Age2LocationType.VICTORY
+    
 location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2ScenarioLocationData}
 location_id_to_name = {_location.id: _location.global_name() for _location in Age2ScenarioLocationData}
