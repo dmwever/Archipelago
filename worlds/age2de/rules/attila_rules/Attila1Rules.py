@@ -3,7 +3,7 @@ from rule_builder.rules import Has, Rule
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.attila.Attila1StartingState import Attila1StartingState
+from ...logic.attila.attila_1 import Attila1StartingState
 from ...logic.Logic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules

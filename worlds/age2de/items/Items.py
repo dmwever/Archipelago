@@ -181,7 +181,23 @@ class Age2ItemData(enum.IntEnum):
     AP_ATTILA_3_GREEN_GOLD =    1006, "Attila, The Walls of Constantinople: Green Gold",    ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
     
     # Joan of Arc
-    AP_JOAN_1_TRANSPORT =       1007, "Joan of Arc, An Unlikely Messiah: Transport Ships",  ScenarioItem(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_TRANSPORT =       1007, "Joan of Arc, An Unlikely Messiah: Transport Ships",          ScenarioItem(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_2_ORLEANS =         1008, "Joan of Arc, The Maid of Orleans: Orleans",                  ScenarioItem(Age2ScenarioData.AP_JOAN_2)
+    AP_JOAN_2_TRADE_CARTS =     1009, "Joan of Arc, The Maid of Orleans: Trade Carts",              ScenarioItem(Age2ScenarioData.AP_JOAN_2)
+    AP_JOAN_2_DOCK =            1010, "Joan of Arc, The Maid of Orleans: Dock",                     ScenarioItem(Age2ScenarioData.AP_JOAN_2)
+    AP_JOAN_3_TRANSPORT =       1011, "Joan of Arc, The Cleansing of the Loire: Transport Ships",   ScenarioItem(Age2ScenarioData.AP_JOAN_3)
+    AP_JOAN_4_FRENCH_CAMP =     1012, "Joan of Arc, The Rising: French Camp",                       ScenarioItem(Age2ScenarioData.AP_JOAN_4)
+    AP_JOAN_5_REFUGEE_1 =       1013, "Joan of Arc, The Siege of Paris: Refugee 1",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_2 =       1014, "Joan of Arc, The Siege of Paris: Refugee 2",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_3 =       1015, "Joan of Arc, The Siege of Paris: Refugee 3",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_4 =       1016, "Joan of Arc, The Siege of Paris: Refugee 4",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_5 =       1017, "Joan of Arc, The Siege of Paris: Refugee 5",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_6 =       1018, "Joan of Arc, The Siege of Paris: Refugee 6",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_7 =       1019, "Joan of Arc, The Siege of Paris: Refugee 7",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_8 =       1020, "Joan of Arc, The Siege of Paris: Refugee 8",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_9 =       1021, "Joan of Arc, The Siege of Paris: Refugee 9",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_REFUGEE_10 =      1022, "Joan of Arc, The Siege of Paris: Refugee 10",                ScenarioItem(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_6_ARMY =            1023, "Joan of Arc, A Perfect Martyr: French Army",                 ScenarioItem(Age2ScenarioData.AP_JOAN_6)
     
     #3000 - 3999 = Scenarios (500), Campaigns (100)
     
@@ -189,7 +205,7 @@ class Age2ItemData(enum.IntEnum):
     PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 5)
     PROGRESSIVE_JOAN_SCENARIO = 3001, "Progressive Joan of Arc Scenario", ProgressiveScenario(Age2CampaignData.JOAN, 5)
     
-    #Campaign Unlocks (Unlocks first level)
+    # Campaign Unlocks (Unlocks first level)
     ATTILA_THE_HUN = 3500, "Attila the Hun Campaign", Campaign(Age2CampaignData.ATTILA)
     JOAN_OF_ARC = 3501, "Joan of Arc Campaign", Campaign(Age2CampaignData.JOAN)
     
@@ -202,10 +218,13 @@ class Age2ItemData(enum.IntEnum):
     AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Attila, The Great Ride: Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2)
     
     # Joan of Arc
-    AP_JOAN_1_RAM =             4004, "Joan of Arc, An Unlikely Messiah: Battering Ram Army",           Mercenary(Age2ScenarioData.AP_JOAN_1)
-    AP_JOAN_1_SWORDSMEN =       4005, "Joan of Arc, An Unlikely Messiah: Starting Swordsmen",           Mercenary(Age2ScenarioData.AP_JOAN_1)
-    AP_JOAN_1_CROSSBOWMEN =     4006, "Joan of Arc, An Unlikely Messiah: Starting Crossbowmen",         Mercenary(Age2ScenarioData.AP_JOAN_1)
-    AP_JOAN_1_RECRUITS =        4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_RAM =                     4004, "Joan of Arc, An Unlikely Messiah: Battering Ram Army",           ScenarioItem(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_SWORDSMEN =               4005, "Joan of Arc, An Unlikely Messiah: Starting Swordsmen",           ScenarioItem(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_CROSSBOWMEN =             4006, "Joan of Arc, An Unlikely Messiah: Starting Crossbowmen",         ScenarioItem(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_1_RECRUITS =                4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1)
+    AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5)
+    AP_JOAN_6_ARTILLERY =               4010, "Joan of Arc, A Perfect Martyr: French Artillery",                ScenarioItem(Age2ScenarioData.AP_JOAN_6)
     
 
         
@@ -228,3 +247,16 @@ for item in Age2ItemData:
     CATEGORY_TO_ITEMS.setdefault(item.type_data, []).append(item)
     if item.type_data == ScenarioItem:
         SCENARIO_TO_ITEMS[item.type.vanilla_scenario].append(item)
+
+item_mapping: dict[str, str] = {
+    Age2ItemData.AP_JOAN_5_REFUGEE_1.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_2.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_3.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_4.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_5.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_6.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_7.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_8.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_9.item_name: "Refugee",
+    Age2ItemData.AP_JOAN_5_REFUGEE_10.item_name: "Refugee",
+}

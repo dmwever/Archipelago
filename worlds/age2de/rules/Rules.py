@@ -3,13 +3,9 @@ from __future__ import annotations
 from abc import ABC
 from typing import TYPE_CHECKING
 
-from BaseClasses import CollectionRule, Entrance, Item, ItemClassification, Location
-from .attila_rules.Attila6Rules import Attila6Rules
-from .attila_rules.Attila5Rules import Attila5Rules
-from .attila_rules.Attila4Rules import Attila4Rules
-from .attila_rules.Attila3Rules import Attila3Rules
-from .attila_rules.Attila2Rules import Attila2Rules
-from .attila_rules.Attila1Rules import Attila1Rules
+from BaseClasses import CollectionRule, Entrance, Item, ItemClassification, Location, Region
+from ..locations.Campaigns import Age2CampaignData
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
 from ..logic.Logic import Logic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Ages import Age2AgeData
@@ -18,10 +14,9 @@ from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
 from rule_builder.rules import CanReachRegion, False_, Has, Rule, True_
 
-from ..locations.Scenarios import Age2ScenarioData
-
 from ..items.Items import Age2ItemData
 from ..locations.Locations import VICTORY_LOCATIONS, Age2ScenarioLocationData, Age2LocationType
+from ..locations.connections import ScenarioDataRules
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -47,19 +42,21 @@ class Rules:
         self.world.set_rule(spot, rule)
 
     def set_rules(self) -> None:
-        for key, value in VICTORY_LOCATIONS.items():
+        for value in [x for x in VICTORY_LOCATIONS.values() if x.scenario.campaign in self.world.included_campaigns]:
             region = self.world.get_region(value.scenario.scenario_name)
             victory_loc = Location(self.world.player, "Complete " + value.scenario.scenario_name, None, region)
             victory_loc.place_locked_item(Item(value.scenario.scenario_name + ": Unlock Next Scenario", ItemClassification.progression, None, self.world.player))
             region.add_event("Complete " + value.scenario.scenario_name, value.scenario.scenario_name + ": Unlock Next Scenario", show_in_spoiler=False)
+           
+        menu: Region = self.world.get_region("Menu") 
+        victory = self.world.create_item(Age2ItemData.VICTORY.item_name)
+        location: Location = Location(self.world.player, "Victory", parent=menu)
+        self.world.multiworld.completion_condition[self.world.player] = lambda state: state.has("Victory", self.world.player)
+        menu.add_event(location.name, victory.name, self.logic.has_goal())
 
-        # Attila 1
-        self.scenario_rules.append(Attila1Rules(self))
-        self.scenario_rules.append(Attila2Rules(self))
-        self.scenario_rules.append(Attila3Rules(self))
-        self.scenario_rules.append(Attila4Rules(self))
-        self.scenario_rules.append(Attila5Rules(self))
-        self.scenario_rules.append(Attila6Rules(self))
+        for campaign in self.world.included_campaigns:
+            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+                self.scenario_rules.append(scenario.rules(self))
 
         for scenario in self.scenario_rules:
             scenario.set_rules()

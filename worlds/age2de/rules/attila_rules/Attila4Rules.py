@@ -1,8 +1,8 @@
-from rule_builder.rules import Has, Rule, True_
+from rule_builder.rules import Has, Rule
 from ...Options import ScenarioBranching
-from ...logic.attila.Attila3StartingState import Age2BuildingData
+from ...logic.attila.attila_3 import Age2BuildingData
 from ...locations.Ages import Age2AgeData
-from ...logic.attila.Attila4StartingState import Attila4StartingState
+from ...logic.attila.attila_4 import Attila4StartingState
 
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData

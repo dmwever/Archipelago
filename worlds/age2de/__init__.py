@@ -3,12 +3,15 @@
 from math import ceil
 import time
 import logging
+from Options import OptionError
+from rule_builder.cached_world import CachedRuleBuilderWorld
 import settings
 from typing import Any, ClassVar, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
+from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
@@ -28,7 +31,7 @@ class Age2Settings(settings.Group):
     
     user_folder: UserDirectory = UserDirectory(AGE2_DE)
         
-class Age2World(World):
+class Age2World(CachedRuleBuilderWorld):
     """
     Age of Empires II: Definitive Edition is a Real-Time Strategy game centered around the medieval
     ages and the various battles, conquests, and wars of history.
@@ -45,6 +48,7 @@ class Age2World(World):
     item_id_to_name = Items.item_id_to_name
     location_name_to_id = Locations.location_name_to_id
     location_id_to_name = Locations.location_id_to_name
+    item_mapping = Items.item_mapping
     
     included_civs: list[Scenarios.Age2CivData] = []
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
@@ -68,24 +72,24 @@ class Age2World(World):
             campaign_names = self.options.enabled_campaigns
             self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
         
-        regions = [Region(self.origin_region_name, self.player, self.multiworld)]
+        regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         
-        for scenario in Scenarios.Age2ScenarioData:
-            if scenario.campaign not in self.included_campaigns:
-                continue
-            new_region = Region(scenario.scenario_name, self.player, self.multiworld)
-            source = regions[-1]
-            connection = Entrance(self.player, f"{new_region.name}", source)
-            source.exits.append(connection)
-            connection.connect(new_region)
-            for location in Locations.REGION_TO_LOCATIONS.get(scenario.scenario_name, ()):
-                if not self.branching_option(location):
-                    continue
-                new_location = Location(self.player, location.global_name(), location.id, new_region)
-                new_region.locations.append(new_location)
-            regions.append(new_region)
-            if scenario.civ not in self.included_civs:
-                self.included_civs.append(scenario.civ)
+        for campaign in self.included_campaigns:
+            scenarios = iter(CAMPAIGN_TO_SCENARIOS[campaign])
+            prev_region: Region = None
+            try:
+                first_scn = next(scenarios)
+                region = self.add_scenario_region(first_scn, regions[0])
+                regions.append(region)
+                prev_region = region
+            except StopIteration:
+                raise OptionError(f"Could not iterate {first_scn.scenario_name} region from {campaign.campaign_name}")
+            for scenario in scenarios:
+                region = self.add_scenario_region(scenario, prev_region)
+                regions.append(region)
+                if scenario.civ not in self.included_civs:
+                    self.included_civs.append(scenario.civ)
+                prev_region = region
                 
         buildings = Region("Can Build", self.player, self.multiworld)
         source = regions[0]
@@ -105,19 +109,25 @@ class Age2World(World):
         regions.append(buildings)
         
         self.multiworld.regions += regions
-            
+    
+    def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
+        new_region = Region(scenario.scenario_name, self.player, self.multiworld)
+        connection = Entrance(self.player, f"{new_region.name}", source)
+        source.exits.append(connection)
+        connection.connect(new_region)
+        for location in Locations.REGION_TO_LOCATIONS.get(scenario.scenario_name, ()):
+            if not self.branching_option(location):
+                continue
+            new_location = Location(self.player, location.global_name(), location.id, new_region)
+            new_region.locations.append(new_location)
+        return new_region
+        
     
     def create_items(self) -> None:
         items: list[Item] = []
-        tentative_items: list[Item] = []
         for item in Items.Age2ItemData:
             if isinstance(item.type, Items.Victory):
-                if self.options.goal == Goal.option_campaign_completion:
-                    location_data: Locations.Age2ScenarioLocationData = Locations.VICTORY_LOCATIONS[Locations.Age2ScenarioLocationData.ATT6_VICTORY.scenario.scenario_name]
-                    location: Location = self.get_location(location_data.global_name())
-                    victory = self.create_item(Items.Age2ItemData.VICTORY.item_name)
-                    location.place_locked_item(victory)
-                    self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
+                continue
             elif isinstance(item.type, Items.ScenarioItem):
                 if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
                     items.append(self.create_item(item.item_name))
@@ -136,9 +146,9 @@ class Age2World(World):
                     for i in range(item.type.num_additional_scenarios):
                         items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Resources):
-                tentative_items.append(self.create_item(item.item_name))
+                continue
             elif isinstance(item.type, Items.StartingResources):
-                tentative_items.append(self.create_item(item.item_name))
+                continue
             elif isinstance(item.type, Items.TCResources):
                 items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Age):
@@ -167,6 +177,17 @@ class Age2World(World):
         
         print(needed_number_of_filler_items)
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
+        
+        for campaign in Campaigns.Age2CampaignData:
+            if campaign.campaign_name in self.options.starting_campaigns:
+                self.add_early_campaign_items(campaign)
+        
+    
+    def add_early_campaign_items(self, campaign: Campaigns.Age2CampaignData):
+        if campaign == Campaigns.Age2CampaignData.JOAN:
+            choice: str = self.random.choice([Items.Age2ItemData.AP_JOAN_1_CROSSBOWMEN.item_name, Items.Age2ItemData.AP_JOAN_1_SWORDSMEN.item_name])
+            self.multiworld.early_items[self.player][choice] = 1
+            self.multiworld.early_items[self.player][Items.Age2ItemData.AP_JOAN_1_RAM.item_name] = 1
     
     def smart_add_starting_resources(self, locations_to_fill: int):
         items: list[Item] = []

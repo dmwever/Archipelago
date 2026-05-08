@@ -1,11 +1,8 @@
-from BaseClasses import Location
 from rule_builder.rules import Has, Rule, True_
-from worlds.age2de.logic.attila.Attila3StartingState import Attila3StartingState
+from worlds.age2de.logic.attila.attila_3 import Attila3StartingState
 
 from ...items.Items import Age2ItemData
-from ...locations.Ages import Age2AgeData
-from ...locations.Locations import SCENARIO_TO_LOCATIONS, Age2ScenarioLocationData
-from ...logic.attila.Attila1StartingState import Attila1StartingState
+from ...locations.Locations import Age2ScenarioLocationData
 from ...logic.Logic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules

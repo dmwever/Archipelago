@@ -1,28 +1,34 @@
 
 import enum
+from typing import TYPE_CHECKING
+
 from .Campaigns import Age2CampaignData
 from .Civilizations import Age2CivData
 
+if TYPE_CHECKING:
+    from ..rules.ScenarioRules import ScenarioRules
+    from ..logic.ScenarioLogic import ScenarioStartingState
 
 class Age2ScenarioData(enum.IntEnum):
-    def __new__(cls, name: str, short_name: str, xsdat_read_name: str, xsdat_write_name: str, campaign: Age2CampaignData, chapter: int, civ: Age2CivData, completion_bit: int):
+    def __new__(cls, name: str, xsdat_read_name: str, xsdat_write_name: str, campaign: Age2CampaignData, chapter: int, civ: Age2CivData, completion_bit: int):
         value = campaign.value * 100 + chapter
         obj = int.__new__(cls, value)
         obj._value_ = value
         return obj
 
     def __init__(
-        self, name: str, short_name: str, xsdat_read_name: str, xsdat_write_name: str, campaign: Age2CampaignData, chapter: int, civ: Age2CivData, completion_bit: int
+        self, name: str, xsdat_read_name: str, xsdat_write_name: str, campaign: Age2CampaignData, chapter: int, civ: Age2CivData, completion_bit: int
     ) -> None:
         self.id = self.value
         self.scenario_name = name
-        self.short_name = short_name
         self.xsdat_read_name = xsdat_read_name
         self.xsdat_write_name = xsdat_write_name
         self.campaign = campaign
         self.chapter = chapter
         self.civ = civ
         self.completion_bit = completion_bit
+        self.rules: 'ScenarioRules' = None
+        self.logic: 'ScenarioStartingState' = None
     
     AP_ATTILA_1 =           "The Scourge of God", "AP_Attila_1.xsdat", "ATT1.xsdat", Age2CampaignData.ATTILA, 1, Age2CivData.HUNS, 0
     AP_ATTILA_2 =               "The Great Ride", "AP_Attila_2.xsdat", "ATT2.xsdat", Age2CampaignData.ATTILA, 2, Age2CivData.HUNS, 1

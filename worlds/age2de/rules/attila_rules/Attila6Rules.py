@@ -1,5 +1,5 @@
 from rule_builder.rules import Rule
-from ...logic.attila.Attila6StartingState import Attila6StartingState
+from ...logic.attila.attila_6 import Attila6StartingState
 from ...locations.Ages import Age2AgeData
 
 from ...locations.Locations import Age2ScenarioLocationData

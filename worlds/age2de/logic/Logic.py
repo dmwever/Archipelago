@@ -1,27 +1,21 @@
 from __future__ import annotations
 
-from abc import ABC
 from typing import TYPE_CHECKING
 
-from BaseClasses import Item, ItemClassification, Location
-from .attila.Attila6StartingState import Attila6StartingState
-from .attila.Attila5StartingState import Attila5StartingState
-from .attila.Attila4StartingState import Attila4StartingState
-from .attila.Attila3StartingState import Attila3StartingState
+from ..Options import Goal
+
+from .goal_logic import GoalLogic
+
 from .MilitaryLogic import MilitaryLogic
 from ..locations.Buildings import Age2BuildingData
-from ..locations.Ages import Age2AgeData
-from .attila.Attila1StartingState import Attila1StartingState
-from .attila.Attila2StartingState import Attila2StartingState
+from ..locations.connections import ScenarioDataLogic
 from .ScenarioLogic import ScenarioLogic
-from .AgeLogic import AgeLogic
-from .BuildingLogic import BuildingLogic
-from rule_builder.rules import CanReachRegion, False_, Has, HasAll, Rule, True_
+from .age_logic import AgeLogic
+from .building_logic import BuildingLogic
+from rule_builder.rules import False_, Rule
 
-from ..locations.Scenarios import Age2ScenarioData
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
-from ..items.Items import Age2ItemData
-from ..locations.Locations import VICTORY_LOCATIONS, Age2ScenarioLocationData, Age2LocationType
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -31,21 +25,23 @@ class Logic:
     buildings: BuildingLogic
     ages: AgeLogic
     military: MilitaryLogic
-    scenarios: list[ScenarioLogic]
+    goal: GoalLogic
+    scenarios: list[ScenarioLogic] = []
     
     def __init__(self, world: Age2World):
         self.buildings = BuildingLogic(self, world)
         self.ages =  AgeLogic(self, world)
-        self.scenarios = [
-            ScenarioLogic(self, Attila1StartingState(self)),
-            ScenarioLogic(self, Attila2StartingState(self)),
-            ScenarioLogic(self, Attila3StartingState(self)),
-            ScenarioLogic(self, Attila4StartingState(self)),
-            ScenarioLogic(self, Attila5StartingState(self)),
-            ScenarioLogic(self, Attila6StartingState(self)),
-        ]
+        for campaign in world.included_campaigns:
+            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+                self.scenarios.append(ScenarioLogic(self, scenario.logic(self)))
         self.military = MilitaryLogic(self, world)
         self.world = world
+        self.goal = GoalLogic(self, world)
+
+    def has_goal(self) -> Rule:
+        if self.world.options.goal == Goal.option_campaign_completion:
+            return self.goal.completed_all_campaigns()
+        return False_()
 
     def has_military(self) -> Rule:
         return self.buildings.has_military()

@@ -108,20 +108,66 @@ class Age2ScenarioLocationData(enum.IntEnum):
     JOAN1_SWORDSMEN =               20101, "Get Swordsmen to Join",                     Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
     JOAN1_CROSSBOWS =               20102, "Get Crossbows to Join",                     Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
     JOAN1_VENISON =                 20103, "Find Bertrand Some Venison",                Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
-    JOAN1_RAMS =                    20104, "Find the Battering Ram",                    Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_RAM =                     20104, "Find the Battering Ram",                    Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
     JOAN1_DOCK =                    20105, "Find the Dock for the River Crossing",      Age2ScenarioData.AP_JOAN_1, Age2LocationType.OBJECTIVE
     JOAN1_RECRUITS =                20106, "Find Recruits Across the River",            Age2ScenarioData.AP_JOAN_1, Age2LocationType.OBJECTIVE
-    JOAN1_FIGHT_HIGHWAYMEN =        20107, "Fight the Highwaymen in Front of Burgundy", Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_SOUTH_HIGHWAYMEN =        20107, "Defeat the Highwaymen South of Burgundy",   Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_EAST_HIGHWAYMEN =         20108, "Defeat the Highwaymen East of Burgundy",    Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_RIVER_HIGHWAYMEN =        20109, "Defeat the Highwaymen Across the River",    Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_RIVER_BURGUNDIANS =       20110, "Defeat the Burgundians Across the River",   Age2ScenarioData.AP_JOAN_1, Age2LocationType.SIDE_QUEST
+    JOAN1_BREAK_INTO_BURGUNDY =     20111, "Break through the Burgundian Town",         Age2ScenarioData.AP_JOAN_1, Age2LocationType.OBJECTIVE
     
-    JOAN2_VICTORY =                  20200, "Victory",                                   Age2ScenarioData.AP_JOAN_2, Age2LocationType.VICTORY
+    JOAN2_VICTORY =                 20200, "Victory",                                   Age2ScenarioData.AP_JOAN_2, Age2LocationType.VICTORY
+    JOAN2_REACH_BLOIS =             20201, "Reach Blois",                               Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE
+    JOAN2_FIND_DOCK =               20202, "Find Dock for Crossing",                    Age2ScenarioData.AP_JOAN_2, Age2LocationType.SIDE_QUEST
+    JOAN2_DEFEAT_BURGUNDY_BLOIS =   20203, "Defeat Burgundians at Blois",               Age2ScenarioData.AP_JOAN_2, Age2LocationType.SIDE_QUEST
+    JOAN2_CONQUER_BRIDGE =          20204, "Defeat Burgundians at the Bridge",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.SIDE_QUEST
+    JOAN2_BRING_JOAN_TO_ORLEANS =   20205, "Bring Joan to Orleans",                     Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE
+    JOAN2_BRING_CARTS_TO_ORLEANS =  20206, "Bring 6 Trade Carts to Orleans",            Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE
+    JOAN2_FIND_FARMING_VILLAGE =    20207, "Find the Farming Village",                  Age2ScenarioData.AP_JOAN_2, Age2LocationType.SIDE_QUEST
+    JOAN2_ANY_CASTLE =              20208, "Destroy 1 English Castle",                  Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ANY
+    JOAN2_NORTHEAST_CASTLE =        20209, "Destroy Northeast English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN2_NORTHWEST_CASTLE =        20210, "Destroy Northwest English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN2_SOUTHEAST_CASTLE =        20211, "Destroy Southeast English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN2_SOUTHWEST_CASTLE =        20212, "Destroy Southwest English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
     
-    JOAN3_VICTORY =                  20300, "Victory",                                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.VICTORY
+    JOAN3_VICTORY =                 20300, "Victory",                                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.VICTORY
+    JOAN3_FIND_SHIPS =              20301, "Find Ships for Crossing",                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.SIDE_QUEST
+    JOAN3_SLAY_FASTOLF =            20302, "Slay Fastoff",                              Age2ScenarioData.AP_JOAN_3, Age2LocationType.SIDE_QUEST
+    JOAN3_DESTROY_ONE_CASTLE =      20303, "Destroy One Castle",                        Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ANY
+    JOAN3_DESTROY_TWO_CASTLES =     20304, "Destroy Two Castles",                       Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ANY
+    JOAN3_DESTROY_LEFT_CASTLE =     20305, "Destroy Leftmost Castle",                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN3_DESTROY_CENTRAL_CASTLE =  20306, "Destroy Central Castle",                    Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN3_DESTROY_RIGHT_CASTLE =    20307, "Destroy Rightmost Castle",                  Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN3_DESTROY_REAR_CASTLE =     20308, "Destroy Rear Castle",                       Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
 
-    JOAN4_VICTORY =                  20400, "Victory",                                   Age2ScenarioData.AP_JOAN_4, Age2LocationType.VICTORY
+    JOAN4_VICTORY =                 20400, "Victory",                                   Age2ScenarioData.AP_JOAN_4, Age2LocationType.VICTORY
+    JOAN4_DEFEAT_ENGLISH_GUARDS =   20401, "Defeat the English Guards",                 Age2ScenarioData.AP_JOAN_4, Age2LocationType.SIDE_QUEST
+    JOAN4_REACH_BASE =              20402, "Locate the French Camp",                    Age2ScenarioData.AP_JOAN_4, Age2LocationType.OBJECTIVE
+    JOAN4_DESTROY_TROYES_TC =       20403, "Destroy Troyes' Town Center",               Age2ScenarioData.AP_JOAN_4, Age2LocationType.OBJECTIVE
+    JOAN4_DESTROY_CHALONS_TC =      20404, "Destroy Chalons' Town Center",              Age2ScenarioData.AP_JOAN_4, Age2LocationType.OBJECTIVE
+    JOAN4_DESTROY_RHEIMS_TC =       20405, "Destroy Rheims' Town Center",               Age2ScenarioData.AP_JOAN_4, Age2LocationType.OBJECTIVE
     
-    JOAN5_VICTORY =                  20500, "Victory",                                   Age2ScenarioData.AP_JOAN_5, Age2LocationType.VICTORY
+    JOAN5_VICTORY =                 20500, "Victory",                                   Age2ScenarioData.AP_JOAN_5, Age2LocationType.VICTORY
+    JOAN5_REFUGEE_1 =               20501, "Rescue Refugee 1",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_2 =               20502, "Rescue Refugee 2",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_3 =               20503, "Rescue Refugee 3",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_4 =               20504, "Rescue Refugee 4",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_5 =               20505, "Rescue Refugee 5",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_6 =               20506, "Rescue Refugee 6",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_7 =               20507, "Rescue Refugee 7",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_8 =               20508, "Rescue Refugee 8",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_9 =               20509, "Rescue Refugee 9",                          Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_REFUGEE_10 =              20510, "Rescue Refugee 10",                         Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_LOYALISTS =               20511, "Find Loyalist Soldiers",                    Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_RENDEZVOUS =              20512, "Meet the King's Reinforcements",            Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_ESCORT_JOAN =             20513, "Escort Joan to Compiègne",                  Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
+    JOAN5_ESCORT_REFUGEES =         20514, "Escort 6 Refugees to Compiègne",            Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
     
-    JOAN6_VICTORY =                  20600, "Victory",                                   Age2ScenarioData.AP_JOAN_6, Age2LocationType.VICTORY
+    JOAN6_VICTORY =                 20600, "Victory",                                   Age2ScenarioData.AP_JOAN_6, Age2LocationType.VICTORY
+    JOAN6_FRENCH_ARMY =             20601, "Locate the French Army",                    Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
+    JOAN6_FRENCH_ARTILLERY =        20602, "Locate the French Artillery",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
+    JOAN6_BURGUNDIAN_TOWN =         20603, "Capture the Burgundian Town",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.SIDE_QUEST
     
 location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2ScenarioLocationData}

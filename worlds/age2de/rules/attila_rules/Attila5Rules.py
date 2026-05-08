@@ -1,10 +1,7 @@
-from rule_builder.rules import Has, Rule, True_
-from ...logic.attila.Attila5StartingState import Attila5StartingState
-from ...logic.attila.Attila3StartingState import Age2BuildingData
+from rule_builder.rules import Rule
+from ...logic.attila.attila_5 import Attila5StartingState
 from ...locations.Ages import Age2AgeData
-from ...logic.attila.Attila4StartingState import Attila4StartingState
 
-from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...logic.Logic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
