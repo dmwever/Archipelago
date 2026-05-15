@@ -20,6 +20,6 @@ class Attila2StartingState(ScenarioStartingState):
         self.rules = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario")
         self.has_vils = self.purple_vils
-        self.has_tc = logic.buildings.can_build_tc() & self.purple_vils
+        self.has_base = logic.can_build_base() & self.purple_vils
         self.can_reach_age[Age2AgeData.FEUDAL] = True_()
         self.can_reach_age[Age2AgeData.CASTLE] = True_()

@@ -43,6 +43,9 @@ class Logic:
             return self.goal.completed_all_campaigns()
         return False_()
 
+    def can_build_base(self) -> Rule:
+        return self.buildings.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
+
     def has_military(self) -> Rule:
         return self.buildings.has_military()
     

@@ -19,7 +19,7 @@ class Attila4Rules(ScenarioRules):
     def set_rules(self):
         super().set_rules()
         can_beat_red: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.military.counters_militia(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL) &
@@ -29,20 +29,20 @@ class Attila4Rules(ScenarioRules):
         )
         
         can_beat_purple: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.military.counters_archer(Age2AgeData.CASTLE) &
             self.logic.military.counters_militia(Age2AgeData.CASTLE) &
             self.logic.military.counters_ram()
         )
         can_ally_purple: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.buildings.has_building(Age2BuildingData.MARKET) &
             self.logic.buildings.has_building(Age2BuildingData.CASTLE) &
             self.logic.ages.has_age(Age2AgeData.CASTLE)
         )
         
         can_beat_cyan: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_spear(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL) &

@@ -22,7 +22,7 @@ class Joan3Rules(ScenarioRules):
         super().set_rules()
         can_cross_ocean = Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name) | (self.logic.buildings.has_building(Age2BuildingData.DOCK) & Has(Age2ItemData.TOWN_CENTER_WOOD.item_name))
         can_destroy_castle: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             can_cross_ocean & 
             self.logic.has_siege() &
             self.logic.military.counters_militia(Age2AgeData.CASTLE) &
@@ -30,7 +30,7 @@ class Joan3Rules(ScenarioRules):
             self.logic.military.counters_knight()
         )
         can_beat_purple: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             can_cross_ocean &
             self.logic.military.counters_building() &
             self.logic.military.counters_militia(Age2AgeData.CASTLE) &
@@ -38,7 +38,7 @@ class Joan3Rules(ScenarioRules):
             self.logic.military.counters_mangonel()
         )
         can_beat_fastolf: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             can_cross_ocean &
             self.logic.military.counters_building() &
             self.logic.military.counters_ram() &

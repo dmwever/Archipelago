@@ -18,19 +18,19 @@ class Attila1Rules(ScenarioRules):
         super().set_rules()
         
         can_beat_purple: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.has_military()
         )
         
         can_beat_blue: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.FEUDAL) &
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.has_military()
         )
         
         can_beat_red: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) &
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.buildings.has_siege() &
             self.logic.military.counters_knight() &
             self.logic.military.counters_mangonel() &
@@ -39,7 +39,7 @@ class Attila1Rules(ScenarioRules):
         
         can_beat_green: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) &
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.buildings.has_siege() &
             self.logic.military.counters_cav_archer() &
             self.logic.military.counters_mangudai()

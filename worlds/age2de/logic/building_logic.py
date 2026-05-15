@@ -19,7 +19,7 @@ class BuildingLogic:
     
     def has_building(self, building: Age2BuildingData) -> Rule:
         has_prerequisites = self.has_prerequisites(building)
-        if building not in self.world.included_buildings:
+        if building not in self.world.shuffled_buildings:
             return has_prerequisites
         return has_prerequisites & Has(building.item.item_name)
     

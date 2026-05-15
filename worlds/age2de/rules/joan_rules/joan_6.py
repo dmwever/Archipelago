@@ -24,7 +24,7 @@ class Joan6Rules(ScenarioRules):
         super().set_rules()
         
         can_defeat_purple = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.military.has_siege() &
             self.logic.military.counters_militia(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_spear(Age2AgeData.IMPERIAL) &
@@ -39,7 +39,7 @@ class Joan6Rules(ScenarioRules):
             can_defeat_purple
         )
         can_defeat_orange = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.military.has_siege() &
             self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_scout(Age2AgeData.IMPERIAL) &
@@ -47,7 +47,7 @@ class Joan6Rules(ScenarioRules):
             self.logic.military.counters_trebuchet()
         )
         can_defeat_red = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.military.has_siege() &
             self.logic.military.counters_longbowman(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &

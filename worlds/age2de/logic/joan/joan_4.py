@@ -18,7 +18,7 @@ class Joan4StartingState(ScenarioStartingState):
         super().__init__()
         self.rules = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN3_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 3)
-        self.has_tc = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
+        self.has_base = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name) & logic.buildings.has_building(Age2BuildingData.HOUSE)
         self.has_vils = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
         self.can_reach_age[Age2AgeData.FEUDAL] = True_()
         self.can_reach_age[Age2AgeData.CASTLE] = True_()

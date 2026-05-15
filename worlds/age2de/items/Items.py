@@ -224,7 +224,8 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_1_RECRUITS =                4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1)
     AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5)
     AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5)
-    AP_JOAN_6_ARTILLERY =               4010, "Joan of Arc, A Perfect Martyr: French Artillery",                ScenarioItem(Age2ScenarioData.AP_JOAN_6)
+    AP_JOAN_6_LA_HIRE =                 4010, "Joan of Arc, A Perfect Martyr: La Hire",                         Mercenary(Age2ScenarioData.AP_JOAN_6)
+    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                ScenarioItem(Age2ScenarioData.AP_JOAN_6)
     
 
         

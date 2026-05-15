@@ -11,7 +11,7 @@ from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
-from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS
+from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
@@ -52,7 +52,7 @@ class Age2World(CachedRuleBuilderWorld):
     
     included_civs: list[Scenarios.Age2CivData] = []
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
-    included_buildings: list[Buildings.Age2BuildingData] = []
+    shuffled_buildings: list[Buildings.Age2BuildingData] = []
     rules: Rules
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
@@ -105,7 +105,7 @@ class Age2World(CachedRuleBuilderWorld):
                    [options for options in self.options.shuffle_buildings if not Buildings.BuildingOption.unique in options]):
                 new_location = Location(self.player, building.location_name, building.id, buildings)
                 buildings.locations.append(new_location)
-                self.included_buildings.append(building)
+                self.shuffled_buildings.append(building)
         regions.append(buildings)
         
         self.multiworld.regions += regions
@@ -158,8 +158,13 @@ class Age2World(CachedRuleBuilderWorld):
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
 
-        for building in self.included_buildings:
-            items.append(self.create_item(building.item.item_name))
+        for building in Age2BuildingData:
+            building_item: Item = self.create_item(building.item.item_name)
+            if building in self.shuffled_buildings:
+                items.append(building_item)
+            else:
+                self.multiworld.push_precollected(building_item)
+                
 
         self.multiworld.itempool += items
         

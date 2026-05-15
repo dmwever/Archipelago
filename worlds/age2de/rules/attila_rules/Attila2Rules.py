@@ -20,14 +20,14 @@ class Attila2Rules(ScenarioRules):
         can_beat_blue: Rule =  (
             self.scythian_troop |
             (
-                self.scenario_logic.has_tc() &
+                self.scenario_logic.has_base() &
                 self.logic.has_siege() &
                 self.logic.military.counters_knight() &
                 self.logic.military.counters_militia(Age2AgeData.CASTLE) &
                 self.logic.military.counters_spear(Age2AgeData.CASTLE)
             )
         )
-        can_build_tc = self.scenario_logic.has_tc()
+        can_build_tc = self.logic.buildings.can_build_tc() & self.scenario_logic.has_vils()
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_beat_blue & can_build_tc)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_beat_blue & can_build_tc)

@@ -20,7 +20,7 @@ class Attila1StartingState(ScenarioStartingState):
         self.rules = logic
         self.is_unlocked = Has("Attila the Hun Campaign")
         self.has_vils = self.has_bledas_camp | self.alternate_vils
-        self.has_tc = self.has_bledas_camp | (logic.buildings.can_build_tc() & 
+        self.has_base = self.has_bledas_camp | (logic.can_build_base() & 
             self.alternate_vils)
         self.can_reach_age[Age2AgeData.FEUDAL] = self.has_bledas_camp | (logic.ages.can_reach_feudal() & self.alternate_vils)
         self.can_reach_age[Age2AgeData.CASTLE] = self.has_bledas_camp | (logic.ages.can_reach_castle() & self.alternate_vils)

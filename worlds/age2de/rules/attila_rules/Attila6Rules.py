@@ -16,6 +16,7 @@ class Attila6Rules(ScenarioRules):
     def set_rules(self):
         super().set_rules()
         can_beat_red: Rule = (
+            self.scenario_logic.has_base() &
             self.logic.military.counters_spear(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_scout(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
@@ -25,10 +26,12 @@ class Attila6Rules(ScenarioRules):
         
         can_beat_green: Rule = (
             (
+                self.scenario_logic.has_base() &
                 self.logic.military.has_navy(Age2AgeData.IMPERIAL) &
                 self.logic.military.has_naval_bombardment()
             ) |
             (
+                self.scenario_logic.has_base() &
                 self.logic.military.counters_archer(Age2AgeData.IMPERIAL) &
                 self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
                 self.logic.military.counters_mangonel(Age2AgeData.IMPERIAL) &
@@ -37,6 +40,7 @@ class Attila6Rules(ScenarioRules):
         )
         
         can_beat_purple: Rule = (
+            self.scenario_logic.has_base() &
             self.logic.military.counters_militia(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_archer(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_longbowman(Age2AgeData.IMPERIAL) &
@@ -45,6 +49,7 @@ class Attila6Rules(ScenarioRules):
         )
         
         can_beat_orange: Rule = (
+            self.scenario_logic.has_base() &
             self.logic.military.counters_archer(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
@@ -52,7 +57,7 @@ class Attila6Rules(ScenarioRules):
             self.logic.military.counters_monk() &
             self.logic.military.has_long_range_siege()
         )
-        can_beat_blue: Rule = self.logic.military.has_military()
+        can_beat_blue: Rule = self.scenario_logic.has_base() & self.logic.military.has_military()
         victory = can_beat_orange & can_beat_green & can_beat_purple & can_beat_red
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_AQUILEIA], can_beat_red)

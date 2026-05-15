@@ -21,7 +21,7 @@ class Joan4Rules(ScenarioRules):
         super().set_rules()
         can_beat_green: Rule = (
             (
-                self.scenario_logic.has_tc() &
+                self.scenario_logic.has_base() &
                 self.logic.military.counters_building() &
                 self.logic.military.has_navy(Age2AgeData.IMPERIAL) &
                 self.logic.military.counters_ram() &
@@ -29,26 +29,26 @@ class Joan4Rules(ScenarioRules):
                 self.logic.military.counters_knight(Age2AgeData.IMPERIAL)
             ) |
             (
-                self.scenario_logic.has_tc() &
+                self.scenario_logic.has_base() &
                 self.logic.military.has_navy(Age2AgeData.IMPERIAL) &
                 self.logic.military.has_naval_bombardment()
             )
         )
         can_beat_orange: Rule = (
             (
-                self.scenario_logic.has_tc() &
+                self.scenario_logic.has_base() &
                 self.logic.military.has_siege() &
                 self.logic.military.counters_knight(Age2AgeData.CASTLE) &
                 self.logic.military.counters_spear(Age2AgeData.CASTLE)
             )|
             (
-                self.scenario_logic.has_tc() &
+                self.scenario_logic.has_base() &
                 self.logic.military.has_navy(Age2AgeData.IMPERIAL) &
                 self.logic.military.has_naval_bombardment()
             )
         )
         can_beat_yellow: Rule = (
-            self.scenario_logic.has_tc() &
+            self.scenario_logic.has_base() &
             self.logic.military.has_siege() &
             self.logic.military.counters_longbowman(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
