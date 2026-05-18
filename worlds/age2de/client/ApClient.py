@@ -70,15 +70,13 @@ class Age2CommandProcessor(ClientCommandProcessor):
 class Age2Context(CommonContext):
     game = Age2World.game
     command_processor = Age2CommandProcessor
-    game_ctx = GameClient.Age2GameContext
+    game_ctx: GameClient.Age2GameContext = None
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
-        self.game_ctx = GameClient.Age2GameContext(client_interface=self)
-        self.game_ctx.update_game_user_folder(self.settings.user_folder)
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         
@@ -108,6 +106,9 @@ class Age2Context(CommonContext):
             self._handle_set_reply(args)
 
     def _handle_connected(self):
+        self.close_game_loop()
+        self.game_ctx = GameClient.Age2GameContext(client_interface=self)
+        self.game_ctx.update_game_user_folder(self.settings.user_folder)
         self.game_ctx.flush_files()
         self.try_startup_game_connection()
         Utils.async_start(self.send_msgs([
@@ -140,6 +141,11 @@ class Age2Context(CommonContext):
         for (scenario_data, managed_scenario) in self.game_ctx.campaign_handler.scenarios.items():
             completed: int = self.stored_data.get(self.scenario_completion_key)
             managed_scenario.completed = completed & (1 << scenario_data.completion_bit) != 0
+            
+    def handle_connection_loss(self, msg: str) -> None:
+        """Override for logging and displaying a loss of connection. Must be called from an except block."""
+        self.close_game_loop()
+        super().handle_connection_loss(msg)
 
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([
@@ -166,6 +172,18 @@ class Age2Context(CommonContext):
             self.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.game_ctx))
             return True
         return False
+    
+    
+    
+    async def disconnect(self, allow_autoreconnect: bool = False):
+        self.close_game_loop()
+        Utils.async_start(super().disconnect(allow_autoreconnect), name="disconnecting")
+
+    def close_game_loop(self):
+        if self.game_ctx:
+            self.game_ctx.running = False
+            self.game_ctx.campaign_handler.deactivate_scenario()
+            self.game_ctx.flush_files()
 
 class Age2JSONtoTextParser(JSONtoTextParser):
     color: str = "white"

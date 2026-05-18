@@ -18,5 +18,4 @@ class Joan1StartingState(ScenarioStartingState):
         self.rules = logic
         self.is_unlocked = Has(Age2ItemData.JOAN_OF_ARC.item_name)
         self.has_vils = False_()
-        self.has_tc = False_()
         self.has_base = False_()

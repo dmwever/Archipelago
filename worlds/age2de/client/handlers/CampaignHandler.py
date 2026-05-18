@@ -124,6 +124,11 @@ class CampaignHandler(FolderHandler):
     
     def deactivate_scenario(self) -> bool:
         try:
+            with open(self._user_folder + self.active_file.data.campaign.xsdat_read_name, "wb") as fp:
+                XsdatFile.write_bool(fp, False)
+        except Exception as ex:
+            print(ex)
+        try:
             with open(self._user_folder + self.active_file.data.xsdat_read_name, "wb") as fp:
                 XsdatFile.write_bool(fp, False)
         except Exception as ex:

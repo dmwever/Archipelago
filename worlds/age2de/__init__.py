@@ -189,10 +189,11 @@ class Age2World(CachedRuleBuilderWorld):
         
     
     def add_early_campaign_items(self, campaign: Campaigns.Age2CampaignData):
-        if campaign == Campaigns.Age2CampaignData.JOAN:
-            choice: str = self.random.choice([Items.Age2ItemData.AP_JOAN_1_CROSSBOWMEN.item_name, Items.Age2ItemData.AP_JOAN_1_SWORDSMEN.item_name])
-            self.multiworld.early_items[self.player][choice] = 1
-            self.multiworld.early_items[self.player][Items.Age2ItemData.AP_JOAN_1_RAM.item_name] = 1
+        pass
+        # if campaign == Campaigns.Age2CampaignData.JOAN:
+        #     choice: str = self.random.choice([Items.Age2ItemData.AP_JOAN_1_CROSSBOWMEN.item_name, Items.Age2ItemData.AP_JOAN_1_SWORDSMEN.item_name])
+        #     self.multiworld.early_items[self.player][choice] = 1
+        #     self.multiworld.early_items[self.player][Items.Age2ItemData.AP_JOAN_1_RAM.item_name] = 1
     
     def smart_add_starting_resources(self, locations_to_fill: int):
         items: list[Item] = []
