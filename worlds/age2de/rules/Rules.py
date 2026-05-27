@@ -50,7 +50,7 @@ class Rules:
            
         menu: Region = self.world.get_region("Menu") 
         victory = self.world.create_item(Age2ItemData.VICTORY.item_name)
-        location: Location = Location(self.world.player, "Victory", parent=menu)
+        location: Location = Location(self.world.player, "Victory", 0, parent=menu)
         self.world.multiworld.completion_condition[self.world.player] = lambda state: state.has("Victory", self.world.player)
         menu.add_event(location.name, victory.name, self.logic.has_goal())
 

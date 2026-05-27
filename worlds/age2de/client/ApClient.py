@@ -74,6 +74,7 @@ class Age2Context(CommonContext):
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
+    victory: bool
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
@@ -97,7 +98,7 @@ class Age2Context(CommonContext):
     
     def on_package(self, cmd: str, args: dict) -> None:
         if cmd == "Connected":
-            self._handle_connected()
+            self._handle_connected(args['slot_data'])
                 
         if cmd == "ReceivedItems":
             self._handle_received_items(args)
@@ -105,11 +106,12 @@ class Age2Context(CommonContext):
         if cmd == "SetReply":
             self._handle_set_reply(args)
 
-    def _handle_connected(self):
+    def _handle_connected(self, args):
         self.close_game_loop()
         self.game_ctx = GameClient.Age2GameContext(client_interface=self)
         self.game_ctx.update_game_user_folder(self.settings.user_folder)
         self.game_ctx.flush_files()
+        self.game_ctx.campaign_handler.setup_victory_requirements(args)
         self.try_startup_game_connection()
         Utils.async_start(self.send_msgs([
         {

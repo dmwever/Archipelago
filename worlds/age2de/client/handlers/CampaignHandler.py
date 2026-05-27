@@ -27,11 +27,13 @@ class ManagedCampaign:
     data: Age2CampaignData = None
     scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
     unlocked: bool = False
+    must_beat: bool = False
     
 class CampaignHandler(FolderHandler):
     _campaigns: dict[Age2CampaignData, ManagedCampaign] = dict()
     scenarios: dict[Age2ScenarioData, ManagedScenario] = dict()
     _scenario_items: dict[Age2ItemData, ManagedScenarioItem] = dict()
+    _victory: False
     
     active_file: ManagedScenario = None
     
@@ -49,7 +51,21 @@ class CampaignHandler(FolderHandler):
                 self.scenarios[scn_data] = managed_scenario
             managed_campaign = ManagedCampaign(data=cpn_data, scenarios=scenarios_as_data)
             self._campaigns[cpn_data] = managed_campaign
-        
+    
+    def setup_victory_requirements(self, args: dict):
+        for data in self._campaigns.keys():
+            if data.campaign_name + "_unlocked" in args.keys():
+                self._campaigns[data].must_beat = True
+    
+    def check_victory(self) -> bool:
+        for campaign in self._campaigns.values():
+            if (campaign.must_beat == False):
+                continue
+            for scenario in campaign.scenarios:
+                if self.scenarios[scenario].completed == False:
+                    return False
+        return True
+    
     def unlock_campaign(self, campaign: Age2CampaignData):
         if campaign not in self._campaigns:
             print(f"Campaign data not found in this AP World's Campaign Handler. Could not unlock campaign {campaign.campaign_name}.")

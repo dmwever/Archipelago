@@ -342,5 +342,7 @@ async def status_loop(ctx: Age2GameContext):
         ctx.message_handler.try_write_to_folder()
         ctx.free_items()
         ctx.ping_game()
+        if ctx.campaign_handler.check_victory():
+            ctx.client_interface.on_location_received(0)
         
         await short_sleep()
