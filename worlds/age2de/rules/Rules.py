@@ -15,7 +15,7 @@ from .BuildingRules import BuildingRules
 from rule_builder.rules import CanReachRegion, False_, Has, Rule, True_
 
 from ..items.Items import Age2ItemData
-from ..locations.Locations import VICTORY_LOCATIONS, Age2ScenarioLocationData, Age2LocationType
+from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData, Age2LocationType
 from ..locations.connections import ScenarioDataRules
 
 if TYPE_CHECKING:
@@ -42,7 +42,7 @@ class Rules:
         self.world.set_rule(spot, rule)
 
     def set_rules(self) -> None:
-        for value in [x for x in VICTORY_LOCATIONS.values() if x.scenario.campaign in self.world.included_campaigns]:
+        for value in [x for x in VICTORY_SCENARIO_LOCATIONS.values() if x.scenario.campaign in self.world.included_campaigns]:
             region = self.world.get_region(value.scenario.scenario_name)
             victory_loc = Location(self.world.player, "Complete " + value.scenario.scenario_name, None, region)
             victory_loc.place_locked_item(Item(value.scenario.scenario_name + ": Unlock Next Scenario", ItemClassification.progression, None, self.world.player))

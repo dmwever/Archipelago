@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Entrance, Location
 from ..locations.Scenarios import Age2ScenarioData
-from ..locations.Locations import SCENARIO_TO_LOCATIONS, Age2ScenarioLocationData
+from ..locations.Locations import SCENARIO_TO_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..logic.ScenarioLogic import ScenarioLogic
 
 
@@ -25,7 +25,7 @@ class ScenarioRules:
         self.logic = rules.logic
         self.world = rules.world
         self.entrance = self.world.get_entrance(scenario.scenario_name)
-        for location in SCENARIO_TO_LOCATIONS[scenario]:
+        for location in SCENARIO_TO_SCENARIO_LOCATIONS[scenario]:
             try:
                 self.locations[location] = self.world.get_location(location.global_name())
             except:

@@ -11,6 +11,7 @@ from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
+from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
@@ -43,11 +44,11 @@ class Age2World(CachedRuleBuilderWorld):
     topology_present = True  # show path to required location checks in spoiler
 
     item_names = set(item.item_name for item in Items.Age2ItemData)
-    location_names = set(location.global_name() for location in Locations.Age2ScenarioLocationData)
+    location_names = set(LocationMapping.location_name_list)
     item_name_to_id = Items.item_name_to_id
     item_id_to_name = Items.item_id_to_name
-    location_name_to_id = Locations.location_name_to_id
-    location_id_to_name = Locations.location_id_to_name
+    location_name_to_id = LocationMapping.location_name_to_id
+    location_id_to_name = LocationMapping.location_id_to_name
     item_mapping = Items.item_mapping
     
     included_civs: list[Scenarios.Age2CivData] = []

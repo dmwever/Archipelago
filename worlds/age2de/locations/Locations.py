@@ -172,9 +172,9 @@ class Age2ScenarioLocationData(enum.IntEnum):
 location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2ScenarioLocationData}
 location_id_to_name = {_location.id: _location.global_name() for _location in Age2ScenarioLocationData}
-SCENARIO_TO_LOCATIONS: dict[Age2ScenarioData, list[Age2ScenarioLocationData]] = {_scenario: [] for _scenario in Age2ScenarioData}
+SCENARIO_TO_SCENARIO_LOCATIONS: dict[Age2ScenarioData, list[Age2ScenarioLocationData]] = {_scenario: [] for _scenario in Age2ScenarioData}
 for _location in Age2ScenarioLocationData:
-    SCENARIO_TO_LOCATIONS[_location.scenario].append(_location)
+    SCENARIO_TO_SCENARIO_LOCATIONS[_location.scenario].append(_location)
 
 REGION_TO_LOCATIONS: dict[str, list[Age2ScenarioLocationData]] = {}
 for location in Age2ScenarioLocationData:
@@ -184,6 +184,6 @@ TYPE_TO_LOCATIONS: dict[Age2LocationType, list[Age2ScenarioLocationData]] = {}
 for location in Age2ScenarioLocationData:
     TYPE_TO_LOCATIONS.setdefault(location.type, []).append(location)
 
-VICTORY_LOCATIONS: dict[str, Age2ScenarioLocationData] = {}
+VICTORY_SCENARIO_LOCATIONS: dict[str, Age2ScenarioLocationData] = {}
 for location in TYPE_TO_LOCATIONS.get(Age2LocationType.VICTORY):
-    VICTORY_LOCATIONS[location.scenario.scenario_name] = location
+    VICTORY_SCENARIO_LOCATIONS[location.scenario.scenario_name] = location
