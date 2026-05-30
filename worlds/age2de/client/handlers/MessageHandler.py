@@ -34,9 +34,9 @@ class MessageHandler(FolderHandler):
                 with open(self._user_folder + "messages.xsdat", "wb") as fp:
                     XsdatFile.write_int(fp, num_to_send)
                     for msg in self._sending_messages:
-                        msg[1] = self._parse_evil_characters(msg[1])
+                        safe_string = _parse_evil_characters(msg[1])
                         XsdatFile.write_int(fp, msg[0])
-                        XsdatFile.write_string(fp, msg[1])
+                        XsdatFile.write_string(fp, safe_string)
             except Exception as ex:
                 print(ex)
     
@@ -80,6 +80,6 @@ class MessageHandler(FolderHandler):
             except queue.Empty:  # On Python 2, use Queue.Empty
                 break
 
-    def _parse_evil_characters(msg: str):
-        msg = msg.replace("%", " percent")
-        return msg
+def _parse_evil_characters(msg: str):
+    msg = msg.replace("%", " percent")
+    return msg
