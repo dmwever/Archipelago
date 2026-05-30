@@ -169,6 +169,9 @@ class Age2Context(CommonContext):
                 "locations": [location_id for location_id in location_ids],
             }]))
 
+    def on_goal(self) -> None:
+        Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
+
     def try_startup_game_connection(self) -> bool:
         if self.game_ctx.game_loop is None or self.game_ctx.game_loop.done():
             self.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.game_ctx))

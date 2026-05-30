@@ -28,11 +28,17 @@ WORLD_ID = 2
 
 class APClientInterface(Protocol):
     def on_scenario_completion(self, scenario_id: Age2ScenarioData):
+        """Called when a scenario is completed"""
         pass
     
     def on_location_received(self, location_ids: list[int]):
         """Called when a new location is received"""
         pass
+    
+    def on_goal(self):
+        """Called on goal"""
+        pass
+    
     def fetch_locations_collected(self, location_status: dict[int, int], new_scenario_id: int):
         """Called when a new location is received"""
         pass
@@ -108,6 +114,7 @@ class Age2GameContext:
     building_handler: BuildingHandler = BuildingHandler([building for building in Age2BuildingData])
     message_handler: MessageHandler = MessageHandler()
     client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
+    finished_game: bool = False
 
     def __init__(self, client_interface):
         self.running = True
@@ -342,7 +349,7 @@ async def status_loop(ctx: Age2GameContext):
         ctx.message_handler.try_write_to_folder()
         ctx.free_items()
         ctx.ping_game()
-        if ctx.campaign_handler.check_victory():
-            ctx.client_interface.on_location_received(0)
-        
+        if ctx.campaign_handler.check_victory() and not ctx.finished_game:
+            ctx.client_interface.on_goal()
+            ctx.finished_game = True
         await short_sleep()
