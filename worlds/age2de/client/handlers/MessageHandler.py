@@ -82,4 +82,5 @@ class MessageHandler(FolderHandler):
 
 def _parse_evil_characters(msg: str):
     msg = msg.replace("%", " percent")
+    msg = msg.replace("è", "e")
     return msg
