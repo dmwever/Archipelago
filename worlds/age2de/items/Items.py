@@ -224,7 +224,7 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_1_RECRUITS =                4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1)
     AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5)
     AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5)
-    AP_JOAN_6_LA_HIRE =                 4010, "Joan of Arc, A Perfect Martyr: La Hire",                         Mercenary(Age2ScenarioData.AP_JOAN_6)
+    AP_JOAN_6_LA_HIRE =                 4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6)
     AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                ScenarioItem(Age2ScenarioData.AP_JOAN_6)
     
 
@@ -246,7 +246,7 @@ for item in Age2ItemData:
     item_id_to_name[item.id] = item.item_name
     item_name_to_id[item.item_name] = item.id
     CATEGORY_TO_ITEMS.setdefault(item.type_data, []).append(item)
-    if item.type_data == ScenarioItem:
+    if item.type_data == ScenarioItem or item.type_data == Mercenary:
         SCENARIO_TO_ITEMS[item.type.vanilla_scenario].append(item)
 
 item_mapping: dict[str, str] = {

@@ -16,7 +16,7 @@ from .handlers.MessageHandler import MessageHandler
 
 from ..campaign import XsdatFile
 from ..items import Items
-from ..items.Items import Age2ItemData, ScenarioItem
+from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
 from ..locations.Campaigns import Age2CampaignData
 from worlds.age2de.locations import Scenarios
 
@@ -255,12 +255,10 @@ async def status_loop(ctx: Age2GameContext):
     while ctx.running:
         # Check all unlocked scenarios every 2 seconds to find active scenario.
         if not ctx.campaign_handler.active_file:
-            logger.info("Searching for active scenario.")
             ctx.campaign_handler.find_active_campaign()
             if not ctx.campaign_handler.has_active_scenario():
                 ctx.campaign_handler.find_active_scenario()
                 if not ctx.campaign_handler.has_active_scenario():
-                    logger.info("No active scenario found. Make sure the game is running and the scenario is unpaused.")
                     await long_sleep()
                     continue
                 else:
@@ -270,7 +268,6 @@ async def status_loop(ctx: Age2GameContext):
         
         # Check all unlocked scenarios every 2.5 seconds after scenario stops updating packet in case user has switched scenarios.
         if ctx.paused and ctx.packet_repeat_count % 5 == 0:
-            logger.info("Searching for an active scenario. The game may be paused.")
             ctx.campaign_handler.find_active_campaign()
             if not ctx.campaign_handler.has_active_scenario():
                 ctx.campaign_handler.find_active_scenario()
@@ -336,7 +333,9 @@ async def status_loop(ctx: Age2GameContext):
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             ctx.send_items()
             ctx.sync_starting_resources()
-            ctx.campaign_handler.sync_scenario_items(list(set(ctx.client_status.unlocked_items).intersection(Items.CATEGORY_TO_ITEMS[ScenarioItem])))
+            items = Items.CATEGORY_TO_ITEMS[ScenarioItem]
+            items.extend(Items.CATEGORY_TO_ITEMS[Mercenary])
+            ctx.campaign_handler.sync_scenario_items(list(set(ctx.client_status.unlocked_items).intersection(items)))
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)

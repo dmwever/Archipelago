@@ -164,7 +164,7 @@ class Age2ScenarioLocationData(enum.IntEnum):
     JOAN5_ESCORT_REFUGEES =         20514, "Escort 6 Refugees to Compiègne",            Age2ScenarioData.AP_JOAN_5, Age2LocationType.OBJECTIVE
     
     JOAN6_VICTORY =                 20600, "Victory",                                   Age2ScenarioData.AP_JOAN_6, Age2LocationType.VICTORY
-    JOAN6_LA_HIRE =                 20601, "Meet with La Hire",                         Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
+    JOAN6_LA_HIRE =                 20601, "Meet with the Longswordsman",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
     JOAN6_FRENCH_ARMY =             20602, "Locate the French Army",                    Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
     JOAN6_FRENCH_ARTILLERY =        20603, "Locate the French Artillery",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
     JOAN6_BURGUNDIAN_TOWN =         20604, "Capture the Burgundian Town",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.SIDE_QUEST
