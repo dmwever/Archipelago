@@ -231,6 +231,7 @@ class Age2GameContext:
     def ping_game(self) -> None:
         try:
             with open(self.user_folder() + "AP.xsdat", "wb") as fp:
+                XsdatFile.write_int(fp, self.current_packet.scenario_id)
                 XsdatFile.write_int(fp, self.current_packet.current_ping_id)
                 XsdatFile.write_float(fp, AP_VERSION)
                 XsdatFile.write_int(fp, WORLD_ID)
@@ -284,6 +285,16 @@ async def status_loop(ctx: Age2GameContext):
             continue
         
         packetStatus = ctx.update_packet(packet)
+        
+        # Improper read. Ping is never -1
+        if packet.current_ping_id == -1:
+            continue
+        
+        if packet.scenario_id != ctx.campaign_handler.active_file.data.id:
+            logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
+            ctx.flush_files()
+            ctx.campaign_handler.deactivate_scenario()
+            continue
         
         if packetStatus == PacketStatus.REPEAT:
             ctx.packet_repeat_count += 1
