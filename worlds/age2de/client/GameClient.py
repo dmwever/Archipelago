@@ -343,10 +343,6 @@ async def status_loop(ctx: Age2GameContext):
         
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             ctx.send_items()
-            ctx.sync_starting_resources()
-            items = Items.CATEGORY_TO_ITEMS[ScenarioItem]
-            items.extend(Items.CATEGORY_TO_ITEMS[Mercenary])
-            ctx.campaign_handler.sync_scenario_items(list(set(ctx.client_status.unlocked_items).intersection(items)))
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
@@ -355,6 +351,9 @@ async def status_loop(ctx: Age2GameContext):
             ctx.campaign_handler.complete_active_scenario()
             ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
         
+        ctx.sync_starting_resources()
+        
+        ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
         ctx.free_items()

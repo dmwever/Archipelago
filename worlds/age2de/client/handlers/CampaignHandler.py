@@ -4,7 +4,7 @@ import os
 from .FolderHandler import FolderHandler
 
 from ...campaign import XsdatFile
-from ...items.Items import Age2ItemData, SCENARIO_TO_ITEMS
+from ...items.Items import CATEGORY_TO_ITEMS, Age2ItemData, SCENARIO_TO_ITEMS, Mercenary, ScenarioItem
 from ...locations.Scenarios import Age2ScenarioData, CAMPAIGN_TO_SCENARIOS, scenario_from_id
 from ...locations.Campaigns import Age2CampaignData
 
@@ -152,8 +152,11 @@ class CampaignHandler(FolderHandler):
         self.active_file = None
     
     def sync_scenario_items(self, unlocked_items: list[Age2ItemData]) -> None:
+        items = CATEGORY_TO_ITEMS[ScenarioItem]
+        items.extend(CATEGORY_TO_ITEMS[Mercenary])
+        unlocked_scenario_items = list(set(unlocked_items).intersection(items))
         try:
-            for item in unlocked_items:
+            for item in unlocked_scenario_items:
                 managed_item = self._scenario_items[item]
                 if managed_item is None:
                     print(f"{item.name} is not in the list of scenario items for this AP World.")
