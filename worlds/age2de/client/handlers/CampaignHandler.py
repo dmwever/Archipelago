@@ -109,10 +109,10 @@ class CampaignHandler(FolderHandler):
                             return True
                         else:
                             print("Not active")
-                            return False
                 except Exception as ex:
                     print(ex)
         self.active_file = None
+        return False
     
     def find_active_scenario(self):
         for scenario in self.scenarios.values():
