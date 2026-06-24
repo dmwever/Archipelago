@@ -100,6 +100,7 @@ class PacketStatus(Enum):
 @dataclass
 class ClientStatus:
     unlocked_items: list[Age2ItemData] = field(default_factory=list[Age2ItemData])
+    checked_locations: set[int] = None
     acked_items: int = 0
     user_folder: str = ''
 
@@ -156,11 +157,11 @@ class Age2GameContext:
         self.current_packet = new_pkt
         return status
 
-    def ack_locations(self) -> None:
+    def sync_checked_locations(self) -> None:
         try:
             with open(self.user_folder() + "locations.xsdat", "wb") as fp:
-                XsdatFile.write_int(fp, len(self.current_packet.location_ids))
-                for location_id in self.current_packet.location_ids:
+                XsdatFile.write_int(fp, len(self.client_status.checked_locations))
+                for location_id in self.client_status.checked_locations:
                     XsdatFile.write_int(fp, location_id)
         except Exception as ex:
             print(ex)
@@ -333,7 +334,8 @@ async def status_loop(ctx: Age2GameContext):
             continue
         if packetStatus == PacketStatus.UPDATE:
             ctx.client_interface.on_location_received(ctx.current_packet.location_ids)
-            ctx.ack_locations()
+            for location_id in ctx.current_packet.location_ids:
+                ctx.client_status.checked_locations.add(location_id)
             
         if packetStatus == PacketStatus.ACTIVE:
             pass
@@ -354,6 +356,7 @@ async def status_loop(ctx: Age2GameContext):
         ctx.sync_starting_resources()
         
         ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
+        ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
         ctx.free_items()
