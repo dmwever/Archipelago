@@ -179,6 +179,9 @@ class CampaignHandler(FolderHandler):
                 os.remove(self._user_folder + scn.xsdat_write_name)
             if os.path.exists(self._user_folder + scn.xsdat_read_name):
                 os.remove(self._user_folder + scn.xsdat_read_name)
+        for cpn in self._campaigns:
+            if os.path.exists(self._user_folder + cpn.xsdat_read_name):
+                os.remove(self._user_folder + cpn.xsdat_read_name)
     
     def __add_campaign_to_folder():
         pass

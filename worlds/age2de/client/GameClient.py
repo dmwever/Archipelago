@@ -160,7 +160,6 @@ class Age2GameContext:
     def sync_checked_locations(self) -> None:
         try:
             with open(self.user_folder() + "locations.xsdat", "wb") as fp:
-                XsdatFile.write_int(fp, len(self.client_status.checked_locations))
                 for location_id in self.client_status.checked_locations:
                     XsdatFile.write_int(fp, location_id)
         except Exception as ex:
@@ -255,6 +254,14 @@ async def long_sleep() -> None:
 
 async def status_loop(ctx: Age2GameContext):
     while ctx.running:
+        
+        # Sync files that are scenario-agnostic before connection.
+        ctx.sync_starting_resources()
+        ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
+        ctx.sync_checked_locations()
+        ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
+        ctx.message_handler.try_write_to_folder()
+        
         # Check all unlocked scenarios every 2 seconds to find active scenario.
         if not ctx.campaign_handler.active_file:
             ctx.campaign_handler.find_active_campaign()
@@ -353,12 +360,6 @@ async def status_loop(ctx: Age2GameContext):
             ctx.campaign_handler.complete_active_scenario()
             ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
         
-        ctx.sync_starting_resources()
-        
-        ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
-        ctx.sync_checked_locations()
-        ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
-        ctx.message_handler.try_write_to_folder()
         ctx.free_items()
         ctx.ping_game()
         if ctx.campaign_handler.check_victory() and not ctx.finished_game:
