@@ -110,7 +110,7 @@ class Age2GameContext:
     paused: bool = False
     packet_repeat_count: int = 0
     current_packet: Age2Packet = Age2Packet()
-    client_status: ClientStatus = None
+    client_status: ClientStatus = ClientStatus(unlocked_items=[])
     campaign_handler: CampaignHandler = CampaignHandler([campaign for campaign in Age2CampaignData])
     building_handler: BuildingHandler = BuildingHandler([building for building in Age2BuildingData])
     message_handler: MessageHandler = MessageHandler()
@@ -120,8 +120,18 @@ class Age2GameContext:
     def __init__(self, client_interface):
         self.running = True
         self.client_interface = client_interface
+
+    def disconnect(self):
+        self.flush_files()
+        self.running = False
+        self.paused = False
+        self.packet_repeat_count = 0
+        self.current_packet = Age2Packet()
         self.client_status = ClientStatus(unlocked_items=[])
-        self.message_handler.add_message("Client Connected!")
+        self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
+        self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.message_handler: MessageHandler = MessageHandler()
+        self.finished_game: bool = False
 
     def update_game_user_folder(self, folder: str):
         self.client_status.user_folder = folder

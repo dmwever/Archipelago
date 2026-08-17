@@ -109,12 +109,11 @@ class Age2Context(CommonContext):
 
     def _handle_connected(self, args):
         self.close_game_loop()
-        self.game_ctx = GameClient.Age2GameContext(client_interface=self)
         self.game_ctx.update_game_user_folder(self.settings.user_folder)
-        self.game_ctx.flush_files()
         self.game_ctx.client_status.checked_locations = self.checked_locations
         self.game_ctx.campaign_handler.setup_victory_requirements(args)
         self.try_startup_game_connection()
+        self.game_ctx.message_handler.add_message("Client Connected!")
         Utils.async_start(self.send_msgs([
         {
             "cmd": "Set",
@@ -188,9 +187,7 @@ class Age2Context(CommonContext):
 
     def close_game_loop(self):
         if self.game_ctx:
-            self.game_ctx.running = False
-            self.game_ctx.campaign_handler.deactivate_scenario()
-            self.game_ctx.flush_files()
+            self.game_ctx.disconnect()
 
 class Age2JSONtoTextParser(JSONtoTextParser):
     color: str = "white"
