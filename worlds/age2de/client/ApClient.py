@@ -109,6 +109,8 @@ class Age2Context(CommonContext):
 
     def _handle_connected(self, args):
         self.close_game_loop()
+        if self.game_ctx == None:
+            self.game_ctx = GameClient.Age2GameContext(client_interface=self)
         self.game_ctx.update_game_user_folder(self.settings.user_folder)
         self.game_ctx.client_status.checked_locations = self.checked_locations
         self.game_ctx.campaign_handler.setup_victory_requirements(args)
