@@ -18,6 +18,7 @@ class MessageHandler(FolderHandler):
     def __init__(self):
         self._unsent_message_queue = Queue()
         self._sending_messages = []
+        super().__init__()
     
     def add_message(self, msg: str):
         new_msg: Age2Message = (self._new_message_id, msg)

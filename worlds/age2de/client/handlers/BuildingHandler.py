@@ -18,6 +18,7 @@ class BuildingHandler(FolderHandler):
         for building in data:
             managedBuilding = ManagedBuilding(building, building.item)
             self._buildings[building] = managedBuilding
+        super().__init__()
     
     def unlock_building(self, building: Age2BuildingData):
         if building not in self._buildings:

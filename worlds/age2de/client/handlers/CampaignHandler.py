@@ -51,6 +51,7 @@ class CampaignHandler(FolderHandler):
                 self.scenarios[scn_data] = managed_scenario
             managed_campaign = ManagedCampaign(data=cpn_data, scenarios=scenarios_as_data)
             self._campaigns[cpn_data] = managed_campaign
+        super().__init__()
     
     def setup_victory_requirements(self, args: dict):
         for data in self._campaigns.keys():
