@@ -71,7 +71,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
 class Age2Context(CommonContext):
     game = Age2World.game
     command_processor = Age2CommandProcessor
-    game_ctx: GameClient.Age2GameContext = None
+    game_ctx: GameClient.Age2GameContext
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
@@ -81,6 +81,7 @@ class Age2Context(CommonContext):
         super().__init__(server_address, password)
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
+        self.game_ctx = GameClient.Age2GameContext(client_interface=self)
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -107,15 +108,8 @@ class Age2Context(CommonContext):
         if cmd == "SetReply":
             self._handle_set_reply(args)
 
-    def _handle_connected(self, args):
-        self.close_game_loop()
-        if self.game_ctx == None:
-            self.game_ctx = GameClient.Age2GameContext(client_interface=self)
-        self.game_ctx.update_game_user_folder(self.settings.user_folder)
-        self.game_ctx.client_status.checked_locations = self.checked_locations
-        self.game_ctx.campaign_handler.setup_victory_requirements(args)
-        self.try_startup_game_connection()
-        self.game_ctx.message_handler.add_message("Client Connected!")
+    def _handle_connected(self, slot_data):
+        self.game_ctx.connect(self.checked_locations, slot_data, self.settings.user_folder)
         Utils.async_start(self.send_msgs([
         {
             "cmd": "Set",
@@ -149,7 +143,7 @@ class Age2Context(CommonContext):
             
     def handle_connection_loss(self, msg: str) -> None:
         """Override for logging and displaying a loss of connection. Must be called from an except block."""
-        self.close_game_loop()
+        self.game_ctx.disconnect()
         super().handle_connection_loss(msg)
 
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
@@ -174,22 +168,10 @@ class Age2Context(CommonContext):
 
     def on_goal(self) -> None:
         Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
-
-    def try_startup_game_connection(self) -> bool:
-        if self.game_ctx.game_loop is None or self.game_ctx.game_loop.done():
-            self.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.game_ctx))
-            return True
-        return False
-    
-    
     
     async def disconnect(self, allow_autoreconnect: bool = False):
-        self.close_game_loop()
+        self.game_ctx.disconnect()
         Utils.async_start(super().disconnect(allow_autoreconnect), name="disconnecting")
-
-    def close_game_loop(self):
-        if self.game_ctx:
-            self.game_ctx.disconnect()
 
 class Age2JSONtoTextParser(JSONtoTextParser):
     color: str = "white"
@@ -233,13 +215,7 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         await asyncio.sleep(1)
         
         await ctx.exit_event.wait()
-        ctx.game_ctx.running = False
-        ctx.game_ctx.campaign_handler.deactivate_scenario()
-        ctx.game_ctx.flush_files()
-        ctx.server_address = None
-        ctx.game_ctx.game_loop.cancel("Shutting down game loop")
-
-        await ctx.shutdown()
+        ctx.game_ctx.disconnect()
 
     import colorama
 

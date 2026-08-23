@@ -50,6 +50,10 @@ class DefaultClientInterface:
     
     def on_location_received(self, location_ids: list[int]) -> None:
         pass
+    
+    def on_goal(self):
+        """Called on goal"""
+        pass
 
     def fetch_locations_collected(self, location_status: dict[int, int], new_mission_id: int) -> None:
         for k in location_status:
@@ -103,35 +107,56 @@ class ClientStatus:
     checked_locations: set[int] = None
     acked_items: int = 0
     user_folder: str = ''
+    finished_game: bool = False
 
 class Age2GameContext:
     running: bool = True
     game_loop: asyncio.Task[None] = None
     paused: bool = False
     packet_repeat_count: int = 0
-    current_packet: Age2Packet = Age2Packet()
-    client_status: ClientStatus = ClientStatus(unlocked_items=[])
-    campaign_handler: CampaignHandler = CampaignHandler([campaign for campaign in Age2CampaignData])
-    building_handler: BuildingHandler = BuildingHandler([building for building in Age2BuildingData])
-    message_handler: MessageHandler = MessageHandler()
-    client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
-    finished_game: bool = False
+    current_packet: Age2Packet
+    client_status: ClientStatus
+    campaign_handler: CampaignHandler
+    building_handler: BuildingHandler
+    message_handler: MessageHandler
+    client_interface: APClientInterface
 
     def __init__(self, client_interface):
         self.running = True
         self.client_interface = client_interface
+        self.client_status = ClientStatus(unlocked_items=[])
+        self.current_packet = Age2Packet()
+        self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
+        self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.message_handler = MessageHandler()
+        
+
+    def connect(self, checked_locations, slot_data, user_folder):
+        self.update_game_user_folder(user_folder)
+        self.client_status.checked_locations = checked_locations
+        self.campaign_handler.setup_victory_requirements(slot_data)
+        self.try_startup_game_connection()
+        self.message_handler.add_message("Client Connected!")
 
     def disconnect(self):
-        self.flush_files()
+        if self.client_status.user_folder != '':
+            self.flush_files()
         self.running = False
+        while self.game_loop != None and not self.game_loop.done():
+            continue
         self.paused = False
         self.packet_repeat_count = 0
         self.current_packet = Age2Packet()
         self.client_status = ClientStatus(unlocked_items=[])
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
-        self.message_handler: MessageHandler = MessageHandler()
-        self.finished_game: bool = False
+        self.message_handler = MessageHandler()
+
+    def try_startup_game_connection(self) -> bool:
+        if self.game_loop is None or self.game_loop.done():
+            self.game_loop = asyncio.create_task(status_loop(self))
+            return True
+        return False
 
     def update_game_user_folder(self, folder: str):
         self.client_status.user_folder = folder
@@ -208,7 +233,7 @@ class Age2GameContext:
 
     def user_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
-            
+
     def free_items(self) -> None:
         try:
             with open(self.user_folder() + "free_items.xsdat", "wb") as fp:
@@ -372,7 +397,7 @@ async def status_loop(ctx: Age2GameContext):
         
         ctx.free_items()
         ctx.ping_game()
-        if ctx.campaign_handler.check_victory() and not ctx.finished_game:
+        if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
             ctx.client_interface.on_goal()
-            ctx.finished_game = True
+            ctx.client_status.finished_game = True
         await short_sleep()
