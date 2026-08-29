@@ -1,4 +1,5 @@
 from rule_builder.rules import Has, Rule, True_
+from ...locations.Buildings import Age2BuildingData
 from worlds.age2de.logic.attila.attila_3 import Attila3StartingState
 
 from ...items.Items import Age2ItemData
@@ -24,6 +25,7 @@ class Attila3Rules(ScenarioRules):
         can_win_water: Rule = self.logic.military.has_navy() & has_some_gold
         can_beat_blue: Rule = self.logic.military.has_siege() & has_much_gold
         
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BUILD_CASTLE], self.logic.can_build_building(Age2BuildingData.CASTLE))
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_COGS], can_win_water)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCK_NORTH], can_win_water)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCKS_SOUTH], can_win_water)

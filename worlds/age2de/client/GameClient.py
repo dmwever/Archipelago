@@ -110,7 +110,7 @@ class ClientStatus:
     finished_game: bool = False
 
 class Age2GameContext:
-    running: bool = True
+    running: bool = False
     game_loop: asyncio.Task[None] = None
     paused: bool = False
     packet_repeat_count: int = 0
@@ -122,7 +122,6 @@ class Age2GameContext:
     client_interface: APClientInterface
 
     def __init__(self, client_interface):
-        self.running = True
         self.client_interface = client_interface
         self.client_status = ClientStatus(unlocked_items=[])
         self.current_packet = Age2Packet()
@@ -154,6 +153,7 @@ class Age2GameContext:
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
+            self.running = True
             self.game_loop = asyncio.create_task(status_loop(self))
             return True
         return False
@@ -344,6 +344,7 @@ async def status_loop(ctx: Age2GameContext):
         
             if ctx.packet_repeat_count == 10:
                 logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
+                ctx.campaign_handler.deactivate_scenario()
                 ctx.paused = True
             
             if ctx.packet_repeat_count == 120:
