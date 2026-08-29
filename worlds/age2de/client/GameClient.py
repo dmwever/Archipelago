@@ -137,12 +137,12 @@ class Age2GameContext:
         self.try_startup_game_connection()
         self.message_handler.add_message("Client Connected!")
 
-    def disconnect(self):
+    async def disconnect(self):
         if self.client_status.user_folder != '':
             self.flush_files()
         self.running = False
-        while self.game_loop != None and not self.game_loop.done():
-            continue
+        if self.game_loop != None:
+            await self.game_loop
         self.paused = False
         self.packet_repeat_count = 0
         self.current_packet = Age2Packet()
