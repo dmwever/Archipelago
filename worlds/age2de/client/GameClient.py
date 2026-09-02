@@ -50,6 +50,10 @@ class DefaultClientInterface:
     
     def on_location_received(self, location_ids: list[int]) -> None:
         pass
+    
+    def on_goal(self):
+        """Called on goal"""
+        pass
 
     def fetch_locations_collected(self, location_status: dict[int, int], new_mission_id: int) -> None:
         for k in location_status:
@@ -100,27 +104,59 @@ class PacketStatus(Enum):
 @dataclass
 class ClientStatus:
     unlocked_items: list[Age2ItemData] = field(default_factory=list[Age2ItemData])
+    checked_locations: set[int] = None
     acked_items: int = 0
     user_folder: str = ''
+    finished_game: bool = False
 
 class Age2GameContext:
-    running: bool = True
+    running: bool = False
     game_loop: asyncio.Task[None] = None
     paused: bool = False
     packet_repeat_count: int = 0
-    current_packet: Age2Packet = Age2Packet()
-    client_status: ClientStatus = None
-    campaign_handler: CampaignHandler = CampaignHandler([campaign for campaign in Age2CampaignData])
-    building_handler: BuildingHandler = BuildingHandler([building for building in Age2BuildingData])
-    message_handler: MessageHandler = MessageHandler()
-    client_interface: APClientInterface = field(default_factory=DefaultClientInterface)
-    finished_game: bool = False
+    current_packet: Age2Packet
+    client_status: ClientStatus
+    campaign_handler: CampaignHandler
+    building_handler: BuildingHandler
+    message_handler: MessageHandler
+    client_interface: APClientInterface
 
     def __init__(self, client_interface):
-        self.running = True
         self.client_interface = client_interface
         self.client_status = ClientStatus(unlocked_items=[])
+        self.current_packet = Age2Packet()
+        self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
+        self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.message_handler = MessageHandler()
+        
+
+    def connect(self, checked_locations, slot_data, user_folder):
+        self.update_game_user_folder(user_folder)
+        self.client_status.checked_locations = checked_locations
+        self.campaign_handler.setup_victory_requirements(slot_data)
+        self.try_startup_game_connection()
         self.message_handler.add_message("Client Connected!")
+
+    async def disconnect(self):
+        if self.client_status.user_folder != '':
+            self.flush_files()
+        self.running = False
+        if self.game_loop != None:
+            await self.game_loop
+        self.paused = False
+        self.packet_repeat_count = 0
+        self.current_packet = Age2Packet()
+        self.client_status = ClientStatus(unlocked_items=[])
+        self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
+        self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.message_handler = MessageHandler()
+
+    def try_startup_game_connection(self) -> bool:
+        if self.game_loop is None or self.game_loop.done():
+            self.running = True
+            self.game_loop = asyncio.create_task(status_loop(self))
+            return True
+        return False
 
     def update_game_user_folder(self, folder: str):
         self.client_status.user_folder = folder
@@ -156,11 +192,10 @@ class Age2GameContext:
         self.current_packet = new_pkt
         return status
 
-    def ack_locations(self) -> None:
+    def sync_checked_locations(self) -> None:
         try:
             with open(self.user_folder() + "locations.xsdat", "wb") as fp:
-                XsdatFile.write_int(fp, len(self.current_packet.location_ids))
-                for location_id in self.current_packet.location_ids:
+                for location_id in self.client_status.checked_locations:
                     XsdatFile.write_int(fp, location_id)
         except Exception as ex:
             print(ex)
@@ -198,7 +233,7 @@ class Age2GameContext:
 
     def user_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
-            
+
     def free_items(self) -> None:
         try:
             with open(self.user_folder() + "free_items.xsdat", "wb") as fp:
@@ -254,6 +289,14 @@ async def long_sleep() -> None:
 
 async def status_loop(ctx: Age2GameContext):
     while ctx.running:
+        
+        # Sync files that are scenario-agnostic before connection.
+        ctx.sync_starting_resources()
+        ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
+        ctx.sync_checked_locations()
+        ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
+        ctx.message_handler.try_write_to_folder()
+        
         # Check all unlocked scenarios every 2 seconds to find active scenario.
         if not ctx.campaign_handler.active_file:
             ctx.campaign_handler.find_active_campaign()
@@ -301,6 +344,7 @@ async def status_loop(ctx: Age2GameContext):
         
             if ctx.packet_repeat_count == 10:
                 logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
+                ctx.campaign_handler.deactivate_scenario()
                 ctx.paused = True
             
             if ctx.packet_repeat_count == 120:
@@ -333,7 +377,8 @@ async def status_loop(ctx: Age2GameContext):
             continue
         if packetStatus == PacketStatus.UPDATE:
             ctx.client_interface.on_location_received(ctx.current_packet.location_ids)
-            ctx.ack_locations()
+            for location_id in ctx.current_packet.location_ids:
+                ctx.client_status.checked_locations.add(location_id)
             
         if packetStatus == PacketStatus.ACTIVE:
             pass
@@ -351,14 +396,9 @@ async def status_loop(ctx: Age2GameContext):
             ctx.campaign_handler.complete_active_scenario()
             ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
         
-        ctx.sync_starting_resources()
-        
-        ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
-        ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
-        ctx.message_handler.try_write_to_folder()
         ctx.free_items()
         ctx.ping_game()
-        if ctx.campaign_handler.check_victory() and not ctx.finished_game:
+        if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
             ctx.client_interface.on_goal()
-            ctx.finished_game = True
+            ctx.client_status.finished_game = True
         await short_sleep()

@@ -61,8 +61,8 @@ class Age2ScenarioLocationData(enum.IntEnum):
     ATT2_BEAT_THE_ROMANS =  10208, "Beat the Romans",                    Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
     
     ATT3_VICTORY =              10300, "Victory",                           Age2ScenarioData.AP_ATTILA_3, Age2LocationType.VICTORY
-    ATT3_GREEN_DOCK_NORTH =     10301, "Destroy Green's Northern Dock.",    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
-    ATT3_GREEN_DOCK_SOUTH =     10302, "Destroy Green's Southern Dock.",    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_GREEN_DOCK_NORTH =     10301, "Destroy Green's Northern Dock",    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
+    ATT3_GREEN_DOCK_SOUTH =     10302, "Destroy Green's Southern Dock",    Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
     ATT3_FIND_GOLD =            10303, "Find Gold",                         Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
     ATT3_GREEN_TC =             10304, "Destroy Green's Town Center",       Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
     ATT3_BLUE_DOCK_NORTH =      10305, "Destroy Blue's Northern Dock",      Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION

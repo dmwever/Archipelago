@@ -31,6 +31,8 @@ class Joan5Rules(ScenarioRules):
             Age2ItemData.AP_JOAN_5_REFUGEE_10.item_name,
         )
         
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN5_RENDEZVOUS], can_beat_scenario)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN5_ESCORT_JOAN], can_beat_scenario)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN5_ESCORT_REFUGEES], can_beat_scenario)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN5_VICTORY], can_beat_scenario)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.JOAN5_VICTORY.scenario.scenario_name), can_beat_scenario)

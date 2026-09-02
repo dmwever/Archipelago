@@ -23,15 +23,6 @@ def set_user_folder(settings: Age2Settings):
 class Age2CommandProcessor(ClientCommandProcessor):
     ctx: 'Age2Context'
     
-    def _cmd_connect_to_game(self) -> None:
-        """
-        Connect to Game: Starts up the game-to-client connection.
-        """
-        started: bool = self.ctx.try_startup_game_connection()
-        if started:
-            self.output(f"Game loop started.")
-        self.output(f"Game loop already is running.")
-    
     def _cmd_set_user_folder(self) -> None:
         """
         Set User Folder: Lets the user assign their local age2de user folder.
@@ -40,37 +31,15 @@ class Age2CommandProcessor(ClientCommandProcessor):
         Select the <STRING_OF_NUMBERS> folder as the user folder.
         """
         set_user_folder(self.ctx.settings)
-        self.ctx.game_ctx.update_game_user_folder(self.ctx.game_ctx, self.ctx.settings.user_folder)
-        self.output(f"User folder now assigned to {self.ctx.game_ctx.client_status.user_folder}")
-    
-    def _cmd_refresh(self) -> None:
-        """
-        Refresh: disconnects and reconnects to the campaign or scenario. Usually only needed when quickly switching between campaigns or standalone scenarios.
-        """
-        self.output(f"Disconnecting from {self.ctx.game_ctx.campaign_handler.active_file}")
-        self.ctx.game_ctx.campaign_handler.active_file = None
-    
-    def _cmd_debug(self, key: str) -> bool:
-        """Debug: prints current value of age2 game client"""
-        parts = key.split('.')
-        current: dict|list|object = self.ctx.game_ctx
-        for part in parts:
-            if part.isnumeric():
-                part = int(part)
-            if isinstance(current, dict):
-                current = current[part]
-            elif isinstance(current, list):
-                current = current[int(part)]
-            else:
-                current = getattr(current, part)
-        logger.info(current)
-        return True
+        if self.ctx.game_ctx != None:
+            self.ctx.game_ctx.update_game_user_folder(self.ctx.settings.user_folder)
+        self.output(f"User folder now assigned to {self.ctx.settings.user_folder}")
 
 
 class Age2Context(CommonContext):
     game = Age2World.game
     command_processor = Age2CommandProcessor
-    game_ctx: GameClient.Age2GameContext = None
+    game_ctx: GameClient.Age2GameContext
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
@@ -80,6 +49,7 @@ class Age2Context(CommonContext):
         super().__init__(server_address, password)
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
+        self.game_ctx = GameClient.Age2GameContext(client_interface=self)
         
     async def server_auth(self, password_requested: bool = False) -> None:
         self.game = Age2World.game
@@ -106,13 +76,8 @@ class Age2Context(CommonContext):
         if cmd == "SetReply":
             self._handle_set_reply(args)
 
-    def _handle_connected(self, args):
-        self.close_game_loop()
-        self.game_ctx = GameClient.Age2GameContext(client_interface=self)
-        self.game_ctx.update_game_user_folder(self.settings.user_folder)
-        self.game_ctx.flush_files()
-        self.game_ctx.campaign_handler.setup_victory_requirements(args)
-        self.try_startup_game_connection()
+    def _handle_connected(self, slot_data):
+        self.game_ctx.connect(self.checked_locations, slot_data, self.settings.user_folder)
         Utils.async_start(self.send_msgs([
         {
             "cmd": "Set",
@@ -146,7 +111,7 @@ class Age2Context(CommonContext):
             
     def handle_connection_loss(self, msg: str) -> None:
         """Override for logging and displaying a loss of connection. Must be called from an except block."""
-        self.close_game_loop()
+        Utils.async_start(self.game_ctx.disconnect())
         super().handle_connection_loss(msg)
 
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
@@ -171,24 +136,10 @@ class Age2Context(CommonContext):
 
     def on_goal(self) -> None:
         Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
-
-    def try_startup_game_connection(self) -> bool:
-        if self.game_ctx.game_loop is None or self.game_ctx.game_loop.done():
-            self.game_ctx.game_loop = asyncio.create_task(GameClient.status_loop(self.game_ctx))
-            return True
-        return False
-    
-    
     
     async def disconnect(self, allow_autoreconnect: bool = False):
-        self.close_game_loop()
+        await self.game_ctx.disconnect()
         Utils.async_start(super().disconnect(allow_autoreconnect), name="disconnecting")
-
-    def close_game_loop(self):
-        if self.game_ctx:
-            self.game_ctx.running = False
-            self.game_ctx.campaign_handler.deactivate_scenario()
-            self.game_ctx.flush_files()
 
 class Age2JSONtoTextParser(JSONtoTextParser):
     color: str = "white"
@@ -232,13 +183,7 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         await asyncio.sleep(1)
         
         await ctx.exit_event.wait()
-        ctx.game_ctx.running = False
-        ctx.game_ctx.campaign_handler.deactivate_scenario()
-        ctx.game_ctx.flush_files()
-        ctx.server_address = None
-        ctx.game_ctx.game_loop.cancel("Shutting down game loop")
-
-        await ctx.shutdown()
+        await ctx.game_ctx.disconnect()
 
     import colorama
 
