@@ -66,13 +66,14 @@ class Age2Packet:
     ap_version: float = 0.0
     world_id: int = -1
     latest_message_id: int = -1
-    item_ids = [-1 for _ in range(12)]
     completed: bool = False
     scenario_id: int = 0
+    item_ids: List[int]
     location_ids: List[int]
     
     def __init__(self, fp = None):
         self.location_ids = []
+        self.item_ids = [-1 for _ in range(12)]
         if not fp:
             return
         self.active = XsdatFile.read_bool(fp)
