@@ -212,7 +212,6 @@ class Age2GameContext:
         if num_items > 0:
             try:
                 with open(self.user_folder() + "items.xsdat", "wb") as fp:
-                    XsdatFile.write_int(fp, num_items)
                     for item in self.client_status.unlocked_items[self.client_status.acked_items:self.client_status.acked_items+num_items]:
                         XsdatFile.write_int(fp, item.id)
             except Exception as ex:
@@ -331,6 +330,7 @@ async def status_loop(ctx: Age2GameContext):
         
         # Improper read. Ping is never -1
         if packet.current_ping_id == -1:
+            await short_sleep()
             continue
         
         if packet.scenario_id != ctx.campaign_handler.active_file.data.id:
