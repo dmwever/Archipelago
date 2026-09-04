@@ -48,7 +48,6 @@ class Age2Context(CommonContext):
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
-        self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         self.game_ctx = GameClient.Age2GameContext(client_interface=self)
         
     async def server_auth(self, password_requested: bool = False) -> None:
@@ -77,6 +76,7 @@ class Age2Context(CommonContext):
             self._handle_set_reply(args)
 
     def _handle_connected(self, slot_data):
+        self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         self.game_ctx.connect(self.checked_locations, slot_data, self.settings.user_folder)
         Utils.async_start(self.send_msgs([
         {
