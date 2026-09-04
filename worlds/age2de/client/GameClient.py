@@ -185,7 +185,7 @@ class Age2GameContext:
             status = PacketStatus.REPEAT
         elif (self.current_packet.latest_message_id != new_pkt.latest_message_id):
             status = PacketStatus.UPDATE
-        elif (len(self.current_packet.location_ids) != 0):
+        elif (len(new_pkt.location_ids) != 0):
             status = PacketStatus.UPDATE
         else:
             status = PacketStatus.ACTIVE
