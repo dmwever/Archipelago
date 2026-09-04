@@ -167,7 +167,7 @@ class Age2GameContext:
 
     def read_packet(self) -> Age2Packet:
         try:
-            with open(self.user_folder() + self.campaign_handler.active_file.data.campaign.xsdat_read_name, "rb") as fp:
+            with open(self.user_folder() + self.campaign_handler.active_file.read_file_name, "rb") as fp:
                 return Age2Packet(fp)
         except Exception as ex:
             print(ex)
@@ -275,7 +275,7 @@ class Age2GameContext:
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
                 XsdatFile.write_bool(fp, False) # Send Units
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
-                XsdatFile.write_bool(fp, self.campaign_handler.active_file.completed)
+                XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
         except Exception as ex:
             print(ex)
 
@@ -334,7 +334,7 @@ async def status_loop(ctx: Age2GameContext):
             await short_sleep()
             continue
         
-        if packet.scenario_id != ctx.campaign_handler.active_file.data.id:
+        if packet.scenario_id != ctx.campaign_handler.active_file.current_scenario.data.id:
             logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
             ctx.flush_files()
             ctx.campaign_handler.deactivate_scenario()

@@ -29,13 +29,21 @@ class ManagedCampaign:
     unlocked: bool = False
     must_beat: bool = False
     
+class ActiveFile:
+    current_scenario: ManagedScenario
+    read_file_name: str = ''
+    
+    def __init__(self, scn: ManagedScenario, read_file_name: str):
+        self.current_scenario = scn
+        self.read_file_name = read_file_name
+    
 class CampaignHandler(FolderHandler):
     _campaigns: dict[Age2CampaignData, ManagedCampaign]
     scenarios: dict[Age2ScenarioData, ManagedScenario]
     _scenario_items: dict[Age2ItemData, ManagedScenarioItem]
     _victory: False
     
-    active_file: ManagedScenario
+    active_file: ActiveFile
     
     def __init__(self, data: list[Age2CampaignData]):
         self._campaigns = {}
@@ -110,7 +118,7 @@ class CampaignHandler(FolderHandler):
                         if (active != b'\x00'):
                             XsdatFile.skip_int(fp, 18)
                             scenario_id = XsdatFile.read_int(fp)
-                            self.active_file = self.scenarios[scenario_from_id[scenario_id]]
+                            self.active_file = ActiveFile(scn=self.scenarios[scenario_from_id[scenario_id]], read_file_name=campaign.data.xsdat_read_name)
                             return True
                         else:
                             print("Not active")
@@ -126,7 +134,7 @@ class CampaignHandler(FolderHandler):
                     with open(self._user_folder + scenario.data.xsdat_read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
                         if (active != b'\x00'):
-                            self.active_file = scenario
+                            self.active_file = ActiveFile(scn=scenario, read_file_name=scenario.data.xsdat_read_name)
                             return
                         else:
                             print("Not active")
@@ -138,19 +146,14 @@ class CampaignHandler(FolderHandler):
         return self.active_file is not None
     
     def is_active_scenario_complete(self) -> bool:
-        return self.active_file.completed
+        return self.active_file.current_scenario.completed
     
     def complete_active_scenario(self) -> None:
-        self.active_file.completed = True
+        self.active_file.current_scenario.completed = True
     
     def deactivate_scenario(self) -> bool:
         try:
-            with open(self._user_folder + self.active_file.data.campaign.xsdat_read_name, "wb") as fp:
-                XsdatFile.write_bool(fp, False)
-        except Exception as ex:
-            print(ex)
-        try:
-            with open(self._user_folder + self.active_file.data.xsdat_read_name, "wb") as fp:
+            with open(self._user_folder + self.active_file.read_file_name, "wb") as fp:
                 XsdatFile.write_bool(fp, False)
         except Exception as ex:
             print(ex)
