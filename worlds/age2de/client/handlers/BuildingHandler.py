@@ -12,9 +12,10 @@ class ManagedBuilding:
     unlocked = False
 
 class BuildingHandler(FolderHandler):
-    _buildings: dict[Age2BuildingData, ManagedBuilding] = {}
+    _buildings: dict[Age2BuildingData, ManagedBuilding]
     
     def __init__(self, data: list[Age2BuildingData]):
+        self._buildings = {}
         for building in data:
             managedBuilding = ManagedBuilding(building, building.item)
             self._buildings[building] = managedBuilding

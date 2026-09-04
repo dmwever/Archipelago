@@ -30,14 +30,18 @@ class ManagedCampaign:
     must_beat: bool = False
     
 class CampaignHandler(FolderHandler):
-    _campaigns: dict[Age2CampaignData, ManagedCampaign] = dict()
-    scenarios: dict[Age2ScenarioData, ManagedScenario] = dict()
-    _scenario_items: dict[Age2ItemData, ManagedScenarioItem] = dict()
+    _campaigns: dict[Age2CampaignData, ManagedCampaign]
+    scenarios: dict[Age2ScenarioData, ManagedScenario]
+    _scenario_items: dict[Age2ItemData, ManagedScenarioItem]
     _victory: False
     
-    active_file: ManagedScenario = None
+    active_file: ManagedScenario
     
     def __init__(self, data: list[Age2CampaignData]):
+        self._campaigns = {}
+        self.scenarios = {}
+        self._scenario_items = {}
+        self.active_file = None
         for cpn_data in data:
             scenarios_as_data: list[Age2ScenarioData] = []
             for scn_data in CAMPAIGN_TO_SCENARIOS[cpn_data]:
