@@ -109,11 +109,6 @@ class Age2Context(CommonContext):
             completed: int = self.stored_data.get(self.scenario_completion_key)
             managed_scenario.completed = completed & (1 << scenario_data.completion_bit) != 0
             
-    def handle_connection_loss(self, msg: str) -> None:
-        """Override for logging and displaying a loss of connection. Must be called from an except block."""
-        Utils.async_start(self.game_ctx.disconnect())
-        super().handle_connection_loss(msg)
-
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([
             {
@@ -137,9 +132,9 @@ class Age2Context(CommonContext):
     def on_goal(self) -> None:
         Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
     
-    async def disconnect(self, allow_autoreconnect: bool = False):
+    async def connection_closed(self):
+        return await super().connection_closed()
         await self.game_ctx.disconnect()
-        Utils.async_start(super().disconnect(allow_autoreconnect), name="disconnecting")
 
 class Age2JSONtoTextParser(JSONtoTextParser):
     color: str = "white"
