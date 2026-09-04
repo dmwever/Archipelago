@@ -133,7 +133,7 @@ class Age2Context(CommonContext):
         Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
     
     async def connection_closed(self):
-        return await super().connection_closed()
+        await super().connection_closed()
         await self.game_ctx.disconnect()
 
 class Age2JSONtoTextParser(JSONtoTextParser):
