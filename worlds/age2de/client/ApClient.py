@@ -179,6 +179,8 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         
         await ctx.exit_event.wait()
         await ctx.game_ctx.disconnect()
+        
+        await ctx.shutdown()
 
     import colorama
 
