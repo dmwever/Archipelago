@@ -157,8 +157,7 @@ class CampaignHandler(FolderHandler):
         self.active_file = None
     
     def sync_scenario_items(self, unlocked_items: list[Age2ItemData]) -> None:
-        items = CATEGORY_TO_ITEMS[ScenarioItem]
-        items.extend(CATEGORY_TO_ITEMS[Mercenary])
+        items = [*CATEGORY_TO_ITEMS[ScenarioItem], *CATEGORY_TO_ITEMS[Mercenary]]
         unlocked_scenario_items = list(set(unlocked_items).intersection(items))
         try:
             for item in unlocked_scenario_items:
