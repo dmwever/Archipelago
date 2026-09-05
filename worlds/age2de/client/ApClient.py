@@ -105,6 +105,8 @@ class Age2Context(CommonContext):
             self.game_ctx.client_status.unlocked_items.append(item_data)
 
     def _handle_set_reply(self, args: dict) -> None:
+        if args["key"] != self.scenario_completion_key:
+            return
         for (scenario_data, managed_scenario) in self.game_ctx.campaign_handler.scenarios.items():
             completed: int = self.stored_data.get(self.scenario_completion_key)
             managed_scenario.completed = completed & (1 << scenario_data.completion_bit) != 0
