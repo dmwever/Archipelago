@@ -115,7 +115,7 @@ class CampaignHandler(FolderHandler):
                 try:
                     with open(self._user_folder + campaign.data.xsdat_read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
-                        if (active != b'\x00'):
+                        if (active == b'\x01'):
                             XsdatFile.skip_int(fp, 18)
                             scenario_id = XsdatFile.read_int(fp)
                             self.active_file = ActiveFile(scn=self.scenarios[scenario_from_id[scenario_id]], read_file_name=campaign.data.xsdat_read_name)
@@ -133,7 +133,7 @@ class CampaignHandler(FolderHandler):
                 try:
                     with open(self._user_folder + scenario.data.xsdat_read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
-                        if (active != b'\x00'):
+                        if (active == b'\x01'):
                             self.active_file = ActiveFile(scn=scenario, read_file_name=scenario.data.xsdat_read_name)
                             return
                         else:
