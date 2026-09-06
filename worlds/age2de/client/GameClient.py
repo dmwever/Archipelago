@@ -143,7 +143,10 @@ class Age2GameContext:
             self.flush_files()
         self.running = False
         if self.game_loop != None:
-            await self.game_loop
+            try:
+                await self.game_loop
+            except Exception:
+                logger.exception("Game loop did not end gracefully, continuing disconnect.")
         self.paused = False
         self.packet_repeat_count = 0
         self.current_packet = Age2Packet()
