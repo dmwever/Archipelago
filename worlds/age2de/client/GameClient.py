@@ -330,12 +330,12 @@ async def status_loop(ctx: Age2GameContext):
             await long_sleep()
             continue
         
-        packetStatus = ctx.update_packet(packet)
-        
         # Improper read. Ping is never -1
         if packet.current_ping_id == -1:
             await short_sleep()
             continue
+        
+        packetStatus = ctx.update_packet(packet)
         
         if packet.scenario_id != ctx.campaign_handler.active_file.current_scenario.data.id:
             logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
