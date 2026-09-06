@@ -9,7 +9,7 @@ from ...locations.Buildings import Age2BuildingData
 class ManagedBuilding:
     data: Age2BuildingData
     item: Age2ItemData
-    unlocked = False
+    unlocked: bool = False
 
 class BuildingHandler(FolderHandler):
     _buildings: dict[Age2BuildingData, ManagedBuilding]

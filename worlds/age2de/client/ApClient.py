@@ -43,7 +43,6 @@ class Age2Context(CommonContext):
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
-    victory: bool
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)

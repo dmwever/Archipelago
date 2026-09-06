@@ -12,7 +12,7 @@ from ...locations.Campaigns import Age2CampaignData
 class ManagedScenarioItem:
     data: Age2ItemData
     scenario: Age2ScenarioData = None
-    unlocked = False
+    unlocked: bool = False
 
 @dataclass
 class ManagedScenario:
@@ -41,7 +41,6 @@ class CampaignHandler(FolderHandler):
     _campaigns: dict[Age2CampaignData, ManagedCampaign]
     scenarios: dict[Age2ScenarioData, ManagedScenario]
     _scenario_items: dict[Age2ItemData, ManagedScenarioItem]
-    _victory: False
     
     active_file: ActiveFile
     
