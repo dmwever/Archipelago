@@ -351,13 +351,6 @@ async def status_loop(ctx: Age2GameContext):
                 ctx.campaign_handler.deactivate_scenario()
                 ctx.paused = True
             
-            if ctx.packet_repeat_count == 120:
-                logger.warning("The current scenario has stopped sending signals for 60 seconds. The scenario has been disconnected.")
-                ctx.campaign_handler.deactivate_scenario()
-                ctx.paused = False
-                await long_sleep()
-                continue
-            
             await short_sleep()
             continue
         else:
