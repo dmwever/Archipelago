@@ -6,10 +6,10 @@ class Age2CampaignData(enum.Enum):
         obj._value_ = id
         return obj
 
-    def __init__(self, id: int, name: str, file_stem: str) -> None:
+    def __init__(self, id: int, name: str, xsdat_read_name) -> None:
         self.id = id
         self.campaign_name = name
-        self.file_stem = file_stem
+        self.xsdat_read_name = xsdat_read_name
     
-    ATTILA  =       1, "Attila the Hun", "AP Attila the Hun"
-    JOAN  =         2, "Joan of Arc", "AP Joan of Arc"
+    ATTILA  =       1, "Attila the Hun", "AP Attila the Hun.xsdat"
+    JOAN  =         2, "Joan of Arc", "AP Joan of Arc.xsdat"
