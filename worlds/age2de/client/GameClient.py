@@ -17,10 +17,7 @@ from .handlers.CampaignHandler import CampaignHandler
 from .handlers.InstallHandler import InstallHandler
 from .handlers.MessageHandler import MessageHandler
 
-from Utils import Version
-
-from .. import Age2World
-from ..generation import Identity, WorldVersion
+from ..generation import Identity
 from ..campaign import XsdatFile
 from ..items import Items
 from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
@@ -30,7 +27,8 @@ from worlds.age2de.locations import Scenarios
 logger = logging.getLogger("Client")
 
 AGE2_USER_PROFILE = "/profile/"
-AP_WORLD_VERSION = Age2World.world_version
+AP_VERSION = 7.0
+AP_VERSION_F32 = struct.unpack("<f", struct.pack("<f", AP_VERSION))[0]
 MISSING_GRACE_SECONDS = 10
 
 class APClientInterface(Protocol):
@@ -70,8 +68,7 @@ class DefaultClientInterface:
 class Age2Packet:
     active: bool = 0
     current_ping_id: int = -1
-    world_major: int = -1
-    world_minor: int = -1
+    ap_version: float = 0.0
     slot_id: int = -1
     latest_message_id: int = -1
     completed: bool = False
@@ -86,27 +83,20 @@ class Age2Packet:
             return
         self.active = XsdatFile.read_bool(fp)
         self.current_ping_id = XsdatFile.read_int(fp)
-        self.world_major = XsdatFile.read_int(fp)
+        self.ap_version = XsdatFile.read_float(fp)
         self.slot_id = XsdatFile.read_int(fp)
         self.latest_message_id = XsdatFile.read_int(fp)
         for num in range(len(self.item_ids)):
             self.item_ids[num] = XsdatFile.read_int(fp)
         self.completed = XsdatFile.read_bool(fp)
         self.scenario_id = XsdatFile.read_int(fp)
-        self.world_minor = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 29)
+        XsdatFile.skip_int(fp, 30)
         while True:
             data = fp.read(4)
             if not data:
                 break
             s = struct.unpack("<i", data)
             self.location_ids.append(s[0])
-
-    def installed_version(self) -> Version:
-        return Version(self.world_major, self.world_minor, 0)
-
-    def installed_version_matches(self) -> bool:
-        return WorldVersion.compatible(self.installed_version(), AP_WORLD_VERSION)
 
 class PacketStatus(Enum):
     ACTIVE = 0
@@ -208,7 +198,7 @@ class Age2GameContext:
     def update_packet(self, new_pkt: Age2Packet) -> PacketStatus:
         status: PacketStatus
         
-        if (not new_pkt.installed_version_matches()):
+        if (new_pkt.ap_version != AP_VERSION_F32):
             status = PacketStatus.WRONG_VERSION
         elif (new_pkt.slot_id != self.client_status.slot_id):
             status = PacketStatus.WRONG_SLOT
@@ -331,8 +321,7 @@ class Age2GameContext:
             with open(self.profile_folder() + "AP.xsdat", "wb") as fp:
                 XsdatFile.write_int(fp, self.current_packet.scenario_id)
                 XsdatFile.write_int(fp, self.current_packet.current_ping_id)
-                XsdatFile.write_int(fp, AP_WORLD_VERSION.major)
-                XsdatFile.write_int(fp, AP_WORLD_VERSION.minor)
+                XsdatFile.write_float(fp, AP_VERSION)
                 XsdatFile.write_int(fp, self.client_status.slot_id)
                 XsdatFile.write_bool(fp, self.client_status.acked_items < len(self.client_status.unlocked_items)) # Send Items
                 XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
@@ -430,9 +419,8 @@ async def status_loop(ctx: Age2GameContext):
         if packetStatus == PacketStatus.WRONG_VERSION:
             ctx.report_packet_mismatch_once(
                 "version",
-                f"The Age2 files in your user folder are version "
-                f"{packet.installed_version().as_simple_string()}, but this client is "
-                f"{AP_WORLD_VERSION.as_simple_string()}. Reinstall the Ageipelago files.")
+                f"This scenario speaks AP protocol {packet.ap_version}, but this client speaks "
+                f"{AP_VERSION}. Install the scenarios generated for this seed.")
             ctx.campaign_handler.deactivate_scenario()
             await long_sleep()
             continue

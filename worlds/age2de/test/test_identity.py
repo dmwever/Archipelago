@@ -2,7 +2,7 @@ import io
 import unittest
 
 from ..campaign import XsdatFile
-from ..client.GameClient import AP_WORLD_VERSION, Age2Packet, PacketStatus
+from ..client.GameClient import AP_VERSION_F32, Age2Packet, PacketStatus
 from ..client.handlers.CampaignHandler import CampaignHandler
 from ..generation import Identity
 from ..locations.Campaigns import Age2CampaignData
@@ -68,31 +68,12 @@ class TestTaggedFileNames(unittest.TestCase):
             Identity.xsdat_name(Age2CampaignData.ATTILA.file_stem, tag))
 
 
-def write_game_packet(slot_id: int, scenario_id: int, major: int = AP_WORLD_VERSION.major,
-                      minor: int = AP_WORLD_VERSION.minor, location_ids=()) -> bytes:
+def write_game_packet(slot_id: int, scenario_id: int, ap_version: float = 7.0,
+                      location_ids=()) -> bytes:
     fp = io.BytesIO()
     XsdatFile.write_bool(fp, True)
     XsdatFile.write_int(fp, 1234)
-    XsdatFile.write_int(fp, major)
-    XsdatFile.write_int(fp, slot_id)
-    XsdatFile.write_int(fp, -1)
-    for _ in range(12):
-        XsdatFile.write_int(fp, -1)
-    XsdatFile.write_int(fp, 0)
-    XsdatFile.write_int(fp, scenario_id)
-    XsdatFile.write_int(fp, minor)
-    for i in range(29):
-        XsdatFile.write_int(fp, i)
-    for location_id in location_ids:
-        XsdatFile.write_int(fp, location_id)
-    return fp.getvalue()
-
-
-def stale_float_packet(protocol: float, slot_id: int, scenario_id: int) -> bytes:
-    fp = io.BytesIO()
-    XsdatFile.write_bool(fp, True)
-    XsdatFile.write_int(fp, 1234)
-    XsdatFile.write_float(fp, protocol)
+    XsdatFile.write_float(fp, ap_version)
     XsdatFile.write_int(fp, slot_id)
     XsdatFile.write_int(fp, -1)
     for _ in range(12):
@@ -101,6 +82,8 @@ def stale_float_packet(protocol: float, slot_id: int, scenario_id: int) -> bytes
     XsdatFile.write_int(fp, scenario_id)
     for i in range(30):
         XsdatFile.write_int(fp, i)
+    for location_id in location_ids:
+        XsdatFile.write_int(fp, location_id)
     return fp.getvalue()
 
 
@@ -117,13 +100,11 @@ class TestPacketLayout(unittest.TestCase):
         parsed = Age2Packet(io.BytesIO(packet))
         self.assertEqual(parsed.location_ids, [10100, 10101])
 
-    def test_reads_the_slot_and_version_back(self):
+    def test_reads_the_slot_back(self):
         parsed = Age2Packet(io.BytesIO(write_game_packet(slot_id=5, scenario_id=206)))
         self.assertEqual(parsed.slot_id, 5)
         self.assertEqual(parsed.scenario_id, 206)
-        self.assertEqual(parsed.world_major, AP_WORLD_VERSION.major)
-        self.assertEqual(parsed.world_minor, AP_WORLD_VERSION.minor)
-        self.assertTrue(parsed.installed_version_matches())
+        self.assertEqual(parsed.ap_version, AP_VERSION_F32)
 
 
 def context_for_slot(slot_id: int):
@@ -144,35 +125,11 @@ class TestSlotMismatch(unittest.TestCase):
         packet = Age2Packet(io.BytesIO(write_game_packet(slot_id=5, scenario_id=101)))
         self.assertEqual(ctx.update_packet(packet), PacketStatus.WRONG_SLOT)
 
-    def test_an_older_install_is_rejected_before_the_slot(self):
+    def test_stale_protocol_is_rejected_before_the_slot(self):
         ctx = context_for_slot(3)
-        packet = Age2Packet(io.BytesIO(write_game_packet(
-            slot_id=2, scenario_id=101, minor=AP_WORLD_VERSION.minor - 1)))
+        packet = Age2Packet(io.BytesIO(
+            write_game_packet(slot_id=2, scenario_id=101, ap_version=6.5)))
         self.assertEqual(ctx.update_packet(packet), PacketStatus.WRONG_VERSION)
-
-    def test_a_newer_install_is_rejected(self):
-        ctx = context_for_slot(3)
-        packet = Age2Packet(io.BytesIO(write_game_packet(
-            slot_id=3, scenario_id=101, minor=AP_WORLD_VERSION.minor + 1)))
-        self.assertEqual(ctx.update_packet(packet), PacketStatus.WRONG_VERSION)
-
-    def test_a_different_major_is_rejected(self):
-        ctx = context_for_slot(3)
-        packet = Age2Packet(io.BytesIO(write_game_packet(
-            slot_id=3, scenario_id=101, major=AP_WORLD_VERSION.major + 1)))
-        self.assertEqual(ctx.update_packet(packet), PacketStatus.WRONG_VERSION)
-
-    def test_a_float_writing_install_is_rejected(self):
-        for protocol in (6.5, 7.0):
-            with self.subTest(protocol=protocol):
-                ctx = context_for_slot(3)
-                packet = Age2Packet(io.BytesIO(stale_float_packet(protocol, 3, 101)))
-                self.assertFalse(packet.installed_version_matches())
-                self.assertEqual(ctx.update_packet(packet), PacketStatus.WRONG_VERSION)
-
-    def test_the_wire_version_is_the_world_version(self):
-        from .. import Age2World
-        self.assertEqual(AP_WORLD_VERSION, Age2World.world_version)
 
     def test_mismatch_is_reported_once(self):
         ctx = context_for_slot(3)
