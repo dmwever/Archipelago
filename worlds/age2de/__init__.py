@@ -1,7 +1,6 @@
 # world/age2DE/__init__.py
 
 from math import ceil
-import time
 import logging
 from Options import OptionError
 from rule_builder.cached_world import CachedRuleBuilderWorld
@@ -276,7 +275,6 @@ class Age2World(CachedRuleBuilderWorld):
             "version_public": 0,
             "version_major": 2,
             "version_minor": 0,
-            "world_id": ((time.time_ns() >> 17) + self.player) & 0x7fff_ffff,
         }
         for campaign in self.included_campaigns:
             mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns

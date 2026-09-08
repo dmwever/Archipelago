@@ -4,16 +4,20 @@ from dataclasses import dataclass, field
 from enum import Enum
 import os
 import struct
+import time
 from typing import List, Protocol
 
+from ... import user_folder
 from worlds.age2de.client.handlers.BuildingHandler import BuildingHandler
 from worlds.age2de.locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 
 
 from .handlers.CampaignHandler import CampaignHandler
+from .handlers.InstallHandler import InstallHandler
 from .handlers.MessageHandler import MessageHandler
 
+from ..generation import Identity
 from ..campaign import XsdatFile
 from ..items import Items
 from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
@@ -23,8 +27,9 @@ from worlds.age2de.locations import Scenarios
 logger = logging.getLogger("Client")
 
 AGE2_USER_PROFILE = "/profile/"
-AP_VERSION = 6.5
-WORLD_ID = 2
+AP_VERSION = 7.0
+AP_VERSION_F32 = struct.unpack("<f", struct.pack("<f", AP_VERSION))[0]
+MISSING_GRACE_SECONDS = 10
 
 class APClientInterface(Protocol):
     def on_scenario_completion(self, scenario_id: Age2ScenarioData):
@@ -64,7 +69,7 @@ class Age2Packet:
     active: bool = 0
     current_ping_id: int = -1
     ap_version: float = 0.0
-    world_id: int = -1
+    slot_id: int = -1
     latest_message_id: int = -1
     completed: bool = False
     scenario_id: int = 0
@@ -79,7 +84,7 @@ class Age2Packet:
         self.active = XsdatFile.read_bool(fp)
         self.current_ping_id = XsdatFile.read_int(fp)
         self.ap_version = XsdatFile.read_float(fp)
-        self.world_id = XsdatFile.read_int(fp)
+        self.slot_id = XsdatFile.read_int(fp)
         self.latest_message_id = XsdatFile.read_int(fp)
         for num in range(len(self.item_ids)):
             self.item_ids[num] = XsdatFile.read_int(fp)
@@ -99,7 +104,7 @@ class PacketStatus(Enum):
     REPEAT = 2
     INACTIVE = 3
     WRONG_VERSION = 4
-    WRONG_WORLD = 5
+    WRONG_SLOT = 5
     ERROR = 6
 
 @dataclass
@@ -109,6 +114,8 @@ class ClientStatus:
     acked_items: int = 0
     user_folder: str = ''
     finished_game: bool = False
+    slot_id: int = -1
+    tag: str = ''
 
 class Age2GameContext:
     running: bool = False
@@ -120,7 +127,11 @@ class Age2GameContext:
     campaign_handler: CampaignHandler
     building_handler: BuildingHandler
     message_handler: MessageHandler
+    install_handler: InstallHandler
     client_interface: APClientInterface
+    missing_since: float = 0.0
+    reported_install_mismatch: bool = False
+    reported_packet_mismatch: str = ''
 
     def __init__(self, client_interface):
         self.client_interface = client_interface
@@ -129,9 +140,11 @@ class Age2GameContext:
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
         self.message_handler = MessageHandler()
-        
+        self.install_handler = InstallHandler()
 
-    def connect(self, checked_locations, slot_data, user_folder):
+    def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str):
+        self.client_status.slot_id = slot
+        self.client_status.tag = tag
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
         self.campaign_handler.setup_victory_requirements(slot_data)
@@ -149,11 +162,15 @@ class Age2GameContext:
                 logger.exception("Game loop did not end gracefully, continuing disconnect.")
         self.paused = False
         self.packet_repeat_count = 0
+        self.missing_since = 0.0
+        self.reported_install_mismatch = False
+        self.reported_packet_mismatch = ''
         self.current_packet = Age2Packet()
         self.client_status = ClientStatus(unlocked_items=[])
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
         self.message_handler = MessageHandler()
+        self.install_handler = InstallHandler()
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -162,15 +179,17 @@ class Age2GameContext:
             return True
         return False
 
-    def update_game_user_folder(self, folder: str):
-        self.client_status.user_folder = folder
-        self.message_handler.set_user_folder(self.user_folder())
-        self.building_handler.set_user_folder(self.user_folder())
-        self.campaign_handler.set_user_folder(self.user_folder())
+    def update_game_user_folder(self, user_folder: str):
+        self.client_status.user_folder = user_folder
+        self.message_handler.set_user_folder(self.profile_folder())
+        self.building_handler.set_user_folder(self.profile_folder())
+        self.campaign_handler.set_user_folder(self.profile_folder())
+        self.campaign_handler.set_tag(self.client_status.tag)
+        self.install_handler.set_user_folder(user_folder)
 
     def read_packet(self) -> Age2Packet:
         try:
-            with open(self.user_folder() + self.campaign_handler.active_file.read_file_name, "rb") as fp:
+            with open(self.profile_folder() + self.campaign_handler.active_file.read_file_name, "rb") as fp:
                 return Age2Packet(fp)
         except Exception as ex:
             print(ex)
@@ -179,10 +198,10 @@ class Age2GameContext:
     def update_packet(self, new_pkt: Age2Packet) -> PacketStatus:
         status: PacketStatus
         
-        if (new_pkt.ap_version != AP_VERSION):
+        if (new_pkt.ap_version != AP_VERSION_F32):
             status = PacketStatus.WRONG_VERSION
-        elif (new_pkt.world_id != WORLD_ID):
-            status = PacketStatus.WRONG_WORLD
+        elif (new_pkt.slot_id != self.client_status.slot_id):
+            status = PacketStatus.WRONG_SLOT
         elif (not new_pkt.active):
             status = PacketStatus.INACTIVE
         elif (self.current_packet.current_ping_id == new_pkt.current_ping_id):
@@ -198,7 +217,7 @@ class Age2GameContext:
 
     def sync_checked_locations(self) -> None:
         try:
-            with open(self.user_folder() + "locations.xsdat", "wb") as fp:
+            with open(self.profile_folder() + "locations.xsdat", "wb") as fp:
                 for location_id in self.client_status.checked_locations:
                     XsdatFile.write_int(fp, location_id)
         except Exception as ex:
@@ -215,7 +234,7 @@ class Age2GameContext:
             num_items = 12
         if num_items > 0:
             try:
-                with open(self.user_folder() + "items.xsdat", "wb") as fp:
+                with open(self.profile_folder() + "items.xsdat", "wb") as fp:
                     for item in self.client_status.unlocked_items[self.client_status.acked_items:self.client_status.acked_items+num_items]:
                         XsdatFile.write_int(fp, item.id)
             except Exception as ex:
@@ -228,18 +247,18 @@ class Age2GameContext:
         for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.TCResources], self.client_status.unlocked_items)):
             item_ids.append(item.id)
         try:
-            with open(self.user_folder() + "startup.xsdat", "wb") as fp:
+            with open(self.profile_folder() + "startup.xsdat", "wb") as fp:
                 for id in item_ids:
                     XsdatFile.write_int(fp, id)
         except Exception as ex:
             print(ex)
 
-    def user_folder(self):
+    def profile_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
 
     def free_items(self) -> None:
         try:
-            with open(self.user_folder() + "free_items.xsdat", "wb") as fp:
+            with open(self.profile_folder() + "free_items.xsdat", "wb") as fp:
                 for item in self.current_packet.item_ids:
                     if item != -1:
                         XsdatFile.write_int(fp, item)
@@ -251,28 +270,59 @@ class Age2GameContext:
             self.message_handler.try_flush_from_folder()
             self.campaign_handler.try_flush_from_folder()
             
-            if os.path.exists(self.user_folder() + "AP.xsdat"):
-                os.remove(self.user_folder() + "AP.xsdat")
-            if os.path.exists(self.user_folder() + "items.xsdat"):
-                os.remove(self.user_folder() + "items.xsdat")
-            if os.path.exists(self.user_folder() + "free_items.xsdat"):
-                os.remove(self.user_folder() + "free_items.xsdat")
-            if os.path.exists(self.user_folder() + "locations.xsdat"):
-                os.remove(self.user_folder() + "locations.xsdat")
-            if os.path.exists(self.user_folder() + "startup.xsdat"):
-                os.remove(self.user_folder() + "startup.xsdat")
-            if os.path.exists(self.user_folder() + "buildings.xsdat"):
-                os.remove(self.user_folder() + "buildings.xsdat")
+            if os.path.exists(self.profile_folder() + "AP.xsdat"):
+                os.remove(self.profile_folder() + "AP.xsdat")
+            if os.path.exists(self.profile_folder() + "items.xsdat"):
+                os.remove(self.profile_folder() + "items.xsdat")
+            if os.path.exists(self.profile_folder() + "free_items.xsdat"):
+                os.remove(self.profile_folder() + "free_items.xsdat")
+            if os.path.exists(self.profile_folder() + "locations.xsdat"):
+                os.remove(self.profile_folder() + "locations.xsdat")
+            if os.path.exists(self.profile_folder() + "startup.xsdat"):
+                os.remove(self.profile_folder() + "startup.xsdat")
+            if os.path.exists(self.profile_folder() + "buildings.xsdat"):
+                os.remove(self.profile_folder() + "buildings.xsdat")
         except Exception as ex:
             print(ex)
 
+    def note_scenario_found(self) -> None:
+        self.missing_since = 0.0
+        self.reported_install_mismatch = False
+
+    def report_install_mismatch_once(self) -> None:
+        if self.missing_since == 0.0:
+            self.missing_since = time.monotonic()
+            return
+        if self.reported_install_mismatch:
+            return
+        if time.monotonic() - self.missing_since < MISSING_GRACE_SECONDS:
+            return
+        self.reported_install_mismatch = True
+        try:
+            present = {Identity.tag_of(name) for name in os.listdir(self.profile_folder())}
+        except OSError as ex:
+            logger.warning("Could not read the Age2 profile folder to check the install: %s", ex)
+            return
+        foreign = sorted(tag for tag in present if tag and tag != self.client_status.tag)
+        if foreign:
+            logger.error(
+                "Found Age2 scenarios tagged %s in the profile folder; this slot expects %s. "
+                "Those scenarios belong to a different seed or player slot -- install the files "
+                "generated for this slot.", ", ".join(foreign), self.client_status.tag)
+
+    def report_packet_mismatch_once(self, kind: str, message: str) -> None:
+        if self.reported_packet_mismatch == kind:
+            return
+        self.reported_packet_mismatch = kind
+        logger.error(message)
+
     def ping_game(self) -> None:
         try:
-            with open(self.user_folder() + "AP.xsdat", "wb") as fp:
+            with open(self.profile_folder() + "AP.xsdat", "wb") as fp:
                 XsdatFile.write_int(fp, self.current_packet.scenario_id)
                 XsdatFile.write_int(fp, self.current_packet.current_ping_id)
                 XsdatFile.write_float(fp, AP_VERSION)
-                XsdatFile.write_int(fp, WORLD_ID)
+                XsdatFile.write_int(fp, self.client_status.slot_id)
                 XsdatFile.write_bool(fp, self.client_status.acked_items < len(self.client_status.unlocked_items)) # Send Items
                 XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
@@ -306,11 +356,14 @@ async def status_loop(ctx: Age2GameContext):
             if not ctx.campaign_handler.has_active_scenario():
                 ctx.campaign_handler.find_active_scenario()
                 if not ctx.campaign_handler.has_active_scenario():
+                    ctx.report_install_mismatch_once()
                     await long_sleep()
                     continue
                 else:
+                    ctx.note_scenario_found()
                     logger.info("Connected!")
             else:
+                ctx.note_scenario_found()
                 logger.info("Connected!")
         
         # Check all unlocked scenarios every 2.5 seconds after scenario stops updating packet in case user has switched scenarios.
@@ -356,6 +409,7 @@ async def status_loop(ctx: Age2GameContext):
         else:
             ctx.packet_repeat_count = 0
             ctx.paused = False
+            ctx.reported_packet_mismatch = ''
             
         if packetStatus == PacketStatus.INACTIVE:
             logger.info("The Current Scenario is no longer active.")
@@ -363,12 +417,19 @@ async def status_loop(ctx: Age2GameContext):
             await long_sleep()
             continue
         if packetStatus == PacketStatus.WRONG_VERSION:
-            logger.warning("The Scenario is expecting a different version of the AP Client.")
+            ctx.report_packet_mismatch_once(
+                "version",
+                f"This scenario speaks AP protocol {packet.ap_version}, but this client speaks "
+                f"{AP_VERSION}. Install the scenarios generated for this seed.")
             ctx.campaign_handler.deactivate_scenario()
             await long_sleep()
             continue
-        if packetStatus == PacketStatus.WRONG_WORLD:
-            logger.warning("The Scenario is expecting a different world ID.")
+        if packetStatus == PacketStatus.WRONG_SLOT:
+            ctx.report_packet_mismatch_once(
+                "slot",
+                f"This scenario was generated for slot {packet.slot_id}, but this client is slot "
+                f"{ctx.client_status.slot_id}. Those files belong to a different player -- they were "
+                "renamed or copied from another slot install.")
             ctx.campaign_handler.deactivate_scenario()
             await long_sleep()
             continue

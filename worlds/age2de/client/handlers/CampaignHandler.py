@@ -3,6 +3,7 @@ import os
 
 from .FolderHandler import FolderHandler
 
+from ...generation import Identity
 from ...campaign import XsdatFile
 from ...items.Items import CATEGORY_TO_ITEMS, Age2ItemData, SCENARIO_TO_ITEMS, Mercenary, ScenarioItem
 from ...locations.Scenarios import Age2ScenarioData, CAMPAIGN_TO_SCENARIOS, scenario_from_id
@@ -27,6 +28,7 @@ class ManagedCampaign:
     data: Age2CampaignData = None
     scenarios: list[Age2ScenarioData] = field(default_factory=list[Age2ScenarioData])
     unlocked: bool = False
+    included: bool = False
     must_beat: bool = False
     
 class ActiveFile:
@@ -43,6 +45,7 @@ class CampaignHandler(FolderHandler):
     _scenario_items: dict[Age2ItemData, ManagedScenarioItem]
     
     active_file: ActiveFile
+    tag: str = ''
     
     def __init__(self, data: list[Age2CampaignData]):
         self._campaigns = {}
@@ -64,10 +67,20 @@ class CampaignHandler(FolderHandler):
             self._campaigns[cpn_data] = managed_campaign
         super().__init__()
     
+    def set_tag(self, tag: str) -> None:
+        self.tag = tag
+    
+    def read_name(self, data) -> str:
+        return Identity.xsdat_name(data.file_stem, self.tag)
+    
     def setup_victory_requirements(self, args: dict):
         for data in self._campaigns.keys():
             if data.campaign_name + "_unlocked" in args.keys():
+                self._campaigns[data].included = True
                 self._campaigns[data].must_beat = True
+
+    def included_campaigns(self) -> list[Age2CampaignData]:
+        return [data for data, managed in self._campaigns.items() if managed.included]
     
     def check_victory(self) -> bool:
         for campaign in self._campaigns.values():
@@ -111,13 +124,14 @@ class CampaignHandler(FolderHandler):
     def find_active_campaign(self) -> bool:
         for campaign in self._campaigns.values():
             if campaign.unlocked:
+                read_name = self.read_name(campaign.data)
                 try:
-                    with open(self._user_folder + campaign.data.xsdat_read_name, "rb") as fp:
+                    with open(self._user_folder + read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
                         if (active == b'\x01'):
                             XsdatFile.skip_int(fp, 18)
                             scenario_id = XsdatFile.read_int(fp)
-                            self.active_file = ActiveFile(scn=self.scenarios[scenario_from_id[scenario_id]], read_file_name=campaign.data.xsdat_read_name)
+                            self.active_file = ActiveFile(scn=self.scenarios[scenario_from_id[scenario_id]], read_file_name=read_name)
                             return True
                         else:
                             print("Not active")
@@ -129,11 +143,12 @@ class CampaignHandler(FolderHandler):
     def find_active_scenario(self):
         for scenario in self.scenarios.values():
             if scenario.unlocked:
+                read_name = self.read_name(scenario.data)
                 try:
-                    with open(self._user_folder + scenario.data.xsdat_read_name, "rb") as fp:
+                    with open(self._user_folder + read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
                         if (active == b'\x01'):
-                            self.active_file = ActiveFile(scn=scenario, read_file_name=scenario.data.xsdat_read_name)
+                            self.active_file = ActiveFile(scn=scenario, read_file_name=read_name)
                             return
                         else:
                             print("Not active")
@@ -183,11 +198,11 @@ class CampaignHandler(FolderHandler):
         for scn in self.scenarios:
             if os.path.exists(self._user_folder + scn.xsdat_write_name):
                 os.remove(self._user_folder + scn.xsdat_write_name)
-            if os.path.exists(self._user_folder + scn.xsdat_read_name):
-                os.remove(self._user_folder + scn.xsdat_read_name)
+            if os.path.exists(self._user_folder + self.read_name(scn)):
+                os.remove(self._user_folder + self.read_name(scn))
         for cpn in self._campaigns:
-            if os.path.exists(self._user_folder + cpn.xsdat_read_name):
-                os.remove(self._user_folder + cpn.xsdat_read_name)
+            if os.path.exists(self._user_folder + self.read_name(cpn)):
+                os.remove(self._user_folder + self.read_name(cpn))
     
     def __add_campaign_to_folder():
         pass

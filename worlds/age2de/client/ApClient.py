@@ -7,6 +7,8 @@ import typing
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
 from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkItem
 import Utils
+from ..generation import Identity
+from .handlers.InstallHandler import InstallError
 from ..items import Items
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Campaigns import Age2CampaignData
@@ -35,6 +37,38 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.ctx.game_ctx.update_game_user_folder(self.ctx.settings.user_folder)
         self.output(f"User folder now assigned to {self.ctx.settings.user_folder}")
 
+    def _cmd_install(self) -> None:
+        """
+        Install: Sets your Age2 install up for this seed and slot.
+
+        Writes a seed-tagged copy of each campaign you enabled, plus SlotData.xs.
+        Run it once per seed, after connecting.
+        """
+        ctx = self.ctx
+        status = ctx.game_ctx.client_status
+        if not status.tag or status.slot_id < 0:
+            self.output("Connect to your multiworld first, so the install knows your seed and slot.")
+            return
+        if not ctx.settings.user_folder:
+            self.output("Set your Age2 user folder first with /set_user_folder.")
+            return
+
+        campaigns = ctx.game_ctx.campaign_handler.included_campaigns()
+        if not campaigns:
+            self.output("This slot has no campaigns to install.")
+            return
+
+        try:
+            ctx.game_ctx.install_handler.setup(campaigns, status.slot_id, status.tag)
+            written = ctx.game_ctx.install_handler.install()
+        except InstallError as ex:
+            self.output(str(ex))
+            return
+
+        for path in written:
+            self.output(f"Wrote {path}")
+        self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
+
 
 class Age2Context(CommonContext):
     game = Age2World.game
@@ -43,6 +77,7 @@ class Age2Context(CommonContext):
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
+    installed_seed_name: str = ''
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
@@ -65,6 +100,9 @@ class Age2Context(CommonContext):
         return super().on_print_json(args)
     
     def on_package(self, cmd: str, args: dict) -> None:
+        if cmd == "RoomInfo":
+            self.installed_seed_name = args.get("seed_name", "")
+
         if cmd == "Connected":
             self._handle_connected(args['slot_data'])
                 
@@ -76,7 +114,11 @@ class Age2Context(CommonContext):
 
     def _handle_connected(self, slot_data):
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
-        self.game_ctx.connect(self.checked_locations, slot_data, self.settings.user_folder)
+        self.seed_name = self.installed_seed_name
+        tag = Identity.seed_tag(self.installed_seed_name, self.slot)
+        logger.info("Playthrough tag for slot %s: %s", self.slot, tag)
+        self.game_ctx.connect(
+            self.checked_locations, slot_data, self.settings.user_folder, self.slot, tag)
         Utils.async_start(self.send_msgs([
         {
             "cmd": "Set",
