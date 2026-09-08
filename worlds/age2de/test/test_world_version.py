@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import unittest
@@ -44,8 +45,16 @@ class TestParse(unittest.TestCase):
 
 
 class TestManifestIsTheSourceOfTruth(unittest.TestCase):
+    def manifest(self) -> dict:
+        return json.loads(
+            (Path(__file__).parents[1] / "archipelago.json").read_text(encoding="utf-8"))
+
     def test_world_version_comes_from_the_manifest(self):
-        self.assertEqual(Age2World.world_version, Version(0, 2, 3))
+        self.assertEqual(Age2World.world_version,
+                         WorldVersion.parse(self.manifest()["world_version"]))
+
+    def test_world_version_is_declared(self):
+        self.assertNotEqual(Age2World.world_version, WorldVersion.UNKNOWN)
 
     def test_slot_data_is_not_hardcoded(self):
         import inspect
