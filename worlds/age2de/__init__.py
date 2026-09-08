@@ -12,6 +12,7 @@ from worlds.LauncherComponents import Component, Type, components, launch as lau
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
+from .generation import WorldVersion
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
@@ -272,9 +273,7 @@ class Age2World(CachedRuleBuilderWorld):
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {
-            "version_public": 0,
-            "version_major": 2,
-            "version_minor": 0,
+            WorldVersion.SLOT_DATA_KEY: self.world_version.as_simple_string(),
         }
         for campaign in self.included_campaigns:
             mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns

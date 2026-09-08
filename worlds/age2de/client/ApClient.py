@@ -7,7 +7,7 @@ import typing
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, server_loop
 from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkItem
 import Utils
-from ..generation import Identity
+from ..generation import Identity, WorldVersion
 from .handlers.InstallHandler import InstallError
 from ..items import Items
 from ..locations.Scenarios import Age2ScenarioData
@@ -52,6 +52,10 @@ class Age2CommandProcessor(ClientCommandProcessor):
         if not ctx.settings.user_folder:
             self.output("Set your Age2 user folder first with /set_user_folder.")
             return
+        if not ctx.seed_is_compatible():
+            self.output(WorldVersion.describe(ctx.seed_world_version, Age2World.world_version))
+            self.output("Nothing was written.")
+            return
 
         campaigns = ctx.game_ctx.campaign_handler.included_campaigns()
         if not campaigns:
@@ -78,6 +82,7 @@ class Age2Context(CommonContext):
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
     installed_seed_name: str = ''
+    seed_world_version = WorldVersion.UNKNOWN
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
@@ -114,6 +119,9 @@ class Age2Context(CommonContext):
 
     def _handle_connected(self, slot_data):
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
+        self.seed_world_version = WorldVersion.parse(slot_data.get(WorldVersion.SLOT_DATA_KEY))
+        if not self.seed_is_compatible():
+            logger.warning(WorldVersion.describe(self.seed_world_version, Age2World.world_version))
         self.seed_name = self.installed_seed_name
         tag = Identity.seed_tag(self.installed_seed_name, self.slot)
         logger.info("Playthrough tag for slot %s: %s", self.slot, tag)
@@ -132,6 +140,9 @@ class Age2Context(CommonContext):
         ]))
             
         self.set_notify(self.scenario_completion_key)
+
+    def seed_is_compatible(self) -> bool:
+        return WorldVersion.compatible(self.seed_world_version, Age2World.world_version)
 
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
