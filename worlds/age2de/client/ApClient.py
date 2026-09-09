@@ -93,6 +93,8 @@ class Age2Context(CommonContext):
 
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
+        if args.get("index", -1) == 0:
+            self.game_ctx.client_status.unlocked_items.clear()
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.item_name == "Victory":
@@ -102,6 +104,9 @@ class Age2Context(CommonContext):
             if item_data.type_data is Items.ProgressiveScenario:
                 self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)
+        status = self.game_ctx.client_status
+        if status.acked_items > len(status.unlocked_items):
+            status.acked_items = len(status.unlocked_items)
 
     def _handle_set_reply(self, args: dict) -> None:
         if args["key"] != self.scenario_completion_key:
