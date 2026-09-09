@@ -322,7 +322,7 @@ async def status_loop(ctx: Age2GameContext):
         
         # Sync files that are scenario-agnostic before connection.
         ctx.sync_starting_resources()
-        ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
+        ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
         ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
