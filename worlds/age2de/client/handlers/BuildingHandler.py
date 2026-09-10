@@ -9,12 +9,13 @@ from ...locations.Buildings import Age2BuildingData
 class ManagedBuilding:
     data: Age2BuildingData
     item: Age2ItemData
-    unlocked = False
+    unlocked: bool = False
 
 class BuildingHandler(FolderHandler):
-    _buildings: dict[Age2BuildingData, ManagedBuilding] = {}
+    _buildings: dict[Age2BuildingData, ManagedBuilding]
     
     def __init__(self, data: list[Age2BuildingData]):
+        self._buildings = {}
         for building in data:
             managedBuilding = ManagedBuilding(building, building.item)
             self._buildings[building] = managedBuilding

@@ -71,3 +71,4 @@ class Attila6Rules(ScenarioRules):
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_ORANGE_WONDER], can_beat_orange)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_THE_ITALIANS], victory)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_VICTORY], victory)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT6_VICTORY.scenario.scenario_name), victory)

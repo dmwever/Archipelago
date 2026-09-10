@@ -14,7 +14,7 @@ def read_float(fp) -> float:
 
 def read_string(fp) -> str:
     len = struct.unpack("<i", fp.read(4))[0]
-    struct.unpack(f"{str(len)}s", fp.read(len))[0]
+    return struct.unpack(f"{str(len)}s", fp.read(len))[0]
     
 def skip_int(fp, len):
     struct.unpack(f"{len*4}s", fp.read(len * 4))

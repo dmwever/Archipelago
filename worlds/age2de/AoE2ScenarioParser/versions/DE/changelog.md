@@ -2,6 +2,51 @@
 
 All changes made to the scenario file will be documented in this file.
 
+> Local additions for the Ageipelago fork. `v1.57` was copied verbatim from
+> AoE2ScenarioParser 0.7.3; `v1.58` was reverse-engineered from the shipped
+> AP campaign scenarios, which the upstream parser cannot open.
+
+## Scenario v1.58
+
+Derived from `v1.57`. Only `EffectStruct` changed; `ConditionStruct` is untouched.
+
+### Changed
+
+- Triggers:
+
+    - `trigger_version` default `4.7` -> `4.9`
+    - `EffectStruct.static_value_75` default `81` -> `83` (i.e. two more `s32` fields)
+
+### Added
+
+- Triggers, `EffectStruct`: two `s32` fields appended after `wall_y2` and before `message`.
+  Semantics unknown; observed values are `-1` for the first across all 1479 effects sampled,
+  and `-1`/`1` for the second.
+
+    ```json
+    "unknown_1_58_a": {
+        "type": "s32",
+        "default": -1
+    },
+    "unknown_1_58_b": {
+        "type": "s32",
+        "default": -1
+    },
+    ```
+
+### Verification
+
+All 12 `AP_*.aoe2scenario` files open, and a read/write/read round-trip reproduces every
+trigger, effect and condition field exactly (2402 parts across the 12). Byte-level round-trip
+is *not* identical, for two reasons that predate this version and affect all versions:
+
+- the payload is recompressed at a different zlib level, so the file shrinks ~8-10%;
+- the parser strips a string's trailing null on read and does not re-add it on write, so
+  embedded AI scripts lose one byte and their length prefix is adjusted to match.
+
+No `default.aoe2scenario` is shipped for `v1.58`, so `from_default()` raises rather than
+silently loading a `v1.57` file. `from_file()` and `write_to_file()` are unaffected.
+
 ---
 
 ## Scenario v1.43

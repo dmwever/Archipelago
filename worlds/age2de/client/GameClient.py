@@ -66,13 +66,14 @@ class Age2Packet:
     ap_version: float = 0.0
     world_id: int = -1
     latest_message_id: int = -1
-    item_ids = [-1 for _ in range(12)]
     completed: bool = False
     scenario_id: int = 0
+    item_ids: List[int]
     location_ids: List[int]
     
     def __init__(self, fp = None):
         self.location_ids = []
+        self.item_ids = [-1 for _ in range(12)]
         if not fp:
             return
         self.active = XsdatFile.read_bool(fp)
@@ -108,6 +109,7 @@ class ClientStatus:
     acked_items: int = 0
     user_folder: str = ''
     finished_game: bool = False
+    in_flight: list[int] = field(default_factory=list[int])
 
 class Age2GameContext:
     running: bool = False
@@ -142,7 +144,10 @@ class Age2GameContext:
             self.flush_files()
         self.running = False
         if self.game_loop != None:
-            await self.game_loop
+            try:
+                await self.game_loop
+            except Exception:
+                logger.exception("Game loop did not end gracefully, continuing disconnect.")
         self.paused = False
         self.packet_repeat_count = 0
         self.current_packet = Age2Packet()
@@ -166,7 +171,7 @@ class Age2GameContext:
 
     def read_packet(self) -> Age2Packet:
         try:
-            with open(self.user_folder() + self.campaign_handler.active_file.data.campaign.xsdat_read_name, "rb") as fp:
+            with open(self.user_folder() + self.campaign_handler.active_file.read_file_name, "rb") as fp:
                 return Age2Packet(fp)
         except Exception as ex:
             print(ex)
@@ -185,7 +190,7 @@ class Age2GameContext:
             status = PacketStatus.REPEAT
         elif (self.current_packet.latest_message_id != new_pkt.latest_message_id):
             status = PacketStatus.UPDATE
-        elif (len(self.current_packet.location_ids) != 0):
+        elif (len(new_pkt.location_ids) != 0):
             status = PacketStatus.UPDATE
         else:
             status = PacketStatus.ACTIVE
@@ -201,22 +206,39 @@ class Age2GameContext:
             print(ex)
 
     def ack_items(self) -> None:
-        for item in self.current_packet.item_ids:
-            if item != -1 and self.client_status.acked_items < len(self.client_status.unlocked_items):
-                self.client_status.acked_items += 1
+        if not self.client_status.in_flight:
+            return
+        echoed = [item for item in self.current_packet.item_ids if item != -1]
+        confirmed = 0
+        for item_id in self.client_status.in_flight:
+            if item_id not in echoed:
+                break
+            echoed.remove(item_id)
+            confirmed += 1
+        if confirmed > 0:
+            self.client_status.acked_items += confirmed
+            del self.client_status.in_flight[:confirmed]
 
     def send_items(self) -> None:
+        if any(item != -1 for item in self.current_packet.item_ids):
+            return
         num_items = len(self.client_status.unlocked_items) - self.client_status.acked_items
         if num_items > 12:
             num_items = 12
-        if num_items > 0:
-            try:
-                with open(self.user_folder() + "items.xsdat", "wb") as fp:
-                    XsdatFile.write_int(fp, num_items)
-                    for item in self.client_status.unlocked_items[self.client_status.acked_items:self.client_status.acked_items+num_items]:
-                        XsdatFile.write_int(fp, item.id)
-            except Exception as ex:
-                print(ex)
+        if num_items <= 0:
+            self.client_status.in_flight = []
+            return
+        window = self.client_status.unlocked_items[self.client_status.acked_items:self.client_status.acked_items+num_items]
+        item_ids = [item.id for item in window]
+        if item_ids == self.client_status.in_flight:
+            return
+        try:
+            with open(self.user_folder() + "items.xsdat", "wb") as fp:
+                for item_id in item_ids:
+                    XsdatFile.write_int(fp, item_id)
+            self.client_status.in_flight = item_ids
+        except Exception as ex:
+            print(ex)
 
     def sync_starting_resources(self) -> None:
         item_ids: list[int] = []
@@ -235,11 +257,19 @@ class Age2GameContext:
         return self.client_status.user_folder + AGE2_USER_PROFILE
 
     def free_items(self) -> None:
+        pending = list(self.client_status.in_flight)
+        freeing: list[int] = []
+        for item in self.current_packet.item_ids:
+            if item == -1:
+                continue
+            if item in pending:
+                pending.remove(item)
+                continue
+            freeing.append(item)
         try:
             with open(self.user_folder() + "free_items.xsdat", "wb") as fp:
-                for item in self.current_packet.item_ids:
-                    if item != -1:
-                        XsdatFile.write_int(fp, item)
+                for item in freeing:
+                    XsdatFile.write_int(fp, item)
         except Exception as ex:
             print(ex)
 
@@ -270,12 +300,12 @@ class Age2GameContext:
                 XsdatFile.write_int(fp, self.current_packet.current_ping_id)
                 XsdatFile.write_float(fp, AP_VERSION)
                 XsdatFile.write_int(fp, WORLD_ID)
-                XsdatFile.write_bool(fp, self.client_status.acked_items < len(self.client_status.unlocked_items)) # Send Items
+                XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
                 XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
                 XsdatFile.write_bool(fp, False) # Send Units
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
-                XsdatFile.write_bool(fp, self.campaign_handler.active_file.completed)
+                XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
         except Exception as ex:
             print(ex)
 
@@ -292,7 +322,7 @@ async def status_loop(ctx: Age2GameContext):
         
         # Sync files that are scenario-agnostic before connection.
         ctx.sync_starting_resources()
-        ctx.campaign_handler.sync_scenario_items(ctx.client_status.unlocked_items)
+        ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
         ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
@@ -327,13 +357,14 @@ async def status_loop(ctx: Age2GameContext):
             await long_sleep()
             continue
         
-        packetStatus = ctx.update_packet(packet)
-        
         # Improper read. Ping is never -1
         if packet.current_ping_id == -1:
+            await short_sleep()
             continue
         
-        if packet.scenario_id != ctx.campaign_handler.active_file.data.id:
+        packetStatus = ctx.update_packet(packet)
+        
+        if packet.scenario_id != ctx.campaign_handler.active_file.current_scenario.data.id:
             logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
             ctx.flush_files()
             ctx.campaign_handler.deactivate_scenario()
@@ -346,13 +377,6 @@ async def status_loop(ctx: Age2GameContext):
                 logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
                 ctx.campaign_handler.deactivate_scenario()
                 ctx.paused = True
-            
-            if ctx.packet_repeat_count == 120:
-                logger.warning("The current scenario has stopped sending signals for 60 seconds. The scenario has been disconnected.")
-                ctx.campaign_handler.deactivate_scenario()
-                ctx.paused = False
-                await long_sleep()
-                continue
             
             await short_sleep()
             continue

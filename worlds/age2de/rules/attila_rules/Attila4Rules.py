@@ -65,3 +65,4 @@ class Attila4Rules(ScenarioRules):
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_ORLEANS], can_beat_cyan)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_ROMAN_ARMY], can_beat_blue)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_VICTORY], can_beat_blue & can_beat_red & (can_ally_purple | can_beat_purple))
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT4_VICTORY.scenario.scenario_name), can_beat_blue & can_beat_red & (can_ally_purple | can_beat_purple))

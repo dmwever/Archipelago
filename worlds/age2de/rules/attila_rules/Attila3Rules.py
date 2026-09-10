@@ -32,3 +32,4 @@ class Attila3Rules(ScenarioRules):
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_THREATEN_WONDER], can_beat_blue)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_DESTROY_WONDER], can_beat_blue)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_VICTORY], (has_much_gold & can_win_water) | can_beat_blue)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT3_VICTORY.scenario.scenario_name), (has_much_gold & can_win_water) | can_beat_blue)

@@ -43,12 +43,10 @@ class Age2Context(CommonContext):
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
-    victory: bool
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
         self.age2_json_text_parser = Age2JSONtoTextParser(self)
-        self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         self.game_ctx = GameClient.Age2GameContext(client_interface=self)
         
     async def server_auth(self, password_requested: bool = False) -> None:
@@ -77,6 +75,7 @@ class Age2Context(CommonContext):
             self._handle_set_reply(args)
 
     def _handle_connected(self, slot_data):
+        self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         self.game_ctx.connect(self.checked_locations, slot_data, self.settings.user_folder)
         Utils.async_start(self.send_msgs([
         {
@@ -94,26 +93,24 @@ class Age2Context(CommonContext):
 
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
+        if args.get("index", -1) == 0:
+            self.game_ctx.client_status.unlocked_items.clear()
         for received_item in received_items:
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
-            if item_data.type_data is Items.Campaign:
-                self.game_ctx.campaign_handler.unlock_campaign(item_data.type.vanilla_campaign)
-            if item_data.type_data is Items.ProgressiveScenario:
-                self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)
+        status = self.game_ctx.client_status
+        if status.acked_items > len(status.unlocked_items):
+            status.acked_items = len(status.unlocked_items)
 
     def _handle_set_reply(self, args: dict) -> None:
+        if args["key"] != self.scenario_completion_key:
+            return
         for (scenario_data, managed_scenario) in self.game_ctx.campaign_handler.scenarios.items():
             completed: int = self.stored_data.get(self.scenario_completion_key)
             managed_scenario.completed = completed & (1 << scenario_data.completion_bit) != 0
             
-    def handle_connection_loss(self, msg: str) -> None:
-        """Override for logging and displaying a loss of connection. Must be called from an except block."""
-        Utils.async_start(self.game_ctx.disconnect())
-        super().handle_connection_loss(msg)
-
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([
             {
@@ -137,9 +134,9 @@ class Age2Context(CommonContext):
     def on_goal(self) -> None:
         Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
     
-    async def disconnect(self, allow_autoreconnect: bool = False):
+    async def connection_closed(self):
+        await super().connection_closed()
         await self.game_ctx.disconnect()
-        Utils.async_start(super().disconnect(allow_autoreconnect), name="disconnecting")
 
 class Age2JSONtoTextParser(JSONtoTextParser):
     color: str = "white"
@@ -184,6 +181,8 @@ def main(connect: Optional[str] = None, password: Optional[str] = None, name: Op
         
         await ctx.exit_event.wait()
         await ctx.game_ctx.disconnect()
+        
+        await ctx.shutdown()
 
     import colorama
 
