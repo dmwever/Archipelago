@@ -140,7 +140,7 @@ class CampaignHandler(FolderHandler):
                             if not scenario.unlocked:
                                 self._note_locked_scenario(scenario)
                             else:
-                                self.active_file = ActiveFile(scn=scenario, read_file_name=campaign.data.xsdat_read_name)
+                                self.active_file = ActiveFile(scn=scenario, read_file_name=read_name)
                                 return True
                         else:
                             print("Not active")

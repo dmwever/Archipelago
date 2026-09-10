@@ -262,7 +262,7 @@ class Age2GameContext:
         if item_ids == self.client_status.in_flight:
             return
         try:
-            with open(self.user_folder() + "items.xsdat", "wb") as fp:
+            with open(self.profile_folder() + "items.xsdat", "wb") as fp:
                 for item_id in item_ids:
                     XsdatFile.write_int(fp, item_id)
             self.client_status.in_flight = item_ids
@@ -296,7 +296,7 @@ class Age2GameContext:
                 continue
             freeing.append(item)
         try:
-            with open(self.user_folder() + "free_items.xsdat", "wb") as fp:
+            with open(self.profile_folder() + "free_items.xsdat", "wb") as fp:
                 for item in freeing:
                     XsdatFile.write_int(fp, item)
         except Exception as ex:

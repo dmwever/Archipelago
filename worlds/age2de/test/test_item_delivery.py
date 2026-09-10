@@ -73,7 +73,7 @@ class TestItemDelivery(unittest.TestCase):
 
         self.ctx = Age2GameContext(DefaultClientInterface())
         self.ctx.client_status.user_folder = self._tmp.name
-        self.folder = self.ctx.user_folder()
+        self.folder = self.ctx.profile_folder()
         self.game = FakeGame()
 
     # -- helpers ---------------------------------------------------------

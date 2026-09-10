@@ -10,6 +10,7 @@ import tempfile
 import unittest
 
 from ..campaign import XsdatFile
+from ..generation import Identity
 from ..client.handlers.CampaignHandler import CampaignHandler
 from ..items.Items import Age2ItemData
 from ..locations.Campaigns import Age2CampaignData
@@ -45,7 +46,7 @@ class TestScenarioItems(unittest.TestCase):
         return [scn.data.name for scn in handler.scenarios.values() if scn.unlocked]
 
     def write_campaign_packet(self, campaign: Age2CampaignData, scenario_id: int) -> None:
-        with open(self.folder + campaign.xsdat_read_name, "wb") as fp:
+        with open(self.folder + Identity.xsdat_name(campaign.file_stem, ""), "wb") as fp:
             XsdatFile.write_bool(fp, True)
             for _ in range(17):
                 XsdatFile.write_int(fp, 0)
