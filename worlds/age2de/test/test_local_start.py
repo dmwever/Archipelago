@@ -13,8 +13,13 @@ from rule_builder.rules import False_, Has, HasAll, True_
 from ..generation.LocalStart import (
     choose_start_scenario,
     resolve,
+    satisfied,
     solve,
     state_with,
+    base_candidate_names,
+    base_items,
+    conjuncts,
+    scenario_base_rule,
     victory_location,
     win_items,
 )
@@ -208,3 +213,108 @@ class TestWinItemsAttila(Age2TestBase):
         print(f"\n[win_items] Attila 1 -> {len(got)} items: {sorted(got)}")
         victory = victory_location(self.world, Age2ScenarioData.AP_ATTILA_1)
         self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
+
+
+class TestBaseItemsJoan(Age2TestBase):
+    options = {
+        "enabled_campaigns": {JOAN},
+        "starting_campaigns": {JOAN},
+    }
+
+    def test_joan_1_has_no_base_of_its_own(self) -> None:
+        # has_base = False_(), so it must contribute nothing rather than poison the target.
+        self.assertIsNone(scenario_base_rule(self.world, Age2ScenarioData.AP_JOAN_1))
+
+    def test_town_centre_items_survive_the_missing_villagers(self) -> None:
+        got = base_items(self.world, Age2ScenarioData.AP_JOAN_1)
+        print(f"\n[base_items] Joan 1 -> {len(got)} items: {sorted(got)}")
+        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
+        self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
+        self.assert_satisfiable_conjuncts_met(got)
+        # Nothing supplies villagers at turn one on a Joan start once campaign
+        # progression is off the table, so that conjunct is skipped rather than
+        # dragging the whole Joan 1 win set in behind it.
+        for excluded in (Age2ItemData.PROGRESSIVE_JOAN_SCENARIO, Age2ItemData.AP_JOAN_1_TRANSPORT):
+            self.assertNotIn(excluded.item_name, got)
+
+    def assert_satisfiable_conjuncts_met(self, got: list[str]) -> None:
+        """Every part of can_build_base that could be satisfied, is.
+
+        Not the whole conjunction: base_items deliberately skips conjuncts no item can
+        satisfy, which on a Joan start is the "some unlocked scenario has villagers"
+        term. Asserting the whole target would demand the behaviour we chose against.
+        """
+        world = self.world
+        base_state = self.multiworld.state
+        candidates = base_candidate_names(world)
+        state = state_with(world, base_state, got)
+        checked = 0
+        for conjunct in conjuncts(world.rules.logic.can_build_base()):
+            resolved = resolve(world, conjunct)
+            if solve(world, resolved, base_state, candidates) is None:
+                continue
+            checked += 1
+            self.assertTrue(satisfied(resolved, state), f"unmet conjunct {conjunct} given {sorted(got)}")
+        self.assertGreater(checked, 0, "no conjunct was satisfiable, so the test proves nothing")
+
+
+
+class TestBaseItemsAttila(Age2TestBase):
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+    }
+
+    VILS = {
+        Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name,
+        Age2ItemData.AP_ATTILA_1_ATTILAS_CAMP.item_name,
+        Age2ItemData.AP_ATTILA_1_ROMAN_VILLAGERS.item_name,
+    }
+
+    def test_attila_1_contributes_its_own_base_rule(self) -> None:
+        self.assertIsNotNone(scenario_base_rule(self.world, Age2ScenarioData.AP_ATTILA_1))
+
+    def test_includes_town_centre_and_a_villager_source(self) -> None:
+        got = base_items(self.world, Age2ScenarioData.AP_ATTILA_1)
+        print(f"\n[base_items] Attila 1 -> {len(got)} items: {sorted(got)}")
+        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
+        self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
+        self.assertTrue(self.VILS & set(got), "no villager source was placed locally")
+        self.assert_satisfiable_conjuncts_met(got)
+        # One villager source is enough; solving conjuncts apart used to collect two.
+        self.assertEqual(1, len(self.VILS & set(got)))
+
+    def assert_satisfiable_conjuncts_met(self, got: list[str]) -> None:
+        """Every part of can_build_base that could be satisfied, is.
+
+        Not the whole conjunction: base_items deliberately skips conjuncts no item can
+        satisfy, which on a Joan start is the "some unlocked scenario has villagers"
+        term. Asserting the whole target would demand the behaviour we chose against.
+        """
+        world = self.world
+        base_state = self.multiworld.state
+        candidates = base_candidate_names(world)
+        state = state_with(world, base_state, got)
+        checked = 0
+        for conjunct in conjuncts(world.rules.logic.can_build_base()):
+            resolved = resolve(world, conjunct)
+            if solve(world, resolved, base_state, candidates) is None:
+                continue
+            checked += 1
+            self.assertTrue(satisfied(resolved, state), f"unmet conjunct {conjunct} given {sorted(got)}")
+        self.assertGreater(checked, 0, "no conjunct was satisfiable, so the test proves nothing")
+
+
+
+class TestConjuncts(unittest.TestCase):
+    def test_flattens_nested_unconditional_ands(self) -> None:
+        a, b, c = Has("A"), Has("B"), Has("C")
+        self.assertEqual([a, b, c], conjuncts((a & b) & c))
+
+    def test_leaves_a_single_rule_alone(self) -> None:
+        a = Has("A")
+        self.assertEqual([a], conjuncts(a))
+
+    def test_does_not_split_an_or(self) -> None:
+        rule = Has("A") | Has("B")
+        self.assertEqual([rule], conjuncts(rule))

@@ -5,10 +5,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from collections import Counter
+
 from BaseClasses import CollectionState, Location
 from Fill import sweep_from_pool
-from rule_builder.rules import Rule
+from rule_builder.rules import And, Rule
 
+from ..items.Items import NAME_TO_ITEM, Campaign, ProgressiveScenario
 from ..locations.Campaigns import NAME_TO_CAMPAIGN
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
@@ -93,3 +96,65 @@ def win_items(world: 'Age2World', scenario: Age2ScenarioData) -> list[str] | Non
     if victory is None:
         return None
     return solve(world, victory, world.multiworld.state, own_itempool_names(world))
+
+
+def base_candidate_names(world: 'Age2World') -> list[str]:
+    """Candidates for the Base solve: the itempool minus campaign progression."""
+    excluded = (ProgressiveScenario, Campaign)
+    return [
+        name for name in own_itempool_names(world)
+        if not isinstance(NAME_TO_ITEM[name].type, excluded)
+    ]
+
+
+def conjuncts(rule: Rule) -> list[Rule]:
+    """Flatten a conjunction into the parts that must each hold on their own."""
+    if isinstance(rule, And) and not rule.options:
+        flattened: list[Rule] = []
+        for child in rule.children:
+            flattened.extend(conjuncts(child))
+        return flattened
+    return [rule]
+
+
+def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule | None:
+    """The scenario's own has_base, or None when it can never hold."""
+    starting_state = scenario.logic(world.rules.logic)
+    has_base = starting_state.has_base
+    if resolve(world, has_base).always_false:
+        return None
+    return has_base
+
+
+def base_items(world: 'Age2World', scenario: Age2ScenarioData) -> list[str]:
+    """Items that let the player build a town centre, plus anything extra `scenario` asks for."""
+    logic = world.rules.logic
+    target = logic.can_build_base()
+
+    scenario_rule = scenario_base_rule(world, scenario)
+    if scenario_rule is not None:
+        target = target & scenario_rule
+
+    candidates = base_candidate_names(world)
+    needed: Counter[str] = Counter()
+    reachable: list[Rule] = []
+    for conjunct in conjuncts(target):
+        solved = solve(world, resolve(world, conjunct), world.multiworld.state, candidates)
+        if solved is None:
+            continue
+        reachable.append(conjunct)
+        # Counts merge by the largest demand, not by summing across conjuncts.
+        for name, count in Counter(solved).items():
+            needed[name] = max(needed[name], count)
+
+    if not reachable:
+        return []
+
+    # Conjuncts are solved apart, so each picks its own way to satisfy a shared
+    # disjunction and the union ends up with redundant items. One pass over the
+    # whole satisfiable target trims those back out.
+    combined = reachable[0]
+    for conjunct in reachable[1:]:
+        combined = combined & conjunct
+    trimmed = solve(world, resolve(world, combined), world.multiworld.state, sorted(needed.elements()))
+    return sorted(trimmed) if trimmed is not None else sorted(needed.elements())
