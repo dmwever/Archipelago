@@ -12,7 +12,7 @@ from worlds.LauncherComponents import Component, Type, components, launch as lau
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
-from .generation import WorldVersion
+from .generation import LocalStart, WorldVersion
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
@@ -275,6 +275,9 @@ class Age2World(CachedRuleBuilderWorld):
     def set_rules(self) -> None:
         self.rules = Rules(self)
         self.rules.set_rules()
+
+    def pre_fill(self) -> None:
+        LocalStart.apply(self)
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {

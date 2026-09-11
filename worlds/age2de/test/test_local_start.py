@@ -318,3 +318,123 @@ class TestConjuncts(unittest.TestCase):
     def test_does_not_split_an_or(self) -> None:
         rule = Has("A") | Has("B")
         self.assertEqual([rule], conjuncts(rule))
+
+
+class PlacementTestBase(Age2TestBase):
+    """Shared assertions for a world generated with Local Start switched on."""
+
+    def locally_placed(self) -> list[str]:
+        """Names of the real items Local Start locked into this player's own locations.
+
+        Event items are locked too but carry no code, so they are filtered out.
+        """
+        return [
+            location.item.name
+            for location in self.multiworld.get_locations(self.player)
+            if location.locked and location.item is not None and location.item.code is not None
+            and location.item.player == self.player
+        ]
+
+    def assert_placements_are_local(self) -> None:
+        for location in self.multiworld.get_locations(self.player):
+            if location.locked and location.item is not None and location.item.code is not None:
+                self.assertEqual(self.player, location.item.player,
+                                 f"{location.item.name} was locked into a foreign slot")
+
+    def assert_pool_still_balances(self) -> None:
+        # create_items sizes the pool to the location count; taking items out to place
+        # them by hand must not break that.
+        unfilled = self.multiworld.get_unfilled_locations(self.player)
+        self.assertEqual(len(unfilled), len(self.multiworld.itempool))
+
+    def assert_victory_reachable_from_placements(self, scenario) -> None:
+        victory = victory_location(self.world, scenario)
+        state = state_with(self.world, self.multiworld.state, self.locally_placed())
+        self.assertTrue(victory.can_reach(state),
+                        f"{scenario.scenario_name} victory not reachable from the placed set")
+
+
+class TestPlaceWinJoan(PlacementTestBase):
+    options = {
+        "enabled_campaigns": {JOAN},
+        "starting_campaigns": {JOAN},
+        "local_start": "guarantee_win_first_scenario",
+    }
+
+    def test_joan_1_is_winnable_from_the_placements(self) -> None:
+        placed = self.locally_placed()
+        print(f"\n[placed win] Joan -> {sorted(placed)}")
+        self.assertTrue(placed)
+        self.assert_placements_are_local()
+        self.assert_pool_still_balances()
+        self.assert_victory_reachable_from_placements(Age2ScenarioData.AP_JOAN_1)
+
+
+class TestPlaceWinAttila(PlacementTestBase):
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+        "local_start": "guarantee_win_first_scenario",
+    }
+
+    def test_attila_1_is_winnable_from_the_placements(self) -> None:
+        placed = self.locally_placed()
+        print(f"\n[placed win] Attila -> {sorted(placed)}")
+        self.assertTrue(placed)
+        self.assert_placements_are_local()
+        self.assert_pool_still_balances()
+        self.assert_victory_reachable_from_placements(Age2ScenarioData.AP_ATTILA_1)
+
+
+class TestPlaceBaseJoan(PlacementTestBase):
+    options = {
+        "enabled_campaigns": {JOAN},
+        "starting_campaigns": {JOAN},
+        "local_start": "base",
+    }
+
+    def test_town_centre_items_are_local(self) -> None:
+        placed = self.locally_placed()
+        print(f"\n[placed base] Joan -> {sorted(placed)}")
+        self.assert_placements_are_local()
+        self.assert_pool_still_balances()
+        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, placed)
+        self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, placed)
+
+
+class TestPlaceBothAttila(PlacementTestBase):
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+        "local_start": "both",
+    }
+
+    def test_win_and_base_are_placed_once_each(self) -> None:
+        placed = self.locally_placed()
+        print(f"\n[placed both] Attila -> {sorted(placed)}")
+        self.assert_placements_are_local()
+        self.assert_pool_still_balances()
+        self.assert_victory_reachable_from_placements(Age2ScenarioData.AP_ATTILA_1)
+        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, placed)
+        # Deduped across the two passes: nothing is placed twice.
+        self.assertEqual(len(placed), len(set(placed)))
+        # The base pass solves on top of the win set, so a requirement the win items
+        # already cover is not bought a second time. Villagers come from exactly one camp.
+        camps = {
+            Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name,
+            Age2ItemData.AP_ATTILA_1_ATTILAS_CAMP.item_name,
+            Age2ItemData.AP_ATTILA_1_ROMAN_VILLAGERS.item_name,
+        }
+        self.assertEqual(1, len(camps & set(placed)), f"expected one villager source, got {sorted(camps & set(placed))}")
+
+
+class TestPlaceDisabled(PlacementTestBase):
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+        "local_start": "no",
+    }
+
+    def test_nothing_is_locked(self) -> None:
+        self.assertEqual([], self.locally_placed())
+        self.assert_pool_still_balances()
