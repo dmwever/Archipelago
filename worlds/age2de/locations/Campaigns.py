@@ -13,3 +13,5 @@ class Age2CampaignData(enum.Enum):
     
     ATTILA  =       1, "Attila the Hun", "AP Attila the Hun"
     JOAN  =         2, "Joan of Arc", "AP Joan of Arc"
+
+NAME_TO_CAMPAIGN = {campaign.campaign_name: campaign for campaign in Age2CampaignData}
