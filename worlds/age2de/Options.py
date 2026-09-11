@@ -27,6 +27,22 @@ class ScenarioBranching(Choice):
     default = option_any
 
 
+class LocalStart(Choice):
+    """Place the items needed for a playable opening in your own world.
+        No: Place nothing locally.
+        Base: Place the items needed to build a town centre locally.
+        Guarantee Win First Scenario: Place everything needed to beat one of your starting scenarios locally.
+        Both: Place both sets locally.
+    """
+    internal_name = "local_start"
+    display_name = "Local Start"
+    option_no = 0
+    option_base = 1
+    option_guarantee_win_first_scenario = 2
+    option_both = 3
+    default = option_no
+
+
 class ShuffleBuildings(OptionSet):
     """
     Determines which buildings to shuffle.
@@ -84,3 +100,4 @@ class Age2Options(PerGameCommonOptions):
     enabled_campaigns: EnabledCampaigns
     starting_campaigns: StartingCampaigns
     goal: Goal
+    local_start: LocalStart
