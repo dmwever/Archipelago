@@ -192,7 +192,6 @@ class TestWinItemsJoan(Age2TestBase):
     def test_joan_1_is_beatable_from_turn_one(self) -> None:
         got = win_items(self.world, Age2ScenarioData.AP_JOAN_1)
         self.assertIsNotNone(got, "Joan 1 could not be made beatable from the pool")
-        print(f"\n[win_items] Joan 1 -> {len(got)} items: {sorted(got)}")
         victory = victory_location(self.world, Age2ScenarioData.AP_JOAN_1)
         self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
 
@@ -210,7 +209,6 @@ class TestWinItemsAttila(Age2TestBase):
     def test_attila_1_is_beatable_from_turn_one(self) -> None:
         got = win_items(self.world, Age2ScenarioData.AP_ATTILA_1)
         self.assertIsNotNone(got, "Attila 1 could not be made beatable from the pool")
-        print(f"\n[win_items] Attila 1 -> {len(got)} items: {sorted(got)}")
         victory = victory_location(self.world, Age2ScenarioData.AP_ATTILA_1)
         self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
 
@@ -227,7 +225,6 @@ class TestBaseItemsJoan(Age2TestBase):
 
     def test_town_centre_items_survive_the_missing_villagers(self) -> None:
         got = base_items(self.world, Age2ScenarioData.AP_JOAN_1)
-        print(f"\n[base_items] Joan 1 -> {len(got)} items: {sorted(got)}")
         self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
         self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
         self.assert_satisfiable_conjuncts_met(got)
@@ -276,7 +273,6 @@ class TestBaseItemsAttila(Age2TestBase):
 
     def test_includes_town_centre_and_a_villager_source(self) -> None:
         got = base_items(self.world, Age2ScenarioData.AP_ATTILA_1)
-        print(f"\n[base_items] Attila 1 -> {len(got)} items: {sorted(got)}")
         self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
         self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
         self.assertTrue(self.VILS & set(got), "no villager source was placed locally")
@@ -363,7 +359,6 @@ class TestPlaceWinJoan(PlacementTestBase):
 
     def test_joan_1_is_winnable_from_the_placements(self) -> None:
         placed = self.locally_placed()
-        print(f"\n[placed win] Joan -> {sorted(placed)}")
         self.assertTrue(placed)
         self.assert_placements_are_local()
         self.assert_pool_still_balances()
@@ -379,7 +374,6 @@ class TestPlaceWinAttila(PlacementTestBase):
 
     def test_attila_1_is_winnable_from_the_placements(self) -> None:
         placed = self.locally_placed()
-        print(f"\n[placed win] Attila -> {sorted(placed)}")
         self.assertTrue(placed)
         self.assert_placements_are_local()
         self.assert_pool_still_balances()
@@ -395,7 +389,6 @@ class TestPlaceBaseJoan(PlacementTestBase):
 
     def test_town_centre_items_are_local(self) -> None:
         placed = self.locally_placed()
-        print(f"\n[placed base] Joan -> {sorted(placed)}")
         self.assert_placements_are_local()
         self.assert_pool_still_balances()
         self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, placed)
@@ -411,7 +404,6 @@ class TestPlaceBothAttila(PlacementTestBase):
 
     def test_win_and_base_are_placed_once_each(self) -> None:
         placed = self.locally_placed()
-        print(f"\n[placed both] Attila -> {sorted(placed)}")
         self.assert_placements_are_local()
         self.assert_pool_still_balances()
         self.assert_victory_reachable_from_placements(Age2ScenarioData.AP_ATTILA_1)
@@ -438,3 +430,49 @@ class TestPlaceDisabled(PlacementTestBase):
     def test_nothing_is_locked(self) -> None:
         self.assertEqual([], self.locally_placed())
         self.assert_pool_still_balances()
+
+
+class TestTwoSlots(unittest.TestCase):
+    """Two age2de slots in one multiworld must not share state.
+
+    included_campaigns, Logic.scenarios and ScenarioRules.locations used to be class
+    attributes, so one slot's campaigns leaked into the next and every scenario shared
+    one location dict. Local Start reads all three, so it would have solved against a
+    merged view of both players.
+    """
+
+    def multiworld(self):
+        from test.general import setup_multiworld
+        from .. import Age2World
+        return setup_multiworld(
+            [Age2World, Age2World],
+            options=[
+                {"enabled_campaigns": {ATTILA}, "starting_campaigns": {ATTILA},
+                 "local_start": "guarantee_win_first_scenario"},
+                {"enabled_campaigns": {JOAN}, "starting_campaigns": {JOAN},
+                 "local_start": "guarantee_win_first_scenario"},
+            ],
+        )
+
+    def test_campaign_sets_do_not_merge(self) -> None:
+        multiworld = self.multiworld()
+        first, second = multiworld.worlds[1], multiworld.worlds[2]
+        self.assertEqual({Age2CampaignData.ATTILA}, first.included_campaigns)
+        self.assertEqual({Age2CampaignData.JOAN}, second.included_campaigns)
+        self.assertIsNot(first.included_campaigns, second.included_campaigns)
+
+    def test_each_slot_places_its_own_items(self) -> None:
+        multiworld = self.multiworld()
+        for player, scenario in ((1, Age2ScenarioData.AP_ATTILA_1), (2, Age2ScenarioData.AP_JOAN_1)):
+            placed = [
+                location.item for location in multiworld.get_locations(player)
+                if location.locked and location.item is not None and location.item.code is not None
+            ]
+            self.assertTrue(placed, f"player {player} placed nothing")
+            for item in placed:
+                self.assertEqual(player, item.player, f"{item.name} landed in the wrong slot")
+            world = multiworld.worlds[player]
+            victory = victory_location(world, scenario)
+            state = state_with(world, multiworld.state, [item.name for item in placed])
+            self.assertTrue(victory.can_reach(state),
+                            f"player {player} cannot beat {scenario.scenario_name} from its placements")
