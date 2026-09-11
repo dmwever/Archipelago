@@ -8,7 +8,11 @@ import random
 import unittest
 from types import SimpleNamespace
 
-from ..generation.LocalStart import choose_start_scenario
+from rule_builder.rules import False_, Has, HasAll, True_
+
+from ..generation.LocalStart import choose_start_scenario, resolve, solve, state_with
+from ..items.Items import Age2ItemData
+from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from .bases import Age2TestBase
@@ -102,3 +106,66 @@ class TestSelectionDeterminism(unittest.TestCase):
             {Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_JOAN_1},
             drawn,
         )
+
+
+class TestSolver(Age2TestBase):
+    """The solver, against real resolved rules on a generated world."""
+
+    options = {
+        "enabled_campaigns": {JOAN},
+        "starting_campaigns": {JOAN},
+    }
+
+    RAM = Age2ItemData.AP_JOAN_1_RAM.item_name
+    SWORDSMEN = Age2ItemData.AP_JOAN_1_SWORDSMEN.item_name
+    CROSSBOWMEN = Age2ItemData.AP_JOAN_1_CROSSBOWMEN.item_name
+    TRANSPORT = Age2ItemData.AP_JOAN_1_TRANSPORT.item_name
+    PROGRESSIVE = Age2ItemData.PROGRESSIVE_JOAN_SCENARIO.item_name
+
+    def target_for(self, rule):
+        return resolve(self.world, rule)
+
+    def solve_for(self, rule, candidates):
+        return solve(self.world, self.target_for(rule), self.multiworld.state, candidates)
+
+    def test_and_over_or_takes_one_branch(self) -> None:
+        # Has(ram) & (Has(swordsmen) | Has(crossbowmen)) needs two items, not three.
+        rule = Has(self.RAM) & (Has(self.SWORDSMEN) | Has(self.CROSSBOWMEN))
+        got = self.solve_for(rule, [self.RAM, self.SWORDSMEN, self.CROSSBOWMEN])
+        self.assertEqual(2, len(got))
+        self.assertIn(self.RAM, got)
+        self.assertTrue(self.SWORDSMEN in got or self.CROSSBOWMEN in got)
+
+    def test_conjunction_keeps_everything_it_needs(self) -> None:
+        rule = HasAll(self.RAM, self.SWORDSMEN, self.TRANSPORT)
+        got = self.solve_for(rule, [self.RAM, self.SWORDSMEN, self.CROSSBOWMEN, self.TRANSPORT])
+        self.assertEqual({self.RAM, self.SWORDSMEN, self.TRANSPORT}, set(got))
+
+    def test_already_satisfied_needs_nothing(self) -> None:
+        self.assertEqual([], self.solve_for(True_(), [self.RAM]))
+
+    def test_unsatisfiable_returns_none(self) -> None:
+        self.assertIsNone(self.solve_for(False_(), [self.RAM]))
+
+    def test_missing_item_returns_none(self) -> None:
+        # The candidate pool cannot supply the transport, so the target is unreachable.
+        rule = HasAll(self.RAM, self.TRANSPORT)
+        self.assertIsNone(self.solve_for(rule, [self.RAM, self.SWORDSMEN]))
+
+    def test_counts_take_as_many_copies_as_asked(self) -> None:
+        rule = Has(self.PROGRESSIVE, 2)
+        got = self.solve_for(rule, [self.PROGRESSIVE] * 4 + [self.RAM])
+        self.assertEqual([self.PROGRESSIVE] * 2, got)
+
+    def test_location_target_joan_1_victory(self) -> None:
+        # The real thing: what does it take to reach Joan 1's victory from turn one?
+        victory = self.world.get_location(Age2ScenarioLocationData.JOAN1_VICTORY.global_name())
+        candidates = [item.name for item in self.multiworld.itempool if item.player == self.player]
+        got = solve(self.world, victory, self.multiworld.state, candidates)
+        self.assertIsNotNone(got)
+        self.assertEqual(3, len(got))
+        self.assertIn(self.RAM, got)
+        self.assertIn(self.TRANSPORT, got)
+        self.assertTrue(self.SWORDSMEN in got or self.CROSSBOWMEN in got)
+        # And the answer actually holds.
+        self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
