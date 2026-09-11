@@ -51,14 +51,19 @@ class Age2World(CachedRuleBuilderWorld):
     location_id_to_name = LocationMapping.location_id_to_name
     item_mapping = Items.item_mapping
     
-    included_civs: list[Scenarios.Age2CivData] = []
-    included_campaigns: set[Campaigns.Age2CampaignData] = set()
-    shuffled_buildings: list[Buildings.Age2BuildingData] = []
+    # Per slot, not per class. As class attributes these accumulated across slots and
+    # kept the MultiWorld alive, which WorldTestBase reports as a leak.
+    included_civs: list[Scenarios.Age2CivData]
+    included_campaigns: set[Campaigns.Age2CampaignData]
+    shuffled_buildings: list[Buildings.Age2BuildingData]
     rules: Rules
-    
+
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
-        
+        self.included_civs = []
+        self.included_campaigns = set()
+        self.shuffled_buildings = []
+
     def branching_option(self, location):
         if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenarioBranching != ScenarioBranching.option_all:
             return False

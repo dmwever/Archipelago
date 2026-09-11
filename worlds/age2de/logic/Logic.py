@@ -26,9 +26,12 @@ class Logic:
     ages: AgeLogic
     military: MilitaryLogic
     goal: GoalLogic
-    scenarios: list[ScenarioLogic] = []
-    
+    scenarios: list[ScenarioLogic]
+
     def __init__(self, world: Age2World):
+        # Per instance, not per class: as a class attribute this accumulated one
+        # slot's scenarios into the next, corrupting can_build_building.
+        self.scenarios = []
         self.buildings = BuildingLogic(self, world)
         self.ages =  AgeLogic(self, world)
         for campaign in world.included_campaigns:

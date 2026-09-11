@@ -18,9 +18,12 @@ if TYPE_CHECKING:
 class ScenarioRules:
     entrance: Entrance
     scenario_logic: ScenarioLogic
-    locations: dict[Age2ScenarioLocationData, Location] = {}
-    
+    locations: dict[Age2ScenarioLocationData, Location]
+
     def __init__(self, rules: 'Rules', scenario: Age2ScenarioData):
+        # Per instance, not per class: as a class attribute every scenario's rule
+        # object shared one location dict, across slots as well as scenarios.
+        self.locations = {}
         self.rules = rules
         self.logic = rules.logic
         self.world = rules.world
