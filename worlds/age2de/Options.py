@@ -76,7 +76,7 @@ class StartingCampaigns(OptionSet):
     """
     Determines which vanilla campaigns will start unlocked for the player.
     """
-    display_name = "Enabled Campaigns"
+    display_name = "Starting Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
     default = set((Age2CampaignData.ATTILA.campaign_name,))
 
