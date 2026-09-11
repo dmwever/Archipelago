@@ -10,7 +10,14 @@ from types import SimpleNamespace
 
 from rule_builder.rules import False_, Has, HasAll, True_
 
-from ..generation.LocalStart import choose_start_scenario, resolve, solve, state_with
+from ..generation.LocalStart import (
+    choose_start_scenario,
+    resolve,
+    solve,
+    state_with,
+    victory_location,
+    win_items,
+)
 from ..items.Items import Age2ItemData
 from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.Campaigns import Age2CampaignData
@@ -168,4 +175,36 @@ class TestSolver(Age2TestBase):
         self.assertIn(self.TRANSPORT, got)
         self.assertTrue(self.SWORDSMEN in got or self.CROSSBOWMEN in got)
         # And the answer actually holds.
+        self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
+
+
+class TestWinItemsJoan(Age2TestBase):
+    options = {
+        "enabled_campaigns": {JOAN},
+        "starting_campaigns": {JOAN},
+    }
+
+    def test_joan_1_is_beatable_from_turn_one(self) -> None:
+        got = win_items(self.world, Age2ScenarioData.AP_JOAN_1)
+        self.assertIsNotNone(got, "Joan 1 could not be made beatable from the pool")
+        print(f"\n[win_items] Joan 1 -> {len(got)} items: {sorted(got)}")
+        victory = victory_location(self.world, Age2ScenarioData.AP_JOAN_1)
+        self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
+
+    def test_scenario_outside_the_playthrough_has_no_victory(self) -> None:
+        self.assertIsNone(victory_location(self.world, Age2ScenarioData.AP_ATTILA_1))
+        self.assertIsNone(win_items(self.world, Age2ScenarioData.AP_ATTILA_1))
+
+
+class TestWinItemsAttila(Age2TestBase):
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+    }
+
+    def test_attila_1_is_beatable_from_turn_one(self) -> None:
+        got = win_items(self.world, Age2ScenarioData.AP_ATTILA_1)
+        self.assertIsNotNone(got, "Attila 1 could not be made beatable from the pool")
+        print(f"\n[win_items] Attila 1 -> {len(got)} items: {sorted(got)}")
+        victory = victory_location(self.world, Age2ScenarioData.AP_ATTILA_1)
         self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))

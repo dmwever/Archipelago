@@ -1,7 +1,4 @@
 """Local Start — place the items needed for a playable opening in the player's own world.
-
-Phases 2-3: scenario selection and the solver that works out which items a target
-needs. Nothing here places anything yet.
 """
 
 from __future__ import annotations
@@ -13,6 +10,7 @@ from Fill import sweep_from_pool
 from rule_builder.rules import Rule
 
 from ..locations.Campaigns import NAME_TO_CAMPAIGN
+from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
 
 if TYPE_CHECKING:
@@ -34,13 +32,6 @@ def choose_start_scenario(world: 'Age2World') -> Age2ScenarioData | None:
 
 
 def resolve(world: 'Age2World', rule: Rule) -> Rule.Resolved:
-    """Resolve a rule fragment for use as a solver target.
-
-    Rules resolved outside World.set_rule are not registered, so the caching layer
-    never invalidates them and a cached False can go stale as the solver collects
-    items. Registering the dependencies wires it into the same invalidation the
-    world's own access rules get.
-    """
     resolved = rule.resolve(world)
     world.register_rule_dependencies(resolved)
     return resolved
@@ -64,19 +55,7 @@ def solve(
     base_state: CollectionState,
     candidates: list[str],
 ) -> list[str] | None:
-    """A small set of item names that satisfies `target` on top of `base_state`.
-
-    `candidates` may repeat a name to offer more than one copy, which is how a
-    `Has(item, count=n)` requirement gets met.
-
-    Returns an empty list when the target is already satisfied and needs nothing,
-    or None when even the whole candidate pool cannot satisfy it — the caller
-    decides whether that is fatal or a conjunct to skip.
-
-    The result is minimal in the sense that dropping any single item from it breaks
-    the target. It is not guaranteed to be the globally smallest such set; which
-    minimal set comes out depends on the seeded shuffle, so it is stable per seed.
-    """
+    """A small set of item names that satisfies `target` on top of `base_state`."""
     if satisfied(target, base_state):
         return []
     if not satisfied(target, state_with(world, base_state, candidates)):
@@ -90,3 +69,27 @@ def solve(
         if satisfied(target, state_with(world, base_state, trial)):
             chosen = trial
     return chosen
+
+
+def own_itempool_names(world: 'Age2World') -> list[str]:
+    """Every item this player still has in the pool, as the solver's candidates."""
+    return [item.name for item in world.multiworld.itempool if item.player == world.player]
+
+
+def victory_location(world: 'Age2World', scenario: Age2ScenarioData) -> Location | None:
+    """The scenario's victory location, or None when it is not in this playthrough."""
+    location_data = VICTORY_SCENARIO_LOCATIONS.get(scenario.scenario_name)
+    if location_data is None:
+        return None
+    try:
+        return world.get_location(location_data.global_name())
+    except KeyError:
+        return None
+
+
+def win_items(world: 'Age2World', scenario: Age2ScenarioData) -> list[str] | None:
+    """Items that make `scenario` beatable from turn one."""
+    victory = victory_location(world, scenario)
+    if victory is None:
+        return None
+    return solve(world, victory, world.multiworld.state, own_itempool_names(world))
