@@ -10,12 +10,13 @@ TS_UNIQUES = "AP_TS_UNIQUES"
 TS_EXISTING = "AP_TS_EXISTING"
 
 UNSET = -1
+TECHSANITY_NONE = 0
 
 DEFAULTS: dict[str, int] = {
     SLOT_ID: UNSET,
     SEED_HIGH: UNSET,
     SEED_LOW: UNSET,
-    TS_MODE: UNSET,
+    TS_MODE: TECHSANITY_NONE,
     TS_BEHAVIOR: UNSET,
     TS_LOCK: UNSET,
     TS_UNIQUES: UNSET,
@@ -29,7 +30,6 @@ OPTIONS: dict[str, str] = {
     TS_UNIQUES: "shuffle_unique_techs",
     TS_EXISTING: "existing_techs",
 }
-TECHSANITY_NONE = 0
 
 MAX_LITERAL = 999_999_999
 HALF_WIDTH = 16

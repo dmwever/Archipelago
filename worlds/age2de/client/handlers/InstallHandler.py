@@ -78,7 +78,6 @@ class InstallHandler(FolderHandler):
         return SlotData.techsanity(self._slot_data)
 
     def scenario_needs_age_up(self) -> bool:
-        return self.techsanity()[SlotData.TS_EXISTING] != 0
 
     def grant_age(self) -> Age2AgeData:
         """The deepest age an installed scenario starts in, or None if none was rebased."""
