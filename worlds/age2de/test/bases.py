@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from test.bases import WorldTestBase
 
 from .. import Age2World, AGE2_DE
@@ -14,6 +17,18 @@ from .. import Age2World, AGE2_DE
 class Age2TestBase(WorldTestBase):
     game = AGE2_DE
     world: Age2World
+
+    def setUp(self) -> None:
+        self._root_log_level = logging.root.level
+        logging.root.setLevel(logging.WARNING)
+        super().setUp()
+
+    def tearDown(self) -> None:
+        kivy_logger = sys.modules.get("kivy.logger")
+        if kivy_logger is not None:
+            kivy_logger.LoggerHistory.clear_history()
+        super().tearDown()
+        logging.root.setLevel(getattr(self, "_root_log_level", logging.WARNING))
 
 
 # The actual tests you write should be in files whose names start with "test_".

@@ -133,14 +133,15 @@ class Age2World(CachedRuleBuilderWorld):
     
     def create_items(self) -> None:
         items: list[Item] = []
+        region_names = {region.name for region in self.multiworld.get_regions(self.player)}
         for item in Items.Age2ItemData:
             if isinstance(item.type, Items.Victory):
                 continue
             elif isinstance(item.type, Items.ScenarioItem):
-                if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
+                if item.type.vanilla_scenario.scenario_name in region_names:
                     items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Mercenary):
-                if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
+                if item.type.vanilla_scenario.scenario_name in region_names:
                     items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Campaign):
                 if item.type.vanilla_campaign in self.included_campaigns:
@@ -188,7 +189,6 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        print(needed_number_of_filler_items)
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
         
     
