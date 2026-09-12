@@ -29,7 +29,7 @@ class TestTechCatalogue(unittest.TestCase):
 
     def test_every_tech_carries_an_age_xs_understands(self):
         for item in CATEGORY_TO_ITEMS[Tech]:
-            self.assertIn(item.type.age.tier, range(len(Age2AgeData)), item.item_name)
+            self.assertIn(item.type.age, Age2AgeData, item.item_name)
 
     def test_the_catalogue_fits_the_xs_capacity(self):
         self.assertLessEqual(len(CATEGORY_TO_ITEMS[Tech]), TechData.TECH_CAPACITY)
@@ -47,8 +47,7 @@ class TestRowSelection(unittest.TestCase):
         for row in table:
             self.assertEqual(row.item_id, TechData.NO_ITEM)
             self.assertFalse(row.is_location)
-            self.assertLess(row.tech.age.tier,
-                            Age2AgeData.CASTLE.tier)
+            self.assertLess(row.tech.age, Age2AgeData.CASTLE)
 
     def test_grant_only_rows_skip_other_civs_uniques(self):
         table = TechData.rows([], grant_age=Age2AgeData.IMPERIAL, civs=[Age2CivData.FRANKS])
@@ -93,7 +92,7 @@ class TestRender(unittest.TestCase):
         tech: Tech = tarkan.type
         self.assertIn(
             f"    addTech({tarkan.id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
-            f"1, 1, {tech.age.tier}, 1);", rendered)
+            f"1, 1, {tech.age.value}, 1);", rendered)
 
     def test_a_grant_only_row_has_no_item_and_is_not_a_location(self):
         table = TechData.rows([], grant_age=Age2AgeData.FEUDAL, civs=[Age2CivData.FRANKS])

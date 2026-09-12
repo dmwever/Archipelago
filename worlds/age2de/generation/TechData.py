@@ -49,7 +49,6 @@ def rows(location_ids: Iterable[int], grant_age: Age2AgeData = None,
     """The seed's pool as locations, plus the grant-only rows a rebased scenario needs."""
     wanted = set(location_ids)
     allowed = {item.id for item in researchable(civs)}
-    depth = None if grant_age is None else grant_age.tier
     out: list[Row] = []
     for item in CATEGORY_TO_ITEMS[Tech]:
         tech = item.type
@@ -61,7 +60,7 @@ def rows(location_ids: Iterable[int], grant_age: Age2AgeData = None,
                     f"{item.item_name} is a location, but no civilization in the seed "
                     "can research it")
             out.append(Row(item.id, tech, True))
-        elif depth is not None and researchable_here and tech.age.tier < depth:
+        elif grant_age is not None and researchable_here and tech.age < grant_age:
             out.append(Row(NO_ITEM, tech, False))
     if wanted:
         raise ValueError(
@@ -83,7 +82,7 @@ def render(table: Iterable[Row] = (), tag: str = None) -> str:
         tech = row.tech
         lines.append(
             f"    addTech({row.item_id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
-            f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {tech.age.tier}, "
+            f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {tech.age.value}, "
             f"{int(row.is_location)});")
     lines.append("}")
     return "\n".join(lines) + "\n"
