@@ -22,12 +22,13 @@ def rebase_to_dark(scenario: AoE2DEScenario) -> bool:
     return True
 
 def apply(body: bytes, steps: Iterable[Step], name: str = "",
-          progress: tuple[int, int] = None) -> bytes:
+          progress: tuple[int, int] = (0, 0), report: Callable[[str], None] = None) -> bytes:
     steps = tuple(steps)
     if not steps:
         return body
-    done, total = progress or (0, 0)
-    logger.info("Parsing %s ........ %d%%", name, round(done * 100 / total) if total else 100)
+    done, total = progress
+    percent = round(done * 100 / total) if total else 100
+    (report or logger.info)(f"Parsing {name} ........ {percent}%")
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder, "in.aoe2scenario")
         source.write_bytes(body)

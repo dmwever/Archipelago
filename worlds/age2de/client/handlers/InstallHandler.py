@@ -1,6 +1,7 @@
+import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 
 from .FolderHandler import FolderHandler
 
@@ -13,6 +14,8 @@ from ...locations.Civilizations import Age2CivData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
+
+logger = logging.getLogger("Client")
 
 CAMPAIGN_SUBPATH = "resources/_common/campaign"
 XS_SUBPATH = "resources/_common/xs"
@@ -42,6 +45,7 @@ class InstallHandler(FolderHandler):
         self._techs: list[Age2TechData] = []
         self._parsed = 0
         self._to_parse = 0
+        self.logger: Callable[[str], None] = logger.info
         super().__init__()
 
     def setup(self, campaigns: list[Age2CampaignData], slot: int, tag: str,
@@ -127,11 +131,7 @@ class InstallHandler(FolderHandler):
         return next((data for data in self._scenarios if data.file_stem == stem), None)
 
     def steps_for(self, data: Age2ScenarioData) -> list[ScenarioParser.Step]:
-        """The edits this seed needs in this scenario, in one pass over it.
-
-        A scenario that earns no step is never opened, which is most of the
-        cost of an install.
-        """
+        """The edits this seed needs in this scenario, in one pass over it."""
         steps = []
         if (self.scenario_needs_age_up() and data is not None
                 and data.vanilla_age > Age2AgeData.DARK):
@@ -145,7 +145,7 @@ class InstallHandler(FolderHandler):
             steps = self.steps_for(data)
             name = data.scenario_name if data else Path(scenario.file_name).stem
             scenario.body = ScenarioParser.apply(
-                scenario.body, steps, name, (self._parsed, self._to_parse))
+                scenario.body, steps, name, (self._parsed, self._to_parse), self.logger)
             if steps:
                 self._parsed += 1
         target = self.install_path(included)

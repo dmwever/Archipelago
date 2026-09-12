@@ -46,6 +46,9 @@ class Age2CommandProcessor(ClientCommandProcessor):
         """
         ctx = self.ctx
         status = ctx.game_ctx.client_status
+        if ctx.installing:
+            self.output("An install is already running.")
+            return
         if not status.tag or status.slot_id < 0:
             self.output("Connect to your multiworld first, so the install knows your seed and slot.")
             return
@@ -62,18 +65,34 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output("This slot has no campaigns to install.")
             return
 
+        ctx.installing = True
+        self.output("Installing. Rebuilding a scenario takes a few seconds each.")
+        Utils.async_start(self._install(campaigns), name="Age2Install")
+
+    async def _install(self, campaigns: list[Age2CampaignData]) -> None:
+        """Install off the event loop, so the client keeps drawing while it runs."""
+        ctx = self.ctx
+        status = ctx.game_ctx.client_status
+        handler = ctx.game_ctx.install_handler
+        loop = asyncio.get_running_loop()
+        # Progress is raised on the worker thread; hand it back before it reaches
+        # the UI, which is not safe to touch from anywhere else.
+        handler.report = lambda text: loop.call_soon_threadsafe(logger.info, text)
         try:
-            ctx.game_ctx.install_handler.setup(
-                campaigns, status.slot_id, status.tag, status.slot_data,
-                ctx.server_locations)
-            written = ctx.game_ctx.install_handler.install()
+            handler.setup(campaigns, status.slot_id, status.tag, status.slot_data,
+                          ctx.server_locations)
+            written = await loop.run_in_executor(None, handler.install)
         except InstallError as ex:
             self.output(str(ex))
-            return
-
-        for path in written:
-            self.output(f"Wrote {path}")
-        self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
+        except Exception:
+            logger.exception("The install did not finish.")
+        else:
+            for path in written:
+                self.output(f"Wrote {path}")
+            self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
+        finally:
+            handler.report = logger.info
+            ctx.installing = False
 
 
 class Age2Context(CommonContext):
@@ -84,6 +103,7 @@ class Age2Context(CommonContext):
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
     installed_seed_name: str = ''
+    installing: bool = False
     seed_world_version = WorldVersion.UNKNOWN
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
