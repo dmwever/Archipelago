@@ -23,22 +23,18 @@ if TYPE_CHECKING:
 
 Target = Location | Rule.Resolved
 
-
 def choose_start_scenario(world: 'Age2World') -> Age2ScenarioData:
     starting_campaigns = sorted(world.options.starting_campaigns.value)
     scenarios = CAMPAIGN_TO_SCENARIOS[NAME_TO_CAMPAIGN[world.random.choice(starting_campaigns)]]
     return scenarios[0]
-
 
 def resolve(world: 'Age2World', rule: Rule) -> Rule.Resolved:
     resolved = rule.resolve(world)
     world.register_rule_dependencies(resolved)
     return resolved
 
-
 def satisfied(target: Target, state: CollectionState) -> bool:
     return target.can_reach(state) if isinstance(target, Location) else target(state)
-
 
 def state_with(world: 'Age2World', base_state: CollectionState, item_names: list[str]) -> CollectionState:
     player = world.player
@@ -60,7 +56,6 @@ def state_with(world: 'Age2World', base_state: CollectionState, item_names: list
         state.collect(world.create_item(name), True)
     state.sweep_for_advancements(locations=world.multiworld.get_locations(player))
     return state
-
 
 def solve(
     world: 'Age2World',
@@ -91,21 +86,17 @@ def solve(
             chosen = trial
     return chosen
 
-
 def own_itempool_names(world: 'Age2World') -> list[str]:
     return [item.name for item in world.multiworld.itempool if item.player == world.player]
-
 
 def base_candidate_names(world: 'Age2World') -> list[str]:
     return [name for name in own_itempool_names(world)
             if not isinstance(NAME_TO_ITEM[name].type, (ProgressiveScenario, Campaign))]
 
-
 def win_items(world: 'Age2World', scenario: Age2ScenarioData) -> list[str] | None:
     """Items that make `scenario` beatable from turn one."""
     victory = world.get_location(VICTORY_SCENARIO_LOCATIONS[scenario.scenario_name].global_name())
     return solve(world, victory, world.multiworld.state, own_itempool_names(world))
-
 
 def conjuncts(rule: Rule) -> list[Rule]:
     """Flatten a conjunction into the parts that must each hold on their own."""
@@ -113,11 +104,9 @@ def conjuncts(rule: Rule) -> list[Rule]:
         return [part for child in rule.children for part in conjuncts(child)]
     return [rule]
 
-
 def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule | None:
     has_base = scenario.logic(world.rules.logic).has_base
     return None if resolve(world, has_base).always_false else has_base
-
 
 def base_items(
     world: 'Age2World',
@@ -125,10 +114,7 @@ def base_items(
     granted: list[str] | None = None,
 ) -> list[str]:
     """Items that let the player build a town centre, plus anything extra `scenario` asks for."""
-    target = world.rules.logic.can_build_base()
-    scenario_rule = scenario_base_rule(world, scenario)
-    if scenario_rule is not None:
-        target = target & scenario_rule
+    target = world.rules.logic.can_build_base() & scenario_base_rule(world, scenario)
 
     base_state = state_with(world, world.multiworld.state, granted) if granted else world.multiworld.state
     candidates = base_candidate_names(world)
@@ -154,7 +140,6 @@ def base_items(
     trimmed = solve(world, resolve(world, combined), base_state, sorted(needed.elements()))
     return sorted(trimmed if trimmed is not None else needed.elements())
 
-
 def take_from_itempool(world: 'Age2World', names: list[str]) -> list[Item]:
     wanted = Counter(names)
     taken: list[Item] = []
@@ -168,13 +153,11 @@ def take_from_itempool(world: 'Age2World', names: list[str]) -> list[Item]:
                         world.player_name, dict(+wanted))
     return taken
 
-
 def place_locally(world: 'Age2World', items: list[Item], base_state: CollectionState,
                   locations: list[Location], name: str) -> None:
     if items:
         fill_restrictive(world.multiworld, base_state, locations, items,
                          single_player_placement=True, lock=True, allow_partial=False, name=name)
-
 
 def local_start_sets(world: 'Age2World') -> tuple[list[str], list[str]]:
     """(win set, base set) for the chosen option value. Either may be empty."""
@@ -191,7 +174,6 @@ def local_start_sets(world: 'Age2World') -> tuple[list[str], list[str]]:
     base_set = base_items(world, scenario, win_set) \
         if option in (LocalStart.option_base, LocalStart.option_both) else []
     return win_set, base_set
-
 
 def apply(world: 'Age2World') -> None:
     """Entry point from Age2World.pre_fill."""
