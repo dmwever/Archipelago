@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, override
 from NetUtils import JSONMessagePart
 from BaseClasses import CollectionState
 
-from ..locations.Ages import Age2AgeData, Age2ItemData
+from ..items.Items import Age2ItemData
+from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from rule_builder.rules import False_, HasAll, HasAny, HasFromListUnique, NestedRule, Rule, True_
 

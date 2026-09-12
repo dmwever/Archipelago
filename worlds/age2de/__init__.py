@@ -154,7 +154,7 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             elif isinstance(item.type, Items.TCResources):
                 items.append(self.create_item(item.item_name))
-            elif isinstance(item.type, Items.Age):
+            elif isinstance(item.type, Items.Age2AgeData):
                 continue
             elif isinstance(item.type, Items.Building):
                 continue
