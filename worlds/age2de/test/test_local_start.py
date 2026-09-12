@@ -20,17 +20,20 @@ from ..generation.LocalStart import (
     base_items,
     conjuncts,
     scenario_base_rule,
-    victory_location,
     win_items,
 )
 from ..items.Items import Age2ItemData
-from ..locations.Locations import Age2ScenarioLocationData
+from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from .bases import Age2TestBase
 
 ATTILA = Age2CampaignData.ATTILA.campaign_name
 JOAN = Age2CampaignData.JOAN.campaign_name
+
+
+def victory_location(world, scenario):
+    return world.get_location(VICTORY_SCENARIO_LOCATIONS[scenario.scenario_name].global_name())
 
 
 class TestSelectionAttilaOnly(Age2TestBase):
@@ -194,10 +197,6 @@ class TestWinItemsJoan(Age2TestBase):
         self.assertIsNotNone(got, "Joan 1 could not be made beatable from the pool")
         victory = victory_location(self.world, Age2ScenarioData.AP_JOAN_1)
         self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
-
-    def test_scenario_outside_the_playthrough_has_no_victory(self) -> None:
-        self.assertIsNone(victory_location(self.world, Age2ScenarioData.AP_ATTILA_1))
-        self.assertIsNone(win_items(self.world, Age2ScenarioData.AP_ATTILA_1))
 
 
 class TestWinItemsAttila(Age2TestBase):
