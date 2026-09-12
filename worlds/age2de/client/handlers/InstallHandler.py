@@ -9,6 +9,8 @@ from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
 from ...locations.Ages import Age2AgeData
 from ...locations.Campaigns import Age2CampaignData
+from ...locations.Civilizations import Age2CivData
+from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 
@@ -35,8 +37,8 @@ class InstallHandler(FolderHandler):
     def __init__(self):
         self._included_campaigns: list[IncludedCampaign] = []
         self._slot_data: dict = {}
-        self._scenarios: list = []
-        self._civs: list = []
+        self._scenarios: list[Age2ScenarioData] = []
+        self._civs: list[Age2CivData] = []
         self._techs: list[Age2TechData] = []
         self._parsed = 0
         self._to_parse = 0
@@ -120,11 +122,11 @@ class InstallHandler(FolderHandler):
         written.append(self._write_tech_data())
         return written
 
-    def scenario_data(self, file_name: str):
+    def scenario_data(self, file_name: str) -> Age2ScenarioData:
         stem = Path(file_name).stem
         return next((data for data in self._scenarios if data.file_stem == stem), None)
 
-    def steps_for(self, data) -> list[ScenarioParser.Step]:
+    def steps_for(self, data: Age2ScenarioData) -> list[ScenarioParser.Step]:
         """The edits this seed needs in this scenario, in one pass over it.
 
         A scenario that earns no step is never opened, which is most of the
