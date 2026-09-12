@@ -8,6 +8,8 @@ import random
 import unittest
 from types import SimpleNamespace
 
+from Options import OptionError
+from test.general import setup_solo_multiworld
 from rule_builder.rules import False_, Has, HasAll, True_
 
 from ..generation.LocalStart import (
@@ -24,9 +26,10 @@ from ..generation.LocalStart import (
 )
 from ..items.Items import Age2ItemData
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData
-from ..locations.Campaigns import Age2CampaignData
+from ..locations.Campaigns import NAME_TO_CAMPAIGN, Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from .bases import Age2TestBase
+from .. import Age2World
 
 ATTILA = Age2CampaignData.ATTILA.campaign_name
 JOAN = Age2CampaignData.JOAN.campaign_name
@@ -69,31 +72,22 @@ class TestSelectionBothCampaigns(Age2TestBase):
         )
 
 
-class TestSelectionStartNotEnabled(Age2TestBase):
-    """A starting campaign is supposed to imply an included campaign.
+class TestSelectionOptionErrors(unittest.TestCase):
+    def assert_rejects(self, enabled: set[str], starting: set[str]) -> None:
+        world = setup_solo_multiworld(Age2World, ()).worlds[1]
+        world.options.enabled_campaigns.value = enabled
+        world.options.starting_campaigns.value = starting
+        with self.assertRaises(OptionError):
+            world.generate_early()
 
-    That it currently does not is a separate bug. Selection follows
-    starting_campaigns regardless, rather than silently doing nothing.
-    """
-    options = {
-        "enabled_campaigns": {ATTILA},
-        "starting_campaigns": {JOAN},
-    }
-    run_default_tests = False
+    def test_starting_must_include_an_enabled_campaign(self) -> None:
+        self.assert_rejects({ATTILA}, {JOAN})
 
-    def test_follows_starting_campaigns(self) -> None:
-        self.assertEqual(Age2ScenarioData.AP_JOAN_1, choose_start_scenario(self.world))
+    def test_enabled_needs_at_least_one(self) -> None:
+        self.assert_rejects(set(), {ATTILA})
 
-
-class TestSelectionNoStartingCampaign(Age2TestBase):
-    options = {
-        "enabled_campaigns": {ATTILA},
-        "starting_campaigns": set(),
-    }
-    run_default_tests = False
-
-    def test_no_starting_campaign_means_nothing_to_do(self) -> None:
-        self.assertIsNone(choose_start_scenario(self.world))
+    def test_starting_needs_at_least_one(self) -> None:
+        self.assert_rejects({ATTILA}, set())
 
 
 class _StubWorld:
@@ -101,7 +95,7 @@ class _StubWorld:
 
     def __init__(self, names: set[str], seed: int) -> None:
         self.random = random.Random(seed)
-        self.options = SimpleNamespace(starting_campaigns=SimpleNamespace(value=names))
+        self.starting_campaigns = {NAME_TO_CAMPAIGN[name] for name in names}
 
 
 class TestSelectionDeterminism(unittest.TestCase):
@@ -220,7 +214,8 @@ class TestBaseItemsJoan(Age2TestBase):
 
     def test_joan_1_has_no_base_of_its_own(self) -> None:
         # has_base = False_(), so it must contribute nothing rather than poison the target.
-        self.assertIsNone(scenario_base_rule(self.world, Age2ScenarioData.AP_JOAN_1))
+        rule = scenario_base_rule(self.world, Age2ScenarioData.AP_JOAN_1)
+        self.assertTrue(resolve(self.world, rule).always_true)
 
     def test_town_centre_items_survive_the_missing_villagers(self) -> None:
         got = base_items(self.world, Age2ScenarioData.AP_JOAN_1)

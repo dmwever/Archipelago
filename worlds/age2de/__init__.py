@@ -55,6 +55,7 @@ class Age2World(CachedRuleBuilderWorld):
     # kept the MultiWorld alive, which WorldTestBase reports as a leak.
     included_civs: list[Scenarios.Age2CivData]
     included_campaigns: set[Campaigns.Age2CampaignData]
+    starting_campaigns: set[Campaigns.Age2CampaignData]
     shuffled_buildings: list[Buildings.Age2BuildingData]
     rules: Rules
 
@@ -62,6 +63,7 @@ class Age2World(CachedRuleBuilderWorld):
         super().__init__(multiworld, player)
         self.included_civs = []
         self.included_campaigns = set()
+        self.starting_campaigns = set()
         self.shuffled_buildings = []
 
     def branching_option(self, location):
@@ -71,12 +73,20 @@ class Age2World(CachedRuleBuilderWorld):
             return False
         return True
 
+    def generate_early(self) -> None:
+        self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData
+                                   if campaign.campaign_name in self.options.enabled_campaigns}
+        self.starting_campaigns = {campaign for campaign in self.included_campaigns
+                                   if campaign.campaign_name in self.options.starting_campaigns}
+        if not self.options.enabled_campaigns.value:
+            raise OptionError(f"{self.player_name}: enabled_campaigns needs at least one campaign.")
+        if not self.options.starting_campaigns.value:
+            raise OptionError(f"{self.player_name}: starting_campaigns needs at least one campaign.")
+        if not self.starting_campaigns:
+            raise OptionError(f"{self.player_name}: starting_campaigns must include at least one "
+                              f"enabled campaign. Enabled: {sorted(self.options.enabled_campaigns.value)}.")
+
     def create_regions(self) -> None:
-        if len(self.options.enabled_campaigns.value) == 0:
-            self.included_campaigns = self.options.enabled_campaigns.default
-        else:
-            campaign_names = self.options.enabled_campaigns
-            self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
         
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         

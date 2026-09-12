@@ -10,11 +10,10 @@ from collections import Counter
 
 from BaseClasses import CollectionState, Item, Location
 from Fill import fill_restrictive, sweep_from_pool
-from rule_builder.rules import And, Rule
+from rule_builder.rules import And, Rule, True_
 
 from ..Options import LocalStart
 from ..items.Items import NAME_TO_ITEM, Campaign, ProgressiveScenario
-from ..locations.Campaigns import NAME_TO_CAMPAIGN
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
 
@@ -24,9 +23,8 @@ if TYPE_CHECKING:
 Target = Location | Rule.Resolved
 
 def choose_start_scenario(world: 'Age2World') -> Age2ScenarioData:
-    starting_campaigns = sorted(world.options.starting_campaigns.value)
-    scenarios = CAMPAIGN_TO_SCENARIOS[NAME_TO_CAMPAIGN[world.random.choice(starting_campaigns)]]
-    return scenarios[0]
+    campaign = world.random.choice(sorted(world.starting_campaigns, key=lambda c: c.campaign_name))
+    return CAMPAIGN_TO_SCENARIOS[campaign][0]
 
 def resolve(world: 'Age2World', rule: Rule) -> Rule.Resolved:
     resolved = rule.resolve(world)
@@ -104,9 +102,9 @@ def conjuncts(rule: Rule) -> list[Rule]:
         return [part for child in rule.children for part in conjuncts(child)]
     return [rule]
 
-def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule | None:
+def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
     has_base = scenario.logic(world.rules.logic).has_base
-    return None if resolve(world, has_base).always_false else has_base
+    return True_() if resolve(world, has_base).always_false else has_base
 
 def base_items(
     world: 'Age2World',
