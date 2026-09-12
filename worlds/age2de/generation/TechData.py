@@ -4,6 +4,7 @@ from typing import Iterable
 from . import SlotData
 from ..items.Items import CATEGORY_TO_ITEMS, Age, Age2ItemData, Tech
 from ..locations.Civilizations import Age2CivData
+from ..locations.Techs import Age2TechData, TechOption
 
 TECH_CAPACITY = 400
 TECH_ITEM_OFFSET = 3600
@@ -25,17 +26,16 @@ class Row:
 def researchable(civs: Iterable[Age2CivData] = ()) -> list[Age2ItemData]:
     """The tech items some civilization in the seed can research.
 
-    Read the way buildings are: a restricted tech counts if any civ includes it,
-    a shared one is gone only if every civ excludes it.
+    Read the way buildings are: a unique or regional tech counts if any civ
+    includes it, a shared one is gone only if every civ excludes it.
     """
     civs = tuple(civs)
     owned = {tech.id for civ in civs for tech in civ.included_techs}
     missing = (set.intersection(*({tech.id for tech in civ.excluded_techs} for civ in civs))
                if civs else set())
-    restricted = {tech.id for civ in Age2CivData for tech in civ.included_techs}
     out = []
     for item in CATEGORY_TO_ITEMS[Tech]:
-        if item.type.is_unique or item.id in restricted:
+        if item.type.is_unique or TechOption.regional in Age2TechData(item.id).tech_options:
             if item.id in owned:
                 out.append(item)
         elif item.id not in missing:

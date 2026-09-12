@@ -2,11 +2,6 @@
 from ..Civilizations import Age2CivData
 from ..Techs import Age2TechData
 
-
-# Technologies only some civilizations reach: unique technologies, and the
-# regional lines a group of civilizations shares, such as Eagle Warrior. Both
-# go here, so a technology is gated on a civilization owning it rather than on
-# every other civilization excluding it.
 Age2CivData.HUNS.included_techs = [
     Age2TechData.ELITE_TARKAN_HUNS,
     Age2TechData.ATHEISM_HUNS,
@@ -18,9 +13,6 @@ Age2CivData.FRANKS.included_techs = [
     Age2TechData.CHIVALRY_FRANKS,
 ]
 
-# Shared technologies this civilization's tech tree leaves out: greyed in the
-# tech tree, or a regional line it never shows at all. Other civilizations'
-# unique technologies need no entry, since a unique is gated on its owner.
 Age2CivData.HUNS.excluded_techs = [
     Age2TechData.CROP_ROTATION,
     Age2TechData.ARCHITECTURE,
@@ -32,7 +24,6 @@ Age2CivData.HUNS.excluded_techs = [
     Age2TechData.FORTIFIED_WALL,
     Age2TechData.RING_ARCHER_ARMOR,
     Age2TechData.HARUSPICY,
-    Age2TechData.HEAVY_CAMEL_RIDER,
     Age2TechData.ARBALESTER,
     Age2TechData.HEAVY_SCORPION,
     Age2TechData.ONAGER,
@@ -45,28 +36,12 @@ Age2CivData.HUNS.excluded_techs = [
     Age2TechData.SIEGE_ENGINEERS,
     Age2TechData.HOARDINGS,
     Age2TechData.LIGHTHOUSE,
-    Age2TechData.EAGLE_WARRIOR,
-    Age2TechData.ELITE_EAGLE_WARRIOR,
     Age2TechData.MYSTERY_CULTS,
     Age2TechData.HERBAL_MEDICINE,
-    Age2TechData.ELITE_ELEPHANT_ARCHER,
-    Age2TechData.ELITE_GENITOUR,
     Age2TechData.ARROWSLITS,
-    Age2TechData.ELITE_BATTLE_ELEPHANT,
-    Age2TechData.IMPERIAL_SKIRMISHER,
-    Age2TechData.ELITE_STEPPE_LANCER,
-    Age2TechData.WINGED_HUSSAR,
-    Age2TechData.SIEGE_ELEPHANT,
     Age2TechData.GAMBESONS,
     Age2TechData.SIPHONS,
     Age2TechData.INCENDIARIES,
-    Age2TechData.HEAVY_ROCKET_CART,
-    Age2TechData.ELITE_FIRE_LANCER,
-    Age2TechData.HEAVY_HEI_GUANG_CAVALRY,
-    Age2TechData.CHAMPI_SCOUT,
-    Age2TechData.CHAMPI_WARRIOR,
-    Age2TechData.ELITE_CHAMPI_WARRIOR,
-    Age2TechData.CHAMPI_RUNNER,
 ]
 Age2CivData.FRANKS.excluded_techs = [
     Age2TechData.GUILDS,
@@ -76,7 +51,6 @@ Age2CivData.FRANKS.excluded_techs = [
     Age2TechData.BRACER,
     Age2TechData.RING_ARCHER_ARMOR,
     Age2TechData.TWO_MAN_SAW,
-    Age2TechData.HEAVY_CAMEL_RIDER,
     Age2TechData.ARBALESTER,
     Age2TechData.SIEGE_RAM,
     Age2TechData.STONE_SHAFT_MINING,
@@ -86,25 +60,9 @@ Age2CivData.FRANKS.excluded_techs = [
     Age2TechData.SHIPWRIGHT,
     Age2TechData.ELITE_CANNON_GALLEON,
     Age2TechData.LIGHTHOUSE,
-    Age2TechData.EAGLE_WARRIOR,
     Age2TechData.HUSSAR,
-    Age2TechData.ELITE_EAGLE_WARRIOR,
     Age2TechData.BLOODLINES,
     Age2TechData.PARTHIAN_TACTICS,
     Age2TechData.THUMB_RING,
-    Age2TechData.ELITE_ELEPHANT_ARCHER,
-    Age2TechData.ELITE_GENITOUR,
-    Age2TechData.ELITE_BATTLE_ELEPHANT,
-    Age2TechData.IMPERIAL_SKIRMISHER,
-    Age2TechData.ELITE_STEPPE_LANCER,
-    Age2TechData.WINGED_HUSSAR,
-    Age2TechData.SIEGE_ELEPHANT,
     Age2TechData.INCENDIARIES,
-    Age2TechData.HEAVY_ROCKET_CART,
-    Age2TechData.ELITE_FIRE_LANCER,
-    Age2TechData.HEAVY_HEI_GUANG_CAVALRY,
-    Age2TechData.CHAMPI_SCOUT,
-    Age2TechData.CHAMPI_WARRIOR,
-    Age2TechData.ELITE_CHAMPI_WARRIOR,
-    Age2TechData.CHAMPI_RUNNER,
 ]
