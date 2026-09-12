@@ -10,10 +10,9 @@ HUNS = Age2CivData.HUNS.game_id
 FRANKS = Age2CivData.FRANKS.game_id
 
 SEED_CIVS = tuple(Age2CivData)
-RESEARCHABLE = [item for item in CATEGORY_TO_ITEMS[Tech]
-                if item.type.civ in (TechData.ANY_CIV, HUNS, FRANKS)]
+RESEARCHABLE = TechData.researchable(SEED_CIVS)
 UPGRADES = [item.id for item in RESEARCHABLE if item.type.is_upgrade]
-GENERIC = [item.id for item in CATEGORY_TO_ITEMS[Tech] if item.type.civ == TechData.ANY_CIV]
+GENERIC = [item.id for item in RESEARCHABLE if not item.type.is_upgrade]
 
 
 def row_for(table, item_id):
@@ -65,8 +64,8 @@ class TestRowSelection(unittest.TestCase):
         table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civs=SEED_CIVS)
         locations = [row for row in table if row.is_location]
         grant_only = [row for row in table if not row.is_location]
-        self.assertEqual(len(locations), 43)
-        self.assertEqual(len(grant_only), 52)
+        self.assertEqual(len(locations), 23)
+        self.assertEqual(len(grant_only), 48)
 
     def test_a_location_no_civilization_can_research_is_refused(self):
         plumed = Age2ItemData.TECH_ELITE_PLUMED_ARCHER_MAYANS
@@ -167,28 +166,32 @@ class TestCivTechLists(unittest.TestCase):
     def test_a_group_tech_is_gated_like_a_unique(self):
         eagle = Age2TechData.EAGLE_WARRIOR
         self.assertFalse(eagle.item.type.is_unique)
-        # Ungated while no civ claims it, because nothing excludes it either.
-        TechData.rows([eagle.id], civs=SEED_CIVS)
+        # Neither shipped civ reaches it, so no seed of theirs can hold it.
+        with self.assertRaises(ValueError):
+            TechData.rows([eagle.id], civs=SEED_CIVS)
 
         franks = Age2CivData.FRANKS
-        original = franks.included_techs
-        franks.included_techs = original + [eagle]
-        self.addCleanup(setattr, franks, "included_techs", original)
+        was_in, was_out = franks.included_techs, franks.excluded_techs
+        franks.included_techs = was_in + [eagle]
+        franks.excluded_techs = [t for t in was_out if t is not eagle]
+        self.addCleanup(setattr, franks, "excluded_techs", was_out)
+        self.addCleanup(setattr, franks, "included_techs", was_in)
 
         # Claimed by Franks, so a Frankish seed keeps it...
         TechData.rows([eagle.id], civs=[franks])
-        # ...and a Hunnic one no longer reaches it.
+        # ...and a Hunnic one still cannot reach it.
         with self.assertRaises(ValueError):
             TechData.rows([eagle.id], civs=[Age2CivData.HUNS])
 
     def test_an_excluded_shared_tech_is_refused(self):
-        loom = Age2TechData.LOOM
-        huns = Age2CivData.HUNS
-        original = huns.excluded_techs
-        huns.excluded_techs = original + [loom]
-        self.addCleanup(setattr, huns, "excluded_techs", original)
-
-        # Franks still have it, so a two-civ seed is fine.
-        TechData.rows([loom.id], civs=SEED_CIVS)
+        # Franks lack Bloodlines; Huns have it, so a two-civ seed still keeps it.
+        bloodlines = Age2TechData.BLOODLINES
+        self.assertIn(bloodlines, Age2CivData.FRANKS.excluded_techs)
+        TechData.rows([bloodlines.id], civs=SEED_CIVS)
         with self.assertRaises(ValueError):
-            TechData.rows([loom.id], civs=[huns])
+            TechData.rows([bloodlines.id], civs=[Age2CivData.FRANKS])
+
+    def test_every_excluded_tech_is_a_real_catalogue_entry(self):
+        for civ in Age2CivData:
+            for tech in civ.excluded_techs:
+                self.assertIsInstance(tech, Age2TechData, civ.campaign_name)

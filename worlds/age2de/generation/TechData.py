@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from . import SlotData
-from ..items.Items import CATEGORY_TO_ITEMS, Age, Tech
+from ..items.Items import CATEGORY_TO_ITEMS, Age, Age2ItemData, Tech
 from ..locations.Civilizations import Age2CivData
 
 TECH_CAPACITY = 400
@@ -22,31 +22,45 @@ class Row:
     is_location: bool
 
 
-def rows(location_ids: Iterable[int], grant_age: Age = None,
-         civs: Iterable[Age2CivData] = ()) -> list[Row]:
-    """The seed's pool as locations, plus the grant-only rows a rebased scenario needs."""
+def researchable(civs: Iterable[Age2CivData] = ()) -> list[Age2ItemData]:
+    """The tech items some civilization in the seed can research.
+
+    Read the way buildings are: a restricted tech counts if any civ includes it,
+    a shared one is gone only if every civ excludes it.
+    """
     civs = tuple(civs)
-    wanted = set(location_ids)
     owned = {tech.id for civ in civs for tech in civ.included_techs}
     missing = (set.intersection(*({tech.id for tech in civ.excluded_techs} for civ in civs))
                if civs else set())
     restricted = {tech.id for civ in Age2CivData for tech in civ.included_techs}
+    out = []
+    for item in CATEGORY_TO_ITEMS[Tech]:
+        if item.type.is_unique or item.id in restricted:
+            if item.id in owned:
+                out.append(item)
+        elif item.id not in missing:
+            out.append(item)
+    return out
+
+
+def rows(location_ids: Iterable[int], grant_age: Age = None,
+         civs: Iterable[Age2CivData] = ()) -> list[Row]:
+    """The seed's pool as locations, plus the grant-only rows a rebased scenario needs."""
+    wanted = set(location_ids)
+    allowed = {item.id for item in researchable(civs)}
     depth = None if grant_age is None else grant_age.value
     out: list[Row] = []
     for item in CATEGORY_TO_ITEMS[Tech]:
         tech = item.type
-        if tech.is_unique or item.id in restricted:
-            researchable = item.id in owned
-        else:
-            researchable = item.id not in missing
+        researchable_here = item.id in allowed
         if item.id in wanted:
             wanted.discard(item.id)
-            if not researchable:
+            if not researchable_here:
                 raise ValueError(
                     f"{item.item_name} is a location, but no civilization in the seed "
                     "can research it")
             out.append(Row(item.id, tech, True))
-        elif depth is not None and researchable and tech.age.value < depth:
+        elif depth is not None and researchable_here and tech.age.value < depth:
             out.append(Row(NO_ITEM, tech, False))
     if wanted:
         raise ValueError(
