@@ -196,7 +196,7 @@ class TestSlotDataFile(unittest.TestCase):
             "extern const int AP_TS_EXISTING = 0;\n")
 
     def test_techsanity_options_are_carried(self):
-        values = SlotData.fields(3, Identity.seed_tag(SEED, 3), {
+        values = SlotData.slot_fields(3, Identity.seed_tag(SEED, 3), {
             "techsanity": 3, "tech_behavior": 1, "lock_techs": 1,
             "shuffle_unique_techs": 2, "existing_techs": 1})
         self.assertEqual(values[SlotData.TS_MODE], 3)
@@ -206,14 +206,14 @@ class TestSlotDataFile(unittest.TestCase):
         self.assertEqual(values[SlotData.TS_EXISTING], 1)
 
     def test_techsanity_none_ignores_the_dependent_options(self):
-        values = SlotData.fields(3, Identity.seed_tag(SEED, 3), {
+        values = SlotData.slot_fields(3, Identity.seed_tag(SEED, 3), {
             "techsanity": 0, "tech_behavior": 1, "lock_techs": 1,
             "shuffle_unique_techs": 2, "existing_techs": 1})
         for name in SlotData.OPTIONS:
             self.assertEqual(values[name], 0, name)
 
     def test_absent_slot_data_falls_back_to_the_defaults(self):
-        values = SlotData.fields(3, Identity.seed_tag(SEED, 3))
+        values = SlotData.slot_fields(3, Identity.seed_tag(SEED, 3))
         for name in SlotData.OPTIONS:
             self.assertEqual(values[name], SlotData.DEFAULTS[name], name)
 
@@ -225,7 +225,7 @@ class TestSlotDataFile(unittest.TestCase):
     def test_halves_fit_the_xs_literal_ceiling(self):
         for slot in (1, 2, 250):
             for seed in (SEED, "1", "99999999999999999999"):
-                values = SlotData.fields(slot, Identity.seed_tag(seed, slot))
+                values = SlotData.slot_fields(slot, Identity.seed_tag(seed, slot))
                 for name, value in values.items():
                     self.assertLessEqual(abs(value), SlotData.MAX_LITERAL, name)
 
@@ -234,7 +234,7 @@ class TestSlotDataFile(unittest.TestCase):
             SlotData.render({"AP_X": SlotData.MAX_LITERAL + 1})
 
     def test_slot_and_seed_are_rendered(self):
-        rendered = SlotData.render(SlotData.fields(3, Identity.seed_tag(SEED, 3)))
+        rendered = SlotData.render(SlotData.slot_fields(3, Identity.seed_tag(SEED, 3)))
         self.assertIn("extern const int AP_SLOT_ID = 3;", rendered)
         self.assertNotIn("-1", rendered)
 

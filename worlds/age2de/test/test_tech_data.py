@@ -124,7 +124,7 @@ class TestSeedGuard(unittest.TestCase):
         rendered = TechData.render((), tag)
         self.assertIn(f"extern const int {TechData.SEED_HIGH} = {high};", rendered)
         self.assertIn(f"extern const int {TechData.SEED_LOW} = {low};", rendered)
-        slot_data = SlotData.render(SlotData.fields(3, tag))
+        slot_data = SlotData.render(SlotData.slot_fields(3, tag))
         self.assertIn(f"extern const int {SlotData.SEED_HIGH} = {high};", slot_data)
         self.assertIn(f"extern const int {SlotData.SEED_LOW} = {low};", slot_data)
 

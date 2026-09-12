@@ -10,21 +10,18 @@ TS_UNIQUES = "AP_TS_UNIQUES"
 TS_EXISTING = "AP_TS_EXISTING"
 
 UNSET = -1
-OFF = 0
 
 DEFAULTS: dict[str, int] = {
     SLOT_ID: UNSET,
     SEED_HIGH: UNSET,
     SEED_LOW: UNSET,
-    TS_MODE: OFF,
-    TS_BEHAVIOR: OFF,
-    TS_LOCK: OFF,
-    TS_UNIQUES: OFF,
-    TS_EXISTING: OFF,
+    TS_MODE: UNSET,
+    TS_BEHAVIOR: UNSET,
+    TS_LOCK: UNSET,
+    TS_UNIQUES: UNSET,
+    TS_EXISTING: UNSET,
 }
 
-# Slot data key per XS name. The values are the option ordinals, which have to
-# match Tech_Constants.xs; TECHSANITY_NONE is the only one this module needs.
 OPTIONS: dict[str, str] = {
     TS_MODE: "techsanity",
     TS_BEHAVIOR: "tech_behavior",
@@ -46,13 +43,10 @@ def seed_halves(tag: str) -> tuple[int, int]:
 
 def techsanity(slot_data: Mapping[str, object] = None) -> dict[str, int]:
     slot_data = {} if slot_data is None else slot_data
-    values = {name: int(slot_data.get(key, DEFAULTS[name])) for name, key in OPTIONS.items()}
-    if values[TS_MODE] == TECHSANITY_NONE:
-        return {name: OFF for name in OPTIONS}
-    return values
+    return {name: int(slot_data.get(key, DEFAULTS[name])) for name, key in OPTIONS.items()}
 
 
-def fields(slot: int, tag: str, slot_data: Mapping[str, object] = None) -> dict[str, int]:
+def slot_fields(slot: int, tag: str, slot_data: Mapping[str, object] = None) -> dict[str, int]:
     high, low = seed_halves(tag)
     values = {SLOT_ID: slot, SEED_HIGH: high, SEED_LOW: low}
     values.update(techsanity(slot_data))

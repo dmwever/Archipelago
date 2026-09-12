@@ -77,12 +77,12 @@ class InstallHandler(FolderHandler):
     def techsanity(self) -> dict[str, int]:
         return SlotData.techsanity(self._slot_data)
 
-    def rebases(self) -> bool:
+    def scenario_needs_age_up(self) -> bool:
         return self.techsanity()[SlotData.TS_EXISTING] != 0
 
     def grant_age(self) -> Age2AgeData:
         """The deepest age an installed scenario starts in, or None if none was rebased."""
-        if not self.rebases():
+        if not self.scenario_needs_age_up():
             return None
         ages = [scenario.vanilla_age for scenario in self._scenarios]
         return max(ages) if ages else None
@@ -129,7 +129,7 @@ class InstallHandler(FolderHandler):
         cost of an install.
         """
         steps = []
-        if (self.rebases() and data is not None
+        if (self.scenario_needs_age_up() and data is not None
                 and data.vanilla_age > Age2AgeData.DARK):
             steps.append(ScenarioParser.rebase_to_dark)
         return steps
@@ -151,7 +151,7 @@ class InstallHandler(FolderHandler):
     def _write_slot_data(self) -> Path:
         target = self.slot_data_path()
         target.write_text(
-            SlotData.render(SlotData.fields(self._player_slot, self._tag, self._slot_data)),
+            SlotData.render(SlotData.slot_fields(self._player_slot, self._tag, self._slot_data)),
             encoding="utf-8")
         return target
 

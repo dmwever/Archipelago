@@ -25,11 +25,7 @@ class Row:
 
 
 def researchable(civs: Iterable[Age2CivData] = ()) -> list[Age2ItemData]:
-    """The tech items some civilization in the seed can research.
-
-    Read the way buildings are: a unique or regional tech counts if any civ
-    includes it, a shared one is gone only if every civ excludes it.
-    """
+    """The tech items some civilization in the seed can research."""
     civs = tuple(civs)
     owned = {tech.id for civ in civs for tech in civ.included_techs}
     missing = (set.intersection(*({tech.id for tech in civ.excluded_techs} for civ in civs))
@@ -57,7 +53,7 @@ def rows(location_ids: Iterable[int], grant_age: Age2AgeData = None,
             wanted.discard(item.id)
             if not researchable_here:
                 raise ValueError(
-                    f"{item.item_name} is a location, but no civilization in the seed "
+                    f"{item.item_name} is an included location, but no civilization in the seed "
                     "can research it")
             out.append(Row(item.id, tech, True))
         elif grant_age is not None and researchable_here and tech.age < grant_age:

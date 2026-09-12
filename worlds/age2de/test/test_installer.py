@@ -72,7 +72,7 @@ class TestInstall(InstallerTestBase):
         self.assertIn(self.tech_data(), written)
         self.assertEqual(
             self.slot_data().read_text(encoding="utf-8").replace("\r\n", "\n"),
-            SlotData.render(SlotData.fields(3, self.tag)))
+            SlotData.render(SlotData.slot_fields(3, self.tag)))
 
     def test_only_the_enabled_campaigns_are_installed(self):
         self.install([Age2CampaignData.JOAN])
@@ -213,7 +213,7 @@ class TestTechInstall(InstallerTestBase):
 
     def test_vanilla_leaves_the_scenarios_alone(self):
         self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag, self.techsanity())
-        self.assertFalse(self.handler.rebases())
+        self.assertFalse(self.handler.scenario_needs_age_up())
         self.assertIsNone(self.handler.grant_age())
 
     def test_locking_techs_rebases_and_grants_to_the_deepest_age(self):
@@ -221,7 +221,7 @@ class TestTechInstall(InstallerTestBase):
             with self.subTest(existing_techs=mode):
                 self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag,
                                    self.techsanity(existing_techs=mode))
-                self.assertTrue(self.handler.rebases())
+                self.assertTrue(self.handler.scenario_needs_age_up())
                 # Attila 6 starts in the Imperial Age, the deepest of the six.
                 self.assertIs(self.handler.grant_age(), Age2AgeData.IMPERIAL)
 
@@ -233,4 +233,4 @@ class TestTechInstall(InstallerTestBase):
     def test_techsanity_off_never_rebases(self):
         self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag,
                            self.techsanity(techsanity=0, existing_techs=1))
-        self.assertFalse(self.handler.rebases())
+        self.assertFalse(self.handler.scenario_needs_age_up())
