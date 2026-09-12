@@ -12,7 +12,7 @@ from worlds.LauncherComponents import Component, Type, components, launch as lau
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
-from .generation import WorldVersion
+from .generation import SlotData, WorldVersion
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
@@ -279,6 +279,8 @@ class Age2World(CachedRuleBuilderWorld):
         }
         for campaign in self.included_campaigns:
             mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns
+        for option_name in SlotData.OPTIONS.values():
+            mapping[option_name] = int(getattr(self.options, option_name).value)
         return mapping
 
 
