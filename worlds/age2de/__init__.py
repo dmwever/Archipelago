@@ -16,7 +16,7 @@ from .generation import WorldVersion
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
-from .locations.connections import CivilizationBuildings
+from .locations.connections import CivilizationBuildings, CivilizationTechs
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)

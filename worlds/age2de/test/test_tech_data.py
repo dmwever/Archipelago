@@ -3,12 +3,13 @@ import unittest
 from ..generation import Identity, SlotData, TechData
 from ..items.Items import CATEGORY_TO_ITEMS, Age, Age2ItemData, Tech
 from ..locations.Civilizations import Age2CivData
+from ..locations.Techs import Age2TechData
 
 # Genie civilization ids, the space Tech.civ is in.
 HUNS = Age2CivData.HUNS.game_id
 FRANKS = Age2CivData.FRANKS.game_id
 
-SEED_CIVS = {HUNS, FRANKS}
+SEED_CIVS = tuple(Age2CivData)
 RESEARCHABLE = [item for item in CATEGORY_TO_ITEMS[Tech]
                 if item.type.civ in (TechData.ANY_CIV, HUNS, FRANKS)]
 UPGRADES = [item.id for item in RESEARCHABLE if item.type.is_upgrade]
@@ -36,12 +37,12 @@ class TestTechCatalogue(unittest.TestCase):
 
 class TestRowSelection(unittest.TestCase):
     def test_locations_only_when_nothing_was_rebased(self):
-        table = TechData.rows([3600, 3649], civ_ids=SEED_CIVS)
+        table = TechData.rows([3600, 3649], civs=SEED_CIVS)
         self.assertEqual([row.item_id for row in table], [3600, 3649])
         self.assertTrue(all(row.is_location for row in table))
 
     def test_grant_only_rows_sit_below_the_grant_age(self):
-        table = TechData.rows([], grant_age=Age.CASTLE, civ_ids=SEED_CIVS)
+        table = TechData.rows([], grant_age=Age.CASTLE, civs=SEED_CIVS)
         self.assertTrue(table)
         for row in table:
             self.assertEqual(row.item_id, TechData.NO_ITEM)
@@ -50,18 +51,18 @@ class TestRowSelection(unittest.TestCase):
                             Age.CASTLE.value)
 
     def test_grant_only_rows_skip_other_civs_uniques(self):
-        table = TechData.rows([], grant_age=Age.IMPERIAL, civ_ids={FRANKS})
+        table = TechData.rows([], grant_age=Age.IMPERIAL, civs=[Age2CivData.FRANKS])
         for row in table:
             self.assertIn(row.tech.civ, (TechData.ANY_CIV, FRANKS))
 
     def test_a_location_is_never_also_a_grant_only_row(self):
-        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civ_ids=SEED_CIVS)
+        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civs=SEED_CIVS)
         ids = [row.item_id for row in table if row.is_location]
         self.assertEqual(sorted(ids), sorted(UPGRADES))
         self.assertEqual(len(ids), len(set(ids)))
 
     def test_units_and_lock_technologies_matches_the_measured_shape(self):
-        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civ_ids=SEED_CIVS)
+        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civs=SEED_CIVS)
         locations = [row for row in table if row.is_location]
         grant_only = [row for row in table if not row.is_location]
         self.assertEqual(len(locations), 43)
@@ -70,14 +71,14 @@ class TestRowSelection(unittest.TestCase):
     def test_a_location_no_civilization_can_research_is_refused(self):
         plumed = Age2ItemData.TECH_ELITE_PLUMED_ARCHER_MAYANS
         with self.assertRaises(ValueError):
-            TechData.rows([plumed.id], civ_ids=SEED_CIVS)
+            TechData.rows([plumed.id], civs=SEED_CIVS)
 
     def test_an_unknown_item_id_is_refused(self):
         with self.assertRaises(ValueError):
-            TechData.rows([3600, 999999], civ_ids=SEED_CIVS)
+            TechData.rows([3600, 999999], civs=SEED_CIVS)
 
     def test_rows_are_ordered_by_item_id(self):
-        table = TechData.rows(GENERIC, civ_ids=SEED_CIVS)
+        table = TechData.rows(GENERIC, civs=SEED_CIVS)
         self.assertEqual([row.item_id for row in table],
                          sorted(row.item_id for row in table))
 
@@ -88,14 +89,14 @@ class TestRender(unittest.TestCase):
 
     def test_a_location_row_carries_every_addtech_argument(self):
         tarkan = Age2ItemData.TECH_ELITE_TARKAN_HUNS
-        rendered = TechData.render(TechData.rows([tarkan.id], civ_ids=SEED_CIVS))
+        rendered = TechData.render(TechData.rows([tarkan.id], civs=SEED_CIVS))
         tech: Tech = tarkan.type
         self.assertIn(
             f"    addTech({tarkan.id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
             f"1, 1, {tech.age.value}, 1);", rendered)
 
     def test_a_grant_only_row_has_no_item_and_is_not_a_location(self):
-        table = TechData.rows([], grant_age=Age.FEUDAL, civ_ids={FRANKS})
+        table = TechData.rows([], grant_age=Age.FEUDAL, civs=[Age2CivData.FRANKS])
         rendered = TechData.render(table).splitlines()
         body = [line for line in rendered if line.startswith("    addTech(")]
         self.assertTrue(body)
@@ -104,7 +105,7 @@ class TestRender(unittest.TestCase):
             self.assertTrue(line.endswith(", 0);"), line)
 
     def test_booleans_render_as_xs_ints(self):
-        rendered = TechData.render(TechData.rows(GENERIC, civ_ids=SEED_CIVS))
+        rendered = TechData.render(TechData.rows(GENERIC, civs=SEED_CIVS))
         self.assertNotIn("True", rendered)
         self.assertNotIn("False", rendered)
 
@@ -134,7 +135,7 @@ class TestSeedGuard(unittest.TestCase):
         self.assertNotEqual(one, two)
 
     def test_the_guard_precedes_the_table(self):
-        rendered = TechData.render(TechData.rows([3600], civ_ids=SEED_CIVS), Identity.seed_tag(SEED, 3))
+        rendered = TechData.render(TechData.rows([3600], civs=SEED_CIVS), Identity.seed_tag(SEED, 3))
         self.assertLess(rendered.index(TechData.SEED_HIGH), rendered.index("LoadTechTable"))
 
 
@@ -150,3 +151,44 @@ class TestCivIds(unittest.TestCase):
         # Age2CivData numbers the civs this world ships; Tech.civ is in genie's
         # space, where 1 is Britons. Passing one for the other is silent.
         self.assertNotEqual(Age2CivData.FRANKS.value, Age2CivData.FRANKS.game_id)
+
+
+class TestCivTechLists(unittest.TestCase):
+    def test_included_techs_matches_the_unique_techs_the_data_assigns(self):
+        for civ in Age2CivData:
+            owned = {tech for tech in Age2TechData if tech.item.type.civ == civ.game_id}
+            self.assertTrue(owned <= set(civ.included_techs), civ.campaign_name)
+
+    def test_included_and_excluded_never_overlap(self):
+        for civ in Age2CivData:
+            self.assertFalse(set(civ.included_techs) & set(civ.excluded_techs),
+                             civ.campaign_name)
+
+    def test_a_group_tech_is_gated_like_a_unique(self):
+        eagle = Age2TechData.EAGLE_WARRIOR
+        self.assertFalse(eagle.item.type.is_unique)
+        # Ungated while no civ claims it, because nothing excludes it either.
+        TechData.rows([eagle.id], civs=SEED_CIVS)
+
+        franks = Age2CivData.FRANKS
+        original = franks.included_techs
+        franks.included_techs = original + [eagle]
+        self.addCleanup(setattr, franks, "included_techs", original)
+
+        # Claimed by Franks, so a Frankish seed keeps it...
+        TechData.rows([eagle.id], civs=[franks])
+        # ...and a Hunnic one no longer reaches it.
+        with self.assertRaises(ValueError):
+            TechData.rows([eagle.id], civs=[Age2CivData.HUNS])
+
+    def test_an_excluded_shared_tech_is_refused(self):
+        loom = Age2TechData.LOOM
+        huns = Age2CivData.HUNS
+        original = huns.excluded_techs
+        huns.excluded_techs = original + [loom]
+        self.addCleanup(setattr, huns, "excluded_techs", original)
+
+        # Franks still have it, so a two-civ seed is fine.
+        TechData.rows([loom.id], civs=SEED_CIVS)
+        with self.assertRaises(ValueError):
+            TechData.rows([loom.id], civs=[huns])

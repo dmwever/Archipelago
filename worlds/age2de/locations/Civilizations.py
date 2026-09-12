@@ -15,6 +15,8 @@ class Age2CivData(enum.IntEnum):
         self.game_id = game_id
         self.excluded_buildings = []
         self.included_buildings = []
+        self.excluded_techs = []
+        self.included_techs = []
     
     HUNS = 0, "Huns", 17
     FRANKS = 1, "Franks", 2

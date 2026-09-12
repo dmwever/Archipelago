@@ -3,6 +3,7 @@ from typing import Iterable
 
 from . import SlotData
 from ..items.Items import CATEGORY_TO_ITEMS, Age, Tech
+from ..locations.Civilizations import Age2CivData
 
 TECH_CAPACITY = 400
 TECH_ITEM_OFFSET = 3600
@@ -22,15 +23,22 @@ class Row:
 
 
 def rows(location_ids: Iterable[int], grant_age: Age = None,
-         civ_ids: Iterable[int] = ()) -> list[Row]:
+         civs: Iterable[Age2CivData] = ()) -> list[Row]:
     """The seed's pool as locations, plus the grant-only rows a rebased scenario needs."""
+    civs = tuple(civs)
     wanted = set(location_ids)
-    playable = set(civ_ids)
+    owned = {tech.id for civ in civs for tech in civ.included_techs}
+    missing = (set.intersection(*({tech.id for tech in civ.excluded_techs} for civ in civs))
+               if civs else set())
+    restricted = {tech.id for civ in Age2CivData for tech in civ.included_techs}
     depth = None if grant_age is None else grant_age.value
     out: list[Row] = []
     for item in CATEGORY_TO_ITEMS[Tech]:
         tech = item.type
-        researchable = tech.civ == ANY_CIV or tech.civ in playable
+        if tech.is_unique or item.id in restricted:
+            researchable = item.id in owned
+        else:
+            researchable = item.id not in missing
         if item.id in wanted:
             wanted.discard(item.id)
             if not researchable:
