@@ -158,6 +158,8 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             elif isinstance(item.type, Items.Building):
                 continue
+            elif isinstance(item.type, Items.Tech):
+                continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
 
