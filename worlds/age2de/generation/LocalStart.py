@@ -21,8 +21,6 @@ from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
 if TYPE_CHECKING:
     from .. import Age2World
 
-# What the solver can aim at: a location the player must be able to reach, or a
-# resolved rule fragment that must evaluate true.
 Target = Location | Rule.Resolved
 
 def choose_start_scenario(world: 'Age2World') -> Age2ScenarioData | None:
@@ -49,9 +47,40 @@ def satisfied(target: Target, state: CollectionState) -> bool:
     return target(state)
 
 
+def probe_state(world: 'Age2World', base_state: CollectionState) -> CollectionState:
+    player = world.player
+    state = CollectionState.__new__(CollectionState)
+    state.multiworld = base_state.multiworld
+    state.prog_items = {player: base_state.prog_items[player].copy()}
+    state.reachable_regions = {player: base_state.reachable_regions[player].copy()}
+    state.blocked_connections = {player: base_state.blocked_connections[player].copy()}
+    state.advancements = base_state.advancements.copy()
+    state.path = base_state.path.copy()
+    state.locations_checked = base_state.locations_checked.copy()
+    state.stale = {player: True}
+    state.allow_partial_entrances = base_state.allow_partial_entrances
+    for function in CollectionState.additional_init_functions:
+        function(state, base_state.multiworld)
+    for function in CollectionState.additional_copy_functions:
+        state = function(base_state, state)
+    return state
+
+
 def state_with(world: 'Age2World', base_state: CollectionState, item_names: list[str]) -> CollectionState:
     """base_state plus the named items, swept so events and follow-on access come with it."""
-    return sweep_from_pool(base_state, [world.create_item(name) for name in item_names])
+    state = probe_state(world, base_state)
+    for name in item_names:
+        state.collect(world.create_item(name), True)
+    state.sweep_for_advancements(locations=world.multiworld.get_locations(world.player))
+    return state
+
+
+def relevant_candidates(target: Target, candidates: list[str]) -> list[str]:
+    rule = target if isinstance(target, Rule.Resolved) else getattr(target, "access_rule", None)
+    if not isinstance(rule, Rule.Resolved):
+        return candidates
+    depends_on = rule.item_dependencies().keys()
+    return [name for name in candidates if name in depends_on]
 
 
 def solve(
@@ -63,11 +92,16 @@ def solve(
     """A small set of item names that satisfies `target` on top of `base_state`."""
     if satisfied(target, base_state):
         return []
-    if not satisfied(target, state_with(world, base_state, candidates)):
-        return None
 
     chosen = list(candidates)
     world.random.shuffle(chosen)
+
+    narrowed = relevant_candidates(target, chosen)
+    if len(narrowed) < len(chosen) and satisfied(target, state_with(world, base_state, narrowed)):
+        chosen = narrowed
+    elif not satisfied(target, state_with(world, base_state, chosen)):
+        return None
+
     for name in list(chosen):
         trial = list(chosen)
         trial.remove(name)  # one copy, so counts shrink one at a time
@@ -82,14 +116,7 @@ def own_itempool_names(world: 'Age2World') -> list[str]:
 
 
 def victory_location(world: 'Age2World', scenario: Age2ScenarioData) -> Location | None:
-    """The scenario's victory location, or None when it is not in this playthrough."""
-    location_data = VICTORY_SCENARIO_LOCATIONS.get(scenario.scenario_name)
-    if location_data is None:
-        return None
-    try:
-        return world.get_location(location_data.global_name())
-    except KeyError:
-        return None
+    return world.get_location(VICTORY_SCENARIO_LOCATIONS[scenario.scenario_name])
 
 
 def win_items(world: 'Age2World', scenario: Age2ScenarioData) -> list[str] | None:
@@ -133,13 +160,7 @@ def base_items(
     scenario: Age2ScenarioData,
     granted: list[str] | None = None,
 ) -> list[str]:
-    """Items that let the player build a town centre, plus anything extra `scenario` asks for.
-
-    `granted` is what another pass is already placing. Solving on top of it stops the two
-    passes buying the same requirement twice — on Attila the win set already includes
-    Bleda's Camp, which supplies villagers, so without this the base solve goes and picks
-    Attila's Camp for the same conjunct.
-    """
+    """Items that let the player build a town centre, plus anything extra `scenario` asks for."""
     logic = world.rules.logic
     target = logic.can_build_base()
 
@@ -179,12 +200,6 @@ def base_items(
 
 
 def take_from_itempool(world: 'Age2World', names: list[str]) -> list[Item]:
-    """Pull the named items out of the itempool so they can be placed by hand.
-
-    create_items sizes the pool exactly to the location count, so these are moved out
-    of the pool rather than created fresh — adding copies would leave the pool one item
-    longer than there are locations.
-    """
     wanted = Counter(names)
     taken: list[Item] = []
     for item in list(world.multiworld.itempool):
@@ -207,12 +222,7 @@ def place_locally(
     locations: list[Location],
     name: str,
 ) -> None:
-    """Lock `items` into `locations`, reachable from `base_state`.
-
-    single_player_placement keeps the search in this slot, lock stops the main fill
-    swapping the placements back out, and allow_partial is off so an impossible request
-    fails the generation instead of quietly honouring half the option.
-    """
+    """Lock `items` into `locations`, reachable from `base_state`."""
     if not items:
         return
     fill_restrictive(
@@ -222,13 +232,7 @@ def place_locally(
 
 
 def late_locations(world: 'Age2World') -> list[Location]:
-    """This player's unfilled locations that are not reachable from turn one.
-
-    The Base pass has to stay out of sphere one. Those locations are the only foothold
-    the main fill has, and there are very few of them — a Joan-only start has two. The
-    Win pass may take them because the items it places open more locations as they go;
-    Base items open nothing, so locking them there strands the rest of the pool.
-    """
+    """This player's unfilled locations that are not reachable from turn one."""
     return [
         location for location in world.multiworld.get_unfilled_locations(world.player)
         if not location.can_reach(world.multiworld.state)
@@ -236,13 +240,7 @@ def late_locations(world: 'Age2World') -> list[Location]:
 
 
 def remaining_pool_state(world: 'Age2World') -> CollectionState:
-    """Everything else this multiworld still has to give.
-
-    Used as the base state for the Base pass: the items being placed have already been
-    taken out of the pool, so they cannot end up locked behind themselves, but every
-    other item counts as obtainable. That is what makes Base "somewhere in your own
-    world" rather than "reachable on turn one".
-    """
+    """Everything else this multiworld still has to give."""
     return sweep_from_pool(world.multiworld.state, world.multiworld.itempool)
 
 
