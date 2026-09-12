@@ -188,7 +188,34 @@ class TestSlotDataFile(unittest.TestCase):
             SlotData.render(),
             "extern const int AP_SLOT_ID = -1;\n"
             "extern const int AP_SEED_HIGH = -1;\n"
-            "extern const int AP_SEED_LOW = -1;\n")
+            "extern const int AP_SEED_LOW = -1;\n"
+            "extern const int AP_TS_MODE = 0;\n"
+            "extern const int AP_TS_BEHAVIOR = 0;\n"
+            "extern const int AP_TS_LOCK = 0;\n"
+            "extern const int AP_TS_UNIQUES = 0;\n"
+            "extern const int AP_TS_EXISTING = 0;\n")
+
+    def test_techsanity_options_are_carried(self):
+        values = SlotData.fields(3, Identity.seed_tag(SEED, 3), {
+            "techsanity": 3, "tech_behavior": 1, "lock_techs": 1,
+            "shuffle_unique_techs": 2, "existing_techs": 1})
+        self.assertEqual(values[SlotData.TS_MODE], 3)
+        self.assertEqual(values[SlotData.TS_BEHAVIOR], 1)
+        self.assertEqual(values[SlotData.TS_LOCK], 1)
+        self.assertEqual(values[SlotData.TS_UNIQUES], 2)
+        self.assertEqual(values[SlotData.TS_EXISTING], 1)
+
+    def test_techsanity_none_ignores_the_dependent_options(self):
+        values = SlotData.fields(3, Identity.seed_tag(SEED, 3), {
+            "techsanity": 0, "tech_behavior": 1, "lock_techs": 1,
+            "shuffle_unique_techs": 2, "existing_techs": 1})
+        for name in SlotData.OPTIONS:
+            self.assertEqual(values[name], 0, name)
+
+    def test_absent_slot_data_falls_back_to_the_defaults(self):
+        values = SlotData.fields(3, Identity.seed_tag(SEED, 3))
+        for name in SlotData.OPTIONS:
+            self.assertEqual(values[name], SlotData.DEFAULTS[name], name)
 
     def test_seed_halves_reconstruct_the_tag(self):
         tag = Identity.seed_tag(SEED, 3)
