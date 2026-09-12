@@ -126,6 +126,7 @@ class ClientStatus:
     finished_game: bool = False
     slot_id: int = -1
     tag: str = ''
+    slot_data: dict = None
 
 class Age2GameContext:
     running: bool = False
@@ -155,6 +156,7 @@ class Age2GameContext:
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str):
         self.client_status.slot_id = slot
         self.client_status.tag = tag
+        self.client_status.slot_data = slot_data
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
         self.campaign_handler.setup_victory_requirements(slot_data)

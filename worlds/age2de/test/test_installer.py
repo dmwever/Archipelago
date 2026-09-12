@@ -6,7 +6,9 @@ from .test_campaign_bundle import SEED, build_fixture
 from ..campaign.CampaignReader import Campaign
 from ..client.handlers.CampaignHandler import CampaignHandler
 from ..client.handlers.InstallHandler import InstallError, InstallHandler
-from ..generation import Identity, SlotData
+from ..generation import Identity, SlotData, TechData
+from ..locations.Ages import Age2AgeData
+from ..locations.Techs import Age2TechData
 from ..locations.Campaigns import Age2CampaignData
 
 SCENARIO_SUBPATH = "resources/_common/scenario"
@@ -40,8 +42,9 @@ class InstallerTestBase(unittest.TestCase):
         self.handler.set_user_folder(str(self.root))
         self.tag = Identity.seed_tag(SEED, 3)
 
-    def install(self, campaigns, slot=3, tag=None):
-        self.handler.setup(campaigns, slot, self.tag if tag is None else tag)
+    def install(self, campaigns, slot=3, tag=None, slot_data=None, location_ids=()):
+        self.handler.setup(campaigns, slot, self.tag if tag is None else tag,
+                           slot_data, location_ids)
         return self.handler.install()
 
     def campaign_dir(self) -> Path:
@@ -49,6 +52,9 @@ class InstallerTestBase(unittest.TestCase):
 
     def slot_data(self) -> Path:
         return self.handler.slot_data_path()
+
+    def tech_data(self) -> Path:
+        return self.handler.tech_data_path()
 
     def bundles_present(self):
         return sorted(p.name for p in self.campaign_dir().iterdir())
@@ -62,7 +68,8 @@ class TestInstall(InstallerTestBase):
         self.assertEqual(written[0], self.campaign_dir()
                          / f"AP Attila the Hun_{self.tag}.aoe2campaign")
         self.assertTrue(written[0].is_file())
-        self.assertEqual(written[-1], self.slot_data())
+        self.assertIn(self.slot_data(), written)
+        self.assertIn(self.tech_data(), written)
         self.assertEqual(
             self.slot_data().read_text(encoding="utf-8").replace("\r\n", "\n"),
             SlotData.render(SlotData.fields(3, self.tag)))
@@ -171,3 +178,59 @@ class TestIncludedCampaigns(unittest.TestCase):
         handler.setup_victory_requirements({
             "Joan of Arc_unlocked": True, "Attila the Hun_unlocked": False})
         self.assertEqual(set(handler.included_campaigns()), set(Age2CampaignData))
+
+
+class TestTechInstall(InstallerTestBase):
+    def techsanity(self, **over):
+        values = {"techsanity": 3, "tech_behavior": 0, "lock_techs": 0,
+                  "shuffle_unique_techs": 1, "existing_techs": 0}
+        values.update(over)
+        return values
+
+    def read_tech_data(self) -> str:
+        return self.tech_data().read_text(encoding="utf-8").replace("\r\n", "\n")
+
+    def test_techsanity_off_writes_the_empty_table(self):
+        self.install([Age2CampaignData.ATTILA])
+        self.assertEqual(self.read_tech_data(), TechData.render())
+
+    def test_the_seed_guard_is_only_stamped_when_techs_are_installed(self):
+        self.install([Age2CampaignData.ATTILA])
+        self.assertIn(f"{TechData.SEED_HIGH} = {SlotData.UNSET};", self.read_tech_data())
+
+        self.install([Age2CampaignData.ATTILA], slot_data=self.techsanity(),
+                     location_ids=[Age2TechData.MARAUDERS_HUNS.id])
+        high, _ = SlotData.seed_halves(self.tag)
+        self.assertIn(f"{TechData.SEED_HIGH} = {high};", self.read_tech_data())
+
+    def test_only_the_seeds_tech_locations_are_written(self):
+        self.install([Age2CampaignData.ATTILA], slot_data=self.techsanity(),
+                     location_ids=[Age2TechData.MARAUDERS_HUNS.id, 42, 3000])
+        rows = [line for line in self.read_tech_data().splitlines()
+                if line.startswith("    addTech(")]
+        self.assertEqual(len(rows), 1)
+        self.assertIn(f"addTech({Age2TechData.MARAUDERS_HUNS.id}, ", rows[0])
+
+    def test_vanilla_leaves_the_scenarios_alone(self):
+        self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag, self.techsanity())
+        self.assertFalse(self.handler.rebases())
+        self.assertIsNone(self.handler.grant_age())
+
+    def test_locking_techs_rebases_and_grants_to_the_deepest_age(self):
+        for mode in (1, 2):
+            with self.subTest(existing_techs=mode):
+                self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag,
+                                   self.techsanity(existing_techs=mode))
+                self.assertTrue(self.handler.rebases())
+                # Attila 6 starts in the Imperial Age, the deepest of the six.
+                self.assertIs(self.handler.grant_age(), Age2AgeData.IMPERIAL)
+
+    def test_joan_alone_is_graded_on_its_own_scenarios(self):
+        self.handler.setup([Age2CampaignData.JOAN], 3, self.tag,
+                           self.techsanity(existing_techs=1))
+        self.assertIs(self.handler.grant_age(), Age2AgeData.IMPERIAL)
+
+    def test_techsanity_off_never_rebases(self):
+        self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag,
+                           self.techsanity(techsanity=0, existing_techs=1))
+        self.assertFalse(self.handler.rebases())

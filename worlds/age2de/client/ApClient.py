@@ -41,8 +41,8 @@ class Age2CommandProcessor(ClientCommandProcessor):
         """
         Install: Sets your Age2 install up for this seed and slot.
 
-        Writes a seed-tagged copy of each campaign you enabled, plus SlotData.xs.
-        Run it once per seed, after connecting.
+        Writes a seed-tagged copy of each campaign you enabled, plus SlotData.xs
+        and TechData.xs. Run it once per seed, after connecting.
         """
         ctx = self.ctx
         status = ctx.game_ctx.client_status
@@ -63,7 +63,9 @@ class Age2CommandProcessor(ClientCommandProcessor):
             return
 
         try:
-            ctx.game_ctx.install_handler.setup(campaigns, status.slot_id, status.tag)
+            ctx.game_ctx.install_handler.setup(
+                campaigns, status.slot_id, status.tag, status.slot_data,
+                ctx.server_locations)
             written = ctx.game_ctx.install_handler.install()
         except InstallError as ex:
             self.output(str(ex))
