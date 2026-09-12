@@ -2,10 +2,11 @@ import unittest
 
 from ..generation import Identity, SlotData, TechData
 from ..items.Items import CATEGORY_TO_ITEMS, Age, Age2ItemData, Tech
+from ..locations.Civilizations import Age2CivData
 
 # Genie civilization ids, the space Tech.civ is in.
-HUNS = 17
-FRANKS = 2
+HUNS = Age2CivData.HUNS.game_id
+FRANKS = Age2CivData.FRANKS.game_id
 
 SEED_CIVS = {HUNS, FRANKS}
 RESEARCHABLE = [item for item in CATEGORY_TO_ITEMS[Tech]
@@ -135,3 +136,17 @@ class TestSeedGuard(unittest.TestCase):
     def test_the_guard_precedes_the_table(self):
         rendered = TechData.render(TechData.rows([3600], civ_ids=SEED_CIVS), Identity.seed_tag(SEED, 3))
         self.assertLess(rendered.index(TechData.SEED_HIGH), rendered.index("LoadTechTable"))
+
+
+class TestCivIds(unittest.TestCase):
+    def test_game_ids_match_the_unique_techs_that_name_the_civ(self):
+        for civ in Age2CivData:
+            named = {item.type.civ for item in CATEGORY_TO_ITEMS[Tech]
+                     if item.type.is_unique
+                     and item.item_name.endswith(f"({civ.campaign_name})")}
+            self.assertEqual(named, {civ.game_id}, civ.campaign_name)
+
+    def test_the_world_id_is_not_the_game_id(self):
+        # Age2CivData numbers the civs this world ships; Tech.civ is in genie's
+        # space, where 1 is Britons. Passing one for the other is silent.
+        self.assertNotEqual(Age2CivData.FRANKS.value, Age2CivData.FRANKS.game_id)

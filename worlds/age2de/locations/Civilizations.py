@@ -9,11 +9,12 @@ class Age2CivData(enum.IntEnum):
         obj._value_ = id
         return obj
 
-    def __init__(self, id: int, name: str) -> None:
+    def __init__(self, id: int, name: str, game_id: int) -> None:
         self.id = id
         self.campaign_name = name
+        self.game_id = game_id
         self.excluded_buildings = []
         self.included_buildings = []
     
-    HUNS = 0, "Huns"
-    FRANKS = 1, "Franks"
+    HUNS = 0, "Huns", 17
+    FRANKS = 1, "Franks", 2
