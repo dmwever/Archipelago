@@ -2,16 +2,13 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from . import SlotData
-from ..items.Items import CATEGORY_TO_ITEMS, Age2ItemData, Tech
 from ..locations.Ages import Age2AgeData
 from ..locations.Civilizations import Age2CivData
 from ..locations.Techs import Age2TechData, TechOption
 
 TECH_CAPACITY = 400
-TECH_ITEM_OFFSET = 3600
 
 NO_ITEM = -1
-ANY_CIV = -1
 
 SEED_HIGH = "TS_SEED_HIGH"
 SEED_LOW = "TS_SEED_LOW"
@@ -19,48 +16,54 @@ SEED_LOW = "TS_SEED_LOW"
 
 @dataclass(frozen=True)
 class Row:
-    item_id: int
-    tech: Tech
+    tech: Age2TechData
     is_location: bool
 
+    @property
+    def item_id(self) -> int:
+        """The id XS unlocks against, which is an item id, not this location's."""
+        return self.tech.item.id if self.is_location else NO_ITEM
 
-def researchable(civs: Iterable[Age2CivData] = ()) -> list[Age2ItemData]:
-    """The tech items some civilization in the seed can research."""
+
+def researchable(civs: Iterable[Age2CivData] = ()) -> list[Age2TechData]:
+    """The technologies some civilization in the seed can research.
+
+    Read the way buildings are: a unique or regional tech counts if any civ
+    includes it, a shared one is gone only if every civ excludes it.
+    """
     civs = tuple(civs)
-    owned = {tech.id for civ in civs for tech in civ.included_techs}
-    missing = (set.intersection(*({tech.id for tech in civ.excluded_techs} for civ in civs))
+    owned = {tech for civ in civs for tech in civ.included_techs}
+    missing = (set.intersection(*(set(civ.excluded_techs) for civ in civs))
                if civs else set())
     out = []
-    for item in CATEGORY_TO_ITEMS[Tech]:
-        if item.type.is_unique or TechOption.regional in Age2TechData(item.id).tech_options:
-            if item.id in owned:
-                out.append(item)
-        elif item.id not in missing:
-            out.append(item)
+    for tech in Age2TechData:
+        if tech.item.type.is_unique or TechOption.regional in tech.tech_options:
+            if tech in owned:
+                out.append(tech)
+        elif tech not in missing:
+            out.append(tech)
     return out
 
 
-def rows(location_ids: Iterable[int], grant_age: Age2AgeData = None,
+def rows(locations: Iterable[Age2TechData], grant_age: Age2AgeData = None,
          civs: Iterable[Age2CivData] = ()) -> list[Row]:
     """The seed's pool as locations, plus the grant-only rows a rebased scenario needs."""
-    wanted = set(location_ids)
-    allowed = {item.id for item in researchable(civs)}
+    wanted = set(locations)
+    allowed = set(researchable(civs))
     out: list[Row] = []
-    for item in CATEGORY_TO_ITEMS[Tech]:
-        tech = item.type
-        researchable_here = item.id in allowed
-        if item.id in wanted:
-            wanted.discard(item.id)
-            if not researchable_here:
+    for tech in Age2TechData:
+        if tech in wanted:
+            wanted.discard(tech)
+            if tech not in allowed:
                 raise ValueError(
-                    f"{item.item_name} is an included location, but no civilization in the seed "
-                    "can research it")
-            out.append(Row(item.id, tech, True))
-        elif grant_age is not None and researchable_here and tech.age < grant_age:
-            out.append(Row(NO_ITEM, tech, False))
+                    f"{tech.location_name} is a location, but no civilization in "
+                    "the seed can research it")
+            out.append(Row(tech, True))
+        elif grant_age is not None and tech in allowed and tech.age < grant_age:
+            out.append(Row(tech, False))
     if wanted:
-        raise ValueError(
-            "No tech carries item id " + ", ".join(str(id) for id in sorted(wanted)))
+        raise ValueError("Not a technology location: "
+                         + ", ".join(sorted(str(tech) for tech in wanted)))
     if len(out) > TECH_CAPACITY:
         raise ValueError(
             f"{len(out)} techs is past the XS capacity of {TECH_CAPACITY}; raise "
@@ -75,10 +78,10 @@ def render(table: Iterable[Row] = (), tag: str = None) -> str:
              "",
              "void LoadTechTable() {"]
     for row in table:
-        tech = row.tech
+        tech = row.tech.item.type
         lines.append(
             f"    addTech({row.item_id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
-            f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {tech.age.value}, "
+            f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {row.tech.age.value}, "
             f"{int(row.is_location)});")
     lines.append("}")
     return "\n".join(lines) + "\n"

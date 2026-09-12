@@ -9,6 +9,7 @@ from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
 from ...locations.Ages import Age2AgeData
 from ...locations.Campaigns import Age2CampaignData
+from ...locations.Techs import Age2TechData
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 
 CAMPAIGN_SUBPATH = "resources/_common/campaign"
@@ -36,7 +37,7 @@ class InstallHandler(FolderHandler):
         self._slot_data: dict = {}
         self._scenarios: list = []
         self._civs: list = []
-        self._tech_locations: list[int] = []
+        self._techs: list[Age2TechData] = []
         self._parsed = 0
         self._to_parse = 0
         super().__init__()
@@ -58,9 +59,8 @@ class InstallHandler(FolderHandler):
         self._scenarios = [scenario for campaign in campaigns
                            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         self._civs = list(dict.fromkeys(scenario.civ for scenario in self._scenarios))
-        self._tech_locations = [id for id in location_ids
-                                if TechData.TECH_ITEM_OFFSET <= id
-                                < TechData.TECH_ITEM_OFFSET + TechData.TECH_CAPACITY]
+        self._techs = [Age2TechData(id) for id in location_ids
+                                if id in Age2TechData]
 
     def campaign_dir(self) -> Path:
         return Path(self._user_folder, CAMPAIGN_SUBPATH)
@@ -160,6 +160,6 @@ class InstallHandler(FolderHandler):
         if self.techsanity()[SlotData.TS_MODE] == SlotData.TECHSANITY_NONE:
             target.write_text(TechData.render(), encoding="utf-8")
             return target
-        table = TechData.rows(self._tech_locations, self.grant_age(), self._civs)
+        table = TechData.rows(self._techs, self.grant_age(), self._civs)
         target.write_text(TechData.render(table, self._tag), encoding="utf-8")
         return target
