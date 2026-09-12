@@ -1,12 +1,17 @@
 import unittest
 
 from ..generation import Identity, SlotData, TechData
-from ..items.Items import Age, Age2ItemData, Tech
+from ..items.Items import CATEGORY_TO_ITEMS, Age, Age2ItemData, Tech
 
+# Genie civilization ids, the space Tech.civ is in.
 HUNS = 17
-FRANKS = 1
+FRANKS = 2
 
-UPGRADES = [item.id for item in TechData.TECH_ITEMS if item.type.is_upgrade]
+SEED_CIVS = {HUNS, FRANKS}
+RESEARCHABLE = [item for item in CATEGORY_TO_ITEMS[Tech]
+                if item.type.civ in (TechData.ANY_CIV, HUNS, FRANKS)]
+UPGRADES = [item.id for item in RESEARCHABLE if item.type.is_upgrade]
+GENERIC = [item.id for item in CATEGORY_TO_ITEMS[Tech] if item.type.civ == TechData.ANY_CIV]
 
 
 def row_for(table, item_id):
@@ -15,56 +20,63 @@ def row_for(table, item_id):
 
 class TestTechCatalogue(unittest.TestCase):
     def test_every_tech_item_is_in_the_band(self):
-        for item in TechData.TECH_ITEMS:
+        for item in CATEGORY_TO_ITEMS[Tech]:
             self.assertGreaterEqual(item.id, TechData.TECH_ITEM_OFFSET, item.item_name)
             offset = item.id - TechData.TECH_ITEM_OFFSET
             self.assertLess(offset, TechData.TECH_CAPACITY, item.item_name)
 
     def test_every_tech_carries_an_age_xs_understands(self):
-        for item in TechData.TECH_ITEMS:
-            self.assertIn(item.type.age, TechData.AGE_ORDER, item.item_name)
+        for item in CATEGORY_TO_ITEMS[Tech]:
+            self.assertIn(item.type.age.value, range(len(Age)), item.item_name)
 
     def test_the_catalogue_fits_the_xs_capacity(self):
-        self.assertLessEqual(len(TechData.TECH_ITEMS), TechData.TECH_CAPACITY)
+        self.assertLessEqual(len(CATEGORY_TO_ITEMS[Tech]), TechData.TECH_CAPACITY)
 
 
 class TestRowSelection(unittest.TestCase):
     def test_locations_only_when_nothing_was_rebased(self):
-        table = TechData.rows([3600, 3601])
-        self.assertEqual([row.item_id for row in table], [3600, 3601])
+        table = TechData.rows([3600, 3649], civ_ids=SEED_CIVS)
+        self.assertEqual([row.item_id for row in table], [3600, 3649])
         self.assertTrue(all(row.is_location for row in table))
 
     def test_grant_only_rows_sit_below_the_grant_age(self):
-        table = TechData.rows([], grant_age=Age.CASTLE, civs={HUNS, FRANKS})
+        table = TechData.rows([], grant_age=Age.CASTLE, civ_ids=SEED_CIVS)
         self.assertTrue(table)
         for row in table:
             self.assertEqual(row.item_id, TechData.NO_ITEM)
             self.assertFalse(row.is_location)
-            self.assertLess(TechData.AGE_ORDER[row.tech.age],
-                            TechData.AGE_ORDER[Age.CASTLE])
+            self.assertLess(row.tech.age.value,
+                            Age.CASTLE.value)
 
     def test_grant_only_rows_skip_other_civs_uniques(self):
-        table = TechData.rows([], grant_age=Age.IMPERIAL, civs={FRANKS})
+        table = TechData.rows([], grant_age=Age.IMPERIAL, civ_ids={FRANKS})
         for row in table:
             self.assertIn(row.tech.civ, (TechData.ANY_CIV, FRANKS))
 
     def test_a_location_is_never_also_a_grant_only_row(self):
-        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civs={HUNS, FRANKS})
+        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civ_ids=SEED_CIVS)
         ids = [row.item_id for row in table if row.is_location]
         self.assertEqual(sorted(ids), sorted(UPGRADES))
         self.assertEqual(len(ids), len(set(ids)))
 
     def test_units_and_lock_technologies_matches_the_measured_shape(self):
-        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civs={HUNS, FRANKS})
+        table = TechData.rows(UPGRADES, grant_age=Age.IMPERIAL, civ_ids=SEED_CIVS)
+        locations = [row for row in table if row.is_location]
         grant_only = [row for row in table if not row.is_location]
+        self.assertEqual(len(locations), 43)
         self.assertEqual(len(grant_only), 52)
+
+    def test_a_location_no_civilization_can_research_is_refused(self):
+        plumed = Age2ItemData.TECH_ELITE_PLUMED_ARCHER_MAYANS
+        with self.assertRaises(ValueError):
+            TechData.rows([plumed.id], civ_ids=SEED_CIVS)
 
     def test_an_unknown_item_id_is_refused(self):
         with self.assertRaises(ValueError):
-            TechData.rows([3600, 999999])
+            TechData.rows([3600, 999999], civ_ids=SEED_CIVS)
 
     def test_rows_are_ordered_by_item_id(self):
-        table = TechData.rows([item.id for item in TechData.TECH_ITEMS])
+        table = TechData.rows(GENERIC, civ_ids=SEED_CIVS)
         self.assertEqual([row.item_id for row in table],
                          sorted(row.item_id for row in table))
 
@@ -75,14 +87,14 @@ class TestRender(unittest.TestCase):
 
     def test_a_location_row_carries_every_addtech_argument(self):
         tarkan = Age2ItemData.TECH_ELITE_TARKAN_HUNS
-        rendered = TechData.render(TechData.rows([tarkan.id]))
+        rendered = TechData.render(TechData.rows([tarkan.id], civ_ids=SEED_CIVS))
         tech: Tech = tarkan.type
         self.assertIn(
             f"    addTech({tarkan.id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
-            f"1, 1, {TechData.AGE_ORDER[tech.age]}, 1);", rendered)
+            f"1, 1, {tech.age.value}, 1);", rendered)
 
     def test_a_grant_only_row_has_no_item_and_is_not_a_location(self):
-        table = TechData.rows([], grant_age=Age.FEUDAL, civs={FRANKS})
+        table = TechData.rows([], grant_age=Age.FEUDAL, civ_ids={FRANKS})
         rendered = TechData.render(table).splitlines()
         body = [line for line in rendered if line.startswith("    addTech(")]
         self.assertTrue(body)
@@ -91,7 +103,7 @@ class TestRender(unittest.TestCase):
             self.assertTrue(line.endswith(", 0);"), line)
 
     def test_booleans_render_as_xs_ints(self):
-        rendered = TechData.render(TechData.rows([item.id for item in TechData.TECH_ITEMS]))
+        rendered = TechData.render(TechData.rows(GENERIC, civ_ids=SEED_CIVS))
         self.assertNotIn("True", rendered)
         self.assertNotIn("False", rendered)
 
@@ -121,5 +133,5 @@ class TestSeedGuard(unittest.TestCase):
         self.assertNotEqual(one, two)
 
     def test_the_guard_precedes_the_table(self):
-        rendered = TechData.render(TechData.rows([3600]), Identity.seed_tag(SEED, 3))
+        rendered = TechData.render(TechData.rows([3600], civ_ids=SEED_CIVS), Identity.seed_tag(SEED, 3))
         self.assertLess(rendered.index(TechData.SEED_HIGH), rendered.index("LoadTechTable"))

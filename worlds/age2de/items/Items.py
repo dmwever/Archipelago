@@ -12,9 +12,9 @@ class Resource(enum.Enum):
     STONE = 4
 
 class Age(enum.Enum):
-    DARK = 0,
-    FEUDAL = 1,
-    CASTLE = 2,
+    DARK = 0
+    FEUDAL = 1
+    CASTLE = 2
     IMPERIAL = 3
 
 @dataclass

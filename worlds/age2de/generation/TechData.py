@@ -2,25 +2,16 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from . import SlotData
-from ..items.Items import Age, Age2ItemData, Tech
+from ..items.Items import CATEGORY_TO_ITEMS, Age, Tech
 
-# Mirrors of Tech_Constants.xs. A row past the capacity is dropped by addTech
-# without a word, and an item id outside the band never reaches techByItem.
 TECH_CAPACITY = 400
 TECH_ITEM_OFFSET = 3600
 
 NO_ITEM = -1
 ANY_CIV = -1
 
-# The file name is fixed, so a stale TechData.xs from another seed would load
-# silently. These are checked against AP_SEED_HIGH / AP_SEED_LOW in SlotData.xs.
-SEED_HIGH = "AP_TECH_SEED_HIGH"
-SEED_LOW = "AP_TECH_SEED_LOW"
-
-AGE_ORDER: dict[Age, int] = {Age.DARK: 0, Age.FEUDAL: 1, Age.CASTLE: 2, Age.IMPERIAL: 3}
-
-TECH_ITEMS: tuple[Age2ItemData, ...] = tuple(sorted(
-    (item for item in Age2ItemData if isinstance(item.type, Tech)), key=lambda item: item.id))
+SEED_HIGH = "TS_SEED_HIGH"
+SEED_LOW = "TS_SEED_LOW"
 
 
 @dataclass(frozen=True)
@@ -31,24 +22,23 @@ class Row:
 
 
 def rows(location_ids: Iterable[int], grant_age: Age = None,
-         civs: Iterable[int] = ()) -> list[Row]:
-    """The seed's pool as locations, plus the grant-only rows a rebased scenario needs.
-
-    location_ids are tech item ids the server knows about. grant_age is the deepest
-    vanilla age among the installed scenarios, or None when nothing was rebased and
-    the engine has already researched everything below it.
-    """
+         civ_ids: Iterable[int] = ()) -> list[Row]:
+    """The seed's pool as locations, plus the grant-only rows a rebased scenario needs."""
     wanted = set(location_ids)
-    playable = set(civs)
+    playable = set(civ_ids)
+    depth = None if grant_age is None else grant_age.value
     out: list[Row] = []
-    for item in TECH_ITEMS:
+    for item in CATEGORY_TO_ITEMS[Tech]:
         tech = item.type
+        researchable = tech.civ == ANY_CIV or tech.civ in playable
         if item.id in wanted:
             wanted.discard(item.id)
+            if not researchable:
+                raise ValueError(
+                    f"{item.item_name} is a location, but no civilization in the seed "
+                    "can research it")
             out.append(Row(item.id, tech, True))
-        elif (grant_age is not None
-              and AGE_ORDER[tech.age] < AGE_ORDER[grant_age]
-              and (tech.civ == ANY_CIV or tech.civ in playable)):
+        elif depth is not None and researchable and tech.age.value < depth:
             out.append(Row(NO_ITEM, tech, False))
     if wanted:
         raise ValueError(
@@ -70,7 +60,7 @@ def render(table: Iterable[Row] = (), tag: str = None) -> str:
         tech = row.tech
         lines.append(
             f"    addTech({row.item_id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
-            f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {AGE_ORDER[tech.age]}, "
+            f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {tech.age.value}, "
             f"{int(row.is_location)});")
     lines.append("}")
     return "\n".join(lines) + "\n"
