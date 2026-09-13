@@ -7,7 +7,7 @@ from .locations.Buildings import BuildingOption
 
 class Goal(Choice):
     """Goal for this playthrough.
-    Win Selected Campaigns: Finish each campaign selected for victory.
+        Win Selected Campaigns: Finish each campaign selected for victory.
     """
     internal_name = "goal"
     display_name = "Goal"
@@ -46,12 +46,12 @@ class LocalStart(Choice):
 class ShuffleBuildings(OptionSet):
     """
     Determines which buildings to shuffle.
-    Economy: Shuffle houses, TC, market, resource buildings, farms. Includes dock.
-    Tech: Shuffle blacksmith, university, monastery.
-    Military: Shuffle military buildings. Includes dock and castle.
-    Defense: Shuffle defensive buildings. Includes castle.
-    Unique: Shuffle unique buildings, if applicable civilizations are in the pool. Other options apply to these buildings, e.g. if economy isn't shuffled, neither is folwark.
-    Wonder: The wonder, the wonder, the... NO!
+        Economy: Shuffle houses, TC, market, resource buildings, farms. Includes dock.
+        Tech: Shuffle blacksmith, university, monastery.
+        Military: Shuffle military buildings. Includes dock and castle.
+        Defense: Shuffle defensive buildings. Includes castle.
+        Unique: Shuffle unique buildings, if applicable civilizations are in the pool. Other options apply to these buildings, e.g. if economy isn't shuffled, neither is folwark.
+        Wonder: The wonder, the wonder, the... NO!
     """
     display_name = "Shuffle Buildings"
     valid_keys = frozenset({
@@ -75,6 +75,8 @@ class ShuffleBuildings(OptionSet):
 class StartingCampaigns(OptionSet):
     """
     Determines which vanilla campaigns will start unlocked for the player.
+        Attila the Hun
+        Joan of Arc
     """
     display_name = "Starting Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
@@ -83,6 +85,8 @@ class StartingCampaigns(OptionSet):
 class EnabledCampaigns(OptionSet):
     """
     Determines which vanilla campaigns will be unlocked for the player.
+        Attila the Hun
+        Joan of Arc
     """
     display_name = "Enabled Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
