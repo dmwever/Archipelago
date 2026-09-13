@@ -29,7 +29,6 @@ class ScenarioRules:
             try:
                 self.locations[location] = self.world.get_location(location.global_name())
             except:
-                print(location.global_name() + " not in current playthrough.")
                 continue
     
     def set_rules(self):

@@ -4,7 +4,7 @@ from ..generation import Identity, SlotData, TechData
 from ..items.Items import CATEGORY_TO_ITEMS, Age2ItemData, Tech
 from ..locations.Ages import Age2AgeData
 from ..locations.Civilizations import Age2CivData
-from ..locations.Techs import Age2TechData
+from ..locations.Techs import Age2TechData, TechOption
 
 # Genie civilization ids, the space Tech.civ is in.
 HUNS = Age2CivData.HUNS.game_id
@@ -88,8 +88,9 @@ class TestRowSelection(unittest.TestCase):
 
 
 class TestRender(unittest.TestCase):
-    def test_an_empty_table_still_defines_the_function(self):
-        self.assertTrue(TechData.render().endswith("void LoadTechTable() {\n}\n"))
+    def test_an_empty_table_still_has_a_body(self):
+        # The game's parser rejects an empty body, though xs-check takes it.
+        self.assertTrue(TechData.render().endswith("void LoadTechTable() {\n    return;\n}\n"))
 
     def test_a_location_row_carries_every_addtech_argument(self):
         tarkan = Age2TechData.ELITE_TARKAN_HUNS
@@ -97,7 +98,7 @@ class TestRender(unittest.TestCase):
         tech: Tech = tarkan.item.type
         self.assertIn(
             f"    addTech({tarkan.item.id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
-            f"1, 1, {tarkan.age.value}, 1);", rendered)
+            f"1, 1, {tarkan.age.value}, 1, {tarkan.prerequisiteId});", rendered)
 
     def test_a_grant_only_row_has_no_item_and_is_not_a_location(self):
         table = TechData.rows((), grant_age=Age2AgeData.FEUDAL, civs=[Age2CivData.FRANKS])
@@ -106,7 +107,10 @@ class TestRender(unittest.TestCase):
         self.assertTrue(body)
         for line in body:
             self.assertTrue(line.startswith("    addTech(-1, "), line)
-            self.assertTrue(line.endswith(", 0);"), line)
+            # isLocation is the eighth of eleven arguments, the requirements last
+            fields = line.strip().removeprefix("addTech(").removesuffix(");").split(", ")
+            self.assertEqual(len(fields), 9, line)
+            self.assertEqual(fields[7], "0", line)
 
     def test_booleans_render_as_xs_ints(self):
         rendered = TechData.render(TechData.rows(GENERIC, civs=SEED_CIVS))
@@ -200,3 +204,35 @@ class TestCivTechLists(unittest.TestCase):
         for civ in Age2CivData:
             for tech in civ.excluded_techs:
                 self.assertIsInstance(tech, Age2TechData, civ.campaign_name)
+
+
+class TestRequirements(unittest.TestCase):
+    def test_every_tech_knows_its_age(self):
+        # The age used to be a requirement id; it lives in tech.age now, and XS
+        # maps it back to the age-up tech, so every tech needs a usable one.
+        for tech in Age2TechData:
+            self.assertIn(tech.age, Age2AgeData, tech.name)
+
+    def test_a_tech_with_no_prerequisite_renders_the_empty_slot(self):
+        loom = Age2TechData.LOOM
+        self.assertIsNone(loom.prerequisite)
+        rendered = TechData.render(TechData.rows([loom], civs=SEED_CIVS))
+        row = [l for l in rendered.splitlines() if "addTech(" in l][0]
+        self.assertTrue(row.rstrip().endswith(f"{TechData.NO_PREREQUISITE});"), row)
+
+    def test_a_prerequisite_renders_as_its_game_id(self):
+        swords = Age2TechData.LONG_SWORDSMAN
+        self.assertIs(swords.prerequisite, Age2TechData.MAN_AT_ARMS)
+        rendered = TechData.render(TechData.rows([swords], civs=SEED_CIVS))
+        row = [l for l in rendered.splitlines() if "addTech(" in l][0]
+        self.assertTrue(row.rstrip().endswith(f"{swords.prerequisiteId});"), row)
+
+    def test_every_prerequisite_names_a_real_tech(self):
+        for tech in Age2TechData:
+            if tech.prerequisite is not None:
+                self.assertIsInstance(tech.prerequisite, Age2TechData, tech.name)
+
+    def test_a_prerequisite_is_never_in_a_later_age(self):
+        for tech in Age2TechData:
+            if tech.prerequisite is not None:
+                self.assertLessEqual(tech.prerequisite.age, tech.age, tech.name)

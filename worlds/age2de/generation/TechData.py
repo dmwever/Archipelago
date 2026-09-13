@@ -9,6 +9,7 @@ from ..locations.Techs import Age2TechData, TechOption
 TECH_CAPACITY = 400
 
 NO_ITEM = -1
+NO_PREREQUISITE = -1
 
 SEED_HIGH = "TS_SEED_HIGH"
 SEED_LOW = "TS_SEED_LOW"
@@ -77,11 +78,14 @@ def render(table: Iterable[Row] = (), tag: str = None) -> str:
              f"extern const int {SEED_LOW} = {low};",
              "",
              "void LoadTechTable() {"]
+    body = len(lines)
     for row in table:
         tech = row.tech.item.type
         lines.append(
             f"    addTech({row.item_id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
             f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {row.tech.age.value}, "
-            f"{int(row.is_location)});")
+            f"{int(row.is_location)}, {row.tech.prerequisiteId});")
+    if len(lines) == body:
+        lines.append("    return;")
     lines.append("}")
     return "\n".join(lines) + "\n"
