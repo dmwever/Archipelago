@@ -113,17 +113,14 @@ class Age2World(CachedRuleBuilderWorld):
                 self.shuffled_buildings.append(building)
         regions.append(buildings)
 
-        # One region per building things are made at, so a tech falls out of
-        # logic exactly when the building it needs does. Units will hang off the
-        # same regions once Unitsanity lands.
         building_region: dict[Buildings.Age2BuildingData, Region] = {}
         for tech in self.tech_pool():
             home = tech.buildings[0]
             region = building_region.get(home)
             if region is None:
                 region = Region(home.item.item_name, self.player, self.multiworld)
-                connection = Entrance(self.player, f"{region.name}", source)
-                source.exits.append(connection)
+                connection = Entrance(self.player, f"{region.name}", buildings)
+                buildings.exits.append(connection)
                 connection.connect(region)
                 building_region[home] = region
                 regions.append(region)
@@ -211,8 +208,6 @@ class Age2World(CachedRuleBuilderWorld):
             else:
                 self.multiworld.push_precollected(building_item)
 
-        # Only shuffled technologies get an item. A technology outside the pool
-        # is researchable as vanilla, so an item for it would unlock nothing.
         for tech in self.shuffled_techs:
             items.append(self.create_item(tech.item.item_name))
                 
