@@ -12,10 +12,11 @@ from worlds.LauncherComponents import Component, Type, components, launch as lau
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
-from .generation import SlotData, WorldVersion
-from .Options import Goal, Age2Options, ScenarioBranching
+from .generation import SlotData, TechData, WorldVersion
+from .Options import Goal, Age2Options, ScenarioBranching, ShuffleUniqueTechs, Techsanity
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
+from .locations.Techs import Age2TechData, TechOption
 from .locations.connections import CivilizationBuildings, CivilizationTechs
 from .rules.Rules import Rules
 
@@ -54,6 +55,7 @@ class Age2World(CachedRuleBuilderWorld):
     included_civs: list[Scenarios.Age2CivData] = []
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
     shuffled_buildings: list[Buildings.Age2BuildingData] = []
+    shuffled_techs: list[Age2TechData] = []
     rules: Rules
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
@@ -110,8 +112,47 @@ class Age2World(CachedRuleBuilderWorld):
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
         regions.append(buildings)
-        
+
+        # One region per building things are made at, so a tech falls out of
+        # logic exactly when the building it needs does. Units will hang off the
+        # same regions once Unitsanity lands.
+        building_region: dict[Buildings.Age2BuildingData, Region] = {}
+        for tech in self.tech_pool():
+            home = tech.buildings[0]
+            region = building_region.get(home)
+            if region is None:
+                region = Region(home.item.item_name, self.player, self.multiworld)
+                connection = Entrance(self.player, f"{region.name}", source)
+                source.exits.append(connection)
+                connection.connect(region)
+                building_region[home] = region
+                regions.append(region)
+            new_location = Location(self.player, tech.location_name, tech.id, region)
+            region.locations.append(new_location)
+            self.shuffled_techs.append(tech)
+
         self.multiworld.regions += regions
+
+    def tech_pool(self) -> list[Age2TechData]:
+        """The technologies this seed turns into locations.
+
+        Researchability is decided by the same TechData call the client uses to
+        write TechData.xs, so the server and the game agree on the pool.
+        """
+        mode = self.options.techsanity
+        if mode == Techsanity.option_none:
+            return []
+        shuffle_uniques = (self.options.shuffle_unique_techs
+                           != ShuffleUniqueTechs.option_unshuffled)
+        wanted = {Techsanity.option_units: TechOption.units,
+                  Techsanity.option_generic: TechOption.generic}.get(mode.value)
+        pool: list[Age2TechData] = []
+        for tech in TechData.researchable(self.included_civs):
+            if TechOption.unique in tech.tech_options and not shuffle_uniques:
+                continue
+            if wanted is None or wanted in tech.tech_options:
+                pool.append(tech)
+        return pool
     
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)
@@ -169,6 +210,11 @@ class Age2World(CachedRuleBuilderWorld):
                 items.append(building_item)
             else:
                 self.multiworld.push_precollected(building_item)
+
+        # Only shuffled technologies get an item. A technology outside the pool
+        # is researchable as vanilla, so an item for it would unlock nothing.
+        for tech in self.shuffled_techs:
+            items.append(self.create_item(tech.item.item_name))
                 
 
         self.multiworld.itempool += items
