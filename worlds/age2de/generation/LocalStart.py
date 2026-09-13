@@ -9,7 +9,7 @@ import logging
 from collections import Counter
 
 from BaseClasses import CollectionState, Item, Location
-from Fill import fill_restrictive, sweep_from_pool
+from Fill import FillError, fill_restrictive, sweep_from_pool
 from rule_builder.rules import And, Rule, True_
 
 from ..Options import LocalStart
@@ -153,9 +153,17 @@ def take_from_itempool(world: 'Age2World', names: list[str]) -> list[Item]:
 
 def place_locally(world: 'Age2World', items: list[Item], base_state: CollectionState,
                   locations: list[Location], name: str) -> None:
-    if items:
+    if not items:
+        return
+    attempted = list(items)
+    try:
         fill_restrictive(world.multiworld, base_state, locations, items,
                          single_player_placement=True, lock=True, allow_partial=False, name=name)
+    except FillError:
+        returned = [item for item in attempted if item.location is None]
+        world.multiworld.itempool.extend(returned)
+        logging.warning("Local Start: %s could not place %s, returning them to the pool: %s",
+                        world.player_name, name, sorted(item.name for item in returned))
 
 def local_start_sets(world: 'Age2World') -> tuple[list[str], list[str]]:
     """(win set, base set) for the chosen option value. Either may be empty."""
