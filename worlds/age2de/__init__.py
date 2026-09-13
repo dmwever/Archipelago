@@ -233,7 +233,6 @@ class Age2World(CachedRuleBuilderWorld):
             if campaign.campaign_name in self.options.starting_campaigns:
                 self.add_early_campaign_items(campaign)
         
-    
     def add_early_campaign_items(self, campaign: Campaigns.Age2CampaignData):
         pass
         # if campaign == Campaigns.Age2CampaignData.JOAN:

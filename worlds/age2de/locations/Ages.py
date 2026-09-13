@@ -1,6 +1,5 @@
 import enum
 
-
 class Age2AgeData(enum.IntEnum):
     def __new__(cls, id: int, *args, **kwargs):
         value = id
