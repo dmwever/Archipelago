@@ -4,10 +4,12 @@ from test.general import setup_solo_multiworld
 
 from .. import Age2World
 from ..Options import ExistingTechs, ShuffleUniqueTechs, Techsanity
-from ..generation import TechData
+from ..client.handlers.install import TechData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData, BuildingOption
-from ..locations.Techs import Age2TechData, TechOption
+from ..generation.TechPool import TechPool
+from ..locations.Techs import (Age2TechData, TechOption,
+                              researchable)
 from ..logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 from ..locations.connections import LocationMapping
 
@@ -23,7 +25,7 @@ class TechPoolTestBase(unittest.TestCase):
             getattr(world.options, name).value = value
         world.create_regions()
         self.world = world
-        return world.tech_pool()
+        return [tech for techs in world.tech_locations().values() for tech in techs]
 
 
 class TestTechPool(TechPoolTestBase):
@@ -50,7 +52,7 @@ class TestTechPool(TechPoolTestBase):
         pool = self.pool(techsanity=Techsanity.option_all,
                          shuffle_unique_techs=ShuffleUniqueTechs.option_shuffled)
         self.assertTrue(pool)
-        self.assertTrue(set(pool) <= set(TechData.researchable(self.world.included_civs)))
+        self.assertTrue(set(pool) <= set(researchable(self.world.included_civs)))
 
 
 class TestResearchRegions(TechPoolTestBase):
@@ -155,5 +157,7 @@ class TestScenarioReachability(TechPoolTestBase):
         self.pool(techsanity=Techsanity.option_all,
                   existing_techs=ExistingTechs.option_only_lock_units,
                   enabled_campaigns={"Joan of Arc"})
-        self.assertTrue(self.world.is_researchable_somewhere(upgrade, above), upgrade.name)
-        self.assertFalse(self.world.is_researchable_somewhere(generic, above), generic.name)
+        pool = TechPool(Techsanity.option_all, ShuffleUniqueTechs.option_unshuffled,
+                        above, ExistingTechs.option_only_lock_units)
+        self.assertTrue(pool.reachable(upgrade), upgrade.name)
+        self.assertFalse(pool.reachable(generic), generic.name)

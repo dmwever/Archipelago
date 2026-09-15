@@ -1,7 +1,9 @@
 import enum
+from typing import Iterable
 
 from .Ages import Age2AgeData
 from .Buildings import Age2BuildingData
+from .Civilizations import Age2CivData
 
 
 from ..items.Items import Age2ItemData
@@ -338,3 +340,23 @@ class Age2TechData(enum.IntEnum):
 
 NAME_TO_TECH: dict[str, Age2TechData] = {tech.location_name: tech for tech in Age2TechData}
 ID_TO_TECH: dict[int, Age2TechData] = {tech.id: tech for tech in Age2TechData}
+
+
+def researchable(civs: Iterable[Age2CivData] = ()) -> list[Age2TechData]:
+    """The technologies some civilization in the seed can research.
+
+    Read the way buildings are: a unique or regional tech counts if any civ
+    includes it, a shared one is gone only if every civ excludes it.
+    """
+    civs = tuple(civs)
+    owned = {tech for civ in civs for tech in civ.included_techs}
+    missing = (set.intersection(*(set(civ.excluded_techs) for civ in civs))
+               if civs else set())
+    out = []
+    for tech in Age2TechData:
+        if tech.item.type.is_unique or TechOption.regional in tech.tech_options:
+            if tech in owned:
+                out.append(tech)
+        elif tech not in missing:
+            out.append(tech)
+    return out

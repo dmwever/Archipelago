@@ -163,6 +163,19 @@ class ExistingTechs(Choice):
     option_only_lock_units = 2
     default = option_vanilla
 
+    @classmethod
+    def rebases(cls, value: int) -> bool:
+        """Whether the installed scenario has to start in the Dark Age, so that
+        the engine auto-researches nothing and XS can grant the right state."""
+        return value != cls.option_vanilla
+
+    @classmethod
+    def locks(cls, value: int, is_upgrade: bool) -> bool:
+        """Whether this mode withholds a technology the scenario would grant."""
+        if value == cls.option_lock_technologies:
+            return True
+        return value == cls.option_only_lock_units and is_upgrade
+
 
 @dataclass
 class Age2Options(PerGameCommonOptions):

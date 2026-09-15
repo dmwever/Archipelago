@@ -12,13 +12,13 @@ from worlds.LauncherComponents import Component, Type, components, launch as lau
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
-from .generation import SlotData, TechData, WorldVersion
-from .Options import (Age2Options, ExistingTechs, Goal, ScenarioBranching,
-                      ShuffleUniqueTechs, Techsanity)
+from .generation import SlotData, WorldVersion
+from .generation.TechPool import TechPool
+from .Options import Age2Options, Goal, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
 from .locations.Ages import Age2AgeData
-from .locations.Techs import Age2TechData, TechOption
+from .locations.Techs import Age2TechData
 from .locations.connections import CivilizationBuildings, CivilizationTechs
 from .rules.Rules import Rules
 
@@ -58,6 +58,7 @@ class Age2World(CachedRuleBuilderWorld):
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
     shuffled_buildings: list[Buildings.Age2BuildingData] = []
     shuffled_techs: list[Age2TechData] = []
+    earliest_age: Age2AgeData = None
     rules: Rules
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
@@ -76,6 +77,9 @@ class Age2World(CachedRuleBuilderWorld):
         else:
             campaign_names = self.options.enabled_campaigns
             self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
+        self.earliest_age = min(scenario.vanilla_age
+                                for campaign in self.included_campaigns
+                                for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
         
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         
@@ -115,51 +119,26 @@ class Age2World(CachedRuleBuilderWorld):
                 self.shuffled_buildings.append(building)
         regions.append(buildings)
 
-        building_region: dict[Buildings.Age2BuildingData, Region] = {}
-        for tech in self.tech_pool():
-            home = tech.buildings[0]
-            region = building_region.get(home)
-            if region is None:
-                region = Region(home.item.item_name, self.player, self.multiworld)
-                connection = Entrance(self.player, f"{region.name}", buildings)
-                buildings.exits.append(connection)
-                connection.connect(region)
-                building_region[home] = region
-                regions.append(region)
-            new_location = Location(self.player, tech.location_name, tech.id, region)
-            region.locations.append(new_location)
-            self.shuffled_techs.append(tech)
+        for home, techs in self.tech_locations().items():
+            region = Region(home.item.item_name, self.player, self.multiworld)
+            connection = Entrance(self.player, f"{region.name}", buildings)
+            buildings.exits.append(connection)
+            connection.connect(region)
+            regions.append(region)
+            for tech in techs:
+                new_location = Location(self.player, tech.location_name, tech.id, region)
+                region.locations.append(new_location)
+                self.shuffled_techs.append(tech)
 
         self.multiworld.regions += regions
 
-    def tech_pool(self) -> list[Age2TechData]:
-        mode = self.options.techsanity
-        if mode == Techsanity.option_none:
-            return []
-        earliest = min(scenario.vanilla_age for campaign in self.included_campaigns
-                       for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
-        shuffle_uniques = (self.options.shuffle_unique_techs
-                           != ShuffleUniqueTechs.option_unshuffled)
-        wanted = {Techsanity.option_units: TechOption.units,
-                  Techsanity.option_generic: TechOption.generic}.get(mode.value)
-        pool: list[Age2TechData] = []
-        for tech in TechData.researchable(self.included_civs):
-            if TechOption.unique in tech.tech_options and not shuffle_uniques:
-                continue
-            if not self.is_researchable_somewhere(tech, earliest):
-                continue
-            if wanted is None or wanted in tech.tech_options:
-                pool.append(tech)
-        return pool
-
-    def is_researchable_somewhere(self, tech: Age2TechData, earliest: Age2AgeData) -> bool:
-        existing = self.options.existing_techs
-        if existing == ExistingTechs.option_lock_technologies:
-            return True
-        if (existing == ExistingTechs.option_only_lock_units
-                and TechOption.units in tech.tech_options):
-            return True
-        return earliest <= tech.age
+    def tech_locations(self) -> dict[Buildings.Age2BuildingData, list[Age2TechData]]:
+        """The seed's tech locations, grouped by the building that researches them."""
+        pool = TechPool(self.options.techsanity.value,
+                        self.options.shuffle_unique_techs.value,
+                        self.earliest_age,
+                        self.options.existing_techs.value)
+        return pool.by_building(self.included_civs)
 
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)

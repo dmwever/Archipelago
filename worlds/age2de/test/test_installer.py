@@ -6,7 +6,8 @@ from .test_campaign_bundle import SEED, build_fixture
 from ..campaign.CampaignReader import Campaign
 from ..client.handlers.CampaignHandler import CampaignHandler
 from ..client.handlers.InstallHandler import InstallError, InstallHandler
-from ..generation import Identity, SlotData, TechData
+from ..client.handlers.install import TechData
+from ..generation import Identity, SlotData
 from ..locations.Ages import Age2AgeData
 from ..locations.Techs import Age2TechData
 from ..locations.Campaigns import Age2CampaignData

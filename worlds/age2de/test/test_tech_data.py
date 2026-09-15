@@ -1,17 +1,18 @@
 import unittest
 
-from ..generation import Identity, SlotData, TechData
+from ..client.handlers.install import TechData
+from ..generation import Identity, SlotData
 from ..items.Items import CATEGORY_TO_ITEMS, Age2ItemData, Tech
 from ..locations.Ages import Age2AgeData
 from ..locations.Civilizations import Age2CivData
-from ..locations.Techs import Age2TechData, TechOption
+from ..locations.Techs import Age2TechData, TechOption, researchable
 
 # Genie civilization ids, the space Tech.civ is in.
 HUNS = Age2CivData.HUNS.game_id
 FRANKS = Age2CivData.FRANKS.game_id
 
 SEED_CIVS = tuple(Age2CivData)
-RESEARCHABLE = TechData.researchable(SEED_CIVS)
+RESEARCHABLE = researchable(SEED_CIVS)
 UPGRADES = [tech for tech in RESEARCHABLE if tech.item.type.is_upgrade]
 GENERIC = [tech for tech in RESEARCHABLE if not tech.item.type.is_upgrade]
 
