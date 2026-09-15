@@ -310,6 +310,9 @@ class Age2GameContext:
         self.reported_install_mismatch = False
 
     def report_install_mismatch_once(self) -> None:
+        if self.install_handler.installing:
+            self.missing_since = 0.0
+            return
         if self.missing_since == 0.0:
             self.missing_since = time.monotonic()
             return

@@ -45,6 +45,7 @@ class InstallHandler(FolderHandler):
         self._techs: list[Age2TechData] = []
         self._parsed = 0
         self._to_parse = 0
+        self.installing = False
         self.logger: Callable[[str], None] = logger.info
         super().__init__()
 

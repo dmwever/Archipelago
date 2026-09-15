@@ -1,8 +1,10 @@
 import io
+import time
 import unittest
 
 from ..campaign import XsdatFile
-from ..client.GameClient import AP_WORLD_VERSION, Age2Packet, PacketStatus
+from ..client.GameClient import (AP_WORLD_VERSION, MISSING_GRACE_SECONDS, Age2Packet,
+                                 PacketStatus)
 from ..client.handlers.CampaignHandler import CampaignHandler
 from ..generation import Identity
 from ..locations.Campaigns import Age2CampaignData
@@ -173,6 +175,25 @@ class TestSlotMismatch(unittest.TestCase):
     def test_the_wire_version_is_the_world_version(self):
         from .. import Age2World
         self.assertEqual(AP_WORLD_VERSION, Age2World.world_version)
+
+    def test_an_install_holds_the_mismatch_report(self):
+        ctx = context_for_slot(3)
+        ctx.install_handler.installing = True
+        ctx.report_install_mismatch_once()
+        ctx.missing_since = time.monotonic() - MISSING_GRACE_SECONDS - 1
+        ctx.report_install_mismatch_once()
+        self.assertFalse(ctx.reported_install_mismatch)
+        self.assertEqual(ctx.missing_since, 0.0)
+
+    def test_the_grace_window_restarts_after_an_install(self):
+        ctx = context_for_slot(3)
+        ctx.install_handler.installing = True
+        ctx.missing_since = time.monotonic() - MISSING_GRACE_SECONDS - 1
+        ctx.report_install_mismatch_once()
+        ctx.install_handler.installing = False
+        ctx.report_install_mismatch_once()
+        self.assertFalse(ctx.reported_install_mismatch)
+        self.assertGreater(ctx.missing_since, 0.0)
 
     def test_mismatch_is_reported_once(self):
         ctx = context_for_slot(3)

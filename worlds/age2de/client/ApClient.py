@@ -46,7 +46,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         """
         ctx = self.ctx
         status = ctx.game_ctx.client_status
-        if ctx.installing:
+        if ctx.game_ctx.install_handler.installing:
             self.output("An install is already running.")
             return
         if not status.tag or status.slot_id < 0:
@@ -65,7 +65,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output("This slot has no campaigns to install.")
             return
 
-        ctx.installing = True
+        ctx.game_ctx.install_handler.installing = True
         self.output("Installing. Rebuilding a scenario takes a few seconds each.")
         Utils.async_start(self._install(campaigns), name="Age2Install")
 
@@ -92,7 +92,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
         finally:
             handler.report = logger.info
-            ctx.installing = False
+            handler.installing = False
 
 
 class Age2Context(CommonContext):
@@ -103,7 +103,6 @@ class Age2Context(CommonContext):
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
     installed_seed_name: str = ''
-    installing: bool = False
     seed_world_version = WorldVersion.UNKNOWN
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
