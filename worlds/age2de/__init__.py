@@ -13,9 +13,11 @@ from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
 from .generation import SlotData, TechData, WorldVersion
-from .Options import Goal, Age2Options, ScenarioBranching, ShuffleUniqueTechs, Techsanity
+from .Options import (Age2Options, ExistingTechs, Goal, ScenarioBranching,
+                      ShuffleUniqueTechs, Techsanity)
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
+from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, TechOption
 from .locations.connections import CivilizationBuildings, CivilizationTechs
 from .rules.Rules import Rules
@@ -131,14 +133,11 @@ class Age2World(CachedRuleBuilderWorld):
         self.multiworld.regions += regions
 
     def tech_pool(self) -> list[Age2TechData]:
-        """The technologies this seed turns into locations.
-
-        Researchability is decided by the same TechData call the client uses to
-        write TechData.xs, so the server and the game agree on the pool.
-        """
         mode = self.options.techsanity
         if mode == Techsanity.option_none:
             return []
+        earliest = min(scenario.vanilla_age for campaign in self.included_campaigns
+                       for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
         shuffle_uniques = (self.options.shuffle_unique_techs
                            != ShuffleUniqueTechs.option_unshuffled)
         wanted = {Techsanity.option_units: TechOption.units,
@@ -147,10 +146,21 @@ class Age2World(CachedRuleBuilderWorld):
         for tech in TechData.researchable(self.included_civs):
             if TechOption.unique in tech.tech_options and not shuffle_uniques:
                 continue
+            if not self.is_researchable_somewhere(tech, earliest):
+                continue
             if wanted is None or wanted in tech.tech_options:
                 pool.append(tech)
         return pool
-    
+
+    def is_researchable_somewhere(self, tech: Age2TechData, earliest: Age2AgeData) -> bool:
+        existing = self.options.existing_techs
+        if existing == ExistingTechs.option_lock_technologies:
+            return True
+        if (existing == ExistingTechs.option_only_lock_units
+                and TechOption.units in tech.tech_options):
+            return True
+        return earliest <= tech.age
+
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)
         connection = Entrance(self.player, f"{new_region.name}", source)
