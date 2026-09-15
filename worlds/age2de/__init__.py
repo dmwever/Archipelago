@@ -54,16 +54,20 @@ class Age2World(CachedRuleBuilderWorld):
     location_id_to_name = LocationMapping.location_id_to_name
     item_mapping = Items.item_mapping
     
-    included_civs: list[Scenarios.Age2CivData] = []
-    included_campaigns: set[Campaigns.Age2CampaignData] = set()
-    shuffled_buildings: list[Buildings.Age2BuildingData] = []
-    shuffled_techs: list[Age2TechData] = []
+    included_civs: list[Scenarios.Age2CivData]
+    included_campaigns: set[Campaigns.Age2CampaignData]
+    shuffled_buildings: list[Buildings.Age2BuildingData]
+    shuffled_techs: list[Age2TechData]
     tech_pool: TechPool
     earliest_age: Age2AgeData = None
     rules: Rules
     
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
+        self.included_civs = []
+        self.included_campaigns = set()
+        self.shuffled_buildings = []
+        self.shuffled_techs = []
         
     def branching_option(self, location):
         if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenarioBranching != ScenarioBranching.option_all:
@@ -120,7 +124,7 @@ class Age2World(CachedRuleBuilderWorld):
         self.earliest_age = min(scenario.vanilla_age
                                 for campaign in self.included_campaigns
                                 for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
-        self.tech_pool = TechPool(self.options, self.earliest_age)
+        self.tech_pool = TechPool(self.options, self.earliest_age, self.included_civs)
         
         for building in Age2BuildingData:
             region = Region(building.item.item_name, self.player, self.multiworld)
@@ -128,7 +132,7 @@ class Age2World(CachedRuleBuilderWorld):
             buildings.exits.append(connection)
             connection.connect(region)
             regions.append(region)
-            for tech in self.tech_pool.by_building(building, self.included_civs):
+            for tech in self.tech_pool.by_building(building):
                 new_location = Location(self.player, tech.location_name, tech.id, region)
                 region.locations.append(new_location)
                 self.shuffled_techs.append(tech)

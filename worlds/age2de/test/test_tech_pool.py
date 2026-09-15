@@ -16,16 +16,12 @@ from ..locations.connections import LocationMapping
 
 class TechPoolTestBase(unittest.TestCase):
     def pool(self, **options) -> list[Age2TechData]:
-        # create_regions appends to class level lists, so start each case clean.
-        for attr, empty in (("included_civs", []), ("included_campaigns", set()),
-                            ("shuffled_buildings", []), ("shuffled_techs", [])):
-            setattr(Age2World, attr, empty)
         world = setup_solo_multiworld(Age2World, steps=("generate_early",)).worlds[1]
         for name, value in options.items():
             getattr(world.options, name).value = value
         world.create_regions()
         self.world = world
-        return [tech for techs in world.tech_locations().values() for tech in techs]
+        return world.shuffled_techs
 
 
 class TestTechPool(TechPoolTestBase):
@@ -72,13 +68,30 @@ class TestResearchRegions(TechPoolTestBase):
                   if location.name.startswith("Research ")]
         self.assertEqual(sorted(placed), sorted(tech.location_name for tech in pool))
 
-    def test_no_region_is_made_for_a_building_with_no_techs(self):
-        self.pool(techsanity=Techsanity.option_units)
-        homes = {tech.buildings[0].item.item_name for tech in self.world.shuffled_techs}
-        names = {region.name for region in self.world.multiworld.get_regions(1)}
-        for building in Age2BuildingData:
-            if building.item.item_name not in homes:
-                self.assertNotIn(building.item.item_name, names, building.name)
+    def test_every_building_gets_a_region_whatever_the_mode(self):
+        # The region set is a function of the buildings, not of the pool, so
+        # Unitsanity can hang units off the same regions later. A building with
+        # no pooled tech simply has an empty one.
+        for mode in (Techsanity.option_none, Techsanity.option_units,
+                     Techsanity.option_all):
+            with self.subTest(mode=mode):
+                self.pool(techsanity=mode)
+                names = {region.name for region in self.world.multiworld.get_regions(1)}
+                for building in Age2BuildingData:
+                    self.assertIn(building.item.item_name, names, building.name)
+
+    def test_a_tech_is_placed_only_under_the_building_it_names_first(self):
+        # A tech researched at a unique replacement is listed under both buildings,
+        # so placing it per building would give it two locations.
+        self.pool(techsanity=Techsanity.option_all)
+        placed = [location.name
+                  for region in self.world.multiworld.get_regions(1)
+                  for location in region.locations
+                  if location.name.startswith("Research ")]
+        self.assertEqual(len(placed), len(set(placed)))
+        for tech in self.world.shuffled_techs:
+            region = self.world.multiworld.get_region(tech.buildings[0].item.item_name, 1)
+            self.assertIn(tech.location_name, [l.name for l in region.locations], tech.name)
 
 
 class TestResearchBuildings(unittest.TestCase):
@@ -158,6 +171,6 @@ class TestScenarioReachability(TechPoolTestBase):
         self.pool(techsanity=Techsanity.option_all,
                   existing_techs=ExistingTechs.option_only_lock_units,
                   enabled_campaigns={"Joan of Arc"})
-        pool = TechPool(self.world.options, above)
+        pool = TechPool(self.world.options, above, self.world.included_civs)
         self.assertTrue(pool.reachable(upgrade), upgrade.name)
         self.assertFalse(pool.reachable(generic), generic.name)
