@@ -236,3 +236,37 @@ class TestRequirements(unittest.TestCase):
         for tech in Age2TechData:
             if tech.prerequisite is not None:
                 self.assertLessEqual(tech.prerequisite.age, tech.age, tech.name)
+
+
+class TestNames(unittest.TestCase):
+    """The six Chronicles civilizations rename a dozen standard technologies.
+    They are excluded from the catalogue, but the extractor walked the civ files
+    alphabetically and ACHAEMENIDS came first, so their names leaked in. These
+    pin the standard names."""
+
+    STANDARD = {
+        45: "Faith", 47: "Chemistry", 63: "Keep", 93: "Ballistics",
+        230: "Block Printing", 231: "Sanctity", 233: "Illumination",
+        316: "Redemption", 319: "Atonement", 380: "Heated Shot",
+        438: "Theocracy", 439: "Heresy",
+    }
+    CHRONICLES = {
+        "Exorcism", "Flaming Arrows", "Bastion", "Target Practice", "Haruspicy",
+        "Amulet Protection", "Purification", "Sacrificial Dedication",
+        "Syncretism", "Lighthouse", "Mystery Cults", "Hemlock",
+    }
+
+    def test_the_renamed_twelve_use_their_standard_names(self):
+        by_game = {tech.item.type.game_id: tech for tech in Age2TechData}
+        for game_id, name in self.STANDARD.items():
+            tech = by_game[game_id]
+            self.assertEqual(tech.item.item_name, name, game_id)
+            self.assertEqual(tech.location_name, f"Research {name}", game_id)
+
+    def test_no_chronicles_name_is_used_anywhere(self):
+        for tech in Age2TechData:
+            self.assertNotIn(tech.item.item_name, self.CHRONICLES, tech.name)
+
+    def test_a_location_name_is_its_item_name(self):
+        for tech in Age2TechData:
+            self.assertEqual(tech.location_name, f"Research {tech.item.item_name}", tech.name)
