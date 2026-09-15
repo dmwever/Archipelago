@@ -3,17 +3,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable
 
-from .FolderHandler import FolderHandler
-
-from ...generation import Identity, SlotData, TechData
 from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
+from ...generation import Identity, SlotData
 from ...locations.Ages import Age2AgeData
 from ...locations.Campaigns import Age2CampaignData
 from ...locations.Civilizations import Age2CivData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
+from ...Options import ExistingTechs
+from .FolderHandler import FolderHandler
+from .install import TechData
 
 logger = logging.getLogger("Client")
 
@@ -87,7 +88,7 @@ class InstallHandler(FolderHandler):
     def scenario_needs_age_up(self) -> bool:
         techsanity = self.techsanity()
         return (techsanity[SlotData.TS_MODE] != SlotData.TECHSANITY_NONE
-                and techsanity[SlotData.TS_EXISTING] != 0)
+                and ExistingTechs.rebases(techsanity[SlotData.TS_EXISTING]))
 
     def grant_age(self) -> Age2AgeData:
         """The deepest age an installed scenario starts in, or None if none was rebased."""

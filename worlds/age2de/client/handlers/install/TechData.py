@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from . import SlotData
-from ..locations.Ages import Age2AgeData
-from ..locations.Civilizations import Age2CivData
-from ..locations.Techs import Age2TechData, TechOption
+from ....generation import SlotData
+from ....locations.Ages import Age2AgeData
+from ....locations.Civilizations import Age2CivData
+from ....locations.Techs import Age2TechData, researchable
 
 TECH_CAPACITY = 400
 
@@ -24,26 +24,6 @@ class Row:
     def item_id(self) -> int:
         """The id XS unlocks against, which is an item id, not this location's."""
         return self.tech.item.id if self.is_location else NO_ITEM
-
-
-def researchable(civs: Iterable[Age2CivData] = ()) -> list[Age2TechData]:
-    """The technologies some civilization in the seed can research.
-
-    Read the way buildings are: a unique or regional tech counts if any civ
-    includes it, a shared one is gone only if every civ excludes it.
-    """
-    civs = tuple(civs)
-    owned = {tech for civ in civs for tech in civ.included_techs}
-    missing = (set.intersection(*(set(civ.excluded_techs) for civ in civs))
-               if civs else set())
-    out = []
-    for tech in Age2TechData:
-        if tech.item.type.is_unique or TechOption.regional in tech.tech_options:
-            if tech in owned:
-                out.append(tech)
-        elif tech not in missing:
-            out.append(tech)
-    return out
 
 
 def rows(locations: Iterable[Age2TechData], grant_age: Age2AgeData = None,
