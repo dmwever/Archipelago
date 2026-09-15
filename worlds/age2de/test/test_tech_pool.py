@@ -158,7 +158,6 @@ class TestScenarioReachability(TechPoolTestBase):
         self.pool(techsanity=Techsanity.option_all,
                   existing_techs=ExistingTechs.option_only_lock_units,
                   enabled_campaigns={"Joan of Arc"})
-        pool = TechPool(Techsanity.option_all, ShuffleUniqueTechs.option_unshuffled,
-                        above, ExistingTechs.option_only_lock_units)
+        pool = TechPool(self.world.options, above)
         self.assertTrue(pool.reachable(upgrade), upgrade.name)
         self.assertFalse(pool.reachable(generic), generic.name)

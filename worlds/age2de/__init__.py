@@ -18,7 +18,7 @@ from .Options import Age2Options, Goal, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
 from .locations.Ages import Age2AgeData
-from .locations.Techs import Age2TechData
+from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
 from .locations.connections import CivilizationBuildings, CivilizationTechs
 from .rules.Rules import Rules
 
@@ -58,6 +58,7 @@ class Age2World(CachedRuleBuilderWorld):
     included_campaigns: set[Campaigns.Age2CampaignData] = set()
     shuffled_buildings: list[Buildings.Age2BuildingData] = []
     shuffled_techs: list[Age2TechData] = []
+    tech_pool: TechPool
     earliest_age: Age2AgeData = None
     rules: Rules
     
@@ -77,9 +78,6 @@ class Age2World(CachedRuleBuilderWorld):
         else:
             campaign_names = self.options.enabled_campaigns
             self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
-        self.earliest_age = min(scenario.vanilla_age
-                                for campaign in self.included_campaigns
-                                for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
         
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         
@@ -118,27 +116,24 @@ class Age2World(CachedRuleBuilderWorld):
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
         regions.append(buildings)
-
-        for home, techs in self.tech_locations().items():
-            region = Region(home.item.item_name, self.player, self.multiworld)
+        
+        self.earliest_age = min(scenario.vanilla_age
+                                for campaign in self.included_campaigns
+                                for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
+        self.tech_pool = TechPool(self.options, self.earliest_age)
+        
+        for building in Age2BuildingData:
+            region = Region(building.item.item_name, self.player, self.multiworld)
             connection = Entrance(self.player, f"{region.name}", buildings)
             buildings.exits.append(connection)
             connection.connect(region)
             regions.append(region)
-            for tech in techs:
+            for tech in self.tech_pool.by_building(building, self.included_civs):
                 new_location = Location(self.player, tech.location_name, tech.id, region)
                 region.locations.append(new_location)
                 self.shuffled_techs.append(tech)
 
         self.multiworld.regions += regions
-
-    def tech_locations(self) -> dict[Buildings.Age2BuildingData, list[Age2TechData]]:
-        """The seed's tech locations, grouped by the building that researches them."""
-        pool = TechPool(self.options.techsanity.value,
-                        self.options.shuffle_unique_techs.value,
-                        self.earliest_age,
-                        self.options.existing_techs.value)
-        return pool.by_building(self.included_civs)
 
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)

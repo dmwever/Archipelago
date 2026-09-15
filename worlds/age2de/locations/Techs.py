@@ -338,3 +338,11 @@ class Age2TechData(enum.IntEnum):
 
 NAME_TO_TECH: dict[str, Age2TechData] = {tech.location_name: tech for tech in Age2TechData}
 ID_TO_TECH: dict[int, Age2TechData] = {tech.id: tech for tech in Age2TechData}
+
+BUILDING_TO_TECHS: dict[Age2BuildingData, list[Age2TechData]] = {
+    building: [] for building in Age2BuildingData
+}
+
+for tech in Age2TechData:
+    for building in tech.buildings:
+        BUILDING_TO_TECHS[building].append(tech)
