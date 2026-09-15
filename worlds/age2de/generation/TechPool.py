@@ -1,3 +1,9 @@
+from typing import Iterable
+
+from ..Options import ExistingTechs, ShuffleUniqueTechs, Techsanity
+from ..locations.Ages import Age2AgeData
+from ..locations.Buildings import Age2BuildingData
+from ..locations.Civilizations import Age2CivData
 from ..locations.Techs import Age2TechData, TechOption, researchable
 
 MODE_TO_OPTION = {
