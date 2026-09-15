@@ -4,7 +4,8 @@ from ..Options import ExistingTechs, ShuffleUniqueTechs, Techsanity
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Civilizations import Age2CivData
-from ..locations.Techs import Age2TechData, TechOption, researchable
+from ..locations.Techs import Age2TechData, TechOption
+from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 
 MODE_TO_OPTION = {
     Techsanity.option_none: None,
@@ -57,7 +58,8 @@ class TechPool:
         out: dict[Age2BuildingData, list[Age2TechData]] = {}
         if self._techsanity == Techsanity.option_none:
             return out
-        for tech in researchable(civs):
+        allowed = {tech for civ in civs for tech in CIV_TO_TECHS[civ]}
+        for tech in allowed:
             if not self.in_mode(tech):
                 continue
             if not self.is_unique_shuffled(tech):

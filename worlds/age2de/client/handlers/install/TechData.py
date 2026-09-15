@@ -5,7 +5,8 @@ from ....Options import ExistingTechs
 from ....generation import SlotData
 from ....locations.Ages import Age2AgeData
 from ....locations.Civilizations import Age2CivData
-from ....locations.Techs import Age2TechData, researchable
+from ....locations.Techs import Age2TechData
+from ....locations.connections.CivilizationTechs import CIV_TO_TECHS
 
 TECH_CAPACITY = 400
 
@@ -37,7 +38,7 @@ def rows(locations: Iterable[Age2TechData], grant_age: Age2AgeData = None,
          civs: Iterable[Age2CivData] = ()) -> list[Row]:
     """The seed's pool as locations, plus the grant-only rows a rebased scenario needs."""
     wanted = set(locations)
-    allowed = set(researchable(civs))
+    allowed = {tech for civ in civs for tech in CIV_TO_TECHS[civ]}
     out: list[Row] = []
     for tech in Age2TechData:
         if tech in wanted:

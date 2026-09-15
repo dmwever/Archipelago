@@ -5,14 +5,16 @@ from ..generation import Identity, SlotData
 from ..items.Items import CATEGORY_TO_ITEMS, Age2ItemData, Tech
 from ..locations.Ages import Age2AgeData
 from ..locations.Civilizations import Age2CivData
-from ..locations.Techs import Age2TechData, TechOption, researchable
+from ..locations.Techs import Age2TechData, TechOption
+from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 
 # Genie civilization ids, the space Tech.civ is in.
 HUNS = Age2CivData.HUNS.game_id
 FRANKS = Age2CivData.FRANKS.game_id
 
 SEED_CIVS = tuple(Age2CivData)
-RESEARCHABLE = researchable(SEED_CIVS)
+RESEARCHABLE = [tech for tech in Age2TechData
+                if any(tech in CIV_TO_TECHS[civ] for civ in SEED_CIVS)]
 UPGRADES = [tech for tech in RESEARCHABLE if tech.item.type.is_upgrade]
 GENERIC = [tech for tech in RESEARCHABLE if not tech.item.type.is_upgrade]
 
@@ -181,17 +183,23 @@ class TestCivTechLists(unittest.TestCase):
             TechData.rows([eagle], civs=SEED_CIVS)
 
         franks = Age2CivData.FRANKS
-        was_in, was_out = franks.included_techs, franks.excluded_techs
-        franks.included_techs = was_in + [eagle]
-        franks.excluded_techs = [t for t in was_out if t is not eagle]
-        self.addCleanup(setattr, franks, "excluded_techs", was_out)
-        self.addCleanup(setattr, franks, "included_techs", was_in)
+        was = CIV_TO_TECHS[franks]
+        CIV_TO_TECHS[franks] = was + [eagle]
+        self.addCleanup(CIV_TO_TECHS.__setitem__, franks, was)
 
         # Claimed by Franks, so a Frankish seed keeps it...
         TechData.rows([eagle], civs=[franks])
         # ...and a Hunnic one still cannot reach it.
         with self.assertRaises(ValueError):
             TechData.rows([eagle], civs=[Age2CivData.HUNS])
+
+    def test_the_table_follows_the_civ_lists(self):
+        # CIV_TO_TECHS is built once at import, so pin what it derives from.
+        for civ in Age2CivData:
+            for tech in civ.included_techs:
+                self.assertIn(tech, CIV_TO_TECHS[civ], f"{civ.campaign_name} {tech.name}")
+            for tech in civ.excluded_techs:
+                self.assertNotIn(tech, CIV_TO_TECHS[civ], f"{civ.campaign_name} {tech.name}")
 
     def test_an_excluded_shared_tech_is_refused(self):
         # Franks lack Bloodlines; Huns have it, so a two-civ seed still keeps it.

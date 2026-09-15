@@ -1,6 +1,6 @@
 
 from ..Civilizations import Age2CivData
-from ..Techs import Age2TechData
+from ..Techs import Age2TechData, TechOption
 
 Age2CivData.HUNS.included_techs = [
     Age2TechData.ELITE_TARKAN_HUNS,
@@ -66,3 +66,21 @@ Age2CivData.FRANKS.excluded_techs = [
     Age2TechData.THUMB_RING,
     Age2TechData.INCENDIARIES,
 ]
+
+
+CIV_TO_TECHS: dict[Age2CivData, list[Age2TechData]] = {}
+
+for civ in Age2CivData:
+    included = set(civ.included_techs)
+    excluded = set(civ.excluded_techs)
+    researchable = []
+    for tech in Age2TechData:
+        if tech.item.type.is_unique or TechOption.regional in tech.tech_options:
+            if tech in included:
+                researchable.append(tech)
+        elif tech not in excluded:
+            researchable.append(tech)
+    CIV_TO_TECHS[civ] = researchable
+
+assert not [civ for civ in Age2CivData
+            if set(civ.included_techs) & set(civ.excluded_techs)], "tech both included and excluded"

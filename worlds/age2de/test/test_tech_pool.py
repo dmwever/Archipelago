@@ -8,8 +8,8 @@ from ..client.handlers.install import TechData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..generation.TechPool import TechPool
-from ..locations.Techs import (Age2TechData, TechOption,
-                              researchable)
+from ..locations.Techs import Age2TechData, TechOption
+from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from ..logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 from ..locations.connections import LocationMapping
 
@@ -52,7 +52,8 @@ class TestTechPool(TechPoolTestBase):
         pool = self.pool(techsanity=Techsanity.option_all,
                          shuffle_unique_techs=ShuffleUniqueTechs.option_shuffled)
         self.assertTrue(pool)
-        self.assertTrue(set(pool) <= set(researchable(self.world.included_civs)))
+        self.assertTrue(set(pool) <= {tech for civ in self.world.included_civs
+                                     for tech in CIV_TO_TECHS[civ]})
 
 
 class TestResearchRegions(TechPoolTestBase):
