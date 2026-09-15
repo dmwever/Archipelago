@@ -6,7 +6,7 @@ from .test_campaign_bundle import SEED, build_fixture
 from ..campaign.CampaignReader import Campaign
 from ..client.handlers.CampaignHandler import CampaignHandler
 from ..client.handlers.InstallHandler import InstallError, InstallHandler
-from ..client.handlers.install import TechData
+from ..client.handlers.install.TechData import TechData
 from ..generation import Identity, SlotData
 from ..locations.Ages import Age2AgeData
 from ..locations.Techs import Age2TechData
@@ -193,7 +193,7 @@ class TestTechInstall(InstallerTestBase):
 
     def test_techsanity_off_writes_the_empty_table(self):
         self.install([Age2CampaignData.ATTILA])
-        self.assertEqual(self.read_tech_data(), TechData.render())
+        self.assertEqual(self.read_tech_data(), TechData().render())
 
     def test_the_seed_guard_is_only_stamped_when_techs_are_installed(self):
         self.install([Age2CampaignData.ATTILA])

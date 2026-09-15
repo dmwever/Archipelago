@@ -1,6 +1,6 @@
 import unittest
 
-from ..client.handlers.install import TechData
+from ..client.handlers.install.TechData import TechData
 from ..generation import Identity, SlotData
 from ..items.Items import CATEGORY_TO_ITEMS, Age2ItemData, Tech
 from ..locations.Ages import Age2AgeData
@@ -44,13 +44,13 @@ class TestTechCatalogue(unittest.TestCase):
 
 class TestRowSelection(unittest.TestCase):
     def test_locations_only_when_nothing_was_rebased(self):
-        table = TechData.rows(
-            [Age2TechData.ELITE_TARKAN_HUNS, Age2TechData.BEARDED_AXE_FRANKS], civs=SEED_CIVS)
+        table = TechData(
+            [Age2TechData.ELITE_TARKAN_HUNS, Age2TechData.BEARDED_AXE_FRANKS], civs=SEED_CIVS).rows()
         self.assertEqual([row.item_id for row in table], [3600, 3649])
         self.assertTrue(all(row.is_location for row in table))
 
     def test_grant_only_rows_sit_below_the_grant_age(self):
-        table = TechData.rows((), grant_age=Age2AgeData.CASTLE, civs=SEED_CIVS)
+        table = TechData((), grant_age=Age2AgeData.CASTLE, civs=SEED_CIVS).rows()
         self.assertTrue(table)
         for row in table:
             self.assertEqual(row.item_id, TechData.NO_ITEM)
@@ -58,18 +58,18 @@ class TestRowSelection(unittest.TestCase):
             self.assertLess(row.tech.age, Age2AgeData.CASTLE)
 
     def test_grant_only_rows_skip_other_civs_uniques(self):
-        table = TechData.rows((), grant_age=Age2AgeData.IMPERIAL, civs=[Age2CivData.FRANKS])
+        table = TechData((), grant_age=Age2AgeData.IMPERIAL, civs=[Age2CivData.FRANKS]).rows()
         for row in table:
             self.assertIn(row.tech.item.type.civ, (-1, FRANKS))
 
     def test_a_location_is_never_also_a_grant_only_row(self):
-        table = TechData.rows(UPGRADES, grant_age=Age2AgeData.IMPERIAL, civs=SEED_CIVS)
+        table = TechData(UPGRADES, grant_age=Age2AgeData.IMPERIAL, civs=SEED_CIVS).rows()
         ids = [row.tech for row in table if row.is_location]
         self.assertEqual(sorted(ids), sorted(UPGRADES))
         self.assertEqual(len(ids), len(set(ids)))
 
     def test_units_and_lock_technologies_matches_the_measured_shape(self):
-        table = TechData.rows(UPGRADES, grant_age=Age2AgeData.IMPERIAL, civs=SEED_CIVS)
+        table = TechData(UPGRADES, grant_age=Age2AgeData.IMPERIAL, civs=SEED_CIVS).rows()
         locations = [row for row in table if row.is_location]
         grant_only = [row for row in table if not row.is_location]
         self.assertEqual(len(locations), 23)
@@ -78,14 +78,14 @@ class TestRowSelection(unittest.TestCase):
     def test_a_location_no_civilization_can_research_is_refused(self):
         plumed = Age2TechData.ELITE_PLUMED_ARCHER_MAYANS
         with self.assertRaises(ValueError):
-            TechData.rows([plumed], civs=SEED_CIVS)
+            TechData([plumed], civs=SEED_CIVS).rows()
 
     def test_an_unknown_item_id_is_refused(self):
         with self.assertRaises(ValueError):
-            TechData.rows([Age2TechData.ELITE_TARKAN_HUNS, 999999], civs=SEED_CIVS)
+            TechData([Age2TechData.ELITE_TARKAN_HUNS, 999999], civs=SEED_CIVS).rows()
 
     def test_rows_are_ordered_by_item_id(self):
-        table = TechData.rows(GENERIC, civs=SEED_CIVS)
+        table = TechData(GENERIC, civs=SEED_CIVS).rows()
         self.assertEqual([row.item_id for row in table],
                          sorted(row.item_id for row in table))
 
@@ -93,19 +93,19 @@ class TestRowSelection(unittest.TestCase):
 class TestRender(unittest.TestCase):
     def test_an_empty_table_still_has_a_body(self):
         # The game's parser rejects an empty body, though xs-check takes it.
-        self.assertTrue(TechData.render().endswith("void LoadTechTable() {\n    return;\n}\n"))
+        self.assertTrue(TechData().render().endswith("void LoadTechTable() {\n    return;\n}\n"))
 
     def test_a_location_row_carries_every_addtech_argument(self):
         tarkan = Age2TechData.ELITE_TARKAN_HUNS
-        rendered = TechData.render(TechData.rows([tarkan], civs=SEED_CIVS))
+        rendered = TechData([tarkan], civs=SEED_CIVS).render()
         tech: Tech = tarkan.item.type
         self.assertIn(
             f"    addTech({tarkan.item.id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
             f"1, 1, {tarkan.age.value}, 1, {tarkan.prerequisiteId});", rendered)
 
     def test_a_grant_only_row_has_no_item_and_is_not_a_location(self):
-        table = TechData.rows((), grant_age=Age2AgeData.FEUDAL, civs=[Age2CivData.FRANKS])
-        rendered = TechData.render(table).splitlines()
+        data = TechData((), grant_age=Age2AgeData.FEUDAL, civs=[Age2CivData.FRANKS])
+        rendered = data.render().splitlines()
         body = [line for line in rendered if line.startswith("    addTech(")]
         self.assertTrue(body)
         for line in body:
@@ -116,7 +116,7 @@ class TestRender(unittest.TestCase):
             self.assertEqual(fields[7], "0", line)
 
     def test_booleans_render_as_xs_ints(self):
-        rendered = TechData.render(TechData.rows(GENERIC, civs=SEED_CIVS))
+        rendered = TechData(GENERIC, civs=SEED_CIVS).render()
         self.assertNotIn("True", rendered)
         self.assertNotIn("False", rendered)
 
@@ -126,14 +126,14 @@ SEED = "0123456789abcdef"
 
 class TestSeedGuard(unittest.TestCase):
     def test_an_uninstalled_table_matches_an_uninstalled_slot_data(self):
-        rendered = TechData.render()
+        rendered = TechData().render()
         self.assertIn(f"extern const int {TechData.SEED_HIGH} = {SlotData.UNSET};", rendered)
         self.assertIn(f"extern const int {TechData.SEED_LOW} = {SlotData.UNSET};", rendered)
 
     def test_the_guard_matches_the_slot_data_halves(self):
         tag = Identity.seed_tag(SEED, 3)
         high, low = SlotData.seed_halves(tag)
-        rendered = TechData.render((), tag)
+        rendered = TechData(tag=tag).render()
         self.assertIn(f"extern const int {TechData.SEED_HIGH} = {high};", rendered)
         self.assertIn(f"extern const int {TechData.SEED_LOW} = {low};", rendered)
         slot_data = SlotData.render(SlotData.slot_fields(3, tag))
@@ -141,12 +141,13 @@ class TestSeedGuard(unittest.TestCase):
         self.assertIn(f"extern const int {SlotData.SEED_LOW} = {low};", slot_data)
 
     def test_a_different_seed_gives_a_different_guard(self):
-        one = TechData.render((), Identity.seed_tag(SEED, 3))
-        two = TechData.render((), Identity.seed_tag(SEED, 4))
+        one = TechData(tag=Identity.seed_tag(SEED, 3)).render()
+        two = TechData(tag=Identity.seed_tag(SEED, 4)).render()
         self.assertNotEqual(one, two)
 
     def test_the_guard_precedes_the_table(self):
-        rendered = TechData.render(TechData.rows([Age2TechData.ELITE_TARKAN_HUNS], civs=SEED_CIVS), Identity.seed_tag(SEED, 3))
+        rendered = TechData([Age2TechData.ELITE_TARKAN_HUNS], civs=SEED_CIVS,
+                            tag=Identity.seed_tag(SEED, 3)).render()
         self.assertLess(rendered.index(TechData.SEED_HIGH), rendered.index("LoadTechTable"))
 
 
@@ -180,7 +181,7 @@ class TestCivTechLists(unittest.TestCase):
         self.assertFalse(eagle.item.type.is_unique)
         # Neither shipped civ reaches it, so no seed of theirs can hold it.
         with self.assertRaises(ValueError):
-            TechData.rows([eagle], civs=SEED_CIVS)
+            TechData([eagle], civs=SEED_CIVS).rows()
 
         franks = Age2CivData.FRANKS
         was = CIV_TO_TECHS[franks]
@@ -188,10 +189,10 @@ class TestCivTechLists(unittest.TestCase):
         self.addCleanup(CIV_TO_TECHS.__setitem__, franks, was)
 
         # Claimed by Franks, so a Frankish seed keeps it...
-        TechData.rows([eagle], civs=[franks])
+        TechData([eagle], civs=[franks]).rows()
         # ...and a Hunnic one still cannot reach it.
         with self.assertRaises(ValueError):
-            TechData.rows([eagle], civs=[Age2CivData.HUNS])
+            TechData([eagle], civs=[Age2CivData.HUNS]).rows()
 
     def test_the_table_follows_the_civ_lists(self):
         # CIV_TO_TECHS is built once at import, so pin what it derives from.
@@ -205,9 +206,9 @@ class TestCivTechLists(unittest.TestCase):
         # Franks lack Bloodlines; Huns have it, so a two-civ seed still keeps it.
         bloodlines = Age2TechData.BLOODLINES
         self.assertIn(bloodlines, Age2CivData.FRANKS.excluded_techs)
-        TechData.rows([bloodlines], civs=SEED_CIVS)
+        TechData([bloodlines], civs=SEED_CIVS).rows()
         with self.assertRaises(ValueError):
-            TechData.rows([bloodlines], civs=[Age2CivData.FRANKS])
+            TechData([bloodlines], civs=[Age2CivData.FRANKS]).rows()
 
     def test_every_excluded_tech_is_a_real_catalogue_entry(self):
         for civ in Age2CivData:
@@ -225,14 +226,14 @@ class TestRequirements(unittest.TestCase):
     def test_a_tech_with_no_prerequisite_renders_the_empty_slot(self):
         loom = Age2TechData.LOOM
         self.assertIsNone(loom.prerequisite)
-        rendered = TechData.render(TechData.rows([loom], civs=SEED_CIVS))
+        rendered = TechData([loom], civs=SEED_CIVS).render()
         row = [l for l in rendered.splitlines() if "addTech(" in l][0]
         self.assertTrue(row.rstrip().endswith(f"{TechData.NO_PREREQUISITE});"), row)
 
     def test_a_prerequisite_renders_as_its_game_id(self):
         swords = Age2TechData.LONG_SWORDSMAN
         self.assertIs(swords.prerequisite, Age2TechData.MAN_AT_ARMS)
-        rendered = TechData.render(TechData.rows([swords], civs=SEED_CIVS))
+        rendered = TechData([swords], civs=SEED_CIVS).render()
         row = [l for l in rendered.splitlines() if "addTech(" in l][0]
         self.assertTrue(row.rstrip().endswith(f"{swords.prerequisiteId});"), row)
 

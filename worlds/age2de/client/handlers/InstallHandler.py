@@ -14,7 +14,7 @@ from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 from .FolderHandler import FolderHandler
-from .install import TechData
+from .install.TechData import TechData
 
 logger = logging.getLogger("Client")
 
@@ -164,8 +164,8 @@ class InstallHandler(FolderHandler):
     def _write_tech_data(self) -> Path:
         target = self.tech_data_path()
         if self.techsanity()[SlotData.TS_MODE] == Techsanity.option_none:
-            target.write_text(TechData.render(), encoding="utf-8")
+            target.write_text(TechData().render(), encoding="utf-8")
             return target
-        table = TechData.rows(self._techs, self.grant_age(), self._civs)
-        target.write_text(TechData.render(table, self._tag), encoding="utf-8")
+        data = TechData(self._techs, self.grant_age(), self._civs, self._tag)
+        target.write_text(data.render(), encoding="utf-8")
         return target

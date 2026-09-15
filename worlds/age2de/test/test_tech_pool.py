@@ -4,7 +4,7 @@ from test.general import setup_solo_multiworld
 
 from .. import Age2World
 from ..Options import ExistingTechs, ShuffleUniqueTechs, Techsanity
-from ..client.handlers.install import TechData
+from ..client.handlers.install.TechData import TechData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..generation.TechPool import TechPool
@@ -102,7 +102,7 @@ class TestPoolMatchesTheInstall(TechPoolTestBase):
         # and TechData.xs to the same idea of what a tech location is.
         pool = self.pool(techsanity=Techsanity.option_all,
                          shuffle_unique_techs=ShuffleUniqueTechs.option_shuffled)
-        table = TechData.rows(pool, civs=self.world.included_civs)
+        table = TechData(pool, civs=self.world.included_civs).rows()
         self.assertEqual([row.tech for row in table if row.is_location], sorted(pool))
 
 
