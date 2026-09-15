@@ -1,5 +1,8 @@
 from typing import Mapping
 
+from ..Options import (ExistingTechs, LockTechs, ShuffleUniqueTechs, TechBehavior,
+                       Techsanity)
+
 SLOT_ID = "AP_SLOT_ID"
 SEED_HIGH = "AP_SEED_HIGH"
 SEED_LOW = "AP_SEED_LOW"
@@ -10,13 +13,12 @@ TS_UNIQUES = "AP_TS_UNIQUES"
 TS_EXISTING = "AP_TS_EXISTING"
 
 UNSET = -1
-TECHSANITY_NONE = 0
 
 DEFAULTS: dict[str, int] = {
     SLOT_ID: UNSET,
     SEED_HIGH: UNSET,
     SEED_LOW: UNSET,
-    TS_MODE: TECHSANITY_NONE,
+    TS_MODE: Techsanity.option_none,
     TS_BEHAVIOR: UNSET,
     TS_LOCK: UNSET,
     TS_UNIQUES: UNSET,
@@ -24,11 +26,11 @@ DEFAULTS: dict[str, int] = {
 }
 
 OPTIONS: dict[str, str] = {
-    TS_MODE: "techsanity",
-    TS_BEHAVIOR: "tech_behavior",
-    TS_LOCK: "lock_techs",
-    TS_UNIQUES: "shuffle_unique_techs",
-    TS_EXISTING: "existing_techs",
+    TS_MODE: Techsanity.internal_name,
+    TS_BEHAVIOR: TechBehavior.internal_name,
+    TS_LOCK: LockTechs.internal_name,
+    TS_UNIQUES: ShuffleUniqueTechs.internal_name,
+    TS_EXISTING: ExistingTechs.internal_name,
 }
 
 MAX_LITERAL = 999_999_999

@@ -12,6 +12,7 @@ from ..campaign.CampaignReader import (
 )
 from ..campaign.CampaignWriter import HEADER_SIZE
 from ..client.handlers.InstallHandler import InstallHandler
+from ..Options import Techsanity
 from ..generation import Identity, SlotData
 from ..locations.Campaigns import Age2CampaignData
 
@@ -199,7 +200,7 @@ class TestSlotDataFile(unittest.TestCase):
         # XS gates on AP_TS_MODE == TECHSANITY_NONE, so a server that sends
         # nothing has to land on that value, not on UNSET.
         values = SlotData.techsanity()
-        self.assertEqual(values[SlotData.TS_MODE], SlotData.TECHSANITY_NONE)
+        self.assertEqual(values[SlotData.TS_MODE], Techsanity.option_none)
 
     def test_techsanity_options_are_carried(self):
         values = SlotData.slot_fields(3, Identity.seed_tag(SEED, 3), {

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable
 
+from ...Options import Techsanity
 from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
 from ...generation import Identity, SlotData
@@ -86,7 +87,7 @@ class InstallHandler(FolderHandler):
 
     def scenario_needs_age_up(self) -> bool:
         techsanity = self.techsanity()
-        return (techsanity[SlotData.TS_MODE] != SlotData.TECHSANITY_NONE
+        return (techsanity[SlotData.TS_MODE] != Techsanity.option_none
                 and TechData.rebases(techsanity[SlotData.TS_EXISTING]))
 
     def grant_age(self) -> Age2AgeData:
@@ -162,7 +163,7 @@ class InstallHandler(FolderHandler):
 
     def _write_tech_data(self) -> Path:
         target = self.tech_data_path()
-        if self.techsanity()[SlotData.TS_MODE] == SlotData.TECHSANITY_NONE:
+        if self.techsanity()[SlotData.TS_MODE] == Techsanity.option_none:
             target.write_text(TechData.render(), encoding="utf-8")
             return target
         table = TechData.rows(self._techs, self.grant_age(), self._civs)
