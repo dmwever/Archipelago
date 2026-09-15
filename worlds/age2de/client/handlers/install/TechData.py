@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
+from ....Options import ExistingTechs
 from ....generation import SlotData
 from ....locations.Ages import Age2AgeData
 from ....locations.Civilizations import Age2CivData
@@ -24,6 +25,12 @@ class Row:
     def item_id(self) -> int:
         """The id XS unlocks against, which is an item id, not this location's."""
         return self.tech.item.id if self.is_location else NO_ITEM
+
+
+def rebases(existing: int) -> bool:
+    """Whether the installed scenario has to start in the Dark Age, so that the
+    engine auto-researches nothing and XS can grant the right state."""
+    return existing != ExistingTechs.option_vanilla
 
 
 def rows(locations: Iterable[Age2TechData], grant_age: Age2AgeData = None,

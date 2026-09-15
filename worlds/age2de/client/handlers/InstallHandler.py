@@ -12,7 +12,6 @@ from ...locations.Civilizations import Age2CivData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
-from ...Options import ExistingTechs
 from .FolderHandler import FolderHandler
 from .install import TechData
 
@@ -88,7 +87,7 @@ class InstallHandler(FolderHandler):
     def scenario_needs_age_up(self) -> bool:
         techsanity = self.techsanity()
         return (techsanity[SlotData.TS_MODE] != SlotData.TECHSANITY_NONE
-                and ExistingTechs.rebases(techsanity[SlotData.TS_EXISTING]))
+                and TechData.rebases(techsanity[SlotData.TS_EXISTING]))
 
     def grant_age(self) -> Age2AgeData:
         """The deepest age an installed scenario starts in, or None if none was rebased."""
