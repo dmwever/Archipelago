@@ -41,6 +41,8 @@ class TechPool:
         """Whether Existing Techs withholds a technology the scenario would grant."""
         if self._existing_techs_mode == ExistingTechs.option_find_items:
             return True
+        if self._existing_techs_mode == ExistingTechs.option_start_in_dark_age:
+            return True
         return (self._existing_techs_mode == ExistingTechs.option_only_find_units
                 and TechOption.units in tech.tech_options)
 

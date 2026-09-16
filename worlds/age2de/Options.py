@@ -153,12 +153,15 @@ class ExistingTechs(Choice):
     Find Items: A technology the scenario would have started with is not applied on scenario start
     until the item is found. Once found, the tech costs nothing to research for its check.
     Only Find Units: Same as Find Items, but only units are hidden.
+    Start In Dark Age: Every scenario opens in the Dark Age with nothing researched at all, ages
+    included, so even the age-ups have to be earned back.
     """
     internal_name = "existing_techs"
     display_name = "Existing Techs"
     option_vanilla = 0
     option_find_items = 1
     option_only_find_units = 2
+    option_start_in_dark_age = 3
     default = option_vanilla
 
 
