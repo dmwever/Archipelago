@@ -10,7 +10,7 @@ from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Civilizations import Age2CivData
 from ..generation.TechPool import TechPool
-from ..locations.Techs import Age2TechData, TechOption
+from ..locations.Techs import Age2TechData, BUILDING_TO_TECHS, TechOption
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from ..logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 from ..locations.connections import LocationMapping
@@ -70,17 +70,21 @@ class TestResearchRegions(TechPoolTestBase):
                   if location.name.startswith("Research ")]
         self.assertEqual(sorted(placed), sorted(tech.location_name for tech in pool))
 
-    def test_every_building_gets_a_region_whatever_the_mode(self):
-        # The region set is a function of the buildings, not of the pool, so
-        # Unitsanity can hang units off the same regions later. A building with
-        # no pooled tech simply has an empty one.
+    def test_the_region_set_does_not_depend_on_the_mode(self):
+        # A building that researches something gets a region whatever Techsanity
+        # says, so Unitsanity can hang units off the same regions later; one that
+        # researches nothing of its own gets none.
+        researches = {building for building in Age2BuildingData
+                      if any(tech.buildings[0] is building
+                             for tech in BUILDING_TO_TECHS[building])}
         for mode in (Techsanity.option_none, Techsanity.option_units,
                      Techsanity.option_all):
             with self.subTest(mode=mode):
                 self.pool(techsanity=mode)
                 names = {region.name for region in self.world.multiworld.get_regions(1)}
                 for building in Age2BuildingData:
-                    self.assertIn(building.item.item_name, names, building.name)
+                    self.assertEqual(building.item.item_name in names,
+                                     building in researches, building.name)
 
     def test_a_tech_is_placed_only_under_the_building_it_names_first(self):
         # A tech researched at a unique replacement is listed under both buildings,
@@ -119,21 +123,31 @@ class TestReplacementEntrances(TechPoolTestBase):
         mw = self.world.multiworld
         self.assertEqual(mw.get_location("Research Horse Collar", 1).parent_region.name,
                          "Mill")
+        # The replacement gets its own region for logic, but holds no location --
+        # no technology names it first.
         self.assertEqual(len(mw.get_region("Settlement", 1).locations), 0)
 
-    def test_either_building_reaches_the_region(self):
+    def test_the_cross_entrance_is_free_and_the_building_entrances_carry_the_rule(self):
+        # Plan 3 will gate Can Build -> Mill on the Mill and Can Build -> Settlement
+        # on the Settlement; the Settlement -> Mill edge stays free, which is what
+        # makes reaching the Mill technologies a disjunction.
         self.pool(techsanity=Techsanity.option_all,
                   enabled_campaigns={"Attila the Hun", "Joan of Arc"})
-        mill = self.world.multiworld.get_region("Mill", 1)
-        standard, replacement = (mill.entrances[0], mill.entrances[1])
-        for has_standard, has_replacement in ((False, False), (True, False),
-                                              (False, True), (True, True)):
-            with self.subTest(mill=has_standard, settlement=has_replacement):
-                standard.access_rule = lambda state, v=has_standard: v
-                replacement.access_rule = lambda state, v=has_replacement: v
-                state = CollectionState(self.world.multiworld)
-                self.assertEqual(state.can_reach(mill),
-                                 has_standard or has_replacement)
+        mw = self.world.multiworld
+        mill = mw.get_region("Mill", 1)
+        cross = next(e for e in mill.entrances if e.name == "Settlement to Mill Techs")
+        self.assertIs(cross.parent_region, mw.get_region("Settlement", 1))
+        self.assertTrue(cross.access_rule(CollectionState(mw)))
+
+        mill_entrance = next(e for e in mill.entrances if e.name == "Mill")
+        settlement_entrance = mw.get_region("Settlement", 1).entrances[0]
+        for has_mill, has_settlement in ((False, False), (True, False),
+                                         (False, True), (True, True)):
+            with self.subTest(mill=has_mill, settlement=has_settlement):
+                mill_entrance.access_rule = lambda state, v=has_mill: v
+                settlement_entrance.access_rule = lambda state, v=has_settlement: v
+                state = CollectionState(mw)
+                self.assertEqual(state.can_reach(mill), has_mill or has_settlement)
 
     def test_nothing_is_added_when_no_civilization_has_the_replacement(self):
         Age2CivData.FRANKS.included_buildings = self.was

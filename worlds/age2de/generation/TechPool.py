@@ -69,4 +69,4 @@ class TechPool:
         research building is a unique replacement is listed under both, so it is
         placed only in the standard building it names first."""
         return [tech for tech in BUILDING_TO_TECHS[building]
-                if tech.buildings[0] is building and self.includes(tech)]
+                if building in tech.buildings and self.includes(tech)]

@@ -127,36 +127,39 @@ class Age2World(CachedRuleBuilderWorld):
         self.tech_pool = TechPool(self.options, self.earliest_age, self.included_civs)
         
         for building in Age2BuildingData:
+            if not BUILDING_TO_TECHS[building] or not self.civ_can_build(building):
+                continue
             region = Region(building.item.item_name, self.player, self.multiworld)
             connection = Entrance(self.player, f"{region.name}", buildings)
             buildings.exits.append(connection)
             connection.connect(region)
             regions.append(region)
-            for replacement in self.replacements_for(building):
+            linked_buildings: set[Region] = set()
+            for tech in self.tech_pool.by_building(building):
+                if tech not in self.shuffled_techs:
+                    new_location = Location(self.player, tech.location_name, tech.id, region)
+                    region.locations.append(new_location)
+                    self.shuffled_techs.append(tech)
+                    continue
+                
+                # Item exists. Point to region with item, with a ruleless entrance.
+                existing_building = self.multiworld.get_location(tech.location_name, self.player).parent_region
+                if existing_building in linked_buildings:
+                    continue
+                linked_buildings.add(existing_building)
                 alternate = Entrance(
                     self.player,
-                    f"{replacement.item.item_name} to {region.name} Techs", buildings)
-                buildings.exits.append(alternate)
-                alternate.connect(region)
-            for tech in self.tech_pool.by_building(building):
-                new_location = Location(self.player, tech.location_name, tech.id, region)
-                region.locations.append(new_location)
-                self.shuffled_techs.append(tech)
+                    f"{region.name} to {existing_building.name} Techs", region)
+                region.exits.append(alternate)
+                alternate.connect(existing_building)
 
         self.multiworld.regions += regions
 
-    def replacements_for(self, building: Buildings.Age2BuildingData
-                         ) -> list[Buildings.Age2BuildingData]:
-        """Unique buildings an included civilization has that stand in for this one.
-
-        TODO - Clean this concept up, probably move to Techs/Buildings.py
-        """
-        return sorted({alternate
-                       for tech in BUILDING_TO_TECHS[building]
-                       if tech.buildings[0] is building
-                       for alternate in tech.buildings[1:]
-                       if any(alternate in civ.included_buildings
-                              for civ in self.included_civs)})
+    def civ_can_build(self, building: Buildings.Age2BuildingData) -> bool:
+        """Whether any included civilization puts up this building."""
+        if Buildings.BuildingOption.unique in building.building_options:
+            return any(building in civ.included_buildings for civ in self.included_civs)
+        return not all(building in civ.excluded_buildings for civ in self.included_civs)
 
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)
