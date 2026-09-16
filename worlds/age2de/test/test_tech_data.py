@@ -68,7 +68,7 @@ class TestRowSelection(unittest.TestCase):
         self.assertEqual(sorted(ids), sorted(UPGRADES))
         self.assertEqual(len(ids), len(set(ids)))
 
-    def test_units_and_lock_technologies_matches_the_measured_shape(self):
+    def test_units_and_find_items_matches_the_measured_shape(self):
         table = TechData(UPGRADES, grant_age=Age2AgeData.IMPERIAL, civs=SEED_CIVS).rows()
         locations = [row for row in table if row.is_location]
         grant_only = [row for row in table if not row.is_location]

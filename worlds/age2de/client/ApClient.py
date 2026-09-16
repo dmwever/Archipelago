@@ -37,12 +37,13 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.ctx.game_ctx.update_game_user_folder(self.ctx.settings.user_folder)
         self.output(f"User folder now assigned to {self.ctx.settings.user_folder}")
 
-    def _cmd_install(self) -> None:
+    def _cmd_install(self, mode: str = "") -> None:
         """
         Install: Sets your Age2 install up for this seed and slot.
 
         Writes a seed-tagged copy of each campaign you enabled, plus SlotData.xs
-        and TechData.xs. Run it once per seed, after connecting.
+        and TechData.xs. Run it once per seed, after connecting. A campaign already
+        installed for this seed is left alone; /install full rebuilds every one.
         """
         ctx = self.ctx
         status = ctx.game_ctx.client_status
@@ -65,11 +66,16 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output("This slot has no campaigns to install.")
             return
 
+        full = mode.strip().lower() == "full"
+        if mode and not full:
+            self.output(f"Unknown option {mode!r}. Use /install or /install full.")
+            return
+
         ctx.game_ctx.install_handler.installing = True
         self.output("Installing. Rebuilding a scenario takes a few seconds each.")
-        Utils.async_start(self._install(campaigns), name="Age2Install")
+        Utils.async_start(self._install(campaigns, full), name="Age2Install")
 
-    async def _install(self, campaigns: list[Age2CampaignData]) -> None:
+    async def _install(self, campaigns: list[Age2CampaignData], full: bool = False) -> None:
         """Install off the event loop, so the client keeps drawing while it runs."""
         ctx = self.ctx
         status = ctx.game_ctx.client_status
@@ -81,7 +87,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         try:
             handler.setup(campaigns, status.slot_id, status.tag, status.slot_data,
                           ctx.server_locations)
-            written = await loop.run_in_executor(None, handler.install)
+            written = await loop.run_in_executor(None, handler.install, full)
         except InstallError as ex:
             self.output(str(ex))
         except Exception:

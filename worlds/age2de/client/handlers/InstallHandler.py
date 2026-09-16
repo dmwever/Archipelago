@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable
 
-from ...Options import Techsanity
+from ...Options import ExistingTechs, Techsanity
 from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
 from ...generation import Identity, SlotData
@@ -94,6 +94,8 @@ class InstallHandler(FolderHandler):
         """The deepest age an installed scenario starts in, or None if none was rebased."""
         if not self.scenario_needs_age_up():
             return None
+        if self.techsanity()[SlotData.TS_EXISTING] == ExistingTechs.option_start_in_dark_age:
+            return None
         ages = [scenario.vanilla_age for scenario in self._scenarios]
         return max(ages) if ages else None
 
@@ -103,7 +105,7 @@ class InstallHandler(FolderHandler):
     def install_path(self, campaign: IncludedCampaign) -> Path:
         return self.campaign_dir() / campaign.write_name
 
-    def install(self) -> list[Path]:
+    def install(self, full: bool = False) -> list[Path]:
         if not self._user_folder:
             raise InstallError("No Age2 user folder is set.")
 
@@ -121,9 +123,18 @@ class InstallHandler(FolderHandler):
                 f"Could not find {self.xs_dir()}. Install the Ageipelago files into your "
                 "Age2 user folder first.")
 
+        rebuild = [campaign for campaign in self._included_campaigns
+                   if full or not self.install_path(campaign).is_file()]
+        for campaign in self._included_campaigns:
+            if campaign not in rebuild:
+                self.report(f"{campaign.display_name} is already installed for this seed.")
+
+        stems = {data.file_stem for campaign in rebuild
+                 for data in CAMPAIGN_TO_SCENARIOS[campaign.data]}
         self._parsed = 0
-        self._to_parse = sum(1 for data in self._scenarios if self.steps_for(data))
-        written = [self._install_campaign(campaign) for campaign in self._included_campaigns]
+        self._to_parse = sum(1 for data in self._scenarios
+                             if data.file_stem in stems and self.steps_for(data))
+        written = [self._install_campaign(campaign) for campaign in rebuild]
         written.append(self._write_slot_data())
         written.append(self._write_tech_data())
         return written

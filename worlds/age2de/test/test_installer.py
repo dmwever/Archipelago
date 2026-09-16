@@ -43,10 +43,11 @@ class InstallerTestBase(unittest.TestCase):
         self.handler.set_user_folder(str(self.root))
         self.tag = Identity.seed_tag(SEED, 3)
 
-    def install(self, campaigns, slot=3, tag=None, slot_data=None, location_ids=()):
+    def install(self, campaigns, slot=3, tag=None, slot_data=None, location_ids=(),
+                full=False):
         self.handler.setup(campaigns, slot, self.tag if tag is None else tag,
                            slot_data, location_ids)
-        return self.handler.install()
+        return self.handler.install(full)
 
     def campaign_dir(self) -> Path:
         return self.handler.campaign_dir()
@@ -107,6 +108,36 @@ class TestInstall(InstallerTestBase):
         self.install([Age2CampaignData.ATTILA])
         self.assertEqual(tagged.read_bytes(), first)
         self.assertEqual(self.slot_data().read_bytes(), first_slot_data)
+
+    def test_an_installed_campaign_is_not_rebuilt(self):
+        campaigns = [Age2CampaignData.ATTILA]
+        first = self.install(campaigns)
+        self.assertTrue([p for p in first if p.suffix == ".aoe2campaign"])
+
+        again = self.install(campaigns)
+        self.assertEqual([p for p in again if p.suffix == ".aoe2campaign"], [])
+        # The seed guard files are cheap and carry the seed, so they always go out.
+        self.assertIn(self.slot_data(), again)
+        self.assertIn(self.tech_data(), again)
+
+    def test_full_rebuilds_an_installed_campaign(self):
+        campaigns = [Age2CampaignData.ATTILA]
+        self.install(campaigns)
+        again = self.install(campaigns, full=True)
+        self.assertTrue([p for p in again if p.suffix == ".aoe2campaign"])
+
+    def test_a_new_campaign_is_built_while_the_installed_one_is_kept(self):
+        self.install([Age2CampaignData.ATTILA])
+        both = self.install([Age2CampaignData.ATTILA, Age2CampaignData.JOAN])
+        built = [p.name for p in both if p.suffix == ".aoe2campaign"]
+        self.assertEqual(len(built), 1)
+        self.assertIn("Joan", built[0])
+
+    def test_another_slot_still_builds_its_own_copy(self):
+        other = Identity.seed_tag(SEED, 5)
+        self.install([Age2CampaignData.ATTILA])
+        written = self.install([Age2CampaignData.ATTILA], slot=5, tag=other)
+        self.assertTrue([p for p in written if p.suffix == ".aoe2campaign"])
 
     def test_another_slot_writes_different_files(self):
         other = Identity.seed_tag(SEED, 5)

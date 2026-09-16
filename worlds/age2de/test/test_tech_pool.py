@@ -228,7 +228,7 @@ class TestScenarioReachability(TechPoolTestBase):
                 for tech in pool:
                     self.assertTrue(any(start <= tech.age for start in starts), tech.name)
 
-    def test_only_lock_units_keeps_an_upgrade_below_every_start(self):
+    def test_only_find_units_keeps_an_upgrade_below_every_start(self):
         upgrade = next(t for t in Age2TechData if TechOption.units in t.tech_options)
         generic = Age2TechData.LOOM
         above = Age2AgeData.IMPERIAL
