@@ -106,15 +106,10 @@ class Age2World(CachedRuleBuilderWorld):
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         
         for campaign in self.included_campaigns:
-            scenarios = iter(CAMPAIGN_TO_SCENARIOS[campaign])
-            prev_region: Region = None
-            try:
-                first_scn = next(scenarios)
-                region = self.add_scenario_region(first_scn, regions[0])
-                regions.append(region)
-                prev_region = region
-            except StopIteration:
-                raise OptionError(f"Could not iterate {first_scn.scenario_name} region from {campaign.campaign_name}")
+            scenarios = CAMPAIGN_TO_SCENARIOS[campaign]
+            if not scenarios:
+                raise OptionError(f"{self.player_name}: {campaign.campaign_name} has no scenarios.")
+            prev_region: Region = regions[0]
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)
                 regions.append(region)
