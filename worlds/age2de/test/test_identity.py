@@ -69,6 +69,24 @@ class TestTaggedFileNames(unittest.TestCase):
             Identity.campaign_xsdat_name(Age2CampaignData.ATTILA.file_stem, tag, "Dave"))
 
 
+class TestSourceNames(unittest.TestCase):
+    def test_the_source_bundle_carries_the_template_suffix(self):
+        self.assertEqual(Identity.source_campaign_file_name("AP Joan of Arc"),
+                         "AP Joan of Arc Template.aoe2campaign")
+
+    def test_the_player_copy_drops_the_template_suffix(self):
+        tag = Identity.seed_tag(SEED_A, 3)
+        installed = Identity.campaign_file_name("AP Joan of Arc", tag, "Dave")
+        self.assertEqual(installed, f"AP Joan of Arc_Dave_{tag}.aoe2campaign")
+        self.assertNotIn(Identity.SOURCE_SUFFIX, installed)
+
+    def test_the_engine_xsdat_drops_the_template_suffix(self):
+        tag = Identity.seed_tag(SEED_A, 3)
+        written = Identity.campaign_xsdat_name("AP Joan of Arc", tag, "Dave")
+        self.assertNotIn(Identity.SOURCE_SUFFIX, written)
+        self.assertEqual(Identity.tag_of(written), tag)
+
+
 class TestPlayerNames(unittest.TestCase):
     def test_the_player_sits_before_the_tag(self):
         tag = Identity.seed_tag(SEED_A, 3)

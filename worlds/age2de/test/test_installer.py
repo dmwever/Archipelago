@@ -21,11 +21,12 @@ def fake_user_folder(root: Path, campaigns=tuple(Age2CampaignData)) -> Path:
     (root / SCENARIO_SUBPATH).mkdir(parents=True)
 
     for campaign in campaigns:
-        bundle = build_fixture(campaign.file_stem, [
+        bundle = build_fixture(Identity.source_campaign_stem(campaign.file_stem), [
             (f"{campaign.file_stem}_{index}.aoe2scenario", bytes([index]) * (64 + index))
             for index in range(1, 4)
         ])
-        (layout.campaign_dir() / (campaign.file_stem + ".aoe2campaign")).write_bytes(bundle)
+        (layout.campaign_dir()
+         / Identity.source_campaign_file_name(campaign.file_stem)).write_bytes(bundle)
         (root / SCENARIO_SUBPATH / f"{campaign.file_stem}_1.aoe2scenario").write_bytes(b"authoring")
 
     layout.slot_data_path().write_text(SlotData.render(), encoding="utf-8")
@@ -80,12 +81,13 @@ class TestInstall(InstallerTestBase):
     def test_source_bundles_are_left_alone(self):
         before = {
             campaign.file_stem: (self.campaign_dir()
-                                 / (campaign.file_stem + ".aoe2campaign")).read_bytes()
+                                 / Identity.source_campaign_file_name(
+                                     campaign.file_stem)).read_bytes()
             for campaign in Age2CampaignData
         }
         self.install(list(Age2CampaignData))
         for campaign in Age2CampaignData:
-            path = self.campaign_dir() / (campaign.file_stem + ".aoe2campaign")
+            path = self.campaign_dir() / Identity.source_campaign_file_name(campaign.file_stem)
             self.assertEqual(path.read_bytes(), before[campaign.file_stem])
 
     def test_the_scenario_folder_is_untouched(self):
@@ -121,7 +123,7 @@ class TestInstall(InstallerTestBase):
         self.assertEqual(campaign.header.name, path.name[:-len(".aoe2campaign")])
 
     def test_the_scenario_entries_are_not_tagged(self):
-        source = Campaign(str(self.campaign_dir() / "AP Attila the Hun.aoe2campaign"))
+        source = Campaign(str(self.campaign_dir() / "AP Attila the Hun Template.aoe2campaign"))
         self.install([Age2CampaignData.ATTILA])
         installed = Campaign(str(
             self.campaign_dir() / self.installed_name("AP Attila the Hun")))
@@ -172,10 +174,10 @@ class TestPlayerNameInTheFileName(InstallerTestBase):
 
 class TestInstallRefusals(InstallerTestBase):
     def test_missing_source_bundle_is_reported(self):
-        (self.campaign_dir() / "AP Attila the Hun.aoe2campaign").unlink()
+        (self.campaign_dir() / "AP Attila the Hun Template.aoe2campaign").unlink()
         with self.assertRaises(InstallError) as caught:
             self.install([Age2CampaignData.ATTILA])
-        self.assertIn("AP Attila the Hun.aoe2campaign", str(caught.exception))
+        self.assertIn("AP Attila the Hun Template.aoe2campaign", str(caught.exception))
 
     def test_missing_xs_folder_is_reported(self):
         for path in self.handler.xs_dir().iterdir():
