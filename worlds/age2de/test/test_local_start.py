@@ -482,8 +482,8 @@ class TestTwoSlots(unittest.TestCase):
     def test_campaign_sets_do_not_merge(self) -> None:
         multiworld = self.multiworld()
         first, second = multiworld.worlds[1], multiworld.worlds[2]
-        self.assertEqual({Age2CampaignData.ATTILA}, first.included_campaigns)
-        self.assertEqual({Age2CampaignData.JOAN}, second.included_campaigns)
+        self.assertEqual([Age2CampaignData.ATTILA], first.included_campaigns)
+        self.assertEqual([Age2CampaignData.JOAN], second.included_campaigns)
         self.assertIsNot(first.included_campaigns, second.included_campaigns)
 
     def test_each_slot_places_its_own_items(self) -> None:
