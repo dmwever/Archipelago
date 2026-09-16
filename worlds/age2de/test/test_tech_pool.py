@@ -1,5 +1,6 @@
 import unittest
 
+from BaseClasses import CollectionState
 from test.general import setup_solo_multiworld
 
 from .. import Age2World
@@ -7,6 +8,7 @@ from ..Options import ExistingTechs, ShuffleUniqueTechs, Techsanity
 from ..client.handlers.install.TechData import TechData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData, BuildingOption
+from ..locations.Civilizations import Age2CivData
 from ..generation.TechPool import TechPool
 from ..locations.Techs import Age2TechData, TechOption
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
@@ -92,6 +94,54 @@ class TestResearchRegions(TechPoolTestBase):
         for tech in self.world.shuffled_techs:
             region = self.world.multiworld.get_region(tech.buildings[0].item.item_name, 1)
             self.assertIn(tech.location_name, [l.name for l in region.locations], tech.name)
+
+
+class TestReplacementEntrances(TechPoolTestBase):
+    """A civilization that builds a Settlement instead of a Mill still researches
+    the Mill technologies, so the Mill region earns a second entrance. The location
+    itself cannot move or be duplicated -- Archipelago allows one location of a
+    given name per player, in exactly one region."""
+
+    def setUp(self):
+        self.was = Age2CivData.FRANKS.included_buildings
+        Age2CivData.FRANKS.included_buildings = self.was + [Age2BuildingData.SETTLEMENT]
+        self.addCleanup(setattr, Age2CivData.FRANKS, "included_buildings", self.was)
+
+    def test_the_replacement_earns_the_standard_region_an_entrance(self):
+        self.pool(techsanity=Techsanity.option_all,
+                  enabled_campaigns={"Attila the Hun", "Joan of Arc"})
+        mill = self.world.multiworld.get_region("Mill", 1)
+        self.assertIn("Settlement to Mill Techs", [e.name for e in mill.entrances])
+
+    def test_the_technology_stays_in_the_standard_region(self):
+        self.pool(techsanity=Techsanity.option_all,
+                  enabled_campaigns={"Attila the Hun", "Joan of Arc"})
+        mw = self.world.multiworld
+        self.assertEqual(mw.get_location("Research Horse Collar", 1).parent_region.name,
+                         "Mill")
+        self.assertEqual(len(mw.get_region("Settlement", 1).locations), 0)
+
+    def test_either_building_reaches_the_region(self):
+        self.pool(techsanity=Techsanity.option_all,
+                  enabled_campaigns={"Attila the Hun", "Joan of Arc"})
+        mill = self.world.multiworld.get_region("Mill", 1)
+        standard, replacement = (mill.entrances[0], mill.entrances[1])
+        for has_standard, has_replacement in ((False, False), (True, False),
+                                              (False, True), (True, True)):
+            with self.subTest(mill=has_standard, settlement=has_replacement):
+                standard.access_rule = lambda state, v=has_standard: v
+                replacement.access_rule = lambda state, v=has_replacement: v
+                state = CollectionState(self.world.multiworld)
+                self.assertEqual(state.can_reach(mill),
+                                 has_standard or has_replacement)
+
+    def test_nothing_is_added_when_no_civilization_has_the_replacement(self):
+        Age2CivData.FRANKS.included_buildings = self.was
+        self.pool(techsanity=Techsanity.option_all,
+                  enabled_campaigns={"Attila the Hun", "Joan of Arc"})
+        extra = [e.name for e in self.world.multiworld.get_region("Can Build", 1).exits
+                 if " to " in e.name]
+        self.assertEqual(extra, [])
 
 
 class TestResearchBuildings(unittest.TestCase):

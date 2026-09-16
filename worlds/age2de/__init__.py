@@ -132,12 +132,31 @@ class Age2World(CachedRuleBuilderWorld):
             buildings.exits.append(connection)
             connection.connect(region)
             regions.append(region)
+            for replacement in self.replacements_for(building):
+                alternate = Entrance(
+                    self.player,
+                    f"{replacement.item.item_name} to {region.name} Techs", buildings)
+                buildings.exits.append(alternate)
+                alternate.connect(region)
             for tech in self.tech_pool.by_building(building):
                 new_location = Location(self.player, tech.location_name, tech.id, region)
                 region.locations.append(new_location)
                 self.shuffled_techs.append(tech)
 
         self.multiworld.regions += regions
+
+    def replacements_for(self, building: Buildings.Age2BuildingData
+                         ) -> list[Buildings.Age2BuildingData]:
+        """Unique buildings an included civilization has that stand in for this one.
+
+        TODO - Clean this concept up, probably move to Techs/Buildings.py
+        """
+        return sorted({alternate
+                       for tech in BUILDING_TO_TECHS[building]
+                       if tech.buildings[0] is building
+                       for alternate in tech.buildings[1:]
+                       if any(alternate in civ.included_buildings
+                              for civ in self.included_civs)})
 
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)
