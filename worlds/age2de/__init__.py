@@ -12,7 +12,7 @@ from worlds.LauncherComponents import Component, Type, components, launch as lau
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
-from .generation import LocalStart, WorldVersion
+from .generation import Identity, LocalStart, WorldVersion
 from .Options import Goal, Age2Options, ScenarioBranching
 from .items import Items
 from .locations import Campaigns, Locations, Scenarios
@@ -85,6 +85,21 @@ class Age2World(CachedRuleBuilderWorld):
         if not self.starting_campaigns:
             raise OptionError(f"{self.player_name}: starting_campaigns must include at least one "
                               f"enabled campaign. Enabled: {sorted(self.options.enabled_campaigns.value)}.")
+        self.check_installable_name()
+
+    def check_installable_name(self) -> None:
+        """/install names each campaign file after the slot, so the name has to survive a file
+        name. Refuse a name that leaves nothing behind, and announce one that merely changes."""
+        safe_name = Identity.sanitize_player(self.player_name)
+        if not safe_name:
+            raise OptionError(
+                f"{self.player_name}: this name has no characters that can be used in a file name. "
+                f"Age2 installs campaign files named after your slot, so pick a name that is not "
+                r'made up entirely of <>:"/\|?* and dots.')
+        if safe_name != self.player_name:
+            logger.warning(
+                "%s's name contains characters that cannot be used in a file name. Their campaigns "
+                "will be installed as \"%s\".", self.player_name, safe_name)
 
     def create_regions(self) -> None:
         

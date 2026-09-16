@@ -62,8 +62,14 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output("This slot has no campaigns to install.")
             return
 
+        raw_name = ctx.player_names[ctx.slot]
+        if status.player_name != raw_name:
+            self.output(f'Your name "{raw_name}" contains characters that cannot be used in a '
+                        f'file name. Your campaigns are installed as "{status.player_name}".')
+
         try:
-            ctx.game_ctx.install_handler.setup(campaigns, status.slot_id, status.tag)
+            ctx.game_ctx.install_handler.setup(
+                campaigns, status.slot_id, status.tag, status.player_name)
             written = ctx.game_ctx.install_handler.install()
         except InstallError as ex:
             self.output(str(ex))
@@ -125,8 +131,10 @@ class Age2Context(CommonContext):
         self.seed_name = self.installed_seed_name
         tag = Identity.seed_tag(self.installed_seed_name, self.slot)
         logger.info("Playthrough tag for slot %s: %s", self.slot, tag)
+        player_name = Identity.sanitize_player(self.player_names[self.slot])
         self.game_ctx.connect(
-            self.checked_locations, slot_data, self.settings.user_folder, self.slot, tag)
+            self.checked_locations, slot_data, self.settings.user_folder, self.slot, tag,
+            player_name)
         Utils.async_start(self.send_msgs([
         {
             "cmd": "Set",

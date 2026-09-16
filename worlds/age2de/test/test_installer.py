@@ -10,6 +10,7 @@ from ..generation import Identity, SlotData
 from ..locations.Campaigns import Age2CampaignData
 
 SCENARIO_SUBPATH = "resources/_common/scenario"
+PLAYER = "Dave"
 
 
 def fake_user_folder(root: Path, campaigns=tuple(Age2CampaignData)) -> Path:
@@ -40,9 +41,12 @@ class InstallerTestBase(unittest.TestCase):
         self.handler.set_user_folder(str(self.root))
         self.tag = Identity.seed_tag(SEED, 3)
 
-    def install(self, campaigns, slot=3, tag=None):
-        self.handler.setup(campaigns, slot, self.tag if tag is None else tag)
+    def install(self, campaigns, slot=3, tag=None, player_name=PLAYER):
+        self.handler.setup(campaigns, slot, self.tag if tag is None else tag, player_name)
         return self.handler.install()
+
+    def installed_name(self, stem, tag=None, player_name=PLAYER):
+        return Identity.campaign_file_name(stem, self.tag if tag is None else tag, player_name)
 
     def campaign_dir(self) -> Path:
         return self.handler.campaign_dir()
@@ -58,9 +62,9 @@ class TestInstall(InstallerTestBase):
     def test_writes_a_tagged_bundle_and_slot_data(self):
         written = self.install([Age2CampaignData.ATTILA])
 
-        self.assertIn(f"AP Attila the Hun_{self.tag}.aoe2campaign", self.bundles_present())
+        self.assertIn(self.installed_name("AP Attila the Hun"), self.bundles_present())
         self.assertEqual(written[0], self.campaign_dir()
-                         / f"AP Attila the Hun_{self.tag}.aoe2campaign")
+                         / self.installed_name("AP Attila the Hun"))
         self.assertTrue(written[0].is_file())
         self.assertEqual(written[-1], self.slot_data())
         self.assertEqual(
@@ -70,8 +74,8 @@ class TestInstall(InstallerTestBase):
     def test_only_the_enabled_campaigns_are_installed(self):
         self.install([Age2CampaignData.JOAN])
         present = self.bundles_present()
-        self.assertIn(f"AP Joan of Arc_{self.tag}.aoe2campaign", present)
-        self.assertNotIn(f"AP Attila the Hun_{self.tag}.aoe2campaign", present)
+        self.assertIn(self.installed_name("AP Joan of Arc"), present)
+        self.assertNotIn(self.installed_name("AP Attila the Hun"), present)
 
     def test_source_bundles_are_left_alone(self):
         before = {
@@ -92,7 +96,7 @@ class TestInstall(InstallerTestBase):
 
     def test_installing_twice_is_identical(self):
         self.install([Age2CampaignData.ATTILA])
-        tagged = self.campaign_dir() / f"AP Attila the Hun_{self.tag}.aoe2campaign"
+        tagged = self.campaign_dir() / self.installed_name("AP Attila the Hun")
         first = tagged.read_bytes()
         first_slot_data = self.slot_data().read_bytes()
 
@@ -106,21 +110,21 @@ class TestInstall(InstallerTestBase):
         self.install([Age2CampaignData.ATTILA], slot=5, tag=other)
 
         present = self.bundles_present()
-        self.assertIn(f"AP Attila the Hun_{self.tag}.aoe2campaign", present)
-        self.assertIn(f"AP Attila the Hun_{other}.aoe2campaign", present)
+        self.assertIn(self.installed_name("AP Attila the Hun"), present)
+        self.assertIn(self.installed_name("AP Attila the Hun", tag=other), present)
         self.assertIn("AP_SLOT_ID = 5", self.slot_data().read_text(encoding="utf-8"))
 
     def test_the_tagged_bundle_carries_the_tagged_display_name(self):
         self.install([Age2CampaignData.ATTILA])
-        path = self.campaign_dir() / f"AP Attila the Hun_{self.tag}.aoe2campaign"
+        path = self.campaign_dir() / self.installed_name("AP Attila the Hun")
         campaign = Campaign(str(path))
-        self.assertEqual(campaign.header.name, f"AP Attila the Hun_{self.tag}")
+        self.assertEqual(campaign.header.name, path.name[:-len(".aoe2campaign")])
 
     def test_the_scenario_entries_are_not_tagged(self):
         source = Campaign(str(self.campaign_dir() / "AP Attila the Hun.aoe2campaign"))
         self.install([Age2CampaignData.ATTILA])
         installed = Campaign(str(
-            self.campaign_dir() / f"AP Attila the Hun_{self.tag}.aoe2campaign"))
+            self.campaign_dir() / self.installed_name("AP Attila the Hun")))
         self.assertEqual([scn.file_name for scn in installed.scenarios],
                          [scn.file_name for scn in source.scenarios])
         self.assertEqual([scn.name for scn in installed.scenarios],
@@ -132,9 +136,38 @@ class TestInstall(InstallerTestBase):
         self.install([Age2CampaignData.ATTILA])
         handler = CampaignHandler(list(Age2CampaignData))
         handler.set_tag(self.tag)
-        installed = self.campaign_dir() / f"AP Attila the Hun_{self.tag}.aoe2campaign"
-        self.assertEqual(handler.read_name(Age2CampaignData.ATTILA),
+        handler.set_player_name(PLAYER)
+        installed = self.campaign_dir() / self.installed_name("AP Attila the Hun")
+        self.assertEqual(handler.campaign_read_name(Age2CampaignData.ATTILA),
                          installed.name.replace(".aoe2campaign", ".xsdat"))
+
+
+class TestPlayerNameInTheFileName(InstallerTestBase):
+    def test_the_player_name_sits_before_the_tag(self):
+        self.install([Age2CampaignData.ATTILA])
+        self.assertIn(f"AP Attila the Hun_{PLAYER}_{self.tag}.aoe2campaign",
+                      self.bundles_present())
+
+    def test_the_tag_is_still_recoverable(self):
+        self.install([Age2CampaignData.ATTILA])
+        installed = self.installed_name("AP Attila the Hun")
+        self.assertEqual(Identity.tag_of(installed.replace(".aoe2campaign", ".xsdat")), self.tag)
+
+    def test_forbidden_characters_are_stripped_from_the_file_name(self):
+        self.install([Age2CampaignData.ATTILA], player_name=Identity.sanitize_player('Da:ve|B'))
+        self.assertIn(f"AP Attila the Hun_DaveB_{self.tag}.aoe2campaign", self.bundles_present())
+
+    def test_the_display_name_matches_the_file_name(self):
+        self.install([Age2CampaignData.ATTILA])
+        path = self.campaign_dir() / self.installed_name("AP Attila the Hun")
+        self.assertEqual(Campaign(str(path)).header.name, path.stem)
+
+    def test_two_players_on_one_machine_do_not_collide(self):
+        self.install([Age2CampaignData.ATTILA], player_name="Dave")
+        self.install([Age2CampaignData.ATTILA], player_name="Erin")
+        present = self.bundles_present()
+        self.assertIn(f"AP Attila the Hun_Dave_{self.tag}.aoe2campaign", present)
+        self.assertIn(f"AP Attila the Hun_Erin_{self.tag}.aoe2campaign", present)
 
 
 class TestInstallRefusals(InstallerTestBase):
@@ -153,7 +186,7 @@ class TestInstallRefusals(InstallerTestBase):
 
     def test_no_user_folder_is_reported(self):
         handler = InstallHandler()
-        handler.setup([Age2CampaignData.ATTILA], 3, self.tag)
+        handler.setup([Age2CampaignData.ATTILA], 3, self.tag, PLAYER)
         with self.assertRaises(InstallError):
             handler.install()
 

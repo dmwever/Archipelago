@@ -4,6 +4,7 @@ Phase 2 covers campaign/scenario selection only — which scenario Local Start
 will work against. Placement is not exercised here.
 """
 
+import logging
 import random
 import unittest
 from types import SimpleNamespace
@@ -88,6 +89,36 @@ class TestSelectionOptionErrors(unittest.TestCase):
 
     def test_starting_needs_at_least_one(self) -> None:
         self.assert_rejects({ATTILA}, set())
+
+
+class TestInstallableName(unittest.TestCase):
+    """/install names each campaign file after the slot, so the name has to survive a file name."""
+
+    def world_named(self, name: str):
+        world = setup_solo_multiworld(Age2World, ()).worlds[1]
+        world.options.enabled_campaigns.value = {ATTILA}
+        world.options.starting_campaigns.value = {ATTILA}
+        world.multiworld.player_name[world.player] = name
+        return world
+
+    def test_a_usable_name_passes(self) -> None:
+        self.world_named("Dave").generate_early()
+
+    def test_a_name_of_only_forbidden_characters_is_refused(self) -> None:
+        for name in ('///', '<>:"|?*', "...", "   "):
+            with self.subTest(name=name), self.assertRaises(OptionError):
+                self.world_named(name).generate_early()
+
+    def test_an_altered_name_warns_and_names_the_result(self) -> None:
+        world = self.world_named('Da:ve|B')
+        with self.assertLogs("worlds.age2de", level=logging.WARNING) as caught:
+            world.generate_early()
+        self.assertIn("DaveB", "\n".join(caught.output))
+
+    def test_a_clean_name_does_not_warn(self) -> None:
+        world = self.world_named("Dave")
+        with self.assertNoLogs("worlds.age2de", level=logging.WARNING):
+            world.generate_early()
 
 
 class _StubWorld:

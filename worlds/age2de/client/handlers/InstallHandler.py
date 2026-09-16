@@ -34,13 +34,15 @@ class InstallHandler(FolderHandler):
         self._included_campaigns: list[IncludedCampaign] = []
         super().__init__()
 
-    def setup(self, campaigns: list[Age2CampaignData], slot: int, tag: str):
+    def setup(self, campaigns: list[Age2CampaignData], slot: int, tag: str, player_name: str):
+        # display_name and write_name must share a stem: the engine names the .xsdat it writes
+        # after the campaign it is playing, and which of the two it reads is untested.
         self._included_campaigns = [
             IncludedCampaign(
                 data=cpn,
-                display_name=Identity.tagged(cpn.file_stem, tag),
-                file_name=Identity.campaign_file_name(cpn.file_stem, ''),
-                write_name=Identity.campaign_file_name(cpn.file_stem, tag),
+                display_name=Identity.campaign_stem(cpn.file_stem, tag, player_name),
+                file_name=Identity.source_campaign_file_name(cpn.file_stem),
+                write_name=Identity.campaign_file_name(cpn.file_stem, tag, player_name),
             )
             for cpn in campaigns
         ]

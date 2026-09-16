@@ -231,14 +231,14 @@ class TestInstallPaths(unittest.TestCase):
         self.assertEqual(handler.slot_data_path().as_posix(),
                          self.ROOT + "/resources/_common/xs/SlotData.xs")
 
-    def test_source_and_installed_names_differ_by_the_tag(self):
+    def test_source_and_installed_names_differ_by_the_player_and_tag(self):
         tag = Identity.seed_tag(SEED, 3)
         handler = self.handler()
-        handler.setup([Age2CampaignData.ATTILA], 3, tag)
+        handler.setup([Age2CampaignData.ATTILA], 3, tag, "Dave")
         included = handler._included_campaigns[0]
         self.assertEqual(handler.source_path(included).name, "AP Attila the Hun.aoe2campaign")
         self.assertEqual(handler.install_path(included).name,
-                         f"AP Attila the Hun_{tag}.aoe2campaign")
-        self.assertEqual(included.display_name, f"AP Attila the Hun_{tag}")
+                         f"AP Attila the Hun_Dave_{tag}.aoe2campaign")
+        self.assertEqual(included.display_name, f"AP Attila the Hun_Dave_{tag}")
         self.assertEqual(handler.source_path(included).parent,
                          handler.install_path(included).parent)

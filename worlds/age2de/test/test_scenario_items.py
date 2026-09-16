@@ -30,6 +30,10 @@ def read_ints(path: str) -> list[int]:
     return [struct.unpack("<i", data[i:i + 4])[0] for i in range(0, len(data), 4)]
 
 
+TAG = Identity.seed_tag("56761350679959987564", 3)
+PLAYER = "Dave"
+
+
 class TestScenarioItems(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -39,6 +43,8 @@ class TestScenarioItems(unittest.TestCase):
     def handler(self, *items: Age2ItemData) -> CampaignHandler:
         handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         handler.set_user_folder(self.folder)
+        handler.set_tag(TAG)
+        handler.set_player_name(PLAYER)
         handler.sync_unlocked(list(items))
         return handler
 
@@ -46,7 +52,8 @@ class TestScenarioItems(unittest.TestCase):
         return [scn.data.name for scn in handler.scenarios.values() if scn.unlocked]
 
     def write_campaign_packet(self, campaign: Age2CampaignData, scenario_id: int) -> None:
-        with open(self.folder + Identity.xsdat_name(campaign.file_stem, ""), "wb") as fp:
+        name = Identity.campaign_xsdat_name(campaign.file_stem, TAG, PLAYER)
+        with open(self.folder + name, "wb") as fp:
             XsdatFile.write_bool(fp, True)
             for _ in range(17):
                 XsdatFile.write_int(fp, 0)

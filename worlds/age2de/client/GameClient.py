@@ -126,6 +126,7 @@ class ClientStatus:
     finished_game: bool = False
     slot_id: int = -1
     tag: str = ''
+    player_name: str = ''
     in_flight: list[int] = field(default_factory=list[int])
 
 class Age2GameContext:
@@ -153,9 +154,11 @@ class Age2GameContext:
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
 
-    def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str):
+    def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
+                player_name: str):
         self.client_status.slot_id = slot
         self.client_status.tag = tag
+        self.client_status.player_name = player_name
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
         self.campaign_handler.setup_victory_requirements(slot_data)
@@ -196,6 +199,7 @@ class Age2GameContext:
         self.building_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_tag(self.client_status.tag)
+        self.campaign_handler.set_player_name(self.client_status.player_name)
         self.install_handler.set_user_folder(user_folder)
 
     def read_packet(self) -> Age2Packet:

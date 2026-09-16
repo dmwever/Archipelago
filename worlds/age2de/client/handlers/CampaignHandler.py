@@ -50,6 +50,7 @@ class CampaignHandler(FolderHandler):
     
     active_file: ActiveFile
     tag: str = ''
+    player_name: str = ''
     
     active_file: ActiveFile
 
@@ -77,8 +78,18 @@ class CampaignHandler(FolderHandler):
     def set_tag(self, tag: str) -> None:
         self.tag = tag
     
+    def set_player_name(self, player_name: str) -> None:
+        self.player_name = player_name
+    
     def read_name(self, data) -> str:
+        """The .xsdat a scenario writes. Scenario files ship untagged and /install never touches
+        them, so these names carry no player segment."""
         return Identity.xsdat_name(data.file_stem, self.tag)
+    
+    def campaign_read_name(self, data) -> str:
+        """The .xsdat a campaign writes. The engine names it after the installed campaign, so this
+        has to match whatever InstallHandler wrote, player segment included."""
+        return Identity.campaign_xsdat_name(data.file_stem, self.tag, self.player_name)
     
     def setup_victory_requirements(self, args: dict):
         for data in self._campaigns.keys():
@@ -129,7 +140,7 @@ class CampaignHandler(FolderHandler):
     def find_active_campaign(self) -> bool:
         for campaign in self._campaigns.values():
             if campaign.unlocked:
-                read_name = self.read_name(campaign.data)
+                read_name = self.campaign_read_name(campaign.data)
                 try:
                     with open(self._user_folder + read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
@@ -209,8 +220,8 @@ class CampaignHandler(FolderHandler):
             if os.path.exists(self._user_folder + self.read_name(scn)):
                 os.remove(self._user_folder + self.read_name(scn))
         for cpn in self._campaigns:
-            if os.path.exists(self._user_folder + self.read_name(cpn)):
-                os.remove(self._user_folder + self.read_name(cpn))
+            if os.path.exists(self._user_folder + self.campaign_read_name(cpn)):
+                os.remove(self._user_folder + self.campaign_read_name(cpn))
     
     def __add_campaign_to_folder():
         pass

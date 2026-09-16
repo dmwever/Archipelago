@@ -63,9 +63,68 @@ class TestTaggedFileNames(unittest.TestCase):
         tag = Identity.seed_tag(SEED_A, 3)
         handler = CampaignHandler(list(Age2CampaignData))
         handler.set_tag(tag)
+        handler.set_player_name("Dave")
         self.assertEqual(
-            handler.read_name(Age2CampaignData.ATTILA),
-            Identity.xsdat_name(Age2CampaignData.ATTILA.file_stem, tag))
+            handler.campaign_read_name(Age2CampaignData.ATTILA),
+            Identity.campaign_xsdat_name(Age2CampaignData.ATTILA.file_stem, tag, "Dave"))
+
+
+class TestPlayerNames(unittest.TestCase):
+    def test_the_player_sits_before_the_tag(self):
+        tag = Identity.seed_tag(SEED_A, 3)
+        self.assertEqual(Identity.campaign_stem("AP Joan of Arc", tag, "Dave"),
+                         f"AP Joan of Arc_Dave_{tag}")
+
+    def test_the_tag_survives_a_player_segment(self):
+        """The whole reason the player goes before the tag rather than after it."""
+        tag = Identity.seed_tag(SEED_A, 3)
+        name = Identity.campaign_xsdat_name("AP Joan of Arc", tag, "Dave")
+        self.assertEqual(Identity.tag_of(name), tag)
+
+    def test_campaigns_carry_the_player_but_scenarios_do_not(self):
+        tag = Identity.seed_tag(SEED_A, 3)
+        handler = CampaignHandler(list(Age2CampaignData))
+        handler.set_tag(tag)
+        handler.set_player_name("Dave")
+        self.assertIn("Dave", handler.campaign_read_name(Age2CampaignData.ATTILA))
+        self.assertNotIn("Dave", handler.read_name(Age2ScenarioData.AP_ATTILA_1))
+
+
+class TestSanitizePlayer(unittest.TestCase):
+    def test_a_clean_name_is_untouched(self):
+        for name in ("Dave", "Dave Smith", "Dave-Smith_1"):
+            self.assertEqual(Identity.sanitize_player(name), name)
+
+    def test_reserved_characters_are_dropped(self):
+        self.assertEqual(Identity.sanitize_player('Da:ve|B'), "DaveB")
+        self.assertEqual(Identity.sanitize_player('a<b>c"d/e\\f|g?h*i'), "abcdefghi")
+
+    def test_control_characters_are_dropped(self):
+        self.assertEqual(Identity.sanitize_player("Da\x00v\x1fe"), "Dave")
+
+    def test_whitespace_is_collapsed_and_trimmed(self):
+        self.assertEqual(Identity.sanitize_player("  Dave   Smith  "), "Dave Smith")
+        self.assertEqual(Identity.sanitize_player("Dave\tSmith"), "Dave Smith")
+
+    def test_trailing_dots_and_spaces_go(self):
+        """Windows will not open a file whose name ends in a dot or a space."""
+        self.assertEqual(Identity.sanitize_player("Dave..."), "Dave")
+        self.assertEqual(Identity.sanitize_player(".Dave."), "Dave")
+
+    def test_a_name_of_only_forbidden_characters_is_empty(self):
+        for name in ('///', '<>:"|?*', "...", "   ", ""):
+            self.assertEqual(Identity.sanitize_player(name), "", name)
+
+    def test_non_latin_names_survive(self):
+        for name in ("Ярослав", "田中", "Ægir"):
+            self.assertEqual(Identity.sanitize_player(name), name)
+
+    def test_the_result_is_usable_in_a_file_name(self):
+        tag = Identity.seed_tag(SEED_A, 3)
+        safe = Identity.sanitize_player('Da:ve|B')
+        name = Identity.campaign_file_name("AP Joan of Arc", tag, safe)
+        self.assertNotIn(":", name)
+        self.assertNotIn("|", name)
 
 
 def write_game_packet(slot_id: int, scenario_id: int, major: int = AP_WORLD_VERSION.major,
