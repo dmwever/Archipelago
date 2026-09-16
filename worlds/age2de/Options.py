@@ -150,17 +150,15 @@ class ExistingTechs(Choice):
     """
     What happens to the technologies a scenario would normally start with. Requires Techsanity.
     Vanilla: A scenario starting in the Castle Age keeps every Dark and Feudal Age technology.
-    Lock Technologies: Nothing is granted; every shuffled technology must be found.
-    Only Lock Units: Economy and blacksmith technologies are granted as vanilla, but unit-line
-    upgrades below the scenario's age must be found.
-    Under Only Lock Units, Techsanity: Generic behaves as Vanilla and Techsanity: Units behaves as
-    Lock Technologies.
+    Find Items: A technology the scenario would have started with is not applied on scenario start
+    until the item is found. Once found, the tech costs nothing to research for its check.
+    Only Find Units: Same as Find Items, but only units are hidden.
     """
     internal_name = "existing_techs"
     display_name = "Existing Techs"
     option_vanilla = 0
-    option_lock_technologies = 1
-    option_only_lock_units = 2
+    option_find_items = 1
+    option_only_find_units = 2
     default = option_vanilla
 
 

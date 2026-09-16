@@ -209,7 +209,7 @@ class TestScenarioReachability(TechPoolTestBase):
         self.assertNotIn(Age2TechData.LOOM, self.joan(ExistingTechs.option_vanilla))
 
     def test_rebasing_puts_it_back(self):
-        self.assertIn(Age2TechData.LOOM, self.joan(ExistingTechs.option_lock_technologies))
+        self.assertIn(Age2TechData.LOOM, self.joan(ExistingTechs.option_find_items))
 
     def test_attila_keeps_it_because_attila_1_starts_in_the_dark_age(self):
         pool = self.pool(techsanity=Techsanity.option_all,
@@ -233,7 +233,7 @@ class TestScenarioReachability(TechPoolTestBase):
         generic = Age2TechData.LOOM
         above = Age2AgeData.IMPERIAL
         self.pool(techsanity=Techsanity.option_all,
-                  existing_techs=ExistingTechs.option_only_lock_units,
+                  existing_techs=ExistingTechs.option_only_find_units,
                   enabled_campaigns={"Joan of Arc"})
         pool = TechPool(self.world.options, above, self.world.included_civs)
         self.assertTrue(pool.reachable(upgrade), upgrade.name)

@@ -39,9 +39,9 @@ class TechPool:
 
     def locks(self, tech: Age2TechData) -> bool:
         """Whether Existing Techs withholds a technology the scenario would grant."""
-        if self._existing_techs_mode == ExistingTechs.option_lock_technologies:
+        if self._existing_techs_mode == ExistingTechs.option_find_items:
             return True
-        return (self._existing_techs_mode == ExistingTechs.option_only_lock_units
+        return (self._existing_techs_mode == ExistingTechs.option_only_find_units
                 and TechOption.units in tech.tech_options)
 
 
