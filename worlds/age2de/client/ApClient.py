@@ -157,6 +157,9 @@ class Age2Context(CommonContext):
         if args.get("index", -1) == 0:
             self.game_ctx.client_status.unlocked_items.clear()
         for received_item in received_items:
+            if received_item.item not in Items.ID_TO_ITEM:
+                logger.warning("Ignoring unknown item id %s from the server.", received_item.item)
+                continue
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))

@@ -200,6 +200,27 @@ class TestItemDelivery(unittest.TestCase):
             "free_items released ids the client had not acknowledged",
         )
 
+    def test_an_unknown_item_id_is_skipped_not_raised(self) -> None:
+        """An id this world does not know must not take the connection down with it."""
+        from NetUtils import NetworkItem
+
+        from ..client.ApClient import Age2Context
+
+        ap = Age2Context.__new__(Age2Context)
+        ap.game_ctx = self.ctx
+
+        known = list(Age2ItemData)[1:3]
+        packet = {"index": 0, "items": [NetworkItem(999999, 0, 0, 0)]
+                  + [NetworkItem(item.id, 0, 0, 0) for item in known]}
+
+        ap._handle_received_items(packet)
+
+        self.assertEqual(
+            self.ctx.client_status.unlocked_items,
+            known,
+            "an id the world does not know killed the ReceivedItems handler",
+        )
+
     def test_index_zero_resync_does_not_duplicate_the_item_list(self) -> None:
         """A mid-session resend replaces the list; the cursor stays valid over it."""
         from NetUtils import NetworkItem
