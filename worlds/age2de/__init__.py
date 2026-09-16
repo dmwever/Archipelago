@@ -83,6 +83,10 @@ class Age2World(CachedRuleBuilderWorld):
             campaign_names = self.options.enabled_campaigns
             self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
         
+        self.included_civs = list(dict.fromkeys(
+            scenario.civ for campaign in self.included_campaigns
+            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]))
+        
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         
         for campaign in self.included_campaigns:
@@ -98,8 +102,6 @@ class Age2World(CachedRuleBuilderWorld):
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)
                 regions.append(region)
-                if scenario.civ not in self.included_civs:
-                    self.included_civs.append(scenario.civ)
                 prev_region = region
                 
         buildings = Region("Can Build", self.player, self.multiworld)

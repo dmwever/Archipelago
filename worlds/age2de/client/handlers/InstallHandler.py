@@ -47,7 +47,7 @@ class InstallHandler(FolderHandler):
         self._parsed = 0
         self._to_parse = 0
         self.installing = False
-        self.logger: Callable[[str], None] = logger.info
+        self.report: Callable[[str], None] = logger.info
         super().__init__()
 
     def setup(self, campaigns: list[Age2CampaignData], slot: int, tag: str,
@@ -147,7 +147,7 @@ class InstallHandler(FolderHandler):
             steps = self.steps_for(data)
             name = data.scenario_name if data else Path(scenario.file_name).stem
             scenario.body = ScenarioParser.apply(
-                scenario.body, steps, name, (self._parsed, self._to_parse), self.logger)
+                scenario.body, steps, name, (self._parsed, self._to_parse), self.report)
             if steps:
                 self._parsed += 1
         target = self.install_path(included)

@@ -118,7 +118,7 @@ class TechBehavior(Choice):
 class LockTechs(Choice):
     """
     What a shuffled technology's item unlocks. Requires Techsanity.
-    Items: The technology is greyed out until its item arrives.
+    Items: The technology is hidden until its item arrives.
     Effects: The technology is always researchable, but researching it does nothing until its item
     arrives. Researching still sends the check, so no check is ever locked behind its own item.
     """
