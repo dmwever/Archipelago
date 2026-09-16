@@ -101,9 +101,10 @@ class CampaignHandler(FolderHandler):
         return [data for data, managed in self._campaigns.items() if managed.included]
     
     def check_victory(self) -> bool:
-        for campaign in self._campaigns.values():
-            if (campaign.must_beat == False):
-                continue
+        required = [campaign for campaign in self._campaigns.values() if campaign.must_beat]
+        if not required:
+            return False
+        for campaign in required:
             for scenario in campaign.scenarios:
                 if self.scenarios[scenario].completed == False:
                     return False
