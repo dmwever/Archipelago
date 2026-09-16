@@ -42,6 +42,34 @@ class TestCivilizationCollection(bases.Age2TestBase):
                           "the campaign's first scenario was held out of the civ loop")
 
 
+class TestVictoryEvents(bases.Age2TestBase):
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+    }
+
+    def test_the_victory_event_has_no_address(self) -> None:
+        victory = self.world.get_location("Victory")
+        self.assertIsNone(victory.address,
+                          "the Victory event carried address 0, which is the Victory item's id")
+
+    def test_each_scenario_has_one_completion_event(self) -> None:
+        names = [location.name for location in self.multiworld.get_locations(self.player)]
+        for campaign in self.world.included_campaigns:
+            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+                event = "Complete " + scenario.scenario_name
+                self.assertEqual(1, names.count(event),
+                                 f"{event} was registered {names.count(event)} times")
+
+    def test_completion_events_are_registered_with_their_region(self) -> None:
+        for campaign in self.world.included_campaigns:
+            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+                region = self.world.get_region(scenario.scenario_name)
+                event = "Complete " + scenario.scenario_name
+                self.assertIn(event, [location.name for location in region.locations],
+                              "a hand-built Location never reached its region")
+
+
 class TestEmptyCampaign(unittest.TestCase):
     def test_a_campaign_with_no_scenarios_is_an_option_error(self) -> None:
         world: Age2World = setup_solo_multiworld(Age2World, ()).worlds[1]
