@@ -4,10 +4,14 @@ from typing import TYPE_CHECKING
 
 from ..locations.Buildings import Age2BuildingData
 
+from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Rule, True_
 
+from ..Options import ExistingTechs
 from ..locations.Ages import Age2AgeData
 
+
+NOT_DARK_START = OptionFilter(ExistingTechs, ExistingTechs.option_start_in_dark_age, "ne")
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -31,18 +35,15 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
-        self.starting_state.can_reach_age[Age2AgeData.DARK] = True_()
     
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils
     
     def has_base(self) -> Rule:
         return self.starting_state.has_base
-    
+
     def can_reach_age(self, age: Age2AgeData) -> Rule:
-        if age <= self.logic.floor_age(self.scenario):
-            return self.starting_state.can_reach_age[age]
-        return self.starting_state.can_reach_age[age] & self.logic.ages.can_reach(age)
+        return self.starting_state.can_reach_age[age]
     
     def start_with_building(self, building: Age2BuildingData) -> Rule:
         return self.starting_state.starts_with_building[building] | self.logic.can_build_building(building)
