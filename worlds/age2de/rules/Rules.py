@@ -1,22 +1,16 @@
 from __future__ import annotations
 
-from abc import ABC
 from typing import TYPE_CHECKING
 
-from BaseClasses import CollectionRule, Entrance, Location, Region
-from ..locations.Campaigns import Age2CampaignData
-from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
+from BaseClasses import CollectionRule, Entrance, Location
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from ..logic.Logic import Logic
-from ..locations.Buildings import Age2BuildingData
-from ..locations.Ages import Age2AgeData
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
-from rule_builder.rules import CanReachRegion, False_, Has, Rule, True_
-
-from ..items.Items import Age2ItemData
-from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData, Age2LocationType
-from ..locations.connections import ScenarioDataRules
+from rule_builder.rules import Rule
+# Imported for its side effect: binds Age2ScenarioData.<member>.rules, used in set_rules below.
+from ..locations.connections import ScenarioDataRules  # noqa: F401
 
 if TYPE_CHECKING:
     from .. import Age2World
