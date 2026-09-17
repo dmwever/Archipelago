@@ -55,15 +55,17 @@ class AgeLogic:
     def can_reach_imperial(self) -> Rule:
         return self.has_age(Age2AgeData.IMPERIAL) & self.two_from_castle_age() & self.logic.buildings.can_build_tc()
 
-    def has_age(self, age: Age2AgeData) -> Rule:
-        return True_()
+    def can_reach(self, age: Age2AgeData) -> Rule:
+        """What the player's economy must look like to stand in an age, anywhere.
 
-    def has_building_age(self, building: Age2BuildingData) -> Rule:
-        if building.age is Age2AgeData.FEUDAL:
+        if age is Age2AgeData.FEUDAL:
             return self.can_reach_feudal()
-        elif building.age is Age2AgeData.CASTLE:
+        elif age is Age2AgeData.CASTLE:
             return self.can_reach_castle()
-        elif building.age is Age2AgeData.IMPERIAL:
+        elif age is Age2AgeData.IMPERIAL:
             return self.can_reach_imperial()
         else:
             return True_()
+
+    def has_age(self, age: Age2AgeData) -> Rule:
+        return True_()
