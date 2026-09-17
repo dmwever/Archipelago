@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING
 
 from BaseClasses import Entrance, Location
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
     from .. import Age2World
     from .Rules import Rules
 
+logger = logging.getLogger("Age2")
+
 
 class ScenarioRules:
     entrance: Entrance
@@ -29,11 +32,12 @@ class ScenarioRules:
         self.world = rules.world
         self.entrance = self.world.get_entrance(scenario.scenario_name)
         for location in SCENARIO_TO_SCENARIO_LOCATIONS[scenario]:
+            if not self.world.branching_option(location):
+                continue
             try:
                 self.locations[location] = self.world.get_location(location.global_name())
-            except:
-                print(location.global_name() + " not in current playthrough.")
-                continue
+            except KeyError:
+                logger.debug("%s is not in this playthrough.", location.global_name())
     
     def set_rules(self):
         self.world.set_rule(self.entrance, self.scenario_logic.is_unlocked())

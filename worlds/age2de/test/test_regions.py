@@ -6,6 +6,8 @@ only scenario was the held-out one produced no building locations at all. And th
 StopIteration handler named first_scn, which is bound by the next() that raises, so an empty
 campaign died with NameError instead of the OptionError it meant to raise.
 """
+import contextlib
+import io
 import unittest
 from unittest import mock
 
@@ -68,6 +70,37 @@ class TestVictoryEvents(bases.Age2TestBase):
                 event = "Complete " + scenario.scenario_name
                 self.assertIn(event, [location.name for location in region.locations],
                               "a hand-built Location never reached its region")
+
+
+class TestScenarioRuleSetup(bases.Age2TestBase):
+    """The location lookup used to be a bare except that printed to stdout for every location
+    branching had filtered out - 8 to 11 lines per slot on every generation."""
+
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+        "scenarioBranching": "any",
+    }
+
+    def test_collecting_a_scenario_s_locations_prints_nothing(self) -> None:
+        from ..rules.ScenarioRules import ScenarioRules
+
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            for campaign in self.world.included_campaigns:
+                for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+                    ScenarioRules(self.world.rules, scenario)
+        self.assertEqual("", buffer.getvalue(),
+                         "generation printed missing-location noise to stdout")
+
+    def test_branching_locations_are_filtered_not_caught(self) -> None:
+        from ..locations.Locations import Age2LocationType
+
+        for rules in self.world.rules.scenario_rules:
+            for location in rules.locations:
+                self.assertNotEqual(
+                    Age2LocationType.OBJECTIVE_BRANCHING_ALL, location.type,
+                    f"{location.global_name()} belongs to the other branching mode")
 
 
 class TestEmptyCampaign(unittest.TestCase):
