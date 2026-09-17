@@ -11,6 +11,7 @@ from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
     from .. import Age2World
+    from ..locations.Scenarios import Age2ScenarioData
     from .Logic import Logic
 
 @dataclass
@@ -24,9 +25,11 @@ class ScenarioStartingState:
 
 class ScenarioLogic:
     starting_state: ScenarioStartingState
-    
-    def __init__(self, logic: 'Logic', data: ScenarioStartingState):
+
+    def __init__(self, logic: 'Logic', data: ScenarioStartingState,
+                 scenario: 'Age2ScenarioData'):
         self.logic = logic
+        self.scenario = scenario
         self.starting_state = data
         self.starting_state.can_reach_age[Age2AgeData.DARK] = True_()
     

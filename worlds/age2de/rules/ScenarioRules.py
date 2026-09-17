@@ -18,12 +18,14 @@ if TYPE_CHECKING:
 class ScenarioRules:
     entrance: Entrance
     scenario_logic: ScenarioLogic
-    locations: dict[Age2ScenarioLocationData, Location] = {}
-    
+    locations: dict[Age2ScenarioLocationData, Location]
+
     def __init__(self, rules: 'Rules', scenario: Age2ScenarioData):
         self.rules = rules
         self.logic = rules.logic
         self.world = rules.world
+        self.scenario = scenario
+        self.locations = {}
         self.entrance = self.world.get_entrance(scenario.scenario_name)
         for location in SCENARIO_TO_SCENARIO_LOCATIONS[scenario]:
             try:

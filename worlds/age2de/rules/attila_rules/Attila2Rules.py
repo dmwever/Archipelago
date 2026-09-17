@@ -13,7 +13,7 @@ class Attila2Rules(ScenarioRules):
     scythian_troop: Rule = Has(Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name)
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_2)
-        self.scenario_logic = ScenarioLogic(self.logic, Attila2StartingState(self.logic))
+        self.scenario_logic = ScenarioLogic(self.logic, Attila2StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()
