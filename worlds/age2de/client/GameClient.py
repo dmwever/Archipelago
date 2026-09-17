@@ -30,6 +30,7 @@ from worlds.age2de.locations import Scenarios
 logger = logging.getLogger("Client")
 
 AGE2_USER_PROFILE = "/profile/"
+GAME_LOOP_SHUTDOWN_SECONDS = 5.0
 AP_WORLD_VERSION = Age2World.world_version
 MISSING_GRACE_SECONDS = 10
 
@@ -115,7 +116,6 @@ class PacketStatus(Enum):
     INACTIVE = 3
     WRONG_VERSION = 4
     WRONG_SLOT = 5
-    ERROR = 6
 
 @dataclass
 class ClientStatus:
@@ -171,7 +171,14 @@ class Age2GameContext:
         self.running = False
         if self.game_loop != None:
             try:
-                await self.game_loop
+                # Bounded: status_loop can block on a file the game is holding, and without a
+                # timeout that stalls disconnect and everything queued behind it, reconnect
+                # included.
+                await asyncio.wait_for(self.game_loop, GAME_LOOP_SHUTDOWN_SECONDS)
+            except asyncio.TimeoutError:
+                logger.warning("Game loop did not stop within %s seconds; cancelling it.",
+                               GAME_LOOP_SHUTDOWN_SECONDS)
+                self.game_loop.cancel()
             except Exception:
                 logger.exception("Game loop did not end gracefully, continuing disconnect.")
         self.paused = False
