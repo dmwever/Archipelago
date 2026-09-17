@@ -1,0 +1,38 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from rule_builder.rules import CanReachLocation, Has, Rule, True_
+
+from ..Options import LockTechs
+from ..locations.Techs import Age2TechData
+
+
+if TYPE_CHECKING:
+    from .. import Age2World
+    from .Logic import Logic
+
+
+class TechLogic:
+    def __init__(self, logic: 'Logic', world: Age2World):
+        self.logic = logic
+        self.world = world
+        self._can_research: dict[Age2TechData, Rule] = {}
+
+    def can_research(self, tech: Age2TechData) -> Rule:
+        rule = self._can_research.get(tech)
+        if rule is None:
+            rule = self.has_tech_items(tech)
+            if tech.age > tech.buildings[0].age:
+                rule = rule & self.logic.can_reach_age(tech.age)
+            self._can_research[tech] = rule
+        return rule
+
+    def has_tech_items(self, tech: Age2TechData) -> Rule:
+        if self.world.options.lock_techs == LockTechs.option_effects:
+            return True_()
+        rule: Rule = Has(tech.item.item_name)
+        prerequisite = tech.prerequisite
+        if prerequisite is not None and self.world.tech_pool.includes(prerequisite):
+            rule = rule & CanReachLocation(prerequisite.location_name)
+        return rule

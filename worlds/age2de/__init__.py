@@ -324,6 +324,7 @@ class Age2World(CachedRuleBuilderWorld):
     def set_rules(self) -> None:
         self.rules = Rules(self)
         self.rules.set_rules()
+        self.register_rule_builder_dependencies()
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {

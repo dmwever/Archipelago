@@ -12,6 +12,7 @@ from ..locations.connections import ScenarioDataLogic
 from .ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
+from .tech_logic import TechLogic
 from rule_builder.rules import False_, Or, Rule
 
 from ..locations.Ages import Age2AgeData
@@ -27,6 +28,7 @@ class Logic:
     ages: AgeLogic
     military: MilitaryLogic
     goal: GoalLogic
+    techs: TechLogic
     scenarios: list[ScenarioLogic]
 
     def __init__(self, world: Age2World):
@@ -49,6 +51,7 @@ class Logic:
                 for scenario in self.scenarios)
         self.military = MilitaryLogic(self, world)
         self.goal = GoalLogic(self, world)
+        self.techs = TechLogic(self, world)
 
     def has_goal(self) -> Rule:
         if self.world.options.goal == Goal.option_campaign_completion:

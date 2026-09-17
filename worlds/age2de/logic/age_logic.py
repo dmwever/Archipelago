@@ -56,8 +56,6 @@ class AgeLogic:
         return self.has_age(Age2AgeData.IMPERIAL) & self.two_from_castle_age() & self.logic.buildings.can_build_tc()
 
     def can_reach(self, age: Age2AgeData) -> Rule:
-        """What the player's economy must look like to stand in an age, anywhere.
-
         if age is Age2AgeData.FEUDAL:
             return self.can_reach_feudal()
         elif age is Age2AgeData.CASTLE:
