@@ -136,7 +136,9 @@ class Age2World(CachedRuleBuilderWorld):
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
         regions.append(buildings)
-        
+
+        regions[0].add_event("Victory", Items.Age2ItemData.VICTORY.item_name)
+
         self.multiworld.regions += regions
     
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
@@ -149,6 +151,10 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             new_location = Location(self.player, location.global_name(), location.id, new_region)
             new_region.locations.append(new_location)
+        if scenario.scenario_name in Locations.VICTORY_SCENARIO_LOCATIONS:
+            new_region.add_event("Complete " + scenario.scenario_name,
+                                 scenario.scenario_name + ": Unlock Next Scenario",
+                                 show_in_spoiler=False)
         return new_region
         
     

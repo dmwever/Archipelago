@@ -42,14 +42,9 @@ class Rules:
         self.world.set_rule(spot, rule)
 
     def set_rules(self) -> None:
-        for value in [x for x in VICTORY_SCENARIO_LOCATIONS.values() if x.scenario.campaign in self.world.included_campaigns]:
-            region = self.world.get_region(value.scenario.scenario_name)
-            region.add_event("Complete " + value.scenario.scenario_name, value.scenario.scenario_name + ": Unlock Next Scenario", show_in_spoiler=False)
-           
-        menu: Region = self.world.get_region("Menu") 
-        victory = self.world.create_item(Age2ItemData.VICTORY.item_name)
+        # The event locations themselves are created in create_regions; only their rules belong here.
         self.world.multiworld.completion_condition[self.world.player] = lambda state: state.has("Victory", self.world.player)
-        menu.add_event("Victory", victory.name, self.logic.has_goal())
+        self.set_rule(self.world.get_location("Victory"), self.logic.has_goal())
 
         for campaign in self.world.included_campaigns:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
