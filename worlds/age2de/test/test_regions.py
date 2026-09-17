@@ -103,6 +103,25 @@ class TestScenarioRuleSetup(bases.Age2TestBase):
                     f"{location.global_name()} belongs to the other branching mode")
 
 
+class TestBuildingSelection(bases.Age2TestBase):
+    """The shuffle_buildings filter compared BuildingOption.unique against each option with `in`,
+    which on strings is a substring test. It worked only because "Unique" is not a substring of
+    the other option names."""
+
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"Economy", "Tech", "Military", "Defense", "Wonder"},
+    }
+
+    def test_unique_buildings_are_never_shuffled_without_the_option(self) -> None:
+        from ..locations.Buildings import BuildingOption
+
+        for building in self.world.shuffled_buildings:
+            self.assertNotIn(BuildingOption.unique, building.building_options,
+                             f"{building.name} was shuffled without the Unique option")
+
+
 class TestEmptyCampaign(unittest.TestCase):
     def test_a_campaign_with_no_scenarios_is_an_option_error(self) -> None:
         world: Age2World = setup_solo_multiworld(Age2World, ()).worlds[1]

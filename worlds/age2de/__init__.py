@@ -130,7 +130,8 @@ class Age2World(CachedRuleBuilderWorld):
             if Buildings.BuildingOption.unique in building.building_options and not any(building in civ.included_buildings for civ in self.included_civs): 
                 continue # No civs with this unique building are included.
             if any(option in building.building_options for option in 
-                   [options for options in self.options.shuffle_buildings if not Buildings.BuildingOption.unique in options]):
+                   [option for option in self.options.shuffle_buildings
+                    if option != Buildings.BuildingOption.unique]):
                 new_location = Location(self.player, building.location_name, building.id, buildings)
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)

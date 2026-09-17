@@ -171,7 +171,7 @@ class Age2ItemData(enum.IntEnum):
     
     #1000 - 2999 = Progression Items
     TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          TCResources(Resource.WOOD, 275)
-    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(Resource.FOOD, 100)
+    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(Resource.STONE, 100)
     
     # Scenario Progression Items
     AP_ATTILA_1_BLEDAS_CAMP =   1002, "Attila, The Scourge of God: Bleda's Camp",           ScenarioItem(Age2ScenarioData.AP_ATTILA_1)

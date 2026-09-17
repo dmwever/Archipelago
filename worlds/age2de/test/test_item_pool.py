@@ -54,6 +54,27 @@ class TestSmartStartingResources(bases.Age2TestBase):
                 self.assertIsInstance(Items.NAME_TO_ITEM[item.name].type, Items.StartingResources)
 
 
+class TestTownCentreItems(bases.Age2TestBase):
+    """Starting Town Center Stone declared Resource.FOOD. A Town Center costs wood and stone, and
+    nothing in Python reads TCResources.type yet - the XS side is what would act on it."""
+
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+    }
+
+    def test_the_pair_covers_the_real_cost(self) -> None:
+        cost = Items.Age2ItemData.TOWN_CENTER.type.needed_resources
+        granted = {
+            Items.Age2ItemData.TOWN_CENTER_WOOD.type.type:
+                Items.Age2ItemData.TOWN_CENTER_WOOD.type.amount,
+            Items.Age2ItemData.TOWN_CENTER_STONE.type.type:
+                Items.Age2ItemData.TOWN_CENTER_STONE.type.amount,
+        }
+        self.assertEqual({resource: int(amount) for resource, amount in cost.items()}, granted,
+                         "the Town Center items do not add up to a Town Center")
+
+
 class TestPoolBalances(bases.Age2TestBase):
     options = {
         "enabled_campaigns": {ATTILA, JOAN},

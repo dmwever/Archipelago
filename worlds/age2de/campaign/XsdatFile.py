@@ -23,7 +23,7 @@ def write_bool(fp, flag: bool) -> None:
     fp.write(struct.pack("<?xxx", flag))
     
 def write_vector(fp, vector: tuple[float, float, float]) -> None:
-    fp.write(struct.pack("<fff", vector))
+    fp.write(struct.pack("<fff", *vector))
 
 def write_int(fp, i: int) -> None:
     fp.write(struct.pack("<i", i))

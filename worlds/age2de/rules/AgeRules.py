@@ -46,7 +46,9 @@ class TwoBuildingsRequirement(NestedRule["Age2World"], game="Age Of Empires II: 
             messages: list[JSONMessagePart] = [{"type": "text", "text": f"Need {self.num_needed} of"}]
             for i, child in enumerate(self.children):
                 if i > 0:
-                    messages.append({"type": "color", "color": "green" if state and self(state) else "salmon", "type": "text", "text": " | "})
+                    messages.append({"type": "color",
+                                     "color": "green" if state and self(state) else "salmon",
+                                     "text": " | "})
                 messages.extend(child.explain_json(state))
             messages.append({"type": "text", "text": " Buildings"})
             
