@@ -71,3 +71,6 @@ class Age2BuildingData(enum.IntEnum):
     KREPOST =               233, "Build Krepost", Age2ItemData.KREPOST, Age2AgeData.CASTLE, [BuildingOption.unique, BuildingOption.defense, BuildingOption.military]
     DONJON =                234, "Build Donjon", Age2ItemData.DONJON, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.defense, BuildingOption.military]
     
+
+NAME_TO_BUILDING: dict[str, Age2BuildingData] = {building.item.item_name: building
+                                                 for building in Age2BuildingData}

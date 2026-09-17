@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import CanReachLocation, Has, Rule, True_
+from rule_builder.rules import Has, Rule, True_
 
 from ..Options import LockTechs
 from ..locations.Techs import Age2TechData
@@ -34,5 +34,5 @@ class TechLogic:
         rule: Rule = Has(tech.item.item_name)
         prerequisite = tech.prerequisite
         if prerequisite is not None and self.world.tech_pool.includes(prerequisite):
-            rule = rule & CanReachLocation(prerequisite.location_name)
+            rule = rule & self.can_research(prerequisite)
         return rule

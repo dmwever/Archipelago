@@ -12,6 +12,7 @@ from ..locations.Ages import Age2AgeData
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
+from .TechRules import TechRules
 from rule_builder.rules import CanReachRegion, False_, Has, Rule, True_
 
 from ..items.Items import Age2ItemData
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 class Rules:
     building_rules: BuildingRules
     age_rules: AgeRules
+    tech_rules: TechRules
     scenario_rules: list[ScenarioRules]
     logic: Logic
     
@@ -33,6 +35,7 @@ class Rules:
         self.logic = Logic(world)
         self.building_rules = BuildingRules(self)
         self.age_rules =  AgeRules(self, world)
+        self.tech_rules = TechRules(self)
         self.scenario_rules = []
 
     def get_entrance(self, entrance_name: str):
@@ -63,3 +66,4 @@ class Rules:
                 
         self.age_rules.set_rules()
         self.building_rules.set_rules()
+        self.tech_rules.set_rules()
