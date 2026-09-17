@@ -24,10 +24,10 @@ class BuildingLogic:
         return has_prerequisites & Has(building.item.item_name)
     
     def has_prerequisites(self, building: Age2BuildingData) -> Rule:
-        if building == (Age2BuildingData.ARCHERY_RANGE or Age2BuildingData.STABLE):
+        if building in (Age2BuildingData.ARCHERY_RANGE, Age2BuildingData.STABLE):
             return self.has_building(Age2BuildingData.BARRACKS)
-        
-        if building == (Age2BuildingData.FARM or Age2BuildingData.MARKET):
+
+        if building in (Age2BuildingData.FARM, Age2BuildingData.MARKET):
             return self.has_building(Age2BuildingData.MILL)
         
         if building == Age2BuildingData.SIEGE_WORKSHOP:
