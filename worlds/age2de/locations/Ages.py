@@ -21,3 +21,7 @@ class Age2AgeData(enum.IntEnum):
     FEUDAL =                26, "Reach Feudal Age"
     CASTLE =                27, "Reach Castle Age"
     IMPERIAL =              28, "Reach Imperial Age"
+
+
+SHUFFLED_AGES: tuple[Age2AgeData, ...] = tuple(
+    age for age in Age2AgeData if age.item is not None)

@@ -6,7 +6,7 @@ from NetUtils import JSONMessagePart
 from BaseClasses import CollectionState
 
 from ..items.Items import Age2ItemData
-from ..locations.Ages import Age2AgeData
+from ..locations.Ages import SHUFFLED_AGES, Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from rule_builder.rules import False_, HasAll, HasAny, HasFromListUnique, NestedRule, Rule, True_
 
@@ -20,9 +20,14 @@ class AgeRules:
     def __init__(self, rules: 'Rules', world: Age2World):
         self.rules = rules
         self.world = world
-        
+        self.logic = rules.logic
+
     def set_rules(self):
-        pass
+        if not self.world.options.shuffle_ages:
+            return  # create_regions built no age locations to rule on
+        for age in SHUFFLED_AGES:
+            self.world.set_rule(self.world.get_location(age.location_name),
+                                self.logic.can_reach_age(age))
 
 @dataclass
 class TwoBuildingsRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definitive Edition"):

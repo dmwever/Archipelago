@@ -1,7 +1,7 @@
 from typing import Mapping
 
-from ..Options import (ExistingTechs, LockTechs, ShuffleUniqueTechs, TechBehavior,
-                       Techsanity)
+from ..Options import (ExistingTechs, LockTechs, ShuffleAges, ShuffleUniqueTechs,
+                       TechBehavior, Techsanity)
 
 SLOT_ID = "AP_SLOT_ID"
 SEED_HIGH = "AP_SEED_HIGH"
@@ -11,6 +11,7 @@ TS_BEHAVIOR = "AP_TS_BEHAVIOR"
 TS_LOCK = "AP_TS_LOCK"
 TS_UNIQUES = "AP_TS_UNIQUES"
 TS_EXISTING = "AP_TS_EXISTING"
+SHUFFLE_AGES = "AP_SHUFFLE_AGES"
 
 UNSET = -1
 
@@ -23,6 +24,7 @@ DEFAULTS: dict[str, int] = {
     TS_LOCK: UNSET,
     TS_UNIQUES: UNSET,
     TS_EXISTING: UNSET,
+    SHUFFLE_AGES: 0,  # not UNSET: a seedless install must read this as off
 }
 
 OPTIONS: dict[str, str] = {
@@ -31,6 +33,7 @@ OPTIONS: dict[str, str] = {
     TS_LOCK: LockTechs.internal_name,
     TS_UNIQUES: ShuffleUniqueTechs.internal_name,
     TS_EXISTING: ExistingTechs.internal_name,
+    SHUFFLE_AGES: ShuffleAges.internal_name,
 }
 
 MAX_LITERAL = 999_999_999

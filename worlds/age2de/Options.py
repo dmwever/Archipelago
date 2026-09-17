@@ -79,6 +79,7 @@ class ShuffleAges(Toggle):
     usual buildings; the item only permits it. A scenario that starts above the Dark Age keeps
     the ages it starts with.
     """
+    internal_name = "shuffle_ages"
     display_name = "Shuffle Ages"
 
 

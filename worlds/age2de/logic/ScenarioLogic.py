@@ -40,7 +40,9 @@ class ScenarioLogic:
         return self.starting_state.has_base
     
     def can_reach_age(self, age: Age2AgeData) -> Rule:
-        return self.starting_state.can_reach_age[age]
+        if age <= self.logic.floor_age(self.scenario):
+            return self.starting_state.can_reach_age[age]
+        return self.starting_state.can_reach_age[age] & self.logic.ages.can_reach(age)
     
     def start_with_building(self, building: Age2BuildingData) -> Rule:
         return self.starting_state.starts_with_building[building] | self.logic.can_build_building(building)

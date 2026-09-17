@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..Options import Goal
+from ..Options import ExistingTechs, Goal, Techsanity
 
 from .goal_logic import GoalLogic
 
@@ -16,7 +16,7 @@ from .tech_logic import TechLogic
 from rule_builder.rules import False_, Or, Rule
 
 from ..locations.Ages import Age2AgeData
-from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
 
 
 if TYPE_CHECKING:
@@ -52,6 +52,12 @@ class Logic:
         self.military = MilitaryLogic(self, world)
         self.goal = GoalLogic(self, world)
         self.techs = TechLogic(self, world)
+
+    def floor_age(self, scenario: Age2ScenarioData) -> Age2AgeData:
+        if (self.world.options.techsanity != Techsanity.option_none
+                and self.world.options.existing_techs == ExistingTechs.option_start_in_dark_age):
+            return Age2AgeData.DARK
+        return scenario.vanilla_age
 
     def has_goal(self) -> Rule:
         if self.world.options.goal == Goal.option_campaign_completion:

@@ -16,7 +16,7 @@ from .generation import SlotData, WorldVersion
 from .generation.TechPool import TechPool
 from .Options import Age2Options, Goal, ScenarioBranching
 from .items import Items
-from .locations import Campaigns, Locations, Scenarios
+from .locations import Ages, Campaigns, Locations, Scenarios
 from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
 from .locations.connections import CivilizationBuildings, CivilizationTechs
@@ -121,6 +121,10 @@ class Age2World(CachedRuleBuilderWorld):
                 new_location = Location(self.player, building.location_name, building.id, buildings)
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
+        if self.options.shuffle_ages:
+            for age in Ages.SHUFFLED_AGES:
+                buildings.locations.append(
+                    Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
         
         self.earliest_age = min(scenario.vanilla_age
@@ -205,7 +209,11 @@ class Age2World(CachedRuleBuilderWorld):
             elif isinstance(item.type, Items.TCResources):
                 items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Age2AgeData):
-                continue
+                age_item = self.create_item(item.item_name)
+                if self.options.shuffle_ages:
+                    items.append(age_item)
+                else:
+                    self.multiworld.push_precollected(age_item)
             elif isinstance(item.type, Items.Building):
                 continue
             elif isinstance(item.type, Items.Tech):

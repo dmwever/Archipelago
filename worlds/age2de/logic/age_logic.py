@@ -9,7 +9,7 @@ from ..rules.AgeRules import TwoBuildingsRequirement
 from ..items.Items import Age2ItemData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
-from rule_builder.rules import False_, HasAll, HasAny, HasFromListUnique, NestedRule, Rule, True_
+from rule_builder.rules import False_, Has, HasAll, HasAny, HasFromListUnique, NestedRule, Rule, True_
 
 
 if TYPE_CHECKING:
@@ -66,4 +66,6 @@ class AgeLogic:
             return True_()
 
     def has_age(self, age: Age2AgeData) -> Rule:
-        return True_()
+        if not self.world.options.shuffle_ages or age.item is None:
+            return True_()
+        return Has(age.item.item_name)
