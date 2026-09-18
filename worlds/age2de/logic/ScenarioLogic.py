@@ -27,6 +27,8 @@ class ScenarioStartingState:
     age_playable: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     has_water_access: Rule = field(default_factory=lambda: True_())
+    fixed_force: bool = False
+    """A set piece fought with what it hands you. No base, and no age to be in."""
 
     def __post_init__(self):
         self.age_playable[Age2AgeData.DARK] = True_() & DARK_START
@@ -47,9 +49,13 @@ class ScenarioLogic:
         return self.starting_state.has_base
 
     def can_reach_age(self, age: Age2AgeData) -> Rule:
+        if self.starting_state.fixed_force:
+            return False_()
         return self.starting_state.age_playable[age]
 
     def start_past_age(self, age: Age2AgeData) -> Rule:
+        if self.starting_state.fixed_force:
+            return False_()
         if self.scenario.vanilla_age > age:
             return True_() & VANILLA_AGE_START
         return False_()
