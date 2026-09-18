@@ -11,7 +11,7 @@ from ..Options import ExistingTechs
 from ..locations.Ages import Age2AgeData
 
 
-NOT_DARK_START = OptionFilter(ExistingTechs, ExistingTechs.option_start_in_dark_age, "ne")
+VANILLA_AGE_START = OptionFilter(ExistingTechs, ExistingTechs.option_start_in_dark_age, "ne")
 DARK_START = OptionFilter(ExistingTechs, ExistingTechs.option_start_in_dark_age)
 
 if TYPE_CHECKING:
@@ -24,9 +24,12 @@ class ScenarioStartingState:
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
     has_base: Rule = field(default_factory=lambda: True_())
-    has_age: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
+    age_playable: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     has_water_access: Rule = field(default_factory=lambda: True_())
+
+    def __post_init__(self):
+        self.age_playable[Age2AgeData.DARK] = True_() & DARK_START
 
 class ScenarioLogic:
     starting_state: ScenarioStartingState
@@ -36,7 +39,6 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
-        self.starting_state.has_age[Age2AgeData.DARK] = True_() & DARK_START
     
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils
@@ -45,7 +47,7 @@ class ScenarioLogic:
         return self.starting_state.has_base
 
     def age_playable(self, age: Age2AgeData) -> Rule:
-        return self.starting_state.has_age[age]
+        return self.starting_state.age_playable[age]
 
     def start_past_age(self, age: Age2AgeData) -> Rule:
         # Standing in this age or any above it. The table already knows which

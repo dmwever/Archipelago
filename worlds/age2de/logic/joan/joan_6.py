@@ -6,7 +6,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
-from ..ScenarioLogic import ScenarioStartingState, DARK_START
+from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
 
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ class Joan6StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN5_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 5)
         self.has_base = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name) & logic.can_build_base()
         self.has_vils = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
-        self.has_age[Age2AgeData.DARK] = logic.ages.can_reach(Age2AgeData.DARK) & DARK_START
-        self.has_age[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
-        self.has_age[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE)
-        self.has_age[Age2AgeData.IMPERIAL] = self.has_base & logic.ages.can_reach(Age2AgeData.IMPERIAL)
+        self.age_playable[Age2AgeData.DARK] = logic.ages.can_reach(Age2AgeData.DARK) & DARK_START
+        self.age_playable[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
+        self.age_playable[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE) | VANILLA_AGE_START
+        self.age_playable[Age2AgeData.IMPERIAL] = self.has_base & logic.ages.can_reach(Age2AgeData.IMPERIAL)
