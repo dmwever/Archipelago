@@ -54,6 +54,9 @@ class InstallerTestBase(unittest.TestCase):
     def installed_name(self, stem, tag=None, player_name=PLAYER):
         return Identity.campaign_file_name(stem, self.tag if tag is None else tag, player_name)
 
+    def installed_name(self, stem, tag=None, player_name=PLAYER):
+        return Identity.campaign_file_name(stem, self.tag if tag is None else tag, player_name)
+
     def campaign_dir(self) -> Path:
         return self.handler.campaign_dir()
 
