@@ -36,10 +36,10 @@ class Logic:
         self.scenarios = []
 
         self._has_vils: Or = Or()
-        self._can_reach_age: dict[Age2AgeData, Or] = {age: Or() for age in Age2AgeData}
 
         self.buildings = BuildingLogic(self, world)
         self.ages =  AgeLogic(self, world)
+        
         for campaign in world.included_campaigns:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
@@ -49,6 +49,10 @@ class Logic:
             self._can_reach_age[age].children = tuple(
                 scenario.is_unlocked() & scenario.can_reach_age(age)
                 for scenario in self.scenarios)
+        
+        self.ages.set_age_to_scenarios(self.scenarios)
+        self.ages.set_can_reach_age(self.scenarios)
+        
         self.military = MilitaryLogic(self, world)
         self.goal = GoalLogic(self, world)
         self.techs = TechLogic(self, world)
@@ -71,10 +75,12 @@ class Logic:
         return self._has_vils
 
     def can_reach_age(self, age: Age2AgeData) -> Rule:
-        return self._can_reach_age[age]
+        return self.ages.can_reach_age(age)
 
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         can_build: Rule = (self.buildings.has_building(building)
                            & self.ages.can_reach(building.age)
                            & self.buildings.has_prerequisites(building))
+        if building.age is Age2AgeData.DARK:
+            return can_build & self.has_vils()
         return can_build & self.has_vils() & self.can_reach_age(building.age)

@@ -6,7 +6,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
-from ..ScenarioLogic import ScenarioStartingState, NOT_DARK_START
+from ..ScenarioLogic import ScenarioStartingState, DARK_START
 
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ class Attila5StartingState(ScenarioStartingState):
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT4_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 4)
         self.has_base = logic.can_build_base()
-        self.can_reach_age[Age2AgeData.DARK] = True_()
-        self.can_reach_age[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) | NOT_DARK_START
-        self.can_reach_age[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE) | NOT_DARK_START
-        self.can_reach_age[Age2AgeData.IMPERIAL] = self.logic.ages.can_reach_imperial()
+        self.has_age[Age2AgeData.DARK] = logic.ages.can_reach(Age2AgeData.DARK) & DARK_START
+        self.has_age[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
+        self.has_age[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE)
+        self.has_age[Age2AgeData.IMPERIAL] = self.logic.ages.can_reach_imperial()

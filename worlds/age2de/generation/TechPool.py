@@ -37,7 +37,7 @@ class TechPool:
         return self._shuffle_uniques != ShuffleUniqueTechs.option_unshuffled
 
 
-    def locks(self, tech: Age2TechData) -> bool:
+    def locked_at_start(self, tech: Age2TechData) -> bool:
         """Whether Existing Techs withholds a technology the scenario would grant."""
         if self._existing_techs_mode == ExistingTechs.option_find_items:
             return True
@@ -51,7 +51,7 @@ class TechPool:
         """Existing Techs. A scenario auto-researches everything below the age it
         starts in, so unless this mode withholds it, a technology no scenario starts
         below is granted on load and never becomes a location the game can check."""
-        if self.locks(tech):
+        if self.locked_at_start(tech):
             return True
         return self._earliest_age <= tech.age
 

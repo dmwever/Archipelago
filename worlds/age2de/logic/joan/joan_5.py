@@ -20,3 +20,5 @@ class Joan5StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN4_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 4)
         self.has_vils = False_()
         self.has_base = False_()
+        self.has_age[Age2AgeData.DARK] = False_()
+        

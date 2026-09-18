@@ -7,7 +7,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
-from ..ScenarioLogic import ScenarioStartingState, NOT_DARK_START
+from ..ScenarioLogic import ScenarioStartingState, DARK_START
 
 
 if TYPE_CHECKING:
@@ -24,6 +24,5 @@ class Attila3StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.STABLE] = True_()
         self.starts_with_building[Age2BuildingData.MILL] = True_()
         self.starts_with_building[Age2BuildingData.BLACKSMITH] = True_()
-        self.can_reach_age[Age2AgeData.DARK] = True_()
-        self.can_reach_age[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) | NOT_DARK_START
-        self.can_reach_age[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE) | NOT_DARK_START
+        self.has_age[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
+        self.has_age[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE)

@@ -9,7 +9,9 @@ from ..rules.AgeRules import TwoBuildingsRequirement
 from ..items.Items import Age2ItemData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
-from rule_builder.rules import False_, Has, HasAll, HasAny, HasFromListUnique, NestedRule, Rule, True_
+from rule_builder.rules import False_, Has, HasAll, HasAny, HasFromListUnique, NestedRule, Or, Rule, True_
+
+from .ScenarioLogic import ScenarioLogic
 
 
 if TYPE_CHECKING:
@@ -21,6 +23,20 @@ class AgeLogic:
     def __init__(self, logic: 'Logic', world: Age2World):
         self.logic = logic
         self.world = world
+        self.age_to_scenarios: dict[Age2AgeData, Rule] = {age: False_() for age in Age2AgeData }
+        self.can_reach_age: dict[Age2AgeData, Rule] = {age: False_() for age in Age2AgeData}
+        
+    def set_can_reach_age(self, scenarios: list[ScenarioLogic]):
+        for age in Age2AgeData:
+            rule = self.can_reach_age[age]
+            for scenario in scenarios:
+                rule = rule | scenario.is_unlocked() & scenario.start_past_age(age)
+    
+    def set_age_to_scenarios(self, scenarios: list[ScenarioLogic]):
+        for age in Age2AgeData:
+            rule = self.age_to_scenarios[age]
+            for scenario in scenarios:
+                rule = rule | (scenario.is_unlocked() & scenario.has_age(age))
     
     def two_from_dark_age(self) -> Rule:
         return TwoBuildingsRequirement([
@@ -64,6 +80,9 @@ class AgeLogic:
             return self.can_reach_imperial()
         else:
             return True_()
+
+    def past_age(self, age: Age2AgeData) -> Rule:
+        return Or(*(self.can_reach(a) for a in Age2AgeData if a >= age))
 
     def has_age(self, age: Age2AgeData) -> Rule:
         if not self.world.options.shuffle_ages or age.item is None:
