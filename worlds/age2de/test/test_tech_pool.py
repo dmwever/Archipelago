@@ -18,9 +18,15 @@ from ..locations.connections import LocationMapping
 
 class TechPoolTestBase(unittest.TestCase):
     def pool(self, **options) -> list[Age2TechData]:
-        world = setup_solo_multiworld(Age2World, steps=("generate_early",)).worlds[1]
+        # generate_early reads the campaign options, so it has to run after they are set.
+        world = setup_solo_multiworld(Age2World, ()).worlds[1]
         for name, value in options.items():
             getattr(world.options, name).value = value
+        if "enabled_campaigns" in options and "starting_campaigns" not in options:
+            # generate_early refuses a start outside the enabled set, and the default start is
+            # Attila. Which campaign you begin in does not affect the tech pool, so follow along.
+            world.options.starting_campaigns.value = set(options["enabled_campaigns"])
+        world.generate_early()
         world.create_regions()
         self.world = world
         return world.shuffled_techs
