@@ -55,6 +55,45 @@ class TestMercenaryLogicFlag(unittest.TestCase):
                              "progression or the locations behind it are unreachable")
 
 
+class TestMercenaryUsedBitfield(unittest.TestCase):
+    """A spent mercenary must never be offered again, across reconnect and save/load, so the used
+    set lives in DataStorage as a bitfield keyed by mercenary_bit."""
+
+    def mercenaries(self) -> list[Items.Age2ItemData]:
+        return sorted(Items.CATEGORY_TO_ITEMS[Items.Mercenary], key=lambda item: item.id)
+
+    def test_every_mercenary_has_its_own_bit(self) -> None:
+        bits = [item.type.mercenary_bit for item in self.mercenaries()]
+        self.assertEqual(len(bits), len(set(bits)),
+                         "two mercenaries share a bit, so spending one would spend the other")
+        for bit in bits:
+            self.assertGreaterEqual(bit, 0, "a negative bit shifts the wrong way")
+
+    def test_nothing_is_spent_in_a_fresh_seed(self) -> None:
+        self.assertEqual(set(), Items.mercenaries_from_bits(0),
+                         "a seed that has never stored the key must start with every mercenary "
+                         "available")
+
+    def test_the_field_round_trips(self) -> None:
+        for item in self.mercenaries():
+            field = Items.bits_for_mercenaries({item})
+            self.assertEqual({item}, Items.mercenaries_from_bits(field),
+                             f"{item.item_name} did not survive the bitfield round trip")
+
+    def test_spending_one_leaves_the_others_alone(self) -> None:
+        every = set(self.mercenaries())
+        for item in self.mercenaries():
+            spent = Items.mercenaries_from_bits(Items.bits_for_mercenaries(every - {item}))
+            self.assertNotIn(item, spent)
+            self.assertEqual(every - {item}, spent,
+                             f"spending everything but {item.item_name} disturbed the rest")
+
+    def test_bits_outside_the_roster_are_ignored(self) -> None:
+        highest = max(item.type.mercenary_bit for item in self.mercenaries())
+        self.assertEqual(set(), Items.mercenaries_from_bits(1 << (highest + 1)),
+                         "a bit from a newer apworld must not decode as some existing mercenary")
+
+
 class TestMercenaryUnits(unittest.TestCase):
 
     def test_every_mercenary_delivers_at_least_one_unit(self) -> None:

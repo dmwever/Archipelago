@@ -52,6 +52,7 @@ class MercenaryUnit:
 class Mercenary:
     vanilla_scenario: Age2ScenarioData
     units: list[MercenaryUnit]
+    mercenary_bit: int
     in_logic: bool = False
 
 @dataclass
@@ -236,20 +237,20 @@ class Age2ItemData(enum.IntEnum):
     #4000 - 4999 = Troops, Future Use
     
     #Troop Items
-    AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 18)])
-    AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Attila, The Scourge of God: Roman Villagers",        Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 7), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5)], in_logic=True)
-    AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Attila, The Great Ride: Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.TARKAN, 5), MercenaryUnit(Age2UnitData.HUSSAR, 2)])
-    AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Attila, The Great Ride: Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.MANGUDAI, 9), MercenaryUnit(Age2UnitData.CAPPED_RAM, 3), MercenaryUnit(Age2UnitData.ONAGER, 1)], in_logic=True)
+    AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 18)], 0)
+    AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Attila, The Scourge of God: Roman Villagers",        Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 7), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5)], 1, in_logic=True)
+    AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Attila, The Great Ride: Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.TARKAN, 5), MercenaryUnit(Age2UnitData.HUSSAR, 2)], 2)
+    AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Attila, The Great Ride: Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.MANGUDAI, 9), MercenaryUnit(Age2UnitData.CAPPED_RAM, 3), MercenaryUnit(Age2UnitData.ONAGER, 1)], 3, in_logic=True)
     
     # Joan of Arc
-    AP_JOAN_1_RAM =                     4004, "Joan of Arc, An Unlikely Messiah: Battering Ram Army",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.PIKEMAN, 6), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4), MercenaryUnit(Age2UnitData.CAPPED_RAM, 1)], in_logic=True)
-    AP_JOAN_1_SWORDSMEN =               4005, "Joan of Arc, An Unlikely Messiah: Starting Swordsmen",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4)], in_logic=True)
-    AP_JOAN_1_CROSSBOWMEN =             4006, "Joan of Arc, An Unlikely Messiah: Starting Crossbowmen",         Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6)], in_logic=True)
-    AP_JOAN_1_RECRUITS =                4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6), MercenaryUnit(Age2UnitData.SCORPION, 2)])
-    AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.MILITIA, 16), MercenaryUnit(Age2UnitData.KNIGHT, 2), MercenaryUnit(Age2UnitData.HEAVY_SCORPION, 2), MercenaryUnit(Age2UnitData.THROWING_AXEMAN, 2)])
-    AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.SCOUT_CAVALRY, 1), MercenaryUnit(Age2UnitData.MILITIA, 1)])
-    AP_JOAN_6_LONE_SWORDSMAN =          4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.LONG_SWORDSMAN, 1)])
-    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2UnitData.JEAN_BUREAU, 1)], in_logic=True)
+    AP_JOAN_1_RAM =                     4004, "Joan of Arc, An Unlikely Messiah: Battering Ram Army",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.PIKEMAN, 6), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4), MercenaryUnit(Age2UnitData.CAPPED_RAM, 1)], 4, in_logic=True)
+    AP_JOAN_1_SWORDSMEN =               4005, "Joan of Arc, An Unlikely Messiah: Starting Swordsmen",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4)], 5, in_logic=True)
+    AP_JOAN_1_CROSSBOWMEN =             4006, "Joan of Arc, An Unlikely Messiah: Starting Crossbowmen",         Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6)], 6, in_logic=True)
+    AP_JOAN_1_RECRUITS =                4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6), MercenaryUnit(Age2UnitData.SCORPION, 2)], 7)
+    AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.MILITIA, 16), MercenaryUnit(Age2UnitData.KNIGHT, 2), MercenaryUnit(Age2UnitData.HEAVY_SCORPION, 2), MercenaryUnit(Age2UnitData.THROWING_AXEMAN, 2)], 8)
+    AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.SCOUT_CAVALRY, 1), MercenaryUnit(Age2UnitData.MILITIA, 1)], 9)
+    AP_JOAN_6_LONE_SWORDSMAN =          4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.LONG_SWORDSMAN, 1)], 10)
+    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2UnitData.JEAN_BUREAU, 1)], 11, in_logic=True)
     
 
         
@@ -285,3 +286,17 @@ item_mapping: dict[str, str] = {
     Age2ItemData.AP_JOAN_5_REFUGEE_9.item_name: "Refugee",
     Age2ItemData.AP_JOAN_5_REFUGEE_10.item_name: "Refugee",
 }
+
+def mercenaries_from_bits(used: int) -> set[Age2ItemData]:
+    """The mercenaries a DataStorage bitfield says are already spent. Python ints have no width,
+    so the field keeps growing as the roster does."""
+    return {mercenary for mercenary in CATEGORY_TO_ITEMS[Mercenary]
+            if used & (1 << mercenary.type.mercenary_bit) != 0}
+
+
+def bits_for_mercenaries(mercenaries: 'set[Age2ItemData]') -> int:
+    """The inverse of mercenaries_from_bits, for tests and diagnostics."""
+    field = 0
+    for mercenary in mercenaries:
+        field = field | (1 << mercenary.type.mercenary_bit)
+    return field

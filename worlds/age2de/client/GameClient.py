@@ -51,6 +51,10 @@ class APClientInterface(Protocol):
         """Called when a new location is received"""
         pass
 
+    def on_mercenary_used(self, mercenary: Age2ItemData):
+        """Called when the game has finished spawning a mercenary, so it is spent for good"""
+        pass
+
 
 class DefaultClientInterface:
     def on_scenario_completion(self, scenario_id: Age2ScenarioData) -> None:
@@ -66,6 +70,9 @@ class DefaultClientInterface:
     def fetch_locations_collected(self, location_status: dict[int, int], new_mission_id: int) -> None:
         for k in location_status:
             location_status[k] = 0
+
+    def on_mercenary_used(self, mercenary: Age2ItemData) -> None:
+        pass
 
 
 class Age2Packet:
@@ -128,6 +135,7 @@ class ClientStatus:
     tag: str = ''
     player_name: str = ''
     in_flight: list[int] = field(default_factory=list[int])
+    used_mercenaries: set[Age2ItemData] = field(default_factory=set[Age2ItemData])
 
 class Age2GameContext:
     running: bool = False
