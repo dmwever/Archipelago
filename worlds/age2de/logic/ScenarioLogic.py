@@ -50,9 +50,9 @@ class ScenarioLogic:
         return self.starting_state.age_playable[age]
 
     def start_past_age(self, age: Age2AgeData) -> Rule:
-        # Standing in this age or any above it. The table already knows which
-        # ages the install hands over and where the scenario tops out.
-        return Or(*(self.can_reach_age(a) for a in Age2AgeData if a >= age))
+        if self.scenario.vanilla_age > age:
+            return True_() & VANILLA_AGE_START
+        return False_()
     
     def start_with_building(self, building: Age2BuildingData) -> Rule:
         return self.starting_state.starts_with_building[building] | self.logic.can_build_building(building)
