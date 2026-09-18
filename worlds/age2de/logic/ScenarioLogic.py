@@ -1,11 +1,10 @@
-from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from ..locations.Buildings import Age2BuildingData
 
 from rule_builder.options import OptionFilter
-from rule_builder.rules import False_, Or, Rule, True_
+from rule_builder.rules import False_, Rule, True_
 
 from ..Options import ExistingTechs
 from ..locations.Ages import Age2AgeData

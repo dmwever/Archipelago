@@ -24,15 +24,14 @@ class AgeLogic:
         self.logic = logic
         self.world = world
         self.age_to_scenarios: dict[Age2AgeData, Rule] = {age: False_() for age in Age2AgeData }
-        self.can_reach_age: dict[Age2AgeData, Rule] = {age: False_() for age in Age2AgeData}
+        self.can_reach_age: dict[Age2AgeData, Or] = {age: Or() for age in Age2AgeData}
         
     def set_can_reach_age(self, scenarios: list[ScenarioLogic]):
         for age in Age2AgeData:
-            rule = self.can_reach_age[age]
-            for scenario in scenarios:
-                rule = rule | (scenario.is_unlocked()
-                               & (scenario.can_reach_age(age) | scenario.start_past_age(age)))
-            self.can_reach_age[age] = rule
+            self.can_reach_age[age].children = tuple(
+                scenario.is_unlocked()
+                & (scenario.can_reach_age(age) | scenario.start_past_age(age))
+                for scenario in scenarios)
     
     def set_age_to_scenarios(self, scenarios: list[ScenarioLogic]):
         for age in Age2AgeData:
@@ -83,9 +82,6 @@ class AgeLogic:
             return self.can_reach_imperial()
         else:
             return True_()
-
-    def past_age(self, age: Age2AgeData) -> Rule:
-        return Or(*(self.can_reach(a) for a in Age2AgeData if a >= age))
 
     def has_age(self, age: Age2AgeData) -> Rule:
         if not self.world.options.shuffle_ages or age.item is None:

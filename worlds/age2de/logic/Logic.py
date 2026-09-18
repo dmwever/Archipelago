@@ -77,6 +77,4 @@ class Logic:
         can_build: Rule = (self.buildings.has_building(building)
                            & self.ages.can_reach(building.age)
                            & self.buildings.has_prerequisites(building))
-        if building.age is Age2AgeData.DARK:
-            return can_build & self.has_vils()
         return can_build & self.has_vils() & self.can_reach_age(building.age)
