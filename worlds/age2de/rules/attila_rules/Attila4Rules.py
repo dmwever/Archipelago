@@ -25,7 +25,7 @@ class Attila4Rules(ScenarioRules):
             self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_ram() &
             self.logic.military.has_siege() &
-            self.scenario_logic.can_reach_age(Age2AgeData.IMPERIAL)
+            self.scenario_logic.start_past_age(Age2AgeData.IMPERIAL)
         )
         
         can_beat_purple: Rule = (
@@ -38,7 +38,7 @@ class Attila4Rules(ScenarioRules):
             self.scenario_logic.has_base() &
             self.logic.buildings.has_building(Age2BuildingData.MARKET) &
             self.logic.buildings.has_building(Age2BuildingData.CASTLE) &
-            self.scenario_logic.can_reach_age(Age2AgeData.CASTLE)
+            self.scenario_logic.start_past_age(Age2AgeData.CASTLE)
         )
         
         can_beat_cyan: Rule = (
@@ -50,7 +50,7 @@ class Attila4Rules(ScenarioRules):
             self.logic.military.counters_monk() &
             self.logic.military.counters_trebuchet() &
             self.logic.military.has_long_range_siege() &
-            self.scenario_logic.can_reach_age(Age2AgeData.IMPERIAL)
+            self.scenario_logic.start_past_age(Age2AgeData.IMPERIAL)
         )
         can_beat_blue: Rule = can_beat_cyan
         

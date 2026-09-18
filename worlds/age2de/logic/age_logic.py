@@ -30,13 +30,15 @@ class AgeLogic:
         for age in Age2AgeData:
             rule = self.can_reach_age[age]
             for scenario in scenarios:
-                rule = rule | scenario.is_unlocked() & scenario.start_past_age(age)
+                rule = rule | (scenario.is_unlocked() & scenario.start_past_age(age))
+            self.can_reach_age[age] = rule
     
     def set_age_to_scenarios(self, scenarios: list[ScenarioLogic]):
         for age in Age2AgeData:
             rule = self.age_to_scenarios[age]
             for scenario in scenarios:
-                rule = rule | (scenario.is_unlocked() & scenario.has_age(age))
+                rule = rule | (scenario.is_unlocked() & scenario.age_playable(age))
+            self.age_to_scenarios[age] = rule
     
     def two_from_dark_age(self) -> Rule:
         return TwoBuildingsRequirement([

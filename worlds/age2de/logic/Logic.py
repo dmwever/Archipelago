@@ -71,7 +71,7 @@ class Logic:
         return self._has_vils
 
     def can_reach_age(self, age: Age2AgeData) -> Rule:
-        return self.ages.can_reach_age(age)
+        return self.ages.can_reach_age[age]
 
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         can_build: Rule = (self.buildings.has_building(building)
