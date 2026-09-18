@@ -1,26 +1,64 @@
+import unittest
+
+from BaseClasses import CollectionState
 from test.bases import WorldTestBase
+from test.general import setup_solo_multiworld
 
 from .. import Age2World, AGE2_DE
 
-# Tests are a big topic.
-# The testing API and the core code in general empower you to test all kinds of complicated custom behavior.
-# However, for APQuest, we'll stick to some of the more basic tests.
 
-
-# Most of your testing will probably be done using the generic WorldTestBase.
-# WorldTestBase is a class that performs a set of generic tests on your world using a given set of options.
-# It also enables you to write custom tests with a slew of generic helper functions.
-# The first thing you'll want to do is subclass it. You'll want to override "game" And "world" like this.
 class Age2TestBase(WorldTestBase):
     game = AGE2_DE
     world: Age2World
 
 
-# The actual tests you write should be in files whose names start with "test_".
-# Ideally, you should group similar tests together in one file, where each file has some overarching significance.
+class Age2RuleTestBase(unittest.TestCase):
+    """For tests that assert on access rules rather than on the pool.
 
-# The best order to read these tests in is:
-# 1. test_easy_mode.py
-# 2. test_hard_mode.py
-# 3. test_extra_starting_chest.py
-# 4. test_hammer.py
+    Two things here are load bearing. Rules only exist after set_rules, so all
+    four steps have to run -- pool tests get away with create_regions alone.
+    And a state has to sweep, or every scenario past the first reports itself
+    locked and the assertions pass without testing anything.
+    """
+
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def build(self, **options) -> Age2World:
+        world = setup_solo_multiworld(Age2World, steps=("generate_early",)).worlds[1]
+        world.options.enabled_campaigns.value = set(self.campaigns)
+        world.options.starting_campaigns.value = set(self.starting_campaigns)
+        for name, value in options.items():
+            getattr(world.options, name).value = value
+        for step in ("create_regions", "create_items", "set_rules"):
+            getattr(world, step)()
+        self.world = world
+        self.multiworld = world.multiworld
+        return world
+
+    def state_without(self, *item_names: str) -> CollectionState:
+        state = CollectionState(self.multiworld)
+        for item in self.multiworld.itempool:
+            if item.name not in item_names:
+                state.collect(item, prevent_sweep=True)
+        state.sweep_for_advancements()
+        return state
+
+    def can_reach(self, location_name: str, state: CollectionState = None) -> bool:
+        if state is None:
+            state = self.state_without()
+        return state.can_reach_location(location_name, self.world.player)
+
+    def location_names(self) -> set[str]:
+        return {location.name for location in self.multiworld.get_locations(self.world.player)}
+
+    def item_requirements(self, location_name: str) -> set[str]:
+        """The item names a location's resolved rule asks for.
+
+        Introspection alone is not enough to trust: Has() never validates a name,
+        so a typo yields a rule nothing can satisfy and an empty-looking set. The
+        tests that matter pair this with a real reachability check.
+        """
+        rule = self.multiworld.get_location(location_name, self.world.player).access_rule
+        dependencies = getattr(rule, "item_dependencies", None)
+        return set(dependencies()) if dependencies else set()
