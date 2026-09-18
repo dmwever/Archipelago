@@ -12,7 +12,7 @@ from worlds.LauncherComponents import Component, Type, components, launch as lau
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
-from .generation import SlotData, WorldVersion
+from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.TechPool import TechPool
 from .Options import Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
@@ -55,18 +55,20 @@ class Age2World(CachedRuleBuilderWorld):
     item_mapping = Items.item_mapping
     
     included_civs: list[Scenarios.Age2CivData]
-    included_campaigns: set[Campaigns.Age2CampaignData]
+    included_campaigns: list[Campaigns.Age2CampaignData]
+    starting_campaigns: list[Campaigns.Age2CampaignData]
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
     shuffled_ages: list[Age2AgeData]
     tech_pool: TechPool
     earliest_age: Age2AgeData = None
     rules: Rules
-    
+
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
         self.included_civs = []
-        self.included_campaigns = set()
+        self.included_campaigns = []
+        self.starting_campaigns = []
         self.shuffled_buildings = []
         self.shuffled_techs = []
         self.shuffled_ages = []
@@ -78,12 +80,35 @@ class Age2World(CachedRuleBuilderWorld):
             return False
         return True
 
+    def generate_early(self) -> None:
+        self.included_campaigns = [campaign for campaign in Campaigns.Age2CampaignData
+                                   if campaign.campaign_name in self.options.enabled_campaigns]
+        self.starting_campaigns = [campaign for campaign in self.included_campaigns
+                                   if campaign.campaign_name in self.options.starting_campaigns]
+        if not self.options.enabled_campaigns.value:
+            raise OptionError(f"{self.player_name}: enabled_campaigns needs at least one campaign.")
+        if not self.options.starting_campaigns.value:
+            raise OptionError(f"{self.player_name}: starting_campaigns needs at least one campaign.")
+        if not self.starting_campaigns:
+            raise OptionError(f"{self.player_name}: starting_campaigns must include at least one "
+                              f"enabled campaign. Enabled: {sorted(self.options.enabled_campaigns.value)}.")
+        self.check_installable_name()
+
+    def check_installable_name(self) -> None:
+        """/install names each campaign file after the slot, so the name has to survive a file
+        name. Refuse a name that leaves nothing behind, and announce one that merely changes."""
+        safe_name = Identity.sanitize_player(self.player_name)
+        if not safe_name:
+            raise OptionError(
+                f"{self.player_name}: this name has no characters that can be used in a file name. "
+                f"Age2 installs campaign files named after your slot, so pick a name that is not "
+                r'made up entirely of <>:"/\|?* and dots.')
+        if safe_name != self.player_name:
+            logger.warning(
+                "%s's name contains characters that cannot be used in a file name. Their campaigns "
+                "will be installed as \"%s\".", self.player_name, safe_name)
+
     def create_regions(self) -> None:
-        if len(self.options.enabled_campaigns.value) == 0:
-            self.included_campaigns = self.options.enabled_campaigns.default
-        else:
-            campaign_names = self.options.enabled_campaigns
-            self.included_campaigns = {campaign for campaign in Campaigns.Age2CampaignData if campaign.campaign_name in campaign_names}
         
         self.included_civs = list(dict.fromkeys(
             scenario.civ for campaign in self.included_campaigns
@@ -92,15 +117,10 @@ class Age2World(CachedRuleBuilderWorld):
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         
         for campaign in self.included_campaigns:
-            scenarios = iter(CAMPAIGN_TO_SCENARIOS[campaign])
-            prev_region: Region = None
-            try:
-                first_scn = next(scenarios)
-                region = self.add_scenario_region(first_scn, regions[0])
-                regions.append(region)
-                prev_region = region
-            except StopIteration:
-                raise OptionError(f"Could not iterate {first_scn.scenario_name} region from {campaign.campaign_name}")
+            scenarios = CAMPAIGN_TO_SCENARIOS[campaign]
+            if not scenarios:
+                raise OptionError(f"{self.player_name}: {campaign.campaign_name} has no scenarios.")
+            prev_region: Region = regions[0]
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)
                 regions.append(region)
@@ -119,7 +139,8 @@ class Age2World(CachedRuleBuilderWorld):
             if Buildings.BuildingOption.unique in building.building_options and not any(building in civ.included_buildings for civ in self.included_civs): 
                 continue # No civs with this unique building are included.
             if any(option in building.building_options for option in 
-                   [options for options in self.options.shuffle_buildings if not Buildings.BuildingOption.unique in options]):
+                   [option for option in self.options.shuffle_buildings
+                    if option != Buildings.BuildingOption.unique]):
                 new_location = Location(self.player, building.location_name, building.id, buildings)
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
@@ -164,6 +185,8 @@ class Age2World(CachedRuleBuilderWorld):
                 region.exits.append(alternate)
                 alternate.connect(existing_building)
 
+        regions[0].add_event("Victory", Items.Age2ItemData.VICTORY.item_name)
+
         self.multiworld.regions += regions
 
     def civ_can_build(self, building: Buildings.Age2BuildingData) -> bool:
@@ -182,19 +205,24 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             new_location = Location(self.player, location.global_name(), location.id, new_region)
             new_region.locations.append(new_location)
+        if scenario.scenario_name in Locations.VICTORY_SCENARIO_LOCATIONS:
+            new_region.add_event("Complete " + scenario.scenario_name,
+                                 scenario.scenario_name + ": Unlock Next Scenario",
+                                 show_in_spoiler=False)
         return new_region
         
     
     def create_items(self) -> None:
         items: list[Item] = []
+        region_names = {region.name for region in self.multiworld.get_regions(self.player)}
         for item in Items.Age2ItemData:
             if isinstance(item.type, Items.Victory):
                 continue
             elif isinstance(item.type, Items.ScenarioItem):
-                if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
+                if item.type.vanilla_scenario.scenario_name in region_names:
                     items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Mercenary):
-                if item.type.vanilla_scenario.scenario_name in [region.name for region in self.multiworld.regions]:
+                if item.type.vanilla_scenario.scenario_name in region_names:
                     items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Campaign):
                 if item.type.vanilla_campaign in self.included_campaigns:
@@ -251,69 +279,46 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        print(needed_number_of_filler_items)
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
-        
-        for campaign in Campaigns.Age2CampaignData:
-            if campaign.campaign_name in self.options.starting_campaigns:
-                self.add_early_campaign_items(campaign)
-        
-    def add_early_campaign_items(self, campaign: Campaigns.Age2CampaignData):
-        pass
-        # if campaign == Campaigns.Age2CampaignData.JOAN:
-        #     choice: str = self.random.choice([Items.Age2ItemData.AP_JOAN_1_CROSSBOWMEN.item_name, Items.Age2ItemData.AP_JOAN_1_SWORDSMEN.item_name])
-        #     self.multiworld.early_items[self.player][choice] = 1
-        #     self.multiworld.early_items[self.player][Items.Age2ItemData.AP_JOAN_1_RAM.item_name] = 1
     
-    def smart_add_starting_resources(self, locations_to_fill: int):
+    def smart_add_starting_resources(self, locations_to_fill: int) -> list[Item]:
         items: list[Item] = []
-        if locations_to_fill == 0:
-            return []
-        wood_amount: int = 1000
-        food_amount: int = 1000
-        gold_amount: int = 750
-        stone_amount: int = 500
+        if locations_to_fill <= 0:
+            return items
+
+        largest = {
+            Items.Resource.WOOD: Items.Age2ItemData.STARTING_WOOD_LARGE,
+            Items.Resource.FOOD: Items.Age2ItemData.STARTING_FOOD_LARGE,
+            Items.Resource.GOLD: Items.Age2ItemData.STARTING_GOLD_LARGE,
+            Items.Resource.STONE: Items.Age2ItemData.STARTING_STONE_LARGE,
+        }
+        amounts = {
+            Items.Resource.WOOD: 1000,
+            Items.Resource.FOOD: 1000,
+            Items.Resource.GOLD: 750,
+            Items.Resource.STONE: 500,
+        }
         starting_resource_choices = Items.CATEGORY_TO_ITEMS[Items.StartingResources]
+
         while locations_to_fill > 0:
-            worst_case_wood_needed: int = ceil(wood_amount / Items.Age2ItemData.STARTING_WOOD_LARGE.type.amount)
-            worst_case_food_needed: int = ceil(food_amount / Items.Age2ItemData.STARTING_FOOD_LARGE.type.amount)
-            worst_case_gold_needed: int = ceil(gold_amount / Items.Age2ItemData.STARTING_GOLD_LARGE.type.amount)
-            worst_case_stone_needed: int = ceil(stone_amount / Items.Age2ItemData.STARTING_STONE_LARGE.type.amount)
-            worst_case_sum = worst_case_wood_needed + worst_case_food_needed + worst_case_gold_needed + worst_case_stone_needed
+            worst_case = {resource: ceil(amounts[resource] / largest[resource].type.amount)
+                          for resource in amounts}
+            worst_case_sum = sum(worst_case.values())
+
             if worst_case_sum > locations_to_fill:
-                wood_amount = wood_amount / 2
-                food_amount = food_amount / 2
-                gold_amount= gold_amount / 2
-                stone_amount = stone_amount / 2
+                amounts = {resource: amount // 2 for resource, amount in amounts.items()}
                 continue
+
             if worst_case_sum == locations_to_fill:
-                for _ in range(worst_case_wood_needed):
-                    self.create_item(Items.Age2ItemData.STARTING_WOOD_LARGE.item_name)
-                for _ in range(worst_case_food_needed):
-                    self.create_item(Items.Age2ItemData.STARTING_FOOD_LARGE.item_name)
-                for _ in range(worst_case_gold_needed):
-                    self.create_item(Items.Age2ItemData.STARTING_GOLD_LARGE.item_name)
-                for _ in range(worst_case_stone_needed):
-                    self.create_item(Items.Age2ItemData.STARTING_STONE_LARGE.item_name)
+                for resource, needed in worst_case.items():
+                    for _ in range(needed):
+                        items.append(self.create_item(largest[resource].item_name))
+                        locations_to_fill -= 1
                 return items
+
             item_data = self.random.choice(starting_resource_choices)
-            if item_data.type.type == Items.Resource.WOOD:
-                wood_amount -= item_data.type.amount
-                if wood_amount < 0:
-                    wood_amount = 0
-            if item_data.type.type == Items.Resource.GOLD:
-                gold_amount -= item_data.type.amount
-                if gold_amount < 0:
-                    gold_amount = 0
-            if item_data.type.type == Items.Resource.FOOD:
-                food_amount -= item_data.type.amount
-                if food_amount < 0:
-                    food_amount = 0
-            if item_data.type.type == Items.Resource.STONE:
-                stone_amount -= item_data.type.amount
-                if stone_amount < 0:
-                    stone_amount = 0
-                
+            resource = item_data.type.type
+            amounts[resource] = max(0, amounts[resource] - item_data.type.amount)
             items.append(self.create_item(item_data.item_name))
             locations_to_fill -= 1
         return items
@@ -337,6 +342,9 @@ class Age2World(CachedRuleBuilderWorld):
     def set_rules(self) -> None:
         self.rules = Rules(self)
         self.rules.set_rules()
+
+    def pre_fill(self) -> None:
+        LocalStart.apply(self)
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {

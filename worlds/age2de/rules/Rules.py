@@ -1,23 +1,17 @@
 from __future__ import annotations
 
-from abc import ABC
 from typing import TYPE_CHECKING
 
-from BaseClasses import CollectionRule, Entrance, Item, ItemClassification, Location, Region
-from ..locations.Campaigns import Age2CampaignData
-from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
+from BaseClasses import CollectionRule, Entrance, Location
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from ..logic.Logic import Logic
-from ..locations.Buildings import Age2BuildingData
-from ..locations.Ages import Age2AgeData
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
 from .TechRules import TechRules
-from rule_builder.rules import CanReachRegion, False_, Has, Rule, True_
-
-from ..items.Items import Age2ItemData
-from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData, Age2LocationType
-from ..locations.connections import ScenarioDataRules
+from rule_builder.rules import Rule
+# Imported for its side effect: binds Age2ScenarioData.<member>.rules, used in set_rules below.
+from ..locations.connections import ScenarioDataRules  # noqa: F401
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -39,23 +33,15 @@ class Rules:
         self.scenario_rules = []
 
     def get_entrance(self, entrance_name: str):
-        self.world.get_entrance(entrance_name)
+        return self.world.get_entrance(entrance_name)
 
     def set_rule(self, spot: Location | Entrance, rule: CollectionRule | Rule[Age2World]):
         self.world.set_rule(spot, rule)
 
     def set_rules(self) -> None:
-        for value in [x for x in VICTORY_SCENARIO_LOCATIONS.values() if x.scenario.campaign in self.world.included_campaigns]:
-            region = self.world.get_region(value.scenario.scenario_name)
-            victory_loc = Location(self.world.player, "Complete " + value.scenario.scenario_name, None, region)
-            victory_loc.place_locked_item(Item(value.scenario.scenario_name + ": Unlock Next Scenario", ItemClassification.progression, None, self.world.player))
-            region.add_event("Complete " + value.scenario.scenario_name, value.scenario.scenario_name + ": Unlock Next Scenario", show_in_spoiler=False)
-           
-        menu: Region = self.world.get_region("Menu") 
-        victory = self.world.create_item(Age2ItemData.VICTORY.item_name)
-        location: Location = Location(self.world.player, "Victory", 0, parent=menu)
+        # The event locations themselves are created in create_regions; only their rules belong here.
         self.world.multiworld.completion_condition[self.world.player] = lambda state: state.has("Victory", self.world.player)
-        menu.add_event(location.name, victory.name, self.logic.has_goal())
+        self.set_rule(self.world.get_location("Victory"), self.logic.has_goal())
 
         for campaign in self.world.included_campaigns:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:

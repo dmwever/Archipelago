@@ -70,6 +70,11 @@ class Age2CommandProcessor(ClientCommandProcessor):
         if mode and not full:
             self.output(f"Unknown option {mode!r}. Use /install or /install full.")
             return
+        
+        raw_name = ctx.player_names[ctx.slot]
+        if status.player_name != raw_name:
+            self.output(f'Your name "{raw_name}" contains characters that cannot be used in a '
+                        f'file name. Your campaigns are installed as "{status.player_name}".')
 
         ctx.game_ctx.install_handler.installing = True
         self.output("Installing. Rebuilding a scenario takes a few seconds each.")
@@ -86,7 +91,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         handler.report = lambda text: loop.call_soon_threadsafe(logger.info, text)
         try:
             handler.setup(campaigns, status.slot_id, status.tag, status.slot_data,
-                          ctx.server_locations)
+                          status.player_name, ctx.server_locations)
             written = await loop.run_in_executor(None, handler.install, full)
         except InstallError as ex:
             self.output(str(ex))
@@ -152,8 +157,10 @@ class Age2Context(CommonContext):
         self.seed_name = self.installed_seed_name
         tag = Identity.seed_tag(self.installed_seed_name, self.slot)
         logger.info("Playthrough tag for slot %s: %s", self.slot, tag)
+        player_name = Identity.sanitize_player(self.player_names[self.slot])
         self.game_ctx.connect(
-            self.checked_locations, slot_data, self.settings.user_folder, self.slot, tag)
+            self.checked_locations, slot_data, self.settings.user_folder, self.slot, tag,
+            player_name)
         Utils.async_start(self.send_msgs([
         {
             "cmd": "Set",
@@ -173,15 +180,19 @@ class Age2Context(CommonContext):
 
     def _handle_received_items(self, args: dict) -> None:
         received_items: list[NetworkItem] = args["items"]
+        if args.get("index", -1) == 0:
+            self.game_ctx.client_status.unlocked_items.clear()
         for received_item in received_items:
+            if received_item.item not in Items.ID_TO_ITEM:
+                logger.warning("Ignoring unknown item id %s from the server.", received_item.item)
+                continue
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
-            if item_data.type_data is Items.Campaign:
-                self.game_ctx.campaign_handler.unlock_campaign(item_data.type.vanilla_campaign)
-            if item_data.type_data is Items.ProgressiveScenario:
-                self.game_ctx.campaign_handler.unlock_progressive_scenario(item_data.type.vanilla_campaign)
             self.game_ctx.client_status.unlocked_items.append(item_data)
+        status = self.game_ctx.client_status
+        if status.acked_items > len(status.unlocked_items):
+            status.acked_items = len(status.unlocked_items)
 
     def _handle_set_reply(self, args: dict) -> None:
         if args["key"] != self.scenario_completion_key:

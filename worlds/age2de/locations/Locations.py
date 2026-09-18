@@ -55,7 +55,7 @@ class Age2ScenarioLocationData(enum.IntEnum):
     ATT2_GREEN_LUMBER =     10202, "Destroy the Green Lumber Camp",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
     ATT2_PURPLE_VILS =      10203, "Destroy the Purple Houses",          Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
     ATT2_GREY_MINING =      10204, "Destroy the Grey Mining Camps",      Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
-    ATT2_CYAN_TC =          10205, "Destroy the Cyan Town Center",       Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
+    ATT2_CYAN_TC_CASTLE =   10205, "Destroy Cyan's Town Center and Castle", Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
     ATT2_SCYTHIAN_VILS =    10206, "Give 6 Villagers to the Scythians",  Age2ScenarioData.AP_ATTILA_2, Age2LocationType.SIDE_QUEST
     ATT2_BUILD_TC =         10207, "Build a Town Center",                Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE
     ATT2_BEAT_THE_ROMANS =  10208, "Beat the Romans",                    Age2ScenarioData.AP_ATTILA_2, Age2LocationType.OBJECTIVE

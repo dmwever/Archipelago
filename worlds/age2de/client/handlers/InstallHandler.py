@@ -50,14 +50,14 @@ class InstallHandler(FolderHandler):
         self.report: Callable[[str], None] = logger.info
         super().__init__()
 
-    def setup(self, campaigns: list[Age2CampaignData], slot: int, tag: str,
+    def setup(self, campaigns: list[Age2CampaignData], slot: int, tag: str, player_name: str,
               slot_data: dict = None, location_ids: Iterable[int] = ()):
         self._included_campaigns = [
             IncludedCampaign(
                 data=cpn,
-                display_name=Identity.tagged(cpn.file_stem, tag),
-                file_name=Identity.campaign_file_name(cpn.file_stem, ''),
-                write_name=Identity.campaign_file_name(cpn.file_stem, tag),
+                display_name=Identity.campaign_stem(cpn.file_stem, tag, player_name),
+                file_name=Identity.source_campaign_file_name(cpn.file_stem),
+                write_name=Identity.campaign_file_name(cpn.file_stem, tag, player_name),
             )
             for cpn in campaigns
         ]

@@ -1,13 +1,17 @@
+from collections import Counter
 from dataclasses import dataclass, field
+import logging
 import os
 
 from .FolderHandler import FolderHandler
 
 from ...generation import Identity
 from ...campaign import XsdatFile
-from ...items.Items import CATEGORY_TO_ITEMS, Age2ItemData, SCENARIO_TO_ITEMS, Mercenary, ScenarioItem
+from ...items.Items import CATEGORY_TO_ITEMS, Age2ItemData, SCENARIO_TO_ITEMS, Campaign, Mercenary, ProgressiveScenario, ScenarioItem
 from ...locations.Scenarios import Age2ScenarioData, CAMPAIGN_TO_SCENARIOS, scenario_from_id
 from ...locations.Campaigns import Age2CampaignData
+
+logger = logging.getLogger("Client")
 
 @dataclass
 class ManagedScenarioItem:
@@ -46,12 +50,16 @@ class CampaignHandler(FolderHandler):
     
     active_file: ActiveFile
     tag: str = ''
+    player_name: str = ''
     
+    active_file: ActiveFile
+
     def __init__(self, data: list[Age2CampaignData]):
         self._campaigns = {}
         self.scenarios = {}
         self._scenario_items = {}
         self.active_file = None
+        self._reported_locked: set[Age2ScenarioData] = set()
         for cpn_data in data:
             scenarios_as_data: list[Age2ScenarioData] = []
             for scn_data in CAMPAIGN_TO_SCENARIOS[cpn_data]:
@@ -70,8 +78,18 @@ class CampaignHandler(FolderHandler):
     def set_tag(self, tag: str) -> None:
         self.tag = tag
     
+    def set_player_name(self, player_name: str) -> None:
+        self.player_name = player_name
+    
     def read_name(self, data) -> str:
+        """The .xsdat a scenario writes. Scenario files ship untagged and /install never touches
+        them, so these names carry no player segment."""
         return Identity.xsdat_name(data.file_stem, self.tag)
+    
+    def campaign_read_name(self, data) -> str:
+        """The .xsdat a campaign writes. The engine names it after the installed campaign, so this
+        has to match whatever InstallHandler wrote, player segment included."""
+        return Identity.campaign_xsdat_name(data.file_stem, self.tag, self.player_name)
     
     def setup_victory_requirements(self, args: dict):
         for data in self._campaigns.keys():
@@ -83,56 +101,59 @@ class CampaignHandler(FolderHandler):
         return [data for data, managed in self._campaigns.items() if managed.included]
     
     def check_victory(self) -> bool:
-        for campaign in self._campaigns.values():
-            if (campaign.must_beat == False):
-                continue
+        required = [campaign for campaign in self._campaigns.values() if campaign.must_beat]
+        if not required:
+            return False
+        for campaign in required:
             for scenario in campaign.scenarios:
                 if self.scenarios[scenario].completed == False:
                     return False
         return True
     
-    def unlock_campaign(self, campaign: Age2CampaignData):
-        if campaign not in self._campaigns:
-            print(f"Campaign data not found in this AP World's Campaign Handler. Could not unlock campaign {campaign.campaign_name}.")
+    def sync_unlocked(self, unlocked_items: list[Age2ItemData]) -> None:
+        counts = Counter(unlocked_items)
+        for campaign, managed_campaign in self._campaigns.items():
+            managed_campaign.unlocked = any(
+                counts[item] for item in CATEGORY_TO_ITEMS[Campaign]
+                if item.type.vanilla_campaign == campaign
+            )
+            available = 0
+            if managed_campaign.unlocked:
+                progressives = sum(
+                    counts[item] for item in CATEGORY_TO_ITEMS[ProgressiveScenario]
+                    if item.type.vanilla_campaign == campaign
+                )
+                available = min(1 + progressives, len(managed_campaign.scenarios))
+            for index, scn in enumerate(managed_campaign.scenarios):
+                self.scenarios[scn].unlocked = index < available
+
+        self._sync_scenario_items(unlocked_items)
+
+    def _note_locked_scenario(self, scenario: ManagedScenario) -> None:
+        if scenario.data in self._reported_locked:
             return
-        first_scenario = self._campaigns[campaign].scenarios[0]
-        if first_scenario is None:
-            print(f"Campaign contains no scenarios. Could not unlock campaign {campaign.campaign_name}.")
-            return
-        
-        self._campaigns[campaign].unlocked = True
-        self.scenarios[first_scenario].unlocked = True
-    
-    def unlock_scenario(self, scenario: Age2ScenarioData):
-        pass
-    
-    def unlock_progressive_scenario(self, campaign: Age2CampaignData):
-        if campaign not in self._campaigns:
-            print(f"Campaign data not found in this AP World's Campaign Handler. Could not unlock progressive scenario for {campaign.campaign_name}.")
-            return
-        if self._campaigns[campaign].unlocked is False:
-            print(f"Campaign is not unlocked. Could not unlock progressive scenario for {campaign.campaign_name}.")
-            return
-        
-        for scn in self._campaigns[campaign].scenarios:
-            if self.scenarios[scn].unlocked is False:
-                self.scenarios[scn].unlocked = True # Activate first scenario that is not active
-                return
-        
-        print(f"All scenarios in {campaign.campaign_name} are already unlocked.")
-    
+        self._reported_locked.add(scenario.data)
+        logger.info(
+            "%s is not unlocked in your Archipelago world yet, so its items cannot be delivered.",
+            scenario.data.scenario_name,
+        )
+
     def find_active_campaign(self) -> bool:
         for campaign in self._campaigns.values():
             if campaign.unlocked:
-                read_name = self.read_name(campaign.data)
+                read_name = self.campaign_read_name(campaign.data)
                 try:
                     with open(self._user_folder + read_name, "rb") as fp:
                         active = fp.peek(1)[:1]
                         if (active == b'\x01'):
                             XsdatFile.skip_int(fp, 18)
                             scenario_id = XsdatFile.read_int(fp)
-                            self.active_file = ActiveFile(scn=self.scenarios[scenario_from_id[scenario_id]], read_file_name=read_name)
-                            return True
+                            scenario = self.scenarios[scenario_from_id[scenario_id]]
+                            if not scenario.unlocked:
+                                self._note_locked_scenario(scenario)
+                            else:
+                                self.active_file = ActiveFile(scn=scenario, read_file_name=read_name)
+                                return True
                         else:
                             print("Not active")
                 except Exception as ex:
@@ -173,27 +194,26 @@ class CampaignHandler(FolderHandler):
             print(ex)
         self.active_file = None
     
-    def sync_scenario_items(self, unlocked_items: list[Age2ItemData]) -> None:
+    def _sync_scenario_items(self, unlocked_items: list[Age2ItemData]) -> None:
         items = [*CATEGORY_TO_ITEMS[ScenarioItem], *CATEGORY_TO_ITEMS[Mercenary]]
-        unlocked_scenario_items = list(set(unlocked_items).intersection(items))
-        try:
-            for item in unlocked_scenario_items:
-                managed_item = self._scenario_items[item]
-                if managed_item is None:
-                    print(f"{item.name} is not in the list of scenario items for this AP World.")
+        for item in set(unlocked_items).intersection(items):
+            managed_item = self._scenario_items.get(item)
+            if managed_item is not None:
                 managed_item.unlocked = True
-            
-            for scenario in self.scenarios.values():
-                if scenario.unlocked == True:
-                    with open(self._user_folder + scenario.data.xsdat_write_name, "wb") as fp:
-                        XsdatFile.write_int(fp, scenario.completed)
-                        for item in scenario.items:
-                            if self._scenario_items[item].unlocked == True:
-                                XsdatFile.write_int(fp, item.id)
-            
-        except Exception as ex:
-            print(ex)
-            
+
+        for scenario in self.scenarios.values():
+            if scenario.unlocked == False:
+                continue
+            try:
+                with open(self._user_folder + scenario.data.xsdat_write_name, "wb") as fp:
+                    XsdatFile.write_int(fp, scenario.completed)
+                    for item in scenario.items:
+                        managed_item = self._scenario_items.get(item)
+                        if managed_item is not None and managed_item.unlocked == True:
+                            XsdatFile.write_int(fp, item.id)
+            except Exception:
+                logger.exception("Could not write scenario items for %s.", scenario.data.scenario_name)
+
     def try_flush_from_folder(self):
         for scn in self.scenarios:
             if os.path.exists(self._user_folder + scn.xsdat_write_name):
@@ -201,8 +221,8 @@ class CampaignHandler(FolderHandler):
             if os.path.exists(self._user_folder + self.read_name(scn)):
                 os.remove(self._user_folder + self.read_name(scn))
         for cpn in self._campaigns:
-            if os.path.exists(self._user_folder + self.read_name(cpn)):
-                os.remove(self._user_folder + self.read_name(cpn))
+            if os.path.exists(self._user_folder + self.campaign_read_name(cpn)):
+                os.remove(self._user_folder + self.campaign_read_name(cpn))
     
     def __add_campaign_to_folder():
         pass

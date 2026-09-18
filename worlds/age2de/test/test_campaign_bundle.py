@@ -175,7 +175,7 @@ class TestBundleRoundTrip(unittest.TestCase):
 class TestRealBundles(unittest.TestCase):
     def test_write_with_no_changes_is_byte_identical(self):
         for data in Age2CampaignData:
-            path = AGEIPELAGO_BUNDLES / (data.file_stem + ".aoe2campaign")
+            path = AGEIPELAGO_BUNDLES / Identity.source_campaign_file_name(data.file_stem)
             if not path.is_file():
                 self.skipTest(f"{path} not present")
             with self.subTest(campaign=data.campaign_name):
@@ -260,14 +260,15 @@ class TestInstallPaths(unittest.TestCase):
         self.assertEqual(handler.slot_data_path().as_posix(),
                          self.ROOT + "/resources/_common/xs/SlotData.xs")
 
-    def test_source_and_installed_names_differ_by_the_tag(self):
+    def test_source_and_installed_names_differ_by_the_player_and_tag(self):
         tag = Identity.seed_tag(SEED, 3)
         handler = self.handler()
-        handler.setup([Age2CampaignData.ATTILA], 3, tag)
+        handler.setup([Age2CampaignData.ATTILA], 3, tag, "Dave")
         included = handler._included_campaigns[0]
-        self.assertEqual(handler.source_path(included).name, "AP Attila the Hun.aoe2campaign")
+        self.assertEqual(handler.source_path(included).name,
+                         "AP Attila the Hun Template.aoe2campaign")
         self.assertEqual(handler.install_path(included).name,
-                         f"AP Attila the Hun_{tag}.aoe2campaign")
-        self.assertEqual(included.display_name, f"AP Attila the Hun_{tag}")
+                         f"AP Attila the Hun_Dave_{tag}.aoe2campaign")
+        self.assertEqual(included.display_name, f"AP Attila the Hun_Dave_{tag}")
         self.assertEqual(handler.source_path(included).parent,
                          handler.install_path(included).parent)
