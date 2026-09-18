@@ -231,8 +231,9 @@ class Age2Context(CommonContext):
 
     def _handle_mercenaries_used_reply(self) -> None:
         used: int = self.stored_data.get(self.mercenaries_used_key)
-        for mercenary in self.data_storage.used_mercenaries(used):
-            self.game_ctx.mercenary_handler.use_mercenary(mercenary)
+        spent = self.data_storage.used_mercenaries(used)
+        for mercenary in self.data_storage.mercenaries:
+            self.game_ctx.mercenary_handler.set_used(mercenary, mercenary in spent)
             
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([

@@ -34,12 +34,17 @@ class MercenaryHandler(FolderHandler):
         super().__init__()
 
     def use_mercenary(self, mercenary: Age2ItemData) -> None:
+        self.set_used(mercenary, True)
+
+    def set_used(self, mercenary: Age2ItemData, used: bool = True) -> None:
         if mercenary not in self._mercenaries:
             logger.warning("Mercenary data not found in this AP World's Mercenary Handler. "
                            "Could not use mercenary %s.", mercenary.name)
             return
         managed = self._mercenaries[mercenary]
-        managed.used = True
+        managed.used = used
+        if not used:
+            return
         if managed.seat != NO_SEAT:
             self._seats[managed.seat] = None
             managed.seat = NO_SEAT

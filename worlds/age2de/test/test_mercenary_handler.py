@@ -93,6 +93,25 @@ class TestSeating(MercenaryHandlerTestBase):
             self.assertIn(mercenary, granted,
                           f"{mercenary.item_name} was queued but never granted")
 
+    def test_handing_a_mercenary_back_returns_it_to_the_queue(self) -> None:
+        """The SetReply assigns rather than only adding, so a mercenary the client marked
+        optimistically and never got stored has to come back rather than stay spent."""
+        handler = self.handler()
+        granted = self.roster()
+        handler.try_sync_mercenaries(granted)
+        spent = handler.seated()[0]
+
+        handler.use_mercenary(spent)
+        handler.try_sync_mercenaries(granted)
+        self.assertTrue(handler.is_used(spent))
+        self.assertNotIn(spent, handler.seated() + handler.queued())
+
+        handler.set_used(spent, False)
+        handler.try_sync_mercenaries(granted)
+        self.assertFalse(handler.is_used(spent))
+        self.assertIn(spent, handler.seated() + handler.queued(),
+                      "a mercenary the server never recorded as spent must be offered again")
+
     def test_using_something_that_is_not_a_mercenary_is_refused(self) -> None:
         handler = self.handler()
         handler.use_mercenary(Age2ItemData.VICTORY)
