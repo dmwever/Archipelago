@@ -86,6 +86,7 @@ class Age2Packet:
     completed: bool = False
     scenario_id: int = 0
     completed_mercenary_id: int = -1
+    acked_queue_serial: int = -1
     item_ids: List[int]
     location_ids: List[int]
     
@@ -105,7 +106,8 @@ class Age2Packet:
         self.scenario_id = XsdatFile.read_int(fp)
         self.world_minor = XsdatFile.read_int(fp)
         self.completed_mercenary_id = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 28)
+        self.acked_queue_serial = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 27)
         while True:
             data = fp.read(4)
             if not data:
@@ -390,7 +392,8 @@ class Age2GameContext:
                 XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
                 XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
-                XsdatFile.write_bool(fp, self.mercenary_handler.has_anything_to_read()) # Send Mercenaries
+                XsdatFile.write_bool(fp, self.mercenary_handler.queue_serial()
+                                     != self.current_packet.acked_queue_serial) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
                 XsdatFile.write_int(fp, self.current_packet.completed_mercenary_id) # Ack mercenary

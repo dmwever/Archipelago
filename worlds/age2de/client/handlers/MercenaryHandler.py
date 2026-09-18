@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import io
 import logging
 import os
 
@@ -24,6 +25,8 @@ class MercenaryHandler(FolderHandler):
     _mercenaries: dict[Age2ItemData, ManagedMercenary]
     _seats: list[Age2ItemData]
     _queue: list[Age2ItemData]
+    _queue_serial: int
+    _queue_bytes: bytes
 
     def __init__(self, data: list[Age2ItemData]):
         self._mercenaries = {}
@@ -31,6 +34,8 @@ class MercenaryHandler(FolderHandler):
             self._mercenaries[mercenary] = ManagedMercenary(mercenary)
         self._seats = [None] * SEAT_COUNT
         self._queue = []
+        self._queue_serial = 0
+        self._queue_bytes = b""
         super().__init__()
 
     def use_mercenary(self, mercenary: Age2ItemData) -> None:
@@ -75,12 +80,8 @@ class MercenaryHandler(FolderHandler):
             return "Unlocked"
         return "Missing"
 
-    def has_anything_to_read(self) -> bool:
-        """Whether the game has any reason to open the mercenary files. A fresh seed with nothing
-        seated and nothing spent has none, so the dispatch flag stays off."""
-        if any(mercenary is not None for mercenary in self._seats):
-            return True
-        return any(managed.used for managed in self._mercenaries.values())
+    def queue_serial(self) -> int:
+        return self._queue_serial
 
     def seated(self) -> list[Age2ItemData]:
         return list(self._seats)
@@ -126,15 +127,24 @@ class MercenaryHandler(FolderHandler):
             self._mercenaries[mercenary].seat = seat
 
     def _write_queue(self) -> None:
+        body = io.BytesIO()
+        for mercenary in self._seats:
+            if mercenary is None:
+                XsdatFile.write_int(body, EMPTY_SEAT)
+                continue
+            XsdatFile.write_int(body, mercenary.id)
+            for unit in mercenary.type.units:
+                for _ in range(unit.count):
+                    XsdatFile.write_int(body, unit.unit.game_id)
+
+        seats = body.getvalue()
+        if seats != self._queue_bytes:
+            self._queue_bytes = seats
+            self._queue_serial = self._queue_serial + 1
+
         with open(self._user_folder + "mercenary_queue.xsdat", "wb") as fp:
-            for mercenary in self._seats:
-                if mercenary is None:
-                    XsdatFile.write_int(fp, EMPTY_SEAT)
-                    continue
-                XsdatFile.write_int(fp, mercenary.id)
-                for unit in mercenary.type.units:
-                    for _ in range(unit.count):
-                        XsdatFile.write_int(fp, unit.unit.game_id)
+            XsdatFile.write_int(fp, self._queue_serial)
+            fp.write(seats)
 
     def _write_used(self) -> None:
         with open(self._user_folder + "mercenaries.xsdat", "wb") as fp:

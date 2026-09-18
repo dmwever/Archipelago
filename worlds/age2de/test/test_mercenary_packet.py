@@ -18,10 +18,10 @@ from ..locations.Campaigns import Age2CampaignData
 
 FIXED_INTS = 49
 SCENARIO_ID_OFFSET = 72
-RESERVED_AFTER_MERCENARY = 28
+RESERVED_AFTER_MERCENARY = 27
 
 
-def build_packet(scenario_id: int = 101, mercenary_id: int = -1,
+def build_packet(scenario_id: int = 101, mercenary_id: int = -1, queue_serial: int = -1,
                  locations: list[int] = ()) -> io.BytesIO:
     """A scenario packet exactly as AP_Write lays it out."""
     fp = io.BytesIO()
@@ -36,6 +36,7 @@ def build_packet(scenario_id: int = 101, mercenary_id: int = -1,
     XsdatFile.write_int(fp, scenario_id)
     XsdatFile.write_int(fp, 3)              # world minor
     XsdatFile.write_int(fp, mercenary_id)   # first reserved int
+    XsdatFile.write_int(fp, queue_serial)   # second reserved int
     for index in range(RESERVED_AFTER_MERCENARY):
         XsdatFile.write_int(fp, index)      # AP_Write writes the loop counter here, not zeros
     for location in locations:
@@ -72,6 +73,11 @@ class TestPacketLayout(unittest.TestCase):
         wanted = Age2ItemData.AP_JOAN_5_LOYALISTS
         packet = Age2Packet(build_packet(mercenary_id=wanted.id))
         self.assertEqual(wanted.id, packet.completed_mercenary_id,
+                         "the loop counter filling the rest of the block must not bleed into this")
+
+    def test_the_consumed_queue_serial_survives_the_reserved_block(self) -> None:
+        packet = Age2Packet(build_packet(queue_serial=7))
+        self.assertEqual(7, packet.acked_queue_serial,
                          "the loop counter filling the rest of the block must not bleed into this")
 
     def test_the_location_tail_still_starts_after_the_header(self) -> None:

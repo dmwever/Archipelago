@@ -127,7 +127,7 @@ class TestQueueFile(MercenaryHandlerTestBase):
         written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
 
         seated = handler.seated()[0]
-        expected = [seated.id]
+        expected = [handler.queue_serial(), seated.id]
         for unit in seated.type.units:
             expected.extend([unit.unit.game_id] * unit.count)
         expected.extend([EMPTY_SEAT] * (SEAT_COUNT - 1))
@@ -137,7 +137,7 @@ class TestQueueFile(MercenaryHandlerTestBase):
     def test_units_are_written_one_per_soldier(self) -> None:
         handler = self.handler()
         handler.try_sync_mercenaries(self.roster())
-        written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
+        written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")[1:]
         seated = handler.seated()[0]
         total = sum(unit.count for unit in seated.type.units)
         self.assertEqual(total, len(written[1:total + 1]),
@@ -153,6 +153,39 @@ class TestQueueFile(MercenaryHandlerTestBase):
         written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
         self.assertEqual(EMPTY_SEAT, written[-1],
                          "the emptied last seat must still be written, or the seats shift")
+
+
+class TestQueueSerial(MercenaryHandlerTestBase):
+    """The serial is what lets SendMercenaries mean "there is something outstanding" rather than
+    "something happened once". It leads the file, and it only moves when the seats actually did."""
+
+    def serial_of(self) -> int:
+        return read_ints(Path(self.folder) / "mercenary_queue.xsdat")[0]
+
+    def test_the_serial_leads_the_file(self) -> None:
+        handler = self.handler()
+        handler.try_sync_mercenaries(self.roster())
+        self.assertEqual(handler.queue_serial(), self.serial_of())
+
+    def test_an_unchanged_queue_does_not_advance_it(self) -> None:
+        handler = self.handler()
+        granted = self.roster()
+        handler.try_sync_mercenaries(granted)
+        settled = handler.queue_serial()
+        for _ in range(3):
+            handler.try_sync_mercenaries(granted)
+        self.assertEqual(settled, handler.queue_serial(),
+                         "nothing changed, so the game has no reason to re-read")
+
+    def test_spending_a_seat_advances_it(self) -> None:
+        handler = self.handler()
+        granted = self.roster()
+        handler.try_sync_mercenaries(granted)
+        before = handler.queue_serial()
+        handler.use_mercenary(handler.seated()[1])
+        handler.try_sync_mercenaries(granted)
+        self.assertGreater(handler.queue_serial(), before,
+                           "seat 1 holds someone new, so the game has to be told")
 
 
 class TestUsedFile(MercenaryHandlerTestBase):
