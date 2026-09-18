@@ -390,7 +390,7 @@ class Age2GameContext:
                 XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
                 XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
-                XsdatFile.write_bool(fp, False) # Send Units
+                XsdatFile.write_bool(fp, self.mercenary_handler.has_anything_to_read()) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
                 XsdatFile.write_int(fp, self.current_packet.completed_mercenary_id) # Ack mercenary

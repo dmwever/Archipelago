@@ -75,6 +75,13 @@ class MercenaryHandler(FolderHandler):
             return "Unlocked"
         return "Missing"
 
+    def has_anything_to_read(self) -> bool:
+        """Whether the game has any reason to open the mercenary files. A fresh seed with nothing
+        seated and nothing spent has none, so the dispatch flag stays off."""
+        if any(mercenary is not None for mercenary in self._seats):
+            return True
+        return any(managed.used for managed in self._mercenaries.values())
+
     def seated(self) -> list[Age2ItemData]:
         return list(self._seats)
 
