@@ -13,6 +13,7 @@ from ..items import Items
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Campaigns import Age2CampaignData
 from .ApGui import Age2Manager
+from .DataStorage import DataStorage
 import worlds.age2de.client.GameClient as GameClient
 from .. import Age2Settings, Age2World
 
@@ -88,6 +89,7 @@ class Age2Context(CommonContext):
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
     mercenaries_used_key: str
+    data_storage: DataStorage
     installed_seed_name: str = ''
     seed_world_version = WorldVersion.UNKNOWN
     
@@ -137,6 +139,7 @@ class Age2Context(CommonContext):
         self.game_ctx.connect(
             self.checked_locations, slot_data, self.settings.user_folder, self.slot, tag,
             player_name)
+        self.data_storage = DataStorage(self.game_ctx.campaign_handler.included_campaigns())
         Utils.async_start(self.send_msgs([
         {
             "cmd": "Set",
@@ -187,25 +190,25 @@ class Age2Context(CommonContext):
             self._handle_mercenaries_used_reply()
 
     def _handle_scenario_completion_reply(self) -> None:
+        completed: int = self.stored_data.get(self.scenario_completion_key)
+        finished = self.data_storage.completed_scenarios(completed)
         for (scenario_data, managed_scenario) in self.game_ctx.campaign_handler.scenarios.items():
-            completed: int = self.stored_data.get(self.scenario_completion_key)
-            managed_scenario.completed = completed & (1 << scenario_data.completion_bit) != 0
+            managed_scenario.completed = scenario_data in finished
 
     def _handle_mercenaries_used_reply(self) -> None:
         used: int = self.stored_data.get(self.mercenaries_used_key)
-        spent = self.game_ctx.client_status.used_mercenaries
-        spent.clear()
-        spent.update(Items.mercenaries_from_bits(used))
+        self.game_ctx.client_status.used_mercenaries.update(
+            self.data_storage.used_mercenaries(used))
             
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([
             {
                 "cmd": "Set",
                 "key": self.scenario_completion_key,
-                "default": False,
+                "default": 0,
                 "want_reply": True,
                 "operations": [
-                    {"operation": "or", "value": 1 << scenario.completion_bit}
+                    {"operation": "or", "value": 1 << self.data_storage.scenario_bit(scenario)}
                 ]
             }
         ]))
@@ -219,7 +222,7 @@ class Age2Context(CommonContext):
                 "default": 0,
                 "want_reply": True,
                 "operations": [
-                    {"operation": "or", "value": 1 << mercenary.type.mercenary_bit}
+                    {"operation": "or", "value": 1 << self.data_storage.mercenary_bit(mercenary)}
                 ]
             }
         ]))
