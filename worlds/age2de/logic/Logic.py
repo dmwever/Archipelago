@@ -45,10 +45,6 @@ class Logic:
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
         self._has_vils.children = tuple(
             scenario.is_unlocked() & scenario.has_vils() for scenario in self.scenarios)
-        for age in Age2AgeData:
-            self._can_reach_age[age].children = tuple(
-                scenario.is_unlocked() & scenario.can_reach_age(age)
-                for scenario in self.scenarios)
         
         self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
