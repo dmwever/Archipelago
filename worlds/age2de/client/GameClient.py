@@ -15,6 +15,7 @@ from ..locations.Scenarios import Age2ScenarioData
 
 from .handlers.CampaignHandler import CampaignHandler
 from .handlers.InstallHandler import InstallHandler
+from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
 
 from Utils import Version
@@ -135,7 +136,6 @@ class ClientStatus:
     tag: str = ''
     player_name: str = ''
     in_flight: list[int] = field(default_factory=list[int])
-    used_mercenaries: set[Age2ItemData] = field(default_factory=set[Age2ItemData])
 
 class Age2GameContext:
     running: bool = False
@@ -146,6 +146,7 @@ class Age2GameContext:
     client_status: ClientStatus
     campaign_handler: CampaignHandler
     building_handler: BuildingHandler
+    mercenary_handler: MercenaryHandler
     message_handler: MessageHandler
     install_handler: InstallHandler
     client_interface: APClientInterface
@@ -159,6 +160,7 @@ class Age2GameContext:
         self.current_packet = Age2Packet()
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
 
@@ -198,6 +200,7 @@ class Age2GameContext:
         self.client_status = ClientStatus(unlocked_items=[])
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
 
@@ -212,6 +215,7 @@ class Age2GameContext:
         self.client_status.user_folder = user_folder
         self.message_handler.set_user_folder(self.profile_folder())
         self.building_handler.set_user_folder(self.profile_folder())
+        self.mercenary_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_tag(self.client_status.tag)
         self.campaign_handler.set_player_name(self.client_status.player_name)
@@ -324,6 +328,7 @@ class Age2GameContext:
     def flush_files(self) -> None:
         try:
             self.message_handler.try_flush_from_folder()
+            self.mercenary_handler.try_flush_from_folder()
             self.campaign_handler.try_flush_from_folder()
             
             if os.path.exists(self.profile_folder() + "AP.xsdat"):
@@ -405,6 +410,7 @@ async def status_loop(ctx: Age2GameContext):
         ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
         ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
+        ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
         
         # Check all unlocked scenarios every 2 seconds to find active scenario.
