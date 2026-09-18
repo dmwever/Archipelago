@@ -13,7 +13,7 @@ from ..ScenarioRules import ScenarioRules
 class Joan2Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_JOAN_2)
-        self.scenario_logic = ScenarioLogic(self.logic, Joan2StartingState(self.logic))
+        self.scenario_logic = ScenarioLogic(self.logic, Joan2StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()

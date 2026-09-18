@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import Has, HasAll, Rule, True_
 from ..items.Items import Age2ItemData
 
+from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 
 
@@ -24,10 +25,10 @@ class BuildingLogic:
         return has_prerequisites & Has(building.item.item_name)
     
     def has_prerequisites(self, building: Age2BuildingData) -> Rule:
-        if building == (Age2BuildingData.ARCHERY_RANGE or Age2BuildingData.STABLE):
+        if building in (Age2BuildingData.ARCHERY_RANGE, Age2BuildingData.STABLE):
             return self.has_building(Age2BuildingData.BARRACKS)
-        
-        if building == (Age2BuildingData.FARM or Age2BuildingData.MARKET):
+
+        if building in (Age2BuildingData.FARM, Age2BuildingData.MARKET):
             return self.has_building(Age2BuildingData.MILL)
         
         if building == Age2BuildingData.SIEGE_WORKSHOP:
@@ -43,7 +44,7 @@ class BuildingLogic:
             HasAll(Age2ItemData.TOWN_CENTER_WOOD.item_name, Age2ItemData.TOWN_CENTER_STONE.item_name)
             
     def can_build_multiple_tc(self) -> Rule:
-        return self.can_build_tc() & self.logic.ages.can_reach_castle()
+        return self.can_build_tc() & self.logic.can_reach_age(Age2AgeData.CASTLE)
     
     # Military
     

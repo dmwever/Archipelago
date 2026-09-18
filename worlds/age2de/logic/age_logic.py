@@ -6,9 +6,12 @@ from NetUtils import JSONMessagePart
 from BaseClasses import CollectionState
 from ..rules.AgeRules import TwoBuildingsRequirement
 
-from ..locations.Ages import Age2AgeData, Age2ItemData
+from ..items.Items import Age2ItemData
+from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
-from rule_builder.rules import False_, HasAll, HasAny, HasFromListUnique, NestedRule, Rule, True_
+from rule_builder.rules import False_, Has, HasAll, HasAny, HasFromListUnique, NestedRule, Or, Rule, True_
+
+from .ScenarioLogic import ScenarioLogic
 
 
 if TYPE_CHECKING:
@@ -20,6 +23,22 @@ class AgeLogic:
     def __init__(self, logic: 'Logic', world: Age2World):
         self.logic = logic
         self.world = world
+        self.age_to_scenarios: dict[Age2AgeData, Rule] = {age: False_() for age in Age2AgeData }
+        self.can_reach_age: dict[Age2AgeData, Or] = {age: Or() for age in Age2AgeData}
+        
+    def set_can_reach_age(self, scenarios: list[ScenarioLogic]):
+        for age in Age2AgeData:
+            self.can_reach_age[age].children = tuple(
+                scenario.is_unlocked()
+                & (scenario.can_reach_age(age) | scenario.start_past_age(age))
+                for scenario in scenarios)
+    
+    def set_age_to_scenarios(self, scenarios: list[ScenarioLogic]):
+        for age in Age2AgeData:
+            rule = self.age_to_scenarios[age]
+            for scenario in scenarios:
+                rule = rule | (scenario.is_unlocked() & scenario.can_reach_age(age))
+            self.age_to_scenarios[age] = rule
     
     def two_from_dark_age(self) -> Rule:
         return TwoBuildingsRequirement([
@@ -54,15 +73,17 @@ class AgeLogic:
     def can_reach_imperial(self) -> Rule:
         return self.has_age(Age2AgeData.IMPERIAL) & self.two_from_castle_age() & self.logic.buildings.can_build_tc()
 
-    def has_age(self, age: Age2AgeData) -> Rule:
-        return True_()
-
-    def has_building_age(self, building: Age2BuildingData) -> Rule:
-        if building.age is Age2AgeData.FEUDAL:
+    def can_reach(self, age: Age2AgeData) -> Rule:
+        if age is Age2AgeData.FEUDAL:
             return self.can_reach_feudal()
-        elif building.age is Age2AgeData.CASTLE:
+        elif age is Age2AgeData.CASTLE:
             return self.can_reach_castle()
-        elif building.age is Age2AgeData.IMPERIAL:
+        elif age is Age2AgeData.IMPERIAL:
             return self.can_reach_imperial()
         else:
             return True_()
+
+    def has_age(self, age: Age2AgeData) -> Rule:
+        if not self.world.options.shuffle_ages or age not in self.world.shuffled_ages:
+            return True_()
+        return Has(age.item.item_name)

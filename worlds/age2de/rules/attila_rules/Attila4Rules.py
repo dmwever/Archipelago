@@ -14,7 +14,7 @@ from ..ScenarioRules import ScenarioRules
 class Attila4Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_4)
-        self.scenario_logic = ScenarioLogic(self.logic, Attila4StartingState(self.logic))
+        self.scenario_logic = ScenarioLogic(self.logic, Attila4StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()
@@ -25,7 +25,7 @@ class Attila4Rules(ScenarioRules):
             self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL) &
             self.logic.military.counters_ram() &
             self.logic.military.has_siege() &
-            self.logic.ages.has_age(Age2AgeData.IMPERIAL)
+            self.scenario_logic.can_reach_age(Age2AgeData.IMPERIAL)
         )
         
         can_beat_purple: Rule = (
@@ -38,7 +38,7 @@ class Attila4Rules(ScenarioRules):
             self.scenario_logic.has_base() &
             self.logic.buildings.has_building(Age2BuildingData.MARKET) &
             self.logic.buildings.has_building(Age2BuildingData.CASTLE) &
-            self.logic.ages.has_age(Age2AgeData.CASTLE)
+            self.scenario_logic.can_reach_age(Age2AgeData.CASTLE)
         )
         
         can_beat_cyan: Rule = (
@@ -50,7 +50,7 @@ class Attila4Rules(ScenarioRules):
             self.logic.military.counters_monk() &
             self.logic.military.counters_trebuchet() &
             self.logic.military.has_long_range_siege() &
-            self.logic.ages.has_age(Age2AgeData.IMPERIAL)
+            self.scenario_logic.can_reach_age(Age2AgeData.IMPERIAL)
         )
         can_beat_blue: Rule = can_beat_cyan
         
