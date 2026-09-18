@@ -51,6 +51,22 @@ class MercenaryHandler(FolderHandler):
             return False
         return self._mercenaries[mercenary].used
 
+    def is_unlocked(self, mercenary: Age2ItemData) -> bool:
+        if mercenary not in self._mercenaries:
+            return False
+        return self._mercenaries[mercenary].unlocked
+
+    def in_seat(self, mercenary: Age2ItemData) -> bool:
+            return False
+        return self._mercenaries[mercenary].seat != NO_SEAT
+
+    def status(self, mercenary: Age2ItemData) -> str:
+        if self.is_used(mercenary):
+            return "In-Pavilion"
+        if self.is_unlocked(mercenary):
+            return "Unlocked"
+        return "Missing"
+
     def seated(self) -> list[Age2ItemData]:
         return list(self._seats)
 

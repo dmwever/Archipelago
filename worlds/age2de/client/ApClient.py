@@ -23,6 +23,7 @@ logger = logging.getLogger("Client")
 def set_user_folder(settings: Age2Settings):
     settings.user_folder = settings.user_folder.browse()
 
+
 class Age2CommandProcessor(ClientCommandProcessor):
     ctx: 'Age2Context'
     
@@ -80,6 +81,38 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output(f"Wrote {path}")
         self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
 
+    def _cmd_mercenaries(self) -> None:
+        """
+        Mercenaries: Lists this seed's mercenaries and where each one stands.
+
+        Missing has not been found, Unlocked is waiting behind the pavilion,
+        In-Pavilion is selectable right now, and Used has been spent.
+        """
+        ctx = self.ctx
+        if ctx.data_storage is None:
+            self.output("Connect to your multiworld first, so the client knows this seed.")
+            return
+        handler = ctx.game_ctx.mercenary_handler
+        for mercenary in ctx.data_storage.mercenaries:
+            self.output(f"{handler.status(mercenary):<12}{mercenary.item_name}")
+
+    def _cmd_scenarios(self) -> None:
+        """
+        Scenarios: Lists this seed's scenarios and where each one stands.
+
+        Missing means its campaign has not been found, Unlocked means the campaign
+        is held but this chapter is not reachable yet, Available is selectable now,
+        Active is the one being played, and Completed is finished.
+        """
+        ctx = self.ctx
+        if ctx.data_storage is None:
+            self.output("Connect to your multiworld first, so the client knows this seed.")
+            return
+        handler = ctx.game_ctx.campaign_handler
+        for scenario in ctx.data_storage.scenarios:
+            status = handler.status(scenario)
+            self.output(f"{status:<12}{scenario.campaign.campaign_name}: {scenario.scenario_name}")
+
 
 class Age2Context(CommonContext):
     game = Age2World.game
@@ -89,7 +122,7 @@ class Age2Context(CommonContext):
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
     mercenaries_used_key: str
-    data_storage: DataStorage
+    data_storage: DataStorage = None
     installed_seed_name: str = ''
     seed_world_version = WorldVersion.UNKNOWN
     

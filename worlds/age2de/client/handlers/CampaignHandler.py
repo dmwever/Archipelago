@@ -99,6 +99,19 @@ class CampaignHandler(FolderHandler):
 
     def included_campaigns(self) -> list[Age2CampaignData]:
         return [data for data, managed in self._campaigns.items() if managed.included]
+
+    def is_campaign_unlocked(self, campaign: Age2CampaignData) -> bool:
+        return self._campaigns[campaign].unlocked
+
+    def status(self, scenario: Age2ScenarioData) -> str:
+        managed = self.scenarios[scenario]
+        if self.has_active_scenario() and self.active_file.current_scenario.data == scenario:
+            return "Completed"
+        if managed.unlocked:
+            return "Available"
+        if self.is_campaign_unlocked(scenario.campaign):
+            return "Unlocked"
+        return "Missing"
     
     def check_victory(self) -> bool:
         required = [campaign for campaign in self._campaigns.values() if campaign.must_beat]
