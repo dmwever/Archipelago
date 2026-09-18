@@ -100,9 +100,10 @@ class Age2CommandProcessor(ClientCommandProcessor):
         """
         Scenarios: Lists this seed's scenarios and where each one stands.
 
-        Missing means its campaign has not been found, Unlocked means the campaign
-        is held but this chapter is not reachable yet, Available is selectable now,
-        Active is the one being played, and Completed is finished.
+        Missing has not been granted yet, Campaign Locked needs the campaign item
+        to be unlocked/available, Unlocked has been granted but waits on the
+        previous mission, Available is selectable now, Active is the one being
+        played, and Completed is finished.
         """
         ctx = self.ctx
         if ctx.data_storage is None:
