@@ -34,6 +34,7 @@ class ManagedCampaign:
     unlocked: bool = False
     included: bool = False
     must_beat: bool = False
+    progressive_scenarios_count: int = 0
     
 class ActiveFile:
     current_scenario: ManagedScenario
@@ -82,13 +83,9 @@ class CampaignHandler(FolderHandler):
         self.player_name = player_name
     
     def read_name(self, data) -> str:
-        """The .xsdat a scenario writes. Scenario files ship untagged and /install never touches
-        them, so these names carry no player segment."""
         return Identity.xsdat_name(data.file_stem, self.tag)
     
     def campaign_read_name(self, data) -> str:
-        """The .xsdat a campaign writes. The engine names it after the installed campaign, so this
-        has to match whatever InstallHandler wrote, player segment included."""
         return Identity.campaign_xsdat_name(data.file_stem, self.tag, self.player_name)
     
     def setup_victory_requirements(self, args: dict):
@@ -100,10 +97,18 @@ class CampaignHandler(FolderHandler):
     def included_campaigns(self) -> list[Age2CampaignData]:
         return [data for data, managed in self._campaigns.items() if managed.included]
 
-    def is_campaign_unlocked(self, campaign: Age2CampaignData) -> bool:
-        if campaign not in self._campaigns:
+    def is_available(self, scenario: Age2ScenarioData) -> bool:
+        if not self.scenarios[scenario].unlocked:
             return False
-        return self._campaigns[campaign].unlocked
+        chapters = CAMPAIGN_TO_SCENARIOS[scenario.campaign]
+        index = chapters.index(scenario)
+        if index == 0:
+            return True
+        return self.scenarios[chapters[index - 1]].completed
+
+    def is_campaign_locked(self, scenario: Age2ScenarioData) -> bool:
+        campaign = self._campaigns[scenario.campaign]
+        return campaign.scenarios.index(scenario) <= campaign.progressive_scenarios_count
 
     def status(self, scenario: Age2ScenarioData) -> str:
         managed = self.scenarios[scenario]
@@ -112,9 +117,11 @@ class CampaignHandler(FolderHandler):
         if managed.completed:
             return "Completed"
         if managed.unlocked:
-            return "Available"
-        if self.is_campaign_unlocked(scenario.campaign):
+            if self.is_available(scenario):
+                return "Available"
             return "Unlocked"
+        if self.is_campaign_locked(scenario):
+            return "Campaign Locked"
         return "Missing"
     
     def check_victory(self) -> bool:
@@ -134,15 +141,14 @@ class CampaignHandler(FolderHandler):
                 counts[item] for item in CATEGORY_TO_ITEMS[Campaign]
                 if item.type.vanilla_campaign == campaign
             )
-            available = 0
-            if managed_campaign.unlocked:
-                progressives = sum(
-                    counts[item] for item in CATEGORY_TO_ITEMS[ProgressiveScenario]
-                    if item.type.vanilla_campaign == campaign
-                )
-                available = min(1 + progressives, len(managed_campaign.scenarios))
+            managed_campaign.progressive_scenarios_count = sum(
+                counts[item] for item in CATEGORY_TO_ITEMS[ProgressiveScenario]
+                if item.type.vanilla_campaign == campaign
+            )
+            reached = min(1 + managed_campaign.progressive_scenarios_count,
+                          len(managed_campaign.scenarios))
             for index, scn in enumerate(managed_campaign.scenarios):
-                self.scenarios[scn].unlocked = index < available
+                self.scenarios[scn].unlocked = managed_campaign.unlocked and index < reached
 
         self._sync_scenario_items(unlocked_items)
 

@@ -111,7 +111,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         handler = ctx.game_ctx.campaign_handler
         for scenario in ctx.data_storage.scenarios:
             status = handler.status(scenario)
-            self.output(f"{status:<12}{scenario.campaign.campaign_name}: {scenario.scenario_name}")
+            self.output(f"{status:<16}{scenario.campaign.campaign_name}: {scenario.scenario_name}")
 
 
 class Age2Context(CommonContext):
