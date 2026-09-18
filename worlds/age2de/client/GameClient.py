@@ -85,6 +85,7 @@ class Age2Packet:
     latest_message_id: int = -1
     completed: bool = False
     scenario_id: int = 0
+    completed_mercenary_id: int = -1
     item_ids: List[int]
     location_ids: List[int]
     
@@ -103,7 +104,8 @@ class Age2Packet:
         self.completed = XsdatFile.read_bool(fp)
         self.scenario_id = XsdatFile.read_int(fp)
         self.world_minor = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 29)
+        self.completed_mercenary_id = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 28)
         while True:
             data = fp.read(4)
             if not data:
@@ -391,6 +393,7 @@ class Age2GameContext:
                 XsdatFile.write_bool(fp, False) # Send Units
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
+                XsdatFile.write_int(fp, self.current_packet.completed_mercenary_id) # Ack mercenary
         except Exception as ex:
             print(ex)
 
@@ -517,6 +520,11 @@ async def status_loop(ctx: Age2GameContext):
         if packet.completed == True and not ctx.campaign_handler.is_active_scenario_complete():
             ctx.campaign_handler.complete_active_scenario()
             ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
+
+        mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
+        if packet.completed_mercenary_id != -1 and mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary] and not ctx.mercenary_handler.is_used(mercenary_item):
+            ctx.mercenary_handler.use_mercenary(mercenary_item)
+            ctx.client_interface.on_mercenary_used(Items.ID_TO_ITEM[packet.completed_mercenary_id])
         
         ctx.free_items()
         ctx.ping_game()
