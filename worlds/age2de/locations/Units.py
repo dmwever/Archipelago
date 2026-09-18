@@ -23,6 +23,7 @@ class Age2UnitData(enum.IntEnum):
     KNIGHT =               38, "Knight"
     MILITIA =              74, "Militia"
     MAN_AT_ARMS =          75, "Man-at-Arms"
+    LONG_SWORDSMAN =       77, "Long Swordsman"
     VILLAGER_MALE =        83, "Villager (Male)"
     SCORPION =            279, "Scorpion"
     THROWING_AXEMAN =     281, "Throwing Axeman"
