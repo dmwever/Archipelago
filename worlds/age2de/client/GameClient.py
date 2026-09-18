@@ -521,10 +521,11 @@ async def status_loop(ctx: Age2GameContext):
             ctx.campaign_handler.complete_active_scenario()
             ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
 
-        mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
-        if packet.completed_mercenary_id != -1 and mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary] and not ctx.mercenary_handler.is_used(mercenary_item):
-            ctx.mercenary_handler.use_mercenary(mercenary_item)
-            ctx.client_interface.on_mercenary_used(Items.ID_TO_ITEM[packet.completed_mercenary_id])
+        if packet.completed_mercenary_id != -1:
+            mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
+            if mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary] and not ctx.mercenary_handler.is_used(mercenary_item):
+                ctx.mercenary_handler.use_mercenary(mercenary_item)
+                ctx.client_interface.on_mercenary_used(Items.ID_TO_ITEM[packet.completed_mercenary_id])
         
         ctx.free_items()
         ctx.ping_game()
