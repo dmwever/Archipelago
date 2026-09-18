@@ -71,7 +71,8 @@ class Age2CommandProcessor(ClientCommandProcessor):
 
         try:
             ctx.game_ctx.install_handler.setup(
-                campaigns, status.slot_id, status.tag, status.player_name)
+                campaigns, ctx.data_storage.mercenaries, status.slot_id, status.tag,
+                status.player_name)
             written = ctx.game_ctx.install_handler.install()
         except InstallError as ex:
             self.output(str(ex))

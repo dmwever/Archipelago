@@ -234,7 +234,7 @@ class TestInstallPaths(unittest.TestCase):
     def test_source_and_installed_names_differ_by_the_player_and_tag(self):
         tag = Identity.seed_tag(SEED, 3)
         handler = self.handler()
-        handler.setup([Age2CampaignData.ATTILA], 3, tag, "Dave")
+        handler.setup([Age2CampaignData.ATTILA], [], 3, tag, "Dave")
         included = handler._included_campaigns[0]
         self.assertEqual(handler.source_path(included).name,
                          "AP Attila the Hun Template.aoe2campaign")

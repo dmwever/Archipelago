@@ -42,8 +42,9 @@ class InstallerTestBase(unittest.TestCase):
         self.handler.set_user_folder(str(self.root))
         self.tag = Identity.seed_tag(SEED, 3)
 
-    def install(self, campaigns, slot=3, tag=None, player_name=PLAYER):
-        self.handler.setup(campaigns, slot, self.tag if tag is None else tag, player_name)
+    def install(self, campaigns, slot=3, tag=None, player_name=PLAYER, mercenaries=()):
+        self.handler.setup(campaigns, list(mercenaries), slot,
+                           self.tag if tag is None else tag, player_name)
         return self.handler.install()
 
     def installed_name(self, stem, tag=None, player_name=PLAYER):
@@ -51,6 +52,9 @@ class InstallerTestBase(unittest.TestCase):
 
     def campaign_dir(self) -> Path:
         return self.handler.campaign_dir()
+
+    def mercenary_data(self) -> Path:
+        return self.root / "resources/_common/xs/MercenaryData.xs"
 
     def slot_data(self) -> Path:
         return self.handler.slot_data_path()
@@ -67,7 +71,7 @@ class TestInstall(InstallerTestBase):
         self.assertEqual(written[0], self.campaign_dir()
                          / self.installed_name("AP Attila the Hun"))
         self.assertTrue(written[0].is_file())
-        self.assertEqual(written[-1], self.slot_data())
+        self.assertIn(self.slot_data(), written)
         self.assertEqual(
             self.slot_data().read_text(encoding="utf-8").replace("\r\n", "\n"),
             SlotData.render(SlotData.fields(3, self.tag)))
@@ -188,7 +192,7 @@ class TestInstallRefusals(InstallerTestBase):
 
     def test_no_user_folder_is_reported(self):
         handler = InstallHandler()
-        handler.setup([Age2CampaignData.ATTILA], 3, self.tag, PLAYER)
+        handler.setup([Age2CampaignData.ATTILA], [], 3, self.tag, PLAYER)
         with self.assertRaises(InstallError):
             handler.install()
 
