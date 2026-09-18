@@ -25,7 +25,7 @@ class AgeRules:
     def set_rules(self):
         if not self.world.options.shuffle_ages:
             return  # create_regions built no age locations to rule on
-        for age in SHUFFLED_AGES:
+        for age in self.world.shuffled_ages:
             self.world.set_rule(self.world.get_location(age.location_name),
                                 self.logic.can_reach_age(age))
 

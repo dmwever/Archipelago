@@ -75,6 +75,5 @@ class Logic:
 
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         can_build: Rule = (self.buildings.has_building(building)
-                           & self.ages.can_reach(building.age)
                            & self.buildings.has_prerequisites(building))
         return can_build & self.has_vils() & self.can_reach_age(building.age)

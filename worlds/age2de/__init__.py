@@ -14,7 +14,7 @@ from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
 from .generation import SlotData, WorldVersion
 from .generation.TechPool import TechPool
-from .Options import Age2Options, Goal, ScenarioBranching
+from .Options import Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
 from .locations import Ages, Campaigns, Locations, Scenarios
 from .locations.Ages import Age2AgeData
@@ -58,6 +58,7 @@ class Age2World(CachedRuleBuilderWorld):
     included_campaigns: set[Campaigns.Age2CampaignData]
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
+    shuffled_ages: list[Age2AgeData]
     tech_pool: TechPool
     earliest_age: Age2AgeData = None
     rules: Rules
@@ -68,6 +69,7 @@ class Age2World(CachedRuleBuilderWorld):
         self.included_campaigns = set()
         self.shuffled_buildings = []
         self.shuffled_techs = []
+        self.shuffled_ages = []
         
     def branching_option(self, location):
         if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenarioBranching != ScenarioBranching.option_all:
@@ -121,15 +123,18 @@ class Age2World(CachedRuleBuilderWorld):
                 new_location = Location(self.player, building.location_name, building.id, buildings)
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
+        self.earliest_age = min(scenario.vanilla_age
+                                for campaign in self.included_campaigns
+                                for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
+        rebased = self.options.existing_techs == ExistingTechs.option_start_in_dark_age
+        self.shuffled_ages = [age for age in Ages.SHUFFLED_AGES
+                              if rebased or age > self.earliest_age]
         if self.options.shuffle_ages:
-            for age in Ages.SHUFFLED_AGES:
+            for age in self.shuffled_ages:
                 buildings.locations.append(
                     Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
         
-        self.earliest_age = min(scenario.vanilla_age
-                                for campaign in self.included_campaigns
-                                for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
         self.tech_pool = TechPool(self.options, self.earliest_age, self.included_civs)
         
         for building in Age2BuildingData:
@@ -210,7 +215,7 @@ class Age2World(CachedRuleBuilderWorld):
                 items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Age2AgeData):
                 age_item = self.create_item(item.item_name)
-                if self.options.shuffle_ages:
+                if self.options.shuffle_ages and item.type in self.shuffled_ages:
                     items.append(age_item)
                 else:
                     self.multiworld.push_precollected(age_item)
