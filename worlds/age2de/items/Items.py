@@ -52,7 +52,19 @@ class MercenaryUnit:
 class Mercenary:
     vanilla_scenario: Age2ScenarioData
     units: list[MercenaryUnit]
+    # than an error. Icons must stay contiguous from 313 -- see test_mercenary_assets.
+    icon_id: int
+    name_string_id: int
     in_logic: bool = False
+
+    @property
+    def unit_ids(self) -> list[int]:
+        """One id per soldier, which is what the queue file carries and the game spawns."""
+        return [unit.unit.game_id for unit in self.units for _ in range(unit.count)]
+
+    @property
+    def unit_count(self) -> int:
+        return sum(unit.count for unit in self.units)
 
 @dataclass
 class ProgressiveScenario:
@@ -238,18 +250,20 @@ class Age2ItemData(enum.IntEnum):
     #Troop Items
     AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 18)])
     AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Attila, The Scourge of God: Roman Villagers",        Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 7), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5)], in_logic=True)
-    AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Attila, The Great Ride: Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.TARKAN, 5), MercenaryUnit(Age2UnitData.HUSSAR, 2)])
-    AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Attila, The Great Ride: Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.MANGUDAI, 9), MercenaryUnit(Age2UnitData.CAPPED_RAM, 3), MercenaryUnit(Age2UnitData.ONAGER, 1)], in_logic=True)
+    AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 18)], icon_id=313, name_string_id=990001)
+    AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Attila, The Scourge of God: Roman Villagers",        Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 7), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5)], icon_id=314, name_string_id=990002, in_logic=True)
+    AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Attila, The Great Ride: Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.TARKAN, 5), MercenaryUnit(Age2UnitData.HUSSAR, 2)], icon_id=315, name_string_id=990003)
+    AP_ATTILA_2_SCYTHIAN_TROOP =            4003, "Attila, The Great Ride: Scythian Troops",            Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.MANGUDAI, 9), MercenaryUnit(Age2UnitData.CAPPED_RAM, 3), MercenaryUnit(Age2UnitData.ONAGER, 1)], icon_id=316, name_string_id=990004, in_logic=True)
     
     # Joan of Arc
-    AP_JOAN_1_RAM =                     4004, "Joan of Arc, An Unlikely Messiah: Battering Ram Army",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.PIKEMAN, 6), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4), MercenaryUnit(Age2UnitData.CAPPED_RAM, 1)], in_logic=True)
-    AP_JOAN_1_SWORDSMEN =               4005, "Joan of Arc, An Unlikely Messiah: Starting Swordsmen",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4)], in_logic=True)
-    AP_JOAN_1_CROSSBOWMEN =             4006, "Joan of Arc, An Unlikely Messiah: Starting Crossbowmen",         Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6)], in_logic=True)
-    AP_JOAN_1_RECRUITS =                4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6), MercenaryUnit(Age2UnitData.SCORPION, 2)])
-    AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.KNIGHT, 2), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 16), MercenaryUnit(Age2UnitData.HEAVY_SCORPION, 2), MercenaryUnit(Age2UnitData.THROWING_AXEMAN, 2)])
-    AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.SCOUT_CAVALRY, 1), MercenaryUnit(Age2UnitData.MILITIA, 1)])
-    AP_JOAN_6_LONE_SWORDSMAN =          4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.LONG_SWORDSMAN, 1)])
-    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2UnitData.JEAN_BUREAU, 1)], in_logic=True)
+    AP_JOAN_1_RAM =                     4004, "Joan of Arc, An Unlikely Messiah: Battering Ram Army",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.PIKEMAN, 6), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4), MercenaryUnit(Age2UnitData.CAPPED_RAM, 1)], icon_id=317, name_string_id=990005, in_logic=True)
+    AP_JOAN_1_SWORDSMEN =               4005, "Joan of Arc, An Unlikely Messiah: Starting Swordsmen",           Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 4)], icon_id=318, name_string_id=990006, in_logic=True)
+    AP_JOAN_1_CROSSBOWMEN =             4006, "Joan of Arc, An Unlikely Messiah: Starting Crossbowmen",         Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6)], icon_id=319, name_string_id=990007, in_logic=True)
+    AP_JOAN_1_RECRUITS =                4007, "Joan of Arc, An Unlikely Messiah: Recruits Across the River",    Mercenary(Age2ScenarioData.AP_JOAN_1, [MercenaryUnit(Age2UnitData.CROSSBOWMAN, 6), MercenaryUnit(Age2UnitData.SCORPION, 2)], icon_id=320, name_string_id=990008)
+    AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.KNIGHT, 2), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 16), MercenaryUnit(Age2UnitData.HEAVY_SCORPION, 2), MercenaryUnit(Age2UnitData.THROWING_AXEMAN, 2)], icon_id=321, name_string_id=990009)
+    AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.SCOUT_CAVALRY, 1), MercenaryUnit(Age2UnitData.MILITIA, 1)], icon_id=322, name_string_id=990010)
+    AP_JOAN_6_LONE_SWORDSMAN =          4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.LONG_SWORDSMAN, 1)], icon_id=323, name_string_id=990011)
+    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2UnitData.JEAN_BUREAU, 1)], icon_id=324, name_string_id=990012, in_logic=True)
     
 
         

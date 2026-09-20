@@ -131,11 +131,17 @@ class MercenaryHandler(FolderHandler):
         for mercenary in self._seats:
             if mercenary is None:
                 XsdatFile.write_int(body, EMPTY_SEAT)
+                XsdatFile.write_int(body, EMPTY_SEAT)
+                XsdatFile.write_int(body, EMPTY_SEAT)
+                XsdatFile.write_int(body, 0)
                 continue
+            data = mercenary.type
             XsdatFile.write_int(body, mercenary.id)
-            for unit in mercenary.type.units:
-                for _ in range(unit.count):
-                    XsdatFile.write_int(body, unit.unit.game_id)
+            XsdatFile.write_int(body, data.name_string_id)
+            XsdatFile.write_int(body, data.icon_id)
+            XsdatFile.write_int(body, data.unit_count)
+            for unit_id in data.unit_ids:
+                XsdatFile.write_int(body, unit_id)
 
         seats = body.getvalue()
         if seats != self._queue_bytes:

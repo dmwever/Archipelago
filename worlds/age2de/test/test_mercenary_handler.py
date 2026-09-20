@@ -2,6 +2,10 @@
 must refill seat 1 from the head of the queue and leave seats 0, 2 and 3 exactly where they were --
 the queue file carries no seat index, so position in the file *is* the seat and anything that shifts
 re-points a mercenary the game has already been shown.
+
+Each record is self-describing: id, name string id, icon id, unit count, then that many unit ids.
+The count is what lets the reader find the end of a seat, which used to require looking the
+mercenary up in a table installed separately and going quietly wrong when the two disagreed.
 """
 
 import tempfile
@@ -125,39 +129,49 @@ class TestSeating(MercenaryHandlerTestBase):
 
 
 class TestQueueFile(MercenaryHandlerTestBase):
+    def record(self, mercenary: Age2ItemData) -> list[int]:
+        data = mercenary.type
+        return ([mercenary.id, data.name_string_id, data.icon_id, data.unit_count]
+                + data.unit_ids)
 
     def test_every_seat_gets_a_record_even_when_empty(self) -> None:
         handler = self.handler()
         handler.try_sync_mercenaries(self.roster()[:1])
         written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
 
-        seated = handler.seated()[0]
-        expected = [handler.queue_serial(), seated.id]
-        for unit in seated.type.units:
-            expected.extend([unit.unit.game_id] * unit.count)
-        expected.extend([EMPTY_SEAT] * (SEAT_COUNT - 1))
+        expected = [handler.queue_serial()] + self.record(handler.seated()[0])
+        expected.extend([EMPTY_SEAT, EMPTY_SEAT, EMPTY_SEAT, 0] * (SEAT_COUNT - 1))
         self.assertEqual(expected, written,
                          "the file must carry one record per seat, so position is the seat")
 
-    def test_units_are_written_one_per_soldier(self) -> None:
+    def test_the_count_matches_the_units_that_follow(self) -> None:
         handler = self.handler()
         handler.try_sync_mercenaries(self.roster())
         written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")[1:]
-        seated = handler.seated()[0]
-        total = sum(unit.count for unit in seated.type.units)
-        self.assertEqual(total, len(written[1:total + 1]),
-                         "each soldier needs its own id; the reader counts them, not the types")
+
+        for seated in handler.seated():
+            count = written[3]
+            self.assertEqual(seated.type.unit_count, count,
+                             "each soldier needs its own id, and the count has to agree")
+            self.assertEqual(self.record(seated), written[:4 + count])
+            written = written[4 + count:]
+        self.assertEqual([], written, "the four records must account for the whole file")
 
     def test_an_emptied_seat_keeps_its_position_in_the_file(self) -> None:
         handler = self.handler()
-        found = self.roster()[:SEAT_COUNT]
-        handler.try_sync_mercenaries(found)
-        handler.use_mercenary(handler.seated()[3])
-        handler.try_sync_mercenaries(found)
-
+        handler.try_sync_mercenaries(self.roster()[:1])
+        handler.use_mercenary(handler.seated()[0])
+        handler.try_sync_mercenaries(self.roster()[:1])
         written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
-        self.assertEqual(EMPTY_SEAT, written[-1],
+        self.assertEqual([EMPTY_SEAT, EMPTY_SEAT, EMPTY_SEAT, 0], written[-4:],
                          "the emptied last seat must still be written, or the seats shift")
+
+    def test_an_empty_seat_carries_no_units(self) -> None:
+        """A zero count is what the reader turns into an empty seat; -1 ids are never read."""
+        handler = self.handler()
+        handler.try_sync_mercenaries([])
+        written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
+        self.assertEqual([EMPTY_SEAT, EMPTY_SEAT, EMPTY_SEAT, 0] * SEAT_COUNT, written[1:])
 
 
 class TestQueueSerial(MercenaryHandlerTestBase):
