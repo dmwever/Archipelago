@@ -9,6 +9,7 @@ from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkIte
 import Utils
 from ..generation import Identity, WorldVersion
 from .handlers.InstallHandler import InstallError
+from .handlers.StorageHandler import reconcile_spent
 from ..items import Items
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Campaigns import Age2CampaignData
@@ -231,10 +232,20 @@ class Age2Context(CommonContext):
             managed_scenario.completed = scenario_data in finished
 
     def _handle_mercenaries_used_reply(self) -> None:
-        used: int = self.stored_data.get(self.mercenaries_used_key)
-        spent = self.data_storage.used_mercenaries(used)
+        used: int = self.stored_data.get(self.mercenaries_used_key) or 0
+        from_server = {mercenary.id
+                       for mercenary in self.data_storage.used_mercenaries(used)}
+
+        spent_ids, push = reconcile_spent(self.game_ctx.storage_handler.try_load(), from_server)
+        spent = {mercenary for mercenary in self.data_storage.mercenaries
+                 if mercenary.id in spent_ids}
+        self.game_ctx.storage_handler.try_save(spent_ids)
+
         for mercenary in self.data_storage.mercenaries:
             self.game_ctx.mercenary_handler.set_used(mercenary, mercenary in spent)
+
+        if push:
+            self._push_mercenaries_used(spent)
             
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([
@@ -250,6 +261,13 @@ class Age2Context(CommonContext):
         ]))
 
     def on_mercenary_used(self, mercenary: Items.Age2ItemData) -> None:
+        spent = {item for item in self.data_storage.mercenaries
+                 if self.game_ctx.mercenary_handler.is_used(item)}
+        spent.add(mercenary)
+        self.game_ctx.storage_handler.try_save({item.id for item in spent})
+        self._push_mercenaries_used(spent)
+
+    def _push_mercenaries_used(self, spent) -> None:
         Utils.async_start(self.send_msgs([
             {
                 "cmd": "Set",
@@ -257,7 +275,8 @@ class Age2Context(CommonContext):
                 "default": 0,
                 "want_reply": True,
                 "operations": [
-                    {"operation": "or", "value": 1 << self.data_storage.mercenary_bit(mercenary)}
+                    {"operation": "replace",
+                     "value": self.data_storage.mercenary_field(spent)}
                 ]
             }
         ]))

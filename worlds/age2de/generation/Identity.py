@@ -36,8 +36,8 @@ def tagged(stem: str, tag: str) -> str:
     return f"{stem}_{tag}" if tag else stem
 
 
-def campaign_stem(stem: str, tag: str, player: str) -> str:
     """The player goes before the tag so that the tag stays the last segment, which is what
+def file_stem(stem: str, tag: str, player: str) -> str:
     TAGGED_XSDAT and tag_of rely on. Generation refuses a slot whose name sanitizes to nothing,
     so player is always something."""
     return tagged(f"{stem}_{player}", tag)
@@ -52,12 +52,15 @@ def scenario_file_name(stem: str, tag: str) -> str:
 
 
 def campaign_file_name(stem: str, tag: str, player: str) -> str:
-    return campaign_stem(stem, tag, player) + ".aoe2campaign"
+    return file_stem(stem, tag, player) + ".aoe2campaign"
 
 
 def campaign_xsdat_name(stem: str, tag: str, player: str) -> str:
     """What the engine writes while a campaign installed under this name is played."""
-    return campaign_stem(stem, tag, player) + ".xsdat"
+    return file_stem(stem, tag, player) + ".xsdat"
+
+def storage_file_name(stem: str, tag: str, player: str) -> str:
+    return file_stem(stem, tag, player) + ".json"
 
 
 def source_campaign_stem(stem: str) -> str:

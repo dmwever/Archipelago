@@ -94,8 +94,13 @@ class TestSeating(MercenaryHandlerTestBase):
                           f"{mercenary.item_name} was queued but never granted")
 
     def test_handing_a_mercenary_back_returns_it_to_the_queue(self) -> None:
-        """The SetReply assigns rather than only adding, so a mercenary the client marked
-        optimistically and never got stored has to come back rather than stay spent."""
+        """The mechanism, not the policy: set_used(x, False) still has to re-offer.
+
+        It used to be driven by the SetReply assigning from the server, which meant a spend the
+        server never stored came back. That rule is now inverted -- the local file decides, see
+        reconcile_spent in test_storage_handler -- but the hand-back path still runs, because a
+        cold start adopts the server wholesale and anything absent from it is un-spent.
+        """
         handler = self.handler()
         granted = self.roster()
         handler.try_sync_mercenaries(granted)

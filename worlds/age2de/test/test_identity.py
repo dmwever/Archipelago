@@ -90,7 +90,7 @@ class TestSourceNames(unittest.TestCase):
 class TestPlayerNames(unittest.TestCase):
     def test_the_player_sits_before_the_tag(self):
         tag = Identity.seed_tag(SEED_A, 3)
-        self.assertEqual(Identity.campaign_stem("AP Joan of Arc", tag, "Dave"),
+        self.assertEqual(Identity.file_stem("AP Joan of Arc", tag, "Dave"),
                          f"AP Joan of Arc_Dave_{tag}")
 
     def test_the_tag_survives_a_player_segment(self):

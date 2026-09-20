@@ -17,6 +17,7 @@ from .handlers.CampaignHandler import CampaignHandler
 from .handlers.InstallHandler import InstallHandler
 from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
+from .handlers.StorageHandler import StorageHandler
 
 from Utils import Version
 
@@ -153,6 +154,7 @@ class Age2GameContext:
     mercenary_handler: MercenaryHandler
     message_handler: MessageHandler
     install_handler: InstallHandler
+    storage_handler: StorageHandler
     client_interface: APClientInterface
     missing_since: float = 0.0
     reported_install_mismatch: bool = False
@@ -167,6 +169,7 @@ class Age2GameContext:
         self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
+        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
 
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
                 player_name: str):
@@ -207,6 +210,7 @@ class Age2GameContext:
         self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
+        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -224,6 +228,9 @@ class Age2GameContext:
         self.campaign_handler.set_tag(self.client_status.tag)
         self.campaign_handler.set_player_name(self.client_status.player_name)
         self.install_handler.set_user_folder(user_folder)
+        self.storage_handler.set_user_folder(user_folder)
+        self.storage_handler.set_tag(self.client_status.tag)
+        self.storage_handler.set_player_name(self.client_status.player_name)
 
     def read_packet(self) -> Age2Packet:
         try:
