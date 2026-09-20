@@ -248,8 +248,6 @@ class Age2ItemData(enum.IntEnum):
     #4000 - 4999 = Troops, Future Use
     
     #Troop Items
-    AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 18)])
-    AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Attila, The Scourge of God: Roman Villagers",        Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 7), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5)], in_logic=True)
     AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 18)], icon_id=313, name_string_id=990001)
     AP_ATTILA_1_ROMAN_VILLAGERS =           4001, "Attila, The Scourge of God: Roman Villagers",        Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 7), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5)], icon_id=314, name_string_id=990002, in_logic=True)
     AP_ATTILA_2_DYRRHACHIUMS_PRISONERS =    4002, "Attila, The Great Ride: Dyrrhachium's Prisoners",    Mercenary(Age2ScenarioData.AP_ATTILA_2, [MercenaryUnit(Age2UnitData.TARKAN, 5), MercenaryUnit(Age2UnitData.HUSSAR, 2)], icon_id=315, name_string_id=990003)
