@@ -31,13 +31,11 @@ def sanitize_player(name: str) -> str:
     # A trailing dot or space is legal in the string but not at the end of a Windows file name.
     return " ".join(safe.split()).strip(" .")
 
-
 def tagged(stem: str, tag: str) -> str:
     return f"{stem}_{tag}" if tag else stem
 
-
-    """The player goes before the tag so that the tag stays the last segment, which is what
 def file_stem(stem: str, tag: str, player: str) -> str:
+    """The player goes before the tag so that the tag stays the last segment, which is what
     TAGGED_XSDAT and tag_of rely on. Generation refuses a slot whose name sanitizes to nothing,
     so player is always something."""
     return tagged(f"{stem}_{player}", tag)
