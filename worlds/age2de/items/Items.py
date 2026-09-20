@@ -52,7 +52,6 @@ class MercenaryUnit:
 class Mercenary:
     vanilla_scenario: Age2ScenarioData
     units: list[MercenaryUnit]
-    # than an error. Icons must stay contiguous from 313 -- see test_mercenary_assets.
     icon_id: int
     name_string_id: int
     in_logic: bool = False
