@@ -207,31 +207,3 @@ class TestQueueSerial(MercenaryHandlerTestBase):
                            "seat 1 holds someone new, so the game has to be told")
 
 
-class TestUsedFile(MercenaryHandlerTestBase):
-
-    def test_it_lists_the_ids_of_spent_mercenaries(self) -> None:
-        handler = self.handler()
-        granted = self.roster()
-        handler.try_sync_mercenaries(granted)
-        self.assertEqual([], read_ints(Path(self.folder) / "mercenaries.xsdat"),
-                         "nothing is spent yet, so the file should be empty")
-
-        spent = granted[2]
-        handler.use_mercenary(spent)
-        handler.try_sync_mercenaries(granted)
-        self.assertEqual([spent.id], read_ints(Path(self.folder) / "mercenaries.xsdat"),
-                         "the file keys by item id, so only the spent id belongs in it")
-
-    def test_a_second_spend_is_added_not_replaced(self) -> None:
-        handler = self.handler()
-        granted = self.roster()
-        handler.try_sync_mercenaries(granted)
-        for mercenary in (granted[0], granted[5]):
-            handler.use_mercenary(mercenary)
-        handler.try_sync_mercenaries(granted)
-        self.assertEqual({granted[0].id, granted[5].id},
-                         set(read_ints(Path(self.folder) / "mercenaries.xsdat")))
-
-
-if __name__ == "__main__":
-    unittest.main()

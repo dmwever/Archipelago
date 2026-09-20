@@ -94,12 +94,11 @@ class MercenaryHandler(FolderHandler):
             self._enqueue_unlocked(unlocked_items)
             self._fill_seats()
             self._write_queue()
-            self._write_used()
         except Exception:
             logger.exception("Could not sync mercenaries.")
 
     def try_flush_from_folder(self) -> None:
-        for name in ("mercenary_queue.xsdat", "mercenaries.xsdat"):
+        for name in ("mercenary_queue.xsdat",):
             try:
                 if os.path.exists(self._user_folder + name):
                     os.remove(self._user_folder + name)
@@ -151,9 +150,3 @@ class MercenaryHandler(FolderHandler):
         with open(self._user_folder + "mercenary_queue.xsdat", "wb") as fp:
             XsdatFile.write_int(fp, self._queue_serial)
             fp.write(seats)
-
-    def _write_used(self) -> None:
-        with open(self._user_folder + "mercenaries.xsdat", "wb") as fp:
-            for mercenary, managed in self._mercenaries.items():
-                if managed.used:
-                    XsdatFile.write_int(fp, mercenary.id)

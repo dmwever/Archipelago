@@ -2,10 +2,6 @@ import enum
 
 @enum.unique
 class Age2UnitData(enum.IntEnum):
-    """Units a mercenary can deliver. The member value is the engine object id, not an AP id, so
-    it is what XS spawns against and what MercenaryData renders. Only the units the shipped
-    scenarios actually hand over are listed; add a member when a mercenary needs one."""
-
     def __new__(cls, game_id: int, *args, **kwargs):
         value = game_id
         obj = int.__new__(cls, value)
