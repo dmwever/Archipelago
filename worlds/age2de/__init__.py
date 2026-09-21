@@ -11,12 +11,16 @@ from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
-from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
-from .generation import Identity, LocalStart, WorldVersion
-from .Options import Goal, Age2Options, ScenarioBranching
+from worlds.age2de.locations.Buildings import Age2BuildingData
+from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
+from .generation import Identity, LocalStart, SlotData, WorldVersion
+from .generation.TechPool import TechPool
+from .Options import Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
-from .locations import Campaigns, Locations, Scenarios
-from .locations.connections import CivilizationBuildings
+from .locations import Ages, Campaigns, Locations, Scenarios
+from .locations.Ages import Age2AgeData
+from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
+from .locations.connections import CivilizationBuildings, CivilizationTechs
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
@@ -51,12 +55,14 @@ class Age2World(CachedRuleBuilderWorld):
     location_id_to_name = LocationMapping.location_id_to_name
     item_mapping = Items.item_mapping
     
-    # Per slot, not per class. As class attributes these accumulated across slots and
-    # kept the MultiWorld alive, which WorldTestBase reports as a leak.
     included_civs: list[Scenarios.Age2CivData]
     included_campaigns: list[Campaigns.Age2CampaignData]
     starting_campaigns: list[Campaigns.Age2CampaignData]
     shuffled_buildings: list[Buildings.Age2BuildingData]
+    shuffled_techs: list[Age2TechData]
+    shuffled_ages: list[Age2AgeData]
+    tech_pool: TechPool
+    earliest_age: Age2AgeData = None
     rules: Rules
 
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
@@ -65,7 +71,9 @@ class Age2World(CachedRuleBuilderWorld):
         self.included_campaigns = []
         self.starting_campaigns = []
         self.shuffled_buildings = []
-
+        self.shuffled_techs = []
+        self.shuffled_ages = []
+        
     def branching_option(self, location):
         if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenarioBranching != ScenarioBranching.option_all:
             return False
@@ -103,6 +111,10 @@ class Age2World(CachedRuleBuilderWorld):
 
     def create_regions(self) -> None:
         
+        self.included_civs = list(dict.fromkeys(
+            scenario.civ for campaign in self.included_campaigns
+            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]))
+        
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         
         for campaign in self.included_campaigns:
@@ -113,8 +125,6 @@ class Age2World(CachedRuleBuilderWorld):
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)
                 regions.append(region)
-                if scenario.civ not in self.included_civs:
-                    self.included_civs.append(scenario.civ)
                 prev_region = region
                 
         buildings = Region("Can Build", self.player, self.multiworld)
@@ -135,12 +145,57 @@ class Age2World(CachedRuleBuilderWorld):
                 new_location = Location(self.player, building.location_name, building.id, buildings)
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
+        self.earliest_age = min(scenario.vanilla_age
+                                for campaign in self.included_campaigns
+                                for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
+        rebased = self.options.existing_techs == ExistingTechs.option_start_in_dark_age
+        self.shuffled_ages = [age for age in Ages.SHUFFLED_AGES
+                              if rebased or age > self.earliest_age]
+        if self.options.shuffle_ages:
+            for age in self.shuffled_ages:
+                buildings.locations.append(
+                    Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
+        
+        self.tech_pool = TechPool(self.options, self.earliest_age, self.included_civs)
+        
+        for building in Age2BuildingData:
+            if not BUILDING_TO_TECHS[building] or not self.civ_can_build(building):
+                continue
+            region = Region(building.item.item_name, self.player, self.multiworld)
+            connection = Entrance(self.player, f"{region.name}", buildings)
+            buildings.exits.append(connection)
+            connection.connect(region)
+            regions.append(region)
+            linked_buildings: set[Region] = set()
+            for tech in self.tech_pool.by_building(building):
+                if tech not in self.shuffled_techs:
+                    new_location = Location(self.player, tech.location_name, tech.id, region)
+                    region.locations.append(new_location)
+                    self.shuffled_techs.append(tech)
+                    continue
+                
+                # Item exists. Point to region with item, with a ruleless entrance.
+                existing_building = self.multiworld.get_location(tech.location_name, self.player).parent_region
+                if existing_building in linked_buildings:
+                    continue
+                linked_buildings.add(existing_building)
+                alternate = Entrance(
+                    self.player,
+                    f"{region.name} to {existing_building.name} Techs", region)
+                region.exits.append(alternate)
+                alternate.connect(existing_building)
 
         regions[0].add_event("Victory", Items.Age2ItemData.VICTORY.item_name)
 
         self.multiworld.regions += regions
-    
+
+    def civ_can_build(self, building: Buildings.Age2BuildingData) -> bool:
+        """Whether any included civilization puts up this building."""
+        if Buildings.BuildingOption.unique in building.building_options:
+            return any(building in civ.included_buildings for civ in self.included_civs)
+        return not all(building in civ.excluded_buildings for civ in self.included_civs)
+
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)
         connection = Entrance(self.player, f"{new_region.name}", source)
@@ -187,9 +242,15 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             elif isinstance(item.type, Items.TCResources):
                 items.append(self.create_item(item.item_name))
-            elif isinstance(item.type, Items.Age):
-                continue
+            elif isinstance(item.type, Items.Age2AgeData):
+                age_item = self.create_item(item.item_name)
+                if self.options.shuffle_ages and item.type in self.shuffled_ages:
+                    items.append(age_item)
+                else:
+                    self.multiworld.push_precollected(age_item)
             elif isinstance(item.type, Items.Building):
+                continue
+            elif isinstance(item.type, Items.Tech):
                 continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
@@ -200,6 +261,9 @@ class Age2World(CachedRuleBuilderWorld):
                 items.append(building_item)
             else:
                 self.multiworld.push_precollected(building_item)
+
+        for tech in self.shuffled_techs:
+            items.append(self.create_item(tech.item.item_name))
                 
 
         self.multiworld.itempool += items
@@ -217,7 +281,6 @@ class Age2World(CachedRuleBuilderWorld):
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
-        
     
     def smart_add_starting_resources(self, locations_to_fill: int) -> list[Item]:
         items: list[Item] = []
@@ -290,6 +353,8 @@ class Age2World(CachedRuleBuilderWorld):
         }
         for campaign in self.included_campaigns:
             mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns
+        for option_name in SlotData.OPTIONS.values():
+            mapping[option_name] = int(getattr(self.options, option_name).value)
         return mapping
 
 

@@ -1,24 +1,27 @@
 import enum
 
-from ..items.Items import Age2ItemData
-
 class Age2AgeData(enum.IntEnum):
-    
     def __new__(cls, id: int, *args, **kwargs):
         value = id
         obj = int.__new__(cls, value)
         obj._value_ = value
         return obj
 
-    def __init__(
-        self, id: int, location_name: str, item: Age2ItemData
-    ) -> None:
+    def __init__(self, id: int, location_name: str) -> None:
         self.id = id
         self.location_name = location_name
-        self.item = item
 
-    DARK =                  25, "Reach Dark Age", None
-    FEUDAL =                26, "Reach Feudal Age", Age2ItemData.FEUDAL_AGE
-    CASTLE =                27, "Reach Castle Age", Age2ItemData.CASTLE_AGE
-    IMPERIAL =              28, "Reach Imperial Age", Age2ItemData.IMPERIAL_AGE
-    
+    @property
+    def item(self):
+        """The age-up item, which shares this location's id. Dark Age has none."""
+        from ..items.Items import ID_TO_ITEM
+        return ID_TO_ITEM.get(self.id)
+
+    DARK =                  25, "Reach Dark Age"
+    FEUDAL =                26, "Reach Feudal Age"
+    CASTLE =                27, "Reach Castle Age"
+    IMPERIAL =              28, "Reach Imperial Age"
+
+
+SHUFFLED_AGES: tuple[Age2AgeData, ...] = tuple(
+    age for age in Age2AgeData if age.item is not None)

@@ -40,15 +40,19 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.ctx.game_ctx.update_game_user_folder(self.ctx.settings.user_folder)
         self.output(f"User folder now assigned to {self.ctx.settings.user_folder}")
 
-    def _cmd_install(self) -> None:
+    def _cmd_install(self, mode: str = "") -> None:
         """
         Install: Sets your Age2 install up for this seed and slot.
 
-        Writes a seed-tagged copy of each campaign you enabled, plus SlotData.xs.
-        Run it once per seed, after connecting.
+        Writes a seed-tagged copy of each campaign you enabled, plus SlotData.xs
+        and TechData.xs. Run it once per seed, after connecting. A campaign already
+        installed for this seed is left alone; /install full rebuilds every one.
         """
         ctx = self.ctx
         status = ctx.game_ctx.client_status
+        if ctx.game_ctx.install_handler.installing:
+            self.output("An install is already running.")
+            return
         if not status.tag or status.slot_id < 0:
             self.output("Connect to your multiworld first, so the install knows your seed and slot.")
             return
@@ -65,22 +69,44 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output("This slot has no campaigns to install.")
             return
 
+        full = mode.strip().lower() == "full"
+        if mode and not full:
+            self.output(f"Unknown option {mode!r}. Use /install or /install full.")
+            return
+        
         raw_name = ctx.player_names[ctx.slot]
         if status.player_name != raw_name:
             self.output(f'Your name "{raw_name}" contains characters that cannot be used in a '
                         f'file name. Your campaigns are installed as "{status.player_name}".')
 
+        ctx.game_ctx.install_handler.installing = True
+        self.output("Installing. Rebuilding a scenario takes a few seconds each.")
+        Utils.async_start(self._install(campaigns, full), name="Age2Install")
+
+    async def _install(self, campaigns: list[Age2CampaignData], full: bool = False) -> None:
+        """Install off the event loop, so the client keeps drawing while it runs."""
+        ctx = self.ctx
+        status = ctx.game_ctx.client_status
+        handler = ctx.game_ctx.install_handler
+        loop = asyncio.get_running_loop()
+        # Progress is raised on the worker thread; hand it back before it reaches
+        # the UI, which is not safe to touch from anywhere else.
+        handler.report = lambda text: loop.call_soon_threadsafe(logger.info, text)
         try:
-            ctx.game_ctx.install_handler.setup(
-                campaigns, status.slot_id, status.tag, status.player_name)
-            written = ctx.game_ctx.install_handler.install()
+            handler.setup(campaigns, status.slot_id, status.tag, status.player_name,
+                          status.slot_data, ctx.server_locations)
+            written = await loop.run_in_executor(None, handler.install, full)
         except InstallError as ex:
             self.output(str(ex))
-            return
-
-        for path in written:
-            self.output(f"Wrote {path}")
-        self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
+        except Exception:
+            logger.exception("The install did not finish.")
+        else:
+            for path in written:
+                self.output(f"Wrote {path}")
+            self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
+        finally:
+            handler.report = logger.info
+            handler.installing = False
 
     def _cmd_mercenaries(self) -> None:
         """

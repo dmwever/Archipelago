@@ -6,7 +6,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
-from ..ScenarioLogic import ScenarioStartingState
+from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
 
 
 if TYPE_CHECKING:
@@ -17,9 +17,9 @@ class Attila2StartingState(ScenarioStartingState):
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
-        self.rules = logic
+        self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario")
         self.has_vils = self.purple_vils
         self.has_base = logic.can_build_base() & self.purple_vils
-        self.can_reach_age[Age2AgeData.FEUDAL] = True_()
-        self.can_reach_age[Age2AgeData.CASTLE] = True_()
+        self.age_playable[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
+        self.age_playable[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE) | VANILLA_AGE_START

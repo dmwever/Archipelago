@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import typing
 
-from Options import Choice, OptionList, OptionSet, PerGameCommonOptions, StartInventoryPool
+from Options import Choice, OptionList, OptionSet, PerGameCommonOptions, StartInventoryPool, Toggle
 from worlds.age2de.locations.Campaigns import Age2CampaignData
 from .locations.Buildings import BuildingOption
 
@@ -92,6 +92,100 @@ class EnabledCampaigns(OptionSet):
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
     default = set((Age2CampaignData.ATTILA.campaign_name,))
 
+class ShuffleAges(Toggle):
+    """
+    Shuffles the ability to advance to the Feudal, Castle and Imperial Ages into the item pool.
+    Reaching each age is its own check. Advancing still costs resources and still requires the
+    usual buildings; the item only permits it. A scenario that starts above the Dark Age keeps
+    the ages it starts with.
+    """
+    internal_name = "shuffle_ages"
+    display_name = "Shuffle Ages"
+
+
+class Techsanity(Choice):
+    """
+    Shuffles technologies. Researching a shuffled technology sends its check, and its item is what
+    makes the technology available.
+    None: Technologies behave as vanilla.
+    Units: Only unit-line upgrades are shuffled, e.g. Man-At-Arms, Crossbowman, Elite Skirmisher.
+    Generic: Every other technology is shuffled, e.g. Loom, Fletching, Wheelbarrow.
+    All: Both.
+    """
+    internal_name = "techsanity"
+    display_name = "Techsanity"
+    option_none = 0
+    option_units = 1
+    option_generic = 2
+    option_all = 3
+    default = option_none
+
+
+class TechBehavior(Choice):
+    """
+    When a shuffled technology's effect is applied. Requires Techsanity.
+    Must Research: The item makes the technology available; you still pay for it and research it.
+    Instant: The item applies the effect immediately, for free.
+    Unit-line upgrades always behave as Must Research, since an upgrade you did not pay for would
+    rewrite an army you already have.
+    """
+    internal_name = "tech_behavior"
+    display_name = "Tech Behavior"
+    option_must_research = 0
+    option_instant = 1
+    default = option_must_research
+
+
+class LockTechs(Choice):
+    """
+    What a shuffled technology's item unlocks. Requires Techsanity.
+    Items: The technology is hidden until its item arrives.
+    Effects: The technology is always researchable, but researching it does nothing until its item
+    arrives. Researching still sends the check, so no check is ever locked behind its own item.
+    """
+    internal_name = "lock_techs"
+    display_name = "Lock Techs"
+    option_items = 0
+    option_effects = 1
+    default = option_items
+
+
+class ShuffleUniqueTechs(Choice):
+    """
+    Whether civilization unique technologies join the pool. Requires Techsanity.
+    Unshuffled: Unique technologies behave as vanilla.
+    Shuffled: Unique technologies are shuffled. A unique technology's effect only applies while you
+    are playing a civilization that has it.
+    Shuffled Everywhere: As above, but the effect applies to whichever civilization you are playing.
+    No setting ever lets a civilization research another civilization's unique technology.
+    """
+    internal_name = "shuffle_unique_techs"
+    display_name = "Shuffle Unique Techs"
+    option_unshuffled = 0
+    option_shuffled = 1
+    option_shuffled_everywhere = 2
+    default = option_unshuffled
+
+
+class ExistingTechs(Choice):
+    """
+    What happens to the technologies a scenario would normally start with. Requires Techsanity.
+    Vanilla: A scenario starting in the Castle Age keeps every Dark and Feudal Age technology.
+    Find Items: A technology the scenario would have started with is not applied on scenario start
+    until the item is found. Once found, the tech costs nothing to research for its check.
+    Only Find Units: Same as Find Items, but only units are hidden.
+    Start In Dark Age: Every scenario opens in the Dark Age with nothing researched at all, ages
+    included, so even the age-ups have to be earned back.
+    """
+    internal_name = "existing_techs"
+    display_name = "Existing Techs"
+    option_vanilla = 0
+    option_find_items = 1
+    option_only_find_units = 2
+    option_start_in_dark_age = 3
+    default = option_vanilla
+
+
 @dataclass
 class Age2Options(PerGameCommonOptions):
     """
@@ -103,5 +197,11 @@ class Age2Options(PerGameCommonOptions):
     shuffle_buildings: ShuffleBuildings
     enabled_campaigns: EnabledCampaigns
     starting_campaigns: StartingCampaigns
+    shuffle_ages: ShuffleAges
+    techsanity: Techsanity
+    tech_behavior: TechBehavior
+    lock_techs: LockTechs
+    shuffle_unique_techs: ShuffleUniqueTechs
+    existing_techs: ExistingTechs
     goal: Goal
     local_start: LocalStart

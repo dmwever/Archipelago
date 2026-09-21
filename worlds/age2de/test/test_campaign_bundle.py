@@ -12,6 +12,7 @@ from ..campaign.CampaignReader import (
 )
 from ..campaign.CampaignWriter import HEADER_SIZE
 from ..client.handlers.InstallHandler import InstallHandler
+from ..Options import Techsanity
 from ..generation import Identity, SlotData
 from ..locations.Campaigns import Age2CampaignData
 
@@ -183,12 +184,39 @@ class TestRealBundles(unittest.TestCase):
 
 
 class TestSlotDataFile(unittest.TestCase):
-    def test_default_is_all_unset(self):
+    def test_the_default_is_unset_with_techsanity_off(self):
         self.assertEqual(
             SlotData.render(),
             "extern const int AP_SLOT_ID = -1;\n"
             "extern const int AP_SEED_HIGH = -1;\n"
-            "extern const int AP_SEED_LOW = -1;\n")
+            "extern const int AP_SEED_LOW = -1;\n"
+            "extern const int AP_TS_MODE = 0;\n"
+            "extern const int AP_TS_BEHAVIOR = -1;\n"
+            "extern const int AP_TS_LOCK = -1;\n"
+            "extern const int AP_TS_UNIQUES = -1;\n"
+            "extern const int AP_TS_EXISTING = -1;\n"
+            "extern const int AP_SHUFFLE_AGES = 0;\n")
+
+    def test_an_unset_mode_reads_as_techsanity_off(self):
+        # XS gates on AP_TS_MODE == TECHSANITY_NONE, so a server that sends
+        # nothing has to land on that value, not on UNSET.
+        values = SlotData.techsanity()
+        self.assertEqual(values[SlotData.TS_MODE], Techsanity.option_none)
+
+    def test_techsanity_options_are_carried(self):
+        values = SlotData.slot_fields(3, Identity.seed_tag(SEED, 3), {
+            "techsanity": 3, "tech_behavior": 1, "lock_techs": 1,
+            "shuffle_unique_techs": 2, "existing_techs": 1})
+        self.assertEqual(values[SlotData.TS_MODE], 3)
+        self.assertEqual(values[SlotData.TS_BEHAVIOR], 1)
+        self.assertEqual(values[SlotData.TS_LOCK], 1)
+        self.assertEqual(values[SlotData.TS_UNIQUES], 2)
+        self.assertEqual(values[SlotData.TS_EXISTING], 1)
+
+    def test_absent_slot_data_falls_back_to_the_defaults(self):
+        values = SlotData.slot_fields(3, Identity.seed_tag(SEED, 3))
+        for name in SlotData.OPTIONS:
+            self.assertEqual(values[name], SlotData.DEFAULTS[name], name)
 
     def test_seed_halves_reconstruct_the_tag(self):
         tag = Identity.seed_tag(SEED, 3)
@@ -198,7 +226,7 @@ class TestSlotDataFile(unittest.TestCase):
     def test_halves_fit_the_xs_literal_ceiling(self):
         for slot in (1, 2, 250):
             for seed in (SEED, "1", "99999999999999999999"):
-                values = SlotData.fields(slot, Identity.seed_tag(seed, slot))
+                values = SlotData.slot_fields(slot, Identity.seed_tag(seed, slot))
                 for name, value in values.items():
                     self.assertLessEqual(abs(value), SlotData.MAX_LITERAL, name)
 
@@ -207,9 +235,10 @@ class TestSlotDataFile(unittest.TestCase):
             SlotData.render({"AP_X": SlotData.MAX_LITERAL + 1})
 
     def test_slot_and_seed_are_rendered(self):
-        rendered = SlotData.render(SlotData.fields(3, Identity.seed_tag(SEED, 3)))
+        rendered = SlotData.render(SlotData.slot_fields(3, Identity.seed_tag(SEED, 3)))
         self.assertIn("extern const int AP_SLOT_ID = 3;", rendered)
-        self.assertNotIn("-1", rendered)
+        self.assertNotIn("AP_SLOT_ID = -1", rendered)
+        self.assertNotIn("AP_SEED_HIGH = -1", rendered)
 
 
 class TestInstallPaths(unittest.TestCase):

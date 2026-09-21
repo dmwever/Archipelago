@@ -1,4 +1,3 @@
-from math import log
 
 from ...locations.Ages import Age2AgeData
 
@@ -18,7 +17,7 @@ from ..ScenarioRules import ScenarioRules
 class Joan6Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_JOAN_6)
-        self.scenario_logic = ScenarioLogic(self.logic, Joan6StartingState(self.logic))
+        self.scenario_logic = ScenarioLogic(self.logic, Joan6StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()

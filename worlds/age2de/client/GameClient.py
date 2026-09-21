@@ -18,6 +18,7 @@ from .handlers.InstallHandler import InstallHandler
 from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
 from .handlers.StorageHandler import StorageHandler
+from .handlers.TechHandler import TechHandler
 
 from Utils import Version
 
@@ -27,6 +28,7 @@ from ..campaign import XsdatFile
 from ..items import Items
 from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
 from ..locations.Campaigns import Age2CampaignData
+from ..locations.Techs import Age2TechData
 from worlds.age2de.locations import Scenarios
 
 logger = logging.getLogger("Client")
@@ -139,6 +141,7 @@ class ClientStatus:
     finished_game: bool = False
     slot_id: int = -1
     tag: str = ''
+    slot_data: dict = None
     player_name: str = ''
     in_flight: list[int] = field(default_factory=list[int])
 
@@ -152,6 +155,7 @@ class Age2GameContext:
     campaign_handler: CampaignHandler
     building_handler: BuildingHandler
     mercenary_handler: MercenaryHandler
+    tech_handler: TechHandler
     message_handler: MessageHandler
     install_handler: InstallHandler
     storage_handler: StorageHandler
@@ -167,6 +171,7 @@ class Age2GameContext:
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
         self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
+        self.tech_handler = TechHandler([tech for tech in Age2TechData])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
@@ -175,6 +180,7 @@ class Age2GameContext:
                 player_name: str):
         self.client_status.slot_id = slot
         self.client_status.tag = tag
+        self.client_status.slot_data = slot_data
         self.client_status.player_name = player_name
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
@@ -208,6 +214,7 @@ class Age2GameContext:
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
         self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
+        self.tech_handler = TechHandler([tech for tech in Age2TechData])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
@@ -224,6 +231,7 @@ class Age2GameContext:
         self.message_handler.set_user_folder(self.profile_folder())
         self.building_handler.set_user_folder(self.profile_folder())
         self.mercenary_handler.set_user_folder(self.profile_folder())
+        self.tech_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_tag(self.client_status.tag)
         self.campaign_handler.set_player_name(self.client_status.player_name)
@@ -354,6 +362,8 @@ class Age2GameContext:
                 os.remove(self.profile_folder() + "startup.xsdat")
             if os.path.exists(self.profile_folder() + "buildings.xsdat"):
                 os.remove(self.profile_folder() + "buildings.xsdat")
+            if os.path.exists(self.profile_folder() + "techs.xsdat"):
+                os.remove(self.profile_folder() + "techs.xsdat")
         except Exception as ex:
             print(ex)
 
@@ -362,6 +372,9 @@ class Age2GameContext:
         self.reported_install_mismatch = False
 
     def report_install_mismatch_once(self) -> None:
+        if self.install_handler.installing:
+            self.missing_since = 0.0
+            return
         if self.missing_since == 0.0:
             self.missing_since = time.monotonic()
             return
@@ -424,6 +437,7 @@ async def status_loop(ctx: Age2GameContext):
         ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
         ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items)
+        ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
         
         # Check all unlocked scenarios every 2 seconds to find active scenario.

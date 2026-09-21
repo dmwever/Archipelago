@@ -1,8 +1,8 @@
 import enum
 
-class Age2CampaignData(enum.Enum):
+class Age2CampaignData(enum.IntEnum):
     def __new__(cls, id: int, *args, **kwargs):
-        obj = object.__new__(cls)
+        obj = int.__new__(cls, id)
         obj._value_ = id
         return obj
 
