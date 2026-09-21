@@ -193,7 +193,7 @@ class Age2Options(PerGameCommonOptions):
     """
 
     startInventoryPool: StartInventoryPool
-    scenarioBranching: ScenarioBranching
+    scenario_branching: ScenarioBranching
     shuffle_buildings: ShuffleBuildings
     enabled_campaigns: EnabledCampaigns
     starting_campaigns: StartingCampaigns

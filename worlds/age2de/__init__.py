@@ -75,9 +75,9 @@ class Age2World(CachedRuleBuilderWorld):
         self.shuffled_ages = []
         
     def branching_option(self, location):
-        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenarioBranching != ScenarioBranching.option_all:
+        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenario_branching != ScenarioBranching.option_all:
             return False
-        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ANY and self.options.scenarioBranching != ScenarioBranching.option_any:
+        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ANY and self.options.scenario_branching != ScenarioBranching.option_any:
             return False
         return True
 

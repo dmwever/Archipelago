@@ -54,7 +54,7 @@ class Attila4Rules(ScenarioRules):
         )
         can_beat_blue: Rule = can_beat_cyan
         
-        if self.world.options.scenarioBranching == ScenarioBranching.option_all:
+        if self.world.options.scenario_branching == ScenarioBranching.option_all:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_TRIBUTE_BURGUNDY_ALL], Has(Age2ItemData.MARKET.item_name))
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_CASTLE_BURGUNDY_ALL], can_ally_purple)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_BURGUNDY_ALL], can_beat_purple)

@@ -50,7 +50,7 @@ class Joan3Rules(ScenarioRules):
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_VICTORY], can_destroy_castle & can_beat_fastolf)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.JOAN3_VICTORY.scenario.scenario_name), can_destroy_castle & can_beat_fastolf)
         
-        if self.world.options.scenarioBranching == ScenarioBranching.option_all:
+        if self.world.options.scenario_branching == ScenarioBranching.option_all:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_DESTROY_CENTRAL_CASTLE], can_destroy_castle)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_DESTROY_REAR_CASTLE], can_destroy_castle)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_DESTROY_LEFT_CASTLE], can_destroy_castle)

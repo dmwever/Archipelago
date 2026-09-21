@@ -23,7 +23,7 @@ class Joan2Rules(ScenarioRules):
         can_beat_orange: Rule = can_cross & self.scenario_logic.has_base() & self.logic.has_siege()
         victory: Rule = (can_beat_red | can_beat_orange) & Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
         
-        if self.world.options.scenarioBranching == ScenarioBranching.option_all:
+        if self.world.options.scenario_branching == ScenarioBranching.option_all:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_NORTHEAST_CASTLE], can_beat_red)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_NORTHWEST_CASTLE], can_beat_red)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_SOUTHWEST_CASTLE], can_beat_orange)

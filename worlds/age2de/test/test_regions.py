@@ -79,7 +79,7 @@ class TestScenarioRuleSetup(bases.Age2TestBase):
     options = {
         "enabled_campaigns": {ATTILA, JOAN},
         "starting_campaigns": {ATTILA},
-        "scenarioBranching": "any",
+        "scenario_branching": "any",
     }
 
     def test_collecting_a_scenario_s_locations_prints_nothing(self) -> None:
