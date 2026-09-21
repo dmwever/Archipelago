@@ -15,7 +15,9 @@ from ..locations.Scenarios import Age2ScenarioData
 
 from .handlers.CampaignHandler import CampaignHandler
 from .handlers.InstallHandler import InstallHandler
+from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
+from .handlers.StorageHandler import StorageHandler
 from .handlers.TechHandler import TechHandler
 
 from Utils import Version
@@ -53,6 +55,10 @@ class APClientInterface(Protocol):
         """Called when a new location is received"""
         pass
 
+    def on_mercenary_used(self, mercenary: Age2ItemData):
+        """Called when the game has finished spawning a mercenary, so it is spent for good"""
+        pass
+
 
 class DefaultClientInterface:
     def on_scenario_completion(self, scenario_id: Age2ScenarioData) -> None:
@@ -69,6 +75,9 @@ class DefaultClientInterface:
         for k in location_status:
             location_status[k] = 0
 
+    def on_mercenary_used(self, mercenary: Age2ItemData) -> None:
+        pass
+
 
 class Age2Packet:
     active: bool = 0
@@ -79,6 +88,8 @@ class Age2Packet:
     latest_message_id: int = -1
     completed: bool = False
     scenario_id: int = 0
+    completed_mercenary_id: int = -1
+    acked_queue_serial: int = -1
     item_ids: List[int]
     location_ids: List[int]
     
@@ -97,7 +108,9 @@ class Age2Packet:
         self.completed = XsdatFile.read_bool(fp)
         self.scenario_id = XsdatFile.read_int(fp)
         self.world_minor = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 29)
+        self.completed_mercenary_id = XsdatFile.read_int(fp)
+        self.acked_queue_serial = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 27)
         while True:
             data = fp.read(4)
             if not data:
@@ -141,9 +154,11 @@ class Age2GameContext:
     client_status: ClientStatus
     campaign_handler: CampaignHandler
     building_handler: BuildingHandler
+    mercenary_handler: MercenaryHandler
     tech_handler: TechHandler
     message_handler: MessageHandler
     install_handler: InstallHandler
+    storage_handler: StorageHandler
     client_interface: APClientInterface
     missing_since: float = 0.0
     reported_install_mismatch: bool = False
@@ -155,9 +170,11 @@ class Age2GameContext:
         self.current_packet = Age2Packet()
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.tech_handler = TechHandler([tech for tech in Age2TechData])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
+        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
 
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
                 player_name: str):
@@ -196,9 +213,11 @@ class Age2GameContext:
         self.client_status = ClientStatus(unlocked_items=[])
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
+        self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.tech_handler = TechHandler([tech for tech in Age2TechData])
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
+        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -211,11 +230,15 @@ class Age2GameContext:
         self.client_status.user_folder = user_folder
         self.message_handler.set_user_folder(self.profile_folder())
         self.building_handler.set_user_folder(self.profile_folder())
+        self.mercenary_handler.set_user_folder(self.profile_folder())
         self.tech_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_tag(self.client_status.tag)
         self.campaign_handler.set_player_name(self.client_status.player_name)
         self.install_handler.set_user_folder(user_folder)
+        self.storage_handler.set_user_folder(user_folder)
+        self.storage_handler.set_tag(self.client_status.tag)
+        self.storage_handler.set_player_name(self.client_status.player_name)
 
     def read_packet(self) -> Age2Packet:
         try:
@@ -324,6 +347,7 @@ class Age2GameContext:
     def flush_files(self) -> None:
         try:
             self.message_handler.try_flush_from_folder()
+            self.mercenary_handler.try_flush_from_folder()
             self.campaign_handler.try_flush_from_folder()
             
             if os.path.exists(self.profile_folder() + "AP.xsdat"):
@@ -388,9 +412,11 @@ class Age2GameContext:
                 XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
                 XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
-                XsdatFile.write_bool(fp, False) # Send Units
+                XsdatFile.write_bool(fp, self.mercenary_handler.queue_serial()
+                                     != self.current_packet.acked_queue_serial) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
+                XsdatFile.write_int(fp, self.current_packet.completed_mercenary_id) # Ack mercenary
         except Exception as ex:
             print(ex)
 
@@ -410,6 +436,7 @@ async def status_loop(ctx: Age2GameContext):
         ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
         ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
+        ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items)
         ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
         
@@ -517,6 +544,12 @@ async def status_loop(ctx: Age2GameContext):
         if packet.completed == True and not ctx.campaign_handler.is_active_scenario_complete():
             ctx.campaign_handler.complete_active_scenario()
             ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
+
+        if packet.completed_mercenary_id != -1:
+            mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
+            if mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary] and not ctx.mercenary_handler.is_used(mercenary_item):
+                ctx.mercenary_handler.use_mercenary(mercenary_item)
+                ctx.client_interface.on_mercenary_used(Items.ID_TO_ITEM[packet.completed_mercenary_id])
         
         ctx.free_items()
         ctx.ping_game()

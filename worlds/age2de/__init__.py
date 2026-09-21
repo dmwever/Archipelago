@@ -328,7 +328,7 @@ class Age2World(CachedRuleBuilderWorld):
         item = Items.NAME_TO_ITEM[name]
         return Item(
             item.item_name,
-            Items.item_type_to_classification[item.type_data],
+            Items.classification_for(item),
             item.id,
             self.player
         )

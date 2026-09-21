@@ -1,0 +1,209 @@
+"""The four pavilion seats are fixed positions, not a sliding window. Spending the one in seat 1
+must refill seat 1 from the head of the queue and leave seats 0, 2 and 3 exactly where they were --
+the queue file carries no seat index, so position in the file *is* the seat and anything that shifts
+re-points a mercenary the game has already been shown.
+
+Each record is self-describing: id, name string id, icon id, unit count, then that many unit ids.
+The count is what lets the reader find the end of a seat, which used to require looking the
+mercenary up in a table installed separately and going quietly wrong when the two disagreed.
+"""
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from ..campaign import XsdatFile
+from ..client.DataStorage import DataStorage
+from ..client.handlers.MercenaryHandler import MercenaryHandler, SEAT_COUNT, EMPTY_SEAT
+from ..items.Items import Age2ItemData, CATEGORY_TO_ITEMS, Mercenary
+from ..locations.Campaigns import Age2CampaignData
+
+EVERY_CAMPAIGN = list(Age2CampaignData)
+
+
+def read_ints(path: Path) -> list[int]:
+    values = []
+    with open(path, "rb") as fp:
+        while fp.read(1):
+            fp.seek(-1, 1)
+            values.append(XsdatFile.read_int(fp))
+    return values
+
+
+class MercenaryHandlerTestBase(unittest.TestCase):
+    def setUp(self) -> None:
+        self._folder = tempfile.TemporaryDirectory()
+        self.folder = self._folder.name + "/"
+        self.addCleanup(self._folder.cleanup)
+
+    def handler(self) -> MercenaryHandler:
+        handler = MercenaryHandler(CATEGORY_TO_ITEMS[Mercenary])
+        handler.set_user_folder(self.folder)
+        return handler
+
+    def roster(self, campaigns: list[Age2CampaignData] = None) -> list[Age2ItemData]:
+        return DataStorage(EVERY_CAMPAIGN if campaigns is None else campaigns).mercenaries
+
+
+class TestSeating(MercenaryHandlerTestBase):
+
+    def test_arrival_order_fills_the_seats(self) -> None:
+        handler = self.handler()
+        found = self.roster()[:SEAT_COUNT + 1][::-1]
+        handler.try_sync_mercenaries(found)
+        self.assertEqual(found[:SEAT_COUNT], handler.seated(),
+                         "seats were not filled in the order the items arrived")
+        self.assertEqual(found[SEAT_COUNT:], handler.queued(),
+                         "the overflow did not stay queued in arrival order")
+
+    def test_spending_a_seat_refills_only_that_seat(self) -> None:
+        handler = self.handler()
+        found = self.roster()[:SEAT_COUNT + 1]
+        handler.try_sync_mercenaries(found)
+        before = handler.seated()
+
+        handler.use_mercenary(before[1])
+        handler.try_sync_mercenaries(found)
+        after = handler.seated()
+
+        self.assertEqual(found[SEAT_COUNT], after[1], "seat 1 was not refilled from the queue head")
+        for seat in (0, 2, 3):
+            self.assertEqual(before[seat], after[seat],
+                             f"seat {seat} moved when seat 1 was emptied")
+
+    def test_a_used_mercenary_never_returns_to_the_queue(self) -> None:
+        handler = self.handler()
+        found = self.roster()
+        handler.try_sync_mercenaries(found)
+        spent = handler.seated()[0]
+
+        handler.use_mercenary(spent)
+        for _ in range(3):
+            handler.try_sync_mercenaries(found)
+
+        self.assertNotIn(spent, handler.seated(), "a spent mercenary was seated again")
+        self.assertNotIn(spent, handler.queued(), "a spent mercenary went back into the queue")
+        self.assertTrue(handler.is_used(spent))
+
+    def test_only_what_was_granted_is_queued(self) -> None:
+        """unlocked_items is what the server granted this slot, so it is already seed-filtered and
+        the handler does not second-guess it."""
+        handler = self.handler()
+        granted = self.roster([Age2CampaignData.JOAN])
+        handler.try_sync_mercenaries(granted)
+        for mercenary in handler.seated() + handler.queued():
+            if mercenary is None:
+                continue
+            self.assertIn(mercenary, granted,
+                          f"{mercenary.item_name} was queued but never granted")
+
+    def test_handing_a_mercenary_back_returns_it_to_the_queue(self) -> None:
+        """The mechanism, not the policy: set_used(x, False) still has to re-offer.
+
+        It used to be driven by the SetReply assigning from the server, which meant a spend the
+        server never stored came back. That rule is now inverted -- the local file decides, see
+        reconcile_spent in test_storage_handler -- but the hand-back path still runs, because a
+        cold start adopts the server wholesale and anything absent from it is un-spent.
+        """
+        handler = self.handler()
+        granted = self.roster()
+        handler.try_sync_mercenaries(granted)
+        spent = handler.seated()[0]
+
+        handler.use_mercenary(spent)
+        handler.try_sync_mercenaries(granted)
+        self.assertTrue(handler.is_used(spent))
+        self.assertNotIn(spent, handler.seated() + handler.queued())
+
+        handler.set_used(spent, False)
+        handler.try_sync_mercenaries(granted)
+        self.assertFalse(handler.is_used(spent))
+        self.assertIn(spent, handler.seated() + handler.queued(),
+                      "a mercenary the server never recorded as spent must be offered again")
+
+    def test_using_something_that_is_not_a_mercenary_is_refused(self) -> None:
+        handler = self.handler()
+        handler.use_mercenary(Age2ItemData.VICTORY)
+        self.assertEqual([None] * SEAT_COUNT, handler.seated(),
+                         "a non-mercenary disturbed the seats")
+
+
+class TestQueueFile(MercenaryHandlerTestBase):
+    def record(self, mercenary: Age2ItemData) -> list[int]:
+        data = mercenary.type
+        return ([mercenary.id, data.name_string_id, data.icon_id, data.unit_count]
+                + data.unit_ids)
+
+    def test_every_seat_gets_a_record_even_when_empty(self) -> None:
+        handler = self.handler()
+        handler.try_sync_mercenaries(self.roster()[:1])
+        written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
+
+        expected = [handler.queue_serial()] + self.record(handler.seated()[0])
+        expected.extend([EMPTY_SEAT, EMPTY_SEAT, EMPTY_SEAT, 0] * (SEAT_COUNT - 1))
+        self.assertEqual(expected, written,
+                         "the file must carry one record per seat, so position is the seat")
+
+    def test_the_count_matches_the_units_that_follow(self) -> None:
+        handler = self.handler()
+        handler.try_sync_mercenaries(self.roster())
+        written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")[1:]
+
+        for seated in handler.seated():
+            count = written[3]
+            self.assertEqual(seated.type.unit_count, count,
+                             "each soldier needs its own id, and the count has to agree")
+            self.assertEqual(self.record(seated), written[:4 + count])
+            written = written[4 + count:]
+        self.assertEqual([], written, "the four records must account for the whole file")
+
+    def test_an_emptied_seat_keeps_its_position_in_the_file(self) -> None:
+        handler = self.handler()
+        handler.try_sync_mercenaries(self.roster()[:1])
+        handler.use_mercenary(handler.seated()[0])
+        handler.try_sync_mercenaries(self.roster()[:1])
+        written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
+        self.assertEqual([EMPTY_SEAT, EMPTY_SEAT, EMPTY_SEAT, 0], written[-4:],
+                         "the emptied last seat must still be written, or the seats shift")
+
+    def test_an_empty_seat_carries_no_units(self) -> None:
+        """A zero count is what the reader turns into an empty seat; -1 ids are never read."""
+        handler = self.handler()
+        handler.try_sync_mercenaries([])
+        written = read_ints(Path(self.folder) / "mercenary_queue.xsdat")
+        self.assertEqual([EMPTY_SEAT, EMPTY_SEAT, EMPTY_SEAT, 0] * SEAT_COUNT, written[1:])
+
+
+class TestQueueSerial(MercenaryHandlerTestBase):
+    """The serial is what lets SendMercenaries mean "there is something outstanding" rather than
+    "something happened once". It leads the file, and it only moves when the seats actually did."""
+
+    def serial_of(self) -> int:
+        return read_ints(Path(self.folder) / "mercenary_queue.xsdat")[0]
+
+    def test_the_serial_leads_the_file(self) -> None:
+        handler = self.handler()
+        handler.try_sync_mercenaries(self.roster())
+        self.assertEqual(handler.queue_serial(), self.serial_of())
+
+    def test_an_unchanged_queue_does_not_advance_it(self) -> None:
+        handler = self.handler()
+        granted = self.roster()
+        handler.try_sync_mercenaries(granted)
+        settled = handler.queue_serial()
+        for _ in range(3):
+            handler.try_sync_mercenaries(granted)
+        self.assertEqual(settled, handler.queue_serial(),
+                         "nothing changed, so the game has no reason to re-read")
+
+    def test_spending_a_seat_advances_it(self) -> None:
+        handler = self.handler()
+        granted = self.roster()
+        handler.try_sync_mercenaries(granted)
+        before = handler.queue_serial()
+        handler.use_mercenary(handler.seated()[1])
+        handler.try_sync_mercenaries(granted)
+        self.assertGreater(handler.queue_serial(), before,
+                           "seat 1 holds someone new, so the game has to be told")
+
+

@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable
 
+from .FolderHandler import FolderHandler
+
+from ...generation import Identity, SlotData
+from ...items.Items import Age2ItemData
 from ...Options import ExistingTechs, Techsanity
 from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
@@ -55,7 +59,7 @@ class InstallHandler(FolderHandler):
         self._included_campaigns = [
             IncludedCampaign(
                 data=cpn,
-                display_name=Identity.campaign_stem(cpn.file_stem, tag, player_name),
+                display_name=Identity.file_stem(cpn.file_stem, tag, player_name),
                 file_name=Identity.source_campaign_file_name(cpn.file_stem),
                 write_name=Identity.campaign_file_name(cpn.file_stem, tag, player_name),
             )

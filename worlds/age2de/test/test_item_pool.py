@@ -7,10 +7,12 @@ and appended none of it, so it returned fewer items than asked for - create_item
 difference up with plain filler, which is why generation still completed.
 """
 from collections import Counter
+import unittest
 
 from . import bases
 from ..items import Items
 from ..locations.Campaigns import Age2CampaignData
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
 ATTILA = Age2CampaignData.ATTILA.campaign_name
 JOAN = Age2CampaignData.JOAN.campaign_name
@@ -89,3 +91,41 @@ class TestPoolBalances(bases.Age2TestBase):
         kinds = [Items.NAME_TO_ITEM[item.name].type for item in self.multiworld.itempool]
         self.assertTrue(any(isinstance(kind, Items.StartingResources) for kind in kinds),
                         "no starting resources reached the pool")
+
+
+class TestProgressiveScenarioCoverage(unittest.TestCase):
+    """A campaign is opened by its Campaign item and then advanced one chapter per Progressive
+    Scenario, so the pool has to hold exactly one progressive fewer than the campaign has chapters.
+    Nothing enforces that today: create_items just makes num_additional_scenarios copies. Too few
+    and the campaign's last chapters can never be reached, with generation succeeding anyway; too
+    many and the surplus sits in the pool as items that unlock nothing. A campaign added with the
+    wrong count would land either way in silence.
+    """
+
+    def progressives(self, campaign: Age2CampaignData) -> list[Items.Age2ItemData]:
+        return [item for item in Items.CATEGORY_TO_ITEMS[Items.ProgressiveScenario]
+                if item.type.vanilla_campaign == campaign]
+
+    def test_every_campaign_has_exactly_one_progressive_item(self) -> None:
+        for campaign in Age2CampaignData:
+            self.assertEqual(1, len(self.progressives(campaign)),
+                             f"{campaign.campaign_name} needs exactly one progressive item; "
+                             "create_items counts copies off a single member")
+
+    def test_the_progressives_reach_the_last_chapter_and_no_further(self) -> None:
+        for campaign in Age2CampaignData:
+            chapters = len(CAMPAIGN_TO_SCENARIOS[campaign])
+            progressive = self.progressives(campaign)[0]
+            self.assertEqual(chapters, progressive.type.num_additional_scenarios + 1,
+                             f"{campaign.campaign_name} has {chapters} chapters but its "
+                             f"progressive makes {progressive.type.num_additional_scenarios} "
+                             "copies; the campaign item opens the first chapter and each copy "
+                             "opens one more")
+
+    def test_every_campaign_has_exactly_one_campaign_item(self) -> None:
+        for campaign in Age2CampaignData:
+            owned = [item for item in Items.CATEGORY_TO_ITEMS[Items.Campaign]
+                     if item.type.vanilla_campaign == campaign]
+            self.assertEqual(1, len(owned),
+                             f"{campaign.campaign_name} needs exactly one campaign item, or "
+                             "sync_unlocked's any() would open it from the wrong one")
