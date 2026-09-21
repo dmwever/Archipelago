@@ -1,4 +1,3 @@
-from math import log
 from typing import TYPE_CHECKING
 
 from rule_builder.rules import False_, Has, Rule, True_
@@ -17,7 +16,7 @@ class Attila3StartingState(ScenarioStartingState):
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
-        self.rules = logic
+        self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 2)
         self.has_base = logic.buildings.has_building(Age2BuildingData.HOUSE)
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = True_()

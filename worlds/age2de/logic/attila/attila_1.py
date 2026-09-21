@@ -17,7 +17,7 @@ class Attila1StartingState(ScenarioStartingState):
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
-        self.rules = logic
+        self.logic = logic
         self.is_unlocked = Has("Attila the Hun Campaign")
         self.has_vils = self.has_bledas_camp | self.alternate_vils
         self.has_base = self.has_bledas_camp | (logic.can_build_base() & 

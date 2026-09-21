@@ -1,4 +1,3 @@
-from math import log
 
 from ...locations.Ages import Age2AgeData
 

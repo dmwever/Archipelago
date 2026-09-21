@@ -16,7 +16,7 @@ class Joan2StartingState(ScenarioStartingState):
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
-        self.rules = logic
+        self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has(Age2ItemData.PROGRESSIVE_JOAN_SCENARIO.item_name)
         self.has_base = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
         self.has_vils = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)

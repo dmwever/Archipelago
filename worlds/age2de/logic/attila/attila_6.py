@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from rule_builder.rules import Has, True_
-from worlds.age2de.logic.goal_logic import Age2BuildingData
+from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Ages import Age2AgeData
 

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from rule_builder.rules import Has, HasAll, Rule, True_
+from rule_builder.rules import Rule
 from ..locations.Ages import Age2AgeData
-from ..items.Items import Age2ItemData
 
 from ..locations.Buildings import Age2BuildingData
 

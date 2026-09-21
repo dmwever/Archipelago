@@ -11,7 +11,8 @@ from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
-from worlds.age2de.logic.goal_logic import CAMPAIGN_TO_SCENARIOS, Age2BuildingData
+from worlds.age2de.locations.Buildings import Age2BuildingData
+from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.TechPool import TechPool
 from .Options import Age2Options, ExistingTechs, Goal, ScenarioBranching

@@ -32,6 +32,6 @@ def write_float(fp, f: float) -> None:
     fp.write(struct.pack("<f", f))
 
 def write_string(fp, s: str) -> None:
-    fp.write(struct.pack("<i", len(s)))
     s = bytes(s, 'utf-8')
+    fp.write(struct.pack("<i", len(s)))
     fp.write(struct.pack(f"{len(s)}s", s))

@@ -90,8 +90,8 @@ class Age2CommandProcessor(ClientCommandProcessor):
         # the UI, which is not safe to touch from anywhere else.
         handler.report = lambda text: loop.call_soon_threadsafe(logger.info, text)
         try:
-            handler.setup(campaigns, status.slot_id, status.tag, status.slot_data,
-                          status.player_name, ctx.server_locations)
+            handler.setup(campaigns, status.slot_id, status.tag, status.player_name,
+                          status.slot_data, ctx.server_locations)
             written = await loop.run_in_executor(None, handler.install, full)
         except InstallError as ex:
             self.output(str(ex))

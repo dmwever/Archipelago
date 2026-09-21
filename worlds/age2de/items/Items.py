@@ -7,9 +7,9 @@ from ..locations.Ages import Age2AgeData
 from ..locations.Scenarios import Age2ScenarioData
 
 class Resource(enum.Enum):
-    WOOD = 1,
-    FOOD = 2,
-    GOLD = 3,
+    WOOD = 1
+    FOOD = 2
+    GOLD = 3
     STONE = 4
 
 @dataclass
@@ -102,7 +102,7 @@ class Age2ItemData(enum.IntEnum):
     
     VICTORY =                       0, "Victory", Victory()
     
-    #1 - 999 = Resources (25), Ages (25), Civs (150), Buildings (100), Units (350), Techs (350) 
+    #1 - 24 = Resources, 25 - 29 = Ages, 30 - 199 = Civs, 200 - 299 = Buildings, 300 - 999 = Units
     
     # Filler Resources
     FILLER_WOOD_SMALL =             1, "+100 Wood",   Resources(Resource.WOOD, 100)
@@ -204,7 +204,7 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_5_REFUGEE_10 =      1022, "Joan of Arc, The Siege of Paris: Refugee 10",                ScenarioItem(Age2ScenarioData.AP_JOAN_5)
     AP_JOAN_6_ARMY =            1023, "Joan of Arc, A Perfect Martyr: French Army",                 ScenarioItem(Age2ScenarioData.AP_JOAN_6)
     
-    #3000 - 3999 = Scenarios (500), Campaigns (100)
+    #3000 - 3499 = Progressive scenarios, 3500 - 3599 = Campaign unlocks
     
     # Progressive Scenarios (Campaign Count - 1)
     PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 5)
