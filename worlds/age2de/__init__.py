@@ -8,7 +8,7 @@ import settings
 from typing import Any, ClassVar, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
-from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
+from worlds.LauncherComponents import Component, Type, components, icon_paths, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.locations.Buildings import Age2BuildingData
@@ -364,10 +364,13 @@ def run_client(*args: Any):
 
     launch_subprocess(main, name="Age2Client")
 
+icon_paths["age2de_client"] = f"ap:{__name__}/icons/age2de_client.png"
+
 components.append(
     Component(
         "Age of Empires II: DE Client",
         func=run_client,
         component_type=Type.CLIENT,
+        icon="age2de_client",
     )
 )
