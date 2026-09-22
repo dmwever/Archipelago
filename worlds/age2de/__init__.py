@@ -20,7 +20,8 @@ from .items import Items
 from .locations import Ages, Campaigns, Locations, Scenarios
 from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
-from .locations.connections import CivilizationBuildings, CivilizationTechs
+from .locations.connections import (BuildingUnits, CivilizationBuildings, CivilizationTechs,
+                                    UnitLineUnits, UnitTechs, UnitVariants)
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
