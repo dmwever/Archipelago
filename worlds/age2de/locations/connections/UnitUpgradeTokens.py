@@ -1,17 +1,3 @@
-"""Which pieces of equipment each unit needs, for unitsanity_items: upgrades.
-
-Authored, not derived: the game data says nothing about a Knight wanting a Horse, a Sword
-and a Shield. Tokens attach per unit rather than per line, and they accumulate down a line -
-a Militia needs a Club, a Man-at-Arms that Club plus a Sword and a Shield. A tier that adds
-nothing carries its predecessor's set and is gated by its upgrade technology alone.
-
-Scope is every line an Age of Empires II civilisation can train. Units only Return of Rome
-or Chronicles civilisations reach carry no tokens, and neither does the villager, which
-shuffle_villager governs on its own.
-
-Imported for its side effect: populates Age2UnitData.upgrade_tokens.
-"""
-
 from ...items.Items import Age2ItemData
 from ..Units import Age2UnitData
 from .CivilizationUnits import UNTRAINABLE

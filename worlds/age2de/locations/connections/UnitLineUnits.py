@@ -1,12 +1,3 @@
-"""Which units make up each upgrade line, lowest tier first.
-
-Membership and names come from the game's own resources/_common/dat/unitlines.json; the tier
-order comes from the upgrade graph, which places a branch beside its sibling rather than
-after it - Legionary sits with Two-Handed Swordsman, not above Champion.
-
-Imported for its side effect: binds Age2UnitData.line.
-"""
-
 from ..UnitLines import Age2UnitLineData
 from ..Units import Age2UnitData
 

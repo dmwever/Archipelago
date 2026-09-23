@@ -1,13 +1,3 @@
-"""Which units each building can train.
-
-A unit appears under every building that trains it, because the same unit keeps a separate
-genie id per building: Sicilians train the spearman line and Serjeants at the Donjon, Huns
-train Tarkans at the Stable, Goths train Huskarls at the Barracks, Bulgarians train Konniks
-at the Krepost. Those extra ids are in UnitVariants.
-
-Imported for its side effect: binds Age2UnitData.buildings.
-"""
-
 from ...items.Items import Age2ItemData
 from ..Buildings import Age2BuildingData
 from ..Units import Age2UnitData

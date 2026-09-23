@@ -1,14 +1,3 @@
-"""The technology that upgrades the tier below into each unit.
-
-A unit is absent when it is a base tier, when the upgrade happens automatically on ageing up
-(a Camel Scout becomes a Camel Rider in the Castle Age), or when this world does not model
-the technology. Several game technologies share one tech-tree button - Fast Fire Ship,
-Galleon and Carrack are all Heavy Warships - so the member named here is the one the player
-researches.
-
-Imported for its side effect: binds Age2UnitData.upgrade_tech.
-"""
-
 from ..Techs import Age2TechData
 from ..Units import Age2UnitData
 
