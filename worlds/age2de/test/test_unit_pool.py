@@ -9,6 +9,7 @@ from ..items.Items import (Age2ItemData, UnitBuilding, UnitLine, UnitUpgrade,
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
+from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.Units import Age2UnitData, UnitType
 from ..locations.VillagerJobs import Age2VillagerJobData, VillagerSex
@@ -58,7 +59,7 @@ class TestUnitPool(UnitPoolTestBase):
         self.assertTrue(set(self.own_locations(lines)) <= line_names)
 
         every = self.build(unitsanity=Unitsanity.option_all)
-        named = {unit.location_name for unit in Age2UnitData}             | {hero.location_name for hero in Age2HeroData}
+        named = {unit.location_name for unit in Age2UnitData}             | {hero.location_name for hero in Age2HeroData}             | {escort.location_name for escort in Age2EscortUnitData}
         self.assertTrue(self.own_locations(every))
         self.assertTrue(set(self.own_locations(every)) <= named)
 
@@ -242,24 +243,27 @@ class TestEscorts(UnitPoolTestBase):
     """Joan 6's cart is class 59 - the King class, which holds escort objectives beside named
     kings and heroes. Nothing trains one, but a scenario hands it to you."""
 
-    def test_the_cart_is_a_check_it_cannot_be_trained_for(self):
+    def test_the_cart_is_a_check_a_scenario_alone_supplies(self):
         world = self.build(unitsanity=Unitsanity.option_all)
-        self.assertIn(Age2UnitData.CART.location_name, self.own_locations(world))
-        trained = {door[3] for door in world.unit_doors if door[1] == "train"}
-        self.assertNotIn(Age2UnitLineData.CART_LINE, trained)
-        startup = {(door[2], door[3]) for door in world.unit_doors if door[1] == "startup"}
-        self.assertIn((Age2ScenarioData.AP_JOAN_6, Age2UnitLineData.CART_LINE), startup)
+        self.assertIn(Age2EscortUnitData.CART.location_name, self.own_locations(world))
+        doors = {(door[1], door[2]) for door in world.unit_doors
+                 if door[3] is Age2EscortUnitData.CART}
+        self.assertEqual(doors, {("startup", Age2ScenarioData.AP_JOAN_6)})
 
-    def test_no_civilization_trains_an_escort(self):
-        """Its unit_type is neither unique nor regional, so without an explicit case it would
-        fall through as a generic unit and every civilization would be said to train it."""
-        world = self.build(unitsanity=Unitsanity.option_all)
-        for civ in world.included_civs:
-            self.assertNotIn(Age2UnitData.CART, CIV_TO_UNITS[civ], civ.name)
+    def test_an_escort_is_a_check_under_all_only(self):
+        self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).unit_pool.escorts)
+        self.assertEqual(self.build(unitsanity=Unitsanity.option_all).unit_pool.escorts,
+                         list(Age2EscortUnitData))
 
-    def test_an_escort_line_has_no_unlock_item_at_all(self):
-        """Not merely unpooled - there is no such item. Nothing trains an escort."""
-        self.assertIsNone(Age2UnitLineData.CART_LINE.item)
+    def test_an_escort_is_not_a_unit_and_never_an_item(self):
+        """Its own enum, so no Age2UnitData invariant has to carve an exception for it - no
+        line, no upgrade token, no producing building, and nothing unlocks one."""
+        self.assertNotIn("CART", Age2UnitData.__members__)
+        world = self.build(unitsanity=Unitsanity.option_all,
+                           include_unique_units=IncludeUniqueUnits.option_both)
+        names = {item.name for item in world.multiworld.itempool}
+        for escort in Age2EscortUnitData:
+            self.assertNotIn(escort.escort_name, names, escort.name)
 
     def test_an_untrainable_line_gets_no_unlock_item(self):
         """The Mangudai has an item, since the Mongols train one, but no seed of these two

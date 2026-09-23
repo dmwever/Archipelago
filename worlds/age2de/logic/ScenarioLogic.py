@@ -2,9 +2,12 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from ..locations.Buildings import Age2BuildingData
+from ..locations.EscortUnits import Age2EscortUnitData
+from ..locations.Heroes import Age2HeroData
+from ..locations.Units import Age2UnitData
 
 from rule_builder.options import OptionFilter
-from rule_builder.rules import False_, Rule, True_
+from rule_builder.rules import False_, Has, Rule, True_
 
 from ..Options import ExistingTechs
 from ..locations.Ages import Age2AgeData
@@ -25,6 +28,7 @@ class ScenarioStartingState:
     has_base: Rule = field(default_factory=lambda: True_())
     age_playable: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
+    obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
     has_water_access: Rule = field(default_factory=lambda: True_())
     fixed_force: bool = False
     """A set piece fought with what it hands you. No base, and no age to be in."""
@@ -32,6 +36,14 @@ class ScenarioStartingState:
     def __post_init__(self):
         self.age_playable[Age2AgeData.DARK] = True_() & DARK_START
 
+    def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
+        from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
+        for item in SCENARIO_TO_ITEMS[scenario]:
+            if item.type_data is not Mercenary:
+                continue
+            for soldier in item.type.units:
+                self.obtains_unit[soldier.unit] = (
+                    self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
 class ScenarioLogic:
     starting_state: ScenarioStartingState
 
@@ -40,6 +52,7 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
+        data.default_mercenary_grants(scenario)
     
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils
@@ -59,6 +72,14 @@ class ScenarioLogic:
             return True_() & VANILLA_AGE_START
         return False_()
     
+    def obtains_unit(self, unit: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
+        authored = self.starting_state.obtains_unit.get(unit)
+        if authored is not None:
+            return authored
+        if unit in self.scenario.trigger_units:
+            return True_()
+        return False_()
+
     def start_with_building(self, building: Age2BuildingData) -> Rule:
         return self.starting_state.starts_with_building[building] | self.logic.can_build_building(building)
     

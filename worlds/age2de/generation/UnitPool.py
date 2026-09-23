@@ -5,6 +5,7 @@ from ..Options import (Age2Options, IncludeUniqueUnits, ShuffleVillager, Unitsan
 from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Civilizations import Age2CivData
+from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
@@ -13,7 +14,8 @@ from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS, UNTRAINABLE
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
-type UnitLocation = Age2UnitData | Age2UnitLineData | Age2VillagerJobData | Age2HeroData
+type UnitLocation = (Age2UnitData | Age2UnitLineData | Age2VillagerJobData | Age2HeroData
+                     | Age2EscortUnitData)
 
 UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
     UnitType.unique_unit: (IncludeUniqueUnits.option_unique, IncludeUniqueUnits.option_both),
@@ -89,6 +91,17 @@ class UnitPool:
 
 
     @property
+    def escorts(self) -> list[Age2EscortUnitData]:
+        if self._unitsanity != Unitsanity.option_all:
+            return []
+        return [escort for escort in Age2EscortUnitData if escort in self._granted]
+
+    @property
+    def handed_over(self) -> list[Age2HeroData | Age2EscortUnitData]:
+        return self.heroes + self.escorts
+
+
+    @property
     def villager_locations(self) -> list[UnitLocation]:
         if self._shuffle_villager == ShuffleVillager.option_no:
             return []
@@ -140,10 +153,11 @@ class UnitPool:
                    for grant in granted)
 
 
-    def scenario_grants_hero(self, scenario: Age2ScenarioData, hero: Age2HeroData,
-                    at_start: bool) -> bool:
+    def scenario_grants_directly(self, scenario: Age2ScenarioData,
+                                 target: Age2HeroData | Age2EscortUnitData,
+                                 at_start: bool) -> bool:
         granted = scenario.startup_units if at_start else scenario.trigger_units
-        return hero in granted
+        return target in granted
 
 
     def items(self, lines: Iterable[Age2UnitLineData], units: Iterable[Age2UnitData],
