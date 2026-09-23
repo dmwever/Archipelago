@@ -67,7 +67,8 @@ class ScenarioItem:
 
 @dataclass
 class MercenaryUnit:
-    unit: Age2UnitData
+    """A hero counts: Joan 6's artillery muster spawns Jean Bureau alongside its cannon."""
+    unit: Age2UnitData | Age2HeroData
     count: int
 
 @dataclass
@@ -766,7 +767,7 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.KNIGHT, 2), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 16), MercenaryUnit(Age2UnitData.HEAVY_SCORPION, 2), MercenaryUnit(Age2UnitData.THROWING_AXEMAN, 2)], icon_id=321, name_string_id=990009)
     AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.SCOUT_CAVALRY, 1), MercenaryUnit(Age2UnitData.MILITIA, 1)], icon_id=322, name_string_id=990010)
     AP_JOAN_6_LONE_SWORDSMAN =          4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.LONG_SWORDSMAN, 1)], icon_id=323, name_string_id=990011)
-    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2UnitData.JEAN_BUREAU, 1)], icon_id=324, name_string_id=990012, in_logic=True)
+    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2HeroData.JEAN_BUREAU, 1)], icon_id=324, name_string_id=990012, in_logic=True)
     
 
         
