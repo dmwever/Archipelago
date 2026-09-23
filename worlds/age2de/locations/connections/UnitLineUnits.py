@@ -1,5 +1,9 @@
 """Which units make up each upgrade line, lowest tier first.
 
+Membership and names come from the game's own resources/_common/dat/unitlines.json; the tier
+order comes from the upgrade graph, which places a branch beside its sibling rather than
+after it - Legionary sits with Two-Handed Swordsman, not above Champion.
+
 Imported for its side effect: binds Age2UnitData.line.
 """
 
@@ -15,7 +19,6 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.MANGUDAI_LINE: [Age2UnitData.MANGUDAI, Age2UnitData.ELITE_MANGUDAI],
     Age2UnitLineData.FISHING_SHIP_LINE: [Age2UnitData.FISHING_SHIP],
     Age2UnitLineData.TRADE_COG_LINE: [Age2UnitData.TRADE_COG],
-    Age2UnitLineData.GALLEY_LINE: [Age2UnitData.GALLEY, Age2UnitData.WAR_GALLEY, Age2UnitData.GALLEON],
     Age2UnitLineData.TEUTONIC_KNIGHT_LINE: [Age2UnitData.TEUTONIC_KNIGHT, Age2UnitData.ELITE_TEUTONIC_KNIGHT],
     Age2UnitLineData.BOMBARD_CANNON_LINE: [Age2UnitData.BOMBARD_CANNON, Age2UnitData.HOUFNICE],
     Age2UnitLineData.KNIGHT_LINE: [Age2UnitData.KNIGHT, Age2UnitData.CAVALIER, Age2UnitData.PALADIN, Age2UnitData.SAVAR],
@@ -30,7 +33,6 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.MONK_LINE: [Age2UnitData.MONK],
     Age2UnitLineData.TRADE_CART_EMPTY_LINE: [Age2UnitData.TRADE_CART_EMPTY],
     Age2UnitLineData.SLINGER_LINE: [Age2UnitData.SLINGER],
-    Age2UnitLineData.CAMEL_SCOUT_LINE: [Age2UnitData.CAMEL_SCOUT, Age2UnitData.CAMEL_RIDER, Age2UnitData.HEAVY_CAMEL_RIDER, Age2UnitData.IMPERIAL_CAMEL_RIDER],
     Age2UnitLineData.WOAD_RAIDER_LINE: [Age2UnitData.WOAD_RAIDER, Age2UnitData.ELITE_WOAD_RAIDER],
     Age2UnitLineData.WAR_ELEPHANT_LINE: [Age2UnitData.WAR_ELEPHANT, Age2UnitData.ELITE_WAR_ELEPHANT],
     Age2UnitLineData.LONGBOAT_LINE: [Age2UnitData.LONGBOAT, Age2UnitData.ELITE_LONGBOAT],
@@ -42,11 +44,9 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.VILLAGER_FEMALE_LINE: [Age2UnitData.VILLAGER_FEMALE],
     Age2UnitLineData.TREBUCHET_PACKED_LINE: [Age2UnitData.TREBUCHET_PACKED],
     Age2UnitLineData.CANNON_GALLEON_LINE: [Age2UnitData.CANNON_GALLEON, Age2UnitData.ELITE_CANNON_GALLEON],
-    Age2UnitLineData.BATTERING_RAM_LINE: [Age2UnitData.BATTERING_RAM, Age2UnitData.CAPPED_RAM, Age2UnitData.SIEGE_RAM],
     Age2UnitLineData.PETARD_LINE: [Age2UnitData.PETARD],
     Age2UnitLineData.SCOUT_CAVALRY_LINE: [Age2UnitData.SCOUT_CAVALRY, Age2UnitData.LIGHT_CAVALRY, Age2UnitData.HUSSAR, Age2UnitData.WINGED_HUSSAR],
-    Age2UnitLineData.DEMOLITION_RAFT_LINE: [Age2UnitData.DEMOLITION_RAFT, Age2UnitData.DEMOLITION_SHIP, Age2UnitData.HEAVY_DEMOLITION_SHIP],
-    Age2UnitLineData.FIRE_GALLEY_LINE: [Age2UnitData.FIRE_GALLEY, Age2UnitData.FIRE_SHIP, Age2UnitData.FAST_FIRE_SHIP, Age2UnitData.DRAGON_SHIP],
+    Age2UnitLineData.GALLEY_LINE: [Age2UnitData.GALLEY, Age2UnitData.WAR_GALLEY, Age2UnitData.GALLEON],
     Age2UnitLineData.TRANSPORT_SHIP_LINE: [Age2UnitData.TRANSPORT_SHIP],
     Age2UnitLineData.JEAN_BUREAU_LINE: [Age2UnitData.JEAN_BUREAU],
     Age2UnitLineData.BERSERK_LINE: [Age2UnitData.BERSERK, Age2UnitData.ELITE_BERSERK],
@@ -70,6 +70,8 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.GENITOUR_LINE: [Age2UnitData.GENITOUR, Age2UnitData.ELITE_GENITOUR],
     Age2UnitLineData.GBETO_LINE: [Age2UnitData.GBETO, Age2UnitData.ELITE_GBETO],
     Age2UnitLineData.SHOTEL_WARRIOR_LINE: [Age2UnitData.SHOTEL_WARRIOR, Age2UnitData.ELITE_SHOTEL_WARRIOR],
+    Age2UnitLineData.FIRE_GALLEY_LINE: [Age2UnitData.FIRE_GALLEY, Age2UnitData.FIRE_SHIP, Age2UnitData.FAST_FIRE_SHIP],
+    Age2UnitLineData.DEMOLITION_RAFT_LINE: [Age2UnitData.DEMOLITION_RAFT, Age2UnitData.DEMOLITION_SHIP, Age2UnitData.HEAVY_DEMOLITION_SHIP],
     Age2UnitLineData.SIEGE_TOWER_LINE: [Age2UnitData.SIEGE_TOWER],
     Age2UnitLineData.BALLISTA_ELEPHANT_LINE: [Age2UnitData.BALLISTA_ELEPHANT, Age2UnitData.ELITE_BALLISTA_ELEPHANT],
     Age2UnitLineData.KARAMBIT_WARRIOR_LINE: [Age2UnitData.KARAMBIT_WARRIOR, Age2UnitData.ELITE_KARAMBIT_WARRIOR],
@@ -80,7 +82,9 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.KESHIK_LINE: [Age2UnitData.KESHIK, Age2UnitData.ELITE_KESHIK],
     Age2UnitLineData.KIPCHAK_LINE: [Age2UnitData.KIPCHAK, Age2UnitData.ELITE_KIPCHAK],
     Age2UnitLineData.LEITIS_LINE: [Age2UnitData.LEITIS, Age2UnitData.ELITE_LEITIS],
+    Age2UnitLineData.BATTERING_RAM_LINE: [Age2UnitData.BATTERING_RAM, Age2UnitData.CAPPED_RAM, Age2UnitData.SIEGE_RAM],
     Age2UnitLineData.FLAMING_CAMEL_LINE: [Age2UnitData.FLAMING_CAMEL],
+    Age2UnitLineData.DRAGON_SHIP_LINE: [Age2UnitData.DRAGON_SHIP],
     Age2UnitLineData.STEPPE_LANCER_LINE: [Age2UnitData.STEPPE_LANCER, Age2UnitData.ELITE_STEPPE_LANCER],
     Age2UnitLineData.COUSTILLIER_LINE: [Age2UnitData.COUSTILLIER, Age2UnitData.ELITE_COUSTILLIER],
     Age2UnitLineData.SERJEANT_LINE: [Age2UnitData.SERJEANT, Age2UnitData.ELITE_SERJEANT],
@@ -93,6 +97,7 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.GHULAM_LINE: [Age2UnitData.GHULAM, Age2UnitData.ELITE_GHULAM],
     Age2UnitLineData.THIRISADAI_LINE: [Age2UnitData.THIRISADAI],
     Age2UnitLineData.SHRIVAMSHA_RIDER_LINE: [Age2UnitData.SHRIVAMSHA_RIDER, Age2UnitData.ELITE_SHRIVAMSHA_RIDER],
+    Age2UnitLineData.CAMEL_SCOUT_LINE: [Age2UnitData.CAMEL_SCOUT, Age2UnitData.CAMEL_RIDER, Age2UnitData.HEAVY_CAMEL_RIDER, Age2UnitData.IMPERIAL_CAMEL_RIDER],
     Age2UnitLineData.RATHA_RANGED_LINE: [Age2UnitData.RATHA_RANGED, Age2UnitData.ELITE_RATHA_RANGED],
     Age2UnitLineData.CENTURION_LINE: [Age2UnitData.CENTURION, Age2UnitData.ELITE_CENTURION],
     Age2UnitLineData.DROMON_LINE: [Age2UnitData.DROMON],
@@ -100,7 +105,8 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.MONASPA_LINE: [Age2UnitData.MONASPA, Age2UnitData.ELITE_MONASPA],
     Age2UnitLineData.WARRIOR_PRIEST_LINE: [Age2UnitData.WARRIOR_PRIEST],
     Age2UnitLineData.FIRE_LANCER_LINE: [Age2UnitData.FIRE_LANCER, Age2UnitData.ELITE_FIRE_LANCER],
-    Age2UnitLineData.ROCKET_CART_LINE: [Age2UnitData.ROCKET_CART, Age2UnitData.HEAVY_ROCKET_CART],
+    Age2UnitLineData.ROCKET_CART_LINE: [Age2UnitData.ROCKET_CART],
+    Age2UnitLineData.HEAVY_ROCKET_CART_LINE: [Age2UnitData.HEAVY_ROCKET_CART],
     Age2UnitLineData.IRON_PAGODA_LINE: [Age2UnitData.IRON_PAGODA, Age2UnitData.ELITE_IRON_PAGODA],
     Age2UnitLineData.GRENADIER_LINE: [Age2UnitData.GRENADIER],
     Age2UnitLineData.LIAO_DAO_LINE: [Age2UnitData.LIAO_DAO, Age2UnitData.ELITE_LIAO_DAO],
@@ -128,13 +134,19 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.TRANSPORT_SHIP_ANTIQUITY_LINE: [Age2UnitData.TRANSPORT_SHIP_ANTIQUITY],
     Age2UnitLineData.MERCHANT_SHIP_LINE: [Age2UnitData.MERCHANT_SHIP],
     Age2UnitLineData.WAR_CHARIOT_ANTIQUITY_LINE: [Age2UnitData.WAR_CHARIOT_ANTIQUITY, Age2UnitData.ELITE_WAR_CHARIOT_ANTIQUITY],
-    Age2UnitLineData.UNIT_2550_LINE: [Age2UnitData.UNIT_2550, Age2UnitData.UNIT_2588, Age2UnitData.UNIT_2552, Age2UnitData.UNIT_2554],
-    Age2UnitLineData.UNIT_2562_LINE: [Age2UnitData.UNIT_2562, Age2UnitData.UNIT_2564],
-    Age2UnitLineData.UNIT_2566_LINE: [Age2UnitData.UNIT_2566, Age2UnitData.UNIT_2568],
-    Age2UnitLineData.UNIT_2569_LINE: [Age2UnitData.UNIT_2569, Age2UnitData.UNIT_2571],
-    Age2UnitLineData.UNIT_2579_LINE: [Age2UnitData.UNIT_2579, Age2UnitData.UNIT_2581],
-    Age2UnitLineData.UNIT_2582_LINE: [Age2UnitData.UNIT_2582, Age2UnitData.UNIT_2584],
-    Age2UnitLineData.UNIT_2586_LINE: [Age2UnitData.UNIT_2586],
+    Age2UnitLineData.CHAMPI_SCOUT_LINE: [Age2UnitData.CHAMPI_SCOUT, Age2UnitData.CHAMPI_RUNNER, Age2UnitData.CHAMPI_WARRIOR, Age2UnitData.ELITE_CHAMPI_WARRIOR],
+    Age2UnitLineData.GUECHA_WARRIOR_LINE: [Age2UnitData.GUECHA_WARRIOR, Age2UnitData.ELITE_GUECHA_WARRIOR],
+    Age2UnitLineData.KONA_LINE: [Age2UnitData.KONA, Age2UnitData.ELITE_KONA],
+    Age2UnitLineData.BOLAS_RIDER_LINE: [Age2UnitData.BOLAS_RIDER, Age2UnitData.ELITE_BOLAS_RIDER],
+    Age2UnitLineData.BLACKWOOD_ARCHER_LINE: [Age2UnitData.BLACKWOOD_ARCHER, Age2UnitData.ELITE_BLACKWOOD_ARCHER],
+    Age2UnitLineData.IBIRAPEMA_WARRIOR_LINE: [Age2UnitData.IBIRAPEMA_WARRIOR, Age2UnitData.ELITE_IBIRAPEMA_WARRIOR],
+    Age2UnitLineData.TEMPLE_GUARD_LINE: [Age2UnitData.TEMPLE_GUARD],
+    Age2UnitLineData.CATAPULT_GALLEON_LINE: [Age2UnitData.CATAPULT_GALLEON],
+    Age2UnitLineData.MOUNTED_CROSSBOWMAN_LINE: [Age2UnitData.MOUNTED_CROSSBOWMAN, Age2UnitData.HEAVY_MOUNTED_CROSSBOWMAN],
+    Age2UnitLineData.VARANGIAN_GUARD_LINE: [Age2UnitData.VARANGIAN_GUARD, Age2UnitData.ELITE_VARANGIAN_GUARD],
+    Age2UnitLineData.HEARTH_TROOP_LINE: [Age2UnitData.HEARTH_TROOP, Age2UnitData.ELITE_HEARTH_TROOP],
+    Age2UnitLineData.JARL_LINE: [Age2UnitData.JARL, Age2UnitData.ELITE_JARL],
+    Age2UnitLineData.JOMSVIKING_LINE: [Age2UnitData.JOMSVIKING, Age2UnitData.ELITE_JOMSVIKING],
 }
 
 

@@ -1,9 +1,10 @@
 """The technology that upgrades the tier below into each unit.
 
 A unit is absent when it is a base tier, when the upgrade happens automatically on ageing up
-(a Camel Scout becomes a Camel Rider in the Castle Age), or when this world does not model the
-technology. Several game technologies share one tech-tree button - Fast Fire Ship, Galleon and
-Carrack are all Heavy Warships - so the member named here is the one the player researches.
+(a Camel Scout becomes a Camel Rider in the Castle Age), or when this world does not model
+the technology. Several game technologies share one tech-tree button - Fast Fire Ship,
+Galleon and Carrack are all Heavy Warships - so the member named here is the one the player
+researches.
 
 Imported for its side effect: binds Age2UnitData.upgrade_tech.
 """
@@ -111,14 +112,14 @@ UNIT_TO_UPGRADE_TECH: dict[Age2UnitData, Age2TechData] = {
     Age2UnitData.ELITE_TIGER_CAVALRY: Age2TechData.ELITE_TIGER_CAVALRY_WEI,
     Age2UnitData.ELITE_WHITE_FEATHER_GUARD: Age2TechData.ELITE_WHITE_FEATHER_GUARD_SHU,
     Age2UnitData.ELITE_FIRE_ARCHER: Age2TechData.ELITE_FIRE_ARCHER_WU,
-    Age2UnitData.UNIT_2552: Age2TechData.CHAMPI_WARRIOR,
-    Age2UnitData.UNIT_2554: Age2TechData.ELITE_CHAMPI_WARRIOR,
-    Age2UnitData.UNIT_2564: Age2TechData.ELITE_GUECHA_WARRIOR_MUISCA,
-    Age2UnitData.UNIT_2568: Age2TechData.ELITE_KONA_MAPUCHE,
-    Age2UnitData.UNIT_2571: Age2TechData.ELITE_BOLAS_RIDER_MAPUCHE,
-    Age2UnitData.UNIT_2581: Age2TechData.ELITE_BLACKWOOD_ARCHER_TUPI,
-    Age2UnitData.UNIT_2584: Age2TechData.ELITE_IBIRAPEMA_WARRIOR_TUPI,
-    Age2UnitData.UNIT_2588: Age2TechData.CHAMPI_RUNNER,
+    Age2UnitData.CHAMPI_WARRIOR: Age2TechData.CHAMPI_WARRIOR,
+    Age2UnitData.ELITE_CHAMPI_WARRIOR: Age2TechData.ELITE_CHAMPI_WARRIOR,
+    Age2UnitData.ELITE_GUECHA_WARRIOR: Age2TechData.ELITE_GUECHA_WARRIOR_MUISCA,
+    Age2UnitData.ELITE_KONA: Age2TechData.ELITE_KONA_MAPUCHE,
+    Age2UnitData.ELITE_BOLAS_RIDER: Age2TechData.ELITE_BOLAS_RIDER_MAPUCHE,
+    Age2UnitData.ELITE_BLACKWOOD_ARCHER: Age2TechData.ELITE_BLACKWOOD_ARCHER_TUPI,
+    Age2UnitData.ELITE_IBIRAPEMA_WARRIOR: Age2TechData.ELITE_IBIRAPEMA_WARRIOR_TUPI,
+    Age2UnitData.CHAMPI_RUNNER: Age2TechData.CHAMPI_RUNNER,
 }
 
 
