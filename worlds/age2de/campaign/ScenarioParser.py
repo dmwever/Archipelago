@@ -29,6 +29,11 @@ def trigger_calls_xs_script(trigger) -> set[str]:
     return triggers
 
 def disable_triggers(disabled: Iterable[Age2ScenarioLocationData]) -> Step:
+    disabled_trigger_calls = frozenset(location.trigger_call for location in disabled)
+
+    def step(scenario: AoE2DEScenario) -> bool:
+        changed = False
+        for trigger in scenario.trigger_manager.triggers:
             if not trigger.enabled:
                 continue
             if not trigger_calls_xs_script(trigger).isdisjoint(disabled_trigger_calls):
