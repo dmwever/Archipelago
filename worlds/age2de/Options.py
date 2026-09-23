@@ -95,9 +95,6 @@ class EnabledCampaigns(OptionSet):
 class ShuffleAges(Toggle):
     """
     Shuffles the ability to advance to the Feudal, Castle and Imperial Ages into the item pool.
-    Reaching each age is its own check. Advancing still costs resources and still requires the
-    usual buildings; the item only permits it. A scenario that starts above the Dark Age keeps
-    the ages it starts with.
     """
     internal_name = "shuffle_ages"
     display_name = "Shuffle Ages"
@@ -141,7 +138,7 @@ class LockTechs(Choice):
     What a shuffled technology's item unlocks. Requires Techsanity.
     Items: The technology is hidden until its item arrives.
     Effects: The technology is always researchable, but researching it does nothing until its item
-    arrives. Researching still sends the check, so no check is ever locked behind its own item.
+    arrives.
     """
     internal_name = "lock_techs"
     display_name = "Lock Techs"
@@ -154,10 +151,8 @@ class ShuffleUniqueTechs(Choice):
     """
     Whether civilization unique technologies join the pool. Requires Techsanity.
     Unshuffled: Unique technologies behave as vanilla.
-    Shuffled: Unique technologies are shuffled. A unique technology's effect only applies while you
-    are playing a civilization that has it.
-    Shuffled Everywhere: As above, but the effect applies to whichever civilization you are playing.
-    No setting ever lets a civilization research another civilization's unique technology.
+    Shuffled: Unique technologies are shuffled.
+    Shuffled Everywhere: Unique technologies are shuffled. If tech behavior is instant, techs apply cross-civilization.
     """
     internal_name = "shuffle_unique_techs"
     display_name = "Shuffle Unique Techs"
@@ -172,10 +167,9 @@ class ExistingTechs(Choice):
     What happens to the technologies a scenario would normally start with. Requires Techsanity.
     Vanilla: A scenario starting in the Castle Age keeps every Dark and Feudal Age technology.
     Find Items: A technology the scenario would have started with is not applied on scenario start
-    until the item is found. Once found, the tech costs nothing to research for its check.
+    until the item is found. Once found, the tech is free to research in that scenario.
     Only Find Units: Same as Find Items, but only units are hidden.
-    Start In Dark Age: Every scenario opens in the Dark Age with nothing researched at all, ages
-    included, so even the age-ups have to be earned back.
+    Start In Dark Age: Every scenario opens in the Dark Age with nothing researched at all.
     """
     internal_name = "existing_techs"
     display_name = "Existing Techs"
@@ -184,6 +178,80 @@ class ExistingTechs(Choice):
     option_only_find_units = 2
     option_start_in_dark_age = 3
     default = option_vanilla
+
+
+class Unitsanity(Choice):
+    """
+    Shuffles units. Owning a unit sends its check, and items are what let you train one.
+    None: Units behave as vanilla.
+    Unit Line: A whole upgrade line is one location and one item, e.g. the Knight line.
+    All: Lines are still what you unlock, but owning any single unit is its own check.
+    """
+    internal_name = "unitsanity"
+    display_name = "Unitsanity"
+    option_none = 0
+    option_unit_line = 1
+    option_all = 2
+    default = option_none
+
+
+class UnitsanityItems(Choice):
+    """
+    What a unitsanity item is. Requires Unitsanity.
+    Unit Line: One item per line, e.g. Militia Line, Archer Line.
+    Upgrades: Units need the equipment they are known for, so a Knight wants a Horse, a Sword and
+    a Shield while an Archer only wants a Bow. A unit becomes trainable once it has all of its own.
+    Buildings: One item per producing building, e.g. Barracks Units, Archery Range Units.
+    """
+    internal_name = "unitsanity_items"
+    display_name = "Unitsanity Items"
+    option_unit_line = 0
+    option_upgrades = 1
+    option_buildings = 2
+    default = option_unit_line
+
+
+class ShuffleVillager(Choice):
+    """
+    Whether the villager is shuffled. Independent of Unitsanity.
+    No: Villagers behave as vanilla.
+    Yes: The villager is an item and a location.
+    Include Professions: Each job a villager can do is its own location.
+    """
+    internal_name = "shuffle_villager"
+    display_name = "Shuffle Villager"
+    option_no = 0
+    option_yes = 1
+    option_include_professions = 2
+    default = option_no
+
+
+class IncludeUniqueUnits(Choice):
+    """
+    Which civilization-restricted units join the pool. Requires Unitsanity.
+    None: Only units (almost) every civilization can train are shuffled.
+    Regional: Also shuffle units a handful of civilizations share, e.g. the Eagle, Camel and
+    Steppe Lancer lines.
+    Unique: Also shuffle units one civilization has, e.g. the Tarkan or the Longboat.
+    Both: Shuffle unique and regional units alike.
+    A unit is only ever obtainable while you are playing a civilization that has it.
+    """
+    internal_name = "include_unique_units"
+    display_name = "Include Unique Units"
+    option_none = 0
+    option_unique = 1
+    option_regional = 2
+    option_both = 3
+    default = option_none
+
+
+class Caveman(Toggle):
+    """
+    OOOK ONK. Need Unit.
+    Not for weak heart man.
+    """
+    internal_name = "caveman"
+    display_name = "Caveman"
 
 
 @dataclass
@@ -203,5 +271,10 @@ class Age2Options(PerGameCommonOptions):
     lock_techs: LockTechs
     shuffle_unique_techs: ShuffleUniqueTechs
     existing_techs: ExistingTechs
+    unitsanity: Unitsanity
+    unitsanity_items: UnitsanityItems
+    shuffle_villager: ShuffleVillager
+    include_unique_units: IncludeUniqueUnits
+    caveman: Caveman
     goal: Goal
     local_start: LocalStart
