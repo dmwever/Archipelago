@@ -8,6 +8,7 @@ at the Krepost. Those extra ids are in UnitVariants.
 Imported for its side effect: binds Age2UnitData.buildings.
 """
 
+from ...items.Items import Age2ItemData
 from ..Buildings import Age2BuildingData
 from ..Units import Age2UnitData
 
@@ -30,3 +31,21 @@ BUILDING_TO_UNITS: dict[Age2BuildingData, list[Age2UnitData]] = {
 for building, building_units in BUILDING_TO_UNITS.items():
     for unit in building_units:
         unit.buildings.append(building)
+
+
+# The item that unlocks everything a building trains, for unitsanity_items: buildings. Spelled
+# out rather than derived from the member name, so a renamed building fails at import instead of
+# silently losing its item.
+BUILDING_TO_UNITS_ITEM: dict[Age2BuildingData, Age2ItemData] = {
+    Age2BuildingData.ARCHERY_RANGE: Age2ItemData.BUILDING_UNITS_ARCHERY_RANGE,
+    Age2BuildingData.CASTLE: Age2ItemData.BUILDING_UNITS_CASTLE,
+    Age2BuildingData.DOCK: Age2ItemData.BUILDING_UNITS_DOCK,
+    Age2BuildingData.SIEGE_WORKSHOP: Age2ItemData.BUILDING_UNITS_SIEGE_WORKSHOP,
+    Age2BuildingData.STABLE: Age2ItemData.BUILDING_UNITS_STABLE,
+    Age2BuildingData.BARRACKS: Age2ItemData.BUILDING_UNITS_BARRACKS,
+    Age2BuildingData.TOWN_CENTER: Age2ItemData.BUILDING_UNITS_TOWN_CENTER,
+    Age2BuildingData.DONJON: Age2ItemData.BUILDING_UNITS_DONJON,
+    Age2BuildingData.MONASTERY: Age2ItemData.BUILDING_UNITS_MONASTERY,
+    Age2BuildingData.MARKET: Age2ItemData.BUILDING_UNITS_MARKET,
+    Age2BuildingData.KREPOST: Age2ItemData.BUILDING_UNITS_KREPOST,
+}
