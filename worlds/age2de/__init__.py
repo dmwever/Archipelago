@@ -228,12 +228,25 @@ class Age2World(CachedRuleBuilderWorld):
 
     def add_unit_door(self, source: Region, target: Region, kind: str,
                       via: object, unit_target: object, name: str) -> None:
+        self.connect(source, target, name)
+        self.unit_doors.append((name, kind, via, unit_target))
 
     def add_unit_regions(
             self, building_regions: dict[Buildings.Age2BuildingData, Region],
             scenario_regions: dict[Scenarios.Age2ScenarioData, Region]) -> list[Region]:
         regions: list[Region] = []
         for line, locations in self.unit_pool.line_locations.items():
+            trainable = [building for building in line.head.buildings
+                        if building in building_regions] if self.unit_pool.is_trainable(line) else []
+            granting = [(scenario, region) for scenario, region in scenario_regions.items()
+                        if self.unit_pool.scenario_grants_line(scenario, line, True)
+                        or self.unit_pool.scenario_grants_line(scenario, line, False)]
+            if not trainable and not granting:
+                continue  # nothing in this seed can produce it, so it is not a check
+
+            region = Region(line.line_name, self.player, self.multiworld)
+            regions.append(region)
+            for location in locations:
                 region.locations.append(
                     Location(self.player, location.location_name, location.id, region))
                 self.record_unit_location(location, trainable)
@@ -265,6 +278,8 @@ class Age2World(CachedRuleBuilderWorld):
                 if self.unit_pool.scenario_grants_directly(scenario, granted, True):
                     self.add_unit_door(scenario_region, region, "startup", scenario, granted,
                                        f"{name} at Start")
+                if self.unit_pool.scenario_grants_directly(scenario, granted, False):
+                    self.add_unit_door(scenario_region, region, "trigger", scenario, granted,
                                        f"{name} by Trigger")
         return regions
 
