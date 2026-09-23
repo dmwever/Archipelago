@@ -1,18 +1,41 @@
 import logging
+import re
 import tempfile
 from pathlib import Path
 from typing import Callable, Iterable
 
 from ..AoE2ScenarioParser import settings
+from ..AoE2ScenarioParser.datasets.effects import EffectId
 from ..AoE2ScenarioParser.datasets.object_support import StartingAge
 from ..AoE2ScenarioParser.datasets.players import PlayerId
 from ..AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
+from ..locations.Locations import Age2ScenarioLocationData
 
 settings.PRINT_STATUS_UPDATES = False
 
 logger = logging.getLogger("Client")
 
 Step = Callable[[AoE2DEScenario], bool]
+
+CALL_REGEX = re.compile(r"([A-Za-z_]\w*)\s*\(\s*\)")
+def effect_script_call(effect) -> set[str]:
+    return set(CALL_REGEX.findall(effect.message or ""))
+
+def trigger_calls_xs_script(trigger) -> set[str]:
+    triggers = set()
+    for effect in trigger.effects:
+        if effect.effect_type == EffectId.SCRIPT_CALL:
+            triggers |= effect_script_call(effect)
+    return triggers
+
+def disable_triggers(disabled: Iterable[Age2ScenarioLocationData]) -> Step:
+            if not trigger.enabled:
+                continue
+            if not trigger_calls_xs_script(trigger).isdisjoint(disabled_trigger_calls):
+                trigger.enabled = 0
+                changed = True
+        return changed
+    return step
 
 def rebase_to_dark(scenario: AoE2DEScenario) -> bool:
     player = scenario.player_manager.players[PlayerId.ONE]

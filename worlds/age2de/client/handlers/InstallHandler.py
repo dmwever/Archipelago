@@ -7,13 +7,15 @@ from .FolderHandler import FolderHandler
 
 from ...generation import Identity, SlotData
 from ...items.Items import Age2ItemData
-from ...Options import ExistingTechs, Techsanity
+from ...Options import ExistingTechs, ScenarioBranching, Techsanity
 from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
 from ...generation import Identity, SlotData
 from ...locations.Ages import Age2AgeData
 from ...locations.Campaigns import Age2CampaignData
 from ...locations.Civilizations import Age2CivData
+from ...locations.Locations import (TYPE_TO_LOCATIONS, Age2LocationType,
+                                   Age2ScenarioLocationData)
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
@@ -48,6 +50,7 @@ class InstallHandler(FolderHandler):
         self._scenarios: list[Age2ScenarioData] = []
         self._civs: list[Age2CivData] = []
         self._techs: list[Age2TechData] = []
+        self._disabled_triggers: dict[Age2ScenarioData, list[Age2ScenarioLocationData]] = {}
         self._parsed = 0
         self._to_parse = 0
         self.installing = False
@@ -73,6 +76,23 @@ class InstallHandler(FolderHandler):
         self._civs = list(dict.fromkeys(scenario.civ for scenario in self._scenarios))
         self._techs = [Age2TechData(id) for id in location_ids
                                 if id in Age2TechData]
+        self._disabled_triggers = self.branching_triggers()
+
+    def branching_triggers(self) -> dict[Age2ScenarioData, list[Age2ScenarioLocationData]]:
+        if ScenarioBranching.internal_name not in self._slot_data:
+            return {}
+
+        excluded_locations: list[Age2ScenarioLocationData]
+        if int(self._slot_data[ScenarioBranching.internal_name]) == ScenarioBranching.option_all:
+            excluded_locations = TYPE_TO_LOCATIONS[Age2LocationType.OBJECTIVE_BRANCHING_ANY]
+        else:
+            excluded_locations = TYPE_TO_LOCATIONS[Age2LocationType.OBJECTIVE_BRANCHING_ALL]
+
+        triggers: dict[Age2ScenarioData, list[Age2ScenarioLocationData]] = {}
+        for location in excluded_locations:
+            if location.scenario in self._scenarios:
+                triggers.setdefault(location.scenario, []).append(location)
+        return triggers
 
     def campaign_dir(self) -> Path:
         return Path(self._user_folder, CAMPAIGN_SUBPATH)
@@ -153,6 +173,8 @@ class InstallHandler(FolderHandler):
         if (self.scenario_needs_age_up() and data is not None
                 and data.vanilla_age > Age2AgeData.DARK):
             steps.append(ScenarioParser.rebase_to_dark)
+        if data is not None and data in self._disabled_triggers:
+            steps.append(ScenarioParser.disable_triggers(self._disabled_triggers[data]))
         return steps
 
     def _install_campaign(self, included: IncludedCampaign) -> Path:

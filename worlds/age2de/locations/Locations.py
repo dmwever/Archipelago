@@ -188,20 +188,3 @@ for location in Age2ScenarioLocationData:
 VICTORY_SCENARIO_LOCATIONS: dict[str, Age2ScenarioLocationData] = {}
 for location in TYPE_TO_LOCATIONS.get(Age2LocationType.VICTORY):
     VICTORY_SCENARIO_LOCATIONS[location.scenario.scenario_name] = location
-
-BRANCHING_TYPES = Age2LocationType.OBJECTIVE_BRANCHING_ALL | Age2LocationType.OBJECTIVE_BRANCHING_ANY
-
-SCENARIO_TO_BRANCHING: dict[Age2ScenarioData, dict[Age2LocationType, frozenset[str]]] = {}
-_branching_calls: dict[Age2ScenarioData, dict[Age2LocationType, set[str]]] = {}
-for location in Age2ScenarioLocationData:
-    if location.type not in BRANCHING_TYPES:
-        continue
-    assert location.trigger_call, f"{location.name} is branching but names no trigger call"
-    _by_type = _branching_calls.setdefault(location.scenario, {})
-    _calls = _by_type.setdefault(location.type, set())
-    assert location.trigger_call not in _calls, f"{location.trigger_call} is claimed twice"
-    _calls.add(location.trigger_call)
-for _scenario, _by_type in _branching_calls.items():
-    SCENARIO_TO_BRANCHING[_scenario] = {
-        _type: frozenset(_calls) for _type, _calls in _by_type.items()
-    }
