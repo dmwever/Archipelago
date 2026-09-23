@@ -108,7 +108,7 @@ for civ in Age2CivData:
     for unit in Age2UnitData:
         if unit in UNTRAINABLE:
             continue
-        if unit.unit_type in (UnitType.unique_unit, UnitType.regional_unit, UnitType.escort):
+        if unit.unit_type in (UnitType.unique_unit, UnitType.regional_unit):
             if unit in included:
                 trainable.append(unit)
         elif unit not in excluded:

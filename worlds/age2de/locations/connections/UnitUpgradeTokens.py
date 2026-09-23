@@ -1,5 +1,5 @@
 from ...items.Items import Age2ItemData
-from ..Units import Age2UnitData, UnitType
+from ..Units import Age2UnitData
 from .CivilizationUnits import UNTRAINABLE
 
 
@@ -367,6 +367,5 @@ for unit in Age2UnitData:
 assert not [unit for unit in Age2UnitData
             if not unit.upgrade_tokens
             and unit not in UNTRAINABLE
-            and unit.unit_type != UnitType.escort
             and unit.line is not Age2UnitData.VILLAGER_MALE.line], \
     "trainable unit with no upgrade tokens"

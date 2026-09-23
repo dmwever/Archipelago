@@ -1,3 +1,4 @@
+from ..EscortUnits import Age2EscortUnitData
 from ..Heroes import Age2HeroData
 from ..Scenarios import Age2ScenarioData, ScenarioUnit
 from ..Units import Age2UnitData
@@ -77,7 +78,7 @@ SCENARIO_TO_STARTUP_UNITS: dict[Age2ScenarioData, list[ScenarioUnit]] = {
         Age2HeroData.JEAN_DE_LORRAIN,
     ],
     Age2ScenarioData.AP_JOAN_6: [
-        Age2UnitData.CART,
+        Age2EscortUnitData.CART,
         Age2HeroData.GUY_JOSSELYNE,
     ],
 }

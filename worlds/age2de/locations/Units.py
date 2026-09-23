@@ -10,7 +10,6 @@ class UnitType:
     unit_upgrade = "UnitUpgrade"      # an upgraded tier of a generic line
     unique_unit = "UniqueUnit"        # one civilisation
     regional_unit = "RegionalUnit"    # a handful of civilisations
-    escort = "Escort"                 # nobody trains it; a scenario hands it over to protect
 
 
 @enum.unique
@@ -302,7 +301,6 @@ class Age2UnitData(enum.IntEnum):
     ELITE_HEARTH_TROOP          = 555, "Own Elite Hearth Troop", "Elite Hearth Troop", 2706, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
     JARL                        = 556, "Own Jarl", "Jarl", 2708, Age2AgeData.CASTLE, UnitType.unique_unit, 0
     ELITE_JARL                  = 557, "Own Elite Jarl", "Elite Jarl", 2709, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
-    CART                        = 377, "Own Cart", "Cart", 1338, Age2AgeData.DARK, UnitType.escort, 0
     JOMSVIKING                  = 558, "Own Jomsviking", "Jomsviking", 2711, Age2AgeData.CASTLE, UnitType.unique_unit, 0
     ELITE_JOMSVIKING            = 559, "Own Elite Jomsviking", "Elite Jomsviking", 2712, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
 

@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING
 from .Ages import Age2AgeData
 from .Campaigns import Age2CampaignData
 from .Civilizations import Age2CivData
+from .EscortUnits import Age2EscortUnitData
 from .Heroes import Age2HeroData
 from .Units import Age2UnitData
-type ScenarioUnit = Age2UnitData | Age2HeroData
+type ScenarioUnit = Age2UnitData | Age2HeroData | Age2EscortUnitData
 
 if TYPE_CHECKING:
     from ..rules.ScenarioRules import ScenarioRules
