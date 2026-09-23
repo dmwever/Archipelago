@@ -15,21 +15,12 @@ from ..Units import Age2UnitData, UnitType
 # no Age of Empires II civilisation trains any of these - but no single civilisation excludes
 # them either, which is why they need naming here rather than in a per-civ list.
 #
-# Derived by asking which units only a non-standard civilisation's tech tree lists. Deriving it
-# from every tree instead lets them back in, because the Chronicles civs do list them.
+# Derived by asking which units only an antiquity civilisation's tech tree lists, where
+# antiquity is the era civilizations.json gives the six Return of Rome and Chronicles civs:
+# Achaemenids, Athenians, Macedonians, Puru, Spartans, Thracians. Reading that field rather
+# than naming the civs by hand matters - a hand-written list here wrongly held the Three
+# Kingdoms and American civilisations, whose units are ordinary Age of Empires II content.
 OTHER_GAME_MODE_UNITS: frozenset[Age2UnitData] = frozenset({
-    Age2UnitData.TRACTION_TREBUCHET,
-    Age2UnitData.HEI_GUANG_CAVALRY,
-    Age2UnitData.HEAVY_HEI_GUANG_CAVALRY,
-    Age2UnitData.TIGER_CAVALRY,
-    Age2UnitData.ELITE_TIGER_CAVALRY,
-    Age2UnitData.XIANBEI_RAIDER,
-    Age2UnitData.WHITE_FEATHER_GUARD,
-    Age2UnitData.ELITE_WHITE_FEATHER_GUARD,
-    Age2UnitData.WAR_CHARIOT_FOCUS_FIRE,
-    Age2UnitData.FIRE_ARCHER,
-    Age2UnitData.ELITE_FIRE_ARCHER,
-    Age2UnitData.JIAN_SWORDSMAN,
     Age2UnitData.IMMORTAL_MELEE,
     Age2UnitData.ELITE_IMMORTAL_MELEE,
     Age2UnitData.STRATEGOS,
@@ -58,17 +49,6 @@ OTHER_GAME_MODE_UNITS: frozenset[Age2UnitData] = frozenset({
     Age2UnitData.MERCHANT_SHIP,
     Age2UnitData.WAR_CHARIOT_ANTIQUITY,
     Age2UnitData.ELITE_WAR_CHARIOT_ANTIQUITY,
-    Age2UnitData.GUECHA_WARRIOR,
-    Age2UnitData.ELITE_GUECHA_WARRIOR,
-    Age2UnitData.KONA,
-    Age2UnitData.ELITE_KONA,
-    Age2UnitData.BOLAS_RIDER,
-    Age2UnitData.ELITE_BOLAS_RIDER,
-    Age2UnitData.BLACKWOOD_ARCHER,
-    Age2UnitData.ELITE_BLACKWOOD_ARCHER,
-    Age2UnitData.IBIRAPEMA_WARRIOR,
-    Age2UnitData.ELITE_IBIRAPEMA_WARRIOR,
-    Age2UnitData.TEMPLE_GUARD,
 })
 
 
@@ -142,3 +122,7 @@ assert not [civ for civ in Age2CivData
     "unit both included and excluded"
 assert not (OTHER_GAME_MODE_UNITS & UNLISTED_UNITS), \
     "a unit cannot be both another mode's and unlisted"
+assert not [civ for civ in Age2CivData
+            if set(civ.included_units) & UNTRAINABLE
+            or set(civ.excluded_units) & UNTRAINABLE], \
+    "a civilisation names a unit the world holds untrainable"
