@@ -19,12 +19,14 @@ class Age2ScenarioLocationData(enum.IntEnum):
         return obj
 
     def __init__(
-        self, id: int, location_name: str, scenario: Age2ScenarioData, type: Age2LocationType, vanilla_item: str = ''
+        self, id: int, location_name: str, scenario: Age2ScenarioData, type: Age2LocationType,
+        trigger_call: str = '', vanilla_item: str = ''
     ) -> None:
         self.id = id
         self.location_name = location_name
         self.scenario = scenario
         self.type = type
+        self.trigger_call = trigger_call
         self.vanilla_item = vanilla_item
     
     def global_name(self) -> str:
@@ -34,18 +36,18 @@ class Age2ScenarioLocationData(enum.IntEnum):
     ATT1_VICTORY =                      10100, "Victory",                               Age2ScenarioData.AP_ATTILA_1, Age2LocationType.VICTORY
     ATT1_UNITE_THE_HUNS =               10101, "Unite the Huns Under Attila",           Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE
     ATT1_FREE_VILLAGERS =               10102, "Free the Villagers From Rome",          Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
-    ATT1_RESOLVE_SCOUT_ANY =            10103, "Free or Kill the Scythian Scout",       Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ANY
+    ATT1_RESOLVE_SCOUT_ANY =            10103, "Free or Kill the Scythian Scout",       Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'ResolveScoutAny'
     ATT1_CAPTURE_HORSES_CAMP =          10104, "Capture Bleda's Horses",                Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSE_RUINS =          10105, "Capture Horse at Ruins",                Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSES_LUMBER =        10106, "Capture Horses Near Lumber",            Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSES_BEHIND_BASE =   10107, "Capture Horses Behind Base",            Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSES_WEST =          10108, "Capture Horses to the West",            Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_CAPTURE_HORSES_ROMAN =         10109, "Capture Horses Near the Roman Base",    Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
-    ATT1_KILL_THE_BOAR =                10110, "Kill the Iron Boar",                    Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    ATT1_BETRAY_BLEDA =                 10111, "Betray Bleda",                          Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    ATT1_BLOW_BLEDA_OFF =               10112, "Refuse Bleda's Challenge",              Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    ATT1_FREE_SCOUT =                   10113, "Free the Scythian Scout",               Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    ATT1_KILL_SCOUT =                   10114, "Kill the Scythian Scout",               Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    ATT1_KILL_THE_BOAR =                10110, "Kill the Iron Boar",                    Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'KillTheBoar'
+    ATT1_BETRAY_BLEDA =                 10111, "Betray Bleda",                          Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'BetrayBleda'
+    ATT1_BLOW_BLEDA_OFF =               10112, "Refuse Bleda's Challenge",              Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'BlowBledaOff'
+    ATT1_FREE_SCOUT =                   10113, "Free the Scythian Scout",               Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'FreeScout'
+    ATT1_KILL_SCOUT =                   10114, "Kill the Scythian Scout",               Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'KillScout'
     ATT1_GIVE_HORSES =                  10115, "Give Scythia 10 Horses",                Age2ScenarioData.AP_ATTILA_1, Age2LocationType.SIDE_QUEST
     ATT1_DEFEAT_FIRST_PLAYER =          10116, "Defeat One Player",                     Age2ScenarioData.AP_ATTILA_1, Age2LocationType.OBJECTIVE
     
@@ -77,13 +79,13 @@ class Age2ScenarioLocationData(enum.IntEnum):
     ATT3_BLUE_MONASTERY =       10315, "Destroy Blue's Monastery",          Age2ScenarioData.AP_ATTILA_3, Age2LocationType.OBJECTIVE_SCENARIO_COLLECTION
     
     ATT4_VICTORY =                      10400, "Victory",                       Age2ScenarioData.AP_ATTILA_4, Age2LocationType.VICTORY
-    ATT4_DEFEAT_BURGUNDY_ALL =          10401, "Defeat Burgundy",               Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    ATT4_DEFEAT_BURGUNDY_ALL =          10401, "Defeat Burgundy",               Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'DefeatBurgundyAll'
     ATT4_DEFEAT_METZ =                  10402, "Defeat Metz",                   Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE
     ATT4_DEFEAT_ORLEANS =               10403, "Defeat Orleans",                Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE
     ATT4_DEFEAT_ROMAN_ARMY =            10404, "Defeat the Roman Army",         Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE
-    ATT4_TRIBUTE_BURGUNDY_ALL =         10405, "Tribute 500 Gold to Burgundy",  Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    ATT4_CASTLE_BURGUNDY_ALL =          10406, "Build a Castle for Burgundy",   Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY =  10407, "Defeat or Ally Burgundy",       Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ANY
+    ATT4_TRIBUTE_BURGUNDY_ALL =         10405, "Tribute 500 Gold to Burgundy",  Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'TributeBurgundyAll'
+    ATT4_CASTLE_BURGUNDY_ALL =          10406, "Build a Castle for Burgundy",   Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'CastleBurgundyAll'
+    ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY =  10407, "Defeat or Ally Burgundy",       Age2ScenarioData.AP_ATTILA_4, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'DefeatOrAllyBurgundyAny'
     
     ATT5_VICTORY =          10500, "Victory",                  Age2ScenarioData.AP_ATTILA_5, Age2LocationType.VICTORY
     ATT5_DEFEAT_ROMANS =    10501, "Defeat the Romans",        Age2ScenarioData.AP_ATTILA_5, Age2LocationType.OBJECTIVE
@@ -124,20 +126,20 @@ class Age2ScenarioLocationData(enum.IntEnum):
     JOAN2_BRING_JOAN_TO_ORLEANS =   20205, "Bring Joan to Orleans",                     Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE
     JOAN2_BRING_CARTS_TO_ORLEANS =  20206, "Bring 6 Trade Carts to Orleans",            Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE
     JOAN2_FIND_FARMING_VILLAGE =    20207, "Find the Farming Village",                  Age2ScenarioData.AP_JOAN_2, Age2LocationType.SIDE_QUEST
-    JOAN2_NORTHEAST_CASTLE =        20208, "Destroy Northeast English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    JOAN2_NORTHWEST_CASTLE =        20209, "Destroy Northwest English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    JOAN2_SOUTHEAST_CASTLE =        20210, "Destroy Southeast English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    JOAN2_SOUTHWEST_CASTLE =        20211, "Destroy Southwest English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN2_NORTHEAST_CASTLE =        20208, "Destroy Northeast English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'NortheastCastle'
+    JOAN2_NORTHWEST_CASTLE =        20209, "Destroy Northwest English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'NorthwestCastle'
+    JOAN2_SOUTHEAST_CASTLE =        20210, "Destroy Southeast English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'SoutheastCastle'
+    JOAN2_SOUTHWEST_CASTLE =        20211, "Destroy Southwest English Castle",          Age2ScenarioData.AP_JOAN_2, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'SouthwestCastle'
     
     JOAN3_VICTORY =                 20300, "Victory",                                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.VICTORY
     JOAN3_FIND_SHIPS =              20301, "Find Ships for Crossing",                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.SIDE_QUEST
     JOAN3_SLAY_FASTOLF =            20302, "Slay Fastoff",                              Age2ScenarioData.AP_JOAN_3, Age2LocationType.SIDE_QUEST
-    JOAN3_DESTROY_ONE_CASTLE =      20303, "Destroy One Castle",                        Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ANY
-    JOAN3_DESTROY_TWO_CASTLES =     20304, "Destroy Two Castles",                       Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ANY
-    JOAN3_DESTROY_LEFT_CASTLE =     20305, "Destroy Leftmost Castle",                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    JOAN3_DESTROY_CENTRAL_CASTLE =  20306, "Destroy Central Castle",                    Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    JOAN3_DESTROY_RIGHT_CASTLE =    20307, "Destroy Rightmost Castle",                  Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
-    JOAN3_DESTROY_REAR_CASTLE =     20308, "Destroy Rear Castle",                       Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL
+    JOAN3_DESTROY_ONE_CASTLE =      20303, "Destroy One Castle",                        Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'DestroyOneCastle'
+    JOAN3_DESTROY_TWO_CASTLES =     20304, "Destroy Two Castles",                       Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'DestroyTwoCastles'
+    JOAN3_DESTROY_LEFT_CASTLE =     20305, "Destroy Leftmost Castle",                   Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'DestroyLeftCastle'
+    JOAN3_DESTROY_CENTRAL_CASTLE =  20306, "Destroy Central Castle",                    Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'DestroyCentralCastle'
+    JOAN3_DESTROY_RIGHT_CASTLE =    20307, "Destroy Rightmost Castle",                  Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'DestroyRightCastle'
+    JOAN3_DESTROY_REAR_CASTLE =     20308, "Destroy Rear Castle",                       Age2ScenarioData.AP_JOAN_3, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'DestroyRearCastle'
 
     JOAN4_VICTORY =                 20400, "Victory",                                   Age2ScenarioData.AP_JOAN_4, Age2LocationType.VICTORY
     JOAN4_DEFEAT_ENGLISH_GUARDS =   20401, "Defeat the English Guards",                 Age2ScenarioData.AP_JOAN_4, Age2LocationType.SIDE_QUEST
@@ -186,3 +188,20 @@ for location in Age2ScenarioLocationData:
 VICTORY_SCENARIO_LOCATIONS: dict[str, Age2ScenarioLocationData] = {}
 for location in TYPE_TO_LOCATIONS.get(Age2LocationType.VICTORY):
     VICTORY_SCENARIO_LOCATIONS[location.scenario.scenario_name] = location
+
+BRANCHING_TYPES = Age2LocationType.OBJECTIVE_BRANCHING_ALL | Age2LocationType.OBJECTIVE_BRANCHING_ANY
+
+SCENARIO_TO_BRANCHING: dict[Age2ScenarioData, dict[Age2LocationType, frozenset[str]]] = {}
+_branching_calls: dict[Age2ScenarioData, dict[Age2LocationType, set[str]]] = {}
+for location in Age2ScenarioLocationData:
+    if location.type not in BRANCHING_TYPES:
+        continue
+    assert location.trigger_call, f"{location.name} is branching but names no trigger call"
+    _by_type = _branching_calls.setdefault(location.scenario, {})
+    _calls = _by_type.setdefault(location.type, set())
+    assert location.trigger_call not in _calls, f"{location.trigger_call} is claimed twice"
+    _calls.add(location.trigger_call)
+for _scenario, _by_type in _branching_calls.items():
+    SCENARIO_TO_BRANCHING[_scenario] = {
+        _type: frozenset(_calls) for _type, _calls in _by_type.items()
+    }

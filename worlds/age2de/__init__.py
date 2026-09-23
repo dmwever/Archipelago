@@ -355,6 +355,7 @@ class Age2World(CachedRuleBuilderWorld):
             mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns
         for option_name in SlotData.OPTIONS.values():
             mapping[option_name] = int(getattr(self.options, option_name).value)
+        mapping[ScenarioBranching.internal_name] = int(self.options.scenario_branching.value)
         return mapping
 
 
