@@ -6,7 +6,7 @@ class Age2HeroData(enum.IntEnum):
     """The named characters a scenario hands the player, for unitsanity: all.
 
     Scoped to heroes a scenario actually grants rather than to everything the game flags as one -
-    the unit data marks 244 heroes across every campaign, and all but these thirteen belong to
+    the unit data marks 244 heroes across every campaign, and all but these twelve belong to
     campaigns this world does not carry. A campaign added later brings its own.
 
     Locations only. A hero is never trainable, never an item, never caveman'd, belongs to no line
@@ -43,7 +43,6 @@ class Age2HeroData(enum.IntEnum):
     GUY_JOSSELYNE       = 593, "Own Guy Josselyne", "Guy Josselyne", 648
     JEAN_BUREAU         = 594, "Own Jean Bureau", "Jean Bureau", 650
     ATTILA_THE_HUN      = 595, "Own Attila the Hun", "Attila the Hun", 777
-    BLEDA_THE_HUN       = 596, "Own Bleda the Hun", "Bleda the Hun", 779
 
 
 NAME_TO_HERO: dict[str, Age2HeroData] = {hero.hero_name: hero for hero in Age2HeroData}

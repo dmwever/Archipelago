@@ -134,6 +134,7 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.VARANGIAN_GUARD_LINE: [Age2UnitData.VARANGIAN_GUARD, Age2UnitData.ELITE_VARANGIAN_GUARD],
     Age2UnitLineData.HEARTH_TROOP_LINE: [Age2UnitData.HEARTH_TROOP, Age2UnitData.ELITE_HEARTH_TROOP],
     Age2UnitLineData.JARL_LINE: [Age2UnitData.JARL, Age2UnitData.ELITE_JARL],
+    Age2UnitLineData.CART_LINE: [Age2UnitData.CART],
     Age2UnitLineData.JOMSVIKING_LINE: [Age2UnitData.JOMSVIKING, Age2UnitData.ELITE_JOMSVIKING],
 }
 

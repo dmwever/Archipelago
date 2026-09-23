@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from .Ages import Age2AgeData
 from .Campaigns import Age2CampaignData
 from .Civilizations import Age2CivData
+type ScenarioUnit = Age2UnitData | Age2HeroData
 
 if TYPE_CHECKING:
     from ..rules.ScenarioRules import ScenarioRules
@@ -32,6 +33,8 @@ class Age2ScenarioData(enum.IntEnum):
         self.vanilla_age = vanilla_age
         self.rules: 'ScenarioRules' = None
         self.logic: 'ScenarioStartingState' = None
+        self.startup_units: list[ScenarioUnit] = []
+        self.trigger_units: list[ScenarioUnit] = []
     
     AP_ATTILA_1 =           "The Scourge of God", "AP_Attila_1", "ATT1.xsdat", Age2CampaignData.ATTILA, 1, Age2CivData.HUNS, Age2AgeData.DARK
     AP_ATTILA_2 =               "The Great Ride", "AP_Attila_2", "ATT2.xsdat", Age2CampaignData.ATTILA, 2, Age2CivData.HUNS, Age2AgeData.CASTLE

@@ -150,7 +150,7 @@ class UnitPool:
               buildings: Iterable[Age2BuildingData], villager: bool) -> list[Age2ItemData]:
         chosen: list[Age2ItemData]
         if self._unitsanity_items == UnitsanityItems.option_unit_line:
-            chosen = [line.item for line in lines]
+            chosen = [line.item for line in lines if self.is_trainable(line)]
         elif self._unitsanity_items == UnitsanityItems.option_upgrades:
             wanted = {token for unit in units for token in unit.upgrade_tokens}
             chosen = [token for token in Age2ItemData if token in wanted]
