@@ -22,7 +22,8 @@ from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, UnitBuildings,
-                                    UnitLineUnits, UnitTechs, UnitVariants)
+                                    UnitLineUnits, UnitTechs, UnitUpgradeTokens,
+                                    UnitVariants)
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
@@ -253,6 +254,12 @@ class Age2World(CachedRuleBuilderWorld):
             elif isinstance(item.type, Items.Building):
                 continue
             elif isinstance(item.type, Items.Tech):
+                continue
+            elif isinstance(item.type, Items.UnitLine):
+                continue
+            elif isinstance(item.type, Items.UnitUpgrade):
+                continue
+            elif isinstance(item.type, Items.UnitBuilding):
                 continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")

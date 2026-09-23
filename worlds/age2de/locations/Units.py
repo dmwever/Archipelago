@@ -33,13 +33,15 @@ class Age2UnitData(enum.IntEnum):
         self.unit_type = unit_type
         self.tier = tier
         # Bound by the modules in locations/connections/, which are imported for their side
-        # effects: UnitLineUnits, UnitBuildings, UnitTechs, UnitVariants. Declared here so
+        # effects: UnitLineUnits, UnitBuildings, UnitTechs, UnitVariants,
+        # UnitUpgradeTokens. Declared here so
         # the attribute always exists; a missed binding would otherwise surface far from its
         # cause.
         self.line: 'Age2UnitLineData' = None
         self.buildings: list['Age2BuildingData'] = []
         self.upgrade_tech: 'Age2TechData' = None
         self.variant_game_ids: list[int] = []
+        self.upgrade_tokens: list['Age2ItemData'] = []
 
     # 300 - 799 = Units. Ids are assigned in ascending game_id order.
     ARCHER                      = 300, "Own Archer", "Archer", 4, Age2AgeData.FEUDAL, UnitType.unit, 0
