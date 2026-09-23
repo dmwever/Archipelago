@@ -64,7 +64,6 @@ class Age2UnitLineData(enum.IntEnum):
     SCOUT_CAVALRY_LINE            = 832, "Own Scout Cavalry Line", "Scout Cavalry Line", Age2UnitData.SCOUT_CAVALRY, Age2ItemData.UNIT_LINE_SCOUT_CAVALRY
     GALLEY_LINE                   = 833, "Own War Galley Line", "War Galley Line", Age2UnitData.GALLEY, Age2ItemData.UNIT_LINE_GALLEY
     TRANSPORT_SHIP_LINE           = 834, "Own Transport Ship Line", "Transport Ship Line", Age2UnitData.TRANSPORT_SHIP, Age2ItemData.UNIT_LINE_TRANSPORT_SHIP
-    JEAN_BUREAU_LINE              = 835, "Own Jean Bureau Line", "Jean Bureau Line", Age2UnitData.JEAN_BUREAU, Age2ItemData.UNIT_LINE_JEAN_BUREAU
     BERSERK_LINE                  = 836, "Own Berserk Line", "Berserk Line", Age2UnitData.BERSERK, Age2ItemData.UNIT_LINE_BERSERK
     JAGUAR_WARRIOR_LINE           = 837, "Own Jaguar Warrior Line", "Jaguar Warrior Line", Age2UnitData.JAGUAR_WARRIOR, Age2ItemData.UNIT_LINE_JAGUAR_WARRIOR
     EAGLE_SCOUT_LINE              = 838, "Own Eagle Warrior Line", "Eagle Warrior Line", Age2UnitData.EAGLE_SCOUT, Age2ItemData.UNIT_LINE_EAGLE_SCOUT

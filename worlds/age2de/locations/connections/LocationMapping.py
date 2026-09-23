@@ -1,5 +1,6 @@
 from ..Ages import SHUFFLED_AGES
 from ..Buildings import Age2BuildingData
+from ..Heroes import Age2HeroData
 from ..Techs import Age2TechData
 from ..UnitLines import Age2UnitLineData
 from ..Units import Age2UnitData
@@ -47,5 +48,10 @@ for job in Age2VillagerJobData:
     location_name_list.append(job.location_name)
     location_name_to_id[job.location_name] = job.id
     location_id_to_name[job.id] = job.location_name
+
+for hero in Age2HeroData:
+    location_name_list.append(hero.location_name)
+    location_name_to_id[hero.location_name] = hero.id
+    location_id_to_name[hero.id] = hero.location_name
 
 assert len(location_name_to_id) == len(location_name_list), "duplicate location name"

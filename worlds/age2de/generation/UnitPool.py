@@ -5,13 +5,15 @@ from ..Options import (Age2Options, IncludeUniqueUnits, ShuffleVillager, Unitsan
 from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Civilizations import Age2CivData
+from ..locations.Heroes import Age2HeroData
+from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData, UnitType
 from ..locations.VillagerJobs import Age2VillagerJobData
-from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
+from ..locations.connections.CivilizationUnits import CIV_TO_UNITS, UNTRAINABLE
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
-type UnitLocation = Age2UnitData | Age2UnitLineData | Age2VillagerJobData
+type UnitLocation = Age2UnitData | Age2UnitLineData | Age2VillagerJobData | Age2HeroData
 
 UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
     UnitType.unique_unit: (IncludeUniqueUnits.option_unique, IncludeUniqueUnits.option_both),
@@ -20,12 +22,17 @@ UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
 
 class UnitPool:
 
-    def __init__(self, options: Age2Options, civs: Iterable[Age2CivData]) -> None:
+    def __init__(self, options: Age2Options, civs: Iterable[Age2CivData],
+                 scenarios: Iterable[Age2ScenarioData]) -> None:
         self._unitsanity = options.unitsanity
         self._unitsanity_items = options.unitsanity_items
         self._include_unique_units = options.include_unique_units
         self._shuffle_villager = options.shuffle_villager
+        self._scenarios = list(scenarios)
         self._trainable = {unit for civ in civs for unit in CIV_TO_UNITS[civ]}
+        self._granted = {grant
+                         for scenario in self._scenarios
+                         for grant in scenario.startup_units + scenario.trigger_units}
 
 
     def is_villager(self, unit: Age2UnitData) -> bool:
@@ -43,8 +50,11 @@ class UnitPool:
         """Whether this unit is one of the seed's units, in any unitsanity mode."""
         if self._unitsanity == Unitsanity.option_none:
             return False
-        if self.is_villager(unit) or unit not in self._trainable:
+        if self.is_villager(unit) or unit in UNTRAINABLE:
             return False
+        if unit not in self._trainable:
+            if self._unitsanity != Unitsanity.option_all or unit not in self._granted:
+                return False
         return self.is_unit_type_included(unit)
 
 
@@ -52,6 +62,10 @@ class UnitPool:
         """A line is in play when any of its tiers is. A civilization that reaches only the
         base tier still gets the line, which is what makes the line the unit of unlocking."""
         return any(self.includes(unit) for unit in line.units)
+
+
+    def is_trainable(self, line: Age2UnitLineData) -> bool:
+        return any(unit in self._trainable for unit in line.units)
 
 
     @property
@@ -68,12 +82,34 @@ class UnitPool:
 
 
     @property
-    def locations(self) -> list[UnitLocation]:
-        """What unitsanity checks. Under `unit_line` a whole line is one location; under `all`
-        each unit is its own and the line location is gone, not doubled up."""
+    def heroes(self) -> list[Age2HeroData]:
+        if self._unitsanity != Unitsanity.option_all:
+            return []
+        return [hero for hero in Age2HeroData if hero in self._granted]
+
+
+    @property
+    def villager_locations(self) -> list[UnitLocation]:
+        if self._shuffle_villager == ShuffleVillager.option_no:
+            return []
+        if self._shuffle_villager != ShuffleVillager.option_include_professions:
+            return [Age2UnitLineData.VILLAGER_LINE]
+        return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] \
+            + list(Age2VillagerJobData)
+
+    @property
+    def line_locations(self) -> dict[Age2UnitLineData, list[UnitLocation]]:
+        grouped: dict[Age2UnitLineData, list[UnitLocation]] = {}
         if self._unitsanity == Unitsanity.option_all:
-            return self.units
-        return self.lines
+            for unit in self.units:
+                grouped.setdefault(unit.line, []).append(unit)
+        else:
+            for line in self.lines:
+                grouped[line] = [line]
+        villager = self.villager_locations
+        if villager:
+            grouped[Age2UnitLineData.VILLAGER_LINE] = villager
+        return grouped
 
 
     def owner_of(self, location: UnitLocation) -> Age2UnitData:
@@ -90,19 +126,24 @@ class UnitPool:
         """Anything Shuffle Villager owns, whichever granularity produced it."""
         if isinstance(location, Age2VillagerJobData):
             return True
+        if isinstance(location, Age2HeroData):
+            return False
         if isinstance(location, Age2UnitLineData):
             return location is Age2UnitLineData.VILLAGER_LINE
         return self.is_villager(location)
 
 
-    @property
-    def villager_locations(self) -> list[UnitLocation]:
-        """Shuffle Villager, which runs independently of unitsanity."""
-        if self._shuffle_villager == ShuffleVillager.option_no:
-            return []
-        if self._shuffle_villager != ShuffleVillager.option_include_professions:
-            return [Age2UnitLineData.VILLAGER_LINE]
-        return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE]             + list(Age2VillagerJobData)
+    def scenario_grants_line(self, scenario: Age2ScenarioData, line: Age2UnitLineData,
+               at_start: bool) -> bool:
+        granted = scenario.startup_units if at_start else scenario.trigger_units
+        return any(isinstance(grant, Age2UnitData) and grant.line is line
+                   for grant in granted)
+
+
+    def scenario_grants_hero(self, scenario: Age2ScenarioData, hero: Age2HeroData,
+                    at_start: bool) -> bool:
+        granted = scenario.startup_units if at_start else scenario.trigger_units
+        return hero in granted
 
 
     def items(self, lines: Iterable[Age2UnitLineData], units: Iterable[Age2UnitData],

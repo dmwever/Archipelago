@@ -52,12 +52,11 @@ OTHER_GAME_MODE_UNITS: frozenset[Age2UnitData] = frozenset({
 })
 
 
-# Units no tech tree lists at all. Villager (Female) is a variant of the male villager and
-# Jean Bureau is a hero; both exist only because mercenary items name them. War Chariot
-# Barrage is a Three Kingdoms firing mode rather than a unit anyone trains.
+# Units no tech tree lists at all. Villager (Female) is a variant of the male villager, carried
+# because mercenary items name her. War Chariot Barrage is a Three Kingdoms firing mode rather
+# than a unit anyone trains. Heroes are not here at all - they live in Age2HeroData.
 UNLISTED_UNITS: frozenset[Age2UnitData] = frozenset({
     Age2UnitData.VILLAGER_FEMALE,
-    Age2UnitData.JEAN_BUREAU,
     Age2UnitData.WAR_CHARIOT_BARRAGE,
 })
 

@@ -121,7 +121,6 @@ class Age2UnitData(enum.IntEnum):
     CHAMPION                    = 374, "Own Champion", "Champion", 567, Age2AgeData.IMPERIAL, UnitType.unit_upgrade, 4
     PALADIN                     = 375, "Own Paladin", "Paladin", 569, Age2AgeData.IMPERIAL, UnitType.unit_upgrade, 2
     SIEGE_ONAGER                = 376, "Own Siege Onager", "Siege Onager", 588, Age2AgeData.IMPERIAL, UnitType.unit_upgrade, 2
-    JEAN_BUREAU                 = 377, "Own Jean Bureau", "Jean Bureau", 650, Age2AgeData.DARK, UnitType.unit, 0
     ELITE_CANNON_GALLEON        = 378, "Own Elite Cannon Galleon", "Elite Cannon Galleon", 691, Age2AgeData.IMPERIAL, UnitType.unit_upgrade, 1
     BERSERK                     = 379, "Own Berserk", "Berserk", 692, Age2AgeData.CASTLE, UnitType.unique_unit, 0
     ELITE_BERSERK               = 380, "Own Elite Berserk", "Elite Berserk", 694, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1

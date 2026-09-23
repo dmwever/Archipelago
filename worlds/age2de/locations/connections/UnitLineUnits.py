@@ -38,7 +38,6 @@ LINE_TO_UNITS: dict[Age2UnitLineData, list[Age2UnitData]] = {
     Age2UnitLineData.SCOUT_CAVALRY_LINE: [Age2UnitData.SCOUT_CAVALRY, Age2UnitData.LIGHT_CAVALRY, Age2UnitData.HUSSAR, Age2UnitData.WINGED_HUSSAR],
     Age2UnitLineData.GALLEY_LINE: [Age2UnitData.GALLEY, Age2UnitData.WAR_GALLEY, Age2UnitData.GALLEON],
     Age2UnitLineData.TRANSPORT_SHIP_LINE: [Age2UnitData.TRANSPORT_SHIP],
-    Age2UnitLineData.JEAN_BUREAU_LINE: [Age2UnitData.JEAN_BUREAU],
     Age2UnitLineData.BERSERK_LINE: [Age2UnitData.BERSERK, Age2UnitData.ELITE_BERSERK],
     Age2UnitLineData.JAGUAR_WARRIOR_LINE: [Age2UnitData.JAGUAR_WARRIOR, Age2UnitData.ELITE_JAGUAR_WARRIOR],
     Age2UnitLineData.EAGLE_SCOUT_LINE: [Age2UnitData.EAGLE_SCOUT, Age2UnitData.EAGLE_WARRIOR, Age2UnitData.ELITE_EAGLE_WARRIOR],
