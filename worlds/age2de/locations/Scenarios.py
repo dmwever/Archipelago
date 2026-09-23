@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from .Ages import Age2AgeData
 from .Campaigns import Age2CampaignData
 from .Civilizations import Age2CivData
+from .Heroes import Age2HeroData
+from .Units import Age2UnitData
 type ScenarioUnit = Age2UnitData | Age2HeroData
 
 if TYPE_CHECKING:

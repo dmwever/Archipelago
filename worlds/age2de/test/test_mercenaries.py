@@ -171,7 +171,7 @@ class TestMercenaryUnits(unittest.TestCase):
         for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]:
             for unit in item.type.units:
                 self.assertGreater(unit.count, 0,
-                                   f"{item.item_name} asks for {unit.count} {unit.unit.unit_name}; "
+                                   f"{item.item_name} asks for {unit.count} {unit.unit.name}; "
                                    "the count is also the seat's research time in seconds")
 
 

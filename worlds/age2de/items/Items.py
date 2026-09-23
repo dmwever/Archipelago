@@ -5,6 +5,7 @@ from BaseClasses import ItemClassification
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Ages import Age2AgeData
 from ..locations.Scenarios import Age2ScenarioData
+from ..locations.Heroes import Age2HeroData
 from ..locations.Units import Age2UnitData
 
 class Resource(enum.Enum):
@@ -271,7 +272,6 @@ class Age2ItemData(enum.IntEnum):
     UNIT_LINE_SCOUT_CAVALRY            = 332, "Scout Cavalry Line", UnitLine(832, Age2AgeData.FEUDAL)
     UNIT_LINE_GALLEY                   = 333, "War Galley Line", UnitLine(833, Age2AgeData.FEUDAL)
     UNIT_LINE_TRANSPORT_SHIP           = 334, "Transport Ship Line", UnitLine(834, Age2AgeData.DARK)
-    UNIT_LINE_JEAN_BUREAU              = 335, "Jean Bureau Line", UnitLine(835, Age2AgeData.DARK)
     UNIT_LINE_BERSERK                  = 336, "Berserk Line", UnitLine(836, Age2AgeData.CASTLE)
     UNIT_LINE_JAGUAR_WARRIOR           = 337, "Jaguar Warrior Line", UnitLine(837, Age2AgeData.CASTLE)
     UNIT_LINE_EAGLE_SCOUT              = 338, "Eagle Warrior Line", UnitLine(838, Age2AgeData.FEUDAL)

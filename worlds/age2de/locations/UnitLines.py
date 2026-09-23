@@ -1,6 +1,6 @@
 import enum
 
-from .Units import Age2UnitData
+from .Units import Age2UnitData, UnitType
 
 from ..items.Items import Age2ItemData
 
@@ -15,7 +15,7 @@ class Age2UnitLineData(enum.IntEnum):
         return obj
 
     def __init__(self, id: int, location_name: str, line_name: str,
-                 head: Age2UnitData, item: Age2ItemData) -> None:
+                 head: Age2UnitData, item: Age2ItemData | None) -> None:
         self.id = id
         self.location_name = location_name
         self.line_name = line_name
@@ -160,9 +160,13 @@ class Age2UnitLineData(enum.IntEnum):
     VARANGIAN_GUARD_LINE          = 929, "Own Varangian Guard Line", "Varangian Guard Line", Age2UnitData.VARANGIAN_GUARD, Age2ItemData.UNIT_LINE_VARANGIAN_GUARD
     HEARTH_TROOP_LINE             = 930, "Own Hearth Troop Line", "Hearth Troop Line", Age2UnitData.HEARTH_TROOP, Age2ItemData.UNIT_LINE_HEARTH_TROOP
     JARL_LINE                     = 931, "Own Jarl Line", "Jarl Line", Age2UnitData.JARL, Age2ItemData.UNIT_LINE_JARL
-    CART_LINE                     = 835, "Own Cart Line", "Cart Line", Age2UnitData.CART, Age2ItemData.UNIT_LINE_CART
+    CART_LINE                     = 835, "Own Cart Line", "Cart Line", Age2UnitData.CART, None
     JOMSVIKING_LINE               = 932, "Own Jomsviking Line", "Jomsviking Line", Age2UnitData.JOMSVIKING, Age2ItemData.UNIT_LINE_JOMSVIKING
 
 
 NAME_TO_LINE: dict[str, Age2UnitLineData] = {line.line_name: line
                                              for line in Age2UnitLineData}
+
+
+assert not [line for line in Age2UnitLineData
+            if (line.item is None) != (line.head.unit_type == UnitType.escort)],     "a line has an unlock item if and only if something can train it"
