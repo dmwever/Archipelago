@@ -278,6 +278,8 @@ class Age2World(CachedRuleBuilderWorld):
         
         starting_items, surplus = self._build_starting_resources(needed_number_of_filler_items)
         
+        # Starting resources come first. Traps only ever spend the padding appended once
+        # every resource target is already met, so they never cost the player economy.
         traps = self.roll_traps(surplus)
         if traps:
             starting_items = starting_items[:len(starting_items) - len(traps)]
@@ -292,9 +294,15 @@ class Age2World(CachedRuleBuilderWorld):
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
     
     def smart_add_starting_resources(self, locations_to_fill: int) -> list[Item]:
+        items, _surplus = self._build_starting_resources(locations_to_fill)
+        return items
+
+    def _build_starting_resources(self, locations_to_fill: int) -> tuple[list[Item], int]:
         items: list[Item] = []
+        surplus = 0
+        halved = False
         if locations_to_fill <= 0:
-            return items
+            return items, surplus
 
         largest = {
             Items.Resource.WOOD: Items.Age2ItemData.STARTING_WOOD_LARGE,
@@ -317,6 +325,7 @@ class Age2World(CachedRuleBuilderWorld):
 
             if worst_case_sum > locations_to_fill:
                 amounts = {resource: amount // 2 for resource, amount in amounts.items()}
+                halved = True
                 continue
 
             if worst_case_sum == locations_to_fill:
@@ -324,14 +333,37 @@ class Age2World(CachedRuleBuilderWorld):
                     for _ in range(needed):
                         items.append(self.create_item(largest[resource].item_name))
                         locations_to_fill -= 1
-                return items
+                return items, surplus
+
+            if worst_case_sum == 0 and not halved:
+                surplus += 1
 
             item_data = self.random.choice(starting_resource_choices)
             resource = item_data.type.type
             amounts[resource] = max(0, amounts[resource] - item_data.type.amount)
             items.append(self.create_item(item_data.item_name))
             locations_to_fill -= 1
-        return items
+        return items, surplus
+
+    def roll_traps(self, surplus: int) -> list[Item]:
+        if surplus <= 0 or not self.options.trap_difficulty.include_traps():
+            return []
+
+        distribution = self.options.trap_distribution
+        names: list[str] = []
+        weights: list[int] = []
+        for trap in Items.CATEGORY_TO_ITEMS[Items.Trap]:
+            weight = distribution[trap.item_name] if trap.item_name in distribution else TRAP_DEFAULT_WEIGHT
+            if weight > 0:
+                names.append(trap.item_name)
+                weights.append(weight)
+        if not names:
+            return []
+
+        count = int(surplus * self.options.trap_percentage.value / 100)
+        if count <= 0:
+            return []
+        return [self.create_item(name) for name in self.random.choices(names, weights=weights, k=count)]
     
     def create_item(self, name: str) -> Item:
         item = Items.NAME_TO_ITEM[name]

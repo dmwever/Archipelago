@@ -24,7 +24,7 @@ class TestOptionsReachTheGame(unittest.TestCase):
 
 class TestSlotDataRoundTrip(unittest.TestCase):
     CHOSEN = {"techsanity": 3, "tech_behavior": 1, "lock_techs": 1, "shuffle_ages": 1,
-              "shuffle_unique_techs": 1, "existing_techs": 1}
+              "shuffle_unique_techs": 1, "existing_techs": 1, "trap_difficulty": 4}
 
     def slot_data(self, **options):
         world = setup_solo_multiworld(Age2World).worlds[1]
