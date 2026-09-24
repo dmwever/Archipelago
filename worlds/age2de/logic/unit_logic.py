@@ -175,7 +175,7 @@ class UnitLogic:
 
     def job_requirement(self, job: Age2VillagerJobData) -> Rule:
         if job.job_name == "Builder":
-            return self.logic.buildings.can_build_anything()
+            return self.logic.can_build_anything()
         building = JOB_BUILDING.get(job.job_name)
         if building is None:
             return True_()

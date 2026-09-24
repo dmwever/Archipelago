@@ -76,6 +76,12 @@ class Logic:
     def can_reach_age(self, age: Age2AgeData) -> Rule:
         return self.ages.can_reach_age[age]
 
+    def can_build_anything(self) -> Rule:
+        """Whether any building at all can go up, which is all a villager needs to be building
+        one. An included civilisation has to be able to put it up, so this is not simply True."""
+        return Or(*[self.can_build_building(building) for building in Age2BuildingData
+                    if self.world.civ_can_build(building)])
+
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         can_build: Rule = (self.buildings.has_building(building)
                            & self.buildings.has_prerequisites(building))
