@@ -267,7 +267,7 @@ class Age2World(CachedRuleBuilderWorld):
 
         # A hero and an escort are the same shape: one check, no line, and a scenario is the
         # only way to come by one. No training entrance is possible for either.
-        for granted in self.unit_pool.handed_over:
+        for granted in self.unit_pool.special_units:
             label = getattr(granted, "hero_name", None) or granted.escort_name
             region = Region(label, self.player, self.multiworld)
             regions.append(region)

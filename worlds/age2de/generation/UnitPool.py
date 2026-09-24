@@ -38,18 +38,15 @@ class UnitPool:
 
 
     def is_villager(self, unit: Age2UnitData) -> bool:
-        """Shuffle Villager owns the villager outright, so unitsanity never touches it."""
         return unit.line is Age2UnitLineData.VILLAGER_LINE
 
 
     def is_unit_type_included(self, unit: Age2UnitData) -> bool:
-        """Include Unique Units. A unit every civilization has is never held back by it."""
         wanted = UNIT_TYPE_TO_OPTIONS.get(unit.unit_type)
         return wanted is None or self._include_unique_units in wanted
 
 
     def includes(self, unit: Age2UnitData) -> bool:
-        """Whether this unit is one of the seed's units, in any unitsanity mode."""
         if self._unitsanity == Unitsanity.option_none:
             return False
         if self.is_villager(unit) or unit in UNTRAINABLE:
@@ -61,8 +58,6 @@ class UnitPool:
 
 
     def includes_line(self, line: Age2UnitLineData) -> bool:
-        """A line is in play when any of its tiers is. A civilization that reaches only the
-        base tier still gets the line, which is what makes the line the unit of unlocking."""
         return any(self.includes(unit) for unit in line.units)
 
 
@@ -72,14 +67,11 @@ class UnitPool:
 
     @property
     def lines(self) -> list[Age2UnitLineData]:
-        """Every line in play. These are what unitsanity items unlock, in both modes - under
-        `all` the locations become per-unit but the lines are still the thing you unlock."""
         return [line for line in Age2UnitLineData if self.includes_line(line)]
 
 
     @property
     def units(self) -> list[Age2UnitData]:
-        """Every unit in play, whether or not each is separately a location."""
         return [unit for unit in Age2UnitData if self.includes(unit)]
 
 
@@ -97,7 +89,7 @@ class UnitPool:
         return [escort for escort in Age2EscortUnitData if escort in self._granted]
 
     @property
-    def handed_over(self) -> list[Age2HeroData | Age2EscortUnitData]:
+    def special_units(self) -> list[Age2HeroData | Age2EscortUnitData]:
         return self.heroes + self.escorts
 
 
@@ -125,9 +117,7 @@ class UnitPool:
         return grouped
 
 
-    def owner_of(self, location: UnitLocation) -> Age2UnitData:
-        """The unit whose producing buildings decide where a location is placed. A villager
-        job is done by a villager, so it sits wherever villagers are trained."""
+    def root_unit_data(self, location: UnitLocation) -> Age2UnitData:
         if isinstance(location, Age2VillagerJobData) or self.is_villager_location(location):
             return Age2UnitData.VILLAGER_MALE
         if isinstance(location, Age2UnitLineData):
