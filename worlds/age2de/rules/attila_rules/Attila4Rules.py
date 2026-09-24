@@ -6,7 +6,7 @@ from ...logic.attila.attila_4 import Attila4StartingState
 
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.Logic import ScenarioLogic
+from ...scenarios.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 

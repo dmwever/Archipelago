@@ -8,7 +8,7 @@ from ...items.Items import Age2ItemData
 
 from ...logic.joan.joan_3 import Joan3StartingState
 
-from ...logic.Logic import ScenarioLogic
+from ...scenarios.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -24,7 +24,7 @@ class Joan3Rules(ScenarioRules):
         can_destroy_castle: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean & 
-            self.logic.has_siege() &
+            self.scenario_logic.buildings.has_siege() &
             self.logic.military.counters_militia(Age2AgeData.CASTLE, self.scenario_logic) &
             self.logic.military.counters_longbowman(Age2AgeData.CASTLE, self.scenario_logic) &
             self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic)

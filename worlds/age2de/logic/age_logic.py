@@ -11,7 +11,7 @@ from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from rule_builder.rules import False_, Has, HasAll, HasAny, HasFromListUnique, NestedRule, Or, Rule, True_
 
-from .ScenarioLogic import ScenarioLogic
+from ..scenarios.ScenarioLogic import ScenarioLogic
 
 
 if TYPE_CHECKING:

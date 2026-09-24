@@ -9,7 +9,7 @@ from .goal_logic import GoalLogic
 from .MilitaryLogic import MilitaryLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections import ScenarioDataLogic
-from .ScenarioLogic import ScenarioLogic
+from ..scenarios.ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
 from .tech_logic import TechLogic
@@ -38,6 +38,9 @@ class Logic:
         self.scenarios = []
 
         self._has_vils: Or = Or()
+        self._can_build: dict[Age2BuildingData, Or] = {building: Or()
+                                                       for building in Age2BuildingData}
+        self._can_build_anything: Or = Or()
 
         self.buildings = BuildingLogic(self, world)
         self.ages =  AgeLogic(self, world)
@@ -47,6 +50,13 @@ class Logic:
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
         self._has_vils.children = tuple(
             scenario.is_unlocked() & scenario.has_vils() for scenario in self.scenarios)
+        for building in Age2BuildingData:
+            self._can_build[building].children = tuple(
+                scenario.is_unlocked() & scenario.buildings.can_build_building(building)
+                for scenario in self.scenarios)
+        self._can_build_anything.children = tuple(
+            scenario.is_unlocked() & scenario.buildings.can_build_anything()
+            for scenario in self.scenarios)
         
         self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
@@ -64,6 +74,7 @@ class Logic:
     def can_build_base(self) -> Rule:
         return self.buildings.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
 
+
     def has_military(self) -> Rule:
         return self.buildings.has_military()
     
@@ -77,12 +88,7 @@ class Logic:
         return self.ages.can_reach_age[age]
 
     def can_build_anything(self) -> Rule:
-        """Whether any building at all can go up, which is all a villager needs to be building
-        one. An included civilisation has to be able to put it up, so this is not simply True."""
-        return Or(*[self.can_build_building(building) for building in Age2BuildingData
-                    if self.world.civ_can_build(building)])
+        return self._can_build_anything
 
     def can_build_building(self, building: Age2BuildingData) -> Rule:
-        can_build: Rule = (self.buildings.has_building(building)
-                           & self.buildings.has_prerequisites(building))
-        return can_build & self.has_vils() & self.can_reach_age(building.age)
+        return self._can_build[building]

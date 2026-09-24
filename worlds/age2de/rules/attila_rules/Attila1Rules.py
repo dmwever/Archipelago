@@ -4,7 +4,7 @@ from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...logic.attila.attila_1 import Attila1StartingState
-from ...logic.Logic import ScenarioLogic
+from ...scenarios.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -31,7 +31,7 @@ class Attila1Rules(ScenarioRules):
         can_beat_red: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) &
             self.scenario_logic.has_base() &
-            self.logic.buildings.has_siege() &
+            self.scenario_logic.buildings.has_siege() &
             self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic) &
             self.logic.military.counters_mangonel(Age2AgeData.CASTLE, self.scenario_logic) &
             self.logic.military.counters_war_elephant(Age2AgeData.CASTLE, self.scenario_logic)
@@ -40,7 +40,7 @@ class Attila1Rules(ScenarioRules):
         can_beat_green: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) &
             self.scenario_logic.has_base() &
-            self.logic.buildings.has_siege() &
+            self.scenario_logic.buildings.has_siege() &
             self.logic.military.counters_cav_archer(Age2AgeData.CASTLE, self.scenario_logic) &
             self.logic.military.counters_mangudai(Age2AgeData.CASTLE, self.scenario_logic)
         )

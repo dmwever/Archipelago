@@ -4,7 +4,7 @@ from ...logic.joan.joan_1 import Joan1StartingState
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.Logic import ScenarioLogic
+from ...scenarios.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 

@@ -5,7 +5,7 @@ from ...logic.joan.joan_2 import Joan2StartingState
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.Logic import ScenarioLogic
+from ...scenarios.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -19,8 +19,8 @@ class Joan2Rules(ScenarioRules):
         super().set_rules()
         can_cross: Rule = HasAny(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name, Age2ItemData.AP_JOAN_2_DOCK.item_name)
         can_beat_purple: Rule = can_cross & self.scenario_logic.has_base() & self.logic.military.counters_building(self.scenario_logic)
-        can_beat_red: Rule = can_cross & self.scenario_logic.has_base() & self.logic.has_siege()
-        can_beat_orange: Rule = can_cross & self.scenario_logic.has_base() & self.logic.has_siege()
+        can_beat_red: Rule = can_cross & self.scenario_logic.has_base() & self.scenario_logic.buildings.has_siege()
+        can_beat_orange: Rule = can_cross & self.scenario_logic.has_base() & self.scenario_logic.buildings.has_siege()
         victory: Rule = (can_beat_red | can_beat_orange) & Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
         
         if self.world.options.scenario_branching == ScenarioBranching.option_all:

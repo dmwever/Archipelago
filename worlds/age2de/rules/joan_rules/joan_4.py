@@ -7,7 +7,7 @@ from rule_builder.rules import Rule
 
 from ...logic.joan.joan_4 import Joan4StartingState
 
-from ...logic.Logic import ScenarioLogic
+from ...scenarios.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 

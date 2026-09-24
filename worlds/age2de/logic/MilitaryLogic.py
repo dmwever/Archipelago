@@ -10,7 +10,7 @@ from ..locations.UnitLines import Age2UnitLineData
 if TYPE_CHECKING:
     from .. import Age2World
     from .Logic import Logic
-    from .ScenarioLogic import ScenarioLogic
+    from ..scenarios.ScenarioLogic import ScenarioLogic
 
 class MilitaryLogic:
 
@@ -42,7 +42,7 @@ class MilitaryLogic:
 
     def counters_building(self, scenario: 'ScenarioLogic') -> Rule:
         """Not a unit matchup: anything that can knock a building down."""
-        return self.logic.buildings.contains_building_counter()
+        return scenario.buildings.contains_building_counter()
 
     def counters_militia(self, age: Age2AgeData, scenario: 'ScenarioLogic') -> Rule:
         return self.counters(Age2UnitLineData.MILITIA_LINE, age, scenario)

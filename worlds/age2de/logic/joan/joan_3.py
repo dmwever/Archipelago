@@ -4,7 +4,7 @@ from rule_builder.rules import Has, True_
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Ages import Age2AgeData
 
-from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
+from ...scenarios.ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
 
 
 if TYPE_CHECKING:

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from BaseClasses import Entrance, Location
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Locations import SCENARIO_TO_SCENARIO_LOCATIONS, Age2ScenarioLocationData
-from ..logic.ScenarioLogic import ScenarioLogic
+from ..scenarios.ScenarioLogic import ScenarioLogic
 
 
 
