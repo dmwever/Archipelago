@@ -6,7 +6,11 @@ from rule_builder.rules import False_, Rule, True_
 
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
+from ..locations.EscortUnits import Age2EscortUnitData
+from ..locations.Heroes import Age2HeroData
+from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
+from ..locations.VillagerJobs import Age2VillagerJobData
 from ..regions.UnitRegions import UnitEntrance, UnitEntranceKind, UnitRegion
 
 if TYPE_CHECKING:
@@ -43,6 +47,23 @@ class UnitRules:
         for region in self.world.unit_regions.regions:
             for entrance in region.entrances:
                 self.world.set_rule(entrance, self.entrance_rule(region, entrance))
+            for location in region.unit_locations:
+                rule = self.location_rule(location)
+                if isinstance(rule, True_):
+                    continue
+                self.world.set_rule(self.world.get_location(location.location_name), rule)
+
+    def location_rule(self, location) -> Rule:
+        units = self.logic.units
+        if isinstance(location, Age2VillagerJobData):
+            return units.can_do_job(location)
+        if isinstance(location, (Age2HeroData, Age2EscortUnitData)):
+            return units.is_granted(location)
+        if isinstance(location, Age2UnitLineData):
+            return units.can_own_line(location)
+        if units.pool.is_villager(location):
+            return True_()
+        return units.can_own(location)
 
     def entrance_rule(self, region: UnitRegion, entrance: UnitEntrance) -> Rule:
         if entrance.kind == UnitEntranceKind.train:

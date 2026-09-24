@@ -5,6 +5,7 @@ from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.Units import Age2UnitData
+from ..locations.VillagerJobs import Age2VillagerJobData
 
 from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, Rule, True_
@@ -29,6 +30,8 @@ class ScenarioStartingState:
     age_playable: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
+    job_available: dict[Age2VillagerJobData, Rule] = field(
+        default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
     fixed_force: bool = False
     """A set piece fought with what it hands you. No base, and no age to be in."""
@@ -72,6 +75,9 @@ class ScenarioLogic:
             return True_() & VANILLA_AGE_START
         return False_()
     
+    def job_available(self, job: Age2VillagerJobData) -> Rule:
+        return self.starting_state.job_available[job]
+
     def obtains_unit(self, unit: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
         authored = self.starting_state.obtains_unit.get(unit)
         if authored is not None:
