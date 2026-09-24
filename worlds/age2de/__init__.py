@@ -15,7 +15,7 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.TechPool import TechPool
-from .Options import Age2Options, ExistingTechs, Goal, ScenarioBranching
+from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
 from .locations import Ages, Campaigns, Locations, Scenarios
 from .locations.Ages import Age2AgeData
@@ -54,6 +54,7 @@ class Age2World(CachedRuleBuilderWorld):
     location_name_to_id = LocationMapping.location_name_to_id
     location_id_to_name = LocationMapping.location_id_to_name
     item_mapping = Items.item_mapping
+    item_name_groups = {"Traps": set(Items.TRAP_NAMES)}
     
     included_civs: list[Scenarios.Age2CivData]
     included_campaigns: list[Campaigns.Age2CampaignData]
@@ -252,6 +253,8 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             elif isinstance(item.type, Items.Tech):
                 continue
+            elif isinstance(item.type, Items.Trap):
+                continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
 
@@ -273,10 +276,16 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        starting_items = self.smart_add_starting_resources(needed_number_of_filler_items)
-        self.multiworld.itempool += starting_items
+        starting_items, surplus = self._build_starting_resources(needed_number_of_filler_items)
         
-        itempool = len(items + starting_items)
+        traps = self.roll_traps(surplus)
+        if traps:
+            starting_items = starting_items[:len(starting_items) - len(traps)]
+        
+        self.multiworld.itempool += starting_items
+        self.multiworld.itempool += traps
+        
+        itempool = len(items + starting_items + traps)
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         

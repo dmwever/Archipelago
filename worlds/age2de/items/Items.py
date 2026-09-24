@@ -28,6 +28,10 @@ class Victory:
     pass
 
 @dataclass
+class Trap:
+    pass
+
+@dataclass
 class Building:
     game_id: int
     total_cost: float
@@ -88,7 +92,7 @@ type FillerItemType = (
 )
 
 type ItemType = (
-    ScenarioItem | StartingResources | ProgressiveScenario | Mercenary | Campaign | Resources | TCResources | Victory | Building | Tech
+    ScenarioItem | StartingResources | ProgressiveScenario | Mercenary | Campaign | Resources | TCResources | Victory | Building | Tech | Trap
 )
 
 class PseudoClassification(enum.Enum):
@@ -109,6 +113,7 @@ item_type_to_classification = {
     Resources: ItemClassification.filler,
     StartingResources: ItemClassification.useful,
     Victory: ItemClassification.progression,
+    Trap: ItemClassification.trap,
 }
 
 def classification_for(item: 'Age2ItemData') -> ItemClassification:
@@ -562,6 +567,17 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.SCOUT_CAVALRY, 1), MercenaryUnit(Age2UnitData.MILITIA, 1)], icon_id=322, name_string_id=990010)
     AP_JOAN_6_LONE_SWORDSMAN =          4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.LONG_SWORDSMAN, 1)], icon_id=323, name_string_id=990011)
     AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2UnitData.JEAN_BUREAU, 1)], icon_id=324, name_string_id=990012, in_logic=True)
+
+    #5000 - 5099 = Traps
+    TRAP_WOLOLO =                       5000, "Wololo Trap",                                  Trap()
+    TRAP_SPANISH_INQUISITION =          5001, "Nobody Expects the Spanish Inquisition Trap",  Trap()
+    TRAP_NO_SIEGE =                     5002, "Long Time, No Siege Trap",                     Trap()
+    TRAP_OOH_AHH =                      5003, "Ooh Ahh Trap",                                 Trap()
+    TRAP_THEOLOGIANS =                  5004, "Theologians Trap",                             Trap()
+    TRAP_IDLE_VILLAGERS =               5005, "I'd Really Like To See That Trap",             Trap()
+    TRAP_FLEMISH_REVOLUTION =           5006, "Flemish Revolution Trap",                      Trap()
+    TRAP_RAIDING_PARTY =                5007, "Raiding Party Trap",                           Trap()
+    TRAP_TRIBUTE =                      5008, "Give Me Your Extra Resources Trap",            Trap()
     
 
         
@@ -584,6 +600,8 @@ for item in Age2ItemData:
     CATEGORY_TO_ITEMS.setdefault(item.type_data, []).append(item)
     if item.type_data == ScenarioItem or item.type_data == Mercenary:
         SCENARIO_TO_ITEMS[item.type.vanilla_scenario].append(item)
+
+TRAP_NAMES: list[str] = [_trap.item_name for _trap in CATEGORY_TO_ITEMS[Trap]]
 
 item_mapping: dict[str, str] = {
     Age2ItemData.AP_JOAN_5_REFUGEE_1.item_name: "Refugee",

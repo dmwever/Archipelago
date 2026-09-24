@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 import typing
 
-from Options import Choice, OptionList, OptionSet, PerGameCommonOptions, StartInventoryPool, Toggle
+from Options import (Choice, OptionCounter, OptionList, OptionSet, PerGameCommonOptions, Range,
+                     StartInventoryPool, Toggle)
 from worlds.age2de.locations.Campaigns import Age2CampaignData
 from .locations.Buildings import BuildingOption
+from .items.Items import TRAP_NAMES
 
 class Goal(Choice):
     """Goal for this playthrough.
@@ -186,6 +188,54 @@ class ExistingTechs(Choice):
     default = option_vanilla
 
 
+class TrapDifficulty(Choice):
+    """
+    How punishing traps are when they are enabled. No Traps keeps them out of the item pool entirely.
+    """
+    internal_name = "trap_difficulty"
+    display_name = "Trap Difficulty"
+    option_no_traps = 0
+    option_easiest = 1
+    option_standard = 2
+    option_medium = 3
+    option_hard = 4
+    option_legendary = 5
+    default = option_no_traps
+
+    def include_traps(self) -> bool:
+        return self.value > 0
+
+
+class TrapPercentage(Range):
+    """
+    Percentage of the leftover filler slots to replace with traps. Starting resources are always
+    funded first, so this only ever spends what is left over once they have what they need. A seed
+    with no room to spare produces no traps whatever this is set to.
+    """
+    internal_name = "trap_percentage"
+    display_name = "Trap Percentage"
+    range_start = 0
+    range_end = 100
+    default = 20
+
+
+TRAP_DEFAULT_WEIGHT = 100
+
+
+class TrapDistribution(OptionCounter):
+    """
+    Relative chance of each trap whenever a trap slot is rolled. Every trap defaults to 100. A trap
+    on 200 is twice as likely as one on 100, a trap on 10 a tenth as likely, and 0 disables that
+    trap outright. Setting every weight to 0 produces no traps at all, overriding Trap Percentage.
+    """
+    internal_name = "trap_distribution"
+    display_name = "Trap Distribution"
+    min = 0
+    max = 1000
+    valid_keys = frozenset(TRAP_NAMES)
+    default = {_trap_name: TRAP_DEFAULT_WEIGHT for _trap_name in TRAP_NAMES}
+
+
 @dataclass
 class Age2Options(PerGameCommonOptions):
     """
@@ -205,3 +255,6 @@ class Age2Options(PerGameCommonOptions):
     existing_techs: ExistingTechs
     goal: Goal
     local_start: LocalStart
+    trap_difficulty: TrapDifficulty
+    trap_percentage: TrapPercentage
+    trap_distribution: TrapDistribution
