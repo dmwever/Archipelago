@@ -15,7 +15,8 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.TechPool import TechPool
-from .generation.UnitPool import UnitLocation, UnitPool
+from .generation.UnitPool import UnitPool
+from .regions.UnitRegions import UnitRegions
 from .Options import Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
 from .locations import (Ages, Campaigns, EscortUnits, Heroes, Locations, Scenarios,
@@ -68,12 +69,8 @@ class Age2World(CachedRuleBuilderWorld):
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
     shuffled_ages: list[Age2AgeData]
-    shuffled_unit_lines: list[UnitLines.Age2UnitLineData]
-    shuffled_units: list[Units.Age2UnitData]
-    shuffled_unit_buildings: list[Buildings.Age2BuildingData]
-    shuffled_villager: bool
     included_scenarios: list[Scenarios.Age2ScenarioData]
-    unit_doors: list[tuple[str, str, object, object]]
+    unit_regions: UnitRegions
     tech_pool: TechPool
     unit_pool: UnitPool
     earliest_age: Age2AgeData = None
@@ -87,11 +84,6 @@ class Age2World(CachedRuleBuilderWorld):
         self.shuffled_buildings = []
         self.shuffled_techs = []
         self.shuffled_ages = []
-        self.shuffled_unit_lines = []
-        self.shuffled_units = []
-        self.shuffled_unit_buildings = []
-        self.shuffled_villager = False
-        self.unit_doors = []
         
     def branching_option(self, location):
         if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenario_branching != ScenarioBranching.option_all:
@@ -214,91 +206,12 @@ class Age2World(CachedRuleBuilderWorld):
                 region.exits.append(alternate)
                 alternate.connect(existing_building)
 
-        regions += self.add_unit_regions(building_regions, scenario_regions)
+        self.unit_regions = UnitRegions(self, building_regions, scenario_regions)
+        regions += self.unit_regions.create()
 
         regions[0].add_event("Victory", Items.Age2ItemData.VICTORY.item_name)
 
         self.multiworld.regions += regions
-
-    def connect(self, source: Region, target: Region, name: str) -> Entrance:
-        entrance = Entrance(self.player, name, source)
-        source.exits.append(entrance)
-        entrance.connect(target)
-        return entrance
-
-    def add_unit_door(self, source: Region, target: Region, kind: str,
-                      via: object, unit_target: object, name: str) -> None:
-        self.connect(source, target, name)
-        self.unit_doors.append((name, kind, via, unit_target))
-
-    def add_unit_regions(
-            self, building_regions: dict[Buildings.Age2BuildingData, Region],
-            scenario_regions: dict[Scenarios.Age2ScenarioData, Region]) -> list[Region]:
-        regions: list[Region] = []
-        for line, locations in self.unit_pool.line_locations.items():
-            trainable = [building for building in line.head.buildings
-                        if building in building_regions] if self.unit_pool.is_trainable(line) else []
-            granting = [(scenario, region) for scenario, region in scenario_regions.items()
-                        if self.unit_pool.startup_grants(scenario, line)
-                        or self.unit_pool.trigger_grants(scenario, line)]
-            if not trainable and not granting:
-                continue  # nothing in this seed can produce it, so it is not a check
-
-            region = Region(line.line_name, self.player, self.multiworld)
-            regions.append(region)
-            for location in locations:
-                region.locations.append(
-                    Location(self.player, location.location_name, location.id, region))
-                self.record_unit_location(location, trainable)
-
-            for building in trainable:
-                self.add_unit_door(building_regions[building], region, "train", building, line,
-                                   f"Train {line.line_name} at {building.item.item_name}")
-            for scenario, scenario_region in scenario_regions.items():
-                name = f"{scenario.scenario_name}: {line.line_name}"
-                if self.unit_pool.startup_grants(scenario, line):
-                    self.add_unit_door(scenario_region, region, "startup", scenario, line,
-                                       f"{name} at Start")
-                if self.unit_pool.trigger_grants(scenario, line):
-                    self.add_unit_door(scenario_region, region, "trigger", scenario, line,
-                                       f"{name} by Trigger")
-                self.add_unit_door(scenario_region, region, "conversion", scenario, line,
-                                   f"{name} by Conversion")
-
-        # A hero and an escort are the same shape: one check, no line, and a scenario is the
-        # only way to come by one. No training entrance is possible for either.
-        for granted in self.unit_pool.special_units:
-            label = getattr(granted, "hero_name", None) or granted.escort_name
-            region = Region(label, self.player, self.multiworld)
-            regions.append(region)
-            region.locations.append(
-                Location(self.player, granted.location_name, granted.id, region))
-            for scenario, scenario_region in scenario_regions.items():
-                name = f"{scenario.scenario_name}: {label}"
-                if self.unit_pool.startup_grants(scenario, granted):
-                    self.add_unit_door(scenario_region, region, "startup", scenario, granted,
-                                       f"{name} at Start")
-                if self.unit_pool.trigger_grants(scenario, granted):
-                    self.add_unit_door(scenario_region, region, "trigger", scenario, granted,
-                                       f"{name} by Trigger")
-        return regions
-
-    def record_unit_location(self, location: UnitLocation,
-                             producers: list[Buildings.Age2BuildingData]) -> None:
-        if self.unit_pool.is_villager_location(location):
-            self.shuffled_villager = True
-            return
-        if isinstance(location, UnitLines.Age2UnitLineData):
-            self.shuffled_unit_lines.append(location)
-            self.shuffled_units += [unit for unit in location.units
-                                    if self.unit_pool.includes(unit)]
-        else:
-            self.shuffled_units.append(location)
-            if location.line not in self.shuffled_unit_lines:
-                self.shuffled_unit_lines.append(location.line)
-        for building in producers:
-            if building not in self.shuffled_unit_buildings:
-                self.shuffled_unit_buildings.append(building)
 
     def civ_can_build(self, building: Buildings.Age2BuildingData) -> bool:
         """Whether any included civilization puts up this building."""
@@ -381,8 +294,7 @@ class Age2World(CachedRuleBuilderWorld):
         for tech in self.shuffled_techs:
             items.append(self.create_item(tech.item.item_name))
 
-        for item in self.unit_pool.items(self.shuffled_unit_lines, self.shuffled_units,
-                                         self.shuffled_unit_buildings, self.shuffled_villager):
+        for item in self.unit_regions.items():
             items.append(self.create_item(item.item_name))
                 
 

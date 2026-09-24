@@ -7,6 +7,7 @@ from rule_builder.rules import False_, Rule, True_
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.Units import Age2UnitData
+from ..regions.UnitRegions import UnitEntrance, UnitEntranceKind, UnitRegion
 
 if TYPE_CHECKING:
     from .Rules import Rules
@@ -39,15 +40,17 @@ class UnitRules:
         return rule if rule is not None else False_()
 
     def set_rules(self):
-        for name, kind, source, target in self.world.unit_doors:
-            door = self.world.get_entrance(name)
-            if kind == "train":
-                self.world.set_rule(door, self.logic.can_build_building(source))
-            elif kind == "startup":
-                self.world.set_rule(door, True_())
-            elif kind == "trigger":
-                self.world.set_rule(door, self.trigger_rule(source, target))
-            else:
-                # Conversion is a placeholder. The entrances exist so the seam sits where it
-                # belongs; they open when Monk logic and per-scenario enemy rosters are real.
-                self.world.set_rule(door, False_())
+        for region in self.world.unit_regions.regions:
+            for entrance in region.entrances:
+                self.world.set_rule(entrance, self.entrance_rule(region, entrance))
+
+    def entrance_rule(self, region: UnitRegion, entrance: UnitEntrance) -> Rule:
+        if entrance.kind == UnitEntranceKind.train:
+            return self.logic.can_build_building(entrance.via)
+        if entrance.kind == UnitEntranceKind.startup:
+            return True_()
+        if entrance.kind == UnitEntranceKind.trigger:
+            return self.trigger_rule(entrance.via, region.target)
+        # Conversion is a placeholder. The entrances exist so the seam sits where it belongs;
+        # they open when Monk logic and per-scenario enemy rosters are real.
+        return False_()

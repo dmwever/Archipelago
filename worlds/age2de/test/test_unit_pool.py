@@ -14,6 +14,7 @@ from ..locations.Heroes import Age2HeroData
 from ..locations.Units import Age2UnitData, UnitType
 from ..locations.VillagerJobs import Age2VillagerJobData, VillagerSex
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
+from ..regions.UnitRegions import UnitEntranceKind, UnitRegion
 
 
 class UnitPoolTestBase(unittest.TestCase):
@@ -71,10 +72,10 @@ class TestUnitPool(UnitPoolTestBase):
     def test_shuffle_villager_owns_the_villager_and_unitsanity_never_touches_it(self):
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        self.assertNotIn(Age2UnitData.VILLAGER_MALE, world.shuffled_units)
+        self.assertNotIn(Age2UnitData.VILLAGER_MALE, world.unit_regions.shuffled_units)
         self.assertNotIn(Age2UnitLineData.VILLAGER_LINE.location_name,
                          self.own_locations(world))
-        self.assertFalse(world.shuffled_villager)
+        self.assertFalse(world.unit_regions.shuffled_villager)
 
     def test_yes_checks_the_line_and_professions_split_it_by_sex(self):
         plain = self.build(shuffle_villager=ShuffleVillager.option_yes)
@@ -97,7 +98,7 @@ class TestUnitPool(UnitPoolTestBase):
     def test_restricted_units_join_only_when_their_option_admits_them(self):
         def kinds(include: int) -> set[str]:
             world = self.build(unitsanity=Unitsanity.option_all, include_unique_units=include)
-            return {unit.unit_type for unit in world.shuffled_units}
+            return {unit.unit_type for unit in world.unit_regions.shuffled_units}
 
         self.assertFalse(kinds(IncludeUniqueUnits.option_none)
                          & {UnitType.unique_unit, UnitType.regional_unit})
@@ -113,12 +114,12 @@ class TestUnitPool(UnitPoolTestBase):
         Mangudai an Attila 1 mercenary muster spawns eighteen of."""
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        self.assertTrue(world.shuffled_units)
+        self.assertTrue(world.unit_regions.shuffled_units)
         trainable = {unit for civ in world.included_civs for unit in CIV_TO_UNITS[civ]}
         granted = {grant for scenario in world.included_scenarios
                    for grant in scenario.startup_units + scenario.trigger_units}
-        self.assertTrue(set(world.shuffled_units) <= trainable | granted)
-        self.assertIn(Age2UnitData.MANGUDAI, world.shuffled_units)
+        self.assertTrue(set(world.unit_regions.shuffled_units) <= trainable | granted)
+        self.assertIn(Age2UnitData.MANGUDAI, world.unit_regions.shuffled_units)
         self.assertNotIn(Age2UnitData.MANGUDAI, trainable)
 
     def test_a_handed_over_unit_is_no_check_under_unit_line(self):
@@ -173,13 +174,16 @@ class TestUnitItems(UnitPoolTestBase):
 class TestUnitRegions(UnitPoolTestBase):
     """A unit line is a region and each way of coming by one is an entrance."""
 
-    def doors(self, world: Age2World, kind: str) -> list[tuple]:
-        return [door for door in world.unit_doors if door[1] == kind]
+    def entrances(self, world: Age2World, kind: str) -> list[tuple]:
+        """(via, target) for every entrance of one kind, across the unit regions."""
+        return [(entrance.via, region.target)
+                for region in world.unit_regions.regions
+                for entrance in region.entrances if entrance.kind == kind]
 
     def test_a_unit_lives_in_its_line_region_not_its_buildings(self):
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        for unit in world.shuffled_units:
+        for unit in world.unit_regions.shuffled_units:
             region = world.multiworld.get_region(unit.line.line_name, 1)
             self.assertIn(unit.location_name,
                           [location.name for location in region.locations], unit.name)
@@ -193,7 +197,8 @@ class TestUnitRegions(UnitPoolTestBase):
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both,
                            shuffle_villager=ShuffleVillager.option_include_professions)
-        real = {door[3] for door in world.unit_doors if door[1] != "conversion"}
+        real = {region.target for region in world.unit_regions.regions
+                for entrance in region.entrances if entrance.kind != UnitEntranceKind.conversion}
         for line in world.unit_pool.line_locations:
             if not world.multiworld.get_region(line.line_name, 1).locations:
                 continue
@@ -201,17 +206,19 @@ class TestUnitRegions(UnitPoolTestBase):
 
     def test_conversion_is_closed_everywhere(self):
         world = self.build_with_rules(unitsanity=Unitsanity.option_all)
-        conversions = self.doors(world, "conversion")
+        conversions = [entrance for region in world.unit_regions.regions
+                       for entrance in region.entrances
+                       if entrance.kind == UnitEntranceKind.conversion]
         self.assertTrue(conversions)
         state = world.multiworld.get_all_state(False)
-        for name, _kind, _scenario, _line in conversions:
-            self.assertFalse(state.can_reach_entrance(name, 1), name)
+        for entrance in conversions:
+            self.assertFalse(state.can_reach_entrance(entrance.name, 1), entrance.name)
 
     def test_a_handed_over_line_needs_no_building_to_train_it(self):
         """Attila 2 opens with twelve Tarkans, so the line is reachable without a Stable."""
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        startup = {(door[2], door[3]) for door in self.doors(world, "startup")}
+        startup = set(self.entrances(world, UnitEntranceKind.startup))
         self.assertIn((Age2ScenarioData.AP_ATTILA_2, Age2UnitLineData.TARKAN_LINE), startup)
         self.assertIn((Age2ScenarioData.AP_ATTILA_2, Age2UnitLineData.CAVALRY_ARCHER_LINE),
                       startup)
@@ -220,7 +227,7 @@ class TestUnitRegions(UnitPoolTestBase):
         """No Hun trains a Mangudai, however many a mercenary muster spawns."""
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        trained = {door[3] for door in self.doors(world, "train")}
+        trained = {target for _via, target in self.entrances(world, UnitEntranceKind.train)}
         self.assertNotIn(Age2UnitLineData.MANGUDAI_LINE, trained)
         self.assertIn(Age2UnitLineData.TARKAN_LINE, trained)
 
@@ -235,7 +242,7 @@ class TestUnitRegions(UnitPoolTestBase):
         for job in Age2VillagerJobData:
             self.assertIn(job.location_name, placed, job.name)
         self.assertIn(Age2UnitData.VILLAGER_FEMALE.location_name, placed)
-        trained = {door[3] for door in self.doors(world, "train")}
+        trained = {target for _via, target in self.entrances(world, UnitEntranceKind.train)}
         self.assertIn(Age2UnitLineData.VILLAGER_LINE, trained)
 
 
@@ -246,9 +253,11 @@ class TestEscorts(UnitPoolTestBase):
     def test_the_cart_is_a_check_a_scenario_alone_supplies(self):
         world = self.build(unitsanity=Unitsanity.option_all)
         self.assertIn(Age2EscortUnitData.CART.location_name, self.own_locations(world))
-        doors = {(door[1], door[2]) for door in world.unit_doors
-                 if door[3] is Age2EscortUnitData.CART}
-        self.assertEqual(doors, {("startup", Age2ScenarioData.AP_JOAN_6)})
+        ways_in = {(entrance.kind, entrance.via)
+                   for region in world.unit_regions.regions
+                   if region.target is Age2EscortUnitData.CART
+                   for entrance in region.entrances}
+        self.assertEqual(ways_in, {(UnitEntranceKind.startup, Age2ScenarioData.AP_JOAN_6)})
 
     def test_an_escort_is_a_check_under_all_only(self):
         self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).unit_pool.escorts)
@@ -292,15 +301,17 @@ class TestHeroes(UnitPoolTestBase):
                              [hero.location_name])
             granting = {scenario for scenario in world.included_scenarios
                         if hero in scenario.startup_units + scenario.trigger_units}
-            doors = {door[2] for door in world.unit_doors if door[3] is hero}
-            self.assertEqual(doors, granting, hero.name)
+            ways_in = {entrance.via for entrance in
+                       world.multiworld.get_region(hero.hero_name, 1).entrances}
+            self.assertEqual(ways_in, granting, hero.name)
 
     def test_attila_arrives_by_trigger_in_one_scenario_and_on_the_map_in_another(self):
         world = self.build(unitsanity=Unitsanity.option_all)
-        kinds = {(door[1], door[2]) for door in world.unit_doors
-                 if door[3] is Age2HeroData.ATTILA_THE_HUN}
-        self.assertIn(("trigger", Age2ScenarioData.AP_ATTILA_1), kinds)
-        self.assertIn(("startup", Age2ScenarioData.AP_ATTILA_6), kinds)
+        kinds = {(entrance.kind, entrance.via) for region in world.unit_regions.regions
+                 if region.target is Age2HeroData.ATTILA_THE_HUN
+                 for entrance in region.entrances}
+        self.assertIn((UnitEntranceKind.trigger, Age2ScenarioData.AP_ATTILA_1), kinds)
+        self.assertIn((UnitEntranceKind.startup, Age2ScenarioData.AP_ATTILA_6), kinds)
 
     def test_no_hero_is_an_item(self):
         world = self.build(unitsanity=Unitsanity.option_all,
