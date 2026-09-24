@@ -239,8 +239,8 @@ class Age2World(CachedRuleBuilderWorld):
             trainable = [building for building in line.head.buildings
                         if building in building_regions] if self.unit_pool.is_trainable(line) else []
             granting = [(scenario, region) for scenario, region in scenario_regions.items()
-                        if self.unit_pool.scenario_grants_line(scenario, line, True)
-                        or self.unit_pool.scenario_grants_line(scenario, line, False)]
+                        if self.unit_pool.startup_grants(scenario, line)
+                        or self.unit_pool.trigger_grants(scenario, line)]
             if not trainable and not granting:
                 continue  # nothing in this seed can produce it, so it is not a check
 
@@ -256,10 +256,10 @@ class Age2World(CachedRuleBuilderWorld):
                                    f"Train {line.line_name} at {building.item.item_name}")
             for scenario, scenario_region in scenario_regions.items():
                 name = f"{scenario.scenario_name}: {line.line_name}"
-                if self.unit_pool.scenario_grants_line(scenario, line, True):
+                if self.unit_pool.startup_grants(scenario, line):
                     self.add_unit_door(scenario_region, region, "startup", scenario, line,
                                        f"{name} at Start")
-                if self.unit_pool.scenario_grants_line(scenario, line, False):
+                if self.unit_pool.trigger_grants(scenario, line):
                     self.add_unit_door(scenario_region, region, "trigger", scenario, line,
                                        f"{name} by Trigger")
                 self.add_unit_door(scenario_region, region, "conversion", scenario, line,
@@ -275,10 +275,10 @@ class Age2World(CachedRuleBuilderWorld):
                 Location(self.player, granted.location_name, granted.id, region))
             for scenario, scenario_region in scenario_regions.items():
                 name = f"{scenario.scenario_name}: {label}"
-                if self.unit_pool.scenario_grants_directly(scenario, granted, True):
+                if self.unit_pool.startup_grants(scenario, granted):
                     self.add_unit_door(scenario_region, region, "startup", scenario, granted,
                                        f"{name} at Start")
-                if self.unit_pool.scenario_grants_directly(scenario, granted, False):
+                if self.unit_pool.trigger_grants(scenario, granted):
                     self.add_unit_door(scenario_region, region, "trigger", scenario, granted,
                                        f"{name} by Trigger")
         return regions

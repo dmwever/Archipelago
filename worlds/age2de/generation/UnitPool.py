@@ -146,18 +146,18 @@ class UnitPool:
         return self.is_villager(location)
 
 
-    def scenario_grants_line(self, scenario: Age2ScenarioData, line: Age2UnitLineData,
-               at_start: bool) -> bool:
-        granted = scenario.startup_units if at_start else scenario.trigger_units
-        return any(isinstance(grant, Age2UnitData) and grant.line is line
-                   for grant in granted)
+    def startup_grants(self, scenario: Age2ScenarioData, target: UnitLocation) -> bool:
+        if isinstance(target, Age2UnitLineData):
+            return any(isinstance(grant, Age2UnitData) and grant.line is target
+                       for grant in scenario.startup_units)
+        return target in scenario.startup_units
 
 
-    def scenario_grants_directly(self, scenario: Age2ScenarioData,
-                                 target: Age2HeroData | Age2EscortUnitData,
-                                 at_start: bool) -> bool:
-        granted = scenario.startup_units if at_start else scenario.trigger_units
-        return target in granted
+    def trigger_grants(self, scenario: Age2ScenarioData, target: UnitLocation) -> bool:
+        if isinstance(target, Age2UnitLineData):
+            return any(isinstance(grant, Age2UnitData) and grant.line is target
+                       for grant in scenario.trigger_units)
+        return target in scenario.trigger_units
 
 
     def items(self, lines: Iterable[Age2UnitLineData], units: Iterable[Age2UnitData],
