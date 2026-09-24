@@ -25,25 +25,25 @@ class Joan3Rules(ScenarioRules):
             self.scenario_logic.has_base() &
             can_cross_ocean & 
             self.logic.has_siege() &
-            self.logic.military.counters_militia(Age2AgeData.CASTLE) &
-            self.logic.military.counters_longbowman() &
-            self.logic.military.counters_knight()
+            self.logic.military.counters_militia(Age2AgeData.CASTLE, self.scenario_logic) &
+            self.logic.military.counters_longbowman(Age2AgeData.CASTLE, self.scenario_logic) &
+            self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic)
         )
         can_beat_purple: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean &
-            self.logic.military.counters_building() &
-            self.logic.military.counters_militia(Age2AgeData.CASTLE) &
-            self.logic.military.counters_spear(Age2AgeData.CASTLE) &
-            self.logic.military.counters_mangonel()
+            self.logic.military.counters_building(self.scenario_logic) &
+            self.logic.military.counters_militia(Age2AgeData.CASTLE, self.scenario_logic) &
+            self.logic.military.counters_spear(Age2AgeData.CASTLE, self.scenario_logic) &
+            self.logic.military.counters_mangonel(Age2AgeData.CASTLE, self.scenario_logic)
         )
         can_beat_fastolf: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean &
-            self.logic.military.counters_building() &
-            self.logic.military.counters_ram() &
-            self.logic.military.counters_scout() &
-            self.logic.military.counters_knight()
+            self.logic.military.counters_building(self.scenario_logic) &
+            self.logic.military.counters_ram(Age2AgeData.CASTLE, self.scenario_logic) &
+            self.logic.military.counters_scout(Age2AgeData.FEUDAL, self.scenario_logic) &
+            self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic)
         )
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_SLAY_FASTOLF], can_beat_fastolf)

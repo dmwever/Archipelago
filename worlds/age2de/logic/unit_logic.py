@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
 from ..Options import Unitsanity, UnitsanityItems
+from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
+from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
 if TYPE_CHECKING:
@@ -58,13 +60,15 @@ class UnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train(self, unit: Age2UnitData) -> Rule:
-        if not self.pool.includes(unit) or not unit.buildings:
+        if not self.pool.is_trainable_unit(unit) or not unit.buildings:
             return False_()
         somewhere = Or(*[scenario.is_unlocked() & self.can_train_in(scenario, unit)
                          for scenario in self.logic.scenarios])
         return self.has_unit_items(unit) & self.has_upgrade_tech(unit) & somewhere
 
     def can_train_in(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> Rule:
+        if not self.pool.civ_trains(scenario.scenario.civ, unit):
+            return False_()   # this scenario's civilisation does not have it
         if self.upgraded_away(scenario, unit):
             return False_()
         return Or(*[scenario.start_with_building(building) for building in unit.buildings
@@ -77,6 +81,8 @@ class UnitLogic:
             tech = successor.upgrade_tech
             if tech is None or self.world.tech_pool.locked_at_start(tech):
                 continue  # withheld, so researching it is your choice and your timing
+            if tech not in CIV_TO_TECHS[scenario.scenario.civ]:
+                continue
             if scenario.scenario.vanilla_age >= tech.age:
                 return True
         return False
@@ -128,6 +134,29 @@ class UnitLogic:
         if not wanted:
             return True_()
         return HasAny(*wanted)
+
+    # -- counters ----------------------------------------------------------------------------
+
+    def tiers_from_age(self, line: Age2UnitLineData, age: Age2AgeData) -> list[Age2UnitData]:
+        return [unit for unit in line.units if unit.age >= age]
+
+    def can_counter(self, target: Age2UnitLineData, age: Age2AgeData,
+                    scenario: 'ScenarioLogic') -> Rule:
+        ways = []
+        civ = scenario.scenario.civ
+        for line in target.countered_by:
+            for unit in self.counter_tiers(line, age, civ):
+                ways.append(self.has_unit_items(unit) & self.has_upgrade_tech(unit)
+                            & self.can_train_in(scenario, unit))
+        return Or(*ways)
+
+    def counter_tiers(self, line: Age2UnitLineData, age: Age2AgeData,
+                      civ) -> list[Age2UnitData]:
+        theirs = [unit for unit in line.units if self.pool.civ_trains(civ, unit)]
+        good_enough = [unit for unit in theirs if unit.age >= age]
+        if good_enough:
+            return good_enough
+        return [max(theirs, key=lambda unit: unit.tier)] if theirs else []
 
     # -- villagers ---------------------------------------------------------------------------
 

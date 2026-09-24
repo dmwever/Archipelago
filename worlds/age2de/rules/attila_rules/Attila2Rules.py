@@ -22,9 +22,9 @@ class Attila2Rules(ScenarioRules):
             (
                 self.scenario_logic.has_base() &
                 self.logic.has_siege() &
-                self.logic.military.counters_knight() &
-                self.logic.military.counters_militia(Age2AgeData.CASTLE) &
-                self.logic.military.counters_spear(Age2AgeData.CASTLE)
+                self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic) &
+                self.logic.military.counters_militia(Age2AgeData.CASTLE, self.scenario_logic) &
+                self.logic.military.counters_spear(Age2AgeData.CASTLE, self.scenario_logic)
             )
         )
         can_build_tc = self.logic.buildings.can_build_tc() & self.scenario_logic.has_vils()

@@ -17,27 +17,27 @@ class Attila5Rules(ScenarioRules):
         super().set_rules()
         can_beat_cyan: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_cav_archer(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_mangonel(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_trebuchet() &
+            self.logic.military.counters_cav_archer(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_knight(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_mangonel(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_trebuchet(Age2AgeData.IMPERIAL, self.scenario_logic) &
             self.logic.military.has_long_range_siege()
         )
         can_beat_green: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_spear(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_militia(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_huskarl(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_ram() &
-            self.logic.military.counters_trebuchet() &
+            self.logic.military.counters_spear(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_militia(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_huskarl(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_ram(Age2AgeData.CASTLE, self.scenario_logic) &
+            self.logic.military.counters_trebuchet(Age2AgeData.IMPERIAL, self.scenario_logic) &
             self.logic.military.has_long_range_siege()
         )
         can_beat_blue: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_centurion(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_legionary(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_scorpion(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_trebuchet() &
+            self.logic.military.counters_centurion(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_legionary(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_scorpion(Age2AgeData.IMPERIAL, self.scenario_logic) &
+            self.logic.military.counters_trebuchet(Age2AgeData.IMPERIAL, self.scenario_logic) &
             self.logic.military.has_long_range_siege()
         )
         

@@ -21,6 +21,8 @@ class Age2UnitLineData(enum.IntEnum):
         self.line_name = line_name
         self.head = head
         self.item = item
+        # Bound by connections/UnitCounters, imported for its side effect.
+        self.countered_by: list['Age2UnitLineData'] = []
 
     @property
     def units(self) -> list[Age2UnitData]:

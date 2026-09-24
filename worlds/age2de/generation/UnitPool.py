@@ -46,6 +46,12 @@ class UnitPool:
         return wanted is None or self._include_unique_units in wanted
 
 
+    def is_trainable_unit(self, unit: Age2UnitData) -> bool:
+        return unit in self._trainable
+
+    def civ_trains(self, civ: Age2CivData, unit: Age2UnitData) -> bool:
+        return unit in CIV_TO_UNITS[civ]
+
     def includes(self, unit: Age2UnitData) -> bool:
         if self._unitsanity == Unitsanity.option_none:
             return False

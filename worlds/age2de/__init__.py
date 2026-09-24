@@ -27,6 +27,7 @@ from .locations.connections.UnitBuildings import BUILDING_TO_UNITS
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, ScenarioStartupUnits,
                                     ScenarioTriggerUnits, UnitBuildings,
+                                    UnitCounters,
                                     UnitLineUnits, UnitTechs, UnitUpgradeTokens,
                                     UnitVariants)
 from .rules.Rules import Rules
