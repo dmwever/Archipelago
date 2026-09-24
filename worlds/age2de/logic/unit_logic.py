@@ -19,15 +19,11 @@ if TYPE_CHECKING:
     from .ScenarioLogic import ScenarioLogic
 
 HORSE_LINE = Age2UnitLineData.SCOUT_CAVALRY_LINE
-"""What a civilisation has to be able to train for a horse to be a thing it owns."""
 
 JOB_BUILDING = {
     "Farmer": Age2BuildingData.FARM,
     "Herder": Age2BuildingData.PASTURE
 }
-"""A job that cannot happen without a particular building. The rest need a resource on the map,
-not something you can be given, so they are governed by the scenario instead - see
-ScenarioStartingState.job_available. The builder is a case of its own: any building will do."""
 
 
 class UnitLogic:
@@ -40,12 +36,6 @@ class UnitLogic:
     # -- owning ------------------------------------------------------------------------------
 
     def can_own(self, unit: Age2UnitData) -> Rule:
-        """Every way of coming by this exact tier.
-
-        Exact, because a granted unit never climbs its line: an upgrade transforms what you own
-        at the moment you research it, and anything handed over afterwards stays as it arrived.
-        So being given a Heavy Cavalry Archer is no way at all to own a Cavalry Archer.
-        """
         return self.can_train(unit) | self.is_granted(unit) | self.can_convert(unit)
 
     def can_own_line(self, line: Age2UnitLineData) -> Rule:
@@ -53,12 +43,9 @@ class UnitLogic:
         return Or(*[self.can_own(unit) for unit in line.units if self.pool.includes(unit)])
 
     def can_convert(self, unit: Age2UnitData) -> Rule:
-        """A placeholder, matching the conversion entrances. Monk logic and a per-scenario
-        roster of what the enemy fields would both have to exist first."""
         return False_()
 
     def is_granted(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
-        """Handed over by a scenario, at its start or by one of its triggers."""
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
             data = scenario.scenario
@@ -71,11 +58,6 @@ class UnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train(self, unit: Age2UnitData) -> Rule:
-        """Turning one out yourself, in some scenario that can still produce this tier.
-
-        Scenario by scenario rather than once globally, because whether a tier can be trained at
-        all depends on where that scenario starts - see upgraded_away.
-        """
         if not self.pool.includes(unit) or not unit.buildings:
             return False_()
         somewhere = Or(*[scenario.is_unlocked() & self.can_train_in(scenario, unit)
@@ -89,16 +71,6 @@ class UnitLogic:
                     if self.world.civ_can_build(building)])
 
     def upgraded_away(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> bool:
-        """Whether this scenario has already upgraded past this tier before you touch anything.
-
-        A scenario auto-researches everything below the age it starts in, and an upgrade changes
-        what the building turns out. So under vanilla technologies a Castle-Age scenario trains
-        Crossbowmen and can never produce an Archer - the tier is not merely hard to get there,
-        it does not exist.
-
-        Static rather than a rule: which technologies a scenario starts with is settled by
-        Existing Techs and the scenario's own age, neither of which an item can change.
-        """
         for successor in unit.line.units:
             if successor.tier != unit.tier + 1:
                 continue
@@ -110,7 +82,6 @@ class UnitLogic:
         return False
 
     def has_upgrade_tech(self, unit: Age2UnitData) -> Rule:
-        """A tier above the base needs its own upgrade researched."""
         tech = unit.upgrade_tech
         if tech is None or not self.world.tech_pool.includes(tech):
             return True_()
@@ -119,7 +90,6 @@ class UnitLogic:
     # -- items -------------------------------------------------------------------------------
 
     def has_unit_items(self, unit: Age2UnitData) -> Rule:
-        """What Unitsanity Items asks for before this unit can be trained."""
         if self.world.options.unitsanity == Unitsanity.option_none:
             return True_()
         mode = self.world.options.unitsanity_items
@@ -141,8 +111,6 @@ class UnitLogic:
         return HasAll(*[token.item_name for token in tokens])
 
     def token_applies(self, unit: Age2UnitData, token) -> bool:
-        """A trade cart wants a horse to pull it, except where there are no horses. A
-        meso-american civilisation trains no cavalry at all and still runs trade carts."""
         from ..items.Items import Age2ItemData
         if unit is not Age2UnitData.TRADE_CART or token is not Age2ItemData.UPGRADE_HORSE:
             return True
@@ -164,11 +132,6 @@ class UnitLogic:
     # -- villagers ---------------------------------------------------------------------------
 
     def can_do_job(self, job: Age2VillagerJobData) -> Rule:
-        """A villager doing a particular piece of work.
-
-        Most jobs need a resource on the map rather than anything you can be handed, so the
-        scenario answers for them and says yes unless it is one of the few that cannot.
-        """
         available = Or(*[scenario.is_unlocked() & scenario.job_available(job)
                          for scenario in self.logic.scenarios])
         return available & self.job_requirement(job)
