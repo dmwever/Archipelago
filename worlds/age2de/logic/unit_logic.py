@@ -20,6 +20,12 @@ HORSE_LINE = Age2UnitLineData.SCOUT_CAVALRY_LINE
 
 
 class UnitLogic:
+    """Whether a unit can be had **somewhere**, which is what its global location asks.
+
+    Every question that depends on where you are standing belongs to ScenarioUnitLogic, and the
+    answers here are an Or over the scenarios that can be reached. What is left is the item half:
+    an item is global by nature, so holding the Archer Line holds it everywhere.
+    """
 
     def __init__(self, logic: 'Logic', world: Age2World):
         self.logic = logic
@@ -113,7 +119,3 @@ class UnitLogic:
         if not wanted:
             return True_()
         return HasAny(*wanted)
-
-        return available & self.job_requirement(job)
-
-    def job_requirement(self, job: Age2VillagerJobData) -> Rule:
