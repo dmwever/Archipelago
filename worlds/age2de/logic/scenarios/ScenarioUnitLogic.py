@@ -35,7 +35,7 @@ class ScenarioUnitLogic:
                          for building in unit.buildings
                          if self.scenario.civilization.can_build(building)])
         return (self.logic.units.has_unit_items(unit) & self.has_upgrade_tech(unit)
-                & somewhere & self.scenario.can_play_age(unit.age))
+                & somewhere & self.scenario.ages.has_reached(unit.age))
 
     def upgraded_away(self, unit: Age2UnitData) -> bool:
         for successor in unit.line.units:

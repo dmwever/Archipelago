@@ -25,7 +25,7 @@ class ScenarioBuildingLogic:
         return (self.buildings.has_building(building)
                 & self.buildings.has_prerequisites(building)
                 & self.scenario.has_vils()
-                & self.scenario.can_play_age(building.age))
+                & self.scenario.ages.has_reached(building.age))
 
     def can_build_anything(self) -> Rule:
         return Or(*[self.can_build_building(building) for building in Age2BuildingData
@@ -40,7 +40,7 @@ class ScenarioBuildingLogic:
         return self.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
 
     def can_build_multiple_tc(self) -> Rule:
-        return self.can_build_tc() & self.scenario.can_play_age(Age2AgeData.CASTLE)
+        return self.can_build_tc() & self.scenario.ages.has_reached(Age2AgeData.CASTLE)
 
     def can_mine(self) -> Rule:
         """Gold and stone need somewhere to drop off, unless a second town centre covers it."""

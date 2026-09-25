@@ -19,11 +19,9 @@ class Attila1StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has("Attila the Hun Campaign")
+        self.max_age = Age2AgeData.CASTLE
         self.has_vils = self.has_bledas_camp | self.alternate_vils
         self.has_base = self.has_bledas_camp   # the camp is a base; Attila's is only villagers
-        self.age_playable[Age2AgeData.DARK] = True_()
-        self.age_playable[Age2AgeData.FEUDAL] = (self.has_bledas_camp | self.alternate_vils) & logic.ages.can_reach(Age2AgeData.FEUDAL)
-        self.age_playable[Age2AgeData.CASTLE] = (self.has_bledas_camp | self.alternate_vils) & logic.ages.can_reach(Age2AgeData.CASTLE)
         self.starts_with_building[Age2BuildingData.STABLE] = self.has_bledas_camp | Has(Age2ItemData.AP_ATTILA_1_ATTILAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.BARRACKS] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)

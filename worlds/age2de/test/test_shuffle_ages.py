@@ -87,7 +87,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
     against the age the scenario actually opens in. This is that check."""
 
     def rows(self, world, scenario_logic):
-        return {age: scenario_logic.can_reach_age(age).resolve(world) for age in Age2AgeData}
+        return {age: scenario_logic.ages.can_reach(age).resolve(world) for age in Age2AgeData}
 
     def test_a_scenario_is_in_the_age_it_opens_in_and_no_lower_one(self):
         world = self.build(shuffle_ages=True)
@@ -110,7 +110,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
             opens_in = scenario_logic.scenario.vanilla_age
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario_logic.scenario.name, age=age.name):
-                    rule = scenario_logic.start_past_age(age).resolve(world)
+                    rule = scenario_logic.ages.start_past(age).resolve(world)
                     self.assertEqual(rule.always_true, age < opens_in)
 
     def test_a_fixed_force_scenario_is_in_no_age_at_all(self):
@@ -123,8 +123,8 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
         for scenario_logic in fixed:
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario_logic.scenario.name, age=age.name):
-                    self.assertTrue(scenario_logic.can_reach_age(age).resolve(world).always_false)
-                    self.assertTrue(scenario_logic.start_past_age(age).resolve(world).always_false)
+                    self.assertTrue(scenario_logic.ages.can_reach(age).resolve(world).always_false)
+                    self.assertTrue(scenario_logic.ages.start_past(age).resolve(world).always_false)
 
     def test_a_dark_age_rebase_puts_every_scenario_in_the_dark_age(self):
         world = self.build(shuffle_ages=True, techsanity=Techsanity.option_all,
@@ -133,10 +133,10 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
             if scenario_logic.starting_state.fixed_force:
                 continue
             with self.subTest(scenario=scenario_logic.scenario.name):
-                dark = scenario_logic.can_reach_age(Age2AgeData.DARK).resolve(world)
+                dark = scenario_logic.ages.can_reach(Age2AgeData.DARK).resolve(world)
                 self.assertTrue(dark.always_true)
                 # and it has started past nothing, so every age above is earned
-                past = scenario_logic.start_past_age(Age2AgeData.DARK).resolve(world)
+                past = scenario_logic.ages.start_past(Age2AgeData.DARK).resolve(world)
                 self.assertTrue(past.always_false)
 
 
@@ -177,7 +177,7 @@ class TestAgeRowsStayOutOfTheAggregateLayer(Age2RuleTestBase):
         for scenario_logic in world.rules.logic.scenarios:
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario_logic.scenario.name, age=age.name):
-                    row = scenario_logic.starting_state.age_playable[age]
+                    row = scenario_logic.ages.can_reach(age)
                     self.assertFalse(self.reaches(row, shells, set()))
 
 

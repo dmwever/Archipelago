@@ -27,7 +27,8 @@ class ScenarioStartingState:
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
     has_base: Rule = field(default_factory=lambda: False_())
-    age_playable: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
+    max_age: Age2AgeData = Age2AgeData.IMPERIAL
+    age_playable: dict[Age2AgeData, Rule] = field(default_factory=dict)
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
     job_available: dict[Age2VillagerJobData, Rule] = field(
@@ -35,9 +36,6 @@ class ScenarioStartingState:
     has_water_access: Rule = field(default_factory=lambda: True_())
     fixed_force: bool = False
     """A set piece fought with what it hands you. No base, and no age to be in."""
-
-    def __post_init__(self):
-        self.age_playable[Age2AgeData.DARK] = True_() & DARK_START
 
     def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
         from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
@@ -57,12 +55,14 @@ class ScenarioLogic:
         self.scenario = scenario
         self.starting_state = data
         data.default_mercenary_grants(scenario)
+        from .scenarios.ScenarioAgeLogic import ScenarioAgeLogic
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
         self.civilization = ScenarioCivilizationLogic(self)
+        self.ages = ScenarioAgeLogic(self)
         self.buildings = ScenarioBuildingLogic(self)
         self.military = ScenarioMilitaryLogic(self)
         self.techs = ScenarioTechLogic(self)
@@ -77,21 +77,6 @@ class ScenarioLogic:
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access
 
-    def can_reach_age(self, age: Age2AgeData) -> Rule:
-        if self.starting_state.fixed_force:
-            return False_()
-        return self.starting_state.age_playable[age]
-
-    def can_play_age(self, age: Age2AgeData) -> Rule:
-        return self.can_reach_age(age) | self.start_past_age(age)
-
-    def start_past_age(self, age: Age2AgeData) -> Rule:
-        if self.starting_state.fixed_force:
-            return False_()
-        if self.scenario.vanilla_age > age:
-            return True_() & VANILLA_AGE_START
-        return False_()
-    
     def job_available(self, job: Age2VillagerJobData) -> Rule:
         return self.starting_state.job_available[job]
 

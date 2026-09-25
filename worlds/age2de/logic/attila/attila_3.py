@@ -18,10 +18,9 @@ class Attila3StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 2)
+        self.max_age = Age2AgeData.CASTLE
         self.has_base = True_()   # a Town Centre stands on the map at player one
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = True_()
         self.starts_with_building[Age2BuildingData.STABLE] = True_()
         self.starts_with_building[Age2BuildingData.MILL] = True_()
         self.starts_with_building[Age2BuildingData.BLACKSMITH] = True_()
-        self.age_playable[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
-        self.age_playable[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE) | VANILLA_AGE_START
