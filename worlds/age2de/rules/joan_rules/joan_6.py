@@ -9,7 +9,7 @@ from ...locations.Locations import Age2ScenarioLocationData
 
 from ...logic.joan.joan_6 import Joan6StartingState
 
-from ...scenarios.ScenarioLogic import ScenarioLogic
+from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 

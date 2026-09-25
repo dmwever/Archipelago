@@ -8,7 +8,7 @@ from ...items.Items import Age2ItemData
 
 from ...logic.joan.joan_3 import Joan3StartingState
 
-from ...scenarios.ScenarioLogic import ScenarioLogic
+from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 

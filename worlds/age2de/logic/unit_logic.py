@@ -18,7 +18,7 @@ from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 if TYPE_CHECKING:
     from .. import Age2World
     from .Logic import Logic
-    from ..scenarios.ScenarioLogic import ScenarioLogic
+    from .ScenarioLogic import ScenarioLogic
 
 HORSE_LINE = Age2UnitLineData.SCOUT_CAVALRY_LINE
 

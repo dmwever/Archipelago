@@ -12,7 +12,7 @@ type ScenarioUnit = Age2UnitData | Age2HeroData | Age2EscortUnitData
 
 if TYPE_CHECKING:
     from ..rules.ScenarioRules import ScenarioRules
-    from ..scenarios.ScenarioLogic import ScenarioStartingState
+    from ..logic.ScenarioLogic import ScenarioStartingState
 
 class Age2ScenarioData(enum.IntEnum):
     def __new__(cls, name: str, file_stem: str, xsdat_write_name: str, campaign: Age2CampaignData, chapter: int, civ: Age2CivData,

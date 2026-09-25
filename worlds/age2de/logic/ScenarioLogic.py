@@ -57,7 +57,7 @@ class ScenarioLogic:
         self.starting_state = data
         data.default_mercenary_grants(scenario)
         # What can be put up here, as opposed to anywhere. See ScenarioBuildingLogic.
-        from .ScenarioBuildingLogic import ScenarioBuildingLogic
+        from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         self.buildings = ScenarioBuildingLogic(self)
     
     def has_vils(self) -> Rule:

@@ -9,7 +9,7 @@ from .goal_logic import GoalLogic
 from .MilitaryLogic import MilitaryLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections import ScenarioDataLogic
-from ..scenarios.ScenarioLogic import ScenarioLogic
+from .ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
 from .tech_logic import TechLogic

@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING
 
 from rule_builder.rules import Or, Rule
 
-from ..locations.Ages import Age2AgeData
-from ..locations.Buildings import Age2BuildingData
+from ...locations.Ages import Age2AgeData
+from ...locations.Buildings import Age2BuildingData
 
 if TYPE_CHECKING:
-    from ..logic.building_logic import BuildingLogic
-    from ..scenarios.ScenarioLogic import ScenarioLogic
+    from ..building_logic import BuildingLogic
+    from ..ScenarioLogic import ScenarioLogic
 
 
 class ScenarioBuildingLogic:

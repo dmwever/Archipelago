@@ -3,7 +3,7 @@ from ...logic.attila.attila_5 import Attila5StartingState
 from ...locations.Ages import Age2AgeData
 
 from ...locations.Locations import Age2ScenarioLocationData
-from ...scenarios.ScenarioLogic import ScenarioLogic
+from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 

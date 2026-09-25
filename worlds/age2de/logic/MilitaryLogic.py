@@ -10,7 +10,7 @@ from ..locations.UnitLines import Age2UnitLineData
 if TYPE_CHECKING:
     from .. import Age2World
     from .Logic import Logic
-    from ..scenarios.ScenarioLogic import ScenarioLogic
+    from .ScenarioLogic import ScenarioLogic
 
 class MilitaryLogic:
 

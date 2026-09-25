@@ -6,7 +6,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
-from ...scenarios.ScenarioLogic import ScenarioStartingState, VANILLA_AGE_START
+from ..ScenarioLogic import ScenarioStartingState, VANILLA_AGE_START
 
 
 if TYPE_CHECKING:

@@ -42,8 +42,6 @@ class BuildingLogic:
         return self.has_building(Age2BuildingData.TOWN_CENTER) & \
             HasAll(Age2ItemData.TOWN_CENTER_WOOD.item_name, Age2ItemData.TOWN_CENTER_STONE.item_name)
 
-    # Military
-
     def has_military(self) -> Rule:
         return (self.has_building(Age2BuildingData.BARRACKS)
                 | self.has_building(Age2BuildingData.STABLE)
