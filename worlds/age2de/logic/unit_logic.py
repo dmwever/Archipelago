@@ -75,6 +75,7 @@ class UnitLogic:
             return False_()
         somewhere = Or(*[scenario.start_with_building(building) for building in unit.buildings
                           if self.world.civ_can_build(building)])
+        return somewhere & scenario.can_play_age(unit.age)
 
     def upgraded_away(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> bool:
         for successor in unit.line.units:
@@ -147,6 +148,10 @@ class UnitLogic:
         tiers = self.fieldable_tiers(line, age, scenario.scenario.civ)
         if not tiers:
             return False_()
+        return Or(*[self.has_unit_items(unit)
+                    & self.has_upgrade_tech(scenario, unit)
+                    & self.can_train_in(scenario, unit) for unit in tiers])
+
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData,
                     scenario: 'ScenarioLogic') -> Rule:
         return Or(*[self.can_field(scenario, line, age) for line in target.countered_by])
