@@ -20,7 +20,7 @@ class Age2CivData(enum.IntEnum):
         self.excluded_units = []
         self.included_units = []
     HUNS = 0, "Huns", 17
-    FRANKS = 1, "Franks", 2    FRANKS = 1, "Franks", 2
+    FRANKS = 1, "Franks", 2
     
     def builds(self, building) -> bool:
         from .Buildings import BuildingOption
