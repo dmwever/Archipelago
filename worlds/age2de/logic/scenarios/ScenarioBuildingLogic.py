@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import Or, Rule
+from rule_builder.rules import False_, Or, Rule
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
@@ -20,6 +20,8 @@ class ScenarioBuildingLogic:
         self.buildings: BuildingLogic = scenario.logic.buildings
 
     def can_build_building(self, building: Age2BuildingData) -> Rule:
+        if not self.scenario.civilization.can_build(building):
+            return False_()   # not this civilisation's to put up
         return (self.buildings.has_building(building)
                 & self.buildings.has_prerequisites(building)
                 & self.scenario.has_vils()
@@ -27,12 +29,14 @@ class ScenarioBuildingLogic:
 
     def can_build_anything(self) -> Rule:
         return Or(*[self.can_build_building(building) for building in Age2BuildingData
-                    if self.world.civ_can_build(building)])
+                    if self.scenario.civilization.can_build(building)])
 
     def can_build_tc(self) -> Rule:
         return self.buildings.can_build_tc() & self.scenario.has_vils()
 
     def can_build_base(self) -> Rule:
+        if not self.scenario.civilization.can_build(Age2BuildingData.HOUSE):
+            return self.can_build_tc()
         return self.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
 
     def can_build_multiple_tc(self) -> Rule:

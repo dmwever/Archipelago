@@ -11,7 +11,6 @@ from ...locations.Heroes import Age2HeroData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData
-from ...locations.connections.CivilizationTechs import CIV_TO_TECHS
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -33,13 +32,13 @@ class ScenarioUnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train(self, unit: Age2UnitData) -> Rule:
-        if not unit.buildings or not self.pool.civ_trains(self.scenario.scenario.civ, unit):
+        if not unit.buildings or not self.scenario.civilization.trains(unit):
             return False_()   # this scenario's civilisation does not have it
         if self.upgraded_away(unit):
             return False_()
-        somewhere = Or(*[self.scenario.start_with_building(building)
+        somewhere = Or(*[self.scenario.has_building(building)
                          for building in unit.buildings
-                         if self.world.civ_can_build(building)])
+                         if self.scenario.civilization.can_build(building)])
         return (self.logic.units.has_unit_items(unit) & self.has_upgrade_tech(unit)
                 & somewhere & self.scenario.can_play_age(unit.age))
 
@@ -50,7 +49,7 @@ class ScenarioUnitLogic:
             tech = successor.upgrade_tech
             if tech is None or self.world.tech_pool.locked_at_start(tech):
                 continue  # withheld, so researching it is your choice and your timing
-            if tech not in CIV_TO_TECHS[self.scenario.scenario.civ]:
+            if not self.scenario.civilization.researches(tech):
                 continue  # not this civilisation's, so it never fires
             if self.scenario.scenario.vanilla_age >= tech.age:
                 return True
@@ -75,8 +74,8 @@ class ScenarioUnitLogic:
 
     def fieldable_tiers(self, line: Age2UnitLineData,
                         age: Age2AgeData) -> list[Age2UnitData]:
-        civ = self.scenario.scenario.civ
-        theirs = [unit for unit in line.units if self.pool.civ_trains(civ, unit)]
+        theirs = [unit for unit in line.units
+                  if self.scenario.civilization.trains(unit)]
         good_enough = [unit for unit in theirs if unit.age >= age]
         if good_enough:
             return good_enough

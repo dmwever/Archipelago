@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import False_, Or, Rule
 
 from ...locations.Techs import Age2TechData
-from ...locations.connections.CivilizationTechs import CIV_TO_TECHS
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -26,7 +25,7 @@ class ScenarioTechLogic:
         return self.available(tech, self.scenario.can_play_age(tech.age))
 
     def available(self, tech: Age2TechData, age: Rule) -> Rule:
-        if tech not in CIV_TO_TECHS[self.scenario.scenario.civ]:
+        if not self.scenario.civilization.researches(tech):
             return False_()   # not this civilisation's to research
         rule = self.has_tech_items(tech)
         if tech.buildings:

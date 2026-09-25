@@ -57,11 +57,12 @@ class ScenarioLogic:
         self.scenario = scenario
         self.starting_state = data
         data.default_mercenary_grants(scenario)
-        # What can be put up here, as opposed to anywhere. See ScenarioBuildingLogic.
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
+        from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
+        self.civilization = ScenarioCivilizationLogic(self)
         self.buildings = ScenarioBuildingLogic(self)
         self.military = ScenarioMilitaryLogic(self)
         self.techs = ScenarioTechLogic(self)
@@ -82,13 +83,6 @@ class ScenarioLogic:
         return self.starting_state.age_playable[age]
 
     def can_play_age(self, age: Age2AgeData) -> Rule:
-        """Able to act in that age here - either by advancing to it, or by opening above it.
-
-        The two halves are separate questions and both count. AgeLogic pairs them the same way
-        when it builds the global answer; using can_reach_age alone would say a Castle-age
-        scenario cannot put up a House, because age_playable[DARK] is gated on starting in the
-        Dark Age.
-        """
         return self.can_reach_age(age) | self.start_past_age(age)
 
     def start_past_age(self, age: Age2AgeData) -> Rule:
@@ -109,8 +103,7 @@ class ScenarioLogic:
             return True_()
         return False_()
 
-    def start_with_building(self, building: Age2BuildingData) -> Rule:
-        """Already standing here, or something this scenario can put up itself."""
+    def has_building(self, building: Age2BuildingData) -> Rule:
         return (self.starting_state.starts_with_building[building]
                 | self.buildings.can_build_building(building))
     
