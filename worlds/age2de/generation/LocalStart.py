@@ -14,6 +14,7 @@ from rule_builder.rules import And, Rule, True_
 
 from ..Options import LocalStart
 from ..items.Items import NAME_TO_ITEM, Campaign, ProgressiveScenario
+from ..locations.Buildings import Age2BuildingData
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
 
@@ -102,17 +103,38 @@ def conjuncts(rule: Rule) -> list[Rule]:
         return [part for child in rule.children for part in conjuncts(child)]
     return [rule]
 
+def scenario_logic(world: 'Age2World', scenario: Age2ScenarioData):
+    for candidate in world.rules.logic.scenarios:
+        if candidate.scenario is scenario:
+            return candidate
+    raise KeyError(f"{scenario.scenario_name} is not in this playthrough")
+
 def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
-    has_base = scenario.logic(world.rules.logic).has_base
+    has_base = scenario_logic(world, scenario).starting_state.has_base
     return True_() if resolve(world, has_base).always_false else has_base
+
+def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
+    """The item half of a base: a town centre, and the houses to live in.
+
+    Not the scenario's own can_build_base, which also wants villagers and an age. For Joan 1 that
+    is False_ outright and would fold the town centre items away with it - and Joan 1 is exactly
+    what this is asked about, since local start is what makes the first scenario playable.
+
+    The House is asked of **this scenario's civilisation**: the Huns build none, so handing an
+    Attila player a House would be handing over something they can never place.
+    """
+    logic = world.rules.logic
+    target = logic.buildings.can_build_tc()
+    if scenario_logic(world, scenario).civilization.can_build(Age2BuildingData.HOUSE):
+        target = target & logic.can_build_building_anywhere(Age2BuildingData.HOUSE)
+    return target & scenario_base_rule(world, scenario)
 
 def base_items(
     world: 'Age2World',
     scenario: Age2ScenarioData,
     granted: list[str] | None = None,
 ) -> list[str]:
-    """Items that let the player build a town centre, plus anything extra `scenario` asks for."""
-    target = world.rules.logic.can_build_base() & scenario_base_rule(world, scenario)
+    target = base_target(world, scenario)
 
     base_state = state_with(world, world.multiworld.state, granted) if granted else world.multiworld.state
     candidates = base_candidate_names(world)

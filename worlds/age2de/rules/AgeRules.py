@@ -27,7 +27,7 @@ class AgeRules:
             return  # create_regions built no age locations to rule on
         for age in self.world.shuffled_ages:
             self.world.set_rule(self.world.get_location(age.location_name),
-                                self.logic.can_reach_age(age))
+                                self.logic.can_reach_age_anywhere(age))
 
 @dataclass
 class TwoBuildingsRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definitive Edition"):

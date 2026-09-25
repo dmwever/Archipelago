@@ -62,7 +62,7 @@ class ScenarioUnitLogic:
         tiers = self.fieldable_tiers(line, age)
         if not tiers:
             return False_()
-        return Or(*[self.can_train(unit) for unit in tiers])
+        return Or(*[self.can_train(unit) for unit in tiers]) & self.scenario.has_base()
 
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
         return Or(*[self.can_field(line, age) for line in target.countered_by])

@@ -21,6 +21,7 @@ from ..generation.LocalStart import (
     state_with,
     base_candidate_names,
     base_items,
+    base_target,
     conjuncts,
     scenario_base_rule,
     win_items,
@@ -252,15 +253,16 @@ class TestBaseItemsJoan(Age2TestBase):
         got = base_items(self.world, Age2ScenarioData.AP_JOAN_1)
         self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
         self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
-        self.assert_satisfiable_conjuncts_met(got)
+        self.assert_satisfiable_conjuncts_met(got, Age2ScenarioData.AP_JOAN_1)
         # Nothing supplies villagers at turn one on a Joan start once campaign
         # progression is off the table, so that conjunct is skipped rather than
         # dragging the whole Joan 1 win set in behind it.
         for excluded in (Age2ItemData.PROGRESSIVE_JOAN_SCENARIO, Age2ItemData.AP_JOAN_1_TRANSPORT):
             self.assertNotIn(excluded.item_name, got)
 
-    def assert_satisfiable_conjuncts_met(self, got: list[str]) -> None:
-        """Every part of can_build_base that could be satisfied, is.
+    def assert_satisfiable_conjuncts_met(self, got: list[str],
+                                         scenario: Age2ScenarioData) -> None:
+        """Every part of the base target that could be satisfied, is.
 
         Not the whole conjunction: base_items deliberately skips conjuncts no item can
         satisfy, which on a Joan start is the "some unlocked scenario has villagers"
@@ -271,7 +273,7 @@ class TestBaseItemsJoan(Age2TestBase):
         candidates = base_candidate_names(world)
         state = state_with(world, base_state, got)
         checked = 0
-        for conjunct in conjuncts(world.rules.logic.can_build_base()):
+        for conjunct in conjuncts(base_target(world, scenario)):
             resolved = resolve(world, conjunct)
             if solve(world, resolved, base_state, candidates) is None:
                 continue
@@ -301,12 +303,13 @@ class TestBaseItemsAttila(Age2TestBase):
         self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
         self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
         self.assertTrue(self.VILS & set(got), "no villager source was placed locally")
-        self.assert_satisfiable_conjuncts_met(got)
+        self.assert_satisfiable_conjuncts_met(got, Age2ScenarioData.AP_ATTILA_1)
         # One villager source is enough; solving conjuncts apart used to collect two.
         self.assertEqual(1, len(self.VILS & set(got)))
 
-    def assert_satisfiable_conjuncts_met(self, got: list[str]) -> None:
-        """Every part of can_build_base that could be satisfied, is.
+    def assert_satisfiable_conjuncts_met(self, got: list[str],
+                                         scenario: Age2ScenarioData) -> None:
+        """Every part of the base target that could be satisfied, is.
 
         Not the whole conjunction: base_items deliberately skips conjuncts no item can
         satisfy, which on a Joan start is the "some unlocked scenario has villagers"
@@ -317,7 +320,7 @@ class TestBaseItemsAttila(Age2TestBase):
         candidates = base_candidate_names(world)
         state = state_with(world, base_state, got)
         checked = 0
-        for conjunct in conjuncts(world.rules.logic.can_build_base()):
+        for conjunct in conjuncts(base_target(world, scenario)):
             resolved = resolve(world, conjunct)
             if solve(world, resolved, base_state, candidates) is None:
                 continue

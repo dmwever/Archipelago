@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class ScenarioStartingState:
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
-    has_base: Rule = field(default_factory=lambda: True_())
+    has_base: Rule = field(default_factory=lambda: False_())
     age_playable: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
@@ -72,7 +72,7 @@ class ScenarioLogic:
         return self.starting_state.has_vils
     
     def has_base(self) -> Rule:
-        return self.starting_state.has_base
+        return self.starting_state.has_base | self.buildings.can_build_base()
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access

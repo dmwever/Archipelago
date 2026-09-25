@@ -174,7 +174,6 @@ class TestAgeRowsStayOutOfTheAggregateLayer(Age2RuleTestBase):
     def test_no_age_row_reaches_the_shared_age_rules(self):
         world = self.build(shuffle_ages=True)
         shells = {id(rule) for rule in world.rules.logic.ages.can_reach_age.values()}
-        shells.add(id(world.rules.logic._has_vils))
         for scenario_logic in world.rules.logic.scenarios:
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario_logic.scenario.name, age=age.name):

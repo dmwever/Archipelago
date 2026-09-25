@@ -34,17 +34,19 @@ class UnitLogic:
 
     # -- owning ------------------------------------------------------------------------------
 
-    def can_own(self, unit: Age2UnitData) -> Rule:
-        return self.can_train(unit) | self.is_granted(unit) | self.can_convert(unit)
+    def can_own_anywhere(self, unit: Age2UnitData) -> Rule:
+        return (self.can_train_anywhere(unit) | self.is_granted_anywhere(unit)
+                | self.can_convert(unit))
 
-    def can_own_line(self, line: Age2UnitLineData) -> Rule:
+    def can_own_line_anywhere(self, line: Age2UnitLineData) -> Rule:
         """Owning any tier is owning the line."""
-        return Or(*[self.can_own(unit) for unit in line.units if self.pool.includes(unit)])
+        return Or(*[self.can_own_anywhere(unit) for unit in line.units
+                    if self.pool.includes(unit)])
 
     def can_convert(self, unit: Age2UnitData) -> Rule:
         return False_()
 
-    def is_granted(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
+    def is_granted_anywhere(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
             answer = scenario.units.is_granted(target)
@@ -55,7 +57,7 @@ class UnitLogic:
 
     # -- training ----------------------------------------------------------------------------
 
-    def can_train(self, unit: Age2UnitData) -> Rule:
+    def can_train_anywhere(self, unit: Age2UnitData) -> Rule:
         if not self.pool.is_trainable_unit(unit) or not unit.buildings:
             return False_()
         ways: list[Rule] = []
@@ -68,7 +70,7 @@ class UnitLogic:
 
     # -- villagers ---------------------------------------------------------------------------
 
-    def can_do_job(self, job: Age2VillagerJobData) -> Rule:
+    def can_do_job_anywhere(self, job: Age2VillagerJobData) -> Rule:
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
             answer = scenario.units.can_do_job(job)

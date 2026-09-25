@@ -122,7 +122,7 @@ class TestExistingTechs(Age2RuleTestBase):
                      for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         for tech in world.shuffled_techs:
             with self.subTest(tech=tech.name):
-                rule = world.rules.logic.can_research(tech).resolve(world)
+                rule = world.rules.logic.can_research_anywhere(tech).resolve(world)
                 self.assertFalse(rule.always_false)
         # every technology has at least one scenario that opens at or below it
         for tech in world.shuffled_techs:

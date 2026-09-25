@@ -36,11 +36,8 @@ class Logic:
         self.world = world
         self.scenarios = []
 
-        self._has_vils: Or = Or()
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
-        self._can_build_anything: Or = Or()
-        self._can_build_base: Or = Or()
         self._can_research: dict[Age2TechData, Or] = {}
 
         self.buildings = BuildingLogic(self, world)
@@ -51,18 +48,10 @@ class Logic:
         for campaign in world.included_campaigns:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
-        self._has_vils.children = tuple(
-            scenario.is_unlocked() & scenario.has_vils() for scenario in self.scenarios)
         for building in Age2BuildingData:
             self._can_build[building].children = tuple(
                 scenario.is_unlocked() & scenario.buildings.can_build_building(building)
                 for scenario in self.scenarios)
-        self._can_build_anything.children = tuple(
-            scenario.is_unlocked() & scenario.buildings.can_build_anything()
-            for scenario in self.scenarios)
-        self._can_build_base.children = tuple(
-            scenario.is_unlocked() & scenario.buildings.can_build_base()
-            for scenario in self.scenarios)
         for tech in Age2TechData:
             self._can_research[tech] = Or(*[
                 scenario.is_unlocked() & scenario.techs.can_research(tech)
@@ -78,21 +67,13 @@ class Logic:
             return self.goal.completed_all_campaigns()
         return False_()
 
-    def can_build_base(self) -> Rule:
-        return self._can_build_base
 
-
-    def has_vils(self) -> Rule:
-        return self._has_vils
-
-    def can_reach_age(self, age: Age2AgeData) -> Rule:
+    def can_reach_age_anywhere(self, age: Age2AgeData) -> Rule:
         return self.ages.can_reach_age[age]
 
-    def can_build_anything(self) -> Rule:
-        return self._can_build_anything
 
-    def can_research(self, tech: Age2TechData) -> Rule:
+    def can_research_anywhere(self, tech: Age2TechData) -> Rule:
         return self._can_research[tech]
 
-    def can_build_building(self, building: Age2BuildingData) -> Rule:
+    def can_build_building_anywhere(self, building: Age2BuildingData) -> Rule:
         return self._can_build[building]
