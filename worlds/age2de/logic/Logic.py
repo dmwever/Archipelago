@@ -45,6 +45,7 @@ class Logic:
         self._can_research: dict[Age2TechData, Or] = {}
 
         self.buildings = BuildingLogic(self, world)
+        self.techs = TechLogic(self, world)
         self.ages =  AgeLogic(self, world)
         
         for campaign in world.included_campaigns:
@@ -69,7 +70,6 @@ class Logic:
         
         self.military = MilitaryLogic(self, world)
         self.goal = GoalLogic(self, world)
-        self.techs = TechLogic(self, world)
         self.units = UnitLogic(self, world)
 
     def has_goal(self) -> Rule:

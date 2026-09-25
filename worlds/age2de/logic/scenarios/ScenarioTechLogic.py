@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Or, Rule, True_
+from rule_builder.rules import False_, Or, Rule
 
-from ...Options import LockTechs
 from ...locations.Techs import Age2TechData
 from ...locations.connections.CivilizationTechs import CIV_TO_TECHS
 
@@ -36,9 +35,7 @@ class ScenarioTechLogic:
         return rule & age
 
     def has_tech_items(self, tech: Age2TechData) -> Rule:
-        if self.world.options.lock_techs == LockTechs.option_effects:
-            return True_()
-        rule: Rule = Has(tech.item.item_name)
+        rule = self.logic.techs.has_tech_item(tech)
         prerequisite = tech.prerequisite
         if prerequisite is not None and self.world.tech_pool.includes(prerequisite):
             rule = rule & self.has_tech(prerequisite)
