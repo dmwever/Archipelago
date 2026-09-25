@@ -34,12 +34,12 @@ class ScenarioMilitaryLogic:
         return self.can_field_role(UnitRole.naval_bombardment) & self.scenario.has_water_access()
 
     def counters(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
-        return self.logic.units.can_counter(target, age, self.scenario)
+        return self.scenario.units.can_counter(target, age)
 
     def counters_building(self) -> Rule:
         return self.can_field_role(UnitRole.building_counter)
 
     def can_field_role(self, role: str, age: Age2AgeData = Age2AgeData.DARK) -> Rule:
-        ways = [self.logic.units.can_field(self.scenario, line, age)
+        ways = [self.scenario.units.can_field(line, age)
                 for line in ROLE_TO_LINES[role]]
         return Or(*[way for way in ways if not isinstance(way, False_)])

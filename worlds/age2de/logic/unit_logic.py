@@ -5,27 +5,18 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
 from ..Options import Unitsanity, UnitsanityItems
-from ..locations.Ages import Age2AgeData
-from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
-from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
 if TYPE_CHECKING:
     from .. import Age2World
     from .Logic import Logic
-    from .ScenarioLogic import ScenarioLogic
 
 HORSE_LINE = Age2UnitLineData.SCOUT_CAVALRY_LINE
-
-JOB_BUILDING = {
-    "Farmer": Age2BuildingData.FARM,
-    "Herder": Age2BuildingData.PASTURE
-}
 
 
 class UnitLogic:
@@ -50,11 +41,10 @@ class UnitLogic:
     def is_granted(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
-            data = scenario.scenario
-            if self.pool.startup_grants(data, target):
-                ways.append(scenario.is_unlocked())
-            if self.pool.trigger_grants(data, target):
-                ways.append(scenario.is_unlocked() & scenario.obtains_unit(target))
+            answer = scenario.units.is_granted(target)
+            if isinstance(answer, False_):
+                continue
+            ways.append(scenario.is_unlocked() & answer)
         return Or(*ways)
 
     # -- training ----------------------------------------------------------------------------
@@ -62,39 +52,24 @@ class UnitLogic:
     def can_train(self, unit: Age2UnitData) -> Rule:
         if not self.pool.is_trainable_unit(unit) or not unit.buildings:
             return False_()
-        somewhere = Or(*[scenario.is_unlocked()
-                         & self.has_upgrade_tech(scenario, unit)
-                         & self.can_train_in(scenario, unit)
-                         for scenario in self.logic.scenarios])
-        return self.has_unit_items(unit) & somewhere
-
-    def can_train_in(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> Rule:
-        if not self.pool.civ_trains(scenario.scenario.civ, unit):
-            return False_()   # this scenario's civilisation does not have it
-        if self.upgraded_away(scenario, unit):
-            return False_()
-        somewhere = Or(*[scenario.start_with_building(building) for building in unit.buildings
-                          if self.world.civ_can_build(building)])
-        return somewhere & scenario.can_play_age(unit.age)
-
-    def upgraded_away(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> bool:
-        for successor in unit.line.units:
-            if successor.tier != unit.tier + 1:
+        ways: list[Rule] = []
+        for scenario in self.logic.scenarios:
+            answer = scenario.units.can_train(unit)
+            if isinstance(answer, False_):
                 continue
-            tech = successor.upgrade_tech
-            if tech is None or self.world.tech_pool.locked_at_start(tech):
-                continue  # withheld, so researching it is your choice and your timing
-            if tech not in CIV_TO_TECHS[scenario.scenario.civ]:
-                continue
-            if scenario.scenario.vanilla_age >= tech.age:
-                return True
-        return False
+            ways.append(scenario.is_unlocked() & answer)
+        return Or(*ways)
 
-    def has_upgrade_tech(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> Rule:
-        tech = unit.upgrade_tech
-        if tech is None or not self.world.tech_pool.includes(tech):
-            return True_()
-        return scenario.techs.has_tech(tech)
+    # -- villagers ---------------------------------------------------------------------------
+
+    def can_do_job(self, job: Age2VillagerJobData) -> Rule:
+        ways: list[Rule] = []
+        for scenario in self.logic.scenarios:
+            answer = scenario.units.can_do_job(job)
+            if isinstance(answer, False_):
+                continue
+            ways.append(scenario.is_unlocked() & answer)
+        return Or(*ways)
 
     # -- items -------------------------------------------------------------------------------
 
@@ -126,6 +101,7 @@ class UnitLogic:
         return self.has_horses()
 
     def has_horses(self) -> bool:
+        """A meso-american civilisation trains a trade cart and has nothing to pull it."""
         from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
         return any(unit in CIV_TO_UNITS[civ]
                    for civ in self.world.included_civs
@@ -138,43 +114,6 @@ class UnitLogic:
             return True_()
         return HasAny(*wanted)
 
-    # -- counters ----------------------------------------------------------------------------
-
-    def tiers_from_age(self, line: Age2UnitLineData, age: Age2AgeData) -> list[Age2UnitData]:
-        return [unit for unit in line.units if unit.age >= age]
-
-    def can_field(self, scenario: 'ScenarioLogic', line: Age2UnitLineData,
-                  age: Age2AgeData) -> Rule:
-        tiers = self.fieldable_tiers(line, age, scenario.scenario.civ)
-        if not tiers:
-            return False_()
-        return Or(*[self.has_unit_items(unit)
-                    & self.has_upgrade_tech(scenario, unit)
-                    & self.can_train_in(scenario, unit) for unit in tiers])
-
-    def can_counter(self, target: Age2UnitLineData, age: Age2AgeData,
-                    scenario: 'ScenarioLogic') -> Rule:
-        return Or(*[self.can_field(scenario, line, age) for line in target.countered_by])
-
-    def fieldable_tiers(self, line: Age2UnitLineData, age: Age2AgeData,
-                        civ) -> list[Age2UnitData]:
-        theirs = [unit for unit in line.units if self.pool.civ_trains(civ, unit)]
-        good_enough = [unit for unit in theirs if unit.age >= age]
-        if good_enough:
-            return good_enough
-        return [max(theirs, key=lambda unit: unit.tier)] if theirs else []
-
-    # -- villagers ---------------------------------------------------------------------------
-
-    def can_do_job(self, job: Age2VillagerJobData) -> Rule:
-        available = Or(*[scenario.is_unlocked() & scenario.job_available(job)
-                         for scenario in self.logic.scenarios])
         return available & self.job_requirement(job)
 
     def job_requirement(self, job: Age2VillagerJobData) -> Rule:
-        if job.job_name == "Builder":
-            return self.logic.can_build_anything()
-        building = JOB_BUILDING.get(job.job_name)
-        if building is None:
-            return True_()
-        return self.logic.can_build_building(building)

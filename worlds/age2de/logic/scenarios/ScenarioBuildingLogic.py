@@ -13,15 +13,6 @@ if TYPE_CHECKING:
 
 
 class ScenarioBuildingLogic:
-    """What can go up in one scenario.
-
-    BuildingLogic answers about items, which are global - holding the Barracks item holds it
-    everywhere. Everything that also needs villagers or an age is a question about a particular
-    scenario, and asking it globally is how a Castle became buildable in a scenario that has
-    neither: `has_vils()` and `can_reach_age()` were each an Or across every scenario, so one
-    could be satisfied by Attila 1 and the other by Joan 5.
-    """
-
     def __init__(self, scenario: 'ScenarioLogic'):
         self.scenario = scenario
         self.logic = scenario.logic

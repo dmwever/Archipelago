@@ -32,11 +32,6 @@ class Age2UnitData(enum.IntEnum):
         self.age = age
         self.unit_type = unit_type
         self.tier = tier
-        # Bound by the modules in locations/connections/, which are imported for their side
-        # effects: UnitLineUnits, UnitBuildings, UnitTechs, UnitVariants,
-        # UnitUpgradeTokens. Declared here so
-        # the attribute always exists; a missed binding would otherwise surface far from its
-        # cause.
         self.line: 'Age2UnitLineData' = None
         self.buildings: list['Age2BuildingData'] = []
         self.upgrade_tech: 'Age2TechData' = None

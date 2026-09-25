@@ -47,6 +47,7 @@ class ScenarioStartingState:
             for soldier in item.type.units:
                 self.obtains_unit[soldier.unit] = (
                     self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
+                
 class ScenarioLogic:
     starting_state: ScenarioStartingState
 
@@ -60,9 +61,11 @@ class ScenarioLogic:
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
+        from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
         self.buildings = ScenarioBuildingLogic(self)
         self.military = ScenarioMilitaryLogic(self)
         self.techs = ScenarioTechLogic(self)
+        self.units = ScenarioUnitLogic(self)
     
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils

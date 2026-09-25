@@ -44,6 +44,7 @@ class Logic:
 
         self.buildings = BuildingLogic(self, world)
         self.techs = TechLogic(self, world)
+        self.units = UnitLogic(self, world)
         self.ages =  AgeLogic(self, world)
         
         for campaign in world.included_campaigns:
@@ -67,7 +68,6 @@ class Logic:
         self.ages.set_can_reach_age(self.scenarios)
         
         self.goal = GoalLogic(self, world)
-        self.units = UnitLogic(self, world)
 
     def has_goal(self) -> Rule:
         if self.world.options.goal == Goal.option_campaign_completion:

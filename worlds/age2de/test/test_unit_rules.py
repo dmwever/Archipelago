@@ -18,9 +18,8 @@ class TestUpgradedAway(Age2RuleTestBase):
     produce an Archer - the tier does not exist there."""
 
     def upgraded_away(self, world, unit: Age2UnitData) -> list[str]:
-        units = world.rules.logic.units
         return [scenario.scenario.name for scenario in world.rules.logic.scenarios
-                if units.upgraded_away(scenario, unit)]
+                if scenario.units.upgraded_away(unit)]
 
     def test_vanilla_technologies_upgrade_the_lower_tiers_away(self):
         world = self.build(existing_techs=ExistingTechs.option_vanilla, **EVERYTHING)
