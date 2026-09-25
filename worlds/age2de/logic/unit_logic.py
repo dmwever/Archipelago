@@ -62,9 +62,11 @@ class UnitLogic:
     def can_train(self, unit: Age2UnitData) -> Rule:
         if not self.pool.is_trainable_unit(unit) or not unit.buildings:
             return False_()
-        somewhere = Or(*[scenario.is_unlocked() & self.can_train_in(scenario, unit)
+        somewhere = Or(*[scenario.is_unlocked()
+                         & self.has_upgrade_tech(scenario, unit)
+                         & self.can_train_in(scenario, unit)
                          for scenario in self.logic.scenarios])
-        return self.has_unit_items(unit) & self.has_upgrade_tech(unit) & somewhere
+        return self.has_unit_items(unit) & somewhere
 
     def can_train_in(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> Rule:
         if not self.pool.civ_trains(scenario.scenario.civ, unit):
@@ -87,11 +89,11 @@ class UnitLogic:
                 return True
         return False
 
-    def has_upgrade_tech(self, unit: Age2UnitData) -> Rule:
+    def has_upgrade_tech(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> Rule:
         tech = unit.upgrade_tech
         if tech is None or not self.world.tech_pool.includes(tech):
             return True_()
-        return self.logic.techs.can_research(tech)
+        return scenario.techs.has_tech(tech)
 
     # -- items -------------------------------------------------------------------------------
 
@@ -146,7 +148,8 @@ class UnitLogic:
         civ = scenario.scenario.civ
         for line in target.countered_by:
             for unit in self.counter_tiers(line, age, civ):
-                ways.append(self.has_unit_items(unit) & self.has_upgrade_tech(unit)
+                ways.append(self.has_unit_items(unit)
+                            & self.has_upgrade_tech(scenario, unit)
                             & self.can_train_in(scenario, unit))
         return Or(*ways)
 

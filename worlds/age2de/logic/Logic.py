@@ -17,6 +17,7 @@ from .unit_logic import UnitLogic
 from rule_builder.rules import False_, Or, Rule
 
 from ..locations.Ages import Age2AgeData
+from ..locations.Techs import Age2TechData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
 
@@ -41,6 +42,7 @@ class Logic:
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
         self._can_build_anything: Or = Or()
+        self._can_research: dict[Age2TechData, Or] = {}
 
         self.buildings = BuildingLogic(self, world)
         self.ages =  AgeLogic(self, world)
@@ -57,6 +59,10 @@ class Logic:
         self._can_build_anything.children = tuple(
             scenario.is_unlocked() & scenario.buildings.can_build_anything()
             for scenario in self.scenarios)
+        for tech in Age2TechData:
+            self._can_research[tech] = Or(*[
+                scenario.is_unlocked() & scenario.techs.can_research(tech)
+                for scenario in self.scenarios])
         
         self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
@@ -89,6 +95,9 @@ class Logic:
 
     def can_build_anything(self) -> Rule:
         return self._can_build_anything
+
+    def can_research(self, tech: Age2TechData) -> Rule:
+        return self._can_research[tech]
 
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         return self._can_build[building]
