@@ -73,8 +73,8 @@ class UnitLogic:
             return False_()   # this scenario's civilisation does not have it
         if self.upgraded_away(scenario, unit):
             return False_()
-        return Or(*[scenario.start_with_building(building) for building in unit.buildings
-                    if self.world.civ_can_build(building)])
+        somewhere = Or(*[scenario.start_with_building(building) for building in unit.buildings
+                          if self.world.civ_can_build(building)])
 
     def upgraded_away(self, scenario: 'ScenarioLogic', unit: Age2UnitData) -> bool:
         for successor in unit.line.units:
@@ -142,19 +142,17 @@ class UnitLogic:
     def tiers_from_age(self, line: Age2UnitLineData, age: Age2AgeData) -> list[Age2UnitData]:
         return [unit for unit in line.units if unit.age >= age]
 
+    def can_field(self, scenario: 'ScenarioLogic', line: Age2UnitLineData,
+                  age: Age2AgeData) -> Rule:
+        tiers = self.fieldable_tiers(line, age, scenario.scenario.civ)
+        if not tiers:
+            return False_()
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData,
                     scenario: 'ScenarioLogic') -> Rule:
-        ways = []
-        civ = scenario.scenario.civ
-        for line in target.countered_by:
-            for unit in self.counter_tiers(line, age, civ):
-                ways.append(self.has_unit_items(unit)
-                            & self.has_upgrade_tech(scenario, unit)
-                            & self.can_train_in(scenario, unit))
-        return Or(*ways)
+        return Or(*[self.can_field(scenario, line, age) for line in target.countered_by])
 
-    def counter_tiers(self, line: Age2UnitLineData, age: Age2AgeData,
-                      civ) -> list[Age2UnitData]:
+    def fieldable_tiers(self, line: Age2UnitLineData, age: Age2AgeData,
+                        civ) -> list[Age2UnitData]:
         theirs = [unit for unit in line.units if self.pool.civ_trains(civ, unit)]
         good_enough = [unit for unit in theirs if unit.age >= age]
         if good_enough:

@@ -1,6 +1,7 @@
 from rule_builder.rules import Has, Rule
 from ...Options import ScenarioBranching
 from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
@@ -24,26 +25,26 @@ class Joan3Rules(ScenarioRules):
         can_destroy_castle: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean & 
-            self.scenario_logic.buildings.has_siege() &
-            self.logic.military.counters_militia(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_longbowman(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic)
+            self.scenario_logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
         )
         can_beat_purple: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean &
-            self.logic.military.counters_building(self.scenario_logic) &
-            self.logic.military.counters_militia(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_spear(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_mangonel(Age2AgeData.CASTLE, self.scenario_logic)
+            self.scenario_logic.military.counters_building() &
+            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
         )
         can_beat_fastolf: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean &
-            self.logic.military.counters_building(self.scenario_logic) &
-            self.logic.military.counters_ram(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_scout(Age2AgeData.FEUDAL, self.scenario_logic) &
-            self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic)
+            self.scenario_logic.military.counters_building() &
+            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.FEUDAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
         )
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_SLAY_FASTOLF], can_beat_fastolf)

@@ -41,12 +41,3 @@ class BuildingLogic:
     def can_build_tc(self) -> Rule:
         return self.has_building(Age2BuildingData.TOWN_CENTER) & \
             HasAll(Age2ItemData.TOWN_CENTER_WOOD.item_name, Age2ItemData.TOWN_CENTER_STONE.item_name)
-
-    def has_military(self) -> Rule:
-        return (self.has_building(Age2BuildingData.BARRACKS)
-                | self.has_building(Age2BuildingData.STABLE)
-                | self.has_building(Age2BuildingData.ARCHERY_RANGE)
-                | self.has_siege())
-
-    def has_siege(self) -> Rule:
-        return self.has_building(Age2BuildingData.CASTLE) | self.has_building(Age2BuildingData.SIEGE_WORKSHOP)

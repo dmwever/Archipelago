@@ -1,6 +1,7 @@
 from rule_builder.rules import Rule
 from ...logic.attila.attila_6 import Attila6StartingState
 from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Locations import Age2ScenarioLocationData
 from ...logic.ScenarioLogic import ScenarioLogic
@@ -17,47 +18,47 @@ class Attila6Rules(ScenarioRules):
         super().set_rules()
         can_beat_red: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_spear(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_scout(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_knight(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_scorpion(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.has_siege()
+            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.has_siege()
         )
         
         can_beat_green: Rule = (
             (
                 self.scenario_logic.has_base() &
-                self.logic.military.has_navy(Age2AgeData.IMPERIAL) &
-                self.logic.military.has_naval_bombardment()
+                self.scenario_logic.military.has_navy(Age2AgeData.IMPERIAL) &
+                self.scenario_logic.military.has_naval_bombardment()
             ) |
             (
                 self.scenario_logic.has_base() &
-                self.logic.military.counters_archer(Age2AgeData.IMPERIAL, self.scenario_logic) &
-                self.logic.military.counters_knight(Age2AgeData.IMPERIAL, self.scenario_logic) &
-                self.logic.military.counters_mangonel(Age2AgeData.IMPERIAL, self.scenario_logic) &
-                self.logic.military.counters_trebuchet(Age2AgeData.IMPERIAL, self.scenario_logic)
+                self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
+                self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+                self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
+                self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
             )
         )
         
         can_beat_purple: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_militia(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_archer(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_longbowman(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_mangonel(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.has_long_range_siege()
+            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.has_long_range_siege()
         )
         
         can_beat_orange: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_archer(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_knight(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_trebuchet(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_monk(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.has_long_range_siege()
+            self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.has_long_range_siege()
         )
-        can_beat_blue: Rule = self.scenario_logic.has_base() & self.logic.military.has_military()
+        can_beat_blue: Rule = self.scenario_logic.has_base() & self.scenario_logic.military.has_military()
         victory = can_beat_orange & can_beat_green & can_beat_purple & can_beat_red
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_AQUILEIA], can_beat_red)

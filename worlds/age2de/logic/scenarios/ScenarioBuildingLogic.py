@@ -44,16 +44,6 @@ class ScenarioBuildingLogic:
     def can_build_base(self) -> Rule:
         return self.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
 
-    def has_siege(self) -> Rule:
-        return (self.can_build_building(Age2BuildingData.CASTLE)
-                | self.can_build_building(Age2BuildingData.SIEGE_WORKSHOP))
-
-    def has_military(self) -> Rule:
-        return (self.can_build_building(Age2BuildingData.BARRACKS)
-                | self.can_build_building(Age2BuildingData.ARCHERY_RANGE)
-                | self.can_build_building(Age2BuildingData.STABLE)
-                | self.has_siege())
-
     def can_build_multiple_tc(self) -> Rule:
         return self.can_build_tc() & self.scenario.can_play_age(Age2AgeData.CASTLE)
 
@@ -61,14 +51,3 @@ class ScenarioBuildingLogic:
         """Gold and stone need somewhere to drop off, unless a second town centre covers it."""
         return (self.can_build_multiple_tc()
                 | self.can_build_building(Age2BuildingData.MINING_CAMP))
-
-    def contains_building_counter(self) -> Rule:
-        """Something here that can knock a building down.
-
-        Not a unit matchup - the nineteen per-unit contains_*_counter methods this used to sit
-        beside are gone, because which line beats which is data now in
-        connections/UnitCounters.py and the rule asks whether the unit can be trained.
-        """
-        return (self.can_build_building(Age2BuildingData.BARRACKS)
-                | self.can_build_building(Age2BuildingData.STABLE)
-                | self.has_siege())

@@ -2,6 +2,7 @@ from rule_builder.rules import Has, Rule
 
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...logic.attila.attila_1 import Attila1StartingState
 from ...logic.ScenarioLogic import ScenarioLogic
@@ -19,30 +20,30 @@ class Attila1Rules(ScenarioRules):
         
         can_beat_purple: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.has_military()
+            self.scenario_logic.military.has_military()
         )
         
         can_beat_blue: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.FEUDAL) &
             self.scenario_logic.has_base() &
-            self.logic.has_military()
+            self.scenario_logic.military.has_military()
         )
         
         can_beat_red: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) &
             self.scenario_logic.has_base() &
-            self.scenario_logic.buildings.has_siege() &
-            self.logic.military.counters_knight(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_mangonel(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_war_elephant(Age2AgeData.CASTLE, self.scenario_logic)
+            self.scenario_logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.WAR_ELEPHANT_LINE, Age2AgeData.CASTLE)
         )
         
         can_beat_green: Rule = (
             self.scenario_logic.can_reach_age(Age2AgeData.CASTLE) &
             self.scenario_logic.has_base() &
-            self.scenario_logic.buildings.has_siege() &
-            self.logic.military.counters_cav_archer(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_mangudai(Age2AgeData.CASTLE, self.scenario_logic)
+            self.scenario_logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MANGUDAI_LINE, Age2AgeData.CASTLE)
         )
         
         self.world.set_rule(

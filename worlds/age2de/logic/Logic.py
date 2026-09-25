@@ -6,7 +6,6 @@ from ..Options import Goal
 
 from .goal_logic import GoalLogic
 
-from .MilitaryLogic import MilitaryLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections import ScenarioDataLogic
 from .ScenarioLogic import ScenarioLogic
@@ -28,7 +27,6 @@ if TYPE_CHECKING:
 class Logic:
     buildings: BuildingLogic
     ages: AgeLogic
-    military: MilitaryLogic
     goal: GoalLogic
     techs: TechLogic
     units: UnitLogic
@@ -68,7 +66,6 @@ class Logic:
         self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
         
-        self.military = MilitaryLogic(self, world)
         self.goal = GoalLogic(self, world)
         self.units = UnitLogic(self, world)
 
@@ -81,12 +78,6 @@ class Logic:
         return self.buildings.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
 
 
-    def has_military(self) -> Rule:
-        return self.buildings.has_military()
-    
-    def has_siege(self) -> Rule:
-        return self.buildings.has_siege()
-    
     def has_vils(self) -> Rule:
         return self._has_vils
 

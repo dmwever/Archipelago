@@ -2,6 +2,7 @@ from rule_builder.rules import Has, Rule
 from ...Options import ScenarioBranching
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 from ...logic.attila.attila_4 import Attila4StartingState
 
 from ...items.Items import Age2ItemData
@@ -20,19 +21,19 @@ class Attila4Rules(ScenarioRules):
         super().set_rules()
         can_beat_red: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_militia(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_knight(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_ram(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.has_siege() &
             self.scenario_logic.can_reach_age(Age2AgeData.IMPERIAL)
         )
         
         can_beat_purple: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_archer(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_militia(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_ram(Age2AgeData.CASTLE, self.scenario_logic)
+            self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE)
         )
         can_ally_purple: Rule = (
             self.scenario_logic.has_base() &
@@ -43,13 +44,13 @@ class Attila4Rules(ScenarioRules):
         
         can_beat_cyan: Rule = (
             self.scenario_logic.has_base() &
-            self.logic.military.counters_knight(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_spear(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_throwing_axeman(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_scorpion(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.counters_monk(Age2AgeData.CASTLE, self.scenario_logic) &
-            self.logic.military.counters_trebuchet(Age2AgeData.IMPERIAL, self.scenario_logic) &
-            self.logic.military.has_long_range_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.has_long_range_siege() &
             self.scenario_logic.can_reach_age(Age2AgeData.IMPERIAL)
         )
         can_beat_blue: Rule = can_beat_cyan

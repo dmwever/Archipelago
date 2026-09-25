@@ -58,8 +58,10 @@ class ScenarioLogic:
         data.default_mercenary_grants(scenario)
         # What can be put up here, as opposed to anywhere. See ScenarioBuildingLogic.
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
+        from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         self.buildings = ScenarioBuildingLogic(self)
+        self.military = ScenarioMilitaryLogic(self)
         self.techs = ScenarioTechLogic(self)
     
     def has_vils(self) -> Rule:
@@ -67,6 +69,9 @@ class ScenarioLogic:
     
     def has_base(self) -> Rule:
         return self.starting_state.has_base
+
+    def has_water_access(self) -> Rule:
+        return self.starting_state.has_water_access
 
     def can_reach_age(self, age: Age2AgeData) -> Rule:
         if self.starting_state.fixed_force:

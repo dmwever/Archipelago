@@ -18,9 +18,9 @@ class Joan2Rules(ScenarioRules):
     def set_rules(self):
         super().set_rules()
         can_cross: Rule = HasAny(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name, Age2ItemData.AP_JOAN_2_DOCK.item_name)
-        can_beat_purple: Rule = can_cross & self.scenario_logic.has_base() & self.logic.military.counters_building(self.scenario_logic)
-        can_beat_red: Rule = can_cross & self.scenario_logic.has_base() & self.scenario_logic.buildings.has_siege()
-        can_beat_orange: Rule = can_cross & self.scenario_logic.has_base() & self.scenario_logic.buildings.has_siege()
+        can_beat_purple: Rule = can_cross & self.scenario_logic.has_base() & self.scenario_logic.military.counters_building()
+        can_beat_red: Rule = can_cross & self.scenario_logic.has_base() & self.scenario_logic.military.has_siege()
+        can_beat_orange: Rule = can_cross & self.scenario_logic.has_base() & self.scenario_logic.military.has_siege()
         victory: Rule = (can_beat_red | can_beat_orange) & Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
         
         if self.world.options.scenario_branching == ScenarioBranching.option_all:
