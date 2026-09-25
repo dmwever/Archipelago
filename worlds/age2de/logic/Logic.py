@@ -79,12 +79,6 @@ class Logic:
         return False_()
 
     def can_build_base(self) -> Rule:
-        """A base **somewhere**, and the same scenario throughout.
-
-        It used to be `can_build_tc() & can_build_building(HOUSE)` off two independent global
-        forms, so a Hun scenario held a base on the strength of a House only Joan could put up.
-        Deferred, because a StartingState asks this while the scenarios list is still being built.
-        """
         return self._can_build_base
 
 
