@@ -17,6 +17,7 @@ class Age2VillagerJobData(enum.IntEnum):
         self.id = id
         self.location_name = location_name
         self.job_name = job_name
+        self.building = None
         self.sex = sex
         self.game_id = game_id
 

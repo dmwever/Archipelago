@@ -30,6 +30,7 @@ class UnitPool:
         self._unitsanity_items = options.unitsanity_items
         self._include_unique_units = options.include_unique_units
         self._shuffle_villager = options.shuffle_villager
+        self._civs = list(civs)
         self._scenarios = list(scenarios)
         self._trainable = {unit for civ in civs for unit in CIV_TO_UNITS[civ]}
         self._granted = {grant
@@ -106,7 +107,10 @@ class UnitPool:
         if self._shuffle_villager != ShuffleVillager.option_include_professions:
             return [Age2UnitLineData.VILLAGER_LINE]
         return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] \
-            + list(Age2VillagerJobData)
+            + [job for job in Age2VillagerJobData if self.job_possible(job)]
+
+    def job_possible(self, job: Age2VillagerJobData) -> bool:
+        return job.building is None or any(civ.builds(job.building) for civ in self._civs)
 
     @property
     def line_locations(self) -> dict[Age2UnitLineData, list[UnitLocation]]:

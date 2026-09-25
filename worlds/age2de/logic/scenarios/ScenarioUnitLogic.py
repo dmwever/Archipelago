@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import False_, Or, Rule, True_
 
 from ...locations.Ages import Age2AgeData
-from ...locations.Buildings import Age2BuildingData
 from ...locations.EscortUnits import Age2EscortUnitData
 from ...locations.Heroes import Age2HeroData
 from ...locations.UnitLines import Age2UnitLineData
@@ -16,10 +15,6 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
 
-JOB_BUILDING = {
-    "Farmer": Age2BuildingData.FARM,
-    "Herder": Age2BuildingData.PASTURE,
-}
 
 
 class ScenarioUnitLogic:
@@ -100,7 +95,6 @@ class ScenarioUnitLogic:
     def job_requirement(self, job: Age2VillagerJobData) -> Rule:
         if job.job_name == "Builder":
             return self.scenario.buildings.can_build_anything()
-        building = JOB_BUILDING.get(job.job_name)
-        if building is None:
+        if job.building is None:
             return True_()
-        return self.scenario.buildings.can_build_building(building)
+        return self.scenario.buildings.can_build_building(job.building)

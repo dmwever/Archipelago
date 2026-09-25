@@ -84,11 +84,15 @@ class TestUnitPool(UnitPoolTestBase):
 
         jobs = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
         placed = set(self.own_locations(jobs))
-        self.assertEqual(len(placed), 26)
+        # Two idle villagers and eleven of the twelve jobs, twice. The Herder is the one left
+        # out: it works a Pasture, which is the Gurjaras' building and nobody else's.
+        self.assertEqual(len(placed), 24)
         self.assertNotIn(Age2UnitLineData.VILLAGER_LINE.location_name, placed)
         self.assertIn(Age2UnitData.VILLAGER_MALE.location_name, placed)
         self.assertIn(Age2UnitData.VILLAGER_FEMALE.location_name, placed)
-        self.assertTrue({job.location_name for job in Age2VillagerJobData} <= placed)
+        self.assertTrue({job.location_name for job in Age2VillagerJobData
+                         if job.job_name != "Herder"} <= placed)
+        self.assertNotIn(Age2VillagerJobData.HERDER_MALE.location_name, placed)
 
     def test_professions_are_evenly_split_between_the_sexes(self):
         for sex in (VillagerSex.male, VillagerSex.female):
@@ -238,8 +242,10 @@ class TestUnitRegions(UnitPoolTestBase):
         self.assertEqual(Age2UnitData.VILLAGER_FEMALE.buildings, [])
         region = world.multiworld.get_region(Age2UnitLineData.VILLAGER_LINE.line_name, 1)
         placed = [location.name for location in region.locations]
-        self.assertEqual(len(placed), 26)
+        self.assertEqual(len(placed), 24)   # the Herder needs a Pasture that neither civ builds
         for job in Age2VillagerJobData:
+            if job.job_name == "Herder":
+                continue
             self.assertIn(job.location_name, placed, job.name)
         self.assertIn(Age2UnitData.VILLAGER_FEMALE.location_name, placed)
         trained = {target for _via, target in self.entrances(world, UnitEntranceKind.train)}

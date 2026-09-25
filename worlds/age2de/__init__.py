@@ -29,7 +29,8 @@ from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     ScenarioTriggerUnits, UnitBuildings,
                                     UnitCounters,
                                     UnitLineUnits, UnitRoles, UnitTechs,
-                                    UnitUpgradeTokens, UnitVariants)
+                                    UnitUpgradeTokens, UnitVariants,
+                                    VillagerJobBuildings)
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
@@ -215,10 +216,7 @@ class Age2World(CachedRuleBuilderWorld):
         self.multiworld.regions += regions
 
     def civ_can_build(self, building: Buildings.Age2BuildingData) -> bool:
-        """Whether any included civilization puts up this building."""
-        if Buildings.BuildingOption.unique in building.building_options:
-            return any(building in civ.included_buildings for civ in self.included_civs)
-        return not all(building in civ.excluded_buildings for civ in self.included_civs)
+        return any(civ.builds(building) for civ in self.included_civs)
 
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)
