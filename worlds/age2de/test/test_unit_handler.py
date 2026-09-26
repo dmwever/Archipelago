@@ -53,4 +53,5 @@ class TestUnitHandler(unittest.TestCase):
     def test_an_unknown_item_is_refused_rather_than_recorded(self):
         handler = UnitHandler()
         handler.unlock_item(Age2ItemData.WONDER)
-        self.assertNotIn(Age2ItemData.WONDER, [i for i, on in handler._items.items() if on])
+        unlocked = [managed.item for managed in handler._items.values() if managed.unlocked]
+        self.assertNotIn(Age2ItemData.WONDER, unlocked)
