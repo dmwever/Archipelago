@@ -15,11 +15,16 @@ from ....locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 class Row:
     unit: Age2UnitData
     is_location: bool
+    line_is_location: bool
     items: tuple[int, ...]
 
     @property
     def location_id(self) -> int:
-        return self.unit.id if self.is_location else UnitData.NO_LOCATION
+        if self.is_location:
+            return self.unit.id
+        if self.line_is_location:
+            return self.unit.line.id
+        return UnitData.NO_LOCATION
 
 
 class UnitData:
@@ -67,6 +72,8 @@ class UnitData:
 
     def rows(self) -> list[Row]:
         locations = self.unit_locations()
+        lines = {place for place in self._locations
+                 if isinstance(place, Age2UnitLineData)}
         wanted = self.wanted()
         out: list[Row] = []
         for unit in Age2UnitData:
@@ -77,7 +84,7 @@ class UnitData:
                 raise ValueError(
                     f"{unit.unit_name} needs {len(items)} items; raise MAX_ITEMS here and "
                     "UNIT_ITEM_CAPACITY in Unitsanity.xs to match")
-            out.append(Row(unit, unit in locations, items))
+            out.append(Row(unit, unit in locations, unit.line in lines, items))
         stranded = {place for place in self._locations
                     if isinstance(place, Age2UnitData) and place not in wanted}
         if stranded:

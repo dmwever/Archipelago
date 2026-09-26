@@ -24,9 +24,19 @@ class TestWhichUnitsGetARow(unittest.TestCase):
         self.assertEqual({row.unit for row in rows},
                          {unit for unit in Age2UnitLineData.MILITIA_LINE.units
                           if unit in CIV_TO_UNITS[Age2CivData.FRANKS]})
-        # ...and none of them is a check: the line is.
+        # None of them is itself a check...
         self.assertTrue(all(not row.is_location for row in rows))
-        self.assertTrue(all(row.location_id == UnitData.NO_LOCATION for row in rows))
+        # ...but every one completes the line's, because owning a Long Swordsman is owning the
+        # Militia line. Without this the game sends nothing at all in unit_line mode.
+        self.assertTrue(all(row.location_id == Age2UnitLineData.MILITIA_LINE.id
+                            for row in rows))
+
+    def test_a_unit_outside_any_line_location_completes_nothing(self):
+        """A row exists so the unit can be locked; it just is not a check."""
+        rows = table([Age2UnitData.MILITIA]).rows()
+        militia = next(row for row in rows if row.unit is Age2UnitData.MILITIA)
+        self.assertEqual(militia.location_id, Age2UnitData.MILITIA.id)
+        self.assertFalse(militia.line_is_location)
 
     def test_a_unit_location_is_a_check(self):
         rows = table([Age2UnitData.MILITIA]).rows()
