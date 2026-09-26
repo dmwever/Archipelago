@@ -6,7 +6,8 @@ from rule_builder.rules import False_, Rule, True_
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from ...rules.AgeRules import TwoBuildingsRequirement
+from ...rules.custom_rules.ScenarioQuestions import ScenarioHasReached
+from ...rules.custom_rules.TwoBuildings import TwoBuildingsRequirement
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -108,6 +109,10 @@ class ScenarioAgeLogic:
         Climbing to a higher age necessarily passes through this one, so this needs no disjunct
         per age above: reaching it, or opening above it, is the whole of it.
         """
+        return ScenarioHasReached(scenario=self.scenario.scenario, age=age)
+
+    def reached_rule(self, age: Age2AgeData) -> Rule:
+        """What ScenarioHasReached resolves to. Call it through that, not directly."""
         return self.can_reach(age) | self.start_past(age)
 
     def start_past(self, age: Age2AgeData) -> Rule:

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, override
 
 from NetUtils import JSONMessagePart
 from BaseClasses import CollectionState
-from ..rules.AgeRules import TwoBuildingsRequirement
+from ..rules.custom_rules.TwoBuildings import TwoBuildingsRequirement
 
 from ..items.Items import Age2ItemData
 from ..locations.Ages import Age2AgeData

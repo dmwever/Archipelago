@@ -6,6 +6,7 @@ from rule_builder.rules import False_, Or, Rule
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
+from ...rules.custom_rules.ScenarioQuestions import ScenarioCanBuild
 
 if TYPE_CHECKING:
     from ..building_logic import BuildingLogic
@@ -21,7 +22,11 @@ class ScenarioBuildingLogic:
 
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         if not self.scenario.civilization.can_build(building):
-            return False_()   # not this civilisation's to put up
+            return False_()   # not this civilisation's to put up, and that is free to answer
+        return ScenarioCanBuild(scenario=self.scenario.scenario, building=building)
+
+    def build_rule(self, building: Age2BuildingData) -> Rule:
+        """What ScenarioCanBuild resolves to. Call it through that, not directly."""
         return (self.buildings.has_building(building)
                 & self.buildings.has_prerequisites(building)
                 & self.scenario.has_vils()

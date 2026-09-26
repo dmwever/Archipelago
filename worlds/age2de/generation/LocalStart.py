@@ -110,7 +110,9 @@ def scenario_logic(world: 'Age2World', scenario: Age2ScenarioData):
     raise KeyError(f"{scenario.scenario_name} is not in this playthrough")
 
 def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
-    has_base = scenario_logic(world, scenario).starting_state.has_base
+    # The composed question, not the raw field: starting_state.has_base is a base **outright**
+    # now, so reading it directly forced Bleda's Camp rather than letting "or build one" count.
+    has_base = scenario_logic(world, scenario).has_base()
     return True_() if resolve(world, has_base).always_false else has_base
 
 def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:

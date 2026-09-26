@@ -36,6 +36,12 @@ class Logic:
         self.world = world
         self.scenarios = []
 
+        self.scenario_answers: dict[tuple, object] = {}
+        """Resolved answers to the scenario questions, one per seed. See rules/custom_rules."""
+
+        self.scenario_answers_open: set[tuple] = set()
+        """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
+
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
         self._can_research: dict[Age2TechData, Or] = {}
@@ -57,10 +63,14 @@ class Logic:
                 scenario.is_unlocked() & scenario.techs.can_research(tech)
                 for scenario in self.scenarios])
         
+        self._by_scenario = {logic.scenario: logic for logic in self.scenarios}
         self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
         
         self.goal = GoalLogic(self, world)
+
+    def for_scenario(self, scenario) -> ScenarioLogic:
+        return self._by_scenario[scenario]
 
     def has_goal(self) -> Rule:
         if self.world.options.goal == Goal.option_campaign_completion:
