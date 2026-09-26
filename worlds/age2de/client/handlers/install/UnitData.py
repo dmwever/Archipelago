@@ -4,6 +4,7 @@ from typing import Iterable
 from ....Options import Unitsanity, UnitsanityItems
 from ....generation import SlotData
 from ....items.Items import Age2ItemData
+from ....locations.Buildings import Age2BuildingData
 from ....locations.Civilizations import Age2CivData
 from ....locations.UnitLines import Age2UnitLineData
 from ....locations.Units import Age2UnitData
@@ -47,7 +48,10 @@ class UnitData:
         self._tag = tag
 
     def trainable(self) -> set[Age2UnitData]:
-        return {unit for civ in self._civs for unit in CIV_TO_UNITS[civ]}
+        units = {unit for civ in self._civs for unit in CIV_TO_UNITS[civ]}
+        if Age2UnitData.VILLAGER_MALE in units:
+            units.add(Age2UnitData.VILLAGER_FEMALE)
+        return units
 
     def unit_locations(self) -> set[Age2UnitData]:
         return {place for place in self._locations if isinstance(place, Age2UnitData)}
@@ -59,7 +63,12 @@ class UnitData:
                 units |= set(place.units)
         return {unit for unit in units if unit in self.trainable()}
 
+    def civs_build(self, building: Age2BuildingData) -> bool:
+        return any(civ.builds(building) for civ in self._civs)
+
     def items_for(self, unit: Age2UnitData) -> tuple[int, ...]:
+        if unit.line is Age2UnitLineData.VILLAGER_LINE:
+            return (Age2UnitLineData.VILLAGER_LINE.item.id,)
         if self._mode == Unitsanity.option_none:
             return ()
         if self._items_mode == UnitsanityItems.option_unit_line:
@@ -68,7 +77,7 @@ class UnitData:
         if self._items_mode == UnitsanityItems.option_upgrades:
             return tuple(token.id for token in unit.upgrade_tokens or ())
         return tuple(BUILDING_TO_UNITS_ITEM[building].id for building in unit.buildings or ()
-                     if building in BUILDING_TO_UNITS_ITEM)
+                     if building in BUILDING_TO_UNITS_ITEM and self.civs_build(building))
 
     def rows(self) -> list[Row]:
         locations = self.unit_locations()

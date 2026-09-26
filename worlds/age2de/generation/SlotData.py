@@ -64,7 +64,11 @@ def seed_halves(tag: str) -> tuple[int, int]:
 
 def options(slot_data: Mapping[str, object] = None) -> dict[str, int]:
     slot_data = {} if slot_data is None else slot_data
-    return {name: int(slot_data.get(key, DEFAULTS[name])) for name, key in OPTIONS.items()}
+    values = {name: int(slot_data.get(key, DEFAULTS[name])) for name, key in OPTIONS.items()}
+    if (values[US_MODE] == Unitsanity.option_none
+            and values[US_VILLAGER] > ShuffleVillager.option_no):
+        values[US_MODE] = Unitsanity.option_unit_line
+    return values
 
 
 def slot_fields(slot: int, tag: str, slot_data: Mapping[str, object] = None) -> dict[str, int]:
