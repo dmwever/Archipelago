@@ -5,6 +5,8 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
+from ...locations.Units import Age2UnitData as U
+from ...locations.Heroes import Age2HeroData as H
 from ..ScenarioLogic import ScenarioStartingState
 
 
@@ -29,3 +31,9 @@ class Attila1StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.MILL] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.BLACKSMITH] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.MARKET] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
+
+        self.obtains_unit[U.TARKAN] = True_()
+        self.obtains_unit[U.SCOUT_CAVALRY] = self.has_bledas_camp
+        self.obtains_unit[U.VILLAGER_MALE] = self.has_bledas_camp
+        self.obtains_unit[U.VILLAGER_FEMALE] = self.has_bledas_camp
+        self.obtains_unit[H.ATTILA_THE_HUN] = True_()

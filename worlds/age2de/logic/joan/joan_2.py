@@ -6,6 +6,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
+from ...locations.Units import Age2UnitData as U
 from ..ScenarioLogic import ScenarioStartingState, VANILLA_AGE_START
 
 
@@ -26,3 +27,12 @@ class Joan2StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.STABLE] = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
         self.starts_with_building[Age2BuildingData.BLACKSMITH] = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
         self.starts_with_building[Age2BuildingData.MARKET] = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
+
+        carts = Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
+        orleans = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
+        self.obtains_unit[U.CROSSBOWMAN] = carts
+        self.obtains_unit[U.KNIGHT] = carts
+        self.obtains_unit[U.TRADE_CART] = carts
+        self.obtains_unit[U.VILLAGER_MALE] = orleans
+        self.obtains_unit[U.VILLAGER_FEMALE] = orleans
+        self.obtains_unit[U.TRANSPORT_SHIP] = Has(Age2ItemData.AP_JOAN_2_DOCK.item_name)

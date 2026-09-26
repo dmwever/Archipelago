@@ -35,7 +35,6 @@ class ScenarioStartingState:
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
     fixed_force: bool = False
-    """A set piece fought with what it hands you. No base, and no age to be in."""
 
     def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
         from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
@@ -84,8 +83,6 @@ class ScenarioLogic:
         authored = self.starting_state.obtains_unit.get(unit)
         if authored is not None:
             return authored
-        if unit in self.scenario.trigger_units:
-            return True_()
         return False_()
 
     def has_building(self, building: Age2BuildingData) -> Rule:

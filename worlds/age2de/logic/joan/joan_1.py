@@ -5,6 +5,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
+from ...locations.Units import Age2UnitData as U
 from ..ScenarioLogic import ScenarioStartingState
 
 
@@ -19,3 +20,5 @@ class Joan1StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ItemData.JOAN_OF_ARC.item_name)
         self.has_vils = False_()
         self.fixed_force = True
+
+        self.obtains_unit[U.TRANSPORT_SHIP] = Has(Age2ItemData.AP_JOAN_1_TRANSPORT.item_name)

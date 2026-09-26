@@ -5,7 +5,6 @@ from ..Units import Age2UnitData
 AUTHORED_TRIGGER_UNITS: dict[Age2ScenarioData, list[ScenarioUnit]] = {
     Age2ScenarioData.AP_ATTILA_1: [
         Age2UnitData.TARKAN,
-        Age2UnitData.ARCHER,
         Age2UnitData.SCOUT_CAVALRY,
         Age2UnitData.VILLAGER_MALE,
         Age2UnitData.VILLAGER_FEMALE,

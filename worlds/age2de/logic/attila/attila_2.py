@@ -6,6 +6,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
+from ...locations.Units import Age2UnitData as U
 from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
 
 
@@ -21,3 +22,6 @@ class Attila2StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario")
         self.max_age = Age2AgeData.CASTLE
         self.has_vils = self.purple_vils
+
+        self.obtains_unit[U.VILLAGER_MALE] = self.purple_vils
+        self.obtains_unit[U.VILLAGER_FEMALE] = self.purple_vils
