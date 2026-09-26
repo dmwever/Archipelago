@@ -195,12 +195,17 @@ class TestSlotDataFile(unittest.TestCase):
             "extern const int AP_TS_LOCK = -1;\n"
             "extern const int AP_TS_UNIQUES = -1;\n"
             "extern const int AP_TS_EXISTING = -1;\n"
-            "extern const int AP_SHUFFLE_AGES = 0;\n")
+            "extern const int AP_SHUFFLE_AGES = 0;\n"
+            "extern const int AP_US_MODE = 0;\n"
+            "extern const int AP_US_ITEMS = -1;\n"
+            "extern const int AP_US_VILLAGER = -1;\n"
+            "extern const int AP_US_UNIQUES = -1;\n"
+            "extern const int AP_US_CAVEMAN = 0;\n")
 
     def test_an_unset_mode_reads_as_techsanity_off(self):
         # XS gates on AP_TS_MODE == TECHSANITY_NONE, so a server that sends
         # nothing has to land on that value, not on UNSET.
-        values = SlotData.techsanity()
+        values = SlotData.options()
         self.assertEqual(values[SlotData.TS_MODE], Techsanity.option_none)
 
     def test_techsanity_options_are_carried(self):
