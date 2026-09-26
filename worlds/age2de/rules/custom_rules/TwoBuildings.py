@@ -43,3 +43,8 @@ class TwoBuildingsRequirement(NestedRule["Age2World"], game="Age Of Empires II: 
             messages.append({"type": "text", "text": " Buildings"})
             
             return messages
+
+        @override
+        def explain_str(self, state: CollectionState | None = None) -> str:
+            clauses = " | ".join(child.explain_str(state) for child in self.children)
+            return f"Need {self.num_needed} of ({clauses}) Buildings"

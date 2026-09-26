@@ -1,15 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
-from NetUtils import JSONMessagePart
-from BaseClasses import CollectionState
-from ..rules.custom_rules.TwoBuildings import TwoBuildingsRequirement
 
-from ..items.Items import Age2ItemData
 from ..locations.Ages import Age2AgeData
-from ..locations.Buildings import Age2BuildingData
-from rule_builder.rules import False_, Has, HasAll, HasAny, HasFromListUnique, NestedRule, Or, Rule, True_
+from rule_builder.rules import False_, Has, Or, Rule
 
 from .ScenarioLogic import ScenarioLogic
 
@@ -40,49 +34,6 @@ class AgeLogic:
                 rule = rule | (scenario.is_unlocked() & scenario.ages.can_reach(age))
             self.age_to_scenarios[age] = rule
     
-    def two_from_dark_age(self) -> Rule:
-        return TwoBuildingsRequirement([
-            self.logic.buildings.has_building(Age2BuildingData.MILL),
-            self.logic.buildings.has_building(Age2BuildingData.LUMBER_CAMP),
-            self.logic.buildings.has_building(Age2BuildingData.MINING_CAMP),
-            self.logic.buildings.has_building(Age2BuildingData.DOCK),
-            self.logic.buildings.has_building(Age2BuildingData.BARRACKS)
-        ])
-    
-    def two_from_fuedal_age(self) -> Rule:
-        return TwoBuildingsRequirement([
-            self.logic.buildings.has_building(Age2BuildingData.ARCHERY_RANGE),
-            self.logic.buildings.has_building(Age2BuildingData.STABLE),
-            self.logic.buildings.has_building(Age2BuildingData.MARKET),
-            self.logic.buildings.has_building(Age2BuildingData.BLACKSMITH)
-        ])
-    
-    def two_from_castle_age(self) -> Rule:
-        return TwoBuildingsRequirement([
-            self.logic.buildings.has_building(Age2BuildingData.MONASTERY),
-            self.logic.buildings.has_building(Age2BuildingData.UNIVERSITY),
-            self.logic.buildings.has_building(Age2BuildingData.SIEGE_WORKSHOP)
-        ]) | self.logic.buildings.has_building(Age2BuildingData.CASTLE)
-
-    def can_reach_feudal(self) -> Rule:
-        return self.has_age(Age2AgeData.FEUDAL) & (self.two_from_dark_age() & self.logic.buildings.can_build_tc())
-        
-    def can_reach_castle(self) -> Rule:
-        return self.has_age(Age2AgeData.CASTLE) & self.two_from_fuedal_age() & self.logic.buildings.can_build_tc()
-        
-    def can_reach_imperial(self) -> Rule:
-        return self.has_age(Age2AgeData.IMPERIAL) & self.two_from_castle_age() & self.logic.buildings.can_build_tc()
-
-    def can_reach(self, age: Age2AgeData) -> Rule:
-        if age is Age2AgeData.FEUDAL:
-            return self.can_reach_feudal()
-        elif age is Age2AgeData.CASTLE:
-            return self.can_reach_castle()
-        elif age is Age2AgeData.IMPERIAL:
-            return self.can_reach_imperial()
-        else:
-            return True_()
-
     def has_age(self, age: Age2AgeData) -> Rule:
         if not self.world.options.shuffle_ages or age not in self.world.shuffled_ages:
             return True_()

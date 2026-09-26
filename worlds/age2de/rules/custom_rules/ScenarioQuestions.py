@@ -161,7 +161,8 @@ class ScenarioCanBuild(ScenarioQuestion, game=GAME):
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
         building = self.building.location_name.removeprefix("Build ")
-        return f"{scenario.scenario_name} can build a {building}"
+        article = "an" if building[0] in "AEIOU" else "a"
+        return f"{scenario.scenario_name} can build {article} {building}"
 
 
 @dataclass
