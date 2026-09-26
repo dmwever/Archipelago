@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 
 from ..locations.Ages import Age2AgeData
-from rule_builder.rules import False_, Has, Or, Rule
+from rule_builder.rules import False_, Has, Or, Rule, True_
 
 from .ScenarioLogic import ScenarioLogic
 
