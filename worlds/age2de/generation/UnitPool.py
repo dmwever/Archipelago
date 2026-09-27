@@ -17,6 +17,16 @@ from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 type UnitLocation = (Age2UnitData | Age2UnitLineData | Age2VillagerJobData | Age2HeroData
                      | Age2EscortUnitData)
 
+UNIT_LOCATION_TYPES = (Age2UnitData, Age2UnitLineData, Age2VillagerJobData, Age2HeroData,
+                       Age2EscortUnitData)
+
+
+def unit_location(id: int) -> UnitLocation | None:
+    for kind in UNIT_LOCATION_TYPES:
+        if id in kind:
+            return kind(id)
+    return None
+
 UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
     UnitType.unique_unit: (IncludeUniqueUnits.option_unique, IncludeUniqueUnits.option_both),
     UnitType.regional_unit: (IncludeUniqueUnits.option_regional, IncludeUniqueUnits.option_both),

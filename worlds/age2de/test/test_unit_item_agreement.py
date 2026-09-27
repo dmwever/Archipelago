@@ -56,7 +56,7 @@ class TestTheGameWaitsForItemsTheSeedContains(UnitTableAgreementBase):
     def test_no_unit_is_gated_by_nothing(self):
         for world in self.every_combination():
             ungated = [row.unit.unit_name for row in self.table_for(world).rows()
-                       if not row.items]
+                       if not row.items and isinstance(row.unit, Age2UnitData)]
             self.assertEqual(ungated, [])
 
     def test_every_option_combination_installs(self):

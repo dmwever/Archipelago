@@ -18,6 +18,7 @@ from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
+from ...generation.UnitPool import UnitLocation, unit_location
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 from .FolderHandler import FolderHandler
 from .install.TechData import TechData
@@ -52,7 +53,7 @@ class InstallHandler(FolderHandler):
         self._scenarios: list[Age2ScenarioData] = []
         self._civs: list[Age2CivData] = []
         self._techs: list[Age2TechData] = []
-        self._unit_places: list[Age2UnitData | Age2UnitLineData] = []
+        self._unit_places: list[UnitLocation] = []
         self._parsed = 0
         self._to_parse = 0
         self.installing = False
@@ -78,9 +79,8 @@ class InstallHandler(FolderHandler):
         self._civs = list(dict.fromkeys(scenario.civ for scenario in self._scenarios))
         self._techs = [Age2TechData(id) for id in location_ids
                                 if id in Age2TechData]
-        self._unit_places = ([Age2UnitData(id) for id in location_ids if id in Age2UnitData]
-                             + [Age2UnitLineData(id) for id in location_ids
-                                if id in Age2UnitLineData])
+        self._unit_places = [place for place in map(unit_location, location_ids)
+                             if place is not None]
 
     def campaign_dir(self) -> Path:
         return Path(self._user_folder, CAMPAIGN_SUBPATH)
