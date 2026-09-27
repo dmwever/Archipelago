@@ -1,4 +1,5 @@
 from ...items.Items import Mercenary, SCENARIO_TO_ITEMS
+from ..EscortUnits import Age2EscortUnitData
 from ..Heroes import Age2HeroData
 from ..Scenarios import Age2ScenarioData, ScenarioUnit
 from ..Units import Age2UnitData
@@ -9,6 +10,7 @@ AUTHORED_TRIGGER_UNITS: dict[Age2ScenarioData, list[ScenarioUnit]] = {
         Age2UnitData.VILLAGER_MALE,
         Age2UnitData.VILLAGER_FEMALE,
         Age2HeroData.ATTILA_THE_HUN,
+        Age2EscortUnitData.HORSE,
     ],
     Age2ScenarioData.AP_ATTILA_2: [
         Age2UnitData.VILLAGER_MALE,

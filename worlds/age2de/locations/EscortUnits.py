@@ -17,6 +17,7 @@ class Age2EscortUnitData(enum.IntEnum):
 
     # 600 - 799 = Escort objectives, picking up after the heroes.
     CART = 600, "Own Cart", "Cart", 1338
+    HORSE = 601, "Own Horse", "Horse", 814
 
 
 NAME_TO_ESCORT: dict[str, Age2EscortUnitData] = {escort.escort_name: escort

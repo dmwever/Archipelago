@@ -6,6 +6,7 @@ from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
 from ...locations.Units import Age2UnitData as U
+from ...locations.EscortUnits import Age2EscortUnitData as E
 from ...locations.Heroes import Age2HeroData as H
 from ..ScenarioLogic import ScenarioStartingState
 
@@ -37,3 +38,4 @@ class Attila1StartingState(ScenarioStartingState):
         self.obtains_unit[U.VILLAGER_MALE] = self.has_bledas_camp
         self.obtains_unit[U.VILLAGER_FEMALE] = self.has_bledas_camp
         self.obtains_unit[H.ATTILA_THE_HUN] = True_()
+        self.obtains_unit[E.HORSE] = True_()
