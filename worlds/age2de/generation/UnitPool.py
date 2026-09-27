@@ -40,6 +40,7 @@ class UnitPool:
         self._unitsanity_items = options.unitsanity_items
         self._include_unique_units = options.include_unique_units
         self._shuffle_villager = options.shuffle_villager
+        self._caveman = options.caveman
         self._civs = list(civs)
         self._scenarios = list(scenarios)
         self._trainable = {unit for civ in civs for unit in CIV_TO_UNITS[civ]}
@@ -174,7 +175,8 @@ class UnitPool:
               buildings: Iterable[Age2BuildingData], villager: bool) -> list[Age2ItemData]:
         chosen: list[Age2ItemData]
         if self._unitsanity_items == UnitsanityItems.option_unit_line:
-            chosen = [line.item for line in lines if self.is_trainable(line)]
+            chosen = [line.item for line in lines
+                      if self.is_trainable(line) or self._caveman]
         elif self._unitsanity_items == UnitsanityItems.option_upgrades:
             wanted = {token for unit in units for token in unit.upgrade_tokens}
             chosen = [token for token in Age2ItemData if token in wanted]

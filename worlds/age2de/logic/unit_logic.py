@@ -2,15 +2,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
-from ..Options import Unitsanity, UnitsanityItems
+from ..Options import Caveman, Unitsanity, UnitsanityItems
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+
+NOT_CAVEMAN = OptionFilter(Caveman, Caveman.option_false)
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -35,8 +38,14 @@ class UnitLogic:
     # -- owning ------------------------------------------------------------------------------
 
     def can_own_anywhere(self, unit: Age2UnitData) -> Rule:
-        return (self.can_train_anywhere(unit) | self.is_granted_anywhere(unit)
-                | self.can_convert(unit))
+        granted = self.is_granted_anywhere(unit) & (NOT_CAVEMAN | self.can_restore(unit))
+        return self.can_train_anywhere(unit) | granted | self.can_convert(unit)
+
+    def can_restore(self, unit: Age2UnitData) -> Rule:
+        tech = unit.upgrade_tech
+        if tech is None or not self.world.tech_pool.includes(tech):
+            return self.has_unit_items(unit)
+        return self.has_unit_items(unit) & self.logic.techs.has_tech_item(tech)
 
     def can_own_line_anywhere(self, line: Age2UnitLineData) -> Rule:
         """Owning any tier is owning the line."""
