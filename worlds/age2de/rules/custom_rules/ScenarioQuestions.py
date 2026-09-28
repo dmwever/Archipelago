@@ -16,11 +16,9 @@ if TYPE_CHECKING:
     from ... import Age2World
     from ...logic.ScenarioLogic import ScenarioLogic
 
-GAME = "Age Of Empires II: Definitive Edition"
-
 
 @dataclass
-class ScenarioQuestion(Rule["Age2World"], game=GAME):
+class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
     """A question about one scenario, answered once per seed and shared by everything that asks.
 
     These carry **identifiers only**, so composing one costs nothing; the tree behind it is built
@@ -141,7 +139,7 @@ class ScenarioQuestion(Rule["Age2World"], game=GAME):
 
 
 @dataclass
-class ScenarioCanBuild(ScenarioQuestion, game=GAME):
+class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
     """Whether this scenario can put this building up.
 
     The deepest of the questions: behind it are the villagers, the civilisation, the prerequisite
@@ -166,7 +164,7 @@ class ScenarioCanBuild(ScenarioQuestion, game=GAME):
 
 
 @dataclass
-class ScenarioHasReached(ScenarioQuestion, game=GAME):
+class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
     """Whether this scenario is at or past this age."""
 
     age: Age2AgeData

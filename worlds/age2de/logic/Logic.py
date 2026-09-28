@@ -11,6 +11,7 @@ from ..locations.connections import ScenarioDataLogic
 from .ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
+from .resource_logic import ResourceLogic
 from .tech_logic import TechLogic
 from .unit_logic import UnitLogic
 from rule_builder.rules import False_, Or, Rule
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 
 
 class Logic:
+    resources: ResourceLogic
     buildings: BuildingLogic
     ages: AgeLogic
     goal: GoalLogic
@@ -46,6 +48,7 @@ class Logic:
                                                        for building in Age2BuildingData}
         self._can_research: dict[Age2TechData, Or] = {}
 
+        self.resources = ResourceLogic(self, world)
         self.buildings = BuildingLogic(self, world)
         self.techs = TechLogic(self, world)
         self.units = UnitLogic(self, world)
