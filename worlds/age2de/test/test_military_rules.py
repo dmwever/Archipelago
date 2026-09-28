@@ -162,7 +162,7 @@ class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):
 
     def test_a_monastery_is_not_an_army_and_neither_is_a_dock(self):
         for line in (Age2UnitLineData.MONK_LINE, Age2UnitLineData.MISSIONARY_LINE,
-                     Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.VILLAGER_LINE,
+                     Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.VILLAGER_MALE_LINE,
                      Age2UnitLineData.TRADE_CART_LINE):
             self.assertNotIn(line, ROLE_TO_LINES[UnitRole.military], line.line_name)
         # The Warrior Priest is the exception: a Monastery unit that carries an axe and a sword,

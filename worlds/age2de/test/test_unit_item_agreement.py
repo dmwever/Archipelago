@@ -70,7 +70,7 @@ class TestVillagersCanBeShuffledAlone(UnitTableAgreementBase):
                                          shuffle_villager=ShuffleVillager.option_yes)
 
     def test_the_location_is_placed(self):
-        self.assertIn("Own Villager Line",
+        self.assertIn("Own Villager (Male) Line",
                       [location.name
                        for location in self.villager_world.multiworld.get_locations(1)])
 
@@ -84,7 +84,7 @@ class TestVillagersCanBeShuffledAlone(UnitTableAgreementBase):
 
     def test_a_row_completes_that_check(self):
         rows = self.table_for(self.villager_world).rows()
-        self.assertTrue(any(row.location_id == Age2UnitLineData.VILLAGER_LINE.id
+        self.assertTrue(any(row.location_id == Age2UnitLineData.VILLAGER_MALE_LINE.id
                             for row in rows))
 
 
@@ -103,8 +103,8 @@ class TestTheVillagerIsGatedByItsLine(UnitPoolTestBase):
         from ..locations.Civilizations import Age2CivData
         for items in ITEM_MODES:
             with self.subTest(items=items):
-                table = UnitData([Age2UnitLineData.VILLAGER_LINE],
+                table = UnitData([Age2UnitLineData.VILLAGER_MALE_LINE],
                                  (Age2CivData.HUNS, Age2CivData.FRANKS),
                                  Unitsanity.option_all, items, "a1b2c3d4")
                 self.assertEqual(table.items_for(Age2UnitData.VILLAGER_MALE),
-                                 (Age2UnitLineData.VILLAGER_LINE.item.id,))
+                                 (Age2UnitLineData.VILLAGER_MALE_LINE.item.id,))

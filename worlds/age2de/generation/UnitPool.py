@@ -17,6 +17,8 @@ from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 type UnitLocation = (Age2UnitData | Age2UnitLineData | Age2VillagerJobData | Age2HeroData
                      | Age2EscortUnitData)
 
+VILLAGER_LINES = (Age2UnitLineData.VILLAGER_MALE_LINE, Age2UnitLineData.VILLAGER_FEMALE_LINE)
+
 UNIT_LOCATION_TYPES = (Age2UnitData, Age2UnitLineData, Age2VillagerJobData, Age2HeroData,
                        Age2EscortUnitData)
 
@@ -44,13 +46,15 @@ class UnitPool:
         self._civs = list(civs)
         self._scenarios = list(scenarios)
         self._trainable = {unit for civ in civs for unit in CIV_TO_UNITS[civ]}
+        if Age2UnitData.VILLAGER_MALE in self._trainable:
+            self._trainable.add(Age2UnitData.VILLAGER_FEMALE)
         self._granted = {grant
                          for scenario in self._scenarios
                          for grant in scenario.startup_units + scenario.trigger_units}
 
 
     def is_villager(self, unit: Age2UnitData) -> bool:
-        return unit.line is Age2UnitLineData.VILLAGER_LINE
+        return unit.line in VILLAGER_LINES
 
 
     def is_unit_type_included(self, unit: Age2UnitData) -> bool:
@@ -116,7 +120,7 @@ class UnitPool:
         if self._shuffle_villager == ShuffleVillager.option_no:
             return []
         if self._shuffle_villager != ShuffleVillager.option_include_professions:
-            return [Age2UnitLineData.VILLAGER_LINE]
+            return list(VILLAGER_LINES)
         return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] \
             + [job for job in Age2VillagerJobData if self.job_possible(job)]
 
@@ -134,7 +138,10 @@ class UnitPool:
                 grouped[line] = [line]
         villager = self.villager_locations
         if villager:
-            grouped[Age2UnitLineData.VILLAGER_LINE] = villager
+            for line in VILLAGER_LINES:
+                mine = [place for place in villager if self.villager_line_of(place) is line]
+                if mine:
+                    grouped[line] = mine
         return grouped
 
 
@@ -146,6 +153,15 @@ class UnitPool:
         return location
 
 
+    def villager_line_of(self, place: UnitLocation) -> Age2UnitLineData:
+        if isinstance(place, Age2UnitLineData):
+            return place
+        if isinstance(place, Age2VillagerJobData):
+            return place.line
+        if place is Age2UnitData.VILLAGER_FEMALE:
+            return Age2UnitLineData.VILLAGER_FEMALE_LINE
+        return Age2UnitLineData.VILLAGER_MALE_LINE
+
     def is_villager_location(self, location: UnitLocation) -> bool:
         """Anything Shuffle Villager owns, whichever granularity produced it."""
         if isinstance(location, Age2VillagerJobData):
@@ -153,7 +169,7 @@ class UnitPool:
         if isinstance(location, Age2HeroData):
             return False
         if isinstance(location, Age2UnitLineData):
-            return location is Age2UnitLineData.VILLAGER_LINE
+            return location in VILLAGER_LINES
         return self.is_villager(location)
 
 
@@ -185,5 +201,9 @@ class UnitPool:
             chosen = [BUILDING_TO_UNITS_ITEM[building] for building in Age2BuildingData
                       if building in producers]
         if villager:
-            chosen.append(Age2UnitLineData.VILLAGER_LINE.item)
+            chosen.append(Age2UnitLineData.VILLAGER_MALE_LINE.item)
+        if self._shuffle_villager == ShuffleVillager.option_include_professions:
+            for job in Age2VillagerJobData:
+                if self.job_possible(job) and job.item not in chosen:
+                    chosen.append(job.item)
         return chosen

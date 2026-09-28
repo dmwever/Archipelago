@@ -47,7 +47,8 @@ class Age2UnitLineData(enum.IntEnum):
     JANISSARY_LINE                = 813, "Own Janissary Line", "Janissary Line", Age2UnitData.JANISSARY, Age2ItemData.UNIT_LINE_JANISSARY
     CHU_KO_NU_LINE                = 814, "Own Chu Ko Nu Line", "Chu Ko Nu Line", Age2UnitData.CHU_KO_NU, Age2ItemData.UNIT_LINE_CHU_KO_NU
     MILITIA_LINE                  = 815, "Own Militia Line", "Militia Line", Age2UnitData.MILITIA, Age2ItemData.UNIT_LINE_MILITIA
-    VILLAGER_LINE                 = 816, "Own Villager Line", "Villager Line", Age2UnitData.VILLAGER_MALE, Age2ItemData.UNIT_LINE_VILLAGER
+    VILLAGER_MALE_LINE            = 816, "Own Villager (Male) Line", "Villager (Male) Line", Age2UnitData.VILLAGER_MALE, Age2ItemData.UNIT_LINE_VILLAGER
+    VILLAGER_FEMALE_LINE          = 933, "Own Villager (Female) Line", "Villager (Female) Line", Age2UnitData.VILLAGER_FEMALE, Age2ItemData.UNIT_LINE_VILLAGER
     SPEARMAN_LINE                 = 817, "Own Spearman Line", "Spearman Line", Age2UnitData.SPEARMAN, Age2ItemData.UNIT_LINE_SPEARMAN
     MONK_LINE                     = 818, "Own Monk Line", "Monk Line", Age2UnitData.MONK, Age2ItemData.UNIT_LINE_MONK
     TRADE_CART_LINE               = 819, "Own Trade Cart Line", "Trade Cart Line", Age2UnitData.TRADE_CART, Age2ItemData.UNIT_LINE_TRADE_CART

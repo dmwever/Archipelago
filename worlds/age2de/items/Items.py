@@ -46,19 +46,19 @@ class Tech:
 
 @dataclass
 class UnitLine:
-    """One whole upgrade line, e.g. the Knight line. line_id is its Age2UnitLineData id."""
     line_id: int
     age: Age2AgeData
 
 @dataclass
 class UnitUpgrade:
-    """A piece of equipment a unit needs, e.g. a Horse or a Bow. The name is the whole payload;
-    which units want it lives in locations/connections/UnitUpgradeTokens.py."""
     pass
 
 @dataclass
+class VillagerProfession:
+    pass
+
+@dataclass(frozen=True)
 class UnitBuilding:
-    """Everything one building trains, e.g. Barracks Units. game_id is the building's genie id."""
     game_id: int
     age: Age2AgeData
 
@@ -68,7 +68,6 @@ class ScenarioItem:
 
 @dataclass
 class MercenaryUnit:
-    """A hero counts: Joan 6's artillery muster spawns Jean Bureau alongside its cannon."""
     unit: Age2UnitData | Age2HeroData
     count: int
 
@@ -129,6 +128,7 @@ item_type_to_classification = {
     Tech: ItemClassification.progression,
     UnitLine: ItemClassification.progression,
     UnitUpgrade: ItemClassification.progression,
+    VillagerProfession: ItemClassification.progression,
     UnitBuilding: ItemClassification.progression,
     Resources: ItemClassification.filler,
     StartingResources: ItemClassification.useful,
@@ -162,7 +162,8 @@ class Age2ItemData(enum.IntEnum):
     VICTORY =                       0, "Victory", Victory()
     
     #1 - 24 = Resources, 25 - 29 = Ages, 30 - 199 = Civs, 200 - 299 = Buildings,
-    #300 - 499 = Unit lines, 500 - 599 = Unit upgrades, 600 - 699 = Building units
+    #300 - 499 = Unit lines, 500 - 599 = Unit upgrades, 600 - 699 = Building units,
+    #700 - 799 = Villager professions
     
     # Filler Resources
     FILLER_WOOD_SMALL =             1, "+100 Wood",   Resources(Resource.WOOD, 100)
@@ -414,6 +415,20 @@ class Age2ItemData(enum.IntEnum):
     BUILDING_UNITS_MONASTERY      = 608, "Monastery Units", UnitBuilding(104, Age2AgeData.CASTLE)
     BUILDING_UNITS_MARKET         = 609, "Market Units", UnitBuilding(84, Age2AgeData.FEUDAL)
     BUILDING_UNITS_KREPOST        = 610, "Krepost Units", UnitBuilding(1251, Age2AgeData.CASTLE)
+
+    #700 - 799 = Villager professions. One item per job; both sexes share it.
+    PROFESSION_BUILDER            = 700, "Builder", VillagerProfession()
+    PROFESSION_FARMER             = 701, "Farmer", VillagerProfession()
+    PROFESSION_FISHERMAN          = 702, "Fisherman", VillagerProfession()
+    PROFESSION_FORAGER            = 703, "Forager", VillagerProfession()
+    PROFESSION_GOLD_MINER         = 704, "Gold Miner", VillagerProfession()
+    PROFESSION_HERDER             = 705, "Herder", VillagerProfession()
+    PROFESSION_HUNTER             = 706, "Hunter", VillagerProfession()
+    PROFESSION_LUMBERJACK         = 707, "Lumberjack", VillagerProfession()
+    PROFESSION_OYSTER_GATHERER    = 708, "Oyster Gatherer", VillagerProfession()
+    PROFESSION_REPAIRER           = 709, "Repairer", VillagerProfession()
+    PROFESSION_SHEPHERD           = 710, "Shepherd", VillagerProfession()
+    PROFESSION_STONE_MINER        = 711, "Stone Miner", VillagerProfession()
 
     #1000 - 2999 = Progression Items
     TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          TCResources(Resource.WOOD, 275)

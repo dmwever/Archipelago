@@ -904,7 +904,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.CHU_KO_NU_LINE,
         Age2UnitLineData.MILITIA_LINE,
-        Age2UnitLineData.VILLAGER_LINE,
+        Age2UnitLineData.VILLAGER_MALE_LINE,
         Age2UnitLineData.WOAD_RAIDER_LINE,
         Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.THROWING_AXEMAN_LINE,

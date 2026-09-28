@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
-from ..Options import Caveman, Unitsanity, UnitsanityItems
+from ..Options import Caveman, ShuffleVillager, Unitsanity, UnitsanityItems
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
@@ -79,6 +79,11 @@ class UnitLogic:
 
     # -- villagers ---------------------------------------------------------------------------
 
+    def has_profession_item(self, job: Age2VillagerJobData) -> Rule:
+        if self.world.options.shuffle_villager != ShuffleVillager.option_include_professions:
+            return True_()
+        return Has(job.item.item_name)
+
     def can_do_job_anywhere(self, job: Age2VillagerJobData) -> Rule:
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
@@ -86,7 +91,7 @@ class UnitLogic:
             if isinstance(answer, False_):
                 continue
             ways.append(scenario.is_unlocked() & answer)
-        return Or(*ways)
+        return Or(*ways) & self.has_profession_item(job)
 
     # -- items -------------------------------------------------------------------------------
 

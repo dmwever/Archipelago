@@ -54,10 +54,12 @@ class Logic:
         for campaign in world.included_campaigns:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
+    
         for building in Age2BuildingData:
             self._can_build[building].children = tuple(
                 scenario.is_unlocked() & scenario.buildings.can_build_building(building)
                 for scenario in self.scenarios)
+
         for tech in Age2TechData:
             self._can_research[tech] = Or(*[
                 scenario.is_unlocked() & scenario.techs.can_research(tech)

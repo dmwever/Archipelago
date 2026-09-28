@@ -3,7 +3,7 @@ from typing import Iterable
 
 from ....Options import Unitsanity, UnitsanityItems
 from ....generation import SlotData
-from ....generation.UnitPool import UnitLocation
+from ....generation.UnitPool import VILLAGER_LINES, UnitLocation
 from ....locations.Ages import Age2AgeData
 from ....locations.Buildings import Age2BuildingData
 from ....locations.Civilizations import Age2CivData
@@ -65,7 +65,7 @@ class UnitData:
         return any(civ.builds(building) for civ in self._civs)
 
     def is_caveman_exempt(self, unit: Age2UnitData) -> bool:
-        return unit.line is Age2UnitLineData.VILLAGER_LINE
+        return unit.line in VILLAGER_LINES
 
     def upgrade_item_for(self, unit: Age2UnitData) -> int:
         tech = unit.upgrade_tech
@@ -74,8 +74,8 @@ class UnitData:
         return tech.item.id
 
     def items_for(self, unit: Age2UnitData) -> tuple[int, ...]:
-        if unit.line is Age2UnitLineData.VILLAGER_LINE:
-            return (Age2UnitLineData.VILLAGER_LINE.item.id,)
+        if unit.line in VILLAGER_LINES:
+            return (Age2UnitLineData.VILLAGER_MALE_LINE.item.id,)
         if self._mode == Unitsanity.option_none:
             return ()
         if self._items_mode == UnitsanityItems.option_unit_line:
@@ -97,6 +97,10 @@ class UnitData:
                    tuple(unit.variant_game_ids or ()))
 
     def owned_type_row(self, place: UnitLocation) -> Row:
+        if isinstance(place, Age2VillagerJobData):
+            return Row(place, place.id, place.line.id, Age2AgeData.DARK.value, 1,
+                       self.NO_UPGRADE_ITEM, True, (place.item.id,), ())
+
         return Row(place, place.id, self.NO_LINE, Age2AgeData.DARK.value, 0,
                    self.NO_UPGRADE_ITEM, True, (), ())
 
