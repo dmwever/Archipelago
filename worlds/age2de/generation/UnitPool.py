@@ -121,8 +121,7 @@ class UnitPool:
             return []
         if self._shuffle_villager != ShuffleVillager.option_include_professions:
             return list(VILLAGER_LINES)
-        return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] \
-            + [job for job in Age2VillagerJobData if self.job_possible(job)]
+        return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] + [job for job in Age2VillagerJobData if self.job_possible(job)]
 
     def job_possible(self, job: Age2VillagerJobData) -> bool:
         return job.building is None or any(civ.builds(job.building) for civ in self._civs)
