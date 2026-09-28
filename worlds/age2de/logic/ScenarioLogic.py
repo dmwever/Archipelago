@@ -2,9 +2,13 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from ..locations.Buildings import Age2BuildingData
+from ..locations.EscortUnits import Age2EscortUnitData
+from ..locations.Heroes import Age2HeroData
+from ..locations.Units import Age2UnitData
+from ..locations.VillagerJobs import Age2VillagerJobData
 
 from rule_builder.options import OptionFilter
-from rule_builder.rules import False_, Rule, True_
+from rule_builder.rules import False_, Has, Rule, True_
 
 from ..Options import ExistingTechs
 from ..locations.Ages import Age2AgeData
@@ -22,16 +26,25 @@ if TYPE_CHECKING:
 class ScenarioStartingState:
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
-    has_base: Rule = field(default_factory=lambda: True_())
-    age_playable: dict[Age2AgeData, Rule] = field(default_factory=lambda: { age: False_() for age in Age2AgeData })
+    has_base: Rule = field(default_factory=lambda: False_())
+    max_age: Age2AgeData = Age2AgeData.IMPERIAL
+    age_playable: dict[Age2AgeData, Rule] = field(default_factory=dict)
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
+    obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
+    job_available: dict[Age2VillagerJobData, Rule] = field(
+        default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
     fixed_force: bool = False
-    """A set piece fought with what it hands you. No base, and no age to be in."""
 
-    def __post_init__(self):
-        self.age_playable[Age2AgeData.DARK] = True_() & DARK_START
-
+    def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
+        from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
+        for item in SCENARIO_TO_ITEMS[scenario]:
+            if item.type_data is not Mercenary:
+                continue
+            for soldier in item.type.units:
+                self.obtains_unit[soldier.unit] = (
+                    self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
+                
 class ScenarioLogic:
     starting_state: ScenarioStartingState
 
@@ -40,27 +53,41 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
+        data.default_mercenary_grants(scenario)
+        from .scenarios.ScenarioAgeLogic import ScenarioAgeLogic
+        from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
+        from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
+        from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
+        from .scenarios.ScenarioTechLogic import ScenarioTechLogic
+        from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
+        self.civilization = ScenarioCivilizationLogic(self)
+        self.ages = ScenarioAgeLogic(self)
+        self.buildings = ScenarioBuildingLogic(self)
+        self.military = ScenarioMilitaryLogic(self)
+        self.techs = ScenarioTechLogic(self)
+        self.units = ScenarioUnitLogic(self)
     
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils
     
     def has_base(self) -> Rule:
-        return self.starting_state.has_base
+        return self.starting_state.has_base | self.buildings.can_build_base()
 
-    def can_reach_age(self, age: Age2AgeData) -> Rule:
-        if self.starting_state.fixed_force:
-            return False_()
-        return self.starting_state.age_playable[age]
+    def has_water_access(self) -> Rule:
+        return self.starting_state.has_water_access
 
-    def start_past_age(self, age: Age2AgeData) -> Rule:
-        if self.starting_state.fixed_force:
-            return False_()
-        if self.scenario.vanilla_age > age:
-            return True_() & VANILLA_AGE_START
+    def job_available(self, job: Age2VillagerJobData) -> Rule:
+        return self.starting_state.job_available[job]
+
+    def obtains_unit(self, unit: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
+        authored = self.starting_state.obtains_unit.get(unit)
+        if authored is not None:
+            return authored
         return False_()
-    
-    def start_with_building(self, building: Age2BuildingData) -> Rule:
-        return self.starting_state.starts_with_building[building] | self.logic.can_build_building(building)
+
+    def has_building(self, building: Age2BuildingData) -> Rule:
+        return (self.starting_state.starts_with_building[building]
+                | self.buildings.can_build_building(building))
     
     def is_unlocked(self) -> Rule:
         return self.starting_state.is_unlocked

@@ -19,6 +19,7 @@ from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
 from .handlers.StorageHandler import StorageHandler
 from .handlers.TechHandler import TechHandler
+from .handlers.UnitHandler import UnitHandler
 
 from Utils import Version
 
@@ -156,6 +157,7 @@ class Age2GameContext:
     building_handler: BuildingHandler
     mercenary_handler: MercenaryHandler
     tech_handler: TechHandler
+    unit_handler: UnitHandler
     message_handler: MessageHandler
     install_handler: InstallHandler
     storage_handler: StorageHandler
@@ -172,6 +174,7 @@ class Age2GameContext:
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
         self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.tech_handler = TechHandler([tech for tech in Age2TechData])
+        self.unit_handler = UnitHandler()
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
@@ -215,6 +218,7 @@ class Age2GameContext:
         self.building_handler = BuildingHandler([building for building in Age2BuildingData])
         self.mercenary_handler = MercenaryHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
         self.tech_handler = TechHandler([tech for tech in Age2TechData])
+        self.unit_handler = UnitHandler()
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
@@ -232,6 +236,7 @@ class Age2GameContext:
         self.building_handler.set_user_folder(self.profile_folder())
         self.mercenary_handler.set_user_folder(self.profile_folder())
         self.tech_handler.set_user_folder(self.profile_folder())
+        self.unit_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_user_folder(self.profile_folder())
         self.campaign_handler.set_tag(self.client_status.tag)
         self.campaign_handler.set_player_name(self.client_status.player_name)
@@ -364,6 +369,8 @@ class Age2GameContext:
                 os.remove(self.profile_folder() + "buildings.xsdat")
             if os.path.exists(self.profile_folder() + "techs.xsdat"):
                 os.remove(self.profile_folder() + "techs.xsdat")
+            if os.path.exists(self.profile_folder() + "units.xsdat"):
+                os.remove(self.profile_folder() + "units.xsdat")
         except Exception as ex:
             print(ex)
 
@@ -438,6 +445,7 @@ async def status_loop(ctx: Age2GameContext):
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
         ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items)
         ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
+        ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
         
         # Check all unlocked scenarios every 2 seconds to find active scenario.

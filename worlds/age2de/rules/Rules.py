@@ -9,6 +9,7 @@ from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
 from .TechRules import TechRules
+from .UnitRules import UnitRules
 from rule_builder.rules import Rule
 # Imported for its side effect: binds Age2ScenarioData.<member>.rules, used in set_rules below.
 from ..locations.connections import ScenarioDataRules  # noqa: F401
@@ -21,6 +22,7 @@ class Rules:
     building_rules: BuildingRules
     age_rules: AgeRules
     tech_rules: TechRules
+    unit_rules: UnitRules
     scenario_rules: list[ScenarioRules]
     logic: Logic
     
@@ -30,6 +32,7 @@ class Rules:
         self.building_rules = BuildingRules(self)
         self.age_rules =  AgeRules(self, world)
         self.tech_rules = TechRules(self)
+        self.unit_rules = UnitRules(self)
         self.scenario_rules = []
 
     def get_entrance(self, entrance_name: str):
@@ -53,3 +56,5 @@ class Rules:
         self.age_rules.set_rules()
         self.building_rules.set_rules()
         self.tech_rules.set_rules()
+        # After the scenario rules, which is where the per-scenario logic it reads is built.
+        self.unit_rules.set_rules()

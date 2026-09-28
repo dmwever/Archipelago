@@ -5,6 +5,9 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
+from ...locations.Units import Age2UnitData as U
+from ...locations.EscortUnits import Age2EscortUnitData as E
+from ...locations.Heroes import Age2HeroData as H
 from ..ScenarioLogic import ScenarioStartingState
 
 
@@ -19,12 +22,9 @@ class Attila1StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has("Attila the Hun Campaign")
+        self.max_age = Age2AgeData.CASTLE
         self.has_vils = self.has_bledas_camp | self.alternate_vils
-        self.has_base = self.has_bledas_camp | (logic.can_build_base() & 
-            self.alternate_vils)
-        self.age_playable[Age2AgeData.DARK] = True_()
-        self.age_playable[Age2AgeData.FEUDAL] = (self.has_bledas_camp | self.alternate_vils) & logic.ages.can_reach(Age2AgeData.FEUDAL)
-        self.age_playable[Age2AgeData.CASTLE] = (self.has_bledas_camp | self.alternate_vils) & logic.ages.can_reach(Age2AgeData.CASTLE)
+        self.has_base = self.has_bledas_camp   # the camp is a base; Attila's is only villagers
         self.starts_with_building[Age2BuildingData.STABLE] = self.has_bledas_camp | Has(Age2ItemData.AP_ATTILA_1_ATTILAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.BARRACKS] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
@@ -32,3 +32,10 @@ class Attila1StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.MILL] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.BLACKSMITH] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
         self.starts_with_building[Age2BuildingData.MARKET] = Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
+
+        self.obtains_unit[U.TARKAN] = True_()
+        self.obtains_unit[U.SCOUT_CAVALRY] = self.has_bledas_camp
+        self.obtains_unit[U.VILLAGER_MALE] = self.has_bledas_camp
+        self.obtains_unit[U.VILLAGER_FEMALE] = self.has_bledas_camp
+        self.obtains_unit[H.ATTILA_THE_HUN] = True_()
+        self.obtains_unit[E.HORSE] = True_()

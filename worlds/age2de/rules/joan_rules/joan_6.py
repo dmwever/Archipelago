@@ -1,5 +1,6 @@
 
 from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ...items.Items import Age2ItemData
 
@@ -9,7 +10,7 @@ from ...locations.Locations import Age2ScenarioLocationData
 
 from ...logic.joan.joan_6 import Joan6StartingState
 
-from ...logic.Logic import ScenarioLogic
+from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -24,10 +25,10 @@ class Joan6Rules(ScenarioRules):
         
         can_defeat_purple = (
             self.scenario_logic.has_base() &
-            self.logic.military.has_siege() &
-            self.logic.military.counters_militia(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_spear(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_monk()
+            self.scenario_logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE)
         )
         
         can_siege_town = (
@@ -39,19 +40,19 @@ class Joan6Rules(ScenarioRules):
         )
         can_defeat_orange = (
             self.scenario_logic.has_base() &
-            self.logic.military.has_siege() &
-            self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_scout(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_ram() &
-            self.logic.military.counters_trebuchet()
+            self.scenario_logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
         )
         can_defeat_red = (
             self.scenario_logic.has_base() &
-            self.logic.military.has_siege() &
-            self.logic.military.counters_longbowman(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_knight(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_mangonel(Age2AgeData.IMPERIAL) &
-            self.logic.military.counters_trebuchet()
+            self.scenario_logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
         )
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN6_BURGUNDIAN_TOWN], can_siege_town)

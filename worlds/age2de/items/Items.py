@@ -5,6 +5,7 @@ from BaseClasses import ItemClassification
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Ages import Age2AgeData
 from ..locations.Scenarios import Age2ScenarioData
+from ..locations.Heroes import Age2HeroData
 from ..locations.Units import Age2UnitData
 
 class Resource(enum.Enum):
@@ -48,12 +49,30 @@ class Tech:
     is_unique: bool
 
 @dataclass
+class UnitLine:
+    line_id: int
+    age: Age2AgeData
+
+@dataclass
+class UnitUpgrade:
+    pass
+
+@dataclass
+class VillagerProfession:
+    pass
+
+@dataclass(frozen=True)
+class UnitBuilding:
+    game_id: int
+    age: Age2AgeData
+
+@dataclass
 class ScenarioItem:
     vanilla_scenario: Age2ScenarioData
 
 @dataclass
 class MercenaryUnit:
-    unit: Age2UnitData
+    unit: Age2UnitData | Age2HeroData
     count: int
 
 @dataclass
@@ -92,7 +111,8 @@ type FillerItemType = (
 )
 
 type ItemType = (
-    ScenarioItem | StartingResources | ProgressiveScenario | Mercenary | Campaign | Resources | TCResources | Victory | Building | Tech | Trap
+    ScenarioItem | StartingResources | ProgressiveScenario | Mercenary | Campaign | Resources | TCResources | Victory | Building | Tech | UnitLine |
+    UnitUpgrade | UnitBuilding | Trap
 )
 
 class PseudoClassification(enum.Enum):
@@ -110,6 +130,10 @@ item_type_to_classification = {
     Building: ItemClassification.progression,
     Mercenary: PseudoClassification.progression_if_needed,
     Tech: ItemClassification.progression,
+    UnitLine: ItemClassification.progression,
+    UnitUpgrade: ItemClassification.progression,
+    VillagerProfession: ItemClassification.progression,
+    UnitBuilding: ItemClassification.progression,
     Resources: ItemClassification.filler,
     StartingResources: ItemClassification.useful,
     Victory: ItemClassification.progression,
@@ -142,7 +166,9 @@ class Age2ItemData(enum.IntEnum):
     
     VICTORY =                       0, "Victory", Victory()
     
-    #1 - 24 = Resources, 25 - 29 = Ages, 30 - 199 = Civs, 200 - 299 = Buildings, 300 - 999 = Units
+    #1 - 24 = Resources, 25 - 29 = Ages, 30 - 199 = Civs, 200 - 299 = Buildings,
+    #300 - 499 = Unit lines, 500 - 599 = Unit upgrades, 600 - 699 = Building units,
+    #700 - 799 = Villager professions
     
     # Filler Resources
     FILLER_WOOD_SMALL =             1, "+100 Wood",   Resources(Resource.WOOD, 100)
@@ -214,6 +240,201 @@ class Age2ItemData(enum.IntEnum):
     KREPOST =                       233, "Krepost",             Building(1251, 350.0,   Age2AgeData.CASTLE,     { Resource.STONE: 350.0 })
     DONJON =                        234, "Donjon",              Building(1665, 225.0,   Age2AgeData.DARK,       { Resource.WOOD: 50.0, Resource.STONE: 175 })
     
+
+    #300 - 499 = Unit lines. One item per line, for unitsanity_items: unit_line.
+
+    UNIT_LINE_ARCHER                   = 300, "Archer Line", UnitLine(800, Age2AgeData.FEUDAL)
+    UNIT_LINE_HAND_CANNONEER           = 301, "Hand Cannoneer Line", UnitLine(801, Age2AgeData.IMPERIAL)
+    UNIT_LINE_SKIRMISHER               = 302, "Skirmisher Line", UnitLine(802, Age2AgeData.FEUDAL)
+    UNIT_LINE_LONGBOWMAN               = 303, "Longbowman Line", UnitLine(803, Age2AgeData.CASTLE)
+    UNIT_LINE_MANGUDAI                 = 304, "Mangudai Line", UnitLine(804, Age2AgeData.CASTLE)
+    UNIT_LINE_FISHING_SHIP             = 305, "Fishing Ship Line", UnitLine(805, Age2AgeData.DARK)
+    UNIT_LINE_TRADE_COG                = 306, "Trade Cog Line", UnitLine(806, Age2AgeData.FEUDAL)
+    UNIT_LINE_TEUTONIC_KNIGHT          = 307, "Teutonic Knight Line", UnitLine(807, Age2AgeData.CASTLE)
+    UNIT_LINE_BOMBARD_CANNON           = 308, "Bombard Cannon Line", UnitLine(808, Age2AgeData.IMPERIAL)
+    UNIT_LINE_KNIGHT                   = 309, "Knight Line", UnitLine(809, Age2AgeData.CASTLE)
+    UNIT_LINE_CAVALRY_ARCHER           = 310, "Cavalry Archer Line", UnitLine(810, Age2AgeData.CASTLE)
+    UNIT_LINE_CATAPHRACT               = 311, "Cataphract Line", UnitLine(811, Age2AgeData.CASTLE)
+    UNIT_LINE_HUSKARL                  = 312, "Huskarl Line", UnitLine(812, Age2AgeData.CASTLE)
+    UNIT_LINE_JANISSARY                = 313, "Janissary Line", UnitLine(813, Age2AgeData.CASTLE)
+    UNIT_LINE_CHU_KO_NU                = 314, "Chu Ko Nu Line", UnitLine(814, Age2AgeData.CASTLE)
+    UNIT_LINE_MILITIA                  = 315, "Militia Line", UnitLine(815, Age2AgeData.DARK)
+    UNIT_LINE_VILLAGER                 = 316, "Villager Line", UnitLine(816, Age2AgeData.DARK)
+    UNIT_LINE_SPEARMAN                 = 317, "Spearman Line", UnitLine(817, Age2AgeData.FEUDAL)
+    UNIT_LINE_MONK                     = 318, "Monk Line", UnitLine(818, Age2AgeData.CASTLE)
+    UNIT_LINE_TRADE_CART               = 319, "Trade Cart Line", UnitLine(819, Age2AgeData.FEUDAL)
+    UNIT_LINE_SLINGER                  = 320, "Slinger Line", UnitLine(820, Age2AgeData.CASTLE)
+    UNIT_LINE_WOAD_RAIDER              = 321, "Woad Raider Line", UnitLine(821, Age2AgeData.CASTLE)
+    UNIT_LINE_WAR_ELEPHANT             = 322, "War Elephant Line", UnitLine(822, Age2AgeData.CASTLE)
+    UNIT_LINE_LONGBOAT                 = 323, "Longboat Line", UnitLine(823, Age2AgeData.CASTLE)
+    UNIT_LINE_SCORPION                 = 324, "Scorpion Line", UnitLine(824, Age2AgeData.CASTLE)
+    UNIT_LINE_MANGONEL                 = 325, "Mangonel Line", UnitLine(825, Age2AgeData.CASTLE)
+    UNIT_LINE_THROWING_AXEMAN          = 326, "Throwing Axeman Line", UnitLine(826, Age2AgeData.CASTLE)
+    UNIT_LINE_MAMELUKE                 = 327, "Mameluke Line", UnitLine(827, Age2AgeData.CASTLE)
+    UNIT_LINE_SAMURAI                  = 328, "Samurai Line", UnitLine(828, Age2AgeData.CASTLE)
+    UNIT_LINE_TREBUCHET                = 329, "Trebuchet Line", UnitLine(829, Age2AgeData.IMPERIAL)
+    UNIT_LINE_CANNON_GALLEON           = 330, "Cannon Galleon Line", UnitLine(830, Age2AgeData.IMPERIAL)
+    UNIT_LINE_PETARD                   = 331, "Petard Line", UnitLine(831, Age2AgeData.CASTLE)
+    UNIT_LINE_SCOUT_CAVALRY            = 332, "Scout Cavalry Line", UnitLine(832, Age2AgeData.FEUDAL)
+    UNIT_LINE_GALLEY                   = 333, "War Galley Line", UnitLine(833, Age2AgeData.FEUDAL)
+    UNIT_LINE_TRANSPORT_SHIP           = 334, "Transport Ship Line", UnitLine(834, Age2AgeData.DARK)
+    UNIT_LINE_BERSERK                  = 336, "Berserk Line", UnitLine(836, Age2AgeData.CASTLE)
+    UNIT_LINE_JAGUAR_WARRIOR           = 337, "Jaguar Warrior Line", UnitLine(837, Age2AgeData.CASTLE)
+    UNIT_LINE_EAGLE_SCOUT              = 338, "Eagle Warrior Line", UnitLine(838, Age2AgeData.FEUDAL)
+    UNIT_LINE_TARKAN                   = 339, "Tarkan Line", UnitLine(839, Age2AgeData.CASTLE)
+    UNIT_LINE_PLUMED_ARCHER            = 340, "Plumed Archer Line", UnitLine(840, Age2AgeData.CASTLE)
+    UNIT_LINE_CONQUISTADOR             = 341, "Conquistador Line", UnitLine(841, Age2AgeData.CASTLE)
+    UNIT_LINE_MISSIONARY               = 342, "Missionary Line", UnitLine(842, Age2AgeData.CASTLE)
+    UNIT_LINE_WAR_WAGON                = 343, "War Wagon Line", UnitLine(843, Age2AgeData.CASTLE)
+    UNIT_LINE_TURTLE_SHIP              = 344, "Turtle Ship Line", UnitLine(844, Age2AgeData.CASTLE)
+    UNIT_LINE_GENOESE_CROSSBOWMAN      = 345, "Genoese Crossbowman Line", UnitLine(845, Age2AgeData.CASTLE)
+    UNIT_LINE_MAGYAR_HUSZAR            = 346, "Magyar Huszar Line", UnitLine(846, Age2AgeData.CASTLE)
+    UNIT_LINE_ELEPHANT_ARCHER          = 347, "Elephant Archer Line", UnitLine(847, Age2AgeData.CASTLE)
+    UNIT_LINE_BOYAR                    = 348, "Boyar Line", UnitLine(848, Age2AgeData.CASTLE)
+    UNIT_LINE_KAMAYUK                  = 349, "Kamayuk Line", UnitLine(849, Age2AgeData.CASTLE)
+    UNIT_LINE_CONDOTTIERO              = 350, "Condottiero Line", UnitLine(850, Age2AgeData.IMPERIAL)
+    UNIT_LINE_ORGAN_GUN                = 351, "Organ Gun Line", UnitLine(851, Age2AgeData.CASTLE)
+    UNIT_LINE_CARAVEL                  = 352, "Caravel Line", UnitLine(852, Age2AgeData.CASTLE)
+    UNIT_LINE_CAMEL_ARCHER             = 353, "Camel Archer Line", UnitLine(853, Age2AgeData.CASTLE)
+    UNIT_LINE_GENITOUR                 = 354, "Genitour Line", UnitLine(854, Age2AgeData.CASTLE)
+    UNIT_LINE_GBETO                    = 355, "Gbeto Line", UnitLine(855, Age2AgeData.CASTLE)
+    UNIT_LINE_SHOTEL_WARRIOR           = 356, "Shotel Warrior Line", UnitLine(856, Age2AgeData.CASTLE)
+    UNIT_LINE_FIRE_GALLEY              = 357, "Fire Ship Line", UnitLine(857, Age2AgeData.FEUDAL)
+    UNIT_LINE_DEMOLITION_RAFT          = 358, "Demolition Ship Line", UnitLine(858, Age2AgeData.FEUDAL)
+    UNIT_LINE_SIEGE_TOWER              = 359, "Siege Tower Line", UnitLine(859, Age2AgeData.CASTLE)
+    UNIT_LINE_BALLISTA_ELEPHANT        = 360, "Ballista Elephant Line", UnitLine(860, Age2AgeData.CASTLE)
+    UNIT_LINE_KARAMBIT_WARRIOR         = 361, "Karambit Warrior Line", UnitLine(861, Age2AgeData.CASTLE)
+    UNIT_LINE_ARAMBAI                  = 362, "Arambai Line", UnitLine(862, Age2AgeData.CASTLE)
+    UNIT_LINE_RATTAN_ARCHER            = 363, "Rattan Archer Line", UnitLine(863, Age2AgeData.CASTLE)
+    UNIT_LINE_BATTLE_ELEPHANT          = 364, "Battle Elephant Line", UnitLine(864, Age2AgeData.CASTLE)
+    UNIT_LINE_KONNIK                   = 365, "Konnik Line", UnitLine(865, Age2AgeData.CASTLE)
+    UNIT_LINE_KESHIK                   = 366, "Keshik Line", UnitLine(866, Age2AgeData.CASTLE)
+    UNIT_LINE_KIPCHAK                  = 367, "Kipchak Line", UnitLine(867, Age2AgeData.CASTLE)
+    UNIT_LINE_LEITIS                   = 368, "Leitis Line", UnitLine(868, Age2AgeData.CASTLE)
+    UNIT_LINE_BATTERING_RAM            = 369, "Battering Ram Line", UnitLine(869, Age2AgeData.CASTLE)
+    UNIT_LINE_FLAMING_CAMEL            = 370, "Flaming Camel Line", UnitLine(870, Age2AgeData.IMPERIAL)
+    UNIT_LINE_DRAGON_SHIP              = 371, "Dragon Ship Line", UnitLine(871, Age2AgeData.IMPERIAL)
+    UNIT_LINE_STEPPE_LANCER            = 372, "Steppe Lancer Line", UnitLine(872, Age2AgeData.CASTLE)
+    UNIT_LINE_COUSTILLIER              = 373, "Coustillier Line", UnitLine(873, Age2AgeData.CASTLE)
+    UNIT_LINE_SERJEANT                 = 374, "Serjeant Line", UnitLine(874, Age2AgeData.CASTLE)
+    UNIT_LINE_FLEMISH_MILITIA          = 375, "Flemish Militia Line", UnitLine(875, Age2AgeData.FEUDAL)
+    UNIT_LINE_OBUCH                    = 376, "Obuch Line", UnitLine(876, Age2AgeData.CASTLE)
+    UNIT_LINE_HUSSITE_WAGON            = 377, "Hussite Wagon Line", UnitLine(877, Age2AgeData.CASTLE)
+    UNIT_LINE_URUMI_SWORDSMAN          = 378, "Urumi Swordsman Line", UnitLine(878, Age2AgeData.CASTLE)
+    UNIT_LINE_CHAKRAM_THROWER          = 379, "Chakram Thrower Line", UnitLine(879, Age2AgeData.CASTLE)
+    UNIT_LINE_ARMORED_ELEPHANT         = 380, "Armored Elephant Line", UnitLine(880, Age2AgeData.CASTLE)
+    UNIT_LINE_GHULAM                   = 381, "Ghulam Line", UnitLine(881, Age2AgeData.CASTLE)
+    UNIT_LINE_THIRISADAI               = 382, "Thirisadai Line", UnitLine(882, Age2AgeData.IMPERIAL)
+    UNIT_LINE_SHRIVAMSHA_RIDER         = 383, "Shrivamsha Rider Line", UnitLine(883, Age2AgeData.CASTLE)
+    UNIT_LINE_CAMEL_SCOUT              = 384, "Camel Line", UnitLine(884, Age2AgeData.FEUDAL)
+    UNIT_LINE_RATHA                    = 385, "Ratha Line", UnitLine(885, Age2AgeData.CASTLE)
+    UNIT_LINE_CENTURION                = 386, "Centurion Line", UnitLine(886, Age2AgeData.CASTLE)
+    UNIT_LINE_DROMON                   = 387, "Dromon Line", UnitLine(887, Age2AgeData.IMPERIAL)
+    UNIT_LINE_COMPOSITE_BOWMAN         = 388, "Composite Bowman Line", UnitLine(888, Age2AgeData.CASTLE)
+    UNIT_LINE_MONASPA                  = 389, "Monaspa Line", UnitLine(889, Age2AgeData.CASTLE)
+    UNIT_LINE_WARRIOR_PRIEST           = 390, "Warrior Priest Line", UnitLine(890, Age2AgeData.CASTLE)
+    UNIT_LINE_FIRE_LANCER              = 391, "Fire Lancer Line", UnitLine(891, Age2AgeData.CASTLE)
+    UNIT_LINE_ROCKET_CART              = 392, "Rocket Cart Line", UnitLine(892, Age2AgeData.CASTLE)
+    UNIT_LINE_HEAVY_ROCKET_CART        = 393, "Heavy Rocket Cart Line", UnitLine(893, Age2AgeData.IMPERIAL)
+    UNIT_LINE_IRON_PAGODA              = 394, "Iron Pagoda Line", UnitLine(894, Age2AgeData.CASTLE)
+    UNIT_LINE_GRENADIER                = 395, "Grenadier Line", UnitLine(895, Age2AgeData.CASTLE)
+    UNIT_LINE_LIAO_DAO                 = 396, "Liao Dao Line", UnitLine(896, Age2AgeData.CASTLE)
+    UNIT_LINE_MOUNTED_TREBUCHET        = 397, "Mounted Trebuchet Line", UnitLine(897, Age2AgeData.IMPERIAL)
+    UNIT_LINE_TRACTION_TREBUCHET       = 398, "Traction Trebuchet Line", UnitLine(898, Age2AgeData.IMPERIAL)
+    UNIT_LINE_HEI_GUANG_CAVALRY        = 399, "Hei Guang Cavalry Line", UnitLine(899, Age2AgeData.CASTLE)
+    UNIT_LINE_LOU_CHUAN                = 400, "Lou Chuan Line", UnitLine(900, Age2AgeData.IMPERIAL)
+    UNIT_LINE_TIGER_CAVALRY            = 401, "Tiger Cavalry Line", UnitLine(901, Age2AgeData.CASTLE)
+    UNIT_LINE_XIANBEI_RAIDER           = 402, "Xianbei Raider Line", UnitLine(902, Age2AgeData.CASTLE)
+    UNIT_LINE_WHITE_FEATHER_GUARD      = 403, "White Feather Guard Line", UnitLine(903, Age2AgeData.CASTLE)
+    UNIT_LINE_WAR_CHARIOT              = 404, "War Chariot Line", UnitLine(904, Age2AgeData.CASTLE)
+    UNIT_LINE_FIRE_ARCHER              = 405, "Fire Archer Line", UnitLine(905, Age2AgeData.CASTLE)
+    UNIT_LINE_JIAN_SWORDSMAN           = 406, "Jian Swordsman Line", UnitLine(906, Age2AgeData.CASTLE)
+    UNIT_LINE_IMMORTAL_MELEE           = 407, "Immortal Line", UnitLine(907, Age2AgeData.CASTLE)
+    UNIT_LINE_STRATEGOS                = 408, "Strategos Line", UnitLine(908, Age2AgeData.CASTLE)
+    UNIT_LINE_HIPPEUS                  = 409, "Hippeus Line", UnitLine(909, Age2AgeData.CASTLE)
+    UNIT_LINE_HOPLITE                  = 410, "Hoplite Line", UnitLine(910, Age2AgeData.CASTLE)
+    UNIT_LINE_LEMBOS                   = 411, "Lembos Line", UnitLine(911, Age2AgeData.DARK)
+    UNIT_LINE_MONOREME                 = 412, "Monoreme Line", UnitLine(912, Age2AgeData.FEUDAL)
+    UNIT_LINE_GALLEY_ANTIQUITY         = 413, "Ancient Galley Line", UnitLine(913, Age2AgeData.FEUDAL)
+    UNIT_LINE_INCENDIARY_RAFT          = 414, "Incendiary Ship Line", UnitLine(914, Age2AgeData.FEUDAL)
+    UNIT_LINE_CATAPULT_SHIP            = 415, "Catapult Ship Line", UnitLine(915, Age2AgeData.CASTLE)
+    UNIT_LINE_LEVIATHAN                = 416, "Leviathan Line", UnitLine(916, Age2AgeData.IMPERIAL)
+    UNIT_LINE_TRANSPORT_SHIP_ANTIQUITY = 417, "Transport Ship Antiquity Line", UnitLine(917, Age2AgeData.DARK)
+    UNIT_LINE_MERCHANT_SHIP            = 418, "Merchant Ship Line", UnitLine(918, Age2AgeData.FEUDAL)
+    UNIT_LINE_WAR_CHARIOT_ANTIQUITY    = 419, "War Chariot (Antiquity) Line", UnitLine(919, Age2AgeData.CASTLE)
+    UNIT_LINE_CHAMPI_SCOUT             = 420, "Champi Line", UnitLine(920, Age2AgeData.DARK)
+    UNIT_LINE_GUECHA_WARRIOR           = 421, "Guecha Warrior Line", UnitLine(921, Age2AgeData.CASTLE)
+    UNIT_LINE_KONA                     = 422, "Kona Line", UnitLine(922, Age2AgeData.CASTLE)
+    UNIT_LINE_BOLAS_RIDER              = 423, "Bolas Rider Line", UnitLine(923, Age2AgeData.CASTLE)
+    UNIT_LINE_BLACKWOOD_ARCHER         = 424, "Blackwood Archer Line", UnitLine(924, Age2AgeData.CASTLE)
+    UNIT_LINE_IBIRAPEMA_WARRIOR        = 425, "Ibirapema Warrior Line", UnitLine(925, Age2AgeData.CASTLE)
+    UNIT_LINE_TEMPLE_GUARD             = 426, "Temple Guard Line", UnitLine(926, Age2AgeData.CASTLE)
+    UNIT_LINE_CATAPULT_GALLEON         = 427, "Catapult Galleon Line", UnitLine(927, Age2AgeData.IMPERIAL)
+    UNIT_LINE_MOUNTED_CROSSBOWMAN      = 428, "Mounted Crossbowman Line", UnitLine(928, Age2AgeData.CASTLE)
+    UNIT_LINE_VARANGIAN_GUARD          = 429, "Varangian Guard Line", UnitLine(929, Age2AgeData.CASTLE)
+    UNIT_LINE_HEARTH_TROOP             = 430, "Hearth Troop Line", UnitLine(930, Age2AgeData.CASTLE)
+    UNIT_LINE_JARL                     = 431, "Jarl Line", UnitLine(931, Age2AgeData.CASTLE)
+    UNIT_LINE_JOMSVIKING               = 432, "Jomsviking Line", UnitLine(932, Age2AgeData.CASTLE)
+
+    #500 - 599 = Unit upgrades. The equipment vocabulary, for unitsanity_items: upgrades.
+    #Which units want which piece is in locations/connections/UnitUpgradeTokens.py.
+
+    UPGRADE_CLUB       = 500, "Club", UnitUpgrade()
+    UPGRADE_SWORD      = 501, "Sword", UnitUpgrade()
+    UPGRADE_SHIELD     = 502, "Shield", UnitUpgrade()
+    UPGRADE_SPEAR      = 503, "Spear", UnitUpgrade()
+    UPGRADE_BOW        = 504, "Bow", UnitUpgrade()
+    UPGRADE_GUN        = 505, "Gun", UnitUpgrade()
+    UPGRADE_SLING      = 506, "Sling", UnitUpgrade()
+    UPGRADE_ELEPHANT   = 507, "Elephant", UnitUpgrade()
+    UPGRADE_HORSE      = 508, "Horse", UnitUpgrade()
+    UPGRADE_GUNPOWDER  = 509, "Gunpowder", UnitUpgrade()
+    UPGRADE_BOLAS      = 510, "Bolas", UnitUpgrade()
+    UPGRADE_CAMEL      = 511, "Camel", UnitUpgrade()
+    UPGRADE_TORCH      = 512, "Torch", UnitUpgrade()
+    UPGRADE_SIEGEWORKS = 513, "Siegeworks", UnitUpgrade()
+    UPGRADE_STONE      = 514, "Stone", UnitUpgrade()
+    UPGRADE_ROCKET     = 515, "Rocket", UnitUpgrade()
+    UPGRADE_BOLT       = 516, "Bolt", UnitUpgrade()
+    UPGRADE_CANNON     = 517, "Cannon", UnitUpgrade()
+    UPGRADE_BIBLE      = 518, "Bible", UnitUpgrade()
+    UPGRADE_AXE        = 519, "Axe", UnitUpgrade()
+    UPGRADE_CART       = 520, "Cart", UnitUpgrade()
+    UPGRADE_BOAT       = 521, "Boat", UnitUpgrade()
+    UPGRADE_CHAKRAM    = 522, "Chakram", UnitUpgrade()
+    UPGRADE_DART       = 523, "Dart", UnitUpgrade()
+    UPGRADE_MACE       = 524, "Mace", UnitUpgrade()
+    UPGRADE_WHIP       = 525, "Whip", UnitUpgrade()
+
+    #600 - 699 = Building units. One item per producing building, for
+    #unitsanity_items: buildings. A unit trained at two buildings sits under both.
+
+    BUILDING_UNITS_ARCHERY_RANGE  = 600, "Archery Range Units", UnitBuilding(87, Age2AgeData.FEUDAL)
+    BUILDING_UNITS_CASTLE         = 601, "Castle Units", UnitBuilding(82, Age2AgeData.CASTLE)
+    BUILDING_UNITS_DOCK           = 602, "Dock Units", UnitBuilding(45, Age2AgeData.DARK)
+    BUILDING_UNITS_SIEGE_WORKSHOP = 603, "Siege Workshop Units", UnitBuilding(49, Age2AgeData.CASTLE)
+    BUILDING_UNITS_STABLE         = 604, "Stable Units", UnitBuilding(101, Age2AgeData.FEUDAL)
+    BUILDING_UNITS_BARRACKS       = 605, "Barracks Units", UnitBuilding(12, Age2AgeData.DARK)
+    BUILDING_UNITS_TOWN_CENTER    = 606, "Town Center Units", UnitBuilding(621, Age2AgeData.DARK)
+    BUILDING_UNITS_DONJON         = 607, "Donjon Units", UnitBuilding(1665, Age2AgeData.DARK)
+    BUILDING_UNITS_MONASTERY      = 608, "Monastery Units", UnitBuilding(104, Age2AgeData.CASTLE)
+    BUILDING_UNITS_MARKET         = 609, "Market Units", UnitBuilding(84, Age2AgeData.FEUDAL)
+    BUILDING_UNITS_KREPOST        = 610, "Krepost Units", UnitBuilding(1251, Age2AgeData.CASTLE)
+
+    #700 - 799 = Villager professions. One item per job; both sexes share it.
+    PROFESSION_BUILDER            = 700, "Builder", VillagerProfession()
+    PROFESSION_FARMER             = 701, "Farmer", VillagerProfession()
+    PROFESSION_FISHERMAN          = 702, "Fisherman", VillagerProfession()
+    PROFESSION_FORAGER            = 703, "Forager", VillagerProfession()
+    PROFESSION_GOLD_MINER         = 704, "Gold Miner", VillagerProfession()
+    PROFESSION_HERDER             = 705, "Herder", VillagerProfession()
+    PROFESSION_HUNTER             = 706, "Hunter", VillagerProfession()
+    PROFESSION_LUMBERJACK         = 707, "Lumberjack", VillagerProfession()
+    PROFESSION_OYSTER_GATHERER    = 708, "Oyster Gatherer", VillagerProfession()
+    PROFESSION_REPAIRER           = 709, "Repairer", VillagerProfession()
+    PROFESSION_SHEPHERD           = 710, "Shepherd", VillagerProfession()
+    PROFESSION_STONE_MINER        = 711, "Stone Miner", VillagerProfession()
+
     #1000 - 2999 = Progression Items
     TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          TCResources(Resource.WOOD, 275)
     TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         TCResources(Resource.STONE, 100)
@@ -566,7 +787,7 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_5_LOYALISTS =               4008, "Joan of Arc, The Siege of Paris: Loyalist Troop",                Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.KNIGHT, 2), MercenaryUnit(Age2UnitData.MAN_AT_ARMS, 16), MercenaryUnit(Age2UnitData.HEAVY_SCORPION, 2), MercenaryUnit(Age2UnitData.THROWING_AXEMAN, 2)], icon_id=321, name_string_id=990009)
     AP_JOAN_5_KINGS_REINFORCEMENTS =    4009, "Joan of Arc, The Siege of Paris: King's Reinforcements",         Mercenary(Age2ScenarioData.AP_JOAN_5, [MercenaryUnit(Age2UnitData.SCOUT_CAVALRY, 1), MercenaryUnit(Age2UnitData.MILITIA, 1)], icon_id=322, name_string_id=990010)
     AP_JOAN_6_LONE_SWORDSMAN =          4010, "Joan of Arc, A Perfect Martyr: A Single Longswordsman",          Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.LONG_SWORDSMAN, 1)], icon_id=323, name_string_id=990011)
-    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2UnitData.JEAN_BUREAU, 1)], icon_id=324, name_string_id=990012, in_logic=True)
+    AP_JOAN_6_ARTILLERY =               4011, "Joan of Arc, A Perfect Martyr: French Artillery",                Mercenary(Age2ScenarioData.AP_JOAN_6, [MercenaryUnit(Age2UnitData.HAND_CANNONEER, 8), MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 3), MercenaryUnit(Age2HeroData.JEAN_BUREAU, 1)], icon_id=324, name_string_id=990012, in_logic=True)
 
     #5000 - 5099 = Traps
     TRAP_WOLOLO =                       5000, "Wololo Trap",                                  Trap()

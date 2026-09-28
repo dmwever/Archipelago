@@ -6,6 +6,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
+from ...locations.Units import Age2UnitData as U
 from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
 
 
@@ -18,8 +19,9 @@ class Joan4StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN3_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 3)
-        self.has_base = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name) & logic.buildings.has_building(Age2BuildingData.HOUSE)
         self.has_vils = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
-        self.age_playable[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
-        self.age_playable[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE) | VANILLA_AGE_START
-        self.age_playable[Age2AgeData.IMPERIAL] = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name) & logic.ages.can_reach(Age2AgeData.IMPERIAL)
+
+        camp = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
+        self.obtains_unit[U.CROSSBOWMAN] = camp
+        self.obtains_unit[U.VILLAGER_MALE] = camp
+        self.obtains_unit[U.VILLAGER_FEMALE] = camp

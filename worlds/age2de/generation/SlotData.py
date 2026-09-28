@@ -1,7 +1,8 @@
 from typing import Mapping
 
-from ..Options import (ExistingTechs, LockTechs, ShuffleAges, ShuffleUniqueTechs,
-                       TechBehavior, Techsanity, TrapDifficulty)
+from ..Options import (Caveman, ExistingTechs, IncludeUniqueUnits, LockTechs, ShuffleAges,
+                       ShuffleUniqueTechs, ShuffleVillager, TechBehavior, Techsanity, Unitsanity,
+                       UnitsanityItems, TrapDifficulty)
 
 SLOT_ID = "AP_SLOT_ID"
 SEED_HIGH = "AP_SEED_HIGH"
@@ -12,6 +13,11 @@ TS_LOCK = "AP_TS_LOCK"
 TS_UNIQUES = "AP_TS_UNIQUES"
 TS_EXISTING = "AP_TS_EXISTING"
 SHUFFLE_AGES = "AP_SHUFFLE_AGES"
+US_MODE = "AP_US_MODE"
+US_ITEMS = "AP_US_ITEMS"
+US_VILLAGER = "AP_US_VILLAGER"
+US_UNIQUES = "AP_US_UNIQUES"
+US_CAVEMAN = "AP_US_CAVEMAN"
 TRAP_DIFFICULTY = "AP_TRAP_DIFFICULTY"
 
 UNSET = -1
@@ -26,6 +32,11 @@ DEFAULTS: dict[str, int] = {
     TS_UNIQUES: UNSET,
     TS_EXISTING: UNSET,
     SHUFFLE_AGES: 0,  # not UNSET: a seedless install must read this as off
+    US_MODE: Unitsanity.option_none,
+    US_ITEMS: UNSET,
+    US_VILLAGER: UNSET,
+    US_UNIQUES: UNSET,
+    US_CAVEMAN: 0,  # like SHUFFLE_AGES: off, not unset, so a seedless install is quiet
     TRAP_DIFFICULTY: TrapDifficulty.option_no_traps,  # likewise: off, not a valid level
 }
 
@@ -36,6 +47,11 @@ OPTIONS: dict[str, str] = {
     TS_UNIQUES: ShuffleUniqueTechs.internal_name,
     TS_EXISTING: ExistingTechs.internal_name,
     SHUFFLE_AGES: ShuffleAges.internal_name,
+    US_MODE: Unitsanity.internal_name,
+    US_ITEMS: UnitsanityItems.internal_name,
+    US_VILLAGER: ShuffleVillager.internal_name,
+    US_UNIQUES: IncludeUniqueUnits.internal_name,
+    US_CAVEMAN: Caveman.internal_name,
     TRAP_DIFFICULTY: TrapDifficulty.internal_name,
 }
 
@@ -49,15 +65,19 @@ def seed_halves(tag: str) -> tuple[int, int]:
     return value >> HALF_WIDTH, value & HALF_MASK
 
 
-def techsanity(slot_data: Mapping[str, object] = None) -> dict[str, int]:
+def options(slot_data: Mapping[str, object] = None) -> dict[str, int]:
     slot_data = {} if slot_data is None else slot_data
-    return {name: int(slot_data.get(key, DEFAULTS[name])) for name, key in OPTIONS.items()}
+    values = {name: int(slot_data.get(key, DEFAULTS[name])) for name, key in OPTIONS.items()}
+    if (values[US_MODE] == Unitsanity.option_none
+            and values[US_VILLAGER] > ShuffleVillager.option_no):
+        values[US_MODE] = Unitsanity.option_unit_line
+    return values
 
 
 def slot_fields(slot: int, tag: str, slot_data: Mapping[str, object] = None) -> dict[str, int]:
     high, low = seed_halves(tag)
     values = {SLOT_ID: slot, SEED_HIGH: high, SEED_LOW: low}
-    values.update(techsanity(slot_data))
+    values.update(options(slot_data))
     return values
 
 

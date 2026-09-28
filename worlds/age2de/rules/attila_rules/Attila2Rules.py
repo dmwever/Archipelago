@@ -3,8 +3,9 @@ from ...logic.attila.attila_2 import Attila2StartingState
 
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.Logic import ScenarioLogic
+from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -21,13 +22,13 @@ class Attila2Rules(ScenarioRules):
             self.scythian_troop |
             (
                 self.scenario_logic.has_base() &
-                self.logic.has_siege() &
-                self.logic.military.counters_knight() &
-                self.logic.military.counters_militia(Age2AgeData.CASTLE) &
-                self.logic.military.counters_spear(Age2AgeData.CASTLE)
+                self.scenario_logic.military.has_siege() &
+                self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
+                self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+                self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
             )
         )
-        can_build_tc = self.logic.buildings.can_build_tc() & self.scenario_logic.has_vils()
+        can_build_tc = self.scenario_logic.buildings.can_build_tc() & self.scenario_logic.has_vils()
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_beat_blue & can_build_tc)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_beat_blue & can_build_tc)

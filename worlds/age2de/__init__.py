@@ -15,12 +15,22 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.TechPool import TechPool
+from .generation.UnitPool import UnitPool
+from .regions.UnitRegions import UnitRegions
 from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
-from .locations import Ages, Campaigns, Locations, Scenarios
+from .locations import (Ages, Campaigns, EscortUnits, Heroes, Locations, Scenarios,
+                        UnitLines, Units, VillagerJobs)
 from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
-from .locations.connections import CivilizationBuildings, CivilizationTechs
+from .locations.connections.UnitBuildings import BUILDING_TO_UNITS
+from .locations.connections import (CivilizationBuildings, CivilizationTechs,
+                                    CivilizationUnits, ScenarioStartupUnits,
+                                    ScenarioTriggerUnits, UnitBuildings,
+                                    UnitCounters,
+                                    UnitLineUnits, UnitRoles, UnitTechs,
+                                    UnitUpgradeTokens, UnitVariants,
+                                    VillagerJobBuildings)
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
@@ -62,7 +72,10 @@ class Age2World(CachedRuleBuilderWorld):
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
     shuffled_ages: list[Age2AgeData]
+    included_scenarios: list[Scenarios.Age2ScenarioData]
+    unit_regions: UnitRegions
     tech_pool: TechPool
+    unit_pool: UnitPool
     earliest_age: Age2AgeData = None
     rules: Rules
 
@@ -112,11 +125,13 @@ class Age2World(CachedRuleBuilderWorld):
 
     def create_regions(self) -> None:
         
+        self.included_scenarios = [scenario for campaign in self.included_campaigns
+                                   for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         self.included_civs = list(dict.fromkeys(
-            scenario.civ for campaign in self.included_campaigns
-            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]))
+            scenario.civ for scenario in self.included_scenarios))
         
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
+        scenario_regions: dict[Scenarios.Age2ScenarioData, Region] = {}
         
         for campaign in self.included_campaigns:
             scenarios = CAMPAIGN_TO_SCENARIOS[campaign]
@@ -126,6 +141,7 @@ class Age2World(CachedRuleBuilderWorld):
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)
                 regions.append(region)
+                scenario_regions[scenario] = region
                 prev_region = region
                 
         buildings = Region("Can Build", self.player, self.multiworld)
@@ -159,15 +175,21 @@ class Age2World(CachedRuleBuilderWorld):
         regions.append(buildings)
         
         self.tech_pool = TechPool(self.options, self.earliest_age, self.included_civs)
+        self.unit_pool = UnitPool(self.options, self.included_civs,
+                                  self.included_scenarios)
         
+        building_regions: dict[Buildings.Age2BuildingData, Region] = {}
         for building in Age2BuildingData:
-            if not BUILDING_TO_TECHS[building] or not self.civ_can_build(building):
+            if not self.civ_can_build(building):
+                continue
+            if not BUILDING_TO_TECHS[building] and not BUILDING_TO_UNITS.get(building):
                 continue
             region = Region(building.item.item_name, self.player, self.multiworld)
             connection = Entrance(self.player, f"{region.name}", buildings)
             buildings.exits.append(connection)
             connection.connect(region)
             regions.append(region)
+            building_regions[building] = region
             linked_buildings: set[Region] = set()
             for tech in self.tech_pool.by_building(building):
                 if tech not in self.shuffled_techs:
@@ -187,15 +209,15 @@ class Age2World(CachedRuleBuilderWorld):
                 region.exits.append(alternate)
                 alternate.connect(existing_building)
 
+        self.unit_regions = UnitRegions(self, building_regions, scenario_regions)
+        regions += self.unit_regions.create()
+
         regions[0].add_event("Victory", Items.Age2ItemData.VICTORY.item_name)
 
         self.multiworld.regions += regions
 
     def civ_can_build(self, building: Buildings.Age2BuildingData) -> bool:
-        """Whether any included civilization puts up this building."""
-        if Buildings.BuildingOption.unique in building.building_options:
-            return any(building in civ.included_buildings for civ in self.included_civs)
-        return not all(building in civ.excluded_buildings for civ in self.included_civs)
+        return any(civ.builds(building) for civ in self.included_civs)
 
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)
@@ -253,6 +275,14 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             elif isinstance(item.type, Items.Tech):
                 continue
+            elif isinstance(item.type, Items.UnitLine):
+                continue
+            elif isinstance(item.type, Items.UnitUpgrade):
+                continue
+            elif isinstance(item.type, Items.UnitBuilding):
+                continue
+            elif isinstance(item.type, Items.VillagerProfession):
+                continue
             elif isinstance(item.type, Items.Trap):
                 continue
             else:
@@ -267,6 +297,9 @@ class Age2World(CachedRuleBuilderWorld):
 
         for tech in self.shuffled_techs:
             items.append(self.create_item(tech.item.item_name))
+
+        for item in self.unit_regions.items():
+            items.append(self.create_item(item.item_name))
                 
 
         self.multiworld.itempool += items

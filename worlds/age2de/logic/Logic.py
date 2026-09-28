@@ -6,16 +6,17 @@ from ..Options import Goal
 
 from .goal_logic import GoalLogic
 
-from .MilitaryLogic import MilitaryLogic
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections import ScenarioDataLogic
 from .ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
 from .tech_logic import TechLogic
+from .unit_logic import UnitLogic
 from rule_builder.rules import False_, Or, Rule
 
 from ..locations.Ages import Age2AgeData
+from ..locations.Techs import Age2TechData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
 
@@ -26,54 +27,65 @@ if TYPE_CHECKING:
 class Logic:
     buildings: BuildingLogic
     ages: AgeLogic
-    military: MilitaryLogic
     goal: GoalLogic
     techs: TechLogic
+    units: UnitLogic
     scenarios: list[ScenarioLogic]
 
     def __init__(self, world: Age2World):
         self.world = world
         self.scenarios = []
 
-        self._has_vils: Or = Or()
+        self.scenario_answers: dict[tuple, object] = {}
+        """Resolved answers to the scenario questions, one per seed. See rules/custom_rules."""
+
+        self.scenario_answers_open: set[tuple] = set()
+        """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
+
+        self._can_build: dict[Age2BuildingData, Or] = {building: Or()
+                                                       for building in Age2BuildingData}
+        self._can_research: dict[Age2TechData, Or] = {}
 
         self.buildings = BuildingLogic(self, world)
+        self.techs = TechLogic(self, world)
+        self.units = UnitLogic(self, world)
         self.ages =  AgeLogic(self, world)
         
         for campaign in world.included_campaigns:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
-        self._has_vils.children = tuple(
-            scenario.is_unlocked() & scenario.has_vils() for scenario in self.scenarios)
+    
+        for building in Age2BuildingData:
+            self._can_build[building].children = tuple(
+                scenario.is_unlocked() & scenario.buildings.can_build_building(building)
+                for scenario in self.scenarios)
+
+        for tech in Age2TechData:
+            self._can_research[tech] = Or(*[
+                scenario.is_unlocked() & scenario.techs.can_research(tech)
+                for scenario in self.scenarios])
         
+        self._by_scenario = {logic.scenario: logic for logic in self.scenarios}
         self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
         
-        self.military = MilitaryLogic(self, world)
         self.goal = GoalLogic(self, world)
-        self.techs = TechLogic(self, world)
+
+    def for_scenario(self, scenario) -> ScenarioLogic:
+        return self._by_scenario[scenario]
 
     def has_goal(self) -> Rule:
         if self.world.options.goal == Goal.option_campaign_completion:
             return self.goal.completed_all_campaigns()
         return False_()
 
-    def can_build_base(self) -> Rule:
-        return self.buildings.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
 
-    def has_military(self) -> Rule:
-        return self.buildings.has_military()
-    
-    def has_siege(self) -> Rule:
-        return self.buildings.has_siege()
-    
-    def has_vils(self) -> Rule:
-        return self._has_vils
-
-    def can_reach_age(self, age: Age2AgeData) -> Rule:
+    def can_reach_age_anywhere(self, age: Age2AgeData) -> Rule:
         return self.ages.can_reach_age[age]
 
-    def can_build_building(self, building: Age2BuildingData) -> Rule:
-        can_build: Rule = (self.buildings.has_building(building)
-                           & self.buildings.has_prerequisites(building))
-        return can_build & self.has_vils() & self.can_reach_age(building.age)
+
+    def can_research_anywhere(self, tech: Age2TechData) -> Rule:
+        return self._can_research[tech]
+
+    def can_build_building_anywhere(self, building: Age2BuildingData) -> Rule:
+        return self._can_build[building]

@@ -7,7 +7,7 @@ from .FolderHandler import FolderHandler
 
 from ...generation import Identity, SlotData
 from ...items.Items import Age2ItemData
-from ...Options import ExistingTechs, ScenarioBranching, Techsanity
+from ...Options import ExistingTechs, ScenarioBranching, Techsanity, Unitsanity
 from ...campaign import CampaignWriter, ScenarioParser
 from ...campaign.CampaignReader import Campaign
 from ...generation import Identity, SlotData
@@ -18,9 +18,13 @@ from ...locations.Locations import (TYPE_TO_LOCATIONS, Age2LocationType,
                                    Age2ScenarioLocationData)
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
+from ...locations.UnitLines import Age2UnitLineData
+from ...locations.Units import Age2UnitData
+from ...generation.UnitPool import UnitLocation, unit_location
 from ...logic.goal_logic import CAMPAIGN_TO_SCENARIOS
 from .FolderHandler import FolderHandler
 from .install.TechData import TechData
+from .install.UnitData import UnitData
 
 logger = logging.getLogger("Client")
 
@@ -28,6 +32,7 @@ CAMPAIGN_SUBPATH = "resources/_common/campaign"
 XS_SUBPATH = "resources/_common/xs"
 SLOT_DATA_FILE = "SlotData.xs"
 TECH_DATA_FILE = "TechData.xs"
+UNIT_DATA_FILE = "UnitData.xs"
 
 class InstallError(Exception):
     pass
@@ -50,6 +55,7 @@ class InstallHandler(FolderHandler):
         self._scenarios: list[Age2ScenarioData] = []
         self._civs: list[Age2CivData] = []
         self._techs: list[Age2TechData] = []
+        self._unit_places: list[UnitLocation] = []
         self._disabled_triggers: dict[Age2ScenarioData, list[Age2ScenarioLocationData]] = {}
         self._parsed = 0
         self._to_parse = 0
@@ -76,6 +82,8 @@ class InstallHandler(FolderHandler):
         self._civs = list(dict.fromkeys(scenario.civ for scenario in self._scenarios))
         self._techs = [Age2TechData(id) for id in location_ids
                                 if id in Age2TechData]
+        self._unit_places = [place for place in map(unit_location, location_ids)
+                             if place is not None]
         self._disabled_triggers = self.branching_triggers()
 
     def branching_triggers(self) -> dict[Age2ScenarioData, list[Age2ScenarioLocationData]]:
@@ -106,11 +114,14 @@ class InstallHandler(FolderHandler):
     def tech_data_path(self) -> Path:
         return self.xs_dir() / TECH_DATA_FILE
 
-    def techsanity(self) -> dict[str, int]:
-        return SlotData.techsanity(self._slot_data)
+    def unit_data_path(self) -> Path:
+        return self.xs_dir() / UNIT_DATA_FILE
+
+    def options(self) -> dict[str, int]:
+        return SlotData.options(self._slot_data)
 
     def scenario_needs_age_up(self) -> bool:
-        techsanity = self.techsanity()
+        techsanity = self.options()
         return (techsanity[SlotData.TS_MODE] != Techsanity.option_none
                 and TechData.rebases(techsanity[SlotData.TS_EXISTING]))
 
@@ -118,7 +129,7 @@ class InstallHandler(FolderHandler):
         """The deepest age an installed scenario starts in, or None if none was rebased."""
         if not self.scenario_needs_age_up():
             return None
-        if self.techsanity()[SlotData.TS_EXISTING] == ExistingTechs.option_start_in_dark_age:
+        if self.options()[SlotData.TS_EXISTING] == ExistingTechs.option_start_in_dark_age:
             return None
         ages = [scenario.vanilla_age for scenario in self._scenarios]
         return max(ages) if ages else None
@@ -161,6 +172,7 @@ class InstallHandler(FolderHandler):
         written = [self._install_campaign(campaign) for campaign in rebuild]
         written.append(self._write_slot_data())
         written.append(self._write_tech_data())
+        written.append(self._write_unit_data())
         return written
 
     def scenario_data(self, file_name: str) -> Age2ScenarioData:
@@ -198,9 +210,20 @@ class InstallHandler(FolderHandler):
             encoding="utf-8")
         return target
 
+    def _write_unit_data(self) -> Path:
+        target = self.unit_data_path()
+        options = self.options()
+        if options[SlotData.US_MODE] == Unitsanity.option_none:
+            target.write_text(UnitData().render(), encoding="utf-8")
+            return target
+        data = UnitData(self._unit_places, self._civs, options[SlotData.US_MODE],
+                        options[SlotData.US_ITEMS], self._tag)
+        target.write_text(data.render(), encoding="utf-8")
+        return target
+
     def _write_tech_data(self) -> Path:
         target = self.tech_data_path()
-        if self.techsanity()[SlotData.TS_MODE] == Techsanity.option_none:
+        if self.options()[SlotData.TS_MODE] == Techsanity.option_none:
             target.write_text(TechData().render(), encoding="utf-8")
             return target
         data = TechData(self._techs, self.grant_age(), self._civs, self._tag)

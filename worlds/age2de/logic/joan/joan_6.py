@@ -6,6 +6,8 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
+from ...locations.Units import Age2UnitData as U
+from ...locations.Heroes import Age2HeroData as H
 from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
 
 
@@ -18,10 +20,15 @@ class Joan6StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN5_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 5)
-        self.has_base = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name) & logic.can_build_base()
         self.has_vils = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
-        self.age_playable[Age2AgeData.DARK] = logic.ages.can_reach(Age2AgeData.DARK) & DARK_START
-        self.age_playable[Age2AgeData.FEUDAL] = logic.ages.can_reach(Age2AgeData.FEUDAL) & DARK_START
-        self.age_playable[Age2AgeData.CASTLE] = logic.ages.can_reach(Age2AgeData.CASTLE) | VANILLA_AGE_START
-        self.age_playable[Age2AgeData.IMPERIAL] = (Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
-                                                   & logic.ages.can_reach(Age2AgeData.IMPERIAL))
+
+        army = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
+        self.obtains_unit[U.ARCHER] = army
+        self.obtains_unit[U.MILITIA] = army
+        self.obtains_unit[U.SCOUT_CAVALRY] = army
+        self.obtains_unit[U.KNIGHT] = army
+        self.obtains_unit[U.TREBUCHET_PACKED] = army
+        self.obtains_unit[U.VILLAGER_MALE] = army
+        self.obtains_unit[U.VILLAGER_FEMALE] = army
+        self.obtains_unit[H.LA_HIRE] = army
+        self.obtains_unit[H.CONSTABLE_RICHEMONT] = army
