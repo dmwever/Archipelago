@@ -1,19 +1,19 @@
 from typing import Type, List, Callable, Dict, Any, Optional, TYPE_CHECKING
 from uuid import UUID
 
-from ...exceptions.asp_exceptions import UnsupportedAttributeError
-from ...objects.aoe2_object import AoE2Object
-from ...scenarios.scenario_store import getters
-from ..aoe2_file_section import AoE2FileSection
-from ..aoe2_struct_model import AoE2StructModel
-from ..dependencies.dependency import handle_retriever_dependency
-from .construct_progress import ConstructProgress
-from .retriever import Retriever
-from .retriever_object_link_parent import RetrieverObjectLinkParent
-from .support import Support
+from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+from AoE2ScenarioParser.scenarios.scenario_store import getters
+from AoE2ScenarioParser.sections.aoe2_file_section import AoE2FileSection
+from AoE2ScenarioParser.sections.aoe2_struct_model import AoE2StructModel
+from AoE2ScenarioParser.sections.dependencies.dependency import handle_retriever_dependency
+from AoE2ScenarioParser.sections.retrievers.construct_progress import ConstructProgress
+from AoE2ScenarioParser.sections.retrievers.retriever import Retriever
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_parent import RetrieverObjectLinkParent
+from AoE2ScenarioParser.sections.retrievers.support import Support
 
 if TYPE_CHECKING:
-    from ...objects.aoe2_object import AoE2Object
+    from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
 
 
 class RetrieverObjectLink(RetrieverObjectLinkParent):

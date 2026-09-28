@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Tuple, Any, List, TextIO
 
-from ... import settings
-from ...helper.helper import typename
-from ...helper.printers import s_print
-from ...helper.string_manipulations import add_tabs, q_str, add_suffix_chars
-from ...sections.aoe2_file_section import AoE2FileSection
-from ...sections.retrievers.retriever import Retriever
+from AoE2ScenarioParser import settings
+from AoE2ScenarioParser.helper.helper import typename
+from AoE2ScenarioParser.helper.printers import s_print
+from AoE2ScenarioParser.helper.string_manipulations import add_tabs, q_str, add_suffix_chars
+from AoE2ScenarioParser.sections.aoe2_file_section import AoE2FileSection
+from AoE2ScenarioParser.sections.retrievers.retriever import Retriever
 
 if TYPE_CHECKING:
-    from ..aoe2_scenario import AoE2Scenario
+    from AoE2ScenarioParser.scenarios.aoe2_scenario import AoE2Scenario
 
 
 def write_difference_to_file(

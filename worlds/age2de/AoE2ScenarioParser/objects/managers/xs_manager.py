@@ -1,26 +1,23 @@
 import re
 import tempfile
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING, List, Tuple
+from typing import Optional, Union, List, Tuple
 
-from ....datasets.conditions import ConditionId
-from ....datasets.effects import EffectId
-from ....exceptions.asp_exceptions import UnsupportedAttributeError, UnsupportedVersionError, \
+from AoE2ScenarioParser.datasets.conditions import ConditionId
+from AoE2ScenarioParser.datasets.effects import EffectId
+from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError, UnsupportedVersionError, \
     XsValidationError
-from ...aoe2_object import AoE2Object
-from ...data_objects.trigger import Trigger
-from ...support.xs_check import XsCheck
-from ....scenarios.scenario_store import actions
-from ....scenarios.scenario_store.getters import get_scenario_version
-from ....sections.retrievers.retriever_object_link import RetrieverObjectLink
-from ....sections.retrievers.support import Support
-
-if TYPE_CHECKING:
-    pass
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+from AoE2ScenarioParser.objects.data_objects.trigger import Trigger
+from AoE2ScenarioParser.objects.support.xs_check import XsCheck
+from AoE2ScenarioParser.scenarios.scenario_store import actions
+from AoE2ScenarioParser.scenarios.scenario_store.getters import get_scenario_version
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link import RetrieverObjectLink
+from AoE2ScenarioParser.sections.retrievers.support import Support
 
 
-class XsManagerDE(AoE2Object):
-    """Manager of everything XS related."""
+class XsManager(AoE2Object):
+    """Manager of everything XS-related."""
 
     _link_list = [
         RetrieverObjectLink("script_name", "Map", "script_name", Support(since=1.40)),
@@ -191,7 +188,13 @@ class XsManagerDE(AoE2Object):
         if include_short_code:
             xs_snippets: List[str] = [
                 '\n'.join([
-                    f"/*{xs_snippet[0]}*/ {line}" for line in xs_snippet[1].splitlines()
+                    (
+                        f"{line} /*{xs_snippet[0]}*/"
+                        if not line.strip().startswith('// xsc-ignore')
+                           and line.strip().startswith('*')
+                           and line.strip().startswith('/*')
+                        else line
+                    ) for line in xs_snippet[1].splitlines()
                 ])
                 for xs_snippet in xs_snippet_map
             ]

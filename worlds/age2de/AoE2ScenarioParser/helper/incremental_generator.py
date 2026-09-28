@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..exceptions.asp_exceptions import EndOfFileError
+from AoE2ScenarioParser.exceptions.asp_exceptions import EndOfFileError
 
 
 class IncrementalGenerator:

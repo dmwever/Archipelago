@@ -3,21 +3,21 @@ from __future__ import annotations
 import math
 from typing import List, Tuple, Any, Union
 
-from ...datasets import effects
-from ...datasets.effects import EffectId
-from ...datasets.players import PlayerColorId, PlayerId
-from ...datasets.trigger_lists import ObjectAttribute
-from ...exceptions.asp_warnings import IncorrectArmorAttackUsageWarning
-from ...helper.helper import raise_if_not_int_subclass, value_is_valid, validate_coords
-from ...helper.printers import warn
-from ...helper.string_manipulations import add_tabs
-from ..aoe2_object import AoE2Object
-from ..support.attr_presentation import transform_effect_attr_value
-from ..support.trigger_object import TriggerComponent
-from ...scenarios.scenario_store import getters
-from ...sections.retrievers.retriever_object_link import RetrieverObjectLink
-from ...sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
-from ...sections.retrievers.support import Support
+from AoE2ScenarioParser.datasets import effects
+from AoE2ScenarioParser.datasets.effects import EffectId
+from AoE2ScenarioParser.datasets.players import PlayerColorId, PlayerId
+from AoE2ScenarioParser.datasets.trigger_lists import ObjectAttribute
+from AoE2ScenarioParser.exceptions.asp_warnings import IncorrectArmorAttackUsageWarning
+from AoE2ScenarioParser.helper.helper import raise_if_not_int_subclass, value_is_valid, validate_coords
+from AoE2ScenarioParser.helper.printers import warn
+from AoE2ScenarioParser.helper.string_manipulations import add_tabs
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+from AoE2ScenarioParser.objects.support.attr_presentation import transform_effect_attr_value
+from AoE2ScenarioParser.objects.support.trigger_object import TriggerComponent
+from AoE2ScenarioParser.scenarios.scenario_store import getters
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link import RetrieverObjectLink
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
+from AoE2ScenarioParser.sections.retrievers.support import Support
 
 
 def _add_trail_if_string_attr_is_used_in_effect(obj: Effect, attr_name, val: bytes | str):
@@ -107,11 +107,21 @@ class Effect(AoE2Object, TriggerComponent):
             RetrieverObjectLink("global_sound", support=Support(since=1.55)),
             RetrieverObjectLink("issue_group_command", support=Support(since=1.56)),
             RetrieverObjectLink("queue_action", support=Support(since=1.56)),
+            RetrieverObjectLink("mutual_diplomacy", support=Support(since=1.57)),
+            RetrieverObjectLink("building_list", support=Support(since=1.57)),
+            RetrieverObjectLink("wall_x1", support=Support(since=1.57)),
+            RetrieverObjectLink("wall_y1", support=Support(since=1.57)),
+            RetrieverObjectLink("wall_x2", support=Support(since=1.57)),
+            RetrieverObjectLink("wall_y2", support=Support(since=1.57)),
+            RetrieverObjectLink("object_filter", support=Support(since=1.58)),
+            RetrieverObjectLink("use_tag_color_for_icon", support=Support(since=1.58)),
             RetrieverObjectLink("message", commit_callback=_add_trail_if_string_attr_is_used_in_effect),
             RetrieverObjectLink("sound_name", commit_callback=_add_trail_if_string_attr_is_used_in_effect),
             RetrieverObjectLink("selected_object_ids"),
             RetrieverObjectLink("message_option1", support=Support(since=1.54)),
             RetrieverObjectLink("message_option2", support=Support(since=1.54)),
+            RetrieverObjectLink("_eff_filler_0", support=Support(since=1.54, until=1.54)),
+            RetrieverObjectLink("_eff_filler_1", support=Support(since=1.54, until=1.54)),
         ])
     ]
 
@@ -191,6 +201,14 @@ class Effect(AoE2Object, TriggerComponent):
             global_sound: int = None,
             issue_group_command: int = None,
             queue_action: int = None,
+            mutual_diplomacy: int = None,
+            building_list: int = None,
+            wall_x1: int = None,
+            wall_y1: int = None,
+            wall_x2: int = None,
+            wall_y2: int = None,
+            object_filter: int = None,
+            use_tag_color_for_icon: bool = None,
             message: str = None,
             sound_name: str = None,
             selected_object_ids: List[int] = None,
@@ -321,6 +339,14 @@ class Effect(AoE2Object, TriggerComponent):
         self.global_sound: int = global_sound
         self.issue_group_command: int = issue_group_command
         self.queue_action: int = queue_action
+        self.mutual_diplomacy: int = mutual_diplomacy
+        self.building_list: int = building_list
+        self.wall_x1: int = wall_x1
+        self.wall_y1: int = wall_y1
+        self.wall_x2: int = wall_x2
+        self.wall_y2: int = wall_y2
+        self.object_filter: int = object_filter
+        self.use_tag_color_for_icon: bool = use_tag_color_for_icon
         self.message: str = message
         self.sound_name: str = sound_name
         self.selected_object_ids: List[int] = selected_object_ids
@@ -454,6 +480,14 @@ class Effect(AoE2Object, TriggerComponent):
         if type(val) is int:
             val = [val]
         self._selected_object_ids = val
+
+    @property
+    def _eff_filler_0(self) -> None:
+        return None
+
+    @property
+    def _eff_filler_1(self) -> None:
+        return None
 
     def _should_be_displayed(self, attr: str, val: Any) -> bool:
         # Ignore the quantity value in the print statement when flag is True.

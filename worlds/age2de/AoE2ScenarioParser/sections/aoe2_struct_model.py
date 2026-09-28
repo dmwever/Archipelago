@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Dict
 
-from ..helper.pretty_format import pretty_format_dict
-from .retrievers.retriever import Retriever
+from AoE2ScenarioParser.helper.pretty_format import pretty_format_dict
+from AoE2ScenarioParser.sections.retrievers.retriever import Retriever
 
 
 class AoE2StructModel:

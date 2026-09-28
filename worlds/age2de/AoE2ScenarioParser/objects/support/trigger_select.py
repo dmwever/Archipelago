@@ -1,6 +1,6 @@
 from typing import Type
 
-from ..data_objects.trigger import Trigger
+from AoE2ScenarioParser.objects.data_objects.trigger import Trigger
 
 
 class TriggerSelect:

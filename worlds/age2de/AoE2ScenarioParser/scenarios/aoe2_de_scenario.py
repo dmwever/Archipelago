@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from typing import Type, Union, Tuple, Optional
 
-from ..exceptions.asp_exceptions import XsCheckValidationError
-from ..objects.managers.de.map_manager_de import MapManagerDE
-from ..objects.managers.de.trigger_manager_de import TriggerManagerDE
-from ..objects.managers.de.unit_manager_de import UnitManagerDE
-from ..objects.managers.de.xs_manager_de import XsManagerDE
-from ..objects.managers.message_manager import MessageManager
-from ..objects.managers.option_manager import OptionManager
-from ..objects.managers.player_manager import PlayerManager
-from .aoe2_scenario import AoE2Scenario, S
+from AoE2ScenarioParser.exceptions.asp_exceptions import XsCheckValidationError
+from AoE2ScenarioParser.objects.managers.map_manager import MapManager
+from AoE2ScenarioParser.objects.managers.trigger_manager import TriggerManager
+from AoE2ScenarioParser.objects.managers.unit_manager import UnitManager
+from AoE2ScenarioParser.objects.managers.xs_manager import XsManager
+from AoE2ScenarioParser.objects.managers.message_manager import MessageManager
+from AoE2ScenarioParser.objects.managers.option_manager import OptionManager
+from AoE2ScenarioParser.objects.managers.player_manager import PlayerManager
+from AoE2ScenarioParser.scenarios.aoe2_scenario import AoE2Scenario, S
 
 
 class AoE2DEScenario(AoE2Scenario):
@@ -18,25 +18,25 @@ class AoE2DEScenario(AoE2Scenario):
     Used to represent a scenario with version >= 1.36 (DE). It is the main class that is exposed to the user of the API.
     """
 
-    LATEST_VERSION: Tuple[int, int] = (1, 56)
+    LATEST_VERSION: Tuple[int, int] = (1, 59)
 
     @property
-    def trigger_manager(self) -> TriggerManagerDE:
+    def trigger_manager(self) -> TriggerManager:
         """The trigger manager of the scenario"""
         return self._object_manager.managers['Trigger']
 
     @property
-    def unit_manager(self) -> UnitManagerDE:
+    def unit_manager(self) -> UnitManager:
         """The unit manager of the scenario"""
         return self._object_manager.managers['Unit']
 
     @property
-    def map_manager(self) -> MapManagerDE:
+    def map_manager(self) -> MapManager:
         """The map manager of the scenario"""
         return self._object_manager.managers['Map']
 
     @property
-    def xs_manager(self) -> XsManagerDE:
+    def xs_manager(self) -> XsManager:
         """The XS manager of the scenario"""
         return self._object_manager.managers['Xs']
 

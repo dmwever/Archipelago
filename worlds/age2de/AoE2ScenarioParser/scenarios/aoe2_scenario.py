@@ -4,47 +4,50 @@ import json
 import time
 import zlib
 from pathlib import Path
-from typing import Dict, TYPE_CHECKING, TypeVar, Type, Any, Union, Tuple
+from typing import Dict, TYPE_CHECKING, TypeVar, Type, Any, Union, Tuple, Callable
 from uuid import uuid4, UUID
 
-from ..datasets import conditions as conditions
-from ..datasets import effects as effects
-from .. import settings
-from ..datasets.scenario_variant import ScenarioVariant
-from ..exceptions.asp_exceptions import InvalidScenarioStructureError, UnknownScenarioStructureError, \
+import AoE2ScenarioParser
+import AoE2ScenarioParser.datasets.conditions as conditions
+import AoE2ScenarioParser.datasets.effects as effects
+from AoE2ScenarioParser import settings
+from AoE2ScenarioParser.datasets.scenario_variant import ScenarioVariant
+from AoE2ScenarioParser.exceptions.asp_exceptions import InvalidScenarioStructureError, UnknownScenarioStructureError, \
     UnknownStructureError, UnsupportedVersionError
-from ..exceptions.asp_warnings import IncorrectVariantWarning
-from ..helper.bytes_conversions import bytes_to_int, bytes_to_double
-from ..helper.incremental_generator import IncrementalGenerator
-from ..helper.printers import s_print, color_string, warn
-from ..helper.string_manipulations import create_textual_hex
-from ..helper.version_check import python_version_check
-from ..objects.aoe2_object_manager import AoE2ObjectManager
-from ..objects.managers.map_manager import MapManager
-from ..objects.managers.message_manager import MessageManager
-from ..objects.managers.player_manager import PlayerManager
-from ..objects.managers.trigger_manager import TriggerManager
-from ..objects.managers.unit_manager import UnitManager
-from .scenario_debug.compare import debug_compare
-from .scenario_store import store
-from .support.object_factory import ObjectFactory
-from .support.scenario_actions import ScenarioActions
-from ..sections.aoe2_file_section import AoE2FileSection, SectionName
+from AoE2ScenarioParser.exceptions.asp_warnings import IncorrectVariantWarning
+from AoE2ScenarioParser.helper.bytes_conversions import bytes_to_int, bytes_to_double
+from AoE2ScenarioParser.helper.incremental_generator import IncrementalGenerator
+from AoE2ScenarioParser.helper.printers import s_print, color_string, warn
+from AoE2ScenarioParser.helper.string_manipulations import create_textual_hex
+from AoE2ScenarioParser.helper.version_check import python_version_check
+from AoE2ScenarioParser.objects.aoe2_object_manager import AoE2ObjectManager
+from AoE2ScenarioParser.objects.managers.map_manager import MapManager
+from AoE2ScenarioParser.objects.managers.message_manager import MessageManager
+from AoE2ScenarioParser.objects.managers.player_manager import PlayerManager
+from AoE2ScenarioParser.objects.managers.trigger_manager import TriggerManager
+from AoE2ScenarioParser.objects.managers.unit_manager import UnitManager
+from AoE2ScenarioParser.scenarios.scenario_debug.compare import debug_compare
+from AoE2ScenarioParser.scenarios.scenario_store import store
+from AoE2ScenarioParser.scenarios.support.object_factory import ObjectFactory
+from AoE2ScenarioParser.scenarios.support.scenario_actions import ScenarioActions
+from AoE2ScenarioParser.sections.aoe2_file_section import AoE2FileSection, SectionName
 
 if TYPE_CHECKING:
-    from ..objects.aoe2_object import AoE2Object
+    from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
 
-S: TypeVar = TypeVar('S', bound='AoE2Scenario')
+S = TypeVar('S', bound='AoE2Scenario')
 """
 A type variable (generic) that represents an instance of the AoE2Scenario class or any of its 
 subclasses (e.g. `AoE2DEScenario`) 
 """
-Func: TypeVar = TypeVar('Func', bound='Callable[[Any], Any]')
+Func = TypeVar('Func', bound='Callable[[Any], Any]')
 """A type variable (generic) that represents a function"""
 
 
 class AoE2Scenario:
     """All scenario objects are derived from this class"""
+
+    LATEST_VERSION: Tuple[int, int] = (1,)
 
     @property
     def trigger_manager(self) -> TriggerManager:
@@ -184,6 +187,7 @@ class AoE2Scenario:
         s_print(f">>> Game version: '{scenario.game_version}'", final=True, color="blue")
         s_print(f">>> Scenario version: {scenario.scenario_version}", final=True, color="blue")
         s_print(f">>> Scenario variant: '{variant}'", final=True, color="blue")
+        s_print(f">>> ASP Version: {AoE2ScenarioParser.__version__}", final=True, color="blue")
         s_print("##########################################", final=True, color="blue")
 
         s_print(f"Loading scenario structure...", time=True, newline=True)
@@ -804,7 +808,7 @@ def _get_version_default_scenario_filepath(game_version: str, scenario_version: 
 
     if not default_scx_path.exists():
         v = f"{game_version}:{scenario_version}"
-        raise UnknownStructureError(f"The structure could not be found with: {v}")
+        raise UnknownStructureError(f"A default scenario file could not be found for version: {v} - please report this, as this is a bug")
 
     return str(default_scx_path.absolute())
 

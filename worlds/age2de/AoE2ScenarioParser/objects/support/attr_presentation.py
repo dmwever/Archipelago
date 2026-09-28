@@ -3,24 +3,24 @@ from __future__ import annotations
 from typing import Dict, TYPE_CHECKING, List, Callable
 from uuid import UUID
 
-from ...datasets.conditions import attribute_presentation as condition_attribute_presentation
-from ...datasets.effects import attribute_presentation as effect_attribute_presentation
-from ...datasets.players import PlayerId, PlayerColorId
-from ...datasets.support.info_dataset_base import InfoDatasetBase
-from ...datasets.techs import TechInfo
-from ...datasets.trigger_lists import DiplomacyState, Operation, AttackStance, UnitAIAction, \
+from AoE2ScenarioParser.datasets.conditions import attribute_presentation as condition_attribute_presentation
+from AoE2ScenarioParser.datasets.effects import attribute_presentation as effect_attribute_presentation
+from AoE2ScenarioParser.datasets.players import PlayerId, PlayerColorId
+from AoE2ScenarioParser.datasets.support.info_dataset_base import InfoDatasetBase
+from AoE2ScenarioParser.datasets.techs import TechInfo
+from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState, Operation, AttackStance, UnitAIAction, \
     ButtonLocation, PanelLocation, TimeUnit, VisibilityState, DifficultyLevel, TechnologyState, Comparison, \
     ObjectAttribute, ObjectType, ObjectClass, TerrainRestrictions, HeroStatusFlag, BlastLevel, \
     DamageClass, Hotkey, ColorMood, ObjectState, ActionType, VictoryTimerType, Attribute, ProjectileSmartMode, \
-    DecisionOption
-from ...helper.helper import get_enum_from_unit_const
-from ...helper.list_functions import listify
-from ...helper.pretty_format import pretty_format_name
-from ...helper.string_manipulations import q_str, trunc_string
-from ...scenarios.scenario_store import getters
+    DecisionOption, ObjectModifyAttributeState
+from AoE2ScenarioParser.helper.helper import get_enum_from_unit_const
+from AoE2ScenarioParser.helper.list_functions import listify
+from AoE2ScenarioParser.helper.pretty_format import pretty_format_name
+from AoE2ScenarioParser.helper.string_manipulations import q_str, trunc_string
+from AoE2ScenarioParser.scenarios.scenario_store import getters
 
 if TYPE_CHECKING:
-    from ..data_objects.unit import Unit
+    from AoE2ScenarioParser.objects.data_objects.unit import Unit
 
 _store_error_displays: Dict[str, Dict[str, Callable[..., str]]] = {
     'triggers': {
@@ -107,6 +107,7 @@ _datasets = {
     "ActionType": ActionType,
     "VictoryTimerType": VictoryTimerType,
     "DecisionOption": DecisionOption,
+    "ObjectModifyAttributeState": ObjectModifyAttributeState,
 }
 
 _other = {

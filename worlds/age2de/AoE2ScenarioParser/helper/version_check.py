@@ -1,7 +1,7 @@
 import sys
 
-from ..exceptions.asp_warnings import PythonVersionWarning
-from ..helper.printers import warn
+from AoE2ScenarioParser.exceptions.asp_warnings import PythonVersionWarning
+from AoE2ScenarioParser.helper.printers import warn
 
 _block_below = (3, 8)
 _notify_below = (3, 8)

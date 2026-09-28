@@ -4,16 +4,16 @@ from enum import Enum
 from typing import Dict, List, TYPE_CHECKING
 from uuid import UUID
 
-from ..helper import bytes_parser
-from ..helper.list_functions import listify
-from ..helper.string_manipulations import create_textual_hex, insert_char, add_suffix_chars, q_str, \
+from AoE2ScenarioParser.helper import bytes_parser
+from AoE2ScenarioParser.helper.list_functions import listify
+from AoE2ScenarioParser.helper.string_manipulations import create_textual_hex, insert_char, add_suffix_chars, q_str, \
     add_tabs
-from .aoe2_struct_model import AoE2StructModel, model_dict_from_structure
-from .dependencies.dependency import handle_retriever_dependency
-from .retrievers.retriever import Retriever, reset_retriever_map
+from AoE2ScenarioParser.sections.aoe2_struct_model import AoE2StructModel, model_dict_from_structure
+from AoE2ScenarioParser.sections.dependencies.dependency import handle_retriever_dependency
+from AoE2ScenarioParser.sections.retrievers.retriever import Retriever, reset_retriever_map
 
 if TYPE_CHECKING:
-    from ..helper.incremental_generator import IncrementalGenerator
+    from AoE2ScenarioParser.helper.incremental_generator import IncrementalGenerator
 
 
 class SectionLevel(Enum):

@@ -3,14 +3,14 @@ from __future__ import annotations
 import struct
 from typing import TYPE_CHECKING
 
-from .. import settings
-from ..exceptions.asp_warnings import ByteDecodeWarning
-from ..helper.printers import warn
-from ..helper.string_manipulations import has_str_trail, del_str_trail, q_str, \
+from AoE2ScenarioParser import settings
+from AoE2ScenarioParser.exceptions.asp_warnings import ByteDecodeWarning
+from AoE2ScenarioParser.helper.printers import warn
+from AoE2ScenarioParser.helper.string_manipulations import has_str_trail, del_str_trail, q_str, \
     add_str_trail, trunc_string
 
 if TYPE_CHECKING:
-    from ..sections.retrievers.retriever import Retriever
+    from AoE2ScenarioParser.sections.retrievers.retriever import Retriever
 
 
 def bytes_to_fixed_chars(byte_elements: bytes) -> str:

@@ -2,25 +2,25 @@ from __future__ import annotations
 
 from typing import List, Any
 
-from ...datasets import conditions as condition_dataset
-from ...datasets import effects as effect_dataset
-from ...datasets.conditions import ConditionId
-from ...datasets.effects import EffectId
-from ...exceptions.asp_exceptions import UnsupportedAttributeError
-from ...helper.helper import mutually_exclusive
-from ...helper.list_functions import list_changed, update_order_array, hash_list
-from ...helper.string_manipulations import add_tabs
-from ..aoe2_object import AoE2Object
-from ..data_objects.condition import Condition
-from ..data_objects.effect import Effect
-from ..support.new_condition import NewConditionSupport
-from ..support.new_effect import NewEffectSupport
-from ..support.trigger_object import TriggerComponent
-from ..support.uuid_list import UuidList
-from ...scenarios.scenario_store import getters
-from ...sections.retrievers.retriever_object_link import RetrieverObjectLink
-from ...sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
-from ...sections.retrievers.support import Support
+import AoE2ScenarioParser.datasets.conditions as condition_dataset
+import AoE2ScenarioParser.datasets.effects as effect_dataset
+from AoE2ScenarioParser.datasets.conditions import ConditionId
+from AoE2ScenarioParser.datasets.effects import EffectId
+from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
+from AoE2ScenarioParser.helper.helper import mutually_exclusive
+from AoE2ScenarioParser.helper.list_functions import list_changed, update_order_array, hash_list
+from AoE2ScenarioParser.helper.string_manipulations import add_tabs
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+from AoE2ScenarioParser.objects.data_objects.condition import Condition
+from AoE2ScenarioParser.objects.data_objects.effect import Effect
+from AoE2ScenarioParser.objects.support.new_condition import NewConditionSupport
+from AoE2ScenarioParser.objects.support.new_effect import NewEffectSupport
+from AoE2ScenarioParser.objects.support.trigger_object import TriggerComponent
+from AoE2ScenarioParser.objects.support.uuid_list import UuidList
+from AoE2ScenarioParser.scenarios.scenario_store import getters
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link import RetrieverObjectLink
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
+from AoE2ScenarioParser.sections.retrievers.support import Support
 
 
 class Trigger(AoE2Object, TriggerComponent):

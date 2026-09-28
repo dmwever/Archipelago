@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import List, overload, TYPE_CHECKING, Optional
 from uuid import UUID
 
-from ...datasets.players import PlayerId
-from ..scenario_store import store
+from AoE2ScenarioParser.datasets.players import PlayerId
+from AoE2ScenarioParser.scenarios.scenario_store import store
 
 if TYPE_CHECKING:
-    from ...objects.data_objects.unit import Unit
-    from ...objects.support.area import Area
-    from ...objects.data_objects.trigger import Trigger
+    from AoE2ScenarioParser.objects.data_objects.unit import Unit
+    from AoE2ScenarioParser.objects.support.area import Area
+    from AoE2ScenarioParser.objects.data_objects.trigger import Trigger
 
 
 @overload

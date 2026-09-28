@@ -4,7 +4,7 @@ import warnings
 from time import strftime, localtime
 from typing import Type
 
-from .. import settings
+from AoE2ScenarioParser import settings
 
 _color = {
     'end': '\033[0m',

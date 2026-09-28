@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..dataset_enum import _DataSetIntFlags
+from AoE2ScenarioParser.datasets.dataset_enum import _DataSetIntFlags
 
 
 class ProjectileSmartMode(_DataSetIntFlags):

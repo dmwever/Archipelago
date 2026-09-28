@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from ..dataset_enum import _DataSetIntFlags
+from AoE2ScenarioParser.datasets.dataset_enum import _DataSetIntFlags
 
 
 class HeroStatusFlag(_DataSetIntFlags):

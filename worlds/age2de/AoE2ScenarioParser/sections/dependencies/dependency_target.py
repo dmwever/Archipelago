@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import List, Union
 
-from ...exceptions.asp_exceptions import InvalidScenarioStructureError
-from ...helper.pretty_format import pretty_format_list
-from ...helper.string_manipulations import add_tabs
+from AoE2ScenarioParser.exceptions.asp_exceptions import InvalidScenarioStructureError
+from AoE2ScenarioParser.helper.pretty_format import pretty_format_list
+from AoE2ScenarioParser.helper.string_manipulations import add_tabs
 
 
 class DependencyTarget:

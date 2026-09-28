@@ -2,13 +2,13 @@ import math
 from typing import List, TYPE_CHECKING
 from uuid import UUID
 
-from ...scenarios.scenario_store import getters
-from ..dependencies.dependency_action import DependencyAction
+from AoE2ScenarioParser.scenarios.scenario_store import getters
+from AoE2ScenarioParser.sections.dependencies.dependency_action import DependencyAction
 
 if TYPE_CHECKING:
-    from ..retrievers.retriever import Retriever
-    from ..dependencies.retriever_dependency import RetrieverDependency
-    from ..aoe2_file_section import AoE2FileSection
+    from AoE2ScenarioParser.sections.retrievers.retriever import Retriever
+    from AoE2ScenarioParser.sections.dependencies.retriever_dependency import RetrieverDependency
+    from AoE2ScenarioParser.sections.aoe2_file_section import AoE2FileSection
 
 
 def refresh_targets(retriever_event: 'RetrieverDependency', section: 'AoE2FileSection', uuid: UUID) -> None:

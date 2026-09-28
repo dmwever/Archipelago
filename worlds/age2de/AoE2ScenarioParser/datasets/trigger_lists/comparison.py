@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..dataset_enum import _DataSetIntEnums
+from AoE2ScenarioParser.datasets.dataset_enum import _DataSetIntEnums
 
 
 class Comparison(_DataSetIntEnums):
@@ -18,3 +18,9 @@ class Comparison(_DataSetIntEnums):
     LARGER = 2
     LESS_OR_EQUAL = 3
     LARGER_OR_EQUAL = 4
+
+    EQ = EQUAL
+    LT = LESS
+    GT = LARGER
+    LEQ = LESS_OR_EQUAL
+    GEQ = LARGER_OR_EQUAL

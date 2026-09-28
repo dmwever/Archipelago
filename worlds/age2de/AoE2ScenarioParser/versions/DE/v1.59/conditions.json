@@ -31,6 +31,10 @@
             "decision_id": "",
             "decision_option": "DecisionOption",
             "variable2":  "VariableId",
+            "local_technology": "TechInfo",
+            "object_group2": "ObjectClass",
+            "object_type2": "ObjectType",
+            "allow_in_fog": "",
             "xs_function": "str"
         }
     },
@@ -69,6 +73,10 @@
             "decision_id": -1,
             "decision_option": -1,
             "variable2":  -1,
+            "local_technology":  -1,
+            "object_group2":  -1,
+            "object_type2":  -1,
+            "allow_in_fog":  -1,
             "xs_function": ""
         }
     },
@@ -1062,6 +1070,7 @@
         "attributes": [
             "unit_object",
             "source_player",
+            "allow_in_fog",
             "inverted"
         ],
         "default_attributes": {
@@ -1405,6 +1414,32 @@
         "default_attributes": {
             "condition_type": 79,
             "inverted": 0
+        }
+    },
+    "80": {
+        "name":  "local_tech_researched",
+        "attributes": [
+            "local_technology",
+            "source_player",
+            "unit_object",
+            "area_x1",
+            "area_y1",
+            "area_x2",
+            "area_y2",
+            "inverted",
+            "quantity"
+        ],
+        "default_attributes": {
+            "condition_type": 80,
+            "local_technology": 1197,
+            "source_player": 1,
+            "unit_object": -1,
+            "area_x1": -1,
+            "area_y1": -1,
+            "area_x2": -1,
+            "area_y2": -1,
+            "inverted": 0,
+            "quantity": -1
         }
     }
 }
