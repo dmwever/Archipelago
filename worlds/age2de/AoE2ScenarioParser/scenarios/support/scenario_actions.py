@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from ..support.data_triggers import DataTriggers
+from AoE2ScenarioParser.scenarios.support.data_triggers import DataTriggers
 
 
 class ScenarioActions:

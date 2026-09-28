@@ -4,16 +4,16 @@ import pickle
 from time import sleep
 from typing import Dict, List, Any
 
-from ... import settings
-from ...exceptions.asp_warnings import UpdateDirtyWarning
-from ...helper import bytes_parser, string_manipulations
-from ...helper.bytes_conversions import parse_bytes_to_val, parse_val_to_bytes
-from ...helper.list_functions import listify
-from ...helper.pretty_format import pretty_format_list
-from ...helper.printers import warn, s_print
-from ..dependencies.dependency_action import DependencyAction
-from ..dependencies.retriever_dependency import RetrieverDependency
-from .datatype import DataType
+from AoE2ScenarioParser import settings
+from AoE2ScenarioParser.exceptions.asp_warnings import UpdateDirtyWarning
+from AoE2ScenarioParser.helper import bytes_parser, string_manipulations
+from AoE2ScenarioParser.helper.bytes_conversions import parse_bytes_to_val, parse_val_to_bytes
+from AoE2ScenarioParser.helper.list_functions import listify
+from AoE2ScenarioParser.helper.pretty_format import pretty_format_list
+from AoE2ScenarioParser.helper.printers import warn, s_print
+from AoE2ScenarioParser.sections.dependencies.dependency_action import DependencyAction
+from AoE2ScenarioParser.sections.dependencies.retriever_dependency import RetrieverDependency
+from AoE2ScenarioParser.sections.retrievers.datatype import DataType
 
 
 class Retriever:

@@ -2,7 +2,7 @@ from typing import Mapping
 
 from ..Options import (Caveman, ExistingTechs, IncludeUniqueUnits, LockTechs, ShuffleAges,
                        ShuffleUniqueTechs, ShuffleVillager, TechBehavior, Techsanity, Unitsanity,
-                       UnitsanityItems)
+                       UnitsanityItems, TrapDifficulty)
 
 SLOT_ID = "AP_SLOT_ID"
 SEED_HIGH = "AP_SEED_HIGH"
@@ -18,6 +18,7 @@ US_ITEMS = "AP_US_ITEMS"
 US_VILLAGER = "AP_US_VILLAGER"
 US_UNIQUES = "AP_US_UNIQUES"
 US_CAVEMAN = "AP_US_CAVEMAN"
+TRAP_DIFFICULTY = "AP_TRAP_DIFFICULTY"
 
 UNSET = -1
 
@@ -36,6 +37,7 @@ DEFAULTS: dict[str, int] = {
     US_VILLAGER: UNSET,
     US_UNIQUES: UNSET,
     US_CAVEMAN: 0,  # like SHUFFLE_AGES: off, not unset, so a seedless install is quiet
+    TRAP_DIFFICULTY: TrapDifficulty.option_no_traps,  # likewise: off, not a valid level
 }
 
 OPTIONS: dict[str, str] = {
@@ -50,6 +52,7 @@ OPTIONS: dict[str, str] = {
     US_VILLAGER: ShuffleVillager.internal_name,
     US_UNIQUES: IncludeUniqueUnits.internal_name,
     US_CAVEMAN: Caveman.internal_name,
+    TRAP_DIFFICULTY: TrapDifficulty.internal_name,
 }
 
 MAX_LITERAL = 999_999_999

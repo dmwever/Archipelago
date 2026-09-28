@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import Optional, List
 from uuid import UUID
 
-from ....scenarios.scenario_store import store
+from AoE2ScenarioParser.scenarios.scenario_store import store
 
-from ....datasets.dataset_enum import dataset_or_value, _DataSet
-from ....datasets.object_support import StartingAge, Civilization, CivilizationOld
-from ....datasets.players import PlayerId
-from ....datasets.trigger_lists import DiplomacyState
-from ....helper.list_functions import listify
-from ....helper.printers import warn
-from ...aoe2_object import AoE2Object
+from AoE2ScenarioParser.datasets.dataset_enum import dataset_or_value, _DataSet
+from AoE2ScenarioParser.datasets.object_support import StartingAge, Civilization, CivilizationOld
+from AoE2ScenarioParser.datasets.players import PlayerId
+from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState
+from AoE2ScenarioParser.helper.list_functions import listify
+from AoE2ScenarioParser.helper.printers import warn
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
 
 
 class Player(AoE2Object):
@@ -196,7 +196,10 @@ class Player(AoE2Object):
             return value
 
         if Player.is_using_old_civilization_dataset(self._uuid):
-            return CivilizationOld[value].value
+            try:
+                return CivilizationOld[value].value
+            except KeyError:
+                raise ValueError(f"Invalid Civilization value for this scenario version: {value}") from None
         else:
             return Civilization[value].value
 

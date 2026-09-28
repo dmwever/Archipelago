@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Any, List, Type, Dict, TYPE_CHECKING, Optional
 from uuid import UUID
 
-from ...scenarios.scenario_store import getters
-from .construct_progress import ConstructProgress
+from AoE2ScenarioParser.scenarios.scenario_store import getters
+from AoE2ScenarioParser.sections.retrievers.construct_progress import ConstructProgress
 
 if TYPE_CHECKING:
-    from ...objects.aoe2_object import AoE2Object
-    from .retriever import Retriever
-    from ..aoe2_file_section import AoE2FileSection
-    from .retriever_object_link_group import RetrieverObjectLinkGroup
+    from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+    from AoE2ScenarioParser.sections.retrievers.retriever import Retriever
+    from AoE2ScenarioParser.sections.aoe2_file_section import AoE2FileSection
+    from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
 
 
 class RetrieverObjectLinkParent:

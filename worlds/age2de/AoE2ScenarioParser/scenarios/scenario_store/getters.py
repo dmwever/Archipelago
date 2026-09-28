@@ -4,14 +4,14 @@ import re
 from typing import Optional, List, Tuple, Dict, TYPE_CHECKING, AnyStr
 from uuid import UUID
 
-from ..scenario_store import store
+from AoE2ScenarioParser.scenarios.scenario_store import store
 
 if TYPE_CHECKING:
-    from ...objects.data_objects.unit import Unit
-    from ...objects.data_objects.trigger import Trigger
-    from ..aoe2_de_scenario import AoE2DEScenario
-    from ...objects.data_objects.terrain_tile import TerrainTile
-    from ...sections.aoe2_file_section import AoE2FileSection
+    from AoE2ScenarioParser.objects.data_objects.unit import Unit
+    from AoE2ScenarioParser.objects.data_objects.trigger import Trigger
+    from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
+    from AoE2ScenarioParser.objects.data_objects.terrain_tile import TerrainTile
+    from AoE2ScenarioParser.sections.aoe2_file_section import AoE2FileSection
 
 
 def get_unit(uuid: UUID, unit_reference_id: int) -> Optional['Unit']:

@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from math import floor
 
-from ...datasets.trigger_lists import VictoryCondition, SecondaryGameMode
-from ..aoe2_object import AoE2Object
-from ...sections.retrievers.retriever_object_link import RetrieverObjectLink
-from ...sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
-from ...sections.retrievers.support import Support
+from AoE2ScenarioParser.datasets.trigger_lists import VictoryCondition, SecondaryGameMode
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link import RetrieverObjectLink
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
+from AoE2ScenarioParser.sections.retrievers.support import Support
 
 
 class OptionManager(AoE2Object):
+    """Manager of all general (global) options"""
+
     _link_list = [
         RetrieverObjectLinkGroup("GlobalVictory", group=[
             RetrieverObjectLink("victory_condition", link='mode'),

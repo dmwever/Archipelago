@@ -200,7 +200,9 @@ class TestSlotDataFile(unittest.TestCase):
             "extern const int AP_US_ITEMS = -1;\n"
             "extern const int AP_US_VILLAGER = -1;\n"
             "extern const int AP_US_UNIQUES = -1;\n"
-            "extern const int AP_US_CAVEMAN = 0;\n")
+            "extern const int AP_US_CAVEMAN = 0;\n"
+            "extern const int AP_TRAP_DIFFICULTY = 0;\n"
+        )
 
     def test_an_unset_mode_reads_as_techsanity_off(self):
         # XS gates on AP_TS_MODE == TECHSANITY_NONE, so a server that sends

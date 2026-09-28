@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..dataset_enum import _DataSetIntEnums
+from AoE2ScenarioParser.datasets.dataset_enum import _DataSetIntEnums
 
 
 class Hotkey(_DataSetIntEnums):

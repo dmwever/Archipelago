@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..dataset_enum import _DataSetIntEnums
+from AoE2ScenarioParser.datasets.dataset_enum import _DataSetIntEnums
 
 
 class ActionType(_DataSetIntEnums):
@@ -35,3 +35,14 @@ class ActionType(_DataSetIntEnums):
     BOX_FORMATION = 19
     STAGGERED_FORMATION = 20
     FLANK_FORMATION = 21
+    TRANSFORM = 22
+    SELL_FOOD = 23
+    SELL_WOOD = 24
+    SELL_STONE = 25
+    BUY_FOOD = 26
+    BUY_WOOD = 27
+    BUY_STONE = 28
+    RING_TOWN_BELL = 29
+    BACK_TO_WORK = 30
+    ALL_BACK_TO_WORK = 31
+    FORCE_DROP_OFF = 32

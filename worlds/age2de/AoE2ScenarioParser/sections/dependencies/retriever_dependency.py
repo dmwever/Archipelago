@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Type
 
-from .dependency_action import DependencyAction
-from .dependency_eval import DependencyEval
-from .dependency_target import DependencyTarget
+from AoE2ScenarioParser.sections.dependencies.dependency_action import DependencyAction
+from AoE2ScenarioParser.sections.dependencies.dependency_eval import DependencyEval
+from AoE2ScenarioParser.sections.dependencies.dependency_target import DependencyTarget
 
 
 class RetrieverDependency:

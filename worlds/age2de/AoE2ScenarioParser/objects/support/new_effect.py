@@ -4,9 +4,9 @@ from typing import List
 
 from typing_extensions import deprecated
 
-from ...datasets.effects import EffectId
-from ...datasets.trigger_lists import ObjectAttribute
-from ..data_objects.effect import Effect
+from AoE2ScenarioParser.datasets.effects import EffectId
+from AoE2ScenarioParser.datasets.trigger_lists import ObjectAttribute
+from AoE2ScenarioParser.objects.data_objects.effect import Effect
 
 
 class NewEffectSupport:
@@ -25,12 +25,14 @@ class NewEffectSupport:
             diplomacy: int | None = None,
             source_player: int | None = None,
             target_player: int | None = None,
+            mutual_diplomacy: bool | None = None,
     ) -> Effect:
         return self._trigger_ref._add_effect(
             EffectId.CHANGE_DIPLOMACY,
             diplomacy=diplomacy,
             source_player=source_player,
             target_player=target_player,
+            mutual_diplomacy=mutual_diplomacy,
         )
 
     def research_technology(
@@ -67,6 +69,7 @@ class NewEffectSupport:
             location_x: int | None = None,
             location_y: int | None = None,
             location_object_reference: int | None = None,
+            global_sound: int | None = None,
             sound_name: str | None = None,
     ) -> Effect:
         return self._trigger_ref._add_effect(
@@ -75,6 +78,7 @@ class NewEffectSupport:
             location_x=location_x,
             location_y=location_y,
             location_object_reference=location_object_reference,
+            global_sound=global_sound,
             sound_name=sound_name,
         )
 
@@ -387,6 +391,7 @@ class NewEffectSupport:
             play_sound: int | None = None,
             message: str | None = None,
             sound_name: str | None = None,
+            use_tag_color_for_icon: bool | None = None,
     ) -> Effect:
         return self._trigger_ref._add_effect(
             EffectId.DISPLAY_INSTRUCTIONS,
@@ -398,6 +403,7 @@ class NewEffectSupport:
             play_sound=play_sound,
             message=message,
             sound_name=sound_name,
+            use_tag_color_for_icon=use_tag_color_for_icon,
         )
 
     def clear_instructions(
@@ -2014,6 +2020,7 @@ class NewEffectSupport:
             quantity: int | float | None = None,
             armour_attack_quantity: int | None = None,
             armour_attack_class: int | None = None,
+            object_filter: int | None = None,
     ):
         if (armour_attack_quantity is not None or armour_attack_class is not None) and quantity is not None:
             raise ValueError("Cannot use 'armour_attack' attributes together with the 'quantity' attribute.")
@@ -2033,6 +2040,7 @@ class NewEffectSupport:
             quantity=quantity,
             armour_attack_quantity=armour_attack_quantity,
             armour_attack_class=armour_attack_class,
+            object_filter=object_filter,
         )
 
     def modify_object_attribute_by_variable(
@@ -2093,4 +2101,66 @@ class NewEffectSupport:
             visibility_state=visibility_state,
             max_units_affected=max_units_affected,
             selected_object_ids=selected_object_ids,
+        )
+
+    def build_object(
+            self,
+            object_list_unit_id: int | None = None,
+            source_player: int | None = None,
+            location_x: int | None = None,
+            location_y: int | None = None,
+            location_object_reference: int | None = None,
+            area_x1: int | None = None,
+            area_y1: int | None = None,
+            area_x2: int | None = None,
+            area_y2: int | None = None,
+            wall_x1: int | None = None,
+            wall_y1: int | None = None,
+            wall_x2: int | None = None,
+            wall_y2: int | None = None,
+            object_group: int | None = None,
+            object_type: int | None = None,
+            building_list: int | None = None,
+            selected_object_ids: int | List[int] | None = None,
+            disable_garrison_unload_sound: int | None = None,
+            max_units_affected: int | None = None,
+            issue_group_command: int | None = None,
+            queue_action: int | None = None,
+    ) -> Effect:
+        return self._trigger_ref._add_effect(
+            EffectId.BUILD_OBJECT,
+            object_list_unit_id=object_list_unit_id,
+            source_player=source_player,
+            location_x=location_x,
+            location_y=location_y,
+            location_object_reference=location_object_reference,
+            area_x1=area_x1,
+            area_y1=area_y1,
+            area_x2=area_x2,
+            area_y2=area_y2,
+            wall_x1=wall_x1,
+            wall_y1=wall_y1,
+            wall_x2=wall_x2,
+            wall_y2=wall_y2,
+            object_group=object_group,
+            object_type=object_type,
+            building_list=building_list,
+            selected_object_ids=selected_object_ids,
+            disable_garrison_unload_sound=disable_garrison_unload_sound,
+            max_units_affected=max_units_affected,
+            issue_group_command=issue_group_command,
+            queue_action=queue_action,
+        )
+
+    def mirror_diplomacy(
+            self,
+            source_player: int | None = None,
+            target_player: int | None = None,
+            enabled: bool | None = None,
+    ) -> Effect:
+        return self._trigger_ref._add_effect(
+            EffectId.MIRROR_DIPLOMACY,
+            source_player=source_player,
+            target_player=target_player,
+            enabled=enabled,
         )

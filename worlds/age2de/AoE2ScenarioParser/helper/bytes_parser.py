@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import List, TYPE_CHECKING, Any
 
-from .. import settings
-from ..helper.bytes_conversions import bytes_to_int
-from ..exceptions.asp_exceptions import EndOfFileError
-from ..helper.incremental_generator import IncrementalGenerator
-from ..helper.string_manipulations import create_textual_hex, trunc_string
+from AoE2ScenarioParser import settings
+from AoE2ScenarioParser.helper.bytes_conversions import bytes_to_int
+from AoE2ScenarioParser.exceptions.asp_exceptions import EndOfFileError
+from AoE2ScenarioParser.helper.incremental_generator import IncrementalGenerator
+from AoE2ScenarioParser.helper.string_manipulations import create_textual_hex, trunc_string
 
 if TYPE_CHECKING:
-    from ..sections.retrievers.retriever import Retriever
+    from AoE2ScenarioParser.sections.retrievers.retriever import Retriever
 
 attributes = ['on_refresh', 'on_construct', 'on_commit']
 

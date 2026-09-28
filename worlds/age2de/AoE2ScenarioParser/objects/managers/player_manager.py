@@ -2,29 +2,26 @@ from __future__ import annotations
 
 from typing import List, Dict, Any
 
-from ...datasets.object_support import Civilization, CivilizationOld
-from ...datasets.players import PlayerId
-from ...datasets.trigger_lists import DiplomacyState
-from ...exceptions.asp_exceptions import UnsupportedAttributeError
-from ..aoe2_object import AoE2Object
-from ..data_objects.player.player import Player
-from ..data_objects.player.player_data_four import PlayerDataFour
-from ..data_objects.player.player_data_three import PlayerDataThree
-from ..data_objects.player.player_diplomacy import PlayerDiplomacy
-from ..data_objects.player.player_initial_view import PlayerInitialView
-from ..data_objects.player.player_meta_data import PlayerMetaData
-from ..data_objects.player.player_resources import PlayerResources
-from ..support.uuid_list import UuidList
-from ...sections.retrievers.retriever_object_link import RetrieverObjectLink
-from ...sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
-from ...sections.retrievers.support import Support
+from AoE2ScenarioParser.datasets.object_support import Civilization, CivilizationOld
+from AoE2ScenarioParser.datasets.players import PlayerId
+from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState
+from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+from AoE2ScenarioParser.objects.data_objects.player.player import Player
+from AoE2ScenarioParser.objects.data_objects.player.player_data_four import PlayerDataFour
+from AoE2ScenarioParser.objects.data_objects.player.player_data_three import PlayerDataThree
+from AoE2ScenarioParser.objects.data_objects.player.player_diplomacy import PlayerDiplomacy
+from AoE2ScenarioParser.objects.data_objects.player.player_initial_view import PlayerInitialView
+from AoE2ScenarioParser.objects.data_objects.player.player_meta_data import PlayerMetaData
+from AoE2ScenarioParser.objects.data_objects.player.player_resources import PlayerResources
+from AoE2ScenarioParser.objects.support.uuid_list import UuidList
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link import RetrieverObjectLink
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
+from AoE2ScenarioParser.sections.retrievers.support import Support
 
 
 class PlayerManager(AoE2Object):
-    """Manager of everything player related."""
-
-    # Todo: Implement a DE version separate of this.
-    #  I'll be dealing with this IF support for other game versions will ever happen.
+    """Manager of everything player-related."""
 
     _link_list = [
         RetrieverObjectLink("_player_count", "FileHeader", "player_count"),

@@ -4,15 +4,15 @@ import re
 from typing import List, Optional, Iterator, Dict
 from uuid import UUID
 
-from ...helper.attr_dict import AttrDict
-from ...helper.helper import values_are_valid, value_is_valid
-from ...objects.data_objects.condition import Condition
-from ...objects.data_objects.effect import Effect
-from ...objects.data_objects.trigger import Trigger
-from ...objects.data_objects.unit import Unit
-from ...objects.support.area import Area
-from ...objects.support.tile import Tile
-from ..scenario_store import getters, actions
+from AoE2ScenarioParser.helper.attr_dict import AttrDict
+from AoE2ScenarioParser.helper.helper import values_are_valid, value_is_valid
+from AoE2ScenarioParser.objects.data_objects.condition import Condition
+from AoE2ScenarioParser.objects.data_objects.effect import Effect
+from AoE2ScenarioParser.objects.data_objects.trigger import Trigger
+from AoE2ScenarioParser.objects.data_objects.unit import Unit
+from AoE2ScenarioParser.objects.support.area import Area
+from AoE2ScenarioParser.objects.support.tile import Tile
+from AoE2ScenarioParser.scenarios.scenario_store import getters, actions
 
 
 class DataTriggers:

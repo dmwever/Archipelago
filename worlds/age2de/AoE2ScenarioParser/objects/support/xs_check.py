@@ -7,18 +7,18 @@ from pathlib import Path
 from typing import Optional, Union, Tuple, Set, List
 from uuid import UUID
 
-from ... import settings
-from ...datasets.conditions import ConditionId
-from ...datasets.effects import EffectId
-from ...exceptions.asp_exceptions import XsCheckValidationError
-from ...helper.pretty_format import pretty_format_name
-from ...helper.printers import s_print
-from ...helper.string_manipulations import add_tabs
-from ...scenarios.scenario_store import getters
+from AoE2ScenarioParser import settings
+from AoE2ScenarioParser.datasets.conditions import ConditionId
+from AoE2ScenarioParser.datasets.effects import EffectId
+from AoE2ScenarioParser.exceptions.asp_exceptions import XsCheckValidationError
+from AoE2ScenarioParser.helper.pretty_format import pretty_format_name
+from AoE2ScenarioParser.helper.printers import s_print
+from AoE2ScenarioParser.helper.string_manipulations import add_tabs
+from AoE2ScenarioParser.scenarios.scenario_store import getters
 
 
 class XsCheck:
-    version: Tuple[int, int, int] = (0, 2, 15)
+    version: Tuple[int, int, int] = (0, 2, 30)
 
     def __init__(self, uuid: UUID):
         self._uuid: UUID = uuid
@@ -165,7 +165,7 @@ class XsCheck:
 
         version_tuple = self.get_version()
 
-        if (0, 1, 2) <= version_tuple <= (0, 2, 15):
+        if (0, 1, 2) <= version_tuple <= (0, 2, 30):
             return True
 
         return False
@@ -220,10 +220,14 @@ class XsCheck:
         command = [self.path, *args]
         exitcode = subprocess.call(command, timeout=self.timeout_seconds, stdout=stdout_file, stderr=stderr_file)
 
-        if exitcode != 0:
+        if exitcode == 1:
             error = Path(stderr_path).read_text(encoding=self.xs_encoding)
 
-            raise ValueError(f"A non-zero exit code ({exitcode}) was returned by xs-check: '{error}'")
+            raise ValueError(f"Error code [{exitcode}] was returned by xs-check. Invalid Usage: '{error}'")
+        elif exitcode < 0 or exitcode > 2:
+            error = Path(stderr_path).read_text(encoding=self.xs_encoding)
+
+            raise ValueError(f"An unknown non-zero exit code ({exitcode}) was returned by xs-check: '{error}'")
 
         return Path(stdout_path).read_text(encoding=self.xs_encoding)
 

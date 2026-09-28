@@ -5,17 +5,17 @@ from enum import Enum
 from typing import List, Any, Dict, TYPE_CHECKING, Optional, TypeVar
 from uuid import UUID
 
-from ..exceptions.asp_exceptions import UnsupportedAttributeError
-from ..helper.pretty_format import pretty_format_dict
-from ..helper.string_manipulations import add_tabs
-from .support.uuid_list import NO_UUID
-from ..scenarios.scenario_store import store
-from ..sections.retrievers.construct_progress import ConstructProgress
-from ..sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
-from ..sections.retrievers.retriever_object_link_parent import RetrieverObjectLinkParent
+from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
+from AoE2ScenarioParser.helper.pretty_format import pretty_format_dict
+from AoE2ScenarioParser.helper.string_manipulations import add_tabs
+from AoE2ScenarioParser.objects.support.uuid_list import NO_UUID
+from AoE2ScenarioParser.scenarios.scenario_store import store
+from AoE2ScenarioParser.sections.retrievers.construct_progress import ConstructProgress
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_parent import RetrieverObjectLinkParent
 
 if TYPE_CHECKING:
-    from ..scenarios.aoe2_de_scenario import AoE2DEScenario
+    from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
 T = TypeVar('T')
 

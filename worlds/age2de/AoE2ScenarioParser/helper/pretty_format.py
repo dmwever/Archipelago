@@ -1,6 +1,6 @@
 from typing import List, Type, Tuple
 
-from ..helper.string_manipulations import create_inline_line, add_tabs
+from AoE2ScenarioParser.helper.string_manipulations import create_inline_line, add_tabs
 
 _default_inline_types: List[Tuple[Type, int]] = [
     (int, 8),

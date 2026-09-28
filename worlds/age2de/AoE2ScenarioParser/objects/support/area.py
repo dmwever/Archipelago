@@ -6,17 +6,17 @@ from enum import Enum
 from typing import Dict, TYPE_CHECKING, List, Tuple, Iterable, Literal
 from uuid import UUID
 
-from ....ordered_set import OrderedSet
+from ordered_set import OrderedSet
 
-from ...exceptions.asp_warnings import UuidForcedUnlinkWarning
-from ...helper.helper import xy_to_i, validate_coords, values_are_valid, value_is_valid
-from ...helper.printers import warn
-from ..support.tile import Tile
-from ...scenarios.scenario_store import getters
+from AoE2ScenarioParser.exceptions.asp_warnings import UuidForcedUnlinkWarning
+from AoE2ScenarioParser.helper.helper import xy_to_i, validate_coords, values_are_valid, value_is_valid
+from AoE2ScenarioParser.helper.printers import warn
+from AoE2ScenarioParser.objects.support.tile import Tile
+from AoE2ScenarioParser.scenarios.scenario_store import getters
 
 if TYPE_CHECKING:
-    from ..data_objects.terrain_tile import TerrainTile
-    from ...scenarios.aoe2_scenario import AoE2Scenario
+    from AoE2ScenarioParser.objects.data_objects.terrain_tile import TerrainTile
+    from AoE2ScenarioParser.scenarios.aoe2_scenario import AoE2Scenario
 
 
 class AreaState(Enum):
@@ -274,13 +274,14 @@ class Area:
         Converts the selection to a list of OrderedSets with Tile NamedTuples with (x, y) coordinates.
         The separation between chunks is based on if they're connected to each other.
         So the tiles must share an edge (i.e. they should be non-diagonal).
+        (With exceptions like grid state when using gap_size = 0)
 
         Args:
             as_terrain: If the returning coordinates should be Tile objects or Terrain Tiles. If `True` the coordinates
                 are returned as TerrainTiles.
 
         Returns:
-            A list of OrderedSets of Tiles ((x, y) named tuple) of the selection.
+            A list of OrderedSets with Tiles ((x, y) named tuple) of the selection.
         """
         tiles = self.to_coords()
 
@@ -302,6 +303,19 @@ class Area:
             )
 
         return chunks_ordered
+
+    def to_chunk_areas(self) -> List[Area]:
+        """
+        Converts the selection to a list of Area objects.
+        Internally, this uses `to_chunks` to convert the selection to chunks.
+        The separation between chunks is based on if they're connected to each other.
+        So the tiles must share an edge (i.e. they should be non-diagonal).
+        (With exceptions like grid state when using gap_size = 0)
+
+        Returns:
+            A list with Area objects based on the selection.
+        """
+        return [Area(corner1=chunk[0], corner2=chunk[-1]) for chunk in self.to_chunks()]
 
     def to_dict(self, prefix: str = "area_") -> Dict[str, int]:
         """
@@ -613,7 +627,7 @@ class Area:
 
     def select_entire_map(self) -> Area:
         """Sets the selection to the entire map"""
-        self.x1, self.y1, self.x2, self.y2 = 0, 0, self._map_size, self._map_size
+        self.x1, self.y1, self.x2, self.y2 = 0, 0, self.map_size - 1, self.map_size - 1
         return self
 
     def select(self, x1: int, y1: int, x2: int = None, y2: int = None) -> Area:
@@ -775,7 +789,7 @@ class Area:
             if half > first_coord:
                 half1 = -first_coord
                 half2 += half - first_coord
-            if half > (dist := self._map_size_safe - second_coord):
+            if half > (dist := self.maximum_coordinate - second_coord):
                 half2 = dist
                 half1 += half - dist
             return math.floor(half1), math.floor(half2)
@@ -861,7 +875,7 @@ class Area:
         elif self.state == AreaState.GRID:
             if self.inverted:
                 return 0
-            per_row = math.ceil(self.get_height() / (self.block_size_x + self.gap_size_x))
+            per_row = math.ceil(self.get_width() / (self.block_size_x + self.gap_size_x))
             return (tile.x - self.x1) // (self.block_size_x + self.gap_size_x) + \
                 (tile.y - self.y1) // (self.block_size_y + self.gap_size_y) * per_row
 

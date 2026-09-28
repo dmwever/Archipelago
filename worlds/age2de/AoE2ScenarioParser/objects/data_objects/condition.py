@@ -3,16 +3,16 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Any
 
-from ...datasets import conditions
-from ...datasets.conditions import ConditionId
-from ...helper.helper import raise_if_not_int_subclass, validate_coords
-from ...helper.string_manipulations import add_tabs
-from ..aoe2_object import AoE2Object
-from ..support.attr_presentation import transform_condition_attr_value
-from ..support.trigger_object import TriggerComponent
-from ...sections.retrievers.retriever_object_link import RetrieverObjectLink
-from ...sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
-from ...sections.retrievers.support import Support
+from AoE2ScenarioParser.datasets import conditions
+from AoE2ScenarioParser.datasets.conditions import ConditionId
+from AoE2ScenarioParser.helper.helper import raise_if_not_int_subclass, validate_coords
+from AoE2ScenarioParser.helper.string_manipulations import add_tabs
+from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+from AoE2ScenarioParser.objects.support.attr_presentation import transform_condition_attr_value
+from AoE2ScenarioParser.objects.support.trigger_object import TriggerComponent
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link import RetrieverObjectLink
+from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
+from AoE2ScenarioParser.sections.retrievers.support import Support
 
 
 class Condition(AoE2Object, TriggerComponent):
@@ -53,7 +53,9 @@ class Condition(AoE2Object, TriggerComponent):
             RetrieverObjectLink("local_technology", support=Support(since=1.55)),
             RetrieverObjectLink("object_group2", support=Support(since=1.55)),
             RetrieverObjectLink("object_type2", support=Support(since=1.55)),
+            RetrieverObjectLink("allow_in_fog", support=Support(since=1.59)),
             RetrieverObjectLink("xs_function", support=Support(since=1.40)),
+            RetrieverObjectLink("_cond_filler_0", support=Support(since=1.54, until=1.54)),
         ])
     ]
 
@@ -91,6 +93,7 @@ class Condition(AoE2Object, TriggerComponent):
             local_technology: int = None,
             object_group2: int = None,
             object_type2: int = None,
+            allow_in_fog: int = None,
             xs_function: str = None,
             **kwargs
     ):
@@ -129,9 +132,14 @@ class Condition(AoE2Object, TriggerComponent):
         self.local_technology: int = local_technology
         self.object_group2: int = object_group2
         self.object_type2: int = object_type2
+        self.allow_in_fog: int = allow_in_fog
         self.xs_function: str = xs_function
 
         super().__init__(**kwargs)
+
+    @property
+    def _cond_filler_0(self) -> None:
+        return None
 
     def _should_be_displayed(self, attr: str, val: Any) -> bool:
         # Include the only exception to the -1 == invalid rule

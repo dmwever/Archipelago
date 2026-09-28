@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-from ..dataset_enum import _DataSetIntEnums
+from AoE2ScenarioParser.datasets.dataset_enum import _DataSetIntEnums
 
 
 class ButtonLocation(_DataSetIntEnums):

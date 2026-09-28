@@ -8,7 +8,7 @@ import settings
 from typing import Any, ClassVar, Mapping
 from BaseClasses import Entrance, Item, Location, MultiWorld, Region
 from worlds.AutoWorld import World
-from worlds.LauncherComponents import Component, Type, components, launch as launch_subprocess
+from worlds.LauncherComponents import Component, Type, components, icon_paths, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
 from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.locations.Buildings import Age2BuildingData
@@ -17,7 +17,7 @@ from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.TechPool import TechPool
 from .generation.UnitPool import UnitPool
 from .regions.UnitRegions import UnitRegions
-from .Options import Age2Options, ExistingTechs, Goal, ScenarioBranching
+from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
 from .locations import (Ages, Campaigns, EscortUnits, Heroes, Locations, Scenarios,
                         UnitLines, Units, VillagerJobs)
@@ -64,6 +64,7 @@ class Age2World(CachedRuleBuilderWorld):
     location_name_to_id = LocationMapping.location_name_to_id
     location_id_to_name = LocationMapping.location_id_to_name
     item_mapping = Items.item_mapping
+    item_name_groups = {"Traps": set(Items.TRAP_NAMES)}
     
     included_civs: list[Scenarios.Age2CivData]
     included_campaigns: list[Campaigns.Age2CampaignData]
@@ -282,6 +283,8 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             elif isinstance(item.type, Items.VillagerProfession):
                 continue
+            elif isinstance(item.type, Items.Trap):
+                continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
 
@@ -306,19 +309,33 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        starting_items = self.smart_add_starting_resources(needed_number_of_filler_items)
-        self.multiworld.itempool += starting_items
+        starting_items, surplus = self._build_starting_resources(needed_number_of_filler_items)
         
-        itempool = len(items + starting_items)
+        # Starting resources come first. Traps only ever spend the padding appended once
+        # every resource target is already met, so they never cost the player economy.
+        traps = self.roll_traps(surplus)
+        if traps:
+            starting_items = starting_items[:len(starting_items) - len(traps)]
+        
+        self.multiworld.itempool += starting_items
+        self.multiworld.itempool += traps
+        
+        itempool = len(items + starting_items + traps)
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
     
     def smart_add_starting_resources(self, locations_to_fill: int) -> list[Item]:
+        items, _surplus = self._build_starting_resources(locations_to_fill)
+        return items
+
+    def _build_starting_resources(self, locations_to_fill: int) -> tuple[list[Item], int]:
         items: list[Item] = []
+        surplus = 0
+        halved = False
         if locations_to_fill <= 0:
-            return items
+            return items, surplus
 
         largest = {
             Items.Resource.WOOD: Items.Age2ItemData.STARTING_WOOD_LARGE,
@@ -341,6 +358,7 @@ class Age2World(CachedRuleBuilderWorld):
 
             if worst_case_sum > locations_to_fill:
                 amounts = {resource: amount // 2 for resource, amount in amounts.items()}
+                halved = True
                 continue
 
             if worst_case_sum == locations_to_fill:
@@ -348,14 +366,37 @@ class Age2World(CachedRuleBuilderWorld):
                     for _ in range(needed):
                         items.append(self.create_item(largest[resource].item_name))
                         locations_to_fill -= 1
-                return items
+                return items, surplus
+
+            if worst_case_sum == 0 and not halved:
+                surplus += 1
 
             item_data = self.random.choice(starting_resource_choices)
             resource = item_data.type.type
             amounts[resource] = max(0, amounts[resource] - item_data.type.amount)
             items.append(self.create_item(item_data.item_name))
             locations_to_fill -= 1
-        return items
+        return items, surplus
+
+    def roll_traps(self, surplus: int) -> list[Item]:
+        if surplus <= 0 or not self.options.trap_difficulty.include_traps():
+            return []
+
+        distribution = self.options.trap_distribution
+        names: list[str] = []
+        weights: list[int] = []
+        for trap in Items.CATEGORY_TO_ITEMS[Items.Trap]:
+            weight = distribution[trap.item_name] if trap.item_name in distribution else TRAP_DEFAULT_WEIGHT
+            if weight > 0:
+                names.append(trap.item_name)
+                weights.append(weight)
+        if not names:
+            return []
+
+        count = int(surplus * self.options.trap_percentage.value / 100)
+        if count <= 0:
+            return []
+        return [self.create_item(name) for name in self.random.choices(names, weights=weights, k=count)]
     
     def create_item(self, name: str) -> Item:
         item = Items.NAME_TO_ITEM[name]
@@ -388,6 +429,7 @@ class Age2World(CachedRuleBuilderWorld):
             mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns
         for option_name in SlotData.OPTIONS.values():
             mapping[option_name] = int(getattr(self.options, option_name).value)
+        mapping[ScenarioBranching.internal_name] = int(self.options.scenario_branching.value)
         return mapping
 
 
@@ -397,10 +439,13 @@ def run_client(*args: Any):
 
     launch_subprocess(main, name="Age2Client")
 
+icon_paths["age2de_client"] = f"ap:{__name__}/icons/age2de_client.png"
+
 components.append(
     Component(
         "Age of Empires II: DE Client",
         func=run_client,
         component_type=Type.CLIENT,
+        icon="age2de_client",
     )
 )
