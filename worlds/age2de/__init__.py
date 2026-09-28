@@ -19,8 +19,8 @@ from .generation.UnitPool import UnitPool
 from .regions.UnitRegions import UnitRegions
 from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, ExistingTechs, Goal, ScenarioBranching
 from .items import Items
-from .locations import (Ages, Campaigns, EscortUnits, Heroes, Locations, Scenarios,
-                        UnitLines, Units, VillagerJobs)
+from .locations import (Ages, Campaigns, EscortUnits, Heroes, Locations, ScenarioResources,
+                        Scenarios, UnitLines, Units, VillagerJobs)
 from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
 from .locations.connections.UnitBuildings import BUILDING_TO_UNITS
