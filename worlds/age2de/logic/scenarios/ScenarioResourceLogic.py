@@ -6,6 +6,7 @@ from rule_builder.rules import And, False_, Or, Rule, True_
 
 from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
+from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ..custom_logic.ScenarioQuestions import ScenarioHasResource
@@ -13,6 +14,8 @@ from ..custom_logic.ScenarioQuestions import ScenarioHasResource
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
+TRADE_SEED_GOLD = 100
+TRADE_SEED_WOOD_AT_SEA = 400
 
 MARKET_ECONOMY = False
 """Buying and selling at a market is a higher-difficulty expectation. The rule is real and
@@ -120,6 +123,15 @@ class ScenarioResourceLogic:
                 & self.scenario.has_building(Age2BuildingData.MONASTERY)
                 & self.scenario.starting_state.starting_relics)
 
+    def can_gather_gold(self) -> Rule:
+        return (self.can_mine_some() | self.can_gather_oysters() | self.can_hunt_whales()
+                | self.can_collect_relics())
+
+    def can_gather_wood(self) -> Rule:
+        return (self.can_chop_some() & self.scenario.has_base()
+                & (self.scenario.buildings.can_build_building(Age2BuildingData.LUMBER_CAMP)
+                   | self.scenario.buildings.can_build_multiple_tc()))
+
     # -- food that grows back -----------------------------------------------------------------
 
     def has_infinite_food(self) -> Rule:
@@ -133,7 +145,7 @@ class ScenarioResourceLogic:
     def endless_food(self) -> Rule:
         farms = self.has_infinite_food() & self.scenario.buildings.has_food_dropsite()
         traps = self.has_infinite_fish() & self.scenario.buildings.has_fishing_boat_dropsite()
-        return (farms | traps) & self.can_get_wood_easily()
+        return (farms | traps) & self._can_get_wood_easily()
 
     # -- the higher-difficulty stubs ----------------------------------------------------------
 
@@ -141,20 +153,47 @@ class ScenarioResourceLogic:
         if not MARKET_ECONOMY:
             return False_()
         return (self.scenario.has_building(Age2BuildingData.MARKET)
-                & (self.can_get_wood_easily() | self.endless_food()))
+                & (self._can_get_wood_easily() | self.endless_food()))
 
     def ally_trade_gold(self) -> Rule:
         if not ALLY_TRADE:
             return False_()
-        return self.scenario.starting_state.trading_ally & (
-            self.scenario.units.can_train(Age2UnitData.TRADE_CART)
-            | self.scenario.units.can_train(Age2UnitData.TRADE_COG))
+        resources = self.logic.resources
+
+        seed_gold = (self.can_gather_gold()
+                     | resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD))
+        
+        wood_by_land = (self.scenario.has_building(Age2BuildingData.MARKET)
+                   & self.logic.units.has_unit_items(Age2UnitData.TRADE_CART)
+                   & self.can_gather_wood())
+        
+        wood_by_sea = (self.scenario.has_building(Age2BuildingData.DOCK)
+                  & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
+                  & (self.can_gather_wood()
+                     | resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)))
+        
+        return (self.scenario.starting_state.trading_ally
+                & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
+                & seed_gold & (wood_by_land | wood_by_sea))
 
     def ally_trade_wood(self) -> Rule:
         if not ALLY_TRADE:
             return False_()
-        return (self.scenario.starting_state.trading_ally
-                & self.scenario.units.can_train(Age2UnitData.TRADE_COG))
+        resources = self.logic.resources
+        return (
+                    self.scenario.starting_state.trading_ally
+                    & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
+                    & self.scenario.has_building(Age2BuildingData.DOCK)
+                    & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
+                    & (
+                        resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)
+                        | self.can_gather_wood()
+                    )
+                    & (
+                        resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD)
+                        | self.can_gather_gold()
+                    )
+                )
 
     # -- aggregates ---------------------------------------------------------------------------
 
@@ -167,7 +206,6 @@ class ScenarioResourceLogic:
     # -- what units and techs ask -------------------------------------------------------------
 
     def can_afford(self, costs: Mapping[Resource, float]) -> Rule:
-        # An empty And resolves to False_, not True_, so free asks for nothing explicitly.
         priced = [resource for resource, amount in costs.items() if amount > 0]
         if not priced:
             return True_()
@@ -180,8 +218,7 @@ class ScenarioResourceLogic:
             return True_()
         return And(*[self.has_easy_source(resource) for resource in priced])
 
-    def can_get_wood_easily(self) -> Rule:
-        return self.ally_trade_wood() | (
-            self.can_chop_some() & self.scenario.has_base()
-            & (self.scenario.buildings.can_build_building(Age2BuildingData.LUMBER_CAMP)
-               | self.scenario.buildings.can_build_multiple_tc()))
+    # -- private methods -------------------------------------------------------------
+
+    def _can_get_wood_easily(self) -> Rule:
+        return self.ally_trade_wood() | self.can_gather_wood()

@@ -177,7 +177,7 @@ class TestEndlessFood(EconomyTestBase):
         """A farm is 60 wood and a fish trap 100, forever."""
         self.build()
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        with mock.patch.object(type(attila_1), "can_get_wood_easily", return_value=False_()):
+        with mock.patch.object(type(attila_1), "_can_get_wood_easily", return_value=False_()):
             self.assertTrue(self.is_false(attila_1.endless_food()))
 
 
@@ -202,9 +202,9 @@ class TestStubs(EconomyTestBase):
             wood = set(self.resolved(attila_1.ally_trade_wood()).item_dependencies())
             self.assertIn(Age2BuildingData.MARKET.item.item_name, gold)
             self.assertIn(Age2BuildingData.DOCK.item.item_name, gold)
-            # Cogs only: a sea route brings wood home, a cart does not.
+            # Cogs only for wood: a sea route brings wood home, a cart does not. The market can
+            # still turn up in here, because the wood route is seeded with gold.
             self.assertIn(Age2BuildingData.DOCK.item.item_name, wood)
-            self.assertNotIn(Age2BuildingData.MARKET.item.item_name, wood)
 
     def test_the_market_rule_is_real_and_terminates_when_switched_on(self):
         """Written against the leaf gatherers, so the wood aggregate cannot ask the market

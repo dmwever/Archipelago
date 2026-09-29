@@ -22,18 +22,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
-    """A question about one scenario, answered once per seed and shared by everything that asks.
-
-    These carry **identifiers only**, so composing one costs nothing; the tree behind it is built
-    when it first resolves. rule_builder interns resolved rules by structural hash, so duplicates
-    collapse - but only after the walk that discovers they are duplicates, and the age chain asks
-    the same questions from very many places: one seed did 1,067,060 resolve() calls to arrive at
-    2,458 distinct rules, twenty seconds a world.
-
-    Answering is not memoised for its own sake. It is memoised because the answer cannot differ:
-    resolution depends on the world's options and on the scenario, and both are fixed by the time
-    rules are built.
-    """
+    """A question about one scenario, answered once per seed and shared by everything that asks."""
 
     scenario: Age2ScenarioData
 
@@ -51,12 +40,7 @@ class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Ed
         raise NotImplementedError
 
     def answered(self, world: 'Age2World') -> Rule.Resolved:
-        """The cache lives on Logic, which is the per-seed rule-building context.
-
-        Not on the world: a rule writing its own bookkeeping onto the World is this world's
-        machinery leaking into the game's. Reading it back through `world.rules.logic` is the
-        same shape as the documented example reading `world.some_precalculated_bool`.
-        """
+        """The cache lives on Logic, which is the per-seed rule-building context."""
         logic = world.rules.logic
         key = self.key()
         answer = logic.scenario_answers.get(key)
@@ -83,11 +67,6 @@ class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Ed
     class Resolved(Rule.Resolved):
         answer: Rule.Resolved
         description: str
-
-        # always_* are ClassVars on Rule.Resolved, and And/Or read them off each child to
-        # short-circuit and to dedupe. A property shadows the inherited ClassVar for instance
-        # access, which is what keeps a False_ answer collapsing its parent rather than surviving
-        # as an opaque wrapper. Without these two the tree grows by 44%; with them, by 23%.
         @property
         def always_true(self) -> bool:
             return self.answer.always_true
@@ -101,14 +80,7 @@ class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Ed
             return self.answer(state)
 
         def mine(self, dependencies: dict[str, set[int]]) -> dict[str, set[int]]:
-            """The child's dependencies, and this wrapper's own id alongside them.
-
-            Forwarding alone is not enough and fails loudly: results are cached under `id(self)`,
-            and CachedRuleBuilderWorld.collect invalidates by the ids a rule registers. Hand back
-            only the child's id and the wrapper's own cached False is never cleared - once false,
-            false forever, and every location behind it becomes unreachable. That is a FillError
-            in 170 tests, which is the lucky version of this mistake.
-            """
+            """The child's dependencies, and this wrapper's own id alongside them."""
             return {name: ids | {id(self)} for name, ids in dependencies.items()}
 
         @override
@@ -129,7 +101,6 @@ class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Ed
 
         @override
         def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
-            """The reason this wrapper exists: one line rather than the subtree behind it."""
             return [{
                 "type": "color",
                 "color": "green" if state and self(state) else "salmon",
@@ -143,11 +114,7 @@ class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Ed
 
 @dataclass
 class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
-    """Whether this scenario can put this building up.
-
-    The deepest of the questions: behind it are the villagers, the civilisation, the prerequisite
-    building and the age - and the age asks for two buildings of the age below, which asks again.
-    """
+    """Whether this scenario can put this building up."""
 
     building: Age2BuildingData
 
@@ -156,8 +123,6 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
         Age2BuildingData.HARBOR,
         Age2BuildingData.FISH_TRAP,
     })
-    """Buildings that need a shoreline. The fish trap is in here rather than leaning on its dock
-    prerequisite, which is answered by the global has_building and never sees the scenario."""
 
     @override
     def key(self) -> tuple:
@@ -203,11 +168,7 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
 @dataclass
 class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
-    """Whether this scenario can bring a resource in at all, or bring it in freely.
-
-    Eight per scenario against roughly five thousand call sites, which is the whole reason this
-    is a question rather than a rule built in place.
-    """
+    """Whether this scenario can bring a resource in at all, or bring it in freely."""
 
     resource: Resource
     easy: bool = False
@@ -236,10 +197,7 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
                 | economy.can_fish_some() | economy.endless_food())
 
     def _gold(self, scenario: 'ScenarioLogic') -> Rule:
-        economy = scenario.economy
-        return (economy.can_mine_some() | economy.can_gather_oysters()
-                | economy.can_hunt_whales() | economy.can_collect_relics()
-                | economy.ally_trade_gold())
+        return scenario.economy.can_gather_gold() | scenario.economy.ally_trade_gold()
 
     def _stone(self, scenario: 'ScenarioLogic') -> Rule:
         return scenario.economy.can_quarry_some()
@@ -283,10 +241,7 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
                 & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
 
     def _wood_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        """The one the economy keeps for itself: endless_food and market_trades ask for it
-        directly, because reaching it through this question would have the wood aggregate ask
-        the market which asks the wood aggregate."""
-        return scenario.economy.can_get_wood_easily()
+        return scenario.economy._can_get_wood_easily()
 
     def _at_scale(self, scenario: 'ScenarioLogic', camp: Age2BuildingData) -> Rule:
         return (scenario.buildings.can_build_building(camp)
