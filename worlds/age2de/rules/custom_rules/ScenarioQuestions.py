@@ -155,7 +155,7 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.buildings.build_rule(self.building)
+        return scenario.buildings._build_rule(self.building)
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
@@ -176,27 +176,12 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.ages.reached_rule(self.age)
+        return scenario.ages.can_reach(self.age) | scenario.ages.start_past(self.age)
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
         age = self.age.location_name.removeprefix("Reach ")
         return f"{scenario.scenario_name} has reached the {age}"
-
-
-GATHERED = {
-    Resource.WOOD: lambda economy: economy.can_get_wood(),
-    Resource.FOOD: lambda economy: economy.can_get_food(),
-    Resource.GOLD: lambda economy: economy.can_get_gold(),
-    Resource.STONE: lambda economy: economy.can_get_stone(),
-}
-
-GATHERED_EASILY = {
-    Resource.WOOD: lambda economy: economy.can_get_wood_easily(),
-    Resource.FOOD: lambda economy: economy.can_get_food_easily(),
-    Resource.GOLD: lambda economy: economy.can_get_gold_easily(),
-    Resource.STONE: lambda economy: economy.can_get_stone_easily(),
-}
 
 
 @dataclass
@@ -209,6 +194,20 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
 
     resource: Resource
     easy: bool = False
+
+    _GATHERED = {
+        Resource.WOOD: lambda economy: economy._can_get_wood(),
+        Resource.FOOD: lambda economy: economy._can_get_food(),
+        Resource.GOLD: lambda economy: economy._can_get_gold(),
+        Resource.STONE: lambda economy: economy._can_get_stone(),
+    }
+
+    _GATHERED_EASILY = {
+        Resource.WOOD: lambda economy: economy._can_get_wood_easily(),
+        Resource.FOOD: lambda economy: economy._can_get_food_easily(),
+        Resource.GOLD: lambda economy: economy._can_get_gold_easily(),
+        Resource.STONE: lambda economy: economy._can_get_stone_easily(),
+    }
 
     @override
     def key(self) -> tuple:
@@ -229,10 +228,10 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
                 | scenario.economy.market_trades())
 
     def _gathered(self, scenario: 'ScenarioLogic') -> Rule:
-        return GATHERED[self.resource](scenario.economy)
+        return self._GATHERED[self.resource](scenario.economy)
 
     def _gathered_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        return GATHERED_EASILY[self.resource](scenario.economy)
+        return self._GATHERED_EASILY[self.resource](scenario.economy)
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:

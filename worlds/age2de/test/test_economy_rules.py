@@ -44,9 +44,9 @@ class TestSourcesPerScenario(EconomyTestBase):
                                  can_forage=mock.Mock(return_value=False_()),
                                  endless_food=mock.Mock(return_value=False_())):
             self.assertTrue(self.is_false(
-                self.economy(Age2ScenarioData.AP_ATTILA_4).can_get_food_easily()))
+                self.economy(Age2ScenarioData.AP_ATTILA_4)._can_get_food_easily()))
             self.assertFalse(self.is_false(
-                self.economy(Age2ScenarioData.AP_ATTILA_1).can_get_food_easily()))
+                self.economy(Age2ScenarioData.AP_ATTILA_1)._can_get_food_easily()))
 
     def test_food_is_the_sum_of_what_can_be_worked(self):
         """No single source has to carry a map: Joan 2 has 680 of hunt, 1500 of herd and 2125
@@ -56,7 +56,7 @@ class TestSourcesPerScenario(EconomyTestBase):
         for count in (joan_2.hunt_count, joan_2.herd_count, joan_2.bush_count):
             self.assertLess(count, Age2ScenarioData.AP_JOAN_2.demand.food)
         self.assertFalse(self.is_false(
-            self.economy(Age2ScenarioData.AP_JOAN_2).can_get_food_easily()))
+            self.economy(Age2ScenarioData.AP_JOAN_2)._can_get_food_easily()))
 
     def test_a_map_under_the_threshold_is_workable_but_not_abundant(self):
         """Read off ABUNDANT rather than off a scenario, so retuning the thresholds does not
@@ -67,9 +67,9 @@ class TestSourcesPerScenario(EconomyTestBase):
             economy = self.economy(scenario)
             for count, threshold, some, easily in (
                     (counts.gold_count, scenario.demand.gold,
-                     economy.can_mine_some, economy.can_get_gold_easily),
+                     economy.can_mine_some, economy._can_get_gold_easily),
                     (counts.stone_count, scenario.demand.stone,
-                     economy.can_quarry_some, economy.can_get_stone_easily)):
+                     economy.can_quarry_some, economy._can_get_stone_easily)):
                 with self.subTest(f"{scenario.name}:{count}/{threshold}"):
                     # Only the threshold direction belongs here. Whether a map that clears it is
                     # actually workable turns on villagers, which Joan 1 and Joan 5 do not have.
@@ -122,7 +122,7 @@ class TestAttila3Gold(EconomyTestBase):
         attila_3 = Age2ScenarioData.AP_ATTILA_3
         easy = self.resolved(self.economy(attila_3).has_easy_source(Resource.GOLD))
         if attila_3.resources.gold_count < attila_3.demand.gold:
-            self.assertTrue(self.is_false(self.economy(attila_3).can_get_gold_easily()))
+            self.assertTrue(self.is_false(self.economy(attila_3)._can_get_gold_easily()))
         self.assertFalse(easy.always_false, "the lumps should keep gold reachable either way")
 
 
@@ -169,7 +169,7 @@ class TestEndlessFood(EconomyTestBase):
         """A farm is 60 wood and a fish trap 100, forever."""
         self.build()
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        with mock.patch.object(type(attila_1), "can_get_wood_easily", return_value=False_()):
+        with mock.patch.object(type(attila_1), "_can_get_wood_easily", return_value=False_()):
             self.assertTrue(self.is_false(attila_1.endless_food()))
 
 

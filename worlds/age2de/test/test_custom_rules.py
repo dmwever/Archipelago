@@ -34,7 +34,7 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
                 with self.subTest(scenario=scenario.scenario.name, building=building.name):
                     asked = ScenarioCanBuild(scenario=scenario.scenario,
                                              building=building).resolve(world)
-                    direct = scenario.buildings.build_rule(building).resolve(world)
+                    direct = scenario.buildings._build_rule(building).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 
     def test_an_age_question_matches_the_rule_it_stands_for(self):
@@ -43,7 +43,8 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario.scenario.name, age=age.name):
                     asked = ScenarioHasReached(scenario=scenario.scenario, age=age).resolve(world)
-                    direct = scenario.ages.reached_rule(age).resolve(world)
+                    direct = (scenario.ages.can_reach(age)
+                              | scenario.ages.start_past(age)).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 
     def test_asking_twice_gives_the_same_object(self):

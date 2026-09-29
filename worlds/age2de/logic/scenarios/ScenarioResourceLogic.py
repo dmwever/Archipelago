@@ -121,62 +121,12 @@ class ScenarioResourceLogic:
                 & self.scenario.has_building(Age2BuildingData.MONASTERY)
                 & self.scenario.starting_state.starting_relics)
 
-    def can_get_food(self) -> Rule:
-        return (self.can_hunt() | self.can_herd() | self.can_forage() | self.can_fish_some()
                 | self.endless_food())
 
-    def can_get_gold(self) -> Rule:
-        return (self.can_mine_some() | self.can_gather_oysters() | self.can_hunt_whales()
-                | self.can_collect_relics() | self.ally_trade_gold())
-
-    def can_get_stone(self) -> Rule:
-        return self.can_quarry_some()
-
-    def can_get_wood(self) -> Rule:
-        return self.can_chop_some() | self.ally_trade_wood()
-
-    # -- sufficient resources -----------------------------------------------------------------
-
-    def can_get_food_easily(self) -> Rule:
-        raw_food = (
-            (self.can_hunt(), self.counts.hunt_count),
-            (self.can_herd(), self.counts.herd_count),
-            (self.can_forage(), self.counts.bush_count),
-            (self.can_fish_from_shore(), self.counts.shore_fish_count),
-            (self.can_fish_by_boat(), self.counts.deep_fish_count),
-        )
         
         return self.endless_food() | SufficientRawResources(sources=raw_food,
                                                             needed=self.demand.food)
-
-    def can_get_gold_easily(self) -> Rule:
-        raw_gold = (
-            (self.can_mine_some(), self.counts.gold_count),
-            (self.can_gather_oysters(), self.counts.oyster_count),
-            (self.can_hunt_whales(), self.counts.whale_count),
-        )
-
-        return self.ally_trade_gold() | (
-            SufficientRawResources(sources=raw_gold, needed=self.demand.gold)
-            & self.scenario.has_base()
-            & (self.scenario.buildings.can_build_building(Age2BuildingData.MINING_CAMP)
-               | self.scenario.buildings.can_build_multiple_tc()))
-
-    def can_get_stone_easily(self) -> Rule:
-        stone_sources = (
-            (self.can_quarry_some(), self.counts.stone_count),
-        )
-
-        return (SufficientRawResources(sources=stone_sources, needed=self.demand.stone)
-                & self.scenario.has_base()
-                & (self.scenario.buildings.can_build_building(Age2BuildingData.MINING_CAMP)
-                   | self.scenario.buildings.can_build_multiple_tc()))
-
-    def can_get_wood_easily(self) -> Rule:
-        return self.ally_trade_wood() | (
-            self.can_chop_some() & self.scenario.has_base()
-            & (self.scenario.buildings.can_build_building(Age2BuildingData.LUMBER_CAMP)
-               | self.scenario.buildings.can_build_multiple_tc()))
+    # -- food that grows back -----------------------------------------------------------------
 
     def has_infinite_food(self) -> Rule:
         return Or(*[self.scenario.has_building(building) & self.has_job(job)
@@ -189,7 +139,7 @@ class ScenarioResourceLogic:
     def endless_food(self) -> Rule:
         farms = self.has_infinite_food() & self.scenario.buildings.has_food_dropsite()
         traps = self.has_infinite_fish() & self.scenario.buildings.has_fishing_boat_dropsite()
-        return (farms | traps) & self.can_get_wood_easily()
+        return (farms | traps) & self._can_get_wood_easily()
 
     # -- the higher-difficulty stubs ----------------------------------------------------------
 
@@ -197,7 +147,7 @@ class ScenarioResourceLogic:
         if not MARKET_ECONOMY:
             return False_()
         return (self.scenario.has_building(Age2BuildingData.MARKET)
-                & (self.can_get_wood_easily() | self.endless_food()))
+                & (self._can_get_wood_easily() | self.endless_food()))
 
     def ally_trade_gold(self) -> Rule:
         if not ALLY_TRADE:
@@ -235,3 +185,65 @@ class ScenarioResourceLogic:
         if not priced:
             return True_()
         return And(*[self.has_easy_source(resource) for resource in priced])
+
+    # -- what ScenarioHasResource resolves to -------------------------------------------------
+
+    def _can_get_food(self) -> Rule:
+        """What ScenarioHasResource resolves to. Ask it through has_source, not directly: the
+        question also folds in this scenario's declared sources, which this does not know."""
+        return (self.can_hunt() | self.can_herd() | self.can_forage() | self.can_fish_some()
+                | self.endless_food())
+
+    def _can_get_gold(self) -> Rule:
+        return (self.can_mine_some() | self.can_gather_oysters() | self.can_hunt_whales()
+                | self.can_collect_relics() | self.ally_trade_gold())
+
+    def _can_get_stone(self) -> Rule:
+        return self.can_quarry_some()
+
+    def _can_get_wood(self) -> Rule:
+        return self.can_chop_some() | self.ally_trade_wood()
+
+    def _can_get_food_easily(self) -> Rule:
+        """Reached through has_easy_source, with one exception: endless_food and market_trades
+        call the wood one directly, because going through the question would have the wood
+        aggregate ask the market which asks the wood aggregate."""
+        raw_food = (
+            (self.can_hunt(), self.counts.hunt_count),
+            (self.can_herd(), self.counts.herd_count),
+            (self.can_forage(), self.counts.bush_count),
+            (self.can_fish_from_shore(), self.counts.shore_fish_count),
+            (self.can_fish_by_boat(), self.counts.deep_fish_count),
+        )
+
+        return self.endless_food() | SufficientRawResources(sources=raw_food,
+                                                            needed=self.demand.food)
+
+    def _can_get_gold_easily(self) -> Rule:
+        raw_gold = (
+            (self.can_mine_some(), self.counts.gold_count),
+            (self.can_gather_oysters(), self.counts.oyster_count),
+            (self.can_hunt_whales(), self.counts.whale_count),
+        )
+
+        return self.ally_trade_gold() | (
+            SufficientRawResources(sources=raw_gold, needed=self.demand.gold)
+            & self.scenario.has_base()
+            & (self.scenario.buildings.can_build_building(Age2BuildingData.MINING_CAMP)
+               | self.scenario.buildings.can_build_multiple_tc()))
+
+    def _can_get_stone_easily(self) -> Rule:
+        raw_stone = (
+            (self.can_quarry_some(), self.counts.stone_count),
+        )
+
+        return (SufficientRawResources(sources=raw_stone, needed=self.demand.stone)
+                & self.scenario.has_base()
+                & (self.scenario.buildings.can_build_building(Age2BuildingData.MINING_CAMP)
+                   | self.scenario.buildings.can_build_multiple_tc()))
+
+    def _can_get_wood_easily(self) -> Rule:
+        return self.ally_trade_wood() | (
+            self.can_chop_some() & self.scenario.has_base()
+            & (self.scenario.buildings.can_build_building(Age2BuildingData.LUMBER_CAMP)
+               | self.scenario.buildings.can_build_multiple_tc()))

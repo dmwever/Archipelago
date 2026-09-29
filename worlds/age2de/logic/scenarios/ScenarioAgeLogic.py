@@ -58,36 +58,11 @@ class ScenarioAgeLogic:
             self._reach[age] = self._can_reach(age)
         return self._reach[age]
 
-    def _can_reach(self, age: Age2AgeData) -> Rule:
-        from ..ScenarioLogic import DARK_START, VANILLA_AGE_START
         state = self.scenario.starting_state
-        if state.fixed_force or age > state.max_age:
-            return False_()
-        override = state.age_playable.get(age)
-        if override is not None:
-            return override
-        opens_at = self.scenario.scenario.vanilla_age
-        rule = self.climb(age)
-        if age < opens_at:
-            # Below the age it opens in, so it is only ever climbed when the start is pulled back.
-            return rule & DARK_START
-        if age == opens_at:
-            # Standing in it already, unless the start is pulled back - and this is your "the two
-            # buildings can be ignored if the age is started past".
-            return rule | VANILLA_AGE_START
-        return rule
-
     def climb(self, into: Age2AgeData) -> Rule:
         if into not in self._climb:
             self._climb[into] = self._climb_rule(into)
         return self._climb[into]
-
-    def _climb_rule(self, into: Age2AgeData) -> Rule:
-        if into is Age2AgeData.DARK:
-            return True_()   # nowhere to advance from
-        return (self.logic.ages.has_age(into)
-                & self.scenario.buildings.can_build_tc()
-                & self.two_from(PREVIOUS[into]))
 
     def two_from(self, age: Age2AgeData) -> Rule:
         rule: Rule = TwoBuildingsRequirement(
@@ -111,10 +86,6 @@ class ScenarioAgeLogic:
         """
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)
 
-    def reached_rule(self, age: Age2AgeData) -> Rule:
-        """What ScenarioHasReached resolves to. Call it through that, not directly."""
-        return self.can_reach(age) | self.start_past(age)
-
     def start_past(self, age: Age2AgeData) -> Rule:
         from ..ScenarioLogic import VANILLA_AGE_START
         if self.scenario.starting_state.fixed_force:
@@ -122,3 +93,31 @@ class ScenarioAgeLogic:
         if self.scenario.scenario.vanilla_age > age:
             return True_() & VANILLA_AGE_START
         return False_()
+
+    # -- what the scenario questions resolve to, and the memo behind can_reach -----------
+
+    def _can_reach(self, age: Age2AgeData) -> Rule:
+        from ..ScenarioLogic import DARK_START, VANILLA_AGE_START
+        state = self.scenario.starting_state
+        if state.fixed_force or age > state.max_age:
+            return False_()
+        override = state.age_playable.get(age)
+        if override is not None:
+            return override
+        opens_at = self.scenario.scenario.vanilla_age
+        rule = self.climb(age)
+        if age < opens_at:
+            # Below the age it opens in, so it is only ever climbed when the start is pulled back.
+            return rule & DARK_START
+        if age == opens_at:
+            # Standing in it already, unless the start is pulled back - and this is your "the two
+            # buildings can be ignored if the age is started past".
+            return rule | VANILLA_AGE_START
+        return rule
+
+    def _climb_rule(self, into: Age2AgeData) -> Rule:
+        if into is Age2AgeData.DARK:
+            return True_()   # nowhere to advance from
+        return (self.logic.ages.has_age(into)
+                & self.scenario.buildings.can_build_tc()
+                & self.two_from(PREVIOUS[into]))

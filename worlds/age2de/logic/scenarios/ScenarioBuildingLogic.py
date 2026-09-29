@@ -34,16 +34,6 @@ class ScenarioBuildingLogic:
             return False_()   # not this civilisation's to put up, and that is free to answer
         return ScenarioCanBuild(scenario=self.scenario.scenario, building=building)
 
-    def build_rule(self, building: Age2BuildingData) -> Rule:
-        """What ScenarioCanBuild resolves to. Call it through that, not directly."""
-        rule = (self.buildings.has_building(building)
-                & self.buildings.has_prerequisites(building)
-                & self.scenario.has_vils()
-                & self.scenario.ages.has_reached(building.age))
-        if building in WATER_BUILDINGS:
-            rule = rule & self.scenario.has_water_access()
-        return rule
-
     def can_build_anything(self) -> Rule:
         return Or(*[self.can_build_building(building) for building in Age2BuildingData
                     if self.scenario.civilization.can_build(building)])
@@ -89,3 +79,15 @@ class ScenarioBuildingLogic:
 
     def has_fisherman_dropsite(self) -> Rule:
         return self.has_food_dropsite() | self.scenario.has_building(Age2BuildingData.DOCK)
+
+    # -- what the scenario questions resolve to ------------------------------------------
+
+    def _build_rule(self, building: Age2BuildingData) -> Rule:
+        """What ScenarioCanBuild resolves to. Call it through that, not directly."""
+        rule = (self.buildings.has_building(building)
+                & self.buildings.has_prerequisites(building)
+                & self.scenario.has_vils()
+                & self.scenario.ages.has_reached(building.age))
+        if building in WATER_BUILDINGS:
+            rule = rule & self.scenario.has_water_access()
+        return rule
