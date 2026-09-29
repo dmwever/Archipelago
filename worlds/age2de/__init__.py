@@ -25,7 +25,7 @@ from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
 from .locations.connections.UnitBuildings import BUILDING_TO_UNITS
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
-                                    CivilizationUnits, ScenarioResources,
+                                    CivilizationUnits, GameCosts, ScenarioResources,
                                     ScenarioStartupUnits,
                                     ScenarioTriggerUnits, UnitBuildings,
                                     UnitCounters,

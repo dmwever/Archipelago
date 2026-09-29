@@ -6,6 +6,7 @@ from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
 from ..Options import Caveman, ShuffleVillager, Unitsanity, UnitsanityItems
+from ..items.Items import Age2ItemData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
@@ -78,6 +79,11 @@ class UnitLogic:
         return Or(*ways)
 
     # -- villagers ---------------------------------------------------------------------------
+
+    def villager_food(self) -> Rule:
+        if self.world.options.shuffle_villager == ShuffleVillager.option_no:
+            return True_()
+        return Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
 
     def has_profession_item(self, job: Age2VillagerJobData) -> Rule:
         if self.world.options.shuffle_villager != ShuffleVillager.option_include_professions:

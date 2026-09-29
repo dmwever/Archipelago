@@ -15,6 +15,9 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
 
+VILLAGER_LINES = (Age2UnitLineData.VILLAGER_MALE_LINE, Age2UnitLineData.VILLAGER_FEMALE_LINE)
+
+
 
 
 class ScenarioUnitLogic:
@@ -34,8 +37,12 @@ class ScenarioUnitLogic:
         somewhere = Or(*[self.scenario.has_building(building)
                          for building in unit.buildings
                          if self.scenario.civilization.can_build(building)])
-        return (self.logic.units.has_unit_items(unit) & self.has_upgrade_tech(unit)
-                & somewhere & self.scenario.ages.has_reached(unit.age))
+        rule = (self.logic.units.has_unit_items(unit) & self.has_upgrade_tech(unit)
+                & somewhere & self.scenario.ages.has_reached(unit.age)
+                & self.scenario.economy.can_afford(unit.cost))
+        if unit.line in VILLAGER_LINES:
+            rule = rule & self.logic.units.villager_food()
+        return rule
 
     def upgraded_away(self, unit: Age2UnitData) -> bool:
         for successor in unit.line.units:
@@ -62,7 +69,13 @@ class ScenarioUnitLogic:
         tiers = self.fieldable_tiers(line, age)
         if not tiers:
             return False_()
-        return Or(*[self.can_train(unit) for unit in tiers]) & self.scenario.has_base()
+        sustained: dict = {}
+        for unit in tiers:
+            for resource, amount in unit.cost.items():
+                if amount > 0:
+                    sustained[resource] = max(sustained.get(resource, 0), amount)
+        return (Or(*[self.can_train(unit) for unit in tiers]) & self.scenario.has_base()
+                & self.scenario.economy.can_sustain(sustained))
 
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
         return Or(*[self.can_field(line, age) for line in target.countered_by])

@@ -37,6 +37,7 @@ class Age2UnitData(enum.IntEnum):
         self.upgrade_tech: 'Age2TechData' = None
         self.variant_game_ids: list[int] = []
         self.upgrade_tokens: list['Age2ItemData'] = []
+        self.cost: dict = {}
 
     # 300 - 799 = Units. Ids are assigned in ascending game_id order.
     ARCHER                      = 300, "Own Archer", "Archer", 4, Age2AgeData.FEUDAL, UnitType.unit, 0

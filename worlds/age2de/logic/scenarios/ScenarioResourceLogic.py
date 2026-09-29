@@ -92,11 +92,19 @@ class ScenarioResourceLogic:
                 & self.has_job(Job.FISHERMAN_MALE)
                 & self.scenario.starting_state.starting_fish)
 
+    def can_crew_fishing_ships(self) -> Rule:
+        ship = Age2UnitData.FISHING_SHIP
+        return (self.logic.units.has_unit_items(ship)
+                & self.scenario.ages.has_reached(ship.age)
+                & (self.can_gather_wood()
+                   | self.logic.resources.has_amount(Resource.WOOD,
+                                                     ship.cost.get(Resource.WOOD, 0))))
+
     def can_fish_by_boat(self) -> Rule:
         if not self.counts.fish_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.scenario.units.can_train(Age2UnitData.FISHING_SHIP)
+                & self.can_crew_fishing_ships()
                 & self.scenario.starting_state.starting_fish)
 
     def can_fish_some(self) -> Rule:
@@ -113,14 +121,18 @@ class ScenarioResourceLogic:
         if not self.counts.whale_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.scenario.units.can_train(Age2UnitData.FISHING_SHIP)
+                & self.can_crew_fishing_ships()
                 & self.scenario.starting_state.starting_whales)
 
     def can_collect_relics(self) -> Rule:
         if not self.counts.relic_count:
             return False_()
-        return (self.scenario.units.can_train(Age2UnitData.MONK)
-                & self.scenario.has_building(Age2BuildingData.MONASTERY)
+        monk = Age2UnitData.MONK
+        return (self.scenario.has_building(Age2BuildingData.MONASTERY)
+                & self.logic.units.has_unit_items(monk)
+                & self.scenario.ages.has_reached(monk.age)
+                & self.logic.resources.has_amount(Resource.GOLD,
+                                                  monk.cost.get(Resource.GOLD, 0))
                 & self.scenario.starting_state.starting_relics)
 
     def can_gather_gold(self) -> Rule:
@@ -139,7 +151,7 @@ class ScenarioResourceLogic:
                     for building, job in RENEWABLE_FOOD])
 
     def has_infinite_fish(self) -> Rule:
-        return (self.scenario.units.can_train(Age2UnitData.FISHING_SHIP)
+        return (self.can_crew_fishing_ships()
                 & self.scenario.has_building(Age2BuildingData.FISH_TRAP))
 
     def endless_food(self) -> Rule:
