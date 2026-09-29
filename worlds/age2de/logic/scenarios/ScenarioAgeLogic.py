@@ -58,7 +58,6 @@ class ScenarioAgeLogic:
             self._reach[age] = self._can_reach(age)
         return self._reach[age]
 
-        state = self.scenario.starting_state
     def climb(self, into: Age2AgeData) -> Rule:
         if into not in self._climb:
             self._climb[into] = self._climb_rule(into)
