@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cache
 from typing import TYPE_CHECKING, ClassVar, override
 
 from BaseClasses import CollectionState
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
     from ... import Age2World
 
 
+@cache
 def contributors(resource: Resource) -> tuple[tuple[str, int], ...]:
     """Every item that adds to the pile a scenario opens with, and what each one adds. The three
     town-centre items are the guaranteed floor: one of each is always pooled."""

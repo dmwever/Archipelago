@@ -265,3 +265,12 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
     def describe(self, scenario: Age2ScenarioData) -> str:
         adverb = "easily " if self.easy else ""
         return f"{scenario.scenario_name} can {adverb}gather {self.resource.name.lower()}"
+
+
+def _question_identity(self: ScenarioQuestion.Resolved) -> int:
+    """Hash a question by what it asks, not by the answer behind it."""
+    return hash((type(self).__module__, self.rule_name, self.player, self.description,
+                 id(self.answer)))
+
+
+ScenarioQuestion.Resolved.__hash__ = _question_identity
