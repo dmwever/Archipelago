@@ -44,7 +44,7 @@ class Age2BuildingData(enum.IntEnum):
     MARKET =                210, "Build Market", Age2ItemData.MARKET, Age2AgeData.FEUDAL, [BuildingOption.economy]
     UNIVERSITY =            211, "Build University", Age2ItemData.UNIVERSITY, Age2AgeData.CASTLE, [BuildingOption.tech]
     BLACKSMITH =            212, "Build Blacksmith", Age2ItemData.BLACKSMITH, Age2AgeData.FEUDAL, [BuildingOption.tech]
-    MONASTERY =             213, "Build Monastery", Age2ItemData.MONASTERY, Age2AgeData.CASTLE, [BuildingOption.tech]
+    MONASTERY =             213, "Build Monastery", Age2ItemData.MONASTERY, Age2AgeData.CASTLE, [BuildingOption.military]
 
     BARRACKS =              214, "Build Barracks", Age2ItemData.BARRACKS, Age2AgeData.DARK, [BuildingOption.military]
     ARCHERY_RANGE =         215, "Build Archery Range", Age2ItemData.ARCHERY_RANGE, Age2AgeData.FEUDAL, [BuildingOption.military]
@@ -62,7 +62,7 @@ class Age2BuildingData(enum.IntEnum):
     FOLWARK =               225, "Build Folwark", Age2ItemData.FOLWARK, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.economy]
     MULE_CART =             226, "Build Mule Cart", Age2ItemData.MULE_CART, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.economy]
     PASTURE =               227, "Build Pasture", Age2ItemData.PASTURE, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.economy]
-    HARBOR =                228, "Build Harbor", Age2ItemData.HARBOR, Age2AgeData.CASTLE, [BuildingOption.unique, BuildingOption.economy]
+    HARBOR =                228, "Build Harbor", Age2ItemData.HARBOR, Age2AgeData.CASTLE, [BuildingOption.unique, BuildingOption.economy, BuildingOption.military]
     CARAVANSERAI =          229, "Build Caravanserai", Age2ItemData.CARAVANSERAI, Age2AgeData.IMPERIAL, [BuildingOption.unique, BuildingOption.economy]
     FEITORIA =              230, "Build Feitoria", Age2ItemData.FEITORIA, Age2AgeData.IMPERIAL, [BuildingOption.unique, BuildingOption.economy]
     SETTLEMENT =            231, "Build Settlement", Age2ItemData.SETTLEMENT, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.economy]
