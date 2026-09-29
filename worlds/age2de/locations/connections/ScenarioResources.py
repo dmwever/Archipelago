@@ -1,34 +1,17 @@
-"""What each scenario's map can yield, in resource units rather than object counts.
-
-Scanned once out of the loose .aoe2scenario files with the vendored AoE2ScenarioParser, then
-owned by hand. Re-scanning is a throwaway job, not a build step: these numbers change only when
-someone re-authors a map, and a human has to look at the result anyway, because the scanner
-counts objects and cannot see which of them a player can actually reach.
-
-Per-object yields used for the first pass: gold mine 800, stone mine 350, forage bush 125,
-deer 140, wild boar 340, iron boar 400, sheep 100, goat 100, shore fish 200, perch 200,
-dorado/salmon/tuna/snapper 225, marlin 350, dolphin 350, box turtles 200 (as shore fish),
-oyster 450 gold, whale 1000 gold.
-"""
-
 from dataclasses import dataclass
 
-from .Scenarios import Age2ScenarioData
+from ..Scenarios import Age2ScenarioData
+
+
+@dataclass(frozen=True)
+class ScenarioResourceDemand:
+    gold: int = 3000
+    stone: int = 1000
+    food: int = 10000
 
 
 @dataclass(frozen=True)
 class ScenarioResourceCount:
-    """One map's yield. Lumber has no field on purpose: every one of these maps carries
-    thousands of trees, so wood is never what runs out, and a number would invite false
-    precision.
-
-    fish_count INCLUDES shore_fish_count - a fishing ship can reach everything a villager can.
-    Do not add the two together.
-
-    relic_count is an object count, not a value: relic gold trickles in for as long as you hold
-    the relic, so what matters to logic is whether there are any, not a lump sum.
-    """
-
     gold_count: int
     stone_count: int
     hunt_count: int
@@ -41,10 +24,26 @@ class ScenarioResourceCount:
     relic_count: int
 
     @property
+    def deep_fish_count(self) -> int:
+        """What only a fishing ship can reach."""
+        return self.fish_count - self.shore_fish_count
+
+    @property
     def food_count(self) -> int:
         """Every edible thing on the map, counting each shore fish once."""
         return self.hunt_count + self.herd_count + self.bush_count + self.fish_count
 
+for _scenario in Age2ScenarioData:
+    _scenario.demand = ScenarioResourceDemand()
+
+Age2ScenarioData.AP_ATTILA_1.demand = ScenarioResourceDemand()
+Age2ScenarioData.AP_ATTILA_2.demand = ScenarioResourceDemand()
+Age2ScenarioData.AP_ATTILA_3.demand = ScenarioResourceDemand()
+Age2ScenarioData.AP_ATTILA_4.demand = ScenarioResourceDemand(gold=9000, stone=2000, food=25000)
+Age2ScenarioData.AP_ATTILA_5.demand = ScenarioResourceDemand()
+Age2ScenarioData.AP_ATTILA_6.demand = ScenarioResourceDemand()
+Age2ScenarioData.AP_JOAN_1.demand = ScenarioResourceDemand()
+# etc
 
 Age2ScenarioData.AP_ATTILA_1.resources = ScenarioResourceCount(
     gold_count=44000, stone_count=10150,
