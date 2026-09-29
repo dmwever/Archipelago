@@ -13,15 +13,6 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
 
-WATER_BUILDINGS: frozenset[Age2BuildingData] = frozenset({
-    Age2BuildingData.DOCK,
-    Age2BuildingData.HARBOR,
-    Age2BuildingData.FISH_TRAP,
-})
-"""Buildings that need a shoreline. The fish trap is in here rather than leaning on its dock
-prerequisite, which is answered by the global has_building and never sees the scenario."""
-
-
 class ScenarioBuildingLogic:
     def __init__(self, scenario: 'ScenarioLogic'):
         self.scenario = scenario
@@ -79,15 +70,3 @@ class ScenarioBuildingLogic:
 
     def has_fisherman_dropsite(self) -> Rule:
         return self.has_food_dropsite() | self.scenario.has_building(Age2BuildingData.DOCK)
-
-    # -- what the scenario questions resolve to ------------------------------------------
-
-    def _build_rule(self, building: Age2BuildingData) -> Rule:
-        """What ScenarioCanBuild resolves to. Call it through that, not directly."""
-        rule = (self.buildings.has_building(building)
-                & self.buildings.has_prerequisites(building)
-                & self.scenario.has_vils()
-                & self.scenario.ages.has_reached(building.age))
-        if building in WATER_BUILDINGS:
-            rule = rule & self.scenario.has_water_access()
-        return rule

@@ -32,9 +32,9 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
                 if not scenario.civilization.can_build(building):
                     continue
                 with self.subTest(scenario=scenario.scenario.name, building=building.name):
-                    asked = ScenarioCanBuild(scenario=scenario.scenario,
-                                             building=building).resolve(world)
-                    direct = scenario.buildings._build_rule(building).resolve(world)
+                    question = ScenarioCanBuild(scenario=scenario.scenario, building=building)
+                    asked = question.resolve(world)
+                    direct = question.answer(scenario).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 
     def test_an_age_question_matches_the_rule_it_stands_for(self):

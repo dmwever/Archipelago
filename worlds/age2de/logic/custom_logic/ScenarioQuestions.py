@@ -8,6 +8,8 @@ from NetUtils import JSONMessagePart
 
 from rule_builder.rules import Rule
 
+from .SufficientRawResources import SufficientRawResources
+
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
@@ -149,13 +151,28 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
 
     building: Age2BuildingData
 
+    _WATER_BUILDINGS = frozenset({
+        Age2BuildingData.DOCK,
+        Age2BuildingData.HARBOR,
+        Age2BuildingData.FISH_TRAP,
+    })
+    """Buildings that need a shoreline. The fish trap is in here rather than leaning on its dock
+    prerequisite, which is answered by the global has_building and never sees the scenario."""
+
     @override
     def key(self) -> tuple:
         return (type(self).__name__, self.scenario, self.building)
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.buildings._build_rule(self.building)
+        buildings = scenario.logic.buildings
+        rule = (buildings.has_building(self.building)
+                & buildings.has_prerequisites(self.building)
+                & scenario.has_vils()
+                & scenario.ages.has_reached(self.building.age))
+        if self.building in self._WATER_BUILDINGS:
+            rule = rule & scenario.has_water_access()
+        return rule
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
@@ -195,20 +212,6 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
     resource: Resource
     easy: bool = False
 
-    _GATHERED = {
-        Resource.WOOD: lambda economy: economy._can_get_wood(),
-        Resource.FOOD: lambda economy: economy._can_get_food(),
-        Resource.GOLD: lambda economy: economy._can_get_gold(),
-        Resource.STONE: lambda economy: economy._can_get_stone(),
-    }
-
-    _GATHERED_EASILY = {
-        Resource.WOOD: lambda economy: economy._can_get_wood_easily(),
-        Resource.FOOD: lambda economy: economy._can_get_food_easily(),
-        Resource.GOLD: lambda economy: economy._can_get_gold_easily(),
-        Resource.STONE: lambda economy: economy._can_get_stone_easily(),
-    }
-
     @override
     def key(self) -> tuple:
         return (type(self).__name__, self.scenario, self.resource, self.easy)
@@ -218,20 +221,90 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
         return self._easily(scenario) if self.easy else self._at_all(scenario)
 
     def _at_all(self, scenario: 'ScenarioLogic') -> Rule:
-        return (self._gathered(scenario)
+        return (self._GATHERED[self.resource](self, scenario)
                 | scenario.starting_state.resource_sources[self.resource]
                 | self._easily(scenario))
 
     def _easily(self, scenario: 'ScenarioLogic') -> Rule:
-        return (self._gathered_easily(scenario)
+        return (self._GATHERED_EASILY[self.resource](self, scenario)
                 | scenario.starting_state.easy_resource_sources[self.resource]
                 | scenario.economy.market_trades())
 
-    def _gathered(self, scenario: 'ScenarioLogic') -> Rule:
-        return self._GATHERED[self.resource](scenario.economy)
+    def _food(self, scenario: 'ScenarioLogic') -> Rule:
+        economy = scenario.economy
+        return (economy.can_hunt() | economy.can_herd() | economy.can_forage()
+                | economy.can_fish_some() | economy.endless_food())
 
-    def _gathered_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        return self._GATHERED_EASILY[self.resource](scenario.economy)
+    def _gold(self, scenario: 'ScenarioLogic') -> Rule:
+        economy = scenario.economy
+        return (economy.can_mine_some() | economy.can_gather_oysters()
+                | economy.can_hunt_whales() | economy.can_collect_relics()
+                | economy.ally_trade_gold())
+
+    def _stone(self, scenario: 'ScenarioLogic') -> Rule:
+        return scenario.economy.can_quarry_some()
+
+    def _wood(self, scenario: 'ScenarioLogic') -> Rule:
+        return scenario.economy.can_chop_some() | scenario.economy.ally_trade_wood()
+
+    def _food_easily(self, scenario: 'ScenarioLogic') -> Rule:
+        economy, counts = scenario.economy, scenario.scenario.resources
+        raw_food = (
+            (economy.can_hunt(), counts.hunt_count),
+            (economy.can_herd(), counts.herd_count),
+            (economy.can_forage(), counts.bush_count),
+            (economy.can_fish_from_shore(), counts.shore_fish_count),
+            (economy.can_fish_by_boat(), counts.deep_fish_count),
+        )
+
+        return economy.endless_food() | SufficientRawResources(
+            sources=raw_food, needed=scenario.scenario.demand.food)
+
+    def _gold_easily(self, scenario: 'ScenarioLogic') -> Rule:
+        economy, counts = scenario.economy, scenario.scenario.resources
+        raw_gold = (
+            (economy.can_mine_some(), counts.gold_count),
+            (economy.can_gather_oysters(), counts.oyster_count),
+            (economy.can_hunt_whales(), counts.whale_count),
+        )
+
+        return economy.ally_trade_gold() | (
+            SufficientRawResources(sources=raw_gold, needed=scenario.scenario.demand.gold)
+            & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
+
+    def _stone_easily(self, scenario: 'ScenarioLogic') -> Rule:
+        economy, counts = scenario.economy, scenario.scenario.resources
+        raw_stone = (
+            (economy.can_quarry_some(), counts.stone_count),
+        )
+
+        return (SufficientRawResources(sources=raw_stone,
+                                       needed=scenario.scenario.demand.stone)
+                & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
+
+    def _wood_easily(self, scenario: 'ScenarioLogic') -> Rule:
+        """The one the economy keeps for itself: endless_food and market_trades ask for it
+        directly, because reaching it through this question would have the wood aggregate ask
+        the market which asks the wood aggregate."""
+        return scenario.economy.can_get_wood_easily()
+
+    def _at_scale(self, scenario: 'ScenarioLogic', camp: Age2BuildingData) -> Rule:
+        return (scenario.buildings.can_build_building(camp)
+                | scenario.buildings.can_build_multiple_tc())
+
+    _GATHERED = {
+        Resource.WOOD: _wood,
+        Resource.FOOD: _food,
+        Resource.GOLD: _gold,
+        Resource.STONE: _stone,
+    }
+
+    _GATHERED_EASILY = {
+        Resource.WOOD: _wood_easily,
+        Resource.FOOD: _food_easily,
+        Resource.GOLD: _gold_easily,
+        Resource.STONE: _stone_easily,
+    }
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
