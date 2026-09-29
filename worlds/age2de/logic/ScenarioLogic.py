@@ -90,8 +90,9 @@ class ScenarioLogic:
     
     def has_base(self) -> Rule:
         villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
-        return ((self.starting_state.has_base | self.buildings.can_build_base())
-                & self.logic.resources.has_amount(villager_food.type, villager_food.amount))
+        starts_with_base = (self.starting_state.has_base
+                   & self.logic.resources.has_amount(villager_food.type, villager_food.amount))
+        return starts_with_base | self.buildings.can_build_base()
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access

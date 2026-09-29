@@ -1,3 +1,4 @@
+from BaseClasses import CollectionState
 from test.general import setup_multiworld
 
 from rule_builder.rules import Rule
@@ -223,3 +224,50 @@ class TestMultipleSlots(Age2RuleTestBase):
         self.assertEqual(
             set(second.get_entrance("Mill").access_rule.item_dependencies()),
             set(alone.get_entrance("Mill").access_rule.item_dependencies()))
+
+
+class TestAgeEventsNeedAClimb(Age2RuleTestBase):
+    """An age advancement location can only be sent by researching the age in game. A scenario
+    that opens at or above it hands it to you instead, and counting that let a seed place
+    progression behind an age the player never has to reach.
+    """
+
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def unlocks_only(self) -> CollectionState:
+        """Everything that merely opens or advances a scenario, and nothing else.
+
+        The per-scenario unlocks are event items placed on event locations, so they cannot be
+        collected out of the itempool - they are granted by name here.
+        """
+        state = CollectionState(self.multiworld)
+        held = state.prog_items[self.world.player]
+        for location in self.multiworld.get_locations(self.world.player):
+            if location.item is not None and location.item.code is None:
+                held[location.item.name] += 1
+        for item in self.multiworld.itempool:
+            if "Progressive" in item.name or "Campaign" in item.name:
+                held[item.name] += len(self.multiworld.get_locations(self.world.player))
+        for item in self.multiworld.precollected_items[self.world.player]:
+            held[item.name] += 1
+        return state
+
+    def test_unlocking_scenarios_does_not_reach_an_age(self):
+        self.build(shuffle_ages=True)
+        state = self.unlocks_only()
+        for age in SHUFFLED_AGES:
+            with self.subTest(age.name):
+                rule = self.world.rules.logic.can_reach_age_anywhere(age).resolve(self.world)
+                self.assertFalse(rule(state),
+                                 f"{age.name} is reachable on scenario unlocks alone, so a seed "
+                                 "can hide progression behind an age nobody has to research")
+
+    def test_an_age_is_still_reachable_the_honest_way(self):
+        """The strictness has to bite without closing the age off altogether."""
+        self.build(shuffle_ages=True)
+        state = self.state_without()
+        for age in SHUFFLED_AGES:
+            with self.subTest(age.name):
+                rule = self.world.rules.logic.can_reach_age_anywhere(age).resolve(self.world)
+                self.assertTrue(rule(state))
