@@ -23,8 +23,10 @@ class ResourceLogic:
         return HasResourceAmount(resource=resource, amount=ceil(amount))
 
     def has_amounts(self, costs: Mapping[Resource, float]) -> Rule:
-        return And(*[self.has_amount(resource, amount)
-                     for resource, amount in costs.items() if amount > 0])
+        priced = [resource for resource, amount in costs.items() if amount > 0]
+        if not priced:
+            return True_()
+        return And(*[self.has_amount(resource, costs[resource]) for resource in priced])
 
     def available(self, resource: Resource) -> int:
         return self.world.starting_resource_totals[resource]

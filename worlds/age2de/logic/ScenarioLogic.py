@@ -11,6 +11,7 @@ from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, Rule, True_
 
 from ..Options import ExistingTechs
+from ..items.Items import Resource
 from ..locations.Ages import Age2AgeData
 
 
@@ -35,6 +36,21 @@ class ScenarioStartingState:
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
     fixed_force: bool = False
+    starting_gold_mine: Rule = field(default_factory=lambda: True_())
+    starting_stone_mine: Rule = field(default_factory=lambda: True_())
+    starting_trees: Rule = field(default_factory=lambda: True_())
+    starting_bushes: Rule = field(default_factory=lambda: True_())
+    starting_hunting: Rule = field(default_factory=lambda: True_())
+    starting_fish: Rule = field(default_factory=lambda: True_())
+    starting_sheep: Rule = field(default_factory=lambda: True_())
+    starting_oysters: Rule = field(default_factory=lambda: False_())
+    starting_whales: Rule = field(default_factory=lambda: False_())
+    starting_relics: Rule = field(default_factory=lambda: True_())
+    trading_ally: Rule = field(default_factory=lambda: False_())
+    resource_sources: dict[Resource, Rule] = field(
+        default_factory=lambda: {resource: False_() for resource in Resource})
+    easy_resource_sources: dict[Resource, Rule] = field(
+        default_factory=lambda: {resource: False_() for resource in Resource})
 
     def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
         from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
@@ -59,6 +75,7 @@ class ScenarioLogic:
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
+        from .scenarios.ScenarioResourceLogic import ScenarioResourceLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
         self.civilization = ScenarioCivilizationLogic(self)
         self.ages = ScenarioAgeLogic(self)
@@ -66,6 +83,7 @@ class ScenarioLogic:
         self.military = ScenarioMilitaryLogic(self)
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
+        self.economy = ScenarioResourceLogic(self)
     
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils

@@ -7,8 +7,8 @@ of facts the logic layer will lean on.
 
 import unittest
 
-from ..locations import ScenarioResources  # noqa: F401  - assigns .resources on import
-from ..locations.ScenarioResources import ScenarioResourceCount
+from ..locations.connections import ScenarioResources  # noqa: F401  - assigns on import
+from ..locations.connections.ScenarioResources import ScenarioResourceCount
 from ..locations.Scenarios import Age2ScenarioData
 
 

@@ -2,7 +2,7 @@ from rule_builder.rules import Has, Rule, True_
 from ...locations.Buildings import Age2BuildingData
 from worlds.age2de.logic.attila.attila_3 import Attila3StartingState
 
-from ...items.Items import Age2ItemData
+from ...items.Items import Age2ItemData, Resource
 from ...locations.Locations import Age2ScenarioLocationData
 from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
@@ -16,12 +16,8 @@ class Attila3Rules(ScenarioRules):
     
     def set_rules(self):
         super().set_rules()
-        can_beat_red: Rule = self.scenario_logic.has_base()
-        can_beat_green: Rule = self.scenario_logic.has_base()
-        has_green_gold: Rule = can_beat_green & Has(Age2ItemData.AP_ATTILA_3_GREEN_GOLD.item_name)
-        has_red_gold: Rule = can_beat_red & Has(Age2ItemData.AP_ATTILA_3_RED_GOLD.item_name)
-        has_some_gold: Rule = self.scenario_logic.buildings.can_mine() | has_green_gold | has_red_gold
-        has_much_gold: Rule = self.scenario_logic.buildings.can_mine() & has_green_gold & has_red_gold
+        has_some_gold: Rule = self.scenario_logic.economy.has_source(Resource.GOLD)
+        has_much_gold: Rule = self.scenario_logic.economy.has_easy_source(Resource.GOLD)
         can_win_water: Rule = self.scenario_logic.military.has_navy() & has_some_gold
         can_beat_blue: Rule = self.scenario_logic.military.has_siege() & has_much_gold
         

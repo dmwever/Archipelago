@@ -8,6 +8,7 @@ from NetUtils import JSONMessagePart
 
 from rule_builder.rules import Rule
 
+from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
@@ -181,3 +182,59 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
     def describe(self, scenario: Age2ScenarioData) -> str:
         age = self.age.location_name.removeprefix("Reach ")
         return f"{scenario.scenario_name} has reached the {age}"
+
+
+GATHERED = {
+    Resource.WOOD: lambda economy: economy.can_get_wood(),
+    Resource.FOOD: lambda economy: economy.can_get_food(),
+    Resource.GOLD: lambda economy: economy.can_get_gold(),
+    Resource.STONE: lambda economy: economy.can_get_stone(),
+}
+
+GATHERED_EASILY = {
+    Resource.WOOD: lambda economy: economy.can_get_wood_easily(),
+    Resource.FOOD: lambda economy: economy.can_get_food_easily(),
+    Resource.GOLD: lambda economy: economy.can_get_gold_easily(),
+    Resource.STONE: lambda economy: economy.can_get_stone_easily(),
+}
+
+
+@dataclass
+class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario can bring a resource in at all, or bring it in freely.
+
+    Eight per scenario against roughly five thousand call sites, which is the whole reason this
+    is a question rather than a rule built in place.
+    """
+
+    resource: Resource
+    easy: bool = False
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.resource, self.easy)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        return self._easily(scenario) if self.easy else self._at_all(scenario)
+
+    def _at_all(self, scenario: 'ScenarioLogic') -> Rule:
+        return (self._gathered(scenario)
+                | scenario.starting_state.resource_sources[self.resource]
+                | self._easily(scenario))
+
+    def _easily(self, scenario: 'ScenarioLogic') -> Rule:
+        return (self._gathered_easily(scenario)
+                | scenario.starting_state.easy_resource_sources[self.resource]
+                | scenario.economy.market_trades())
+
+    def _gathered(self, scenario: 'ScenarioLogic') -> Rule:
+        return GATHERED[self.resource](scenario.economy)
+
+    def _gathered_easily(self, scenario: 'ScenarioLogic') -> Rule:
+        return GATHERED_EASILY[self.resource](scenario.economy)
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        adverb = "easily " if self.easy else ""
+        return f"{scenario.scenario_name} can {adverb}gather {self.resource.name.lower()}"
