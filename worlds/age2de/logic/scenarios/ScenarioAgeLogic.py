@@ -32,19 +32,6 @@ PREVIOUS: dict[Age2AgeData, Age2AgeData] = {
 
 
 class ScenarioAgeLogic:
-    """Which ages can be played here, and what advancing costs.
-
-    The climb used to be item-level and shared: `has_age(item) & two of these building **items** &
-    can_build_tc(items)`. Holding a Stable is not having one, so most scenarios could advance an
-    age with no villagers at all - twenty-odd rows carried no villager term, and Attila 1 was the
-    only one that did. Asking `scenario.buildings.can_build_building` instead folds in the
-    villagers, the civilisation and the age below, all at once.
-
-    It terminates because each age asks only about the one beneath it, and the Dark Age asks
-    nothing. The answers are cached because the tree is broad: Imperial reaches four Castle
-    buildings, each of which reaches four Feudal ones.
-    """
-
     def __init__(self, scenario: 'ScenarioLogic'):
         self.scenario = scenario
         self.logic = scenario.logic
@@ -73,16 +60,6 @@ class ScenarioAgeLogic:
         return rule
 
     def has_reached(self, age: Age2AgeData) -> Rule:
-        """At or past that age here, which is what anything age-gated actually wants.
-
-        A Mill stays buildable in the Imperial Age, a Man-at-Arms stays trainable, and Loom stays
-        researched - none of them cares whether you are standing in the Dark Age, only whether you
-        got that far. `can_reach` is the narrower question, and only a research or advancement
-        **event** wants it.
-
-        Climbing to a higher age necessarily passes through this one, so this needs no disjunct
-        per age above: reaching it, or opening above it, is the whole of it.
-        """
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)
 
     def start_past(self, age: Age2AgeData) -> Rule:
@@ -94,6 +71,16 @@ class ScenarioAgeLogic:
         return False_()
 
     # -- what the scenario questions resolve to, and the memo behind can_reach -----------
+
+    def can_research(self, age: Age2AgeData) -> Rule:
+        from ..ScenarioLogic import DARK_START
+        state = self.scenario.starting_state
+        if state.fixed_force or age > state.max_age:
+            return False_()
+        rule = self.climb(age)
+        if age <= self.scenario.scenario.vanilla_age:
+            return rule & DARK_START
+        return rule
 
     def _can_reach(self, age: Age2AgeData) -> Rule:
         from ..ScenarioLogic import DARK_START, VANILLA_AGE_START

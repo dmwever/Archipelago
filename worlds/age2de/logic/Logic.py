@@ -69,7 +69,6 @@ class Logic:
                 for scenario in self.scenarios])
         
         self._by_scenario = {logic.scenario: logic for logic in self.scenarios}
-        self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
         
         self.goal = GoalLogic(self, world)
