@@ -121,11 +121,6 @@ class ScenarioResourceLogic:
                 & self.scenario.has_building(Age2BuildingData.MONASTERY)
                 & self.scenario.starting_state.starting_relics)
 
-                | self.endless_food())
-
-        
-        return self.endless_food() | SufficientRawResources(sources=raw_food,
-                                                            needed=self.demand.food)
     # -- food that grows back -----------------------------------------------------------------
 
     def has_infinite_food(self) -> Rule:
