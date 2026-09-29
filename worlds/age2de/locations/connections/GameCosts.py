@@ -1,13 +1,3 @@
-"""What units and technologies cost.
-
-Generated once from the aoe2techtree data dump, then owned by hand. Cross-checked at generation
-against the thirty-five building costs hand-authored in Items.py: thirty-four agreed exactly, and
-the one that did not is the Palisade Gate, 20 wood here against 30 in the dump.
-
-Nothing here reaches the game. A cost is a logic-side question - whether a scenario could pay for
-a unit or a technology - and the XS side never sees one.
-"""
-
 from ...items.Items import Resource
 from ..Techs import Age2TechData
 from ..Units import Age2UnitData
