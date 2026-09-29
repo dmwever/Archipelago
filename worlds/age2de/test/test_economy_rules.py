@@ -11,7 +11,7 @@ from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
-from ..rules.custom_rules.ScenarioQuestions import ScenarioHasResource
+from ..logic.custom_logic.ScenarioQuestions import ScenarioHasResource
 
 
 class EconomyTestBase(bases.Age2RuleTestBase):

@@ -6,8 +6,8 @@ from rule_builder.rules import False_, Rule, True_
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from ...rules.custom_rules.ScenarioQuestions import ScenarioHasReached
-from ...rules.custom_rules.TwoBuildings import TwoBuildingsRequirement
+from ..custom_logic.ScenarioQuestions import ScenarioHasReached
+from ..custom_logic.TwoBuildings import TwoBuildingsRequirement
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic

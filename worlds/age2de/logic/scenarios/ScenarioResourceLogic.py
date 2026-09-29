@@ -8,8 +8,8 @@ from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
-from ...rules.custom_rules.SufficientRawResources import SufficientRawResources
-from ...rules.custom_rules.ScenarioQuestions import ScenarioHasResource
+from ..custom_logic.SufficientRawResources import SufficientRawResources
+from ..custom_logic.ScenarioQuestions import ScenarioHasResource
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic

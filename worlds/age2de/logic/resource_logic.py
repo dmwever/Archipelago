@@ -6,7 +6,7 @@ from rule_builder.rules import And, HasAny, Rule, True_
 from ..items.Items import Resource
 from ..locations.VillagerJobs import FOOD_PROFESSIONS
 from ..Options import ShuffleVillager
-from ..rules.custom_rules.ResourceAmount import HasResourceAmount
+from .custom_logic.ResourceAmount import HasResourceAmount
 
 if TYPE_CHECKING:
     from .. import Age2World

@@ -14,7 +14,7 @@ from . import bases
 from ..items.Items import Age2ItemData, Resource, StartingResources
 from ..locations.VillagerJobs import Age2VillagerJobData, FOOD_PROFESSIONS
 from ..Options import ShuffleVillager
-from ..rules.custom_rules.ResourceAmount import HasResourceAmount, contributors
+from ..logic.custom_logic.ResourceAmount import HasResourceAmount, contributors
 
 
 class TestContributors(unittest.TestCase):

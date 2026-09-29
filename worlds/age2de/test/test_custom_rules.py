@@ -3,7 +3,7 @@ from rule_builder.rules import Rule
 from ..Options import IncludeUniqueUnits, Techsanity, Unitsanity
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
-from ..rules.custom_rules.ScenarioQuestions import ScenarioCanBuild, ScenarioHasReached
+from ..logic.custom_logic.ScenarioQuestions import ScenarioCanBuild, ScenarioHasReached
 from .bases import Age2RuleTestBase
 
 EVERYTHING = dict(techsanity=Techsanity.option_all, unitsanity=Unitsanity.option_all,

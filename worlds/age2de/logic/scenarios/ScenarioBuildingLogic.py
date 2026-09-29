@@ -6,7 +6,7 @@ from rule_builder.rules import False_, Or, Rule
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from ...rules.custom_rules.ScenarioQuestions import ScenarioCanBuild
+from ..custom_logic.ScenarioQuestions import ScenarioCanBuild
 
 if TYPE_CHECKING:
     from ..building_logic import BuildingLogic

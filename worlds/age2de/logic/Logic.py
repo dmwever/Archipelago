@@ -39,7 +39,7 @@ class Logic:
         self.scenarios = []
 
         self.scenario_answers: dict[tuple, object] = {}
-        """Resolved answers to the scenario questions, one per seed. See rules/custom_rules."""
+        """Resolved answers to the scenario questions, one per seed. See logic/custom_logic."""
 
         self.scenario_answers_open: set[tuple] = set()
         """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
