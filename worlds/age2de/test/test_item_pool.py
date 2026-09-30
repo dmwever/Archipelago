@@ -29,19 +29,19 @@ class TestSmartStartingResources(bases.Age2TestBase):
     def test_returns_exactly_the_number_asked_for(self) -> None:
         # 1 to 3 is the range that used to hang; 15 and 20 returned 0 and 8.
         for wanted in range(0, 40):
-            got = self.world.smart_add_starting_resources(wanted)
+            got = self.world.pool.resources.build_items(wanted)
             self.assertEqual(wanted, len(got), f"asked for {wanted} items, got {len(got)}")
 
     def test_zero_locations_returns_nothing(self) -> None:
-        self.assertEqual([], self.world.smart_add_starting_resources(0))
+        self.assertEqual([], self.world.pool.resources.build_items(0))
 
     def test_a_negative_count_returns_nothing(self) -> None:
-        self.assertEqual([], self.world.smart_add_starting_resources(-5))
+        self.assertEqual([], self.world.pool.resources.build_items(-5))
 
     def test_the_exact_fit_hands_back_the_large_items(self) -> None:
         # 725/250 + 850/250 + 750/250 + 400/125 = 3 + 4 + 3 + 4 = 14. The targets came down by
         # what the three town-centre items now contribute to the same totals.
-        got = self.world.smart_add_starting_resources(14)
+        got = self.world.pool.resources.build_items(14)
         self.assertEqual(
             Counter({
                 Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 3,
@@ -49,14 +49,14 @@ class TestSmartStartingResources(bases.Age2TestBase):
                 Items.Age2ItemData.STARTING_GOLD_LARGE.item_name: 3,
                 Items.Age2ItemData.STARTING_STONE_LARGE.item_name: 4,
             }),
-            Counter(item.name for item in got),
+            Counter(item.item_name for item in got),
             "the exact-fit branch created items and threw them away",
         )
 
     def test_everything_returned_is_a_starting_resource(self) -> None:
         for wanted in (5, 15, 30):
-            for item in self.world.smart_add_starting_resources(wanted):
-                self.assertIsInstance(Items.NAME_TO_ITEM[item.name].type, Items.StartingResources)
+            for item in self.world.pool.resources.build_items(wanted):
+                self.assertIsInstance(item.type, Items.StartingResources)
 
 
 class TestTownCentreItems(bases.Age2TestBase):
@@ -124,7 +124,7 @@ class TestStartingResourcesAreProgression(bases.Age2TestBase):
             payload = Items.NAME_TO_ITEM[item.name].type
             if isinstance(payload, (Items.StartingResources, Items.TCResources)):
                 by_hand[payload.type] += payload.amount
-        self.assertEqual(self.world.starting_resource_totals, by_hand)
+        self.assertEqual(self.world.pool.resources.totals, by_hand)
 
 
 class TestPoolBalances(bases.Age2TestBase):

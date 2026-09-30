@@ -69,7 +69,7 @@ class TestSummation(bases.Age2RuleTestBase):
 
     def test_denominations_add_up(self):
         self.build()
-        self.world.starting_resource_totals[Resource.FOOD] = 10000
+        self.world.pool.resources.totals[Resource.FOOD] = 10000
         rule = self.resolved(Resource.FOOD, 400)
         state = self.state_with(**{"+50 Starting Food": 1, "+100 Starting Food": 1,
                                    "+250 Starting Food": 1})
@@ -77,7 +77,7 @@ class TestSummation(bases.Age2RuleTestBase):
 
     def test_one_short_is_short(self):
         self.build()
-        self.world.starting_resource_totals[Resource.FOOD] = 10000
+        self.world.pool.resources.totals[Resource.FOOD] = 10000
         rule = self.resolved(Resource.FOOD, 401)
         state = self.state_with(**{"+50 Starting Food": 1, "+100 Starting Food": 1,
                                    "+250 Starting Food": 1})
@@ -85,14 +85,14 @@ class TestSummation(bases.Age2RuleTestBase):
 
     def test_copies_of_one_denomination_stack(self):
         self.build()
-        self.world.starting_resource_totals[Resource.WOOD] = 10000
+        self.world.pool.resources.totals[Resource.WOOD] = 10000
         rule = self.resolved(Resource.WOOD, 200)
         self.assertTrue(rule(self.state_with(**{"+50 Starting Wood": 4})))
         self.assertFalse(rule(self.state_with(**{"+50 Starting Wood": 3})))
 
     def test_one_resource_does_not_pay_for_another(self):
         self.build()
-        self.world.starting_resource_totals[Resource.GOLD] = 10000
+        self.world.pool.resources.totals[Resource.GOLD] = 10000
         rule = self.resolved(Resource.GOLD, 50)
         self.assertFalse(rule(self.state_with(**{"+250 Starting Food": 1})))
 
@@ -107,13 +107,13 @@ class TestResolveTimeDegrade(bases.Age2RuleTestBase):
         """Not an unsatisfiable rule - an honest False, so the Or in can_afford drops this
         branch and the gathering branch carries the cost alone."""
         self.build()
-        self.world.starting_resource_totals[Resource.STONE] = 100
+        self.world.pool.resources.totals[Resource.STONE] = 100
         self.assertIsInstance(HasResourceAmount(resource=Resource.STONE, amount=101)
                               .resolve(self.world), False_.Resolved)
 
     def test_exactly_what_the_seed_holds_is_a_real_rule(self):
         self.build()
-        self.world.starting_resource_totals[Resource.STONE] = 100
+        self.world.pool.resources.totals[Resource.STONE] = 100
         resolved = HasResourceAmount(resource=Resource.STONE, amount=100).resolve(self.world)
         self.assertIsInstance(resolved, HasResourceAmount.Resolved)
 
@@ -123,7 +123,7 @@ class TestDependencies(bases.Age2RuleTestBase):
         """LocalStart.solve narrows its candidates by this set, so a missing name means local
         start quietly stops finding that resource."""
         self.build()
-        self.world.starting_resource_totals[Resource.FOOD] = 10000
+        self.world.pool.resources.totals[Resource.FOOD] = 10000
         resolved = HasResourceAmount(resource=Resource.FOOD, amount=100).resolve(self.world)
         self.assertEqual(set(resolved.item_dependencies()),
                          {name for name, _ in contributors(Resource.FOOD)})
@@ -132,7 +132,7 @@ class TestDependencies(bases.Age2RuleTestBase):
         """The ScenarioQuestion.mine failure mode, written down: a cached False that never
         clears is how this becomes hundreds of FillErrors instead of one wrong answer."""
         self.build()
-        self.world.starting_resource_totals[Resource.FOOD] = 10000
+        self.world.pool.resources.totals[Resource.FOOD] = 10000
         rule = HasResourceAmount(resource=Resource.FOOD, amount=250).resolve(self.world)
         state = CollectionState(self.multiworld)
         self.assertFalse(rule(state))

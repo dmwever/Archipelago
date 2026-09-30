@@ -42,7 +42,7 @@ class HasResourceAmount(Rule["Age2World"], game="Age Of Empires II: Definitive E
     def _instantiate(self, world: "Age2World") -> Rule.Resolved:
         if self.amount <= 0:
             return True_().resolve(world)
-        if world.starting_resource_totals[self.resource] < self.amount:
+        if world.pool.resources.totals[self.resource] < self.amount:
             return False_().resolve(world)
         return self.Resolved(
             contributors(self.resource),

@@ -66,12 +66,10 @@ class Age2World(CachedRuleBuilderWorld):
     
     pool: Age2Pool
     unit_regions: UnitRegions
-    starting_resource_totals: dict[Items.Resource, int]
     rules: Rules
 
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
-        self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
 
     @classmethod
     def create_group(cls, multiworld: 'MultiWorld', new_player_id: int, players: set[int]) -> World:
@@ -270,14 +268,12 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        starting_items, surplus = self._build_starting_resources(needed_number_of_filler_items)
-        
         # Starting resources come first. Traps only ever spend the padding appended once
         # every resource target is already met, so they never cost the player economy.
-        traps = self.roll_traps(surplus)
-        if traps:
-            starting_items = starting_items[:len(starting_items) - len(traps)]
-        
+        plan = self.pool.resources.plan(needed_number_of_filler_items)
+        starting_items = [self.create_item(data.item_name) for data in plan.items]
+        traps = [self.create_item(data.item_name) for data in plan.traps]
+
         self.multiworld.itempool += starting_items
         self.multiworld.itempool += traps
         
@@ -287,88 +283,6 @@ class Age2World(CachedRuleBuilderWorld):
         
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
 
-        self._tally_starting_resources()
-
-    def _tally_starting_resources(self) -> None:
-        self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
-        pooled = [item for item in self.multiworld.itempool if item.player == self.player]
-        for item in pooled + self.multiworld.precollected_items[self.player]:
-            payload = Items.NAME_TO_ITEM[item.name].type
-            if isinstance(payload, (Items.StartingResources, Items.TCResources)):
-                self.starting_resource_totals[payload.type] += payload.amount
-
-    def smart_add_starting_resources(self, locations_to_fill: int) -> list[Item]:
-        items, _surplus = self._build_starting_resources(locations_to_fill)
-        return items
-
-    def _build_starting_resources(self, locations_to_fill: int) -> tuple[list[Item], int]:
-        items: list[Item] = []
-        surplus = 0
-        halved = False
-        if locations_to_fill <= 0:
-            return items, surplus
-
-        largest = {
-            Items.Resource.WOOD: Items.Age2ItemData.STARTING_WOOD_LARGE,
-            Items.Resource.FOOD: Items.Age2ItemData.STARTING_FOOD_LARGE,
-            Items.Resource.GOLD: Items.Age2ItemData.STARTING_GOLD_LARGE,
-            Items.Resource.STONE: Items.Age2ItemData.STARTING_STONE_LARGE,
-        }
-        amounts = {
-            Items.Resource.WOOD: 725,
-            Items.Resource.FOOD: 850,
-            Items.Resource.GOLD: 750,
-            Items.Resource.STONE: 400,
-        }
-        starting_resource_choices = Items.CATEGORY_TO_ITEMS[Items.StartingResources]
-
-        while locations_to_fill > 0:
-            worst_case = {resource: ceil(amounts[resource] / largest[resource].type.amount)
-                          for resource in amounts}
-            worst_case_sum = sum(worst_case.values())
-
-            if worst_case_sum > locations_to_fill:
-                amounts = {resource: amount // 2 for resource, amount in amounts.items()}
-                halved = True
-                continue
-
-            if worst_case_sum == locations_to_fill:
-                for resource, needed in worst_case.items():
-                    for _ in range(needed):
-                        items.append(self.create_item(largest[resource].item_name))
-                        locations_to_fill -= 1
-                return items, surplus
-
-            if worst_case_sum == 0 and not halved:
-                surplus += 1
-
-            item_data = self.random.choice(starting_resource_choices)
-            resource = item_data.type.type
-            amounts[resource] = max(0, amounts[resource] - item_data.type.amount)
-            items.append(self.create_item(item_data.item_name))
-            locations_to_fill -= 1
-        return items, surplus
-
-    def roll_traps(self, surplus: int) -> list[Item]:
-        if surplus <= 0 or not self.options.trap_difficulty.include_traps():
-            return []
-
-        distribution = self.options.trap_distribution
-        names: list[str] = []
-        weights: list[int] = []
-        for trap in Items.CATEGORY_TO_ITEMS[Items.Trap]:
-            weight = distribution[trap.item_name] if trap.item_name in distribution else TRAP_DEFAULT_WEIGHT
-            if weight > 0:
-                names.append(trap.item_name)
-                weights.append(weight)
-        if not names:
-            return []
-
-        count = int(surplus * self.options.trap_percentage.value / 100)
-        if count <= 0:
-            return []
-        return [self.create_item(name) for name in self.random.choices(names, weights=weights, k=count)]
-    
     def create_item(self, name: str) -> Item:
         item = Items.NAME_TO_ITEM[name]
         return Item(

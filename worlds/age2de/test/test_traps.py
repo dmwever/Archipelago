@@ -71,14 +71,14 @@ class TestTrapsReachThePool(bases.Age2TestBase):
     options = {**BIG_SEED, "trap_difficulty": 5, "trap_percentage": 100}
 
     def test_roll_traps_spends_the_whole_surplus_at_full_percentage(self) -> None:
-        traps = self.world.roll_traps(40)
+        traps = self.world.pool.resources.roll_traps(40)
         self.assertEqual(40, len(traps))
         for trap in traps:
-            self.assertIn(trap.name, TRAP_NAMES)
+            self.assertIn(trap.item_name, TRAP_NAMES)
 
     def test_roll_traps_takes_the_percentage_share(self) -> None:
         self.world.options.trap_percentage.value = 25
-        self.assertEqual(10, len(self.world.roll_traps(40)))
+        self.assertEqual(10, len(self.world.pool.resources.roll_traps(40)))
 
     def test_the_pool_still_matches_the_location_count(self) -> None:
         unfilled = self.multiworld.get_unfilled_locations(self.player)
@@ -128,7 +128,7 @@ class TestAWeightOfZeroExcludesOneTrap(bases.Age2TestBase):
 
     def test_a_large_roll_never_yields_it_either(self) -> None:
         """200 draws over eight remaining traps: absence here is by construction, not luck."""
-        rolled = Counter(trap.name for trap in self.world.roll_traps(200))
+        rolled = Counter(trap.item_name for trap in self.world.pool.resources.roll_traps(200))
         self.assertEqual(0, rolled[self.EXCLUDED])
         self.assertEqual(200, sum(rolled.values()), "zeroing one trap suppressed the rest")
 
@@ -143,7 +143,7 @@ class TestEveryWeightZeroSuppressesTraps(bases.Age2TestBase):
 
     def test_all_weights_zero_overrides_the_percentage(self) -> None:
         self.assertEqual(Counter(), trap_counts(self.multiworld.itempool))
-        self.assertEqual([], self.world.roll_traps(200), "every weight was 0 but traps were rolled")
+        self.assertEqual([], self.world.pool.resources.roll_traps(200), "every weight was 0 but traps were rolled")
 
     def test_the_pool_still_matches_the_location_count(self) -> None:
         unfilled = self.multiworld.get_unfilled_locations(self.player)
@@ -157,16 +157,16 @@ class TestSurplusAccounting(bases.Age2TestBase):
         """Halving means the targets were abandoned, not met. A seed too tight to fund them is
         too tight to fund traps, so the surplus is forfeited rather than shared."""
         for wanted in range(0, 16):
-            _items, surplus = self.world._build_starting_resources(wanted)
+            _items, surplus = self.world.pool.resources.build(wanted)
             self.assertEqual(0, surplus, f"{wanted} slots reported {surplus} surplus")
 
     def test_a_generous_budget_reports_surplus(self) -> None:
-        _items, surplus = self.world._build_starting_resources(80)
+        _items, surplus = self.world.pool.resources.build(80)
         self.assertGreater(surplus, 0, "80 slots funded the targets but reported no surplus")
 
     def test_the_surplus_is_never_more_than_the_budget(self) -> None:
         for wanted in (20, 40, 80, 160):
-            items, surplus = self.world._build_starting_resources(wanted)
+            items, surplus = self.world.pool.resources.build(wanted)
             self.assertEqual(wanted, len(items))
             self.assertLessEqual(surplus, wanted)
 
@@ -181,8 +181,8 @@ class TestSurplusAccounting(bases.Age2TestBase):
         self.world.options.trap_difficulty.value = 5
         self.world.options.trap_percentage.value = 100
         for wanted in (20, 40, 80, 160):
-            items, surplus = self.world._build_starting_resources(wanted)
-            traps = self.world.roll_traps(surplus)
+            items, surplus = self.world.pool.resources.build(wanted)
+            traps = self.world.pool.resources.roll_traps(surplus)
             self.assertLessEqual(len(traps), surplus,
                                  f"{wanted} slots: traps outnumbered the surplus")
             kept = items[:len(items) - len(traps)]
@@ -192,8 +192,8 @@ class TestSurplusAccounting(bases.Age2TestBase):
     def test_roll_traps_returns_nothing_without_surplus(self) -> None:
         self.world.options.trap_difficulty.value = 5
         self.world.options.trap_percentage.value = 100
-        self.assertEqual([], self.world.roll_traps(0))
-        self.assertEqual([], self.world.roll_traps(-1))
+        self.assertEqual([], self.world.pool.resources.roll_traps(0))
+        self.assertEqual([], self.world.pool.resources.roll_traps(-1))
 
 
 class TestTrapItemGroup(unittest.TestCase):
