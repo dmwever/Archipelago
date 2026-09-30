@@ -8,6 +8,7 @@ from .pools.CampaignPool import CampaignPool
 from .pools.CivilizationPool import CivilizationPool
 from .pools.ScenarioPool import ScenarioPool
 from .pools.TechPool import TechPool
+from .pools.UnitPool import UnitPool
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -22,3 +23,4 @@ class Age2Pool:
         self.ages = AgePool(world.options, self.scenarios.included)
         self.buildings = BuildingPool(world.options, self.civs)
         self.techs = TechPool(world.options, self.ages.earliest, self.civs)
+        self.units = UnitPool(world.options, self.civs, self.scenarios.included)

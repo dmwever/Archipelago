@@ -4,7 +4,7 @@ from ..Options import (IncludeUniqueUnits, ShuffleVillager, Unitsanity,
                        UnitsanityItems)
 from ..client.handlers.install.UnitData import UnitData
 from ..generation import SlotData
-from ..generation.UnitPool import unit_location
+from ..generation.pools.UnitPool import unit_location
 from ..items.Items import Age2ItemData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData

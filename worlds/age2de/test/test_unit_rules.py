@@ -69,7 +69,7 @@ class TestOwningAUnit(Age2RuleTestBase):
 
     def test_a_hero_is_reachable_only_because_a_scenario_grants_one(self):
         world = self.build(**EVERYTHING)
-        for hero in world.unit_pool.heroes:
+        for hero in world.pool.units.heroes:
             self.assertTrue(self.can_reach(hero.location_name), hero.name)
         self.assertTrue(self.can_reach(Age2EscortUnitData.CART.location_name))
 

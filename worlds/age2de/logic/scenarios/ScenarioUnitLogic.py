@@ -22,7 +22,6 @@ class ScenarioUnitLogic:
         self.scenario = scenario
         self.logic = scenario.logic
         self.world = scenario.logic.world
-        self.pool = scenario.logic.world.unit_pool
 
     # -- training ----------------------------------------------------------------------------
 
@@ -88,9 +87,9 @@ class ScenarioUnitLogic:
     def is_granted(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
         ways: list[Rule] = []
         data = self.scenario.scenario
-        if self.pool.startup_grants(data, target):
+        if self.world.pool.units.startup_grants(data, target):
             ways.append(True_())   # it is standing there when the scenario opens
-        if self.pool.trigger_grants(data, target):
+        if self.world.pool.units.trigger_grants(data, target):
             ways.append(self.scenario.obtains_unit(target))
         return Or(*ways)
 

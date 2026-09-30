@@ -15,14 +15,12 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
-from .generation.UnitPool import UnitPool
 from .regions.UnitRegions import UnitRegions
 from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching
 from .items import Items
 from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
                         UnitLines, Units, VillagerJobs)
-from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
-from .locations.connections.UnitBuildings import BUILDING_TO_UNITS
+from .locations.Techs import Age2TechData
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, GameCosts, ScenarioResources,
                                     ScenarioStartupUnits,
@@ -68,7 +66,6 @@ class Age2World(CachedRuleBuilderWorld):
     
     pool: Age2Pool
     unit_regions: UnitRegions
-    unit_pool: UnitPool
     starting_resource_totals: dict[Items.Resource, int]
     rules: Rules
 
@@ -146,14 +143,10 @@ class Age2World(CachedRuleBuilderWorld):
                 Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
         
-        self.unit_pool = UnitPool(self.options, self.pool.civs.included,
-                                  self.pool.scenarios.included)
         
         building_regions: dict[Buildings.Age2BuildingData, Region] = {}
         for building in Age2BuildingData:
-            if not self.pool.civs.builds(building):
-                continue
-            if not BUILDING_TO_TECHS[building] and not BUILDING_TO_UNITS.get(building):
+            if not self.pool.buildings.hosts_locations(building):
                 continue
             region = Region(building.item.item_name, self.player, self.multiworld)
             connection = Entrance(self.player, f"{region.name}", buildings)

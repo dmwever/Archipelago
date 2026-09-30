@@ -3,7 +3,7 @@ from typing import Iterable
 
 from ....Options import Unitsanity, UnitsanityItems
 from ....generation import SlotData
-from ....generation.UnitPool import VILLAGER_LINES, UnitLocation
+from ....generation.pools.UnitPool import VILLAGER_LINES, UnitLocation
 from ....locations.Ages import Age2AgeData
 from ....locations.Buildings import Age2BuildingData
 from ....locations.Civilizations import Age2CivData

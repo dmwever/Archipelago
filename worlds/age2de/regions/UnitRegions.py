@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Entrance, Location, MultiWorld, Region
 
-from ..generation.UnitPool import UnitLocation, UnitPool
+from ..generation.pools.UnitPool import UnitLocation
 from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
@@ -40,7 +40,6 @@ class UnitRegions:
                  building_regions: dict[Age2BuildingData, Region],
                  scenario_regions: dict[Age2ScenarioData, Region]) -> None:
         self.world = world
-        self.pool: UnitPool = world.unit_pool
         self.building_regions = building_regions
         self.scenario_regions = scenario_regions
         self.regions: list[UnitRegion] = []
@@ -51,22 +50,23 @@ class UnitRegions:
 
     def create(self) -> list[Region]:
         self.regions = []
-        for line, locations in self.pool.line_locations.items():
+        for line, locations in self.world.pool.units.line_locations.items():
             region = self.add_line_region(line, locations)
             if region is not None:
                 self.regions.append(region)
-        for special in self.pool.special_units:
+        for special in self.world.pool.units.special_units:
             self.regions.append(self.add_special_region(special))
         return list(self.regions)
 
     def add_line_region(self, line: Age2UnitLineData,
                         locations: list[UnitLocation]) -> UnitRegion | None:
-        trainable = [building for building in self.pool.root_unit_data(line).buildings
+        units = self.world.pool.units
+        trainable = [building for building in units.root_unit_data(line).buildings
                      if building in self.building_regions] \
-            if self.pool.is_trainable(line) else []
+            if units.is_trainable(line) else []
         granting = [scenario for scenario in self.scenario_regions
-                    if self.pool.startup_grants(scenario, line)
-                    or self.pool.trigger_grants(scenario, line)]
+                    if units.startup_grants(scenario, line)
+                    or units.trigger_grants(scenario, line)]
         if not trainable and not granting:
             return None
 
@@ -102,13 +102,13 @@ class UnitRegions:
 
     def add_scenario_start_entrance(self, label: str, region: UnitRegion,
                                     scenario: Age2ScenarioData, source: Region) -> None:
-        if self.pool.startup_grants(scenario, region.target):
+        if self.world.pool.units.startup_grants(scenario, region.target):
             self.add_entrance(source, region, UnitEntranceKind.startup, scenario,
                               f"{label} at {scenario.scenario_name} Start")
 
     def add_scenario_trigger_entrance(self, label: str, region: UnitRegion,
                                       scenario: Age2ScenarioData, source: Region) -> None:
-        if self.pool.trigger_grants(scenario, region.target):
+        if self.world.pool.units.trigger_grants(scenario, region.target):
             self.add_entrance(source, region, UnitEntranceKind.trigger, scenario,
                               f"{label} by {scenario.scenario_name} Trigger")
 
@@ -125,20 +125,22 @@ class UnitRegions:
 
     def record(self, location: UnitLocation,
                producers: list[Age2BuildingData]) -> None:
-        if self.pool.is_villager_location(location):
+        for building in producers:
+            if building not in self.shuffled_unit_building_items:
+                self.shuffled_unit_building_items.append(building)
+        if self.world.pool.units.is_villager_location(location):
             self.shuffled_villager = True
             return
         if isinstance(location, Age2UnitLineData):
             self.shuffled_lines.append(location)
-            self.shuffled_units += [unit for unit in location.units if self.pool.includes(unit)]
+            self.shuffled_units += [unit for unit in location.units
+                                    if self.world.pool.units.includes(unit)]
         else:
             self.shuffled_units.append(location)
             if location.line not in self.shuffled_lines:
                 self.shuffled_lines.append(location.line)
-        for building in producers:
-            if building not in self.shuffled_unit_building_items:
-                self.shuffled_unit_building_items.append(building)
 
     def items(self) -> list[Age2ItemData]:
-        return self.pool.items(self.shuffled_lines, self.shuffled_units,
-                               self.shuffled_unit_building_items, self.shuffled_villager)
+        return self.world.pool.units.items(self.shuffled_lines, self.shuffled_units,
+                                           self.shuffled_unit_building_items,
+                                           self.shuffled_villager)

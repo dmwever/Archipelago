@@ -21,7 +21,7 @@ class ScenarioCivilizationLogic:
         return self.civ.builds(building)
 
     def trains(self, unit: Age2UnitData) -> bool:
-        return self.world.unit_pool.civ_trains(self.civ, unit)
+        return self.world.pool.units.civ_trains(self.civ, unit)
 
     def researches(self, tech: Age2TechData) -> bool:
         return tech in CIV_TO_TECHS[self.civ]

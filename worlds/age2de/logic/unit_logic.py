@@ -34,7 +34,6 @@ class UnitLogic:
     def __init__(self, logic: 'Logic', world: Age2World):
         self.logic = logic
         self.world = world
-        self.pool = world.unit_pool
 
     # -- owning ------------------------------------------------------------------------------
 
@@ -51,7 +50,7 @@ class UnitLogic:
     def can_own_line_anywhere(self, line: Age2UnitLineData) -> Rule:
         """Owning any tier is owning the line."""
         return Or(*[self.can_own_anywhere(unit) for unit in line.units
-                    if self.pool.includes(unit)])
+                    if self.world.pool.units.includes(unit)])
 
     def can_convert(self, unit: Age2UnitData) -> Rule:
         return False_()
@@ -68,7 +67,7 @@ class UnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train_anywhere(self, unit: Age2UnitData) -> Rule:
-        if not self.pool.is_trainable_unit(unit) or not unit.buildings:
+        if not self.world.pool.units.is_trainable_unit(unit) or not unit.buildings:
             return False_()
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:

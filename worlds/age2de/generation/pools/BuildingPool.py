@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...locations.Buildings import Age2BuildingData, BuildingOption
+from ...locations.Techs import BUILDING_TO_TECHS
+from ...locations.connections.UnitBuildings import BUILDING_TO_UNITS
 
 if TYPE_CHECKING:
     from ...Options import Age2Options
@@ -21,6 +23,10 @@ class BuildingPool:
     @property
     def locations(self) -> list[Age2BuildingData]:
         return self.shuffled
+
+    def hosts_locations(self, building: Age2BuildingData) -> bool:
+        return (self._civs.builds(building)
+                and bool(BUILDING_TO_TECHS[building] or BUILDING_TO_UNITS.get(building)))
 
     def _is_shuffled(self, building: Age2BuildingData) -> bool:
         if not self._civs.builds(building):

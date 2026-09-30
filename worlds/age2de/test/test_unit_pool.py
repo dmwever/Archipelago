@@ -7,6 +7,7 @@ from ..Options import IncludeUniqueUnits, ShuffleVillager, Unitsanity, Unitsanit
 from ..items.Items import (Age2ItemData, UnitBuilding, UnitLine, UnitUpgrade,
                            NAME_TO_ITEM)
 from ..locations.Buildings import Age2BuildingData
+from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.EscortUnits import Age2EscortUnitData
@@ -153,14 +154,19 @@ class TestUnitItems(UnitPoolTestBase):
             self.assertEqual({item.type_data for item in items}, {payload}, mode)
 
     def test_the_villager_is_a_line_item_in_every_mode(self):
+        """And in buildings mode the Town Centre comes with it: villagers are trained there, so
+        the building item is required for them exactly as it is for any other line."""
+        villager_item = Age2UnitLineData.VILLAGER_MALE_LINE.item.item_name
+        town_centre = BUILDING_TO_UNITS_ITEM[Age2BuildingData.TOWN_CENTER].item_name
         for mode in (UnitsanityItems.option_unit_line, UnitsanityItems.option_upgrades,
                      UnitsanityItems.option_buildings):
             for villager in (ShuffleVillager.option_yes,
                              ShuffleVillager.option_include_professions):
                 world = self.build(shuffle_villager=villager, unitsanity_items=mode)
+                expected = ([town_centre, villager_item]
+                            if mode == UnitsanityItems.option_buildings else [villager_item])
                 self.assertEqual([item.item_name for item in self.unit_items(world)],
-                                 [Age2UnitLineData.VILLAGER_MALE_LINE.item.item_name],
-                                 (mode, villager))
+                                 expected, (mode, villager))
 
     def test_no_item_for_a_building_no_civilization_can_put_up(self):
         # The Donjon trains spearmen, but neither Huns nor Franks build one.
@@ -212,7 +218,7 @@ class TestUnitRegions(UnitPoolTestBase):
                            shuffle_villager=ShuffleVillager.option_include_professions)
         real = {region.target for region in world.unit_regions.regions
                 for entrance in region.entrances if entrance.kind != UnitEntranceKind.conversion}
-        for line in world.unit_pool.line_locations:
+        for line in world.pool.units.line_locations:
             if not world.multiworld.get_region(line.line_name, 1).locations:
                 continue
             self.assertIn(line, real, line.name)
@@ -277,8 +283,8 @@ class TestEscorts(UnitPoolTestBase):
         self.assertEqual(ways_in, {(UnitEntranceKind.startup, Age2ScenarioData.AP_JOAN_6)})
 
     def test_an_escort_is_a_check_under_all_only(self):
-        self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).unit_pool.escorts)
-        self.assertEqual(self.build(unitsanity=Unitsanity.option_all).unit_pool.escorts,
+        self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).pool.units.escorts)
+        self.assertEqual(self.build(unitsanity=Unitsanity.option_all).pool.units.escorts,
                          list(Age2EscortUnitData))
 
     def test_an_escort_is_not_a_unit_and_never_an_item(self):
@@ -304,15 +310,15 @@ class TestEscorts(UnitPoolTestBase):
 
 class TestHeroes(UnitPoolTestBase):
     def test_heroes_are_checks_under_all_only(self):
-        self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).unit_pool.heroes)
+        self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).pool.units.heroes)
         self.assertFalse(self.build(shuffle_villager=ShuffleVillager.option_yes)
-                         .unit_pool.heroes)
+                         .pool.units.heroes)
         world = self.build(unitsanity=Unitsanity.option_all)
-        self.assertEqual(len(world.unit_pool.heroes), len(list(Age2HeroData)))
+        self.assertEqual(len(world.pool.units.heroes), len(list(Age2HeroData)))
 
     def test_a_hero_has_one_region_and_an_entrance_per_granting_scenario(self):
         world = self.build(unitsanity=Unitsanity.option_all)
-        for hero in world.unit_pool.heroes:
+        for hero in world.pool.units.heroes:
             region = world.multiworld.get_region(hero.hero_name, 1)
             self.assertEqual([location.name for location in region.locations],
                              [hero.location_name])
@@ -342,22 +348,22 @@ class TestHeroes(UnitPoolTestBase):
         behind it, so an unauthored grant has to be open rather than shut."""
         world = self.build_with_rules(unitsanity=Unitsanity.option_all)
         state = world.multiworld.get_all_state(False)
-        for hero in world.unit_pool.heroes:
+        for hero in world.pool.units.heroes:
             self.assertTrue(state.can_reach_location(hero.location_name, 1), hero.name)
 class TestWhatMayBePlaced(UnitPoolTestBase):
     def test_a_unit_no_civilisation_can_field_is_never_placed(self):
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        self.assertFalse(world.unit_pool.includes(Age2UnitData.LONGBOWMAN))
+        self.assertFalse(world.pool.units.includes(Age2UnitData.LONGBOWMAN))
         self.assertNotIn("Own Longbowman", self.own_locations(world))
 
     def test_a_granted_unit_no_civilisation_can_train_is_placed(self):
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        self.assertTrue(world.unit_pool.includes(Age2UnitData.MANGUDAI))
+        self.assertTrue(world.pool.units.includes(Age2UnitData.MANGUDAI))
         self.assertIn("Own Mangudai", self.own_locations(world))
 
     def test_only_all_admits_a_unit_no_civilisation_can_train(self):
         world = self.build(unitsanity=Unitsanity.option_unit_line,
                            include_unique_units=IncludeUniqueUnits.option_both)
-        self.assertFalse(world.unit_pool.includes(Age2UnitData.MANGUDAI))
+        self.assertFalse(world.pool.units.includes(Age2UnitData.MANGUDAI))

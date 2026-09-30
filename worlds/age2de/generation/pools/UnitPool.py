@@ -1,18 +1,19 @@
 from typing import Iterable
 
-from ..Options import (Age2Options, IncludeUniqueUnits, ShuffleVillager, Unitsanity,
-                       UnitsanityItems)
-from ..items.Items import Age2ItemData
-from ..locations.Buildings import Age2BuildingData
-from ..locations.Civilizations import Age2CivData
-from ..locations.EscortUnits import Age2EscortUnitData
-from ..locations.Heroes import Age2HeroData
-from ..locations.Scenarios import Age2ScenarioData
-from ..locations.UnitLines import Age2UnitLineData
-from ..locations.Units import Age2UnitData, UnitType
-from ..locations.VillagerJobs import Age2VillagerJobData
-from ..locations.connections.CivilizationUnits import CIV_TO_UNITS, UNTRAINABLE
-from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from ...Options import (Age2Options, IncludeUniqueUnits, ShuffleVillager, Unitsanity,
+                        UnitsanityItems)
+from ...items.Items import Age2ItemData
+from ...locations.Buildings import Age2BuildingData
+from ...locations.Civilizations import Age2CivData
+from ...locations.EscortUnits import Age2EscortUnitData
+from ...locations.Heroes import Age2HeroData
+from ...locations.Scenarios import Age2ScenarioData
+from ...locations.UnitLines import Age2UnitLineData
+from ...locations.Units import Age2UnitData, UnitType
+from ...locations.VillagerJobs import Age2VillagerJobData
+from ...locations.connections.CivilizationUnits import CIV_TO_UNITS, UNTRAINABLE
+from ...locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from .CivilizationPool import CivilizationPool
 
 type UnitLocation = (Age2UnitData | Age2UnitLineData | Age2VillagerJobData | Age2HeroData
                      | Age2EscortUnitData)
@@ -36,16 +37,16 @@ UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
 
 class UnitPool:
 
-    def __init__(self, options: Age2Options, civs: Iterable[Age2CivData],
+    def __init__(self, options: Age2Options, civs: CivilizationPool,
                  scenarios: Iterable[Age2ScenarioData]) -> None:
         self._unitsanity = options.unitsanity
         self._unitsanity_items = options.unitsanity_items
         self._include_unique_units = options.include_unique_units
         self._shuffle_villager = options.shuffle_villager
         self._caveman = options.caveman
-        self._civs = list(civs)
+        self._civs = civs
         self._scenarios = list(scenarios)
-        self._trainable = {unit for civ in civs for unit in CIV_TO_UNITS[civ]}
+        self._trainable = {unit for civ in civs.included for unit in CIV_TO_UNITS[civ]}
         if Age2UnitData.VILLAGER_MALE in self._trainable:
             self._trainable.add(Age2UnitData.VILLAGER_FEMALE)
         self._granted = {grant
@@ -124,7 +125,7 @@ class UnitPool:
         return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] + [job for job in Age2VillagerJobData if self.job_possible(job)]
 
     def job_possible(self, job: Age2VillagerJobData) -> bool:
-        return job.building is None or any(civ.builds(job.building) for civ in self._civs)
+        return job.building is None or self._civs.builds(job.building)
 
     @property
     def line_locations(self) -> dict[Age2UnitLineData, list[UnitLocation]]:

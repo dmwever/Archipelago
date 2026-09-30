@@ -57,7 +57,7 @@ class UnitRules:
             return units.can_do_job_anywhere(location)
         if isinstance(location, (Age2HeroData, Age2EscortUnitData)):
             return units.is_granted_anywhere(location)
-        if units.pool.is_villager_location(location):
+        if self.world.pool.units.is_villager_location(location):
             return True_()
         if isinstance(location, Age2UnitLineData):
             return units.can_own_line_anywhere(location)
