@@ -305,3 +305,15 @@ class TestTechInstall(InstallerTestBase):
         self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag, PLAYER,
                            slot_data=self.techsanity(techsanity=0, existing_techs=1))
         self.assertFalse(self.handler.scenario_needs_age_up())
+
+    def test_caveman_rebases_on_its_own(self):
+        self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag, PLAYER,
+                           slot_data=self.techsanity(techsanity=0, existing_techs=0,
+                                                     caveman=1))
+        self.assertTrue(self.handler.scenario_needs_age_up())
+
+    def test_caveman_rebases_where_vanilla_techs_would_not(self):
+        self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag, PLAYER,
+                           slot_data=self.techsanity(existing_techs=0, caveman=1))
+        self.assertTrue(self.handler.scenario_needs_age_up())
+        self.assertIs(self.handler.grant_age(), Age2AgeData.IMPERIAL)

@@ -17,9 +17,6 @@ if TYPE_CHECKING:
 
 VILLAGER_LINES = (Age2UnitLineData.VILLAGER_MALE_LINE, Age2UnitLineData.VILLAGER_FEMALE_LINE)
 
-
-
-
 class ScenarioUnitLogic:
     def __init__(self, scenario: 'ScenarioLogic'):
         self.scenario = scenario

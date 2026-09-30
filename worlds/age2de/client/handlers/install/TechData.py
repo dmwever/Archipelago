@@ -67,7 +67,7 @@ class TechData:
         if len(out) > self.TECH_CAPACITY:
             raise ValueError(
                 f"{len(out)} techs is past the XS capacity of {self.TECH_CAPACITY}; raise "
-                "TECH_CAPACITY in Tech_Constants.xs to match")
+                "TECH_CAPACITY in AP_Constants.xs to match")
         return out
 
 

@@ -47,7 +47,6 @@ class Age2VillagerJobData(enum.IntEnum):
     OYSTER_GATHERER_MALE   = 582, "Own Oyster Gatherer (Male)", "Oyster Gatherer", Age2UnitLineData.VILLAGER_MALE_LINE, 2333, Age2ItemData.PROFESSION_OYSTER_GATHERER
     OYSTER_GATHERER_FEMALE = 583, "Own Oyster Gatherer (Female)", "Oyster Gatherer", Age2UnitLineData.VILLAGER_FEMALE_LINE, 2334, Age2ItemData.PROFESSION_OYSTER_GATHERER
 
-
 FOOD_PROFESSIONS: tuple[Age2ItemData, ...] = (
     Age2ItemData.PROFESSION_FARMER,
     Age2ItemData.PROFESSION_FISHERMAN,
