@@ -96,3 +96,27 @@ class TestTheAnswersAreActuallyShared(Age2RuleTestBase):
         for answer in world.rules.logic.scenario_answers.values():
             self.assertIsInstance(answer, Rule.Resolved)
         self.assertFalse(world.rules.logic.scenario_answers_open, "a question was left part-way answered")
+
+
+class TestOneScenarioLogicPerScenario(Age2RuleTestBase):
+    """The rules side and the logic side have to be looking at the same object.
+
+    A question is memoised against Logic.scenario_answers and answered through
+    logic.for_scenario(...), whichever object built it. A second ScenarioLogic per scenario would
+    carry its own starting state and its own mercenary grants, and the two would answer the same
+    question apart the moment either stopped being pure.
+    """
+
+    def test_the_rules_read_the_logic_owned_object(self):
+        world = self.build(**EVERYTHING)
+        logic = world.rules.logic
+        self.assertEqual(len(world.rules.scenario_rules), len(logic.scenarios))
+        for rules in world.rules.scenario_rules:
+            with self.subTest(rules.scenario.scenario_name):
+                self.assertIs(rules.scenario_logic, logic.for_scenario(rules.scenario))
+
+    def test_there_is_exactly_one_per_scenario(self):
+        world = self.build(**EVERYTHING)
+        owned = {id(scenario_logic) for scenario_logic in world.rules.logic.scenarios}
+        owned.update(id(rules.scenario_logic) for rules in world.rules.scenario_rules)
+        self.assertEqual(len(owned), len(world.rules.logic.scenarios))

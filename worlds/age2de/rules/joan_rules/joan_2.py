@@ -1,11 +1,9 @@
 from rule_builder.rules import Has, HasAny, Rule
 from ...Options import ScenarioBranching
-from ...logic.joan.joan_2 import Joan2StartingState
 
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -13,7 +11,6 @@ from ..ScenarioRules import ScenarioRules
 class Joan2Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_JOAN_2)
-        self.scenario_logic = ScenarioLogic(self.logic, Joan2StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()

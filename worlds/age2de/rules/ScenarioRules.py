@@ -31,6 +31,7 @@ class ScenarioRules:
         self.logic = rules.logic
         self.world = rules.world
         self.scenario = scenario
+        self.scenario_logic = rules.logic.for_scenario(scenario)
         self.entrance = self.world.get_entrance(scenario.scenario_name)
         for location in SCENARIO_TO_SCENARIO_LOCATIONS[scenario]:
             if not self.world.branching_option(location):

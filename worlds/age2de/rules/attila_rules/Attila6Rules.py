@@ -1,10 +1,8 @@
 from rule_builder.rules import Rule
-from ...logic.attila.attila_6 import Attila6StartingState
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -12,7 +10,6 @@ from ..ScenarioRules import ScenarioRules
 class Attila6Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_6)
-        self.scenario_logic = ScenarioLogic(self.logic, Attila6StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()

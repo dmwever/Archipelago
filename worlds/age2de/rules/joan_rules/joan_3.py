@@ -7,9 +7,7 @@ from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
 from ...items.Items import Age2ItemData
 
-from ...logic.joan.joan_3 import Joan3StartingState
 
-from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -17,7 +15,6 @@ from ..ScenarioRules import ScenarioRules
 class Joan3Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_JOAN_3)
-        self.scenario_logic = ScenarioLogic(self.logic, Joan3StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()

@@ -1,11 +1,9 @@
 from rule_builder.rules import Has, Rule
-from ...logic.attila.attila_2 import Attila2StartingState
 
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -14,7 +12,6 @@ class Attila2Rules(ScenarioRules):
     scythian_troop: Rule = Has(Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name)
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_2)
-        self.scenario_logic = ScenarioLogic(self.logic, Attila2StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()

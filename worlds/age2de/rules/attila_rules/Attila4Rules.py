@@ -3,11 +3,9 @@ from ...Options import ScenarioBranching
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
-from ...logic.attila.attila_4 import Attila4StartingState
 
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
-from ...logic.ScenarioLogic import ScenarioLogic
 from ...locations.Scenarios import Age2ScenarioData
 from ..ScenarioRules import ScenarioRules
 
@@ -15,7 +13,6 @@ from ..ScenarioRules import ScenarioRules
 class Attila4Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_4)
-        self.scenario_logic = ScenarioLogic(self.logic, Attila4StartingState(self.logic), self.scenario)
     
     def set_rules(self):
         super().set_rules()
