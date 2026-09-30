@@ -91,7 +91,7 @@ class UnitData:
         if len(items) > self.MAX_ITEMS:
             raise ValueError(
                 f"{unit.unit_name} needs {len(items)} items; raise MAX_ITEMS here and "
-                "UNIT_ITEM_CAPACITY in Unitsanity.xs to match")
+                "UNIT_ITEM_CAPACITY in AP_Constants.xs to match")
         return Row(unit, location_id, unit.line.id, unit.age.value, unit.tier,
                    self.upgrade_item_for(unit), self.is_caveman_exempt(unit), items,
                    tuple(unit.variant_game_ids or ()))
@@ -127,7 +127,7 @@ class UnitData:
         if len(out) > self.UNIT_CAPACITY:
             raise ValueError(
                 f"{len(out)} units is past the XS capacity of {self.UNIT_CAPACITY}; raise "
-                "UNIT_CAPACITY in Unit_Constants.xs to match")
+                "UNIT_CAPACITY in AP_Constants.xs to match")
         return list(out.values())
 
     def render(self) -> str:
