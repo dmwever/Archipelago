@@ -11,6 +11,7 @@ from ..locations.connections import ScenarioDataLogic
 from .ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
+from .resource_logic import ResourceLogic
 from .tech_logic import TechLogic
 from .unit_logic import UnitLogic
 from rule_builder.rules import False_, Or, Rule
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 
 
 class Logic:
+    resources: ResourceLogic
     buildings: BuildingLogic
     ages: AgeLogic
     goal: GoalLogic
@@ -37,7 +39,7 @@ class Logic:
         self.scenarios = []
 
         self.scenario_answers: dict[tuple, object] = {}
-        """Resolved answers to the scenario questions, one per seed. See rules/custom_rules."""
+        """Resolved answers to the scenario questions, one per seed. See logic/custom_logic."""
 
         self.scenario_answers_open: set[tuple] = set()
         """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
@@ -46,6 +48,7 @@ class Logic:
                                                        for building in Age2BuildingData}
         self._can_research: dict[Age2TechData, Or] = {}
 
+        self.resources = ResourceLogic(self, world)
         self.buildings = BuildingLogic(self, world)
         self.techs = TechLogic(self, world)
         self.units = UnitLogic(self, world)
@@ -66,7 +69,6 @@ class Logic:
                 for scenario in self.scenarios])
         
         self._by_scenario = {logic.scenario: logic for logic in self.scenarios}
-        self.ages.set_age_to_scenarios(self.scenarios)
         self.ages.set_can_reach_age(self.scenarios)
         
         self.goal = GoalLogic(self, world)

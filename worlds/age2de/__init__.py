@@ -25,7 +25,8 @@ from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
 from .locations.connections.UnitBuildings import BUILDING_TO_UNITS
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
-                                    CivilizationUnits, ScenarioStartupUnits,
+                                    CivilizationUnits, GameCosts, ScenarioResources,
+                                    ScenarioStartupUnits,
                                     ScenarioTriggerUnits, UnitBuildings,
                                     UnitCounters,
                                     UnitLineUnits, UnitRoles, UnitTechs,
@@ -76,6 +77,7 @@ class Age2World(CachedRuleBuilderWorld):
     unit_regions: UnitRegions
     tech_pool: TechPool
     unit_pool: UnitPool
+    starting_resource_totals: dict[Items.Resource, int]
     earliest_age: Age2AgeData = None
     rules: Rules
 
@@ -87,7 +89,8 @@ class Age2World(CachedRuleBuilderWorld):
         self.shuffled_buildings = []
         self.shuffled_techs = []
         self.shuffled_ages = []
-        
+        self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
+
     def branching_option(self, location):
         if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenario_branching != ScenarioBranching.option_all:
             return False
@@ -325,7 +328,17 @@ class Age2World(CachedRuleBuilderWorld):
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
         self.multiworld.itempool += [self.create_filler() for _ in range(needed_number_of_filler_items)]
-    
+
+        self._tally_starting_resources()
+
+    def _tally_starting_resources(self) -> None:
+        self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
+        pooled = [item for item in self.multiworld.itempool if item.player == self.player]
+        for item in pooled + self.multiworld.precollected_items[self.player]:
+            payload = Items.NAME_TO_ITEM[item.name].type
+            if isinstance(payload, (Items.StartingResources, Items.TCResources)):
+                self.starting_resource_totals[payload.type] += payload.amount
+
     def smart_add_starting_resources(self, locations_to_fill: int) -> list[Item]:
         items, _surplus = self._build_starting_resources(locations_to_fill)
         return items
@@ -344,10 +357,10 @@ class Age2World(CachedRuleBuilderWorld):
             Items.Resource.STONE: Items.Age2ItemData.STARTING_STONE_LARGE,
         }
         amounts = {
-            Items.Resource.WOOD: 1000,
-            Items.Resource.FOOD: 1000,
+            Items.Resource.WOOD: 725,
+            Items.Resource.FOOD: 850,
             Items.Resource.GOLD: 750,
-            Items.Resource.STONE: 500,
+            Items.Resource.STONE: 400,
         }
         starting_resource_choices = Items.CATEGORY_TO_ITEMS[Items.StartingResources]
 

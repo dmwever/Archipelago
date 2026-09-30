@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import False_, Has, HasAny, Rule, True_
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
-from ...items.Items import Age2ItemData
+from ...items.Items import Age2ItemData, Resource
 
 from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
 
@@ -24,3 +24,8 @@ class Attila3StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.STABLE] = True_()
         self.starts_with_building[Age2BuildingData.MILL] = True_()
         self.starts_with_building[Age2BuildingData.BLACKSMITH] = True_()
+
+        gold_lump = HasAny(Age2ItemData.AP_ATTILA_3_RED_GOLD.item_name,
+                           Age2ItemData.AP_ATTILA_3_GREEN_GOLD.item_name)
+        self.resource_sources[Resource.GOLD] = gold_lump
+        self.easy_resource_sources[Resource.GOLD] = gold_lump

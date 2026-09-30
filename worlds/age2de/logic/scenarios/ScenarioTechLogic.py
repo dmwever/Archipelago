@@ -18,8 +18,10 @@ class ScenarioTechLogic:
 
     def can_research(self, tech: Age2TechData) -> Rule:
         if self.world.tech_pool.locked_at_start(tech):
-            return self.available(tech, self.scenario.ages.has_reached(tech.age))
-        return self.available(tech, self.scenario.ages.can_reach(tech.age))
+            age = self.scenario.ages.has_reached(tech.age)
+        else:
+            age = self.scenario.ages.can_reach(tech.age)
+        return self.available(tech, age) & self.scenario.economy.can_afford(tech.cost)
 
     def has_tech(self, tech: Age2TechData) -> Rule:
         return self.available(tech, self.scenario.ages.has_reached(tech.age))

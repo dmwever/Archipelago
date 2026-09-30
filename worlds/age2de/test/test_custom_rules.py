@@ -3,7 +3,7 @@ from rule_builder.rules import Rule
 from ..Options import IncludeUniqueUnits, Techsanity, Unitsanity
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
-from ..rules.custom_rules.ScenarioQuestions import ScenarioCanBuild, ScenarioHasReached
+from ..logic.custom_logic.ScenarioQuestions import ScenarioCanBuild, ScenarioHasReached
 from .bases import Age2RuleTestBase
 
 EVERYTHING = dict(techsanity=Techsanity.option_all, unitsanity=Unitsanity.option_all,
@@ -32,9 +32,9 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
                 if not scenario.civilization.can_build(building):
                     continue
                 with self.subTest(scenario=scenario.scenario.name, building=building.name):
-                    asked = ScenarioCanBuild(scenario=scenario.scenario,
-                                             building=building).resolve(world)
-                    direct = scenario.buildings.build_rule(building).resolve(world)
+                    question = ScenarioCanBuild(scenario=scenario.scenario, building=building)
+                    asked = question.resolve(world)
+                    direct = question.answer(scenario).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 
     def test_an_age_question_matches_the_rule_it_stands_for(self):
@@ -43,7 +43,8 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario.scenario.name, age=age.name):
                     asked = ScenarioHasReached(scenario=scenario.scenario, age=age).resolve(world)
-                    direct = scenario.ages.reached_rule(age).resolve(world)
+                    direct = (scenario.ages.can_reach(age)
+                              | scenario.ages.start_past(age)).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 
     def test_asking_twice_gives_the_same_object(self):

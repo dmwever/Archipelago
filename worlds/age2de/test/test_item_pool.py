@@ -9,6 +9,8 @@ difference up with plain filler, which is why generation still completed.
 from collections import Counter
 import unittest
 
+from BaseClasses import ItemClassification
+
 from . import bases
 from ..items import Items
 from ..locations.Campaigns import Age2CampaignData
@@ -37,11 +39,12 @@ class TestSmartStartingResources(bases.Age2TestBase):
         self.assertEqual([], self.world.smart_add_starting_resources(-5))
 
     def test_the_exact_fit_hands_back_the_large_items(self) -> None:
-        # 1000/250 + 1000/250 + 750/250 + 500/125 = 4 + 4 + 3 + 4 = 15.
-        got = self.world.smart_add_starting_resources(15)
+        # 725/250 + 850/250 + 750/250 + 400/125 = 3 + 4 + 3 + 4 = 14. The targets came down by
+        # what the three town-centre items now contribute to the same totals.
+        got = self.world.smart_add_starting_resources(14)
         self.assertEqual(
             Counter({
-                Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 4,
+                Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 3,
                 Items.Age2ItemData.STARTING_FOOD_LARGE.item_name: 4,
                 Items.Age2ItemData.STARTING_GOLD_LARGE.item_name: 3,
                 Items.Age2ItemData.STARTING_STONE_LARGE.item_name: 4,
@@ -75,6 +78,53 @@ class TestTownCentreItems(bases.Age2TestBase):
         }
         self.assertEqual({resource: int(amount) for resource, amount in cost.items()}, granted,
                          "the Town Center items do not add up to a Town Center")
+
+    def test_the_villager_food_joins_the_pair(self) -> None:
+        """The third of the opening set: a town centre you cannot put villagers in front of is
+        not a start. 150 food is three villagers at 50 each."""
+        food = Items.Age2ItemData.STARTING_VILLAGER_FOOD
+        self.assertIsInstance(food.type, Items.TCResources)
+        self.assertEqual(food.type.type, Items.Resource.FOOD)
+        self.assertEqual(food.type.amount, 150)
+        self.assertIn(food, Items.CATEGORY_TO_ITEMS[Items.TCResources])
+
+    def test_exactly_one_of_each_opening_item_reaches_the_pool(self) -> None:
+        names = [item.name for item in self.multiworld.itempool]
+        for item in Items.CATEGORY_TO_ITEMS[Items.TCResources]:
+            with self.subTest(item.item_name):
+                self.assertEqual(names.count(item.item_name), 1)
+
+
+class TestStartingResourcesAreProgression(bases.Age2TestBase):
+    """They became progression when the economy started counting what they add up to:
+    state.prog_items only ever holds advancement items."""
+
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+    }
+
+    def test_the_band_is_progression(self) -> None:
+        for item in Items.CATEGORY_TO_ITEMS[Items.StartingResources]:
+            with self.subTest(item.item_name):
+                self.assertEqual(Items.classification_for(item),
+                                 ItemClassification.progression)
+
+    def test_they_are_still_not_filler(self) -> None:
+        """create_filler draws from filler_items, which is the Resources band alone. A starting
+        resource turning up there would make the padding fight the economy."""
+        for item in Items.CATEGORY_TO_ITEMS[Items.StartingResources]:
+            with self.subTest(item.item_name):
+                self.assertNotIn(item, Items.filler_items)
+
+    def test_the_tally_matches_the_pool(self) -> None:
+        by_hand = {resource: 0 for resource in Items.Resource}
+        pooled = [item for item in self.multiworld.itempool if item.player == self.world.player]
+        for item in pooled + self.multiworld.precollected_items[self.world.player]:
+            payload = Items.NAME_TO_ITEM[item.name].type
+            if isinstance(payload, (Items.StartingResources, Items.TCResources)):
+                by_hand[payload.type] += payload.amount
+        self.assertEqual(self.world.starting_resource_totals, by_hand)
 
 
 class TestPoolBalances(bases.Age2TestBase):

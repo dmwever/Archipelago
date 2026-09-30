@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from rule_builder.rules import Has, HasAll, Rule, True_
+from rule_builder.rules import Has, Rule, True_
 from ..items.Items import Age2ItemData
 
 from ..locations.Buildings import Age2BuildingData
@@ -39,5 +39,8 @@ class BuildingLogic:
         return True_()
 
     def can_build_tc(self) -> Rule:
-        return self.has_building(Age2BuildingData.TOWN_CENTER) & \
-            HasAll(Age2ItemData.TOWN_CENTER_WOOD.item_name, Age2ItemData.TOWN_CENTER_STONE.item_name)
+        villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
+        resources = self.logic.resources
+        return (self.has_building(Age2BuildingData.TOWN_CENTER)
+                & resources.has_amounts(Age2ItemData.TOWN_CENTER.type.needed_resources)
+                & resources.has_amount(villager_food.type, villager_food.amount))

@@ -135,7 +135,7 @@ item_type_to_classification = {
     VillagerProfession: ItemClassification.progression,
     UnitBuilding: ItemClassification.progression,
     Resources: ItemClassification.filler,
-    StartingResources: ItemClassification.useful,
+    StartingResources: ItemClassification.progression,
     Victory: ItemClassification.progression,
     Trap: ItemClassification.trap,
 }
@@ -464,7 +464,10 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_5_REFUGEE_9 =       1021, "Joan of Arc, The Siege of Paris: Refugee 9",                 ScenarioItem(Age2ScenarioData.AP_JOAN_5)
     AP_JOAN_5_REFUGEE_10 =      1022, "Joan of Arc, The Siege of Paris: Refugee 10",                ScenarioItem(Age2ScenarioData.AP_JOAN_5)
     AP_JOAN_6_ARMY =            1023, "Joan of Arc, A Perfect Martyr: French Army",                 ScenarioItem(Age2ScenarioData.AP_JOAN_6)
-    
+
+    # Here to avoid updating existing items
+    STARTING_VILLAGER_FOOD =    1024, "Starting Villager Food",                                     TCResources(Resource.FOOD, 150)
+
     #3000 - 3499 = Progressive scenarios, 3500 - 3599 = Campaign unlocks
     
     # Progressive Scenarios (Campaign Count - 1)

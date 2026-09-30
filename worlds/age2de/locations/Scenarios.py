@@ -13,6 +13,7 @@ type ScenarioUnit = Age2UnitData | Age2HeroData | Age2EscortUnitData
 if TYPE_CHECKING:
     from ..rules.ScenarioRules import ScenarioRules
     from ..logic.ScenarioLogic import ScenarioStartingState
+    from .connections.ScenarioResources import ScenarioResourceDemand, ScenarioResourceCount
 
 class Age2ScenarioData(enum.IntEnum):
     def __new__(cls, name: str, file_stem: str, xsdat_write_name: str, campaign: Age2CampaignData, chapter: int, civ: Age2CivData,
@@ -38,6 +39,8 @@ class Age2ScenarioData(enum.IntEnum):
         self.logic: 'ScenarioStartingState' = None
         self.startup_units: list[ScenarioUnit] = []
         self.trigger_units: list[ScenarioUnit] = []
+        self.resources: 'ScenarioResourceCount' = None
+        self.demand: 'ScenarioResourceDemand' = None
     
     AP_ATTILA_1 =           "The Scourge of God", "AP_Attila_1", "ATT1.xsdat", Age2CampaignData.ATTILA, 1, Age2CivData.HUNS, Age2AgeData.DARK
     AP_ATTILA_2 =               "The Great Ride", "AP_Attila_2", "ATT2.xsdat", Age2CampaignData.ATTILA, 2, Age2CivData.HUNS, Age2AgeData.CASTLE

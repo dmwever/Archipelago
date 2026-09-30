@@ -33,6 +33,7 @@ class Age2TechData(enum.IntEnum):
         self.tech_options = tech_options
         self.buildings = buildings
         self._prerequisite = prerequisite
+        self.cost: dict = {}
 
     @property
     def prerequisite(self) -> 'Age2TechData':

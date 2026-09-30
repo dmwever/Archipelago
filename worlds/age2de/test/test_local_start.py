@@ -26,12 +26,38 @@ from ..generation.LocalStart import (
     scenario_base_rule,
     win_items,
 )
-from ..items.Items import Age2ItemData
+from ..items.Items import Age2ItemData, NAME_TO_ITEM, Resource, StartingResources, TCResources
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..locations.Campaigns import NAME_TO_CAMPAIGN, Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from .bases import Age2TestBase
 from .. import Age2World
+
+def resources_in(names) -> dict[Resource, int]:
+    """What a set of item names is worth, by resource.
+
+    The base target asks for amounts now rather than for the two town-centre items by name, so
+    what a test can assert is that the set pays for a town centre - not which items it chose.
+    """
+    totals = {resource: 0 for resource in Resource}
+    for name in names:
+        payload = NAME_TO_ITEM[name].type
+        if isinstance(payload, (StartingResources, TCResources)):
+            totals[payload.type] += payload.amount
+    return totals
+
+
+def assert_pays_for_a_town_centre(case, names) -> None:
+    totals = resources_in(names)
+    cost = Age2ItemData.TOWN_CENTER.type.needed_resources
+    for resource, amount in cost.items():
+        case.assertGreaterEqual(totals[resource], amount,
+                                f"the set holds {totals[resource]} {resource.name}, short of the "
+                                f"{int(amount)} a town centre costs")
+    villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type.amount
+    case.assertGreaterEqual(totals[Resource.FOOD], villager_food,
+                            "the set cannot pay for the villagers to go with the town centre")
+
 
 ATTILA = Age2CampaignData.ATTILA.campaign_name
 JOAN = Age2CampaignData.JOAN.campaign_name
@@ -249,10 +275,9 @@ class TestBaseItemsJoan(Age2TestBase):
         rule = scenario_base_rule(self.world, Age2ScenarioData.AP_JOAN_1)
         self.assertTrue(resolve(self.world, rule).always_true)
 
-    def test_town_centre_items_survive_the_missing_villagers(self) -> None:
+    def test_the_base_set_pays_for_a_town_centre(self) -> None:
         got = base_items(self.world, Age2ScenarioData.AP_JOAN_1)
-        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
-        self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
+        assert_pays_for_a_town_centre(self, got)
         self.assert_satisfiable_conjuncts_met(got, Age2ScenarioData.AP_JOAN_1)
         # Nothing supplies villagers at turn one on a Joan start once campaign
         # progression is off the table, so that conjunct is skipped rather than
@@ -300,8 +325,7 @@ class TestBaseItemsAttila(Age2TestBase):
 
     def test_includes_town_centre_and_a_villager_source(self) -> None:
         got = base_items(self.world, Age2ScenarioData.AP_ATTILA_1)
-        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, got)
-        self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, got)
+        assert_pays_for_a_town_centre(self, got)
         self.assertTrue(self.VILS & set(got), "no villager source was placed locally")
         self.assert_satisfiable_conjuncts_met(got, Age2ScenarioData.AP_ATTILA_1)
         # One villager source is enough; solving conjuncts apart used to collect two.
@@ -415,12 +439,11 @@ class TestPlaceBaseJoan(PlacementTestBase):
         "local_start": "base",
     }
 
-    def test_town_centre_items_are_local(self) -> None:
+    def test_the_opening_is_paid_for_locally(self) -> None:
         placed = self.locally_placed()
         self.assert_placements_are_local()
         self.assert_pool_still_balances()
-        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, placed)
-        self.assertIn(Age2ItemData.TOWN_CENTER_STONE.item_name, placed)
+        assert_pays_for_a_town_centre(self, placed)
 
 
 class TestPlaceBothAttila(PlacementTestBase):
@@ -435,9 +458,10 @@ class TestPlaceBothAttila(PlacementTestBase):
         self.assert_placements_are_local()
         self.assert_pool_still_balances()
         self.assert_victory_reachable_from_placements(Age2ScenarioData.AP_ATTILA_1)
-        self.assertIn(Age2ItemData.TOWN_CENTER_WOOD.item_name, placed)
-        # Deduped across the two passes: nothing is placed twice.
-        self.assertEqual(len(placed), len(set(placed)))
+        assert_pays_for_a_town_centre(self, placed)
+        # Name uniqueness used to stand in for "nothing is bought twice". It cannot any more:
+        # paying 275 wood legitimately takes two +250 Starting Wood. The camps check below is
+        # what still carries that meaning, on an item the solver only ever needs one of.
         # The base pass solves on top of the win set, so a requirement the win items
         # already cover is not bought a second time. Villagers come from exactly one camp.
         camps = {

@@ -46,3 +46,12 @@ class Age2VillagerJobData(enum.IntEnum):
     HERDER_FEMALE          = 581, "Own Herder (Female)", "Herder", Age2UnitLineData.VILLAGER_FEMALE_LINE, 1891, Age2ItemData.PROFESSION_HERDER
     OYSTER_GATHERER_MALE   = 582, "Own Oyster Gatherer (Male)", "Oyster Gatherer", Age2UnitLineData.VILLAGER_MALE_LINE, 2333, Age2ItemData.PROFESSION_OYSTER_GATHERER
     OYSTER_GATHERER_FEMALE = 583, "Own Oyster Gatherer (Female)", "Oyster Gatherer", Age2UnitLineData.VILLAGER_FEMALE_LINE, 2334, Age2ItemData.PROFESSION_OYSTER_GATHERER
+
+FOOD_PROFESSIONS: tuple[Age2ItemData, ...] = (
+    Age2ItemData.PROFESSION_FARMER,
+    Age2ItemData.PROFESSION_FISHERMAN,
+    Age2ItemData.PROFESSION_FORAGER,
+    Age2ItemData.PROFESSION_HUNTER,
+    Age2ItemData.PROFESSION_SHEPHERD,
+    Age2ItemData.PROFESSION_HERDER,
+)

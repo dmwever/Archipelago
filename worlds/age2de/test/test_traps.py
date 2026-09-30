@@ -22,12 +22,14 @@ JOAN = Age2CampaignData.JOAN.campaign_name
 TRAP_NAMES = set(Items.TRAP_NAMES)
 
 # Mirrors the targets in _build_starting_resources. Duplicated deliberately: a test that read them
-# from the implementation could not catch the implementation lowering them.
+# from the implementation could not catch the implementation lowering them. They came down when the
+# three town-centre items started counting toward the same totals - 275 wood, 150 food and 100
+# stone are guaranteed in every pool, so the rolled band no longer has to supply them.
 TARGETS = {
-    Items.Resource.WOOD: 1000,
-    Items.Resource.FOOD: 1000,
+    Items.Resource.WOOD: 725,
+    Items.Resource.FOOD: 850,
     Items.Resource.GOLD: 750,
-    Items.Resource.STONE: 500,
+    Items.Resource.STONE: 400,
 }
 
 # Traps only appear where there is surplus, and a single-campaign seed has two filler slots in
@@ -167,6 +169,25 @@ class TestSurplusAccounting(bases.Age2TestBase):
             items, surplus = self.world._build_starting_resources(wanted)
             self.assertEqual(wanted, len(items))
             self.assertLessEqual(surplus, wanted)
+
+    def test_trimming_for_traps_never_eats_into_the_targets(self) -> None:
+        """Starting resources are progression now, and the economy counts what they add up to,
+        so a trap budget must not be able to quietly weaken it.
+
+        It cannot: surplus is only ever non-zero once the four targets have been met in full -
+        halving forfeits it entirely - and the surplus items are the tail of the list, which is
+        the end roll_traps trims. This pins that, because the two are far apart in create_items.
+        """
+        self.world.options.trap_difficulty.value = 5
+        self.world.options.trap_percentage.value = 100
+        for wanted in (20, 40, 80, 160):
+            items, surplus = self.world._build_starting_resources(wanted)
+            traps = self.world.roll_traps(surplus)
+            self.assertLessEqual(len(traps), surplus,
+                                 f"{wanted} slots: traps outnumbered the surplus")
+            kept = items[:len(items) - len(traps)]
+            self.assertGreaterEqual(len(kept), len(items) - surplus,
+                                    f"{wanted} slots: trimming reached past the surplus")
 
     def test_roll_traps_returns_nothing_without_surplus(self) -> None:
         self.world.options.trap_difficulty.value = 5

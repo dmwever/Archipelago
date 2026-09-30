@@ -1,0 +1,141 @@
+"""Unit and technology costs, and what the rules do with them."""
+
+import unittest
+
+from . import bases
+from ..items.Items import Age2ItemData, Building, Resource
+from ..locations.Scenarios import Age2ScenarioData
+from ..locations.Techs import Age2TechData
+from ..locations.UnitLines import Age2UnitLineData
+from ..locations.Units import Age2UnitData
+from ..locations.connections.GameCosts import (GAME_DATA_SOURCE, TECHS_WITHOUT_COST,
+                                               UNITS_WITHOUT_COST)
+from ..Options import ShuffleVillager
+
+
+class TestEverythingIsPriced(unittest.TestCase):
+    def test_every_unit_has_a_cost_or_is_declared_free(self):
+        for unit in Age2UnitData:
+            with self.subTest(unit.name):
+                self.assertTrue(unit.cost or unit in UNITS_WITHOUT_COST)
+
+    def test_every_tech_has_a_cost_or_is_declared_free(self):
+        for tech in Age2TechData:
+            with self.subTest(tech.name):
+                self.assertTrue(tech.cost or tech in TECHS_WITHOUT_COST)
+
+    def test_costs_are_whole_positive_amounts_of_real_resources(self):
+        for owner in (*Age2UnitData, *Age2TechData):
+            for resource, amount in owner.cost.items():
+                with self.subTest(f"{owner.name}.{resource}"):
+                    self.assertIsInstance(resource, Resource)
+                    self.assertIsInstance(amount, int)
+                    self.assertGreater(amount, 0)
+
+    def test_the_units_without_a_cost_are_the_ones_we_think(self):
+        """All Chronicles-era, none trainable by a shipped civilisation. A new name in here is a
+        unit that would silently become free."""
+        for unit in UNITS_WITHOUT_COST:
+            with self.subTest(unit.name):
+                self.assertGreaterEqual(unit.game_id, 2101)
+
+    def test_the_source_is_recorded(self):
+        self.assertTrue(GAME_DATA_SOURCE.strip())
+
+
+class TestSpotChecks(unittest.TestCase):
+    """A handful of costs everyone knows, so a regenerated table that is subtly wrong fails."""
+
+    def test_known_costs(self):
+        self.assertEqual(Age2UnitData.VILLAGER_MALE.cost, {Resource.FOOD: 50})
+        self.assertEqual(Age2UnitData.VILLAGER_FEMALE.cost, {Resource.FOOD: 50})
+        self.assertEqual(Age2UnitData.KNIGHT.cost, {Resource.FOOD: 60, Resource.GOLD: 75})
+        self.assertEqual(Age2UnitData.FISHING_SHIP.cost, {Resource.WOOD: 75})
+        self.assertEqual(Age2UnitData.MONK.cost, {Resource.GOLD: 100})
+
+    def test_the_building_costs_in_items_still_agree_with_the_dump(self):
+        """Thirty-four of thirty-five agreed when the table was generated. The Palisade Gate did
+        not - 20 wood here against 30 in the dump - and this records that rather than hiding it."""
+        gate = Age2ItemData.PALISADE_GATE
+        self.assertIsInstance(gate.type, Building)
+        self.assertEqual(gate.type.needed_resources, {Resource.WOOD: 20.0})
+
+
+class TestCostsReachTheRules(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+
+    def deps(self, rule):
+        return set(rule.resolve(self.world).item_dependencies())
+
+    def test_training_a_unit_asks_for_what_it_costs(self):
+        self.build()
+        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+        wanted = self.deps(scenario.units.can_train(Age2UnitData.KNIGHT))
+        # A knight is food and gold: either banked, or a source on the map.
+        self.assertIn("+250 Starting Food", wanted)
+        self.assertIn("+250 Starting Gold", wanted)
+
+    def test_researching_a_tech_asks_for_what_it_costs(self):
+        self.build(techsanity=3)
+        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+        wanted = self.deps(scenario.techs.can_research(Age2TechData.LOOM))
+        self.assertIn("+250 Starting Gold", wanted)
+
+    def test_a_free_unit_is_free_rather_than_untrainable(self):
+        """An empty And resolves to False_, so a unit with no cost on file has to be handled
+        explicitly or it becomes untrainable."""
+        self.build()
+        economy = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).economy
+        self.assertTrue(economy.can_afford({}).resolve(self.world).always_true)
+
+
+class TestVillagersCostFood(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def test_a_shuffled_villager_wants_the_starting_food_item(self):
+        self.build(shuffle_villager=ShuffleVillager.option_yes)
+        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+        wanted = set(scenario.units.can_train(Age2UnitData.VILLAGER_MALE)
+                     .resolve(self.world).item_dependencies())
+        self.assertIn(Age2ItemData.STARTING_VILLAGER_FOOD.item_name, wanted)
+
+    def test_an_unshuffled_villager_does_not(self):
+        self.build(shuffle_villager=ShuffleVillager.option_no)
+        rule = self.world.rules.logic.units.villager_food()
+        self.assertTrue(rule.resolve(self.world).always_true)
+
+
+class TestABaseNeedsVillagers(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def test_even_a_granted_base_wants_the_food_to_staff_it(self):
+        """Attila 3 opens with a town centre standing. A town centre with nobody in front of it
+        is not a base, so the food is asked outside the granted-or-built choice."""
+        self.build()
+        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
+        self.assertTrue(scenario.starting_state.has_base.resolve(self.world).always_true)
+        wanted = set(scenario.has_base().resolve(self.world).item_dependencies())
+        self.assertIn(Age2ItemData.STARTING_VILLAGER_FOOD.item_name, wanted)
+
+
+class TestFieldingSustainsEveryTier(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def test_a_line_that_costs_gold_at_any_tier_needs_gold(self):
+        """The militia line costs gold at every tier. Sustaining is asked of the union of the
+        tiers, not of the cheapest one - a tier with no cost on file would read as cheapest."""
+        self.build()
+        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+        from ..locations.Ages import Age2AgeData
+        rule = scenario.units.can_field(Age2UnitLineData.MILITIA_LINE, Age2AgeData.DARK)
+        wanted = set(rule.resolve(self.world).item_dependencies())
+        self.assertTrue(wanted, "fielding the militia line asked for nothing at all")
+        tiers = scenario.units.fieldable_tiers(Age2UnitLineData.MILITIA_LINE, Age2AgeData.DARK)
+        self.assertTrue(any(Resource.GOLD in unit.cost for unit in tiers))
+
+
+if __name__ == "__main__":
+    unittest.main()
