@@ -14,5 +14,5 @@ class BuildingRules:
         self.logic = rules.logic
     
     def set_rules(self):
-        for building in self.world.shuffled_buildings:
+        for building in self.world.pool.buildings.locations:
             self.world.set_rule(self.world.get_location(building.location_name), self.logic.can_build_building_anywhere(building))

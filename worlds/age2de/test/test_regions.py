@@ -117,7 +117,7 @@ class TestBuildingSelection(bases.Age2TestBase):
     def test_unique_buildings_are_never_shuffled_without_the_option(self) -> None:
         from ..locations.Buildings import BuildingOption
 
-        for building in self.world.shuffled_buildings:
+        for building in self.world.pool.buildings.shuffled:
             self.assertNotIn(BuildingOption.unique, building.building_options,
                              f"{building.name} was shuffled without the Unique option")
 

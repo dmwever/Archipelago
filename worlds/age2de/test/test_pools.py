@@ -3,7 +3,7 @@
 import unittest
 
 from . import bases
-from ..locations.Buildings import Age2BuildingData
+from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
@@ -78,6 +78,51 @@ class TestScenarioPool(bases.Age2RuleTestBase):
                 self.assertEqual(world.pool.scenarios.of(campaign)[0], first)
                 self.assertEqual(min(s.chapter for s in world.pool.scenarios.of(campaign)),
                                  first.chapter)
+
+
+class TestBuildingPool(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def shuffled(self, **options):
+        return self.build(**options).pool.buildings.shuffled
+
+    def test_nothing_shuffled_when_no_category_is_chosen(self):
+        self.assertEqual([], self.shuffled(shuffle_buildings=set()))
+
+    def test_a_building_needs_a_chosen_category(self):
+        economy = self.shuffled(shuffle_buildings={BuildingOption.economy})
+        for building in economy:
+            with self.subTest(building.name):
+                self.assertIn(BuildingOption.economy, building.building_options)
+
+    def test_unique_is_a_qualifier_not_a_category(self):
+        """Unique alone selects nothing: a unique building is sorted by its other category, so
+        the Folwark would need Economy as well as Unique."""
+        self.assertEqual([], self.shuffled(shuffle_buildings={BuildingOption.unique}))
+
+    def test_no_unique_building_is_reachable_with_the_shipped_civs(self):
+        """Age2CivData.builds sends a unique building to included_buildings, and neither the Huns
+        nor the Franks declare any - so no unique building is ever shuffled today, whatever
+        Shuffle Buildings says. A civ that declares one will change this."""
+        with_unique = self.shuffled(shuffle_buildings={BuildingOption.economy,
+                                                       BuildingOption.unique})
+        without = self.shuffled(shuffle_buildings={BuildingOption.economy})
+        self.assertEqual(without, with_unique)
+        for building in with_unique:
+            with self.subTest(building.name):
+                self.assertNotIn(BuildingOption.unique, building.building_options)
+
+    def test_only_buildings_somebody_builds(self):
+        world = self.build()
+        for building in world.pool.buildings.shuffled:
+            with self.subTest(building.name):
+                self.assertTrue(world.pool.civs.builds(building))
+
+    def test_locations_and_shuffled_agree(self):
+        """Buildings have no separate on/off toggle, so the two are the same list."""
+        world = self.build()
+        self.assertEqual(world.pool.buildings.shuffled, world.pool.buildings.locations)
 
 
 class TestCampaignPool(bases.Age2RuleTestBase):

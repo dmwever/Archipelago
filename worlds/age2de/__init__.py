@@ -68,7 +68,6 @@ class Age2World(CachedRuleBuilderWorld):
     item_name_groups = {"Traps": set(Items.TRAP_NAMES)}
     
     pool: Age2Pool
-    shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
     unit_regions: UnitRegions
     tech_pool: TechPool
@@ -78,7 +77,6 @@ class Age2World(CachedRuleBuilderWorld):
 
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
-        self.shuffled_buildings = []
         self.shuffled_techs = []
         self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
 
@@ -144,19 +142,9 @@ class Age2World(CachedRuleBuilderWorld):
         connection = Entrance(self.player, f"{buildings.name}", source)
         source.exits.append(connection)
         connection.connect(buildings)
-        for building in Buildings.Age2BuildingData:
-            if all(building in civ.excluded_buildings for civ in self.pool.civs.included):
-                continue # No included civs have this non-unique building.
-            if Buildings.BuildingOption.unique in building.building_options and Buildings.BuildingOption.unique not in self.options.shuffle_buildings:
-                continue # We skip unique altogether, else we sort by other building type.
-            if Buildings.BuildingOption.unique in building.building_options and not any(building in civ.included_buildings for civ in self.pool.civs.included): 
-                continue # No civs with this unique building are included.
-            if any(option in building.building_options for option in 
-                   [option for option in self.options.shuffle_buildings
-                    if option != Buildings.BuildingOption.unique]):
-                new_location = Location(self.player, building.location_name, building.id, buildings)
-                buildings.locations.append(new_location)
-                self.shuffled_buildings.append(building)
+        for building in self.pool.buildings.locations:
+            buildings.locations.append(
+                Location(self.player, building.location_name, building.id, buildings))
         for age in self.pool.ages.locations:
             buildings.locations.append(
                 Location(self.player, age.location_name, age.id, buildings))
@@ -276,7 +264,7 @@ class Age2World(CachedRuleBuilderWorld):
 
         for building in Age2BuildingData:
             building_item: Item = self.create_item(building.item.item_name)
-            if building in self.shuffled_buildings:
+            if building in self.pool.buildings.locations:
                 items.append(building_item)
             else:
                 self.multiworld.push_precollected(building_item)
