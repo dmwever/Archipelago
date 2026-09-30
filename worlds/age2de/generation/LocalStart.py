@@ -24,7 +24,8 @@ if TYPE_CHECKING:
 Target = Location | Rule.Resolved
 
 def choose_start_scenario(world: 'Age2World') -> Age2ScenarioData:
-    campaign = world.random.choice(sorted(world.starting_campaigns, key=lambda c: c.campaign_name))
+    campaign = world.random.choice(
+        sorted(world.pool.campaigns.starting, key=lambda c: c.campaign_name))
     return CAMPAIGN_TO_SCENARIOS[campaign][0]
 
 def resolve(world: 'Age2World', rule: Rule) -> Rule.Resolved:

@@ -54,7 +54,7 @@ class Logic:
         self.units = UnitLogic(self, world)
         self.ages =  AgeLogic(self, world)
         
-        for campaign in world.included_campaigns:
+        for campaign in world.pool.campaigns.enabled:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
     

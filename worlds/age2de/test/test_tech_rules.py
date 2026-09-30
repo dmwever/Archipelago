@@ -118,7 +118,7 @@ class TestExistingTechs(Age2RuleTestBase):
         # standing in the age itself count.
         world = self.build(techsanity=Techsanity.option_all,
                            existing_techs=ExistingTechs.option_vanilla)
-        scenarios = [scenario for campaign in world.included_campaigns
+        scenarios = [scenario for campaign in world.pool.campaigns.enabled
                      for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         for tech in world.shuffled_techs:
             with self.subTest(tech=tech.name):

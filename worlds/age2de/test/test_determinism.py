@@ -22,16 +22,16 @@ class TestCampaignOrder(bases.Age2TestBase):
     def test_campaigns_are_kept_in_definition_order(self) -> None:
         self.assertEqual(
             [Age2CampaignData.ATTILA, Age2CampaignData.JOAN],
-            self.world.included_campaigns,
+            self.world.pool.campaigns.enabled,
             "a set here made region, item and rule order depend on how the members hashed",
         )
 
     def test_starting_campaigns_follow_the_same_order(self) -> None:
-        self.assertEqual([Age2CampaignData.ATTILA], self.world.starting_campaigns)
+        self.assertEqual([Age2CampaignData.ATTILA], self.world.pool.campaigns.starting)
 
     def test_regions_are_created_in_campaign_order(self) -> None:
         expected = [scenario.scenario_name
-                    for campaign in self.world.included_campaigns
+                    for campaign in self.world.pool.campaigns.enabled
                     for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         created = [region.name for region in self.multiworld.get_regions(self.player)]
         self.assertEqual(expected, [name for name in created if name in expected],
@@ -39,7 +39,7 @@ class TestCampaignOrder(bases.Age2TestBase):
 
     def test_scenario_logic_follows_region_order(self) -> None:
         expected = [scenario.scenario_name
-                    for campaign in self.world.included_campaigns
+                    for campaign in self.world.pool.campaigns.enabled
                     for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         # ScenarioRules keeps its scenario only as the entrance it rules, and the entrance is
         # named after the scenario.

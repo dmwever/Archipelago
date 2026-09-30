@@ -32,13 +32,13 @@ class TestCivilizationCollection(bases.Age2TestBase):
     def test_every_included_scenario_contributes_its_civilisation(self) -> None:
         # Passes before the fix too, because every chapter of a campaign shares one civ today.
         # It pins the invariant for the first campaign whose opener differs from the rest.
-        for campaign in self.world.included_campaigns:
+        for campaign in self.world.pool.campaigns.enabled:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 self.assertIn(scenario.civ, self.world.included_civs,
                               f"{scenario.scenario_name} never registered its civilisation")
 
     def test_the_first_scenario_of_a_campaign_counts(self) -> None:
-        for campaign in self.world.included_campaigns:
+        for campaign in self.world.pool.campaigns.enabled:
             opener = CAMPAIGN_TO_SCENARIOS[campaign][0]
             self.assertIn(opener.civ, self.world.included_civs,
                           "the campaign's first scenario was held out of the civ loop")
@@ -57,14 +57,14 @@ class TestVictoryEvents(bases.Age2TestBase):
 
     def test_each_scenario_has_one_completion_event(self) -> None:
         names = [location.name for location in self.multiworld.get_locations(self.player)]
-        for campaign in self.world.included_campaigns:
+        for campaign in self.world.pool.campaigns.enabled:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 event = "Complete " + scenario.scenario_name
                 self.assertEqual(1, names.count(event),
                                  f"{event} was registered {names.count(event)} times")
 
     def test_completion_events_are_registered_with_their_region(self) -> None:
-        for campaign in self.world.included_campaigns:
+        for campaign in self.world.pool.campaigns.enabled:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 region = self.world.get_region(scenario.scenario_name)
                 event = "Complete " + scenario.scenario_name
@@ -87,7 +87,7 @@ class TestScenarioRuleSetup(bases.Age2TestBase):
 
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
-            for campaign in self.world.included_campaigns:
+            for campaign in self.world.pool.campaigns.enabled:
                 for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                     ScenarioRules(self.world.rules, scenario)
         self.assertEqual("", buffer.getvalue(),

@@ -13,6 +13,7 @@ from Options import OptionError
 from test.general import setup_solo_multiworld
 from rule_builder.rules import False_, Has, HasAll, True_
 
+from ..generation.pools.CampaignPool import CampaignPool
 from ..generation.LocalStart import (
     choose_start_scenario,
     resolve,
@@ -149,11 +150,19 @@ class TestInstallableName(unittest.TestCase):
 
 
 class _StubWorld:
-    """Minimal stand-in for Age2World: choose_start_scenario only needs these two."""
+    """Minimal stand-in for Age2World: choose_start_scenario only needs the random and the pool.
+
+    The campaign pool is the real one rather than a fake, so the ordering this test pins is the
+    ordering production uses."""
 
     def __init__(self, names: set[str], seed: int) -> None:
         self.random = random.Random(seed)
-        self.starting_campaigns = {NAME_TO_CAMPAIGN[name] for name in names}
+        options = Age2World.options_dataclass(**{
+            key: option.from_any(option.default)
+            for key, option in Age2World.options_dataclass.type_hints.items()})
+        options.enabled_campaigns.value = set(names)
+        options.starting_campaigns.value = set(names)
+        self.pool = SimpleNamespace(campaigns=CampaignPool(options))
 
 
 class TestSelectionDeterminism(unittest.TestCase):
@@ -509,9 +518,9 @@ class TestTwoSlots(unittest.TestCase):
     def test_campaign_sets_do_not_merge(self) -> None:
         multiworld = self.multiworld()
         first, second = multiworld.worlds[1], multiworld.worlds[2]
-        self.assertEqual([Age2CampaignData.ATTILA], first.included_campaigns)
-        self.assertEqual([Age2CampaignData.JOAN], second.included_campaigns)
-        self.assertIsNot(first.included_campaigns, second.included_campaigns)
+        self.assertEqual([Age2CampaignData.ATTILA], first.pool.campaigns.enabled)
+        self.assertEqual([Age2CampaignData.JOAN], second.pool.campaigns.enabled)
+        self.assertIsNot(first.pool.campaigns.enabled, second.pool.campaigns.enabled)
 
     def test_each_slot_places_its_own_items(self) -> None:
         multiworld = self.multiworld()

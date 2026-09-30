@@ -43,7 +43,7 @@ class Rules:
         self.world.multiworld.completion_condition[self.world.player] = lambda state: state.has("Victory", self.world.player)
         self.set_rule(self.world.get_location("Victory"), self.logic.has_goal())
 
-        for campaign in self.world.included_campaigns:
+        for campaign in self.world.pool.campaigns.enabled:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
                 self.scenario_rules.append(scenario.rules(self))
 

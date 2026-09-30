@@ -14,6 +14,7 @@ from worlds.age2de.locations.connections import LocationMapping
 from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
+from .generation.Age2Pool import Age2Pool
 from .generation.TechPool import TechPool
 from .generation.UnitPool import UnitPool
 from .regions.UnitRegions import UnitRegions
@@ -67,9 +68,8 @@ class Age2World(CachedRuleBuilderWorld):
     item_mapping = Items.item_mapping
     item_name_groups = {"Traps": set(Items.TRAP_NAMES)}
     
+    pool: Age2Pool
     included_civs: list[Scenarios.Age2CivData]
-    included_campaigns: list[Campaigns.Age2CampaignData]
-    starting_campaigns: list[Campaigns.Age2CampaignData]
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
     shuffled_ages: list[Age2AgeData]
@@ -84,12 +84,16 @@ class Age2World(CachedRuleBuilderWorld):
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
         self.included_civs = []
-        self.included_campaigns = []
-        self.starting_campaigns = []
         self.shuffled_buildings = []
         self.shuffled_techs = []
         self.shuffled_ages = []
         self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
+
+    @classmethod
+    def create_group(cls, multiworld: 'MultiWorld', new_player_id: int, players: set[int]) -> World:
+        group = super().create_group(multiworld, new_player_id, players)
+        group.pool = Age2Pool(group)
+        return group
 
     def branching_option(self, location):
         if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenario_branching != ScenarioBranching.option_all:
@@ -98,19 +102,21 @@ class Age2World(CachedRuleBuilderWorld):
             return False
         return True
 
+    def inspect_options(self, options: Age2Options, player_name: str) -> None:
+        if not options.enabled_campaigns.value:
+            raise OptionError(f"{player_name}: enabled_campaigns needs at least one campaign.")
+        if not options.starting_campaigns.value:
+            raise OptionError(f"{player_name}: starting_campaigns needs at least one campaign.")
+        enabled = {campaign.campaign_name for campaign in Campaigns.Age2CampaignData
+                   if campaign.campaign_name in options.enabled_campaigns}
+        if not enabled & set(options.starting_campaigns.value):
+            raise OptionError(f"{player_name}: starting_campaigns must include at least one "
+                              f"enabled campaign. Enabled: {sorted(options.enabled_campaigns.value)}.")
+
     def generate_early(self) -> None:
-        self.included_campaigns = [campaign for campaign in Campaigns.Age2CampaignData
-                                   if campaign.campaign_name in self.options.enabled_campaigns]
-        self.starting_campaigns = [campaign for campaign in self.included_campaigns
-                                   if campaign.campaign_name in self.options.starting_campaigns]
-        if not self.options.enabled_campaigns.value:
-            raise OptionError(f"{self.player_name}: enabled_campaigns needs at least one campaign.")
-        if not self.options.starting_campaigns.value:
-            raise OptionError(f"{self.player_name}: starting_campaigns needs at least one campaign.")
-        if not self.starting_campaigns:
-            raise OptionError(f"{self.player_name}: starting_campaigns must include at least one "
-                              f"enabled campaign. Enabled: {sorted(self.options.enabled_campaigns.value)}.")
+        self.inspect_options(self.options, self.player_name)
         self.check_installable_name()
+        self.pool = Age2Pool(self)
 
     def check_installable_name(self) -> None:
         """/install names each campaign file after the slot, so the name has to survive a file
@@ -128,7 +134,7 @@ class Age2World(CachedRuleBuilderWorld):
 
     def create_regions(self) -> None:
         
-        self.included_scenarios = [scenario for campaign in self.included_campaigns
+        self.included_scenarios = [scenario for campaign in self.pool.campaigns.enabled
                                    for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         self.included_civs = list(dict.fromkeys(
             scenario.civ for scenario in self.included_scenarios))
@@ -136,7 +142,7 @@ class Age2World(CachedRuleBuilderWorld):
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         scenario_regions: dict[Scenarios.Age2ScenarioData, Region] = {}
         
-        for campaign in self.included_campaigns:
+        for campaign in self.pool.campaigns.enabled:
             scenarios = CAMPAIGN_TO_SCENARIOS[campaign]
             if not scenarios:
                 raise OptionError(f"{self.player_name}: {campaign.campaign_name} has no scenarios.")
@@ -166,7 +172,7 @@ class Age2World(CachedRuleBuilderWorld):
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
         self.earliest_age = min(scenario.vanilla_age
-                                for campaign in self.included_campaigns
+                                for campaign in self.pool.campaigns.enabled
                                 for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
         rebased = self.options.existing_techs == ExistingTechs.option_start_in_dark_age
         self.shuffled_ages = [age for age in Ages.SHUFFLED_AGES
@@ -252,14 +258,14 @@ class Age2World(CachedRuleBuilderWorld):
                 if item.type.vanilla_scenario.scenario_name in region_names:
                     items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Campaign):
-                if item.type.vanilla_campaign in self.included_campaigns:
+                if item.type.vanilla_campaign in self.pool.campaigns.enabled:
                     ap_item = self.create_item(item.item_name)
-                    if item.type.vanilla_campaign.campaign_name in self.options.starting_campaigns:
+                    if item.type.vanilla_campaign in self.pool.campaigns.starting:
                         self.multiworld.push_precollected(ap_item)
                     else:
                         items.append(ap_item)
             elif isinstance(item.type, Items.ProgressiveScenario):
-                if item.type.vanilla_campaign in self.included_campaigns:
+                if item.type.vanilla_campaign in self.pool.campaigns.enabled:
                     for i in range(item.type.num_additional_scenarios):
                         items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Resources):
@@ -438,8 +444,8 @@ class Age2World(CachedRuleBuilderWorld):
         mapping: Mapping[str, Any] = {
             WorldVersion.SLOT_DATA_KEY: self.world_version.as_simple_string(),
         }
-        for campaign in self.included_campaigns:
-            mapping[campaign.campaign_name + "_unlocked"] = campaign.campaign_name in self.options.starting_campaigns
+        for campaign in self.pool.campaigns.enabled:
+            mapping[campaign.campaign_name + "_unlocked"] = campaign in self.pool.campaigns.starting
         for option_name in SlotData.OPTIONS.values():
             mapping[option_name] = int(getattr(self.options, option_name).value)
         mapping[ScenarioBranching.internal_name] = int(self.options.scenario_branching.value)

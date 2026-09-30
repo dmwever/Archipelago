@@ -229,7 +229,7 @@ class TestScenarioReachability(TechPoolTestBase):
                 pool = self.pool(techsanity=Techsanity.option_all,
                                  enabled_campaigns=set(campaigns))
                 starts = [scenario.vanilla_age
-                          for campaign in self.world.included_campaigns
+                          for campaign in self.world.pool.campaigns.enabled
                           for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
                 for tech in pool:
                     self.assertTrue(any(start <= tech.age for start in starts), tech.name)
