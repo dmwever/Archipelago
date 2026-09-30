@@ -164,6 +164,7 @@ class Age2ItemData(enum.IntEnum):
         self.type = type
         self.type_data = self.type.__class__
     
+    #0 = Victory
     VICTORY =                       0, "Victory", Victory()
     
     #1 - 24 = Resources, 25 - 29 = Ages, 30 - 199 = Civs, 200 - 299 = Buildings,
@@ -203,7 +204,7 @@ class Age2ItemData(enum.IntEnum):
     CASTLE_AGE =        27, "Castle Age", Age2AgeData.CASTLE
     IMPERIAL_AGE =      28, "Imperial Age", Age2AgeData.IMPERIAL
     
-    #200 - 300 = Buildings
+    #200 - 299 = Buildings
     WONDER =                        200, "Wonder",              Building(276, 3000.0,   Age2AgeData.IMPERIAL,   { Resource.WOOD: 1000.0, Resource.GOLD: 1000.0, Resource.STONE: 1000.0 })
     OUTPOST =                       201, "Outpost",             Building(598, 30.0,     Age2AgeData.DARK,       { Resource.WOOD: 25.0, Resource.STONE: 5.0 })
     TOWN_CENTER =                   202, "Town Center",         Building(621, 375.0,    Age2AgeData.DARK,       { Resource.WOOD: 275.0, Resource.STONE: 100.0 })
@@ -774,7 +775,7 @@ class Age2ItemData(enum.IntEnum):
     TECH_CHAMPI_RUNNER                      = 3891, "Champi Runner",                        Tech(1402, 1402, -1, Age2AgeData.FEUDAL, True, False)
     TECH_CIRCUMNAVIGATION_PORTUGUESE        = 3892, "Circumnavigation (Portuguese)",        Tech(1404, 1404, 24, Age2AgeData.CASTLE, False, True)
 
-    #4000 - 4999 = Troops, Future Use
+    #4000 - 4999 = Mercenaries
     
     #Troop Items
     AP_ATTILA_1_MANGUDAI =                  4000, "Attila, The Scourge of God: Scythian Mangudai",      Mercenary(Age2ScenarioData.AP_ATTILA_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 18)], icon_id=313, name_string_id=990001)

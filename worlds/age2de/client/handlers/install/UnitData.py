@@ -113,15 +113,8 @@ class UnitData:
         return [self.owned_type_row(place)]
 
     def rows(self) -> list[Row]:
-        places = self.places()
-        stranded = [place for place in places
-                    if isinstance(place, Age2UnitData) and place not in self._trainable]
-        if stranded:
-            raise ValueError(
-                "unit locations no civilization in the seed can field: "
-                + ", ".join(sorted(unit.unit_name for unit in stranded)))
         out: dict[UnitLocation, Row] = {}
-        for place in places:
+        for place in self.places():
             for row in self.rows_for(place):
                 out.setdefault(row.unit, row)
         if len(out) > self.UNIT_CAPACITY:
