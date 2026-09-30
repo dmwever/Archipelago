@@ -141,17 +141,6 @@ class TestDependencies(bases.Age2RuleTestBase):
 
 
 class TestFoodProfessions(bases.Age2RuleTestBase):
-    def test_food_is_free_when_professions_are_not_shuffled(self):
-        self.build(shuffle_villager=ShuffleVillager.option_no)
-        rule = self.world.rules.logic.resources.has_any_food_profession()
-        self.assertIsInstance(rule, True_)
-
-    def test_any_food_profession_names_all_six(self):
-        self.build(shuffle_villager=ShuffleVillager.option_include_professions)
-        rule = self.world.rules.logic.resources.has_any_food_profession()
-        self.assertEqual(set(rule.resolve(self.world).item_dependencies()),
-                         {profession.item_name for profession in FOOD_PROFESSIONS})
-
     def test_every_food_profession_is_a_real_job(self):
         jobs = {job.item for job in Age2VillagerJobData}
         for profession in FOOD_PROFESSIONS:

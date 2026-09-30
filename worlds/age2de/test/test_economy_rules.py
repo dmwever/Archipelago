@@ -1,5 +1,6 @@
 """The per-scenario economy: who can gather what, and what that makes affordable."""
 
+import dataclasses
 import unittest
 from unittest import mock
 
@@ -228,9 +229,11 @@ class TestAffordability(EconomyTestBase):
         for costs in ({}, {Resource.GOLD: 0}, {Resource.GOLD: 0, Resource.FOOD: 0}):
             with self.subTest(str(costs)):
                 self.assertTrue(self.resolved(economy.can_afford(costs))(state))
-                self.assertTrue(self.resolved(economy.can_sustain(costs))(state))
                 self.assertTrue(self.resolved(
                     self.world.rules.logic.resources.has_amounts(costs))(state))
+        # can_sustain is asked which resources to keep coming, not what they cost, so the
+        # zero-cost filtering happens in can_field and nothing priced at nothing reaches here.
+        self.assertTrue(self.resolved(economy.can_sustain(()))(state))
 
     def test_a_cost_can_be_paid_from_the_bank_or_from_the_ground(self):
         self.build()
@@ -268,3 +271,30 @@ class TestTheQuestionIsShared(EconomyTestBase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDeepFishIsWhatABoatNeeds(EconomyTestBase):
+    """A fishing ship can only reach the fish a villager on the shore cannot, so the guard that
+    switches the boat rule off has to read deep_fish_count - the same number the abundance weighing
+    pairs it with. Every shipped map has deep fish, so the two spellings agree on all of them and
+    only a map whose fish are all inshore can tell them apart."""
+
+    def counts_with(self, scenario, **fields):
+        return dataclasses.replace(scenario.resources, **fields)
+
+    def test_a_map_whose_fish_are_all_inshore_cannot_be_fished_by_boat(self):
+        self.build()
+        economy = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        economy.counts = self.counts_with(Age2ScenarioData.AP_ATTILA_1,
+                                          shore_fish_count=4000, fish_count=4000)
+        self.assertEqual(0, economy.counts.deep_fish_count)
+        self.assertTrue(economy.counts.fish_count, "fish_count must stay non-zero to tell the "
+                                                   "two guards apart")
+        self.assertIsInstance(economy.can_fish_by_boat(), False_)
+
+    def test_deep_fish_alone_can_be(self):
+        self.build()
+        economy = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        economy.counts = self.counts_with(Age2ScenarioData.AP_ATTILA_1,
+                                          shore_fish_count=0, fish_count=4000)
+        self.assertNotIsInstance(economy.can_fish_by_boat(), False_)

@@ -6,16 +6,14 @@ from rule_builder.rules import False_, Rule, True_
 
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
-from ..locations.EscortUnits import Age2EscortUnitData
-from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from ..regions.UnitRegions import UnitEntrance, UnitEntranceKind, UnitRegion
 
 if TYPE_CHECKING:
+    from ..logic.ScenarioLogic import ScenarioLogic
     from .Rules import Rules
-    from .ScenarioRules import ScenarioRules
 
 
 class UnitRules:
@@ -24,11 +22,11 @@ class UnitRules:
         self.world = rules.world
         self.logic = rules.logic
 
-    def scenario_logic(self, scenario) -> 'ScenarioRules':
-        for scenario_rules in self.rules.scenario_rules:
-            if scenario_rules.scenario is scenario:
-                return scenario_rules.scenario_logic
-        raise KeyError(f"{scenario.scenario_name} has no rules in this playthrough")
+    def scenario_logic(self, scenario) -> 'ScenarioLogic':
+        try:
+            return self.logic.for_scenario(scenario)
+        except KeyError:
+            raise KeyError(f"{scenario.scenario_name} is not in this playthrough") from None
 
     def trigger_rule(self, scenario, target) -> Rule:
         logic = self.scenario_logic(scenario)

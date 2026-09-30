@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING, Collection, Mapping
 
 from rule_builder.rules import And, False_, Or, Rule, True_
 
@@ -101,7 +101,7 @@ class ScenarioResourceLogic:
                                                      ship.cost.get(Resource.WOOD, 0))))
 
     def can_fish_by_boat(self) -> Rule:
-        if not self.counts.fish_count:
+        if not self.counts.deep_fish_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
                 & self.can_crew_fishing_ships()
@@ -224,11 +224,10 @@ class ScenarioResourceLogic:
         return And(*[self.logic.resources.has_amount(resource, costs[resource])
                      | self.has_source(resource) for resource in priced])
 
-    def can_sustain(self, costs: Mapping[Resource, float]) -> Rule:
-        priced = [resource for resource, amount in costs.items() if amount > 0]
-        if not priced:
+    def can_sustain(self, resources: Collection[Resource]) -> Rule:
+        if not resources:
             return True_()
-        return And(*[self.has_easy_source(resource) for resource in priced])
+        return And(*[self.has_easy_source(resource) for resource in resources])
 
     # -- private methods -------------------------------------------------------------
 

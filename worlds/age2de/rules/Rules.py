@@ -35,9 +35,6 @@ class Rules:
         self.unit_rules = UnitRules(self)
         self.scenario_rules = []
 
-    def get_entrance(self, entrance_name: str):
-        return self.world.get_entrance(entrance_name)
-
     def set_rule(self, spot: Location | Entrance, rule: CollectionRule | Rule[Age2World]):
         self.world.set_rule(spot, rule)
 

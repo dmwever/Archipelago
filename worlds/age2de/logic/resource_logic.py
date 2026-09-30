@@ -1,11 +1,9 @@
 from math import ceil
 from typing import TYPE_CHECKING, Mapping
 
-from rule_builder.rules import And, HasAny, Rule, True_
+from rule_builder.rules import And, Rule, True_
 
 from ..items.Items import Resource
-from ..locations.VillagerJobs import FOOD_PROFESSIONS
-from ..Options import ShuffleVillager
 from .custom_logic.ResourceAmount import HasResourceAmount
 
 if TYPE_CHECKING:
@@ -28,10 +26,3 @@ class ResourceLogic:
             return True_()
         return And(*[self.has_amount(resource, costs[resource]) for resource in priced])
 
-    def available(self, resource: Resource) -> int:
-        return self.world.starting_resource_totals[resource]
-
-    def has_any_food_profession(self) -> Rule:
-        if self.world.options.shuffle_villager != ShuffleVillager.option_include_professions:
-            return True_()
-        return HasAny(*[profession.item_name for profession in FOOD_PROFESSIONS])

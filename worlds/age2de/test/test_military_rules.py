@@ -4,6 +4,7 @@ from pathlib import Path
 from ..Options import IncludeUniqueUnits, Unitsanity
 from ..locations.Ages import Age2AgeData
 from ..locations.Civilizations import Age2CivData
+from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
@@ -168,3 +169,29 @@ class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):
         # The Warrior Priest is the exception: a Monastery unit that carries an axe and a sword,
         # so it is an army unit and it counters buildings.
         self.assertIn(Age2UnitLineData.WARRIOR_PRIEST_LINE, ROLE_TO_LINES[UnitRole.military])
+
+
+class TestDefeatingOnePlayer(Age2RuleTestBase):
+    """Attila 1 has four opponents and one location for beating any of them, so it is the union of
+    what beating each costs - not the cost of beating the one the victory rule happens to name."""
+
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def test_the_first_kill_costs_the_cheapest_opponent(self):
+        """Blue is the cheapest of the three and needs the Feudal Age. Red and green need the
+        Castle Age, and demanding that of this location would price it as a victory."""
+        self.build(shuffle_ages=True)
+        state = self.state_without("Castle Age", "Imperial Age")
+        location = Age2ScenarioLocationData.ATT1_DEFEAT_FIRST_PLAYER.global_name()
+        self.assertTrue(self.multiworld.get_location(location, self.world.player)
+                        .access_rule(state))
+
+    def test_the_victory_costs_more_than_the_first_kill(self):
+        """Winning needs blue beaten and then one of red or green, so the same state that clears
+        one player does not clear the scenario."""
+        self.build(shuffle_ages=True)
+        state = self.state_without("Castle Age", "Imperial Age")
+        location = Age2ScenarioLocationData.ATT1_VICTORY.global_name()
+        self.assertFalse(self.multiworld.get_location(location, self.world.player)
+                         .access_rule(state))

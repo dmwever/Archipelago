@@ -123,7 +123,6 @@ class UnitLogic:
         return HasAll(*[token.item_name for token in tokens])
 
     def token_applies(self, unit: Age2UnitData, token) -> bool:
-        from ..items.Items import Age2ItemData
         if unit is not Age2UnitData.TRADE_CART or token is not Age2ItemData.UPGRADE_HORSE:
             return True
         return self.has_horses()

@@ -49,7 +49,7 @@ class Attila1Rules(ScenarioRules):
         )
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.ATT1_DEFEAT_FIRST_PLAYER],
-            can_beat_blue
+            can_beat_blue | can_beat_red | can_beat_green
         )
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.ATT1_CAPTURE_HORSES_CAMP],

@@ -66,11 +66,8 @@ class ScenarioUnitLogic:
         tiers = self.fieldable_tiers(line, age)
         if not tiers:
             return False_()
-        sustained: dict = {}
-        for unit in tiers:
-            for resource, amount in unit.cost.items():
-                if amount > 0:
-                    sustained[resource] = max(sustained.get(resource, 0), amount)
+        sustained = {resource for unit in tiers
+                     for resource, amount in unit.cost.items() if amount > 0}
         return (Or(*[self.can_train(unit) for unit in tiers]) & self.scenario.has_base()
                 & self.scenario.economy.can_sustain(sustained))
 
