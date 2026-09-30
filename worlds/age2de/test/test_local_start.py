@@ -115,8 +115,43 @@ class TestSelectionOptionErrors(unittest.TestCase):
     def test_enabled_needs_at_least_one(self) -> None:
         self.assert_rejects(set(), {ATTILA})
 
-    def test_starting_needs_at_least_one(self) -> None:
-        self.assert_rejects({ATTILA}, set())
+
+
+class TestABlankStartIsRandom(unittest.TestCase):
+    """Leaving starting_campaigns blank asks for a random start rather than being an error."""
+
+    def world_with(self, enabled: set[str], seed: int = 0):
+        world = setup_solo_multiworld(Age2World, (), seed=seed).worlds[1]
+        world.options.enabled_campaigns.value = enabled
+        world.options.starting_campaigns.value = set()
+        world.generate_early()
+        return world
+
+    def test_a_blank_start_picks_an_enabled_campaign(self) -> None:
+        for enabled in ({ATTILA}, {JOAN}, {ATTILA, JOAN}):
+            with self.subTest(sorted(enabled)):
+                world = self.world_with(enabled)
+                self.assertEqual(1, len(world.pool.campaigns.starting))
+                self.assertIn(world.pool.campaigns.starting[0].campaign_name, enabled)
+
+    def test_the_same_seed_draws_the_same_campaign(self) -> None:
+        """The option is a set, so the draw is only reproducible because it sorts first."""
+        for seed in range(8):
+            first = self.world_with({ATTILA, JOAN}, seed).pool.campaigns.starting
+            second = self.world_with({ATTILA, JOAN}, seed).pool.campaigns.starting
+            self.assertEqual(first, second, f"seed {seed} drew two different campaigns")
+
+    def test_both_campaigns_are_reachable_across_seeds(self) -> None:
+        drawn = {self.world_with({ATTILA, JOAN}, seed).pool.campaigns.starting[0]
+                 for seed in range(32)}
+        self.assertEqual({Age2CampaignData.ATTILA, Age2CampaignData.JOAN}, drawn)
+
+    def test_the_option_itself_is_corrected(self) -> None:
+        """Slot data and the installer read the option, not the pool, so the fill has to land
+        on the option value as well."""
+        world = self.world_with({ATTILA, JOAN})
+        self.assertEqual({world.pool.campaigns.starting[0].campaign_name},
+                         set(world.options.starting_campaigns.value))
 
 
 class TestInstallableName(unittest.TestCase):

@@ -105,11 +105,14 @@ class Age2World(CachedRuleBuilderWorld):
     def inspect_options(self, options: Age2Options, player_name: str) -> None:
         if not options.enabled_campaigns.value:
             raise OptionError(f"{player_name}: enabled_campaigns needs at least one campaign.")
-        if not options.starting_campaigns.value:
-            raise OptionError(f"{player_name}: starting_campaigns needs at least one campaign.")
         enabled = {campaign.campaign_name for campaign in Campaigns.Age2CampaignData
                    if campaign.campaign_name in options.enabled_campaigns}
-        if not enabled & set(options.starting_campaigns.value):
+        if not options.starting_campaigns.value:
+            drawn = self.random.choice(sorted(enabled))
+            options.starting_campaigns.value = {drawn}
+            logger.info("%s left starting_campaigns blank; starting them in %s.",
+                        player_name, drawn)
+        elif not enabled & set(options.starting_campaigns.value):
             raise OptionError(f"{player_name}: starting_campaigns must include at least one "
                               f"enabled campaign. Enabled: {sorted(options.enabled_campaigns.value)}.")
 
