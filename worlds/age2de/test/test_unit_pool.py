@@ -344,3 +344,20 @@ class TestHeroes(UnitPoolTestBase):
         state = world.multiworld.get_all_state(False)
         for hero in world.unit_pool.heroes:
             self.assertTrue(state.can_reach_location(hero.location_name, 1), hero.name)
+class TestWhatMayBePlaced(UnitPoolTestBase):
+    def test_a_unit_no_civilisation_can_field_is_never_placed(self):
+        world = self.build(unitsanity=Unitsanity.option_all,
+                           include_unique_units=IncludeUniqueUnits.option_both)
+        self.assertFalse(world.unit_pool.includes(Age2UnitData.LONGBOWMAN))
+        self.assertNotIn("Own Longbowman", self.own_locations(world))
+
+    def test_a_granted_unit_no_civilisation_can_train_is_placed(self):
+        world = self.build(unitsanity=Unitsanity.option_all,
+                           include_unique_units=IncludeUniqueUnits.option_both)
+        self.assertTrue(world.unit_pool.includes(Age2UnitData.MANGUDAI))
+        self.assertIn("Own Mangudai", self.own_locations(world))
+
+    def test_only_all_admits_a_unit_no_civilisation_can_train(self):
+        world = self.build(unitsanity=Unitsanity.option_unit_line,
+                           include_unique_units=IncludeUniqueUnits.option_both)
+        self.assertFalse(world.unit_pool.includes(Age2UnitData.MANGUDAI))

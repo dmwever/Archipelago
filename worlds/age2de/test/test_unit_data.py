@@ -50,10 +50,6 @@ class TestWhichUnitsGetARow(unittest.TestCase):
         self.assertNotIn(Age2UnitData.CHAMPION, units)
         self.assertIn(Age2UnitData.TWO_HANDED_SWORDSMAN, units)
 
-    def test_a_location_no_civilisation_can_field_is_refused(self):
-        """Loudly, rather than emitting a row the game can never use."""
-        with self.assertRaises(ValueError):
-            table([Age2UnitData.LONGBOWMAN], civs=(Age2CivData.HUNS,)).rows()
 
 
 class TestTheItemRequirementIsResolvedHere(unittest.TestCase):
