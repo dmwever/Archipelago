@@ -32,7 +32,7 @@ class UnitTableAgreementBase(UnitPoolTestBase):
 
     def table_for(self, world) -> UnitData:
         installed = self.installed(world)
-        return UnitData(self.places(world), world.included_civs,
+        return UnitData(self.places(world), world.pool.civs.included,
                         installed[SlotData.US_MODE], installed[SlotData.US_ITEMS], "a1b2c3d4")
 
     def place_name(self, place) -> str:

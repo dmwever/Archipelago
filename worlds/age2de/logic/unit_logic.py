@@ -129,10 +129,7 @@ class UnitLogic:
 
     def has_horses(self) -> bool:
         """A meso-american civilisation trains a trade cart and has nothing to pull it."""
-        from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
-        return any(unit in CIV_TO_UNITS[civ]
-                   for civ in self.world.included_civs
-                   for unit in HORSE_LINE.units)
+        return any(self.world.pool.civs.any_trains(unit) for unit in HORSE_LINE.units)
 
     def has_building_item(self, unit: Age2UnitData) -> Rule:
         wanted = [BUILDING_TO_UNITS_ITEM[building].item_name for building in unit.buildings

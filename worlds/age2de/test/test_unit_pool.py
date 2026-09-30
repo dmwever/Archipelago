@@ -128,7 +128,7 @@ class TestUnitPool(UnitPoolTestBase):
         world = self.build(unitsanity=Unitsanity.option_all,
                            include_unique_units=IncludeUniqueUnits.option_both)
         self.assertTrue(world.unit_regions.shuffled_units)
-        trainable = {unit for civ in world.included_civs for unit in CIV_TO_UNITS[civ]}
+        trainable = {unit for civ in world.pool.civs.included for unit in CIV_TO_UNITS[civ]}
         granted = {grant for scenario in world.pool.scenarios.included
                    for grant in scenario.startup_units + scenario.trigger_units}
         self.assertTrue(set(world.unit_regions.shuffled_units) <= trainable | granted)

@@ -34,13 +34,13 @@ class TestCivilizationCollection(bases.Age2TestBase):
         # It pins the invariant for the first campaign whose opener differs from the rest.
         for campaign in self.world.pool.campaigns.enabled:
             for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
-                self.assertIn(scenario.civ, self.world.included_civs,
+                self.assertIn(scenario.civ, self.world.pool.civs.included,
                               f"{scenario.scenario_name} never registered its civilisation")
 
     def test_the_first_scenario_of_a_campaign_counts(self) -> None:
         for campaign in self.world.pool.campaigns.enabled:
             opener = CAMPAIGN_TO_SCENARIOS[campaign][0]
-            self.assertIn(opener.civ, self.world.included_civs,
+            self.assertIn(opener.civ, self.world.pool.civs.included,
                           "the campaign's first scenario was held out of the civ loop")
 
 

@@ -69,7 +69,6 @@ class Age2World(CachedRuleBuilderWorld):
     item_name_groups = {"Traps": set(Items.TRAP_NAMES)}
     
     pool: Age2Pool
-    included_civs: list[Scenarios.Age2CivData]
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
     shuffled_ages: list[Age2AgeData]
@@ -82,7 +81,6 @@ class Age2World(CachedRuleBuilderWorld):
 
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
-        self.included_civs = []
         self.shuffled_buildings = []
         self.shuffled_techs = []
         self.shuffled_ages = []
@@ -132,8 +130,6 @@ class Age2World(CachedRuleBuilderWorld):
 
     def create_regions(self) -> None:
         
-        self.included_civs = list(dict.fromkeys(
-            scenario.civ for scenario in self.pool.scenarios.included))
         
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         scenario_regions: dict[Scenarios.Age2ScenarioData, Region] = {}
@@ -153,11 +149,11 @@ class Age2World(CachedRuleBuilderWorld):
         source.exits.append(connection)
         connection.connect(buildings)
         for building in Buildings.Age2BuildingData:
-            if all(building in civ.excluded_buildings for civ in self.included_civs):
+            if all(building in civ.excluded_buildings for civ in self.pool.civs.included):
                 continue # No included civs have this non-unique building.
             if Buildings.BuildingOption.unique in building.building_options and Buildings.BuildingOption.unique not in self.options.shuffle_buildings:
                 continue # We skip unique altogether, else we sort by other building type.
-            if Buildings.BuildingOption.unique in building.building_options and not any(building in civ.included_buildings for civ in self.included_civs): 
+            if Buildings.BuildingOption.unique in building.building_options and not any(building in civ.included_buildings for civ in self.pool.civs.included): 
                 continue # No civs with this unique building are included.
             if any(option in building.building_options for option in 
                    [option for option in self.options.shuffle_buildings
@@ -176,13 +172,13 @@ class Age2World(CachedRuleBuilderWorld):
                     Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
         
-        self.tech_pool = TechPool(self.options, self.earliest_age, self.included_civs)
-        self.unit_pool = UnitPool(self.options, self.included_civs,
+        self.tech_pool = TechPool(self.options, self.earliest_age, self.pool.civs.included)
+        self.unit_pool = UnitPool(self.options, self.pool.civs.included,
                                   self.pool.scenarios.included)
         
         building_regions: dict[Buildings.Age2BuildingData, Region] = {}
         for building in Age2BuildingData:
-            if not self.civ_can_build(building):
+            if not self.pool.civs.builds(building):
                 continue
             if not BUILDING_TO_TECHS[building] and not BUILDING_TO_UNITS.get(building):
                 continue
@@ -217,9 +213,6 @@ class Age2World(CachedRuleBuilderWorld):
         regions[0].add_event("Victory", Items.Age2ItemData.VICTORY.item_name)
 
         self.multiworld.regions += regions
-
-    def civ_can_build(self, building: Buildings.Age2BuildingData) -> bool:
-        return any(civ.builds(building) for civ in self.included_civs)
 
     def add_scenario_region(self, scenario: Scenarios.Age2ScenarioData, source: Region) -> Region:
         new_region = Region(scenario.scenario_name, self.player, self.multiworld)

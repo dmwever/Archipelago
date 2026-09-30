@@ -56,7 +56,7 @@ class TestTechPool(TechPoolTestBase):
         pool = self.pool(techsanity=Techsanity.option_all,
                          shuffle_unique_techs=ShuffleUniqueTechs.option_shuffled)
         self.assertTrue(pool)
-        self.assertTrue(set(pool) <= {tech for civ in self.world.included_civs
+        self.assertTrue(set(pool) <= {tech for civ in self.world.pool.civs.included
                                      for tech in CIV_TO_TECHS[civ]})
 
 
@@ -185,7 +185,7 @@ class TestPoolMatchesTheInstall(TechPoolTestBase):
         # and TechData.xs to the same idea of what a tech location is.
         pool = self.pool(techsanity=Techsanity.option_all,
                          shuffle_unique_techs=ShuffleUniqueTechs.option_shuffled)
-        table = TechData(pool, civs=self.world.included_civs).rows()
+        table = TechData(pool, civs=self.world.pool.civs.included).rows()
         self.assertEqual([row.tech for row in table if row.is_location], sorted(pool))
 
 
@@ -241,6 +241,6 @@ class TestScenarioReachability(TechPoolTestBase):
         self.pool(techsanity=Techsanity.option_all,
                   existing_techs=ExistingTechs.option_only_find_units,
                   enabled_campaigns={"Joan of Arc"})
-        pool = TechPool(self.world.options, above, self.world.included_civs)
+        pool = TechPool(self.world.options, above, self.world.pool.civs.included)
         self.assertTrue(pool.reachable(upgrade), upgrade.name)
         self.assertFalse(pool.reachable(generic), generic.name)
