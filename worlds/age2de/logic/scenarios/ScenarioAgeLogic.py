@@ -52,11 +52,10 @@ class ScenarioAgeLogic:
 
     def two_from(self, age: Age2AgeData) -> Rule:
         rule: Rule = TwoBuildingsRequirement(
-            [self.scenario.buildings.can_build_building(building)
-             for building in AGE_BUILDINGS[age]])
+            [self.scenario.has_building(building) for building in AGE_BUILDINGS[age]])
         if age is Age2AgeData.CASTLE:
             # A Castle counts for both on its own.
-            rule = rule | self.scenario.buildings.can_build_building(Age2BuildingData.CASTLE)
+            rule = rule | self.scenario.has_building(Age2BuildingData.CASTLE)
         return rule
 
     def has_reached(self, age: Age2AgeData) -> Rule:
@@ -105,5 +104,5 @@ class ScenarioAgeLogic:
         if into is Age2AgeData.DARK:
             return True_()   # nowhere to advance from
         return (self.logic.ages.has_age(into)
-                & self.scenario.buildings.can_build_tc()
+                & self.scenario.buildings.has_tc()
                 & self.two_from(PREVIOUS[into]))

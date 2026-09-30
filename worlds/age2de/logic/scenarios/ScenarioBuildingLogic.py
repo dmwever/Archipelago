@@ -32,6 +32,12 @@ class ScenarioBuildingLogic:
     def can_build_tc(self) -> Rule:
         return self.buildings.can_build_tc() & self.scenario.has_vils()
 
+    def has_tc(self) -> Rule:
+        """A Town Centre to work from. One standing on the map counts, and costs nothing - the
+        villagers are asked on the built path only, where they are the ones putting it up."""
+        standing = self.scenario.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER]
+        return standing | self.can_build_tc()
+
     def can_build_base(self) -> Rule:
         if not self.scenario.civilization.can_build(Age2BuildingData.HOUSE):
             return self.can_build_tc()

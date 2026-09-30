@@ -31,7 +31,7 @@ class ScenarioTechLogic:
             return False_()   # not this civilisation's to research
         rule = self.has_tech_items(tech)
         if tech.buildings:
-            rule = rule & Or(*[self.scenario.buildings.can_build_building(building)
+            rule = rule & Or(*[self.scenario.has_building(building)
                                for building in tech.buildings])
         return rule & age
 
