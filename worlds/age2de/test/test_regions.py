@@ -127,13 +127,14 @@ class TestEmptyCampaign(unittest.TestCase):
         world: Age2World = setup_solo_multiworld(Age2World, ()).worlds[1]
         world.options.enabled_campaigns.value = {ATTILA, JOAN}
         world.options.starting_campaigns.value = {ATTILA}
-        world.generate_early()
-
         empty = dict(CAMPAIGN_TO_SCENARIOS)
         empty[Age2CampaignData.JOAN] = []
+        # inspect_options runs first in generate_early, so the campaign table is read a step
+        # earlier than it used to be. patch.dict mutates the table itself rather than rebinding
+        # a name, so every module holding a reference to it sees the empty campaign.
         with mock.patch.dict("worlds.age2de.CAMPAIGN_TO_SCENARIOS", empty, clear=True):
             with self.assertRaises(OptionError):
-                world.create_regions()
+                world.generate_early()
 
 
 if __name__ == "__main__":

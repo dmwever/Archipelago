@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 from rule_builder.rules import Has, Rule, True_
-from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
 
 
@@ -17,6 +16,6 @@ class GoalLogic:
     def completed_all_campaigns(self) -> Rule:
         completed: Rule = True_()
         for campaign in self.world.pool.campaigns.enabled:
-            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+            for scenario in self.world.pool.scenarios.of(campaign):
                 completed = completed & Has(scenario.scenario_name + ": Unlock Next Scenario")
         return completed

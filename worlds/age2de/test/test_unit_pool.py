@@ -129,7 +129,7 @@ class TestUnitPool(UnitPoolTestBase):
                            include_unique_units=IncludeUniqueUnits.option_both)
         self.assertTrue(world.unit_regions.shuffled_units)
         trainable = {unit for civ in world.included_civs for unit in CIV_TO_UNITS[civ]}
-        granted = {grant for scenario in world.included_scenarios
+        granted = {grant for scenario in world.pool.scenarios.included
                    for grant in scenario.startup_units + scenario.trigger_units}
         self.assertTrue(set(world.unit_regions.shuffled_units) <= trainable | granted)
         self.assertIn(Age2UnitData.MANGUDAI, world.unit_regions.shuffled_units)
@@ -316,7 +316,7 @@ class TestHeroes(UnitPoolTestBase):
             region = world.multiworld.get_region(hero.hero_name, 1)
             self.assertEqual([location.name for location in region.locations],
                              [hero.location_name])
-            granting = {scenario for scenario in world.included_scenarios
+            granting = {scenario for scenario in world.pool.scenarios.included
                         if hero in scenario.startup_units + scenario.trigger_units}
             ways_in = {entrance.via for entrance in
                        world.multiworld.get_region(hero.hero_name, 1).entrances}

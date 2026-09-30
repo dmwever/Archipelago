@@ -1,5 +1,4 @@
 from rule_builder.rules import Has, Rule
-from ...Options import ScenarioBranching
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
@@ -52,7 +51,7 @@ class Attila4Rules(ScenarioRules):
         )
         can_beat_blue: Rule = can_beat_cyan
         
-        if self.world.options.scenario_branching == ScenarioBranching.option_all:
+        if self.world.pool.scenarios.all_scenario_branches:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_TRIBUTE_BURGUNDY_ALL], Has(Age2ItemData.MARKET.item_name))
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_CASTLE_BURGUNDY_ALL], can_ally_purple)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_BURGUNDY_ALL], can_beat_purple)

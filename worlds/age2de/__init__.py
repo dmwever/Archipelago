@@ -73,7 +73,6 @@ class Age2World(CachedRuleBuilderWorld):
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
     shuffled_ages: list[Age2AgeData]
-    included_scenarios: list[Scenarios.Age2ScenarioData]
     unit_regions: UnitRegions
     tech_pool: TechPool
     unit_pool: UnitPool
@@ -95,13 +94,6 @@ class Age2World(CachedRuleBuilderWorld):
         group.pool = Age2Pool(group)
         return group
 
-    def branching_option(self, location):
-        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ALL and self.options.scenario_branching != ScenarioBranching.option_all:
-            return False
-        if location.type == Locations.Age2LocationType.OBJECTIVE_BRANCHING_ANY and self.options.scenario_branching != ScenarioBranching.option_any:
-            return False
-        return True
-
     def inspect_options(self, options: Age2Options, player_name: str) -> None:
         if not options.enabled_campaigns.value:
             raise OptionError(f"{player_name}: enabled_campaigns needs at least one campaign.")
@@ -115,6 +107,9 @@ class Age2World(CachedRuleBuilderWorld):
         elif not enabled & set(options.starting_campaigns.value):
             raise OptionError(f"{player_name}: starting_campaigns must include at least one "
                               f"enabled campaign. Enabled: {sorted(options.enabled_campaigns.value)}.")
+        for campaign in Campaigns.Age2CampaignData:
+            if campaign.campaign_name in enabled and not CAMPAIGN_TO_SCENARIOS[campaign]:
+                raise OptionError(f"{player_name}: {campaign.campaign_name} has no scenarios.")
 
     def generate_early(self) -> None:
         self.inspect_options(self.options, self.player_name)
@@ -137,18 +132,14 @@ class Age2World(CachedRuleBuilderWorld):
 
     def create_regions(self) -> None:
         
-        self.included_scenarios = [scenario for campaign in self.pool.campaigns.enabled
-                                   for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
         self.included_civs = list(dict.fromkeys(
-            scenario.civ for scenario in self.included_scenarios))
+            scenario.civ for scenario in self.pool.scenarios.included))
         
         regions: list[Region] = [Region(self.origin_region_name, self.player, self.multiworld)]
         scenario_regions: dict[Scenarios.Age2ScenarioData, Region] = {}
         
         for campaign in self.pool.campaigns.enabled:
-            scenarios = CAMPAIGN_TO_SCENARIOS[campaign]
-            if not scenarios:
-                raise OptionError(f"{self.player_name}: {campaign.campaign_name} has no scenarios.")
+            scenarios = self.pool.scenarios.of(campaign)
             prev_region: Region = regions[0]
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)
@@ -175,8 +166,7 @@ class Age2World(CachedRuleBuilderWorld):
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
         self.earliest_age = min(scenario.vanilla_age
-                                for campaign in self.pool.campaigns.enabled
-                                for scenario in CAMPAIGN_TO_SCENARIOS[campaign])
+                                for scenario in self.pool.scenarios.included)
         rebased = self.options.existing_techs == ExistingTechs.option_start_in_dark_age
         self.shuffled_ages = [age for age in Ages.SHUFFLED_AGES
                               if rebased or age > self.earliest_age]
@@ -188,7 +178,7 @@ class Age2World(CachedRuleBuilderWorld):
         
         self.tech_pool = TechPool(self.options, self.earliest_age, self.included_civs)
         self.unit_pool = UnitPool(self.options, self.included_civs,
-                                  self.included_scenarios)
+                                  self.pool.scenarios.included)
         
         building_regions: dict[Buildings.Age2BuildingData, Region] = {}
         for building in Age2BuildingData:
@@ -237,7 +227,7 @@ class Age2World(CachedRuleBuilderWorld):
         source.exits.append(connection)
         connection.connect(new_region)
         for location in Locations.REGION_TO_LOCATIONS.get(scenario.scenario_name, ()):
-            if not self.branching_option(location):
+            if not self.pool.scenarios.includes_location(location):
                 continue
             new_location = Location(self.player, location.global_name(), location.id, new_region)
             new_region.locations.append(new_location)

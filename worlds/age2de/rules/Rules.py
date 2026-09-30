@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, Entrance, Location
-from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from ..logic.Logic import Logic
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
@@ -44,7 +43,7 @@ class Rules:
         self.set_rule(self.world.get_location("Victory"), self.logic.has_goal())
 
         for campaign in self.world.pool.campaigns.enabled:
-            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+            for scenario in self.world.pool.scenarios.of(campaign):
                 self.scenario_rules.append(scenario.rules(self))
 
         for scenario in self.scenario_rules:

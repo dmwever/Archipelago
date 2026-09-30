@@ -16,7 +16,7 @@ from ..Options import LocalStart
 from ..items.Items import NAME_TO_ITEM, Campaign, ProgressiveScenario
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
-from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
+from ..locations.Scenarios import Age2ScenarioData
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -26,7 +26,7 @@ Target = Location | Rule.Resolved
 def choose_start_scenario(world: 'Age2World') -> Age2ScenarioData:
     campaign = world.random.choice(
         sorted(world.pool.campaigns.starting, key=lambda c: c.campaign_name))
-    return CAMPAIGN_TO_SCENARIOS[campaign][0]
+    return world.pool.scenarios.first_scenario(campaign)
 
 def resolve(world: 'Age2World', rule: Rule) -> Rule.Resolved:
     resolved = rule.resolve(world)

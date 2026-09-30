@@ -1,5 +1,4 @@
 from rule_builder.rules import Has, Rule
-from ...Options import ScenarioBranching
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
@@ -48,7 +47,7 @@ class Joan3Rules(ScenarioRules):
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_VICTORY], can_destroy_castle & can_beat_fastolf)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.JOAN3_VICTORY.scenario.scenario_name), can_destroy_castle & can_beat_fastolf)
         
-        if self.world.options.scenario_branching == ScenarioBranching.option_all:
+        if self.world.pool.scenarios.all_scenario_branches:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_DESTROY_CENTRAL_CASTLE], can_destroy_castle)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_DESTROY_REAR_CASTLE], can_destroy_castle)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_DESTROY_LEFT_CASTLE], can_destroy_castle)

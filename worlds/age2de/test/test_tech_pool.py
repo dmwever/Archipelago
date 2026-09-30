@@ -12,7 +12,7 @@ from ..locations.Civilizations import Age2CivData
 from ..generation.TechPool import TechPool
 from ..locations.Techs import Age2TechData, BUILDING_TO_TECHS, TechOption
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
-from ..logic.goal_logic import CAMPAIGN_TO_SCENARIOS
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from ..locations.connections import LocationMapping
 
 

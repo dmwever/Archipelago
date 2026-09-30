@@ -18,7 +18,6 @@ from rule_builder.rules import False_, Or, Rule
 
 from ..locations.Ages import Age2AgeData
 from ..locations.Techs import Age2TechData
-from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
 
 if TYPE_CHECKING:
@@ -55,7 +54,7 @@ class Logic:
         self.ages =  AgeLogic(self, world)
         
         for campaign in world.pool.campaigns.enabled:
-            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]:
+            for scenario in world.pool.scenarios.of(campaign):
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
     
         for building in Age2BuildingData:

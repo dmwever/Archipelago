@@ -14,6 +14,7 @@ from test.general import setup_solo_multiworld
 from rule_builder.rules import False_, Has, HasAll, True_
 
 from ..generation.pools.CampaignPool import CampaignPool
+from ..generation.pools.ScenarioPool import ScenarioPool
 from ..generation.LocalStart import (
     choose_start_scenario,
     resolve,
@@ -197,7 +198,10 @@ class _StubWorld:
             for key, option in Age2World.options_dataclass.type_hints.items()})
         options.enabled_campaigns.value = set(names)
         options.starting_campaigns.value = set(names)
-        self.pool = SimpleNamespace(campaigns=CampaignPool(options))
+        campaigns = CampaignPool(options)
+        self.pool = SimpleNamespace(
+            campaigns=campaigns,
+            scenarios=ScenarioPool(options, campaigns.enabled))
 
 
 class TestSelectionDeterminism(unittest.TestCase):
