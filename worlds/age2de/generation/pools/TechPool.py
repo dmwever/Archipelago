@@ -1,11 +1,11 @@
-from typing import Iterable
+from functools import cached_property
 
-from ..Options import Age2Options, ExistingTechs, ShuffleUniqueTechs, Techsanity
-from ..locations.Ages import Age2AgeData
-from ..locations.Buildings import Age2BuildingData
-from ..locations.Civilizations import Age2CivData
-from ..locations.Techs import Age2TechData, TechOption, BUILDING_TO_TECHS
-from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
+from ...Options import Age2Options, ExistingTechs, ShuffleUniqueTechs, Techsanity
+from ...locations.Ages import Age2AgeData
+from ...locations.Buildings import Age2BuildingData
+from ...locations.Techs import Age2TechData, TechOption, BUILDING_TO_TECHS
+from ...locations.connections.CivilizationTechs import CIV_TO_TECHS
+from .CivilizationPool import CivilizationPool
 
 MODE_TO_OPTION = {
     Techsanity.option_none: None,
@@ -17,12 +17,13 @@ MODE_TO_OPTION = {
 class TechPool:
 
     def __init__(self, options: Age2Options, earliest_age: Age2AgeData,
-                 civs: Iterable[Age2CivData]):
+                 civs: CivilizationPool):
         self._techsanity = options.techsanity
         self._shuffle_uniques = options.shuffle_unique_techs
         self._existing_techs_mode = options.existing_techs
         self._earliest_age = earliest_age
-        self._researchable = {tech for civ in civs for tech in CIV_TO_TECHS[civ]}
+        self._civs = civs
+        self._researchable = {tech for civ in civs.included for tech in CIV_TO_TECHS[civ]}
     
     def in_mode(self, tech: Age2TechData) -> bool:
         """Techsanity. Units and Generic are disjoint halves of All."""
@@ -72,3 +73,27 @@ class TechPool:
         placed only in the standard building it names first."""
         return [tech for tech in BUILDING_TO_TECHS[building]
                 if building in tech.buildings and self.includes(tech)]
+
+    @cached_property
+    def _hosting(self) -> dict[Age2TechData, Age2BuildingData]:
+        """Which building's region holds each technology's location.
+
+        A technology researched at two buildings gets one location, in the first building that
+        names it; the second reaches it by a ruleless entrance. Buildings are walked in enum
+        order, and one nobody in this seed builds has no region to host anything.
+        """
+        hosts: dict[Age2TechData, Age2BuildingData] = {}
+        for building in Age2BuildingData:
+            if not self._civs.builds(building):
+                continue
+            for tech in self.by_building(building):
+                hosts.setdefault(tech, building)
+        return hosts
+
+    @property
+    def shuffled(self) -> list[Age2TechData]:
+        """The seed's tech locations, in the order the regions are built."""
+        return list(self._hosting)
+
+    def host_building(self, tech: Age2TechData) -> Age2BuildingData:
+        return self._hosting[tech]

@@ -44,7 +44,7 @@ class UnitLogic:
 
     def can_restore(self, unit: Age2UnitData) -> Rule:
         tech = unit.upgrade_tech
-        if tech is None or not self.world.tech_pool.includes(tech):
+        if tech is None or not self.world.pool.techs.includes(tech):
             return self.has_unit_items(unit)
         return self.has_unit_items(unit) & self.logic.techs.has_tech_item(tech)
 

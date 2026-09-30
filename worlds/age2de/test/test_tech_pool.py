@@ -9,7 +9,7 @@ from ..client.handlers.install.TechData import TechData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Civilizations import Age2CivData
-from ..generation.TechPool import TechPool
+from ..generation.pools.TechPool import TechPool
 from ..locations.Techs import Age2TechData, BUILDING_TO_TECHS, TechOption
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
@@ -29,7 +29,7 @@ class TechPoolTestBase(unittest.TestCase):
         world.generate_early()
         world.create_regions()
         self.world = world
-        return world.shuffled_techs
+        return world.pool.techs.shuffled
 
 
 class TestTechPool(TechPoolTestBase):
@@ -101,7 +101,7 @@ class TestResearchRegions(TechPoolTestBase):
                   for location in region.locations
                   if location.name.startswith("Research ")]
         self.assertEqual(len(placed), len(set(placed)))
-        for tech in self.world.shuffled_techs:
+        for tech in self.world.pool.techs.shuffled:
             region = self.world.multiworld.get_region(tech.buildings[0].item.item_name, 1)
             self.assertIn(tech.location_name, [l.name for l in region.locations], tech.name)
 
@@ -241,6 +241,6 @@ class TestScenarioReachability(TechPoolTestBase):
         self.pool(techsanity=Techsanity.option_all,
                   existing_techs=ExistingTechs.option_only_find_units,
                   enabled_campaigns={"Joan of Arc"})
-        pool = TechPool(self.world.options, above, self.world.pool.civs.included)
+        pool = TechPool(self.world.options, above, self.world.pool.civs)
         self.assertTrue(pool.reachable(upgrade), upgrade.name)
         self.assertFalse(pool.reachable(generic), generic.name)

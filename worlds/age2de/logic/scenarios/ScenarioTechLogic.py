@@ -17,7 +17,7 @@ class ScenarioTechLogic:
         self.world = scenario.logic.world
 
     def can_research(self, tech: Age2TechData) -> Rule:
-        if self.world.tech_pool.locked_at_start(tech):
+        if self.world.pool.techs.locked_at_start(tech):
             age = self.scenario.ages.has_reached(tech.age)
         else:
             age = self.scenario.ages.can_reach(tech.age)
@@ -38,6 +38,6 @@ class ScenarioTechLogic:
     def has_tech_items(self, tech: Age2TechData) -> Rule:
         rule = self.logic.techs.has_tech_item(tech)
         prerequisite = tech.prerequisite
-        if prerequisite is not None and self.world.tech_pool.includes(prerequisite):
+        if prerequisite is not None and self.world.pool.techs.includes(prerequisite):
             rule = rule & self.has_tech(prerequisite)
         return rule

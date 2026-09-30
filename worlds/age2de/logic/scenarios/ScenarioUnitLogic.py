@@ -46,7 +46,7 @@ class ScenarioUnitLogic:
             if successor.tier != unit.tier + 1:
                 continue
             tech = successor.upgrade_tech
-            if tech is None or self.world.tech_pool.locked_at_start(tech):
+            if tech is None or self.world.pool.techs.locked_at_start(tech):
                 continue  # withheld, so researching it is your choice and your timing
             if not self.scenario.civilization.researches(tech):
                 continue  # not this civilisation's, so it never fires
@@ -56,7 +56,7 @@ class ScenarioUnitLogic:
 
     def has_upgrade_tech(self, unit: Age2UnitData) -> Rule:
         tech = unit.upgrade_tech
-        if tech is None or not self.world.tech_pool.includes(tech):
+        if tech is None or not self.world.pool.techs.includes(tech):
             return True_()
         return self.scenario.techs.has_tech(tech)
 

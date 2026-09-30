@@ -15,7 +15,6 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
-from .generation.TechPool import TechPool
 from .generation.UnitPool import UnitPool
 from .regions.UnitRegions import UnitRegions
 from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching
@@ -68,16 +67,13 @@ class Age2World(CachedRuleBuilderWorld):
     item_name_groups = {"Traps": set(Items.TRAP_NAMES)}
     
     pool: Age2Pool
-    shuffled_techs: list[Age2TechData]
     unit_regions: UnitRegions
-    tech_pool: TechPool
     unit_pool: UnitPool
     starting_resource_totals: dict[Items.Resource, int]
     rules: Rules
 
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
-        self.shuffled_techs = []
         self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
 
     @classmethod
@@ -150,8 +146,6 @@ class Age2World(CachedRuleBuilderWorld):
                 Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
         
-        self.tech_pool = TechPool(self.options, self.pool.ages.earliest,
-                                  self.pool.civs.included)
         self.unit_pool = UnitPool(self.options, self.pool.civs.included,
                                   self.pool.scenarios.included)
         
@@ -168,15 +162,15 @@ class Age2World(CachedRuleBuilderWorld):
             regions.append(region)
             building_regions[building] = region
             linked_buildings: set[Region] = set()
-            for tech in self.tech_pool.by_building(building):
-                if tech not in self.shuffled_techs:
-                    new_location = Location(self.player, tech.location_name, tech.id, region)
-                    region.locations.append(new_location)
-                    self.shuffled_techs.append(tech)
+            for tech in self.pool.techs.by_building(building):
+                host = self.pool.techs.host_building(tech)
+                if host is building:
+                    region.locations.append(
+                        Location(self.player, tech.location_name, tech.id, region))
                     continue
-                
-                # Item exists. Point to region with item, with a ruleless entrance.
-                existing_building = self.multiworld.get_location(tech.location_name, self.player).parent_region
+
+                # Its location is in the host's region already; reach it by a ruleless entrance.
+                existing_building = building_regions[host]
                 if existing_building in linked_buildings:
                     continue
                 linked_buildings.add(existing_building)
@@ -269,7 +263,7 @@ class Age2World(CachedRuleBuilderWorld):
             else:
                 self.multiworld.push_precollected(building_item)
 
-        for tech in self.shuffled_techs:
+        for tech in self.pool.techs.shuffled:
             items.append(self.create_item(tech.item.item_name))
 
         for item in self.unit_regions.items():

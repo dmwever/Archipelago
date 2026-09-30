@@ -61,7 +61,7 @@ class TestPrerequisiteOutsideThePool(Age2RuleTestBase):
 
     def test_a_prerequisite_outside_the_pool_imposes_nothing(self):
         self.build(techsanity=Techsanity.option_generic)
-        self.assertNotIn(Age2TechData.HEAVY_PLOW, self.world.shuffled_techs)
+        self.assertNotIn(Age2TechData.HEAVY_PLOW, self.world.pool.techs.shuffled)
         wanted = self.item_requirements(Age2TechData.CROP_ROTATION.location_name)
         self.assertNotIn(Age2TechData.HEAVY_PLOW.item.item_name, wanted)
         self.assertIn(Age2TechData.CROP_ROTATION.item.item_name, wanted)
@@ -120,12 +120,12 @@ class TestExistingTechs(Age2RuleTestBase):
                            existing_techs=ExistingTechs.option_vanilla)
         scenarios = [scenario for campaign in world.pool.campaigns.enabled
                      for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
-        for tech in world.shuffled_techs:
+        for tech in world.pool.techs.shuffled:
             with self.subTest(tech=tech.name):
                 rule = world.rules.logic.can_research_anywhere(tech).resolve(world)
                 self.assertFalse(rule.always_false)
         # every technology has at least one scenario that opens at or below it
-        for tech in world.shuffled_techs:
+        for tech in world.pool.techs.shuffled:
             self.assertTrue([s for s in scenarios if s.vanilla_age <= tech.age], tech.name)
 
     def test_find_items_hands_every_technology_back(self):
@@ -133,8 +133,8 @@ class TestExistingTechs(Age2RuleTestBase):
         # research it -- for free, but it still sends the check.
         world = self.build(techsanity=Techsanity.option_all,
                            existing_techs=ExistingTechs.option_find_items)
-        for tech in world.shuffled_techs:
-            self.assertTrue(world.tech_pool.locked_at_start(tech), tech.name)
+        for tech in world.pool.techs.shuffled:
+            self.assertTrue(world.pool.techs.locked_at_start(tech), tech.name)
 
 
 class TestReplacementBuildingReachesSharedTechs(Age2RuleTestBase):
