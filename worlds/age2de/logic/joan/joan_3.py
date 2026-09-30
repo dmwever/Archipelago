@@ -6,7 +6,7 @@ from ...locations.Ages import Age2AgeData
 
 from ...locations.Units import Age2UnitData as U
 from ...items.Items import Age2ItemData
-from ..ScenarioLogic import ScenarioStartingState, DARK_START, VANILLA_AGE_START
+from ..ScenarioLogic import ScenarioStartingState
 
 
 if TYPE_CHECKING:

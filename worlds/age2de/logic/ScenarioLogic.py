@@ -7,16 +7,10 @@ from ..locations.Heroes import Age2HeroData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 
-from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, Rule, True_
 
-from ..Options import ExistingTechs
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Ages import Age2AgeData
-
-
-VANILLA_AGE_START = OptionFilter(ExistingTechs, ExistingTechs.option_start_in_dark_age, "ne")
-DARK_START = OptionFilter(ExistingTechs, ExistingTechs.option_start_in_dark_age)
 
 if TYPE_CHECKING:
     from .. import Age2World

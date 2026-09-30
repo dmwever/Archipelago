@@ -20,16 +20,16 @@ class TestWhichAgesAreShuffled(Age2RuleTestBase):
 
     def test_every_age_is_shuffled_when_a_scenario_opens_in_the_dark_age(self):
         world = self.build(shuffle_ages=True)
-        self.assertEqual(world.earliest_age, Age2AgeData.DARK)
-        self.assertEqual(list(world.shuffled_ages), list(SHUFFLED_AGES))
+        self.assertEqual(world.pool.ages.earliest, Age2AgeData.DARK)
+        self.assertEqual(list(world.pool.ages.shuffled), list(SHUFFLED_AGES))
 
     def test_an_age_no_scenario_starts_below_is_not_shuffled(self):
         world = self.build(shuffle_ages=True, enabled_campaigns={"Joan of Arc"},
                            starting_campaigns={"Joan of Arc"})
-        self.assertEqual(world.earliest_age, Age2AgeData.FEUDAL)
-        self.assertNotIn(Age2AgeData.FEUDAL, world.shuffled_ages)
-        self.assertIn(Age2AgeData.CASTLE, world.shuffled_ages)
-        self.assertIn(Age2AgeData.IMPERIAL, world.shuffled_ages)
+        self.assertEqual(world.pool.ages.earliest, Age2AgeData.FEUDAL)
+        self.assertNotIn(Age2AgeData.FEUDAL, world.pool.ages.shuffled)
+        self.assertIn(Age2AgeData.CASTLE, world.pool.ages.shuffled)
+        self.assertIn(Age2AgeData.IMPERIAL, world.pool.ages.shuffled)
 
     def test_an_unshuffled_age_is_neither_an_item_nor_a_location(self):
         self.build(shuffle_ages=True, enabled_campaigns={"Joan of Arc"},
@@ -47,7 +47,7 @@ class TestWhichAgesAreShuffled(Age2RuleTestBase):
                            existing_techs=ExistingTechs.option_start_in_dark_age,
                            enabled_campaigns={"Joan of Arc"},
                            starting_campaigns={"Joan of Arc"})
-        self.assertEqual(list(world.shuffled_ages), list(SHUFFLED_AGES))
+        self.assertEqual(list(world.pool.ages.shuffled), list(SHUFFLED_AGES))
         self.assertIn(Age2AgeData.FEUDAL.location_name, self.location_names())
 
 

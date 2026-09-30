@@ -18,11 +18,10 @@ from .generation.Age2Pool import Age2Pool
 from .generation.TechPool import TechPool
 from .generation.UnitPool import UnitPool
 from .regions.UnitRegions import UnitRegions
-from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, ExistingTechs, Goal, ScenarioBranching
+from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching
 from .items import Items
-from .locations import (Ages, Campaigns, EscortUnits, Heroes, Locations, Scenarios,
+from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
                         UnitLines, Units, VillagerJobs)
-from .locations.Ages import Age2AgeData
 from .locations.Techs import Age2TechData, BUILDING_TO_TECHS
 from .locations.connections.UnitBuildings import BUILDING_TO_UNITS
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
@@ -71,19 +70,16 @@ class Age2World(CachedRuleBuilderWorld):
     pool: Age2Pool
     shuffled_buildings: list[Buildings.Age2BuildingData]
     shuffled_techs: list[Age2TechData]
-    shuffled_ages: list[Age2AgeData]
     unit_regions: UnitRegions
     tech_pool: TechPool
     unit_pool: UnitPool
     starting_resource_totals: dict[Items.Resource, int]
-    earliest_age: Age2AgeData = None
     rules: Rules
 
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
         self.shuffled_buildings = []
         self.shuffled_techs = []
-        self.shuffled_ages = []
         self.starting_resource_totals = {resource: 0 for resource in Items.Resource}
 
     @classmethod
@@ -161,18 +157,13 @@ class Age2World(CachedRuleBuilderWorld):
                 new_location = Location(self.player, building.location_name, building.id, buildings)
                 buildings.locations.append(new_location)
                 self.shuffled_buildings.append(building)
-        self.earliest_age = min(scenario.vanilla_age
-                                for scenario in self.pool.scenarios.included)
-        rebased = self.options.existing_techs == ExistingTechs.option_start_in_dark_age
-        self.shuffled_ages = [age for age in Ages.SHUFFLED_AGES
-                              if rebased or age > self.earliest_age]
-        if self.options.shuffle_ages:
-            for age in self.shuffled_ages:
-                buildings.locations.append(
-                    Location(self.player, age.location_name, age.id, buildings))
+        for age in self.pool.ages.locations:
+            buildings.locations.append(
+                Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
         
-        self.tech_pool = TechPool(self.options, self.earliest_age, self.pool.civs.included)
+        self.tech_pool = TechPool(self.options, self.pool.ages.earliest,
+                                  self.pool.civs.included)
         self.unit_pool = UnitPool(self.options, self.pool.civs.included,
                                   self.pool.scenarios.included)
         
@@ -262,7 +253,7 @@ class Age2World(CachedRuleBuilderWorld):
                 items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Age2AgeData):
                 age_item = self.create_item(item.item_name)
-                if self.options.shuffle_ages and item.type in self.shuffled_ages:
+                if item.type in self.pool.ages.locations:
                     items.append(age_item)
                 else:
                     self.multiworld.push_precollected(age_item)

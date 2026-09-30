@@ -6,6 +6,7 @@ from rule_builder.rules import False_, Rule, True_
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
+from ...generation.pools.AgePool import DARK_START, VANILLA_AGE_START
 from ..custom_logic.ScenarioQuestions import ScenarioHasReached
 from ..custom_logic.TwoBuildings import TwoBuildingsRequirement
 
@@ -62,34 +63,31 @@ class ScenarioAgeLogic:
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)
 
     def start_past(self, age: Age2AgeData) -> Rule:
-        from ..ScenarioLogic import VANILLA_AGE_START
         if self.scenario.starting_state.fixed_force:
             return False_()
-        if self.scenario.scenario.vanilla_age > age:
+        if self.world.pool.ages.starts_in(self.scenario.scenario) > age:
             return True_() & VANILLA_AGE_START
         return False_()
 
     # -- what the scenario questions resolve to, and the memo behind can_reach -----------
 
     def can_research(self, age: Age2AgeData) -> Rule:
-        from ..ScenarioLogic import DARK_START
         state = self.scenario.starting_state
         if state.fixed_force or age > state.max_age:
             return False_()
         rule = self.climb(age)
-        if age <= self.scenario.scenario.vanilla_age:
+        if age <= self.world.pool.ages.starts_in(self.scenario.scenario):
             return rule & DARK_START
         return rule
 
     def _can_reach(self, age: Age2AgeData) -> Rule:
-        from ..ScenarioLogic import DARK_START, VANILLA_AGE_START
         state = self.scenario.starting_state
         if state.fixed_force or age > state.max_age:
             return False_()
         override = state.age_playable.get(age)
         if override is not None:
             return override
-        opens_at = self.scenario.scenario.vanilla_age
+        opens_at = self.world.pool.ages.starts_in(self.scenario.scenario)
         rule = self.climb(age)
         if age < opens_at:
             # Below the age it opens in, so it is only ever climbed when the start is pulled back.

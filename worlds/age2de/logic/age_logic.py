@@ -32,6 +32,6 @@ class AgeLogic:
                 for scenario in scenarios)
     
     def has_age(self, age: Age2AgeData) -> Rule:
-        if not self.world.options.shuffle_ages or age not in self.world.shuffled_ages:
+        if age not in self.world.pool.ages.shuffled:
             return True_()
         return Has(age.item.item_name)
