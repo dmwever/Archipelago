@@ -105,10 +105,10 @@ def conjuncts(rule: Rule) -> list[Rule]:
     return [rule]
 
 def scenario_logic(world: 'Age2World', scenario: Age2ScenarioData):
-    for candidate in world.rules.logic.scenarios:
-        if candidate.scenario is scenario:
-            return candidate
-    raise KeyError(f"{scenario.scenario_name} is not in this playthrough")
+    try:
+        return world.rules.logic.for_scenario(scenario)
+    except KeyError:
+        raise KeyError(f"{scenario.scenario_name} is not in this playthrough") from None
 
 def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
     # The composed question, not the raw field: starting_state.has_base is a base **outright**
