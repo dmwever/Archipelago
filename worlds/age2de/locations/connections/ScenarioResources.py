@@ -333,6 +333,126 @@ Age2ScenarioData.AP_JOAN_6.resources = ScenarioEnemyResourceCount(
     shore_fish_count=1825, fish_count=1300,
     oyster_count=0, whale_count=0, relic_count=0)
 
+Age2ScenarioData.AP_GENGHIS_2.resources = ScenarioBaseResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_2.resources = ScenarioOpenResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_2.resources = ScenarioAllyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_2.resources = ScenarioEnemyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_3.resources = ScenarioBaseResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_3.resources = ScenarioOpenResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_3.resources = ScenarioAllyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_3.resources = ScenarioEnemyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources = ScenarioBaseResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources = ScenarioOpenResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources = ScenarioAllyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources = ScenarioEnemyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_5.resources = ScenarioBaseResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_5.resources = ScenarioOpenResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_5.resources = ScenarioAllyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_5.resources = ScenarioEnemyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources = ScenarioBaseResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources = ScenarioOpenResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources = ScenarioAllyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources = ScenarioEnemyResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
 
 assert not [scenario for scenario in Age2ScenarioData if scenario.resources is None], \
     "a scenario has no resource count; re-scan the loose scenario files and add one"
