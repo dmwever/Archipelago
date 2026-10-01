@@ -9,26 +9,12 @@ from ...locations.EscortUnits import Age2EscortUnitData
 from ...locations.Heroes import Age2HeroData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.UnitLines import Age2UnitLineData
+from ...locations.UnitLocations import UnitLocation, VILLAGER_LINES
 from ...locations.Units import Age2UnitData, UnitType
 from ...locations.VillagerJobs import Age2VillagerJobData
 from ...locations.connections.CivilizationUnits import CIV_TO_UNITS, UNTRAINABLE
 from ...locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 from .CivilizationPool import CivilizationPool
-
-type UnitLocation = (Age2UnitData | Age2UnitLineData | Age2VillagerJobData | Age2HeroData
-                     | Age2EscortUnitData)
-
-VILLAGER_LINES = (Age2UnitLineData.VILLAGER_MALE_LINE, Age2UnitLineData.VILLAGER_FEMALE_LINE)
-
-UNIT_LOCATION_TYPES = (Age2UnitData, Age2UnitLineData, Age2VillagerJobData, Age2HeroData,
-                       Age2EscortUnitData)
-
-
-def unit_location(id: int) -> UnitLocation | None:
-    for kind in UNIT_LOCATION_TYPES:
-        if id in kind:
-            return kind(id)
-    return None
 
 UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
     UnitType.unique_unit: (IncludeUniqueUnits.option_unique, IncludeUniqueUnits.option_both),

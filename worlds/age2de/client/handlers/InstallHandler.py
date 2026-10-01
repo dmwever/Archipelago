@@ -20,7 +20,7 @@ from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
-from ...generation.pools.UnitPool import UnitLocation, unit_location
+from ...locations.UnitLocations import UnitLocation, unit_location
 from ...locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .FolderHandler import FolderHandler
 from .install.TechData import TechData

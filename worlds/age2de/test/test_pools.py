@@ -1,8 +1,11 @@
 """The pools: what this seed contains, decided once in generate_early and read everywhere."""
 
+import ast
+import pathlib
 import unittest
 
 from . import bases
+from ..Options import Age2Options
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Techs import Age2TechData
@@ -144,3 +147,63 @@ class TestCampaignPool(bases.Age2RuleTestBase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestWhereTheOptionsLive(unittest.TestCase):
+    """A pool owns 'is this in the seed'. It never owns 'what shape is the rule'.
+
+    That line is what stops Age2Pool becoming a second options object. These options decide how a
+    rule is written rather than what exists, so they are read where the rule is built and a pool
+    reading one would be a mistake - not a style one, a layering one.
+    """
+
+    RULE_SHAPE = {
+        "goal",            # which victory rule, not which scenarios exist
+        "lock_techs",      # whether a tech item gates availability or only the effect
+        "local_start",     # a placement policy, applied in pre_fill
+        "tech_behavior",   # the game mod's business; slot data only
+    }
+
+    POOLS = pathlib.Path(__file__).parent.parent / "generation" / "pools"
+
+    def option_names_read_by(self, source: pathlib.Path) -> set[str]:
+        """Attribute names taken off an `options` object anywhere in this module."""
+        tree = ast.parse(source.read_text(encoding="utf-8"))
+        found: set[str] = set()
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name)
+                    and node.value.id == "options"):
+                found.add(node.attr)
+        return found
+
+    def test_no_pool_reads_a_rule_shape_option(self) -> None:
+        for source in sorted(self.POOLS.rglob("*.py")):
+            with self.subTest(source.name):
+                self.assertFalse(self.option_names_read_by(source) & self.RULE_SHAPE,
+                                 "a pool read an option that decides how a rule is written")
+
+    def ours(self) -> set[str]:
+        """The options age2de declares. The rest come from PerGameCommonOptions and are core
+        AP's business - item links, plando, exclusions - which no pool should know about."""
+        return {name for name, option in Age2Options.type_hints.items()
+                if option.__module__.endswith("age2de.Options")}
+
+    def test_every_rule_shape_option_is_a_real_option(self) -> None:
+        """So a renamed option cannot leave this list quietly guarding nothing."""
+        declared = self.ours()
+        for name in self.RULE_SHAPE:
+            with self.subTest(name):
+                self.assertIn(name, declared)
+
+    def test_the_pools_between_them_read_the_rest(self) -> None:
+        """Every other option is somebody's content question, and the pools are where that is
+        answered - except the ones create_items and the installer own outright."""
+        elsewhere = {
+            "enabled_campaigns", "starting_campaigns",   # inspect_options validates them first
+        }
+        read = set()
+        for source in self.POOLS.rglob("*.py"):
+            read |= self.option_names_read_by(source)
+        missing = self.ours() - read - self.RULE_SHAPE - elsewhere
+        self.assertEqual(set(), missing,
+                         "an option names content but no pool reads it")

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Entrance, Location, MultiWorld, Region
 
-from ..generation.pools.UnitPool import UnitLocation
+from ..locations.UnitLocations import UnitLocation
 from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
