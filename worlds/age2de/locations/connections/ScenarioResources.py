@@ -307,8 +307,8 @@ Age2ScenarioData.AP_JOAN_4.resources = ScenarioEnemyResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_6.resources = ScenarioBaseResourceCount(
-    gold_count=8000, stone_count=3150,
-    hunt_count=0, herd_count=0, bush_count=750,
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
     shore_fish_count=0, fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
@@ -325,8 +325,8 @@ Age2ScenarioData.AP_JOAN_6.resources = ScenarioAllyResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_6.resources = ScenarioEnemyResourceCount(
-    gold_count=38400, stone_count=8750,
-    hunt_count=0, herd_count=0, bush_count=1250,
+    gold_count=46400, stone_count=11900,
+    hunt_count=0, herd_count=0, bush_count=2000,
     shore_fish_count=1825, fish_count=1300,
     oyster_count=0, whale_count=0, relic_count=0)
 
