@@ -66,25 +66,25 @@ Age2ScenarioData.AP_JOAN_6.demand = ScenarioResourceDemand(gold=6000, stone=2000
 Age2ScenarioData.AP_ATTILA_1.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=6400, stone_count=350,
     hunt_count=3900, herd_count=0, bush_count=1875,
-    shore_fish_count=2250, deep_fish_count=0,
+    shore_fish_count=2225, deep_fish_count=450,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_1.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=8000, stone_count=1750,
     hunt_count=2860, herd_count=0, bush_count=1875,
-    shore_fish_count=2625, deep_fish_count=2025,
+    shore_fish_count=4025, deep_fish_count=2025,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_1.resources[Tier.ALLY] = ScenarioResourceCount(
     gold_count=8000, stone_count=4900,
     hunt_count=0, herd_count=0, bush_count=2625,
-    shore_fish_count=0, deep_fish_count=0,
+    shore_fish_count=1650, deep_fish_count=1350,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_1.resources[Tier.ENEMY] = ScenarioResourceCount(
     gold_count=21600, stone_count=3150,
     hunt_count=420, herd_count=0, bush_count=0,
-    shore_fish_count=4000, deep_fish_count=5625,
+    shore_fish_count=4200, deep_fish_count=4500,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_2.resources[Tier.BASE] = ScenarioResourceCount(
@@ -96,7 +96,7 @@ Age2ScenarioData.AP_ATTILA_2.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_ATTILA_2.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=19200, stone_count=4550,
     hunt_count=2660, herd_count=0, bush_count=0,
-    shore_fish_count=1200, deep_fish_count=1125,
+    shore_fish_count=2600, deep_fish_count=1325,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_2.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -108,7 +108,7 @@ Age2ScenarioData.AP_ATTILA_2.resources[Tier.ALLY] = ScenarioResourceCount(
 Age2ScenarioData.AP_ATTILA_2.resources[Tier.ENEMY] = ScenarioResourceCount(
     gold_count=12800, stone_count=0,
     hunt_count=0, herd_count=0, bush_count=250,
-    shore_fish_count=800, deep_fish_count=0,
+    shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_3.resources[Tier.BASE] = ScenarioResourceCount(
@@ -120,7 +120,7 @@ Age2ScenarioData.AP_ATTILA_3.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_ATTILA_3.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=4800, stone_count=4900,
     hunt_count=3500, herd_count=0, bush_count=0,
-    shore_fish_count=3400, deep_fish_count=5750,
+    shore_fish_count=5000, deep_fish_count=6000,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_3.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -132,7 +132,7 @@ Age2ScenarioData.AP_ATTILA_3.resources[Tier.ALLY] = ScenarioResourceCount(
 Age2ScenarioData.AP_ATTILA_3.resources[Tier.ENEMY] = ScenarioResourceCount(
     gold_count=0, stone_count=3500,
     hunt_count=0, herd_count=200, bush_count=875,
-    shore_fish_count=2000, deep_fish_count=6650,
+    shore_fish_count=1600, deep_fish_count=6675,
     oyster_count=0, whale_count=0, relic_count=1)
 
 # The fish drought: five deep fish and seven shore fish, against eighty-five gold mines.
@@ -145,7 +145,7 @@ Age2ScenarioData.AP_ATTILA_4.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_ATTILA_4.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=13600, stone_count=5950,
     hunt_count=1040, herd_count=400, bush_count=0,
-    shore_fish_count=1400, deep_fish_count=1125,
+    shore_fish_count=1625, deep_fish_count=900,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_4.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -193,7 +193,7 @@ Age2ScenarioData.AP_ATTILA_6.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_ATTILA_6.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=23200, stone_count=7000,
     hunt_count=2340, herd_count=500, bush_count=1625,
-    shore_fish_count=1600, deep_fish_count=12325,
+    shore_fish_count=2000, deep_fish_count=9400,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_6.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -205,7 +205,7 @@ Age2ScenarioData.AP_ATTILA_6.resources[Tier.ALLY] = ScenarioResourceCount(
 Age2ScenarioData.AP_ATTILA_6.resources[Tier.ENEMY] = ScenarioResourceCount(
     gold_count=28800, stone_count=4550,
     hunt_count=1260, herd_count=1600, bush_count=0,
-    shore_fish_count=0, deep_fish_count=1800,
+    shore_fish_count=200, deep_fish_count=3275,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_2.resources[Tier.BASE] = ScenarioResourceCount(
@@ -217,7 +217,7 @@ Age2ScenarioData.AP_JOAN_2.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_JOAN_2.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=13600, stone_count=3500,
     hunt_count=680, herd_count=0, bush_count=0,
-    shore_fish_count=625, deep_fish_count=6325,
+    shore_fish_count=425, deep_fish_count=6300,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_2.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -235,19 +235,19 @@ Age2ScenarioData.AP_JOAN_2.resources[Tier.ENEMY] = ScenarioResourceCount(
 Age2ScenarioData.AP_JOAN_3.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=5600, stone_count=1050,
     hunt_count=0, herd_count=500, bush_count=625,
-    shore_fish_count=0, deep_fish_count=0,
+    shore_fish_count=1800, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_3.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=4000, stone_count=3500,
     hunt_count=0, herd_count=900, bush_count=1250,
-    shore_fish_count=0, deep_fish_count=0,
+    shore_fish_count=1800, deep_fish_count=3350,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_3.resources[Tier.ALLY] = ScenarioResourceCount(
     gold_count=0, stone_count=0,
     hunt_count=0, herd_count=0, bush_count=0,
-    shore_fish_count=2400, deep_fish_count=3550,
+    shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_3.resources[Tier.ENEMY] = ScenarioResourceCount(
@@ -265,7 +265,7 @@ Age2ScenarioData.AP_JOAN_4.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_JOAN_4.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=6400, stone_count=1400,
     hunt_count=0, herd_count=0, bush_count=625,
-    shore_fish_count=2000, deep_fish_count=0,
+    shore_fish_count=1425, deep_fish_count=3950,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_4.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -277,7 +277,7 @@ Age2ScenarioData.AP_JOAN_4.resources[Tier.ALLY] = ScenarioResourceCount(
 Age2ScenarioData.AP_JOAN_4.resources[Tier.ENEMY] = ScenarioResourceCount(
     gold_count=33600, stone_count=12600,
     hunt_count=0, herd_count=0, bush_count=4000,
-    shore_fish_count=2000, deep_fish_count=4800,
+    shore_fish_count=3000, deep_fish_count=825,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_6.resources[Tier.BASE] = ScenarioResourceCount(
@@ -289,7 +289,7 @@ Age2ScenarioData.AP_JOAN_6.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_JOAN_6.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=3200, stone_count=0,
     hunt_count=0, herd_count=0, bush_count=0,
-    shore_fish_count=5400, deep_fish_count=875,
+    shore_fish_count=3000, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_6.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -301,7 +301,7 @@ Age2ScenarioData.AP_JOAN_6.resources[Tier.ALLY] = ScenarioResourceCount(
 Age2ScenarioData.AP_JOAN_6.resources[Tier.ENEMY] = ScenarioResourceCount(
     gold_count=38400, stone_count=8750,
     hunt_count=0, herd_count=0, bush_count=1250,
-    shore_fish_count=1825, deep_fish_count=1300,
+    shore_fish_count=5400, deep_fish_count=3025,
     oyster_count=0, whale_count=0, relic_count=0)
 
 # A fixed force has no villagers, so there is nothing to gather whatever the map holds.
