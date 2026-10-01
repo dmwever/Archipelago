@@ -94,7 +94,7 @@ Age2ScenarioData.AP_ATTILA_2.resources[Tier.BASE] = ScenarioResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_2.resources[Tier.OPEN] = ScenarioResourceCount(
-    gold_count=11200, stone_count=4550,
+    gold_count=19200, stone_count=4550,
     hunt_count=2660, herd_count=0, bush_count=0,
     shore_fish_count=1200, deep_fish_count=1125,
     oyster_count=0, whale_count=0, relic_count=0)
@@ -144,7 +144,7 @@ Age2ScenarioData.AP_ATTILA_4.resources[Tier.BASE] = ScenarioResourceCount(
 
 Age2ScenarioData.AP_ATTILA_4.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=13600, stone_count=5950,
-    hunt_count=1040, herd_count=100, bush_count=0,
+    hunt_count=1040, herd_count=400, bush_count=0,
     shore_fish_count=1400, deep_fish_count=1125,
     oyster_count=0, whale_count=0, relic_count=0)
 
@@ -155,21 +155,21 @@ Age2ScenarioData.AP_ATTILA_4.resources[Tier.ALLY] = ScenarioResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_4.resources[Tier.ENEMY] = ScenarioResourceCount(
-    gold_count=39200, stone_count=3150,
-    hunt_count=2290, herd_count=1200, bush_count=1875,
+    gold_count=38400, stone_count=3150,
+    hunt_count=2920, herd_count=1200, bush_count=1875,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=4)
 
 Age2ScenarioData.AP_ATTILA_5.resources[Tier.BASE] = ScenarioResourceCount(
-    gold_count=1200, stone_count=2800,
+    gold_count=12000, stone_count=2800,
     hunt_count=680, herd_count=1400, bush_count=750,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_5.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=4800, stone_count=1400,
-    hunt_count=420, herd_count=200, bush_count=0,
-    shore_fish_count=9200, deep_fish_count=11225,
+    hunt_count=420, herd_count=1600, bush_count=0,
+    shore_fish_count=9200, deep_fish_count=2025,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_5.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -179,31 +179,31 @@ Age2ScenarioData.AP_ATTILA_5.resources[Tier.ALLY] = ScenarioResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_5.resources[Tier.ENEMY] = ScenarioResourceCount(
-    gold_count=30400, stone_count=6300,
+    gold_count=36800, stone_count=7700,
     hunt_count=3840, herd_count=2100, bush_count=2250,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_6.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=0, stone_count=0,
-    hunt_count=2720, herd_count=0, bush_count=0,
+    hunt_count=3060, herd_count=0, bush_count=0,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_6.resources[Tier.OPEN] = ScenarioResourceCount(
-    gold_count=24800, stone_count=7000,
+    gold_count=23200, stone_count=7000,
     hunt_count=2340, herd_count=500, bush_count=1625,
     shore_fish_count=1600, deep_fish_count=12325,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_6.resources[Tier.ALLY] = ScenarioResourceCount(
-    gold_count=0, stone_count=4550,
+    gold_count=0, stone_count=0,
     hunt_count=0, herd_count=0, bush_count=0,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_ATTILA_6.resources[Tier.ENEMY] = ScenarioResourceCount(
-    gold_count=25600, stone_count=0,
+    gold_count=28800, stone_count=4550,
     hunt_count=1260, herd_count=1600, bush_count=0,
     shore_fish_count=0, deep_fish_count=1800,
     oyster_count=0, whale_count=0, relic_count=0)
@@ -234,13 +234,13 @@ Age2ScenarioData.AP_JOAN_2.resources[Tier.ENEMY] = ScenarioResourceCount(
 
 Age2ScenarioData.AP_JOAN_3.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=5600, stone_count=1050,
-    hunt_count=0, herd_count=500, bush_count=500,
+    hunt_count=0, herd_count=500, bush_count=625,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_3.resources[Tier.OPEN] = ScenarioResourceCount(
-    gold_count=4000, stone_count=1050,
-    hunt_count=0, herd_count=900, bush_count=625,
+    gold_count=4000, stone_count=3500,
+    hunt_count=0, herd_count=900, bush_count=1250,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
 
@@ -251,7 +251,7 @@ Age2ScenarioData.AP_JOAN_3.resources[Tier.ALLY] = ScenarioResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_3.resources[Tier.ENEMY] = ScenarioResourceCount(
-    gold_count=43200, stone_count=4900,
+    gold_count=43200, stone_count=5950,
     hunt_count=2520, herd_count=500, bush_count=1375,
     shore_fish_count=0, deep_fish_count=0,
     oyster_count=0, whale_count=0, relic_count=0)
@@ -275,8 +275,8 @@ Age2ScenarioData.AP_JOAN_4.resources[Tier.ALLY] = ScenarioResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_JOAN_4.resources[Tier.ENEMY] = ScenarioResourceCount(
-    gold_count=33600, stone_count=12250,
-    hunt_count=0, herd_count=0, bush_count=3750,
+    gold_count=33600, stone_count=12600,
+    hunt_count=0, herd_count=0, bush_count=4000,
     shore_fish_count=2000, deep_fish_count=4800,
     oyster_count=0, whale_count=0, relic_count=0)
 
