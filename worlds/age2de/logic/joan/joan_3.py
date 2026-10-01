@@ -4,6 +4,7 @@ from rule_builder.rules import Has, True_
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Ages import Age2AgeData
 
+from ...locations.Buildings import Age2BuildingData
 from ...locations.Units import Age2UnitData as U
 from ...items.Items import Age2ItemData
 from ..ScenarioLogic import ScenarioStartingState
@@ -24,3 +25,6 @@ class Joan3StartingState(ScenarioStartingState):
         boats = Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
         self.obtains_unit[U.TRANSPORT_SHIP] = boats
         self.obtains_unit[U.DEMOLITION_SHIP] = boats
+        self.meets_additional_base_requirements = boats | (
+            logic.buildings.has_building(Age2BuildingData.DOCK)
+            & logic.units.has_unit_items(U.TRANSPORT_SHIP))

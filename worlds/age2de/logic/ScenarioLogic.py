@@ -22,6 +22,9 @@ class ScenarioStartingState:
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
     has_base: Rule = field(default_factory=lambda: False_())
+    # A base is no use where you cannot stand: some scenarios must first reach the ground
+    # they are meant to settle. Kept free of the economy, since has_base feeds it.
+    meets_additional_base_requirements: Rule = field(default_factory=lambda: True_())
     max_age: Age2AgeData = Age2AgeData.IMPERIAL
     age_playable: dict[Age2AgeData, Rule] = field(default_factory=dict)
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
@@ -86,7 +89,8 @@ class ScenarioLogic:
         villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
         starts_with_base = (self.starting_state.has_base
                    & self.logic.resources.has_amount(villager_food.type, villager_food.amount))
-        return starts_with_base | self.buildings.can_build_base()
+        return ((starts_with_base | self.buildings.can_build_base())
+                & self.starting_state.meets_additional_base_requirements)
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access
