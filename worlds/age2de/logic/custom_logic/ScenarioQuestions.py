@@ -205,7 +205,7 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
         return scenario.economy.can_chop_some() | scenario.economy.ally_trade_wood()
 
     def _food_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy, counts = scenario.economy, scenario.scenario.resources
+        economy, counts = scenario.economy, scenario.economy.counts
         raw_food = (
             (economy.can_hunt(), counts.hunt_count),
             (economy.can_herd(), counts.herd_count),
@@ -218,7 +218,7 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
             sources=raw_food, needed=scenario.scenario.demand.food)
 
     def _gold_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy, counts = scenario.economy, scenario.scenario.resources
+        economy, counts = scenario.economy, scenario.economy.counts
         raw_gold = (
             (economy.can_mine_some(), counts.gold_count),
             (economy.can_gather_oysters(), counts.oyster_count),
@@ -230,7 +230,7 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
             & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
 
     def _stone_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy, counts = scenario.economy, scenario.scenario.resources
+        economy, counts = scenario.economy, scenario.economy.counts
         raw_stone = (
             (economy.can_quarry_some(), counts.stone_count),
         )

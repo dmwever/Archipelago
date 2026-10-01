@@ -6,6 +6,7 @@ from rule_builder.rules import And, False_, Or, Rule, True_
 
 from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
+from ...locations.connections import ScenarioResources
 from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
@@ -37,7 +38,7 @@ class ScenarioResourceLogic:
         self.scenario = scenario
         self.logic = scenario.logic
         self.world = scenario.logic.world
-        self.counts = scenario.scenario.resources
+        self.counts = ScenarioResources.total(scenario.scenario)
         self.demand = scenario.scenario.demand
 
     # -- can gather ---------------------------------------------------------------------------
