@@ -84,12 +84,15 @@ Age2ScenarioData.AP_ATTILA_3.demand = ScenarioResourceDemand()
 Age2ScenarioData.AP_ATTILA_4.demand = ScenarioResourceDemand(gold=9000, stone=2000, food=25000)
 Age2ScenarioData.AP_ATTILA_5.demand = ScenarioResourceDemand(gold=7500, stone=2000, food=20000)
 Age2ScenarioData.AP_ATTILA_6.demand = ScenarioResourceDemand(gold=12000, stone=4000, food=40000)
-Age2ScenarioData.AP_JOAN_1.demand = ScenarioResourceDemand()
 Age2ScenarioData.AP_JOAN_2.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
 Age2ScenarioData.AP_JOAN_3.demand = ScenarioResourceDemand()
 Age2ScenarioData.AP_JOAN_4.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
-Age2ScenarioData.AP_JOAN_5.demand = ScenarioResourceDemand()
 Age2ScenarioData.AP_JOAN_6.demand = ScenarioResourceDemand(gold=6000, stone=2000, food=20000)
+Age2ScenarioData.AP_GENGHIS_2.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
+Age2ScenarioData.AP_GENGHIS_3.demand = ScenarioResourceDemand(gold=12000, stone=4000, food=40000)
+Age2ScenarioData.AP_GENGHIS_4.demand = ScenarioResourceDemand(gold=6000, stone=2000, food=20000)
+Age2ScenarioData.AP_GENGHIS_5.demand = ScenarioResourceDemand(gold=4500, stone=4000, food=15000)
+Age2ScenarioData.AP_GENGHIS_6.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
 # etc
 
 Age2ScenarioData.AP_ATTILA_1.resources = ScenarioBaseResourceCount(
