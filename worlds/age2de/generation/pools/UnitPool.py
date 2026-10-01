@@ -145,6 +145,12 @@ class UnitPool:
         return grouped
 
 
+    def mercenary_exclusive_location(self, unit: Age2UnitData) -> bool:
+        for line, locations in self.line_locations.items():
+            if unit in locations or (unit.line is line and line in locations):
+                return True
+        return False
+
     def root_unit_data(self, location: UnitLocation) -> Age2UnitData:
         if isinstance(location, Age2VillagerJobData) or self.is_villager_location(location):
             return Age2UnitData.VILLAGER_MALE

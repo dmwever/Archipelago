@@ -1,8 +1,9 @@
-"""A mercenary is progression only where a rule leans on it. That has to be declared on the item,
-because an item's classification is fixed in create_items while the rules that reference it are not
-built until set_rules, and four of the six references live inside methods rather than on a class.
-A declared flag drifts the moment someone adds or drops a rule, so these tests derive the truth from
-the rule source and fail when the two disagree.
+"""A mercenary is progression only where a rule leans on it, and that is two questions.
+
+A scenario objective that names one is declared on the item as in_logic, because those references
+live in hand-written rule code that nothing can derive from - the AST scan below is what keeps the
+flag honest. Whether unitsanity turns a soldier it hands over into a location is derived from the
+pool instead, since that moves with the options. Age2World.needs_mercenary is the two together.
 """
 
 import ast
@@ -12,6 +13,7 @@ import unittest
 from BaseClasses import ItemClassification
 
 from ..client.DataStorage import DataStorage
+from . import bases
 from ..items import Items
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
@@ -177,3 +179,56 @@ class TestMercenaryUnits(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestMercenariesTheSeedNeeds(bases.Age2RuleTestBase):
+    """A mercenary is progression only where a rule leans on it, and which mercenaries those are
+    is a property of the seed: six are named at default options, and opening the unit locations
+    names five more. The declared in_logic flag covers the scenario objectives; the pool covers
+    the units, because whether a soldier becomes a location is what decides the rest.
+    """
+
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def referenced(self, world) -> set:
+        """The mercenary names this seed's access rules actually ask for."""
+        names = {item.item_name for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]}
+        found: set[str] = set()
+        for spot in (*world.multiworld.get_locations(world.player),
+                     *world.multiworld.get_entrances(world.player)):
+            dependencies = getattr(spot.access_rule, "item_dependencies", None)
+            if dependencies is None:
+                continue
+            found |= names & dependencies().keys()
+        return found
+
+    def needed(self, world) -> set:
+        return {item.item_name for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]
+                if world.needs_mercenary(item)}
+
+    def test_the_seed_claims_exactly_what_its_rules_ask_for(self):
+        for options in ({}, {"unitsanity": 1}, {"unitsanity": 2},
+                        {"unitsanity": 2, "techsanity": 3}):
+            with self.subTest(str(options)):
+                world = self.build(**options)
+                self.assertEqual(self.referenced(world), self.needed(world))
+
+    def test_the_set_grows_when_the_unit_locations_open(self):
+        """The flag alone could not say this - it is the same six items either way."""
+        self.assertLess(self.needed(self.build()), self.needed(self.build(unitsanity=2)))
+
+    def test_what_the_seed_needs_is_pooled_as_progression(self):
+        world = self.build(unitsanity=2)
+        wanted = self.needed(world)
+        pooled = {item.name: item for item in world.multiworld.itempool
+                  if item.player == world.player
+                  and item.name in {m.item_name
+                                    for m in Items.CATEGORY_TO_ITEMS[Items.Mercenary]}}
+        self.assertTrue(pooled, "no mercenary reached the pool")
+        for name, item in pooled.items():
+            with self.subTest(name):
+                self.assertEqual(name in wanted,
+                                 ItemClassification.progression in item.classification,
+                                 "a rule depends on this, so fill has to place it as progression "
+                                 "or the locations behind it are unreachable")
