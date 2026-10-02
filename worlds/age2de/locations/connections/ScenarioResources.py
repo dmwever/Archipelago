@@ -121,7 +121,7 @@ Age2ScenarioData.AP_ATTILA_3.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=4800, stone_count=4900,
     hunt_count=3500, herd_count=0, bush_count=0,
     shore_fish_count=5000, deep_fish_count=6000,
-    oyster_count=0, whale_count=0, relic_count=0)
+    oyster_count=0, whale_count=0, relic_count=2)
 
 Age2ScenarioData.AP_ATTILA_3.resources[Tier.ALLY] = ScenarioResourceCount(
     gold_count=0, stone_count=0,
@@ -133,7 +133,7 @@ Age2ScenarioData.AP_ATTILA_3.resources[Tier.ENEMY] = ScenarioResourceCount(
     gold_count=0, stone_count=3500,
     hunt_count=0, herd_count=200, bush_count=875,
     shore_fish_count=1600, deep_fish_count=6675,
-    oyster_count=0, whale_count=0, relic_count=1)
+    oyster_count=0, whale_count=0, relic_count=0)
 
 # The fish drought: five deep fish and seven shore fish, against eighty-five gold mines.
 Age2ScenarioData.AP_ATTILA_4.resources[Tier.BASE] = ScenarioResourceCount(

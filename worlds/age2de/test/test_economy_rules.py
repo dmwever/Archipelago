@@ -10,6 +10,7 @@ from rule_builder.rules import False_, True_
 from . import bases
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
+from ..locations.connections.ScenarioResources import total
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
 from ..logic.custom_logic.ScenarioQuestions import ScenarioHasResource
@@ -38,12 +39,18 @@ class TestSourcesPerScenario(EconomyTestBase):
     def test_a_scenario_with_no_gold_on_the_map_has_no_mining(self):
         self.build()
         self.assertTrue(self.is_false(self.economy(Age2ScenarioData.AP_JOAN_1).can_mine_some()))
-        self.assertEqual(Age2ScenarioData.AP_JOAN_1.resources.gold_count, 0)
+        self.assertEqual(total(Age2ScenarioData.AP_JOAN_1).gold_count, 0)
 
     def test_attila_4_cannot_live_on_fish(self):
-        """Five deep fish and seven shore fish against Attila 4's demand; Attila 1 has twenty
-        thousand fish against the same. Farms are mocked away too: a farm is endless food on
-        either map, which is the point of endless_food."""
+        """A dozen fish against Attila 4's demand; Attila 3 has eleven thousand within reach
+        against a smaller one. Farms are mocked away too: a farm is endless food on either map,
+        which is the point of endless_food.
+
+        Attila 3 rather than Attila 1 is the map that can, which is the tiering showing through.
+        Attila 1 holds the most fish of anywhere - twenty thousand - but 8700 of it lies inside
+        a Persian camp and 3000 is the Scythians' to give, leaving 8725 against a demand of
+        10000. Only what the tiers let you reach is weighed.
+        """
         self.build()
         with mock.patch.multiple(economy_module.ScenarioResourceLogic,
                                  can_hunt=mock.Mock(return_value=False_()),
@@ -52,14 +59,18 @@ class TestSourcesPerScenario(EconomyTestBase):
                                  endless_food=mock.Mock(return_value=False_())):
             self.assertTrue(self.is_false(
                 self.easy(Age2ScenarioData.AP_ATTILA_4, Resource.FOOD)))
+            self.assertTrue(self.is_false(
+                self.easy(Age2ScenarioData.AP_ATTILA_1, Resource.FOOD)),
+                "Attila 1's fish are mostly an enemy's, so they do not count towards living "
+                "on fish alone")
             self.assertFalse(self.is_false(
-                self.easy(Age2ScenarioData.AP_ATTILA_1, Resource.FOOD)))
+                self.easy(Age2ScenarioData.AP_ATTILA_3, Resource.FOOD)))
 
     def test_food_is_the_sum_of_what_can_be_worked(self):
         """No single source has to carry a map: Joan 2 has 680 of hunt, 1500 of herd and 2125
         of bushes, none of them near the threshold, and together they clear it."""
         self.build()
-        joan_2 = Age2ScenarioData.AP_JOAN_2.resources
+        joan_2 = total(Age2ScenarioData.AP_JOAN_2)
         for count in (joan_2.hunt_count, joan_2.herd_count, joan_2.bush_count):
             self.assertLess(count, Age2ScenarioData.AP_JOAN_2.demand.food)
         self.assertFalse(self.is_false(
@@ -70,7 +81,7 @@ class TestSourcesPerScenario(EconomyTestBase):
         make this a lie."""
         self.build()
         for scenario in Age2ScenarioData:
-            counts = scenario.resources
+            counts = total(scenario)
             economy = self.economy(scenario)
             for count, threshold, some, easily in (
                     (counts.gold_count, scenario.demand.gold,
@@ -130,7 +141,7 @@ class TestAttila3Gold(EconomyTestBase):
         self.build()
         attila_3 = Age2ScenarioData.AP_ATTILA_3
         easy = self.resolved(self.economy(attila_3).has_easy_source(Resource.GOLD))
-        if attila_3.resources.gold_count < attila_3.demand.gold:
+        if total(attila_3).gold_count < attila_3.demand.gold:
             self.assertTrue(self.is_false(self.easy(attila_3, Resource.GOLD)))
         self.assertFalse(easy.always_false, "the lumps should keep gold reachable either way")
 
@@ -280,21 +291,23 @@ class TestDeepFishIsWhatABoatNeeds(EconomyTestBase):
     only a map whose fish are all inshore can tell them apart."""
 
     def counts_with(self, scenario, **fields):
-        return dataclasses.replace(scenario.resources, **fields)
+        """economy.counts is the tiers added together, so doctoring it is still a flat
+        dataclass - the tier table itself is left alone."""
+        return dataclasses.replace(total(scenario), **fields)
 
     def test_a_map_whose_fish_are_all_inshore_cannot_be_fished_by_boat(self):
         self.build()
         economy = self.economy(Age2ScenarioData.AP_ATTILA_1)
         economy.counts = self.counts_with(Age2ScenarioData.AP_ATTILA_1,
-                                          shore_fish_count=4000, fish_count=4000)
+                                          shore_fish_count=4000, deep_fish_count=0)
         self.assertEqual(0, economy.counts.deep_fish_count)
-        self.assertTrue(economy.counts.fish_count, "fish_count must stay non-zero to tell the "
-                                                   "two guards apart")
+        self.assertTrue(economy.counts.shore_fish_count, "shore fish must stay non-zero to tell "
+                                                         "the two guards apart")
         self.assertIsInstance(economy.can_fish_by_boat(), False_)
 
     def test_deep_fish_alone_can_be(self):
         self.build()
         economy = self.economy(Age2ScenarioData.AP_ATTILA_1)
         economy.counts = self.counts_with(Age2ScenarioData.AP_ATTILA_1,
-                                          shore_fish_count=0, fish_count=4000)
+                                          shore_fish_count=0, deep_fish_count=4000)
         self.assertNotIsInstance(economy.can_fish_by_boat(), False_)
