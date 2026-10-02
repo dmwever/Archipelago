@@ -146,6 +146,7 @@ class Age2UnitLineData(enum.IntEnum):
     MONOREME_LINE                 = 912, "Own Monoreme Line", "Monoreme Line", Age2UnitData.MONOREME, Age2ItemData.UNIT_LINE_MONOREME
     GALLEY_ANTIQUITY_LINE         = 913, "Own Ancient Galley Line", "Ancient Galley Line", Age2UnitData.GALLEY_ANTIQUITY, Age2ItemData.UNIT_LINE_GALLEY_ANTIQUITY
     INCENDIARY_RAFT_LINE          = 914, "Own Incendiary Ship Line", "Incendiary Ship Line", Age2UnitData.INCENDIARY_RAFT, Age2ItemData.UNIT_LINE_INCENDIARY_RAFT
+    HULK_LINE                     = 914, "Own HULK Line", "HULK Line", Age2UnitData.HULK, Age2ItemData.UNIT_LINE_HULK
     CATAPULT_SHIP_LINE            = 915, "Own Catapult Ship Line", "Catapult Ship Line", Age2UnitData.CATAPULT_SHIP, Age2ItemData.UNIT_LINE_CATAPULT_SHIP
     LEVIATHAN_LINE                = 916, "Own Leviathan Line", "Leviathan Line", Age2UnitData.LEVIATHAN, Age2ItemData.UNIT_LINE_LEVIATHAN
     TRANSPORT_SHIP_ANTIQUITY_LINE = 917, "Own Transport Ship Antiquity Line", "Transport Ship Antiquity Line", Age2UnitData.TRANSPORT_SHIP_ANTIQUITY, Age2ItemData.UNIT_LINE_TRANSPORT_SHIP_ANTIQUITY
