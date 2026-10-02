@@ -10,7 +10,7 @@ from rule_builder.rules import False_, True_
 from . import bases
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
-from ..locations.connections.ScenarioResources import total
+from ..locations.connections.ScenarioResources import Tier, total
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
 from ..logic.custom_logic.ScenarioQuestions import ScenarioHasResource
@@ -311,3 +311,60 @@ class TestDeepFishIsWhatABoatNeeds(EconomyTestBase):
         economy.counts = self.counts_with(Age2ScenarioData.AP_ATTILA_1,
                                           shore_fish_count=0, deep_fish_count=4000)
         self.assertNotIsInstance(economy.can_fish_by_boat(), False_)
+
+
+class TestEveryScenarioCanLive(EconomyTestBase):
+    """The tiers gate, so a scenario can be shut out of a resource by the data alone - a map
+    whose only gold sits in a camp the scenario never asks you to take would read as abundant
+    and be unwinnable. This is the test that says which, rather than leaving it to a seed.
+
+    A fixed force is excluded on purpose: no villagers, so nothing is gatherable by design.
+    """
+
+    def playable(self):
+        return [scenario for scenario in Age2ScenarioData
+                if not self.world.rules.logic.for_scenario(scenario).starting_state.fixed_force]
+
+    def easy_answer(self, scenario: Age2ScenarioData, resource: Resource):
+        """The whole easy question - gathering, the scenario's declared sources, and trade."""
+        question = ScenarioHasResource(scenario=scenario, resource=resource, easy=True)
+        return question.answer(self.world.rules.logic.for_scenario(scenario))
+
+    def test_every_scenario_can_qualify_for_every_resource(self):
+        self.build()
+        barren = [f"{scenario.name}:{resource.name}"
+                  for scenario in self.playable()
+                  for resource in Resource
+                  if self.is_false(self.easy_answer(scenario, resource))]
+        self.assertEqual([], barren,
+                         "a scenario cannot reach one of its resources by any route; either the "
+                         "tier split is wrong or the gate is too tight")
+
+    def test_a_fixed_force_is_shut_out_on_purpose(self):
+        """The counterpart: if these ever start qualifying, a fixed force has gained an economy
+        and the exclusion above has stopped meaning anything."""
+        self.build()
+        for scenario in (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5):
+            for resource in (Resource.FOOD, Resource.GOLD, Resource.STONE):
+                with self.subTest(f"{scenario.name}.{resource.name}"):
+                    self.assertTrue(self.is_false(self.easy_answer(scenario, resource)))
+
+    def test_the_tiers_actually_gate(self):
+        """Half of the scenarios lose a resource when only the base tier counts. If this ever
+        comes back empty the gates have stopped gating and every tier is being summed again."""
+        self.build()
+        before = {(scenario, resource)
+                  for scenario in self.playable() for resource in Resource
+                  if not self.is_false(self.easy_answer(scenario, resource))}
+
+        base_only = {tier: (True_() if tier is Tier.BASE else False_()) for tier in Tier}
+        with mock.patch.object(economy_module.ScenarioResourceLogic, "tier_gates",
+                               lambda self, kind="land": base_only):
+            self.world.rules.logic.scenario_answers.clear()
+            after = {(scenario, resource)
+                     for scenario in self.playable() for resource in Resource
+                     if not self.is_false(self.easy_answer(scenario, resource))}
+        self.world.rules.logic.scenario_answers.clear()
+
+        self.assertTrue(after < before,
+                        "gating every tier but the base should cost somebody something")
