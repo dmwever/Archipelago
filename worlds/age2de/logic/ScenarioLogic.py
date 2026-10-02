@@ -32,6 +32,7 @@ class ScenarioStartingState:
     job_available: dict[Age2VillagerJobData, Rule] = field(
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
+    must_steal_base: Rule = field(default_factory=lambda: False_())
     fixed_force: bool = False
     starting_gold_mine: Rule = field(default_factory=lambda: True_())
     starting_stone_mine: Rule = field(default_factory=lambda: True_())

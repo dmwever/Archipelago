@@ -46,6 +46,25 @@ class ScenarioBuildingLogic:
     def can_build_multiple_tc(self) -> Rule:
         return self.can_build_tc() & self.scenario.ages.has_reached(Age2AgeData.CASTLE)
 
+    def is_fortified(self) -> Rule:
+        strongpoint = Or(*[self.scenario.has_building(building) for building in
+                           (Age2BuildingData.TOWN_CENTER, Age2BuildingData.CASTLE,
+                            Age2BuildingData.FORTIFIED_CHURCH, Age2BuildingData.KREPOST,
+                            Age2BuildingData.DONJON)
+                           if self.scenario.civilization.can_build(building)])
+        wall = Or(*[self.scenario.has_building(building) for building in
+                    (Age2BuildingData.STONE_WALL, Age2BuildingData.PALISADE_WALL)
+                    if self.scenario.civilization.can_build(building)])
+        tower = Or(*[self.scenario.has_building(building) for building in
+                     (Age2BuildingData.WATCH_TOWER, Age2BuildingData.BOMBARD_TOWER)
+                     if self.scenario.civilization.can_build(building)])
+        return strongpoint | (wall & tower)
+
+    def can_hold_a_shoreline(self) -> Rule:
+        return ((self.scenario.has_building(Age2BuildingData.MILL) & self.is_fortified())
+                | self.can_build_multiple_tc()
+                | self.scenario.has_building(Age2BuildingData.DOCK))
+
     def has_gold_dropsite(self) -> Rule:
         return Or(*[self.scenario.has_building(building) for building in
                     (Age2BuildingData.MINING_CAMP, Age2BuildingData.TOWN_CENTER,

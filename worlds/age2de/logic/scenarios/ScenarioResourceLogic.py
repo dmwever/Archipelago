@@ -7,6 +7,7 @@ from rule_builder.rules import And, False_, Or, Rule, True_
 from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.connections import ScenarioResources
+from ...locations.connections.ScenarioResources import Tier
 from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
@@ -39,7 +40,35 @@ class ScenarioResourceLogic:
         self.logic = scenario.logic
         self.world = scenario.logic.world
         self.counts = ScenarioResources.total(scenario.scenario)
+        self._gates: dict[str, dict[Tier, Rule]] = {}
         self.demand = scenario.scenario.demand
+
+    # -- what each tier costs to reach ---------------------------------------------------------
+
+    def tier_gates(self, kind: str = "land") -> dict[Tier, Rule]:
+        gates = self._gates.get(kind)
+        if gates is None:
+            gates = self._gates[kind] = {
+                Tier.BASE: True_(),
+                Tier.OPEN: self._open_gate(kind),
+                Tier.ALLY: False_(),
+                Tier.ENEMY: self.scenario.starting_state.must_steal_base,
+            }
+        return gates
+
+    def _open_gate(self, kind: str) -> Rule:
+        if kind == "afloat":
+            return self.scenario.military.has_navy()
+        if kind == "shoreline":
+            return (self.scenario.buildings.can_hold_a_shoreline()
+                    | self.scenario.military.has_navy())
+        return self.scenario.buildings.is_fortified()
+
+    def tiered(self, gathers: Rule, field: str,
+               gates: Mapping[Tier, Rule]) -> tuple[tuple[Rule, int], ...]:
+        return tuple((gathers & gates[tier], getattr(counts, field))
+                     for tier, counts in self.scenario.scenario.resources.items()
+                     if getattr(counts, field))
 
     # -- can gather ---------------------------------------------------------------------------
 
@@ -111,12 +140,22 @@ class ScenarioResourceLogic:
     def can_fish_some(self) -> Rule:
         return self.can_fish_from_shore() | self.can_fish_by_boat()
 
-    def can_gather_oysters(self) -> Rule:
+    def can_gather_oysters_from_shore(self) -> Rule:
         if not self.counts.oyster_count:
             return False_()
         return (self.scenario.buildings.has_fisherman_dropsite() & self.scenario.has_vils()
                 & self.has_job(Job.OYSTER_GATHERER_MALE)
                 & self.scenario.starting_state.starting_oysters)
+
+    def can_gather_oysters_by_boat(self) -> Rule:
+        if not self.counts.oyster_count:
+            return False_()
+        return (self.scenario.buildings.has_fishing_boat_dropsite()
+                & self.can_crew_fishing_ships()
+                & self.scenario.starting_state.starting_oysters)
+
+    def can_gather_oysters(self) -> Rule:
+        return self.can_gather_oysters_from_shore() | self.can_gather_oysters_by_boat()
 
     def can_hunt_whales(self) -> Rule:
         if not self.counts.whale_count:

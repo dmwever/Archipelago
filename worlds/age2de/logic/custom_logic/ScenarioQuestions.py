@@ -83,21 +83,31 @@ class ScenarioQuestion(Rule["Age2World"], game="Age Of Empires II: Definitive Ed
             """The child's dependencies, and this wrapper's own id alongside them."""
             return {name: ids | {id(self)} for name, ids in dependencies.items()}
 
+        def _walked(self, kind: str, walk) -> dict[str, set[int]]:
+            cache = getattr(self, "_walked_cache", None)
+            if cache is None:
+                cache = {}
+                object.__setattr__(self, "_walked_cache", cache)
+            found = cache.get(kind)
+            if found is None:
+                found = cache[kind] = self.mine(walk())
+            return found
+
         @override
         def item_dependencies(self) -> dict[str, set[int]]:
-            return self.mine(self.answer.item_dependencies())
+            return self._walked("item", self.answer.item_dependencies)
 
         @override
         def region_dependencies(self) -> dict[str, set[int]]:
-            return self.mine(self.answer.region_dependencies())
+            return self._walked("region", self.answer.region_dependencies)
 
         @override
         def location_dependencies(self) -> dict[str, set[int]]:
-            return self.mine(self.answer.location_dependencies())
+            return self._walked("location", self.answer.location_dependencies)
 
         @override
         def entrance_dependencies(self) -> dict[str, set[int]]:
-            return self.mine(self.answer.entrance_dependencies())
+            return self._walked("entrance", self.answer.entrance_dependencies)
 
         @override
         def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
@@ -205,24 +215,29 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
         return scenario.economy.can_chop_some() | scenario.economy.ally_trade_wood()
 
     def _food_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy, counts = scenario.economy, scenario.economy.counts
+        economy = scenario.economy
+        land = economy.tier_gates()
         raw_food = (
-            (economy.can_hunt(), counts.hunt_count),
-            (economy.can_herd(), counts.herd_count),
-            (economy.can_forage(), counts.bush_count),
-            (economy.can_fish_from_shore(), counts.shore_fish_count),
-            (economy.can_fish_by_boat(), counts.deep_fish_count),
+            *economy.tiered(economy.can_hunt(), "hunt_count", land),
+            *economy.tiered(economy.can_herd(), "herd_count", land),
+            *economy.tiered(economy.can_forage(), "bush_count", land),
+            *economy.tiered(economy.can_fish_some(), "shore_fish_count",
+                            economy.tier_gates("shoreline")),
+            *economy.tiered(economy.can_fish_by_boat(), "deep_fish_count",
+                            economy.tier_gates("afloat")),
         )
 
         return economy.endless_food() | SufficientRawResources(
             sources=raw_food, needed=scenario.scenario.demand.food)
 
     def _gold_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy, counts = scenario.economy, scenario.economy.counts
+        economy = scenario.economy
+        land, afloat = economy.tier_gates(), economy.tier_gates("afloat")
         raw_gold = (
-            (economy.can_mine_some(), counts.gold_count),
-            (economy.can_gather_oysters(), counts.oyster_count),
-            (economy.can_hunt_whales(), counts.whale_count),
+            *economy.tiered(economy.can_mine_some(), "gold_count", land),
+            *economy.tiered(economy.can_gather_oysters(), "oyster_count",
+                            economy.tier_gates("shoreline")),
+            *economy.tiered(economy.can_hunt_whales(), "whale_count", afloat),
         )
 
         return economy.ally_trade_gold() | (
@@ -230,10 +245,9 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
             & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
 
     def _stone_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy, counts = scenario.economy, scenario.economy.counts
-        raw_stone = (
-            (economy.can_quarry_some(), counts.stone_count),
-        )
+        economy = scenario.economy
+        raw_stone = economy.tiered(economy.can_quarry_some(), "stone_count",
+                                   economy.tier_gates())
 
         return (SufficientRawResources(sources=raw_stone,
                                        needed=scenario.scenario.demand.stone)
