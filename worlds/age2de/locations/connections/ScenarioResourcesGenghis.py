@@ -30,7 +30,9 @@ Age2ScenarioData.AP_GENGHIS_2.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=8000, stone_count=1050,
     hunt_count=1400, herd_count=0, bush_count=0,
     shore_fish_count=0, deep_fish_count=0,
-    oyster_count=0, whale_count=0, relic_count=0)
+    oyster_count=0, whale_count=0, relic_count=0
+    ally_market=false, enemy_market=true,
+    ally_dock=false, enemy_dock=false)
 
 Age2ScenarioData.AP_GENGHIS_2.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=7200, stone_count=1050,
@@ -54,7 +56,9 @@ Age2ScenarioData.AP_GENGHIS_3.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=3200, stone_count=3500,
     hunt_count=680, herd_count=300, bush_count=1500,
     shore_fish_count=800, deep_fish_count=0,
-    oyster_count=0, whale_count=0, relic_count=0)
+    oyster_count=0, whale_count=0, relic_count=0
+    ally_market=false, enemy_market=false,
+    ally_dock=false, enemy_dock=false)
 
 Age2ScenarioData.AP_GENGHIS_3.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=12000, stone_count=10050,
@@ -78,7 +82,9 @@ Age2ScenarioData.AP_GENGHIS_4.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=8000, stone_count=0,
     hunt_count=1660, herd_count=1000, bush_count=0,
     shore_fish_count=0, deep_fish_count=0,
-    oyster_count=0, whale_count=0, relic_count=0)
+    oyster_count=0, whale_count=0, relic_count=0
+    ally_market=true, enemy_market=true,
+    ally_dock=false, enemy_dock=false)
 
 Age2ScenarioData.AP_GENGHIS_4.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=4000, stone_count=0,
@@ -102,7 +108,9 @@ Age2ScenarioData.AP_GENGHIS_5.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=3200, stone_count=3850,
     hunt_count=840, herd_count=0, bush_count=0,
     shore_fish_count=800, deep_fish_count=0,
-    oyster_count=0, whale_count=0, relic_count=0)
+    oyster_count=0, whale_count=0, relic_count=0
+    ally_market=true, enemy_market=false,
+    ally_dock=true, enemy_dock=false)
 
 Age2ScenarioData.AP_GENGHIS_5.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=4000, stone_count=2450,
@@ -126,7 +134,9 @@ Age2ScenarioData.AP_GENGHIS_6.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=8000, stone_count=3500,
     hunt_count=980, herd_count=800, bush_count=0,
     shore_fish_count=0, deep_fish_count=0,
-    oyster_count=0, whale_count=0, relic_count=0)
+    oyster_count=0, whale_count=0, relic_count=0
+    ally_market=false, enemy_market=false,
+    ally_dock=false, enemy_dock=false)
 
 Age2ScenarioData.AP_GENGHIS_6.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=8000, stone_count=3500,
