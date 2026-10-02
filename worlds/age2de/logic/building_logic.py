@@ -4,21 +4,12 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import Has, Rule, True_
 from ..items.Items import Age2ItemData
 
-from ..locations.Buildings import Age2BuildingData
+from ..locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 
 
 if TYPE_CHECKING:
     from .. import Age2World
     from .Logic import Logic
-
-BUILDING_PREREQUISITE: dict[Age2BuildingData, Age2BuildingData] = {
-    Age2BuildingData.ARCHERY_RANGE: Age2BuildingData.BARRACKS,
-    Age2BuildingData.STABLE: Age2BuildingData.BARRACKS,
-    Age2BuildingData.FARM: Age2BuildingData.MILL,
-    Age2BuildingData.MARKET: Age2BuildingData.MILL,
-    Age2BuildingData.SIEGE_WORKSHOP: Age2BuildingData.BLACKSMITH,
-    Age2BuildingData.FISH_TRAP: Age2BuildingData.DOCK,
-}
 
 
 class BuildingLogic:
