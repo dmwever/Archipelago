@@ -268,7 +268,7 @@ class Age2World(CachedRuleBuilderWorld):
         # every resource target is already met, so they never cost the player economy.
         plan = self.pool.resources.plan(needed_number_of_filler_items)
         starting_items = [self.create_item(data.item_name) for data in plan.items]
-        traps = [self.create_item(data.item_name) for data in plan.traps]
+        traps = [self.create_item(data.item_name) for data in self.pool.traps.roll(plan.spare)]
 
         self.multiworld.itempool += starting_items
         self.multiworld.itempool += traps
