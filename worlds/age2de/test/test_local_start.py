@@ -231,10 +231,12 @@ class TestSolver(Age2TestBase):
         "starting_campaigns": {JOAN},
     }
 
-    RAM = Age2ItemData.AP_JOAN_1_RAM.item_name
-    SWORDSMEN = Age2ItemData.AP_JOAN_1_SWORDSMEN.item_name
-    CROSSBOWMEN = Age2ItemData.AP_JOAN_1_CROSSBOWMEN.item_name
+    # Stand-ins for the synthetic rules below have to be progression: a useful item never enters
+    # the collection state, so Has() on one is false however many copies the solver is handed.
     TRANSPORT = Age2ItemData.AP_JOAN_1_TRANSPORT.item_name
+    ORLEANS = Age2ItemData.AP_JOAN_2_ORLEANS.item_name
+    CARTS = Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name
+    DOCK = Age2ItemData.AP_JOAN_2_DOCK.item_name
     PROGRESSIVE = Age2ItemData.PROGRESSIVE_JOAN_SCENARIO.item_name
 
     def target_for(self, rule):
@@ -244,44 +246,43 @@ class TestSolver(Age2TestBase):
         return solve(self.world, self.target_for(rule), self.multiworld.state, candidates)
 
     def test_and_over_or_takes_one_branch(self) -> None:
-        # Has(ram) & (Has(swordsmen) | Has(crossbowmen)) needs two items, not three.
-        rule = Has(self.RAM) & (Has(self.SWORDSMEN) | Has(self.CROSSBOWMEN))
-        got = self.solve_for(rule, [self.RAM, self.SWORDSMEN, self.CROSSBOWMEN])
+        # Has(orleans) & (Has(carts) | Has(dock)) needs two items, not three.
+        rule = Has(self.ORLEANS) & (Has(self.CARTS) | Has(self.DOCK))
+        got = self.solve_for(rule, [self.ORLEANS, self.CARTS, self.DOCK])
         self.assertEqual(2, len(got))
-        self.assertIn(self.RAM, got)
-        self.assertTrue(self.SWORDSMEN in got or self.CROSSBOWMEN in got)
+        self.assertIn(self.ORLEANS, got)
+        self.assertTrue(self.CARTS in got or self.DOCK in got)
 
     def test_conjunction_keeps_everything_it_needs(self) -> None:
-        rule = HasAll(self.RAM, self.SWORDSMEN, self.TRANSPORT)
-        got = self.solve_for(rule, [self.RAM, self.SWORDSMEN, self.CROSSBOWMEN, self.TRANSPORT])
-        self.assertEqual({self.RAM, self.SWORDSMEN, self.TRANSPORT}, set(got))
+        rule = HasAll(self.ORLEANS, self.CARTS, self.TRANSPORT)
+        got = self.solve_for(rule, [self.ORLEANS, self.CARTS, self.DOCK, self.TRANSPORT])
+        self.assertEqual({self.ORLEANS, self.CARTS, self.TRANSPORT}, set(got))
 
     def test_already_satisfied_needs_nothing(self) -> None:
-        self.assertEqual([], self.solve_for(True_(), [self.RAM]))
+        self.assertEqual([], self.solve_for(True_(), [self.ORLEANS]))
 
     def test_unsatisfiable_returns_none(self) -> None:
-        self.assertIsNone(self.solve_for(False_(), [self.RAM]))
+        self.assertIsNone(self.solve_for(False_(), [self.ORLEANS]))
 
     def test_missing_item_returns_none(self) -> None:
         # The candidate pool cannot supply the transport, so the target is unreachable.
-        rule = HasAll(self.RAM, self.TRANSPORT)
-        self.assertIsNone(self.solve_for(rule, [self.RAM, self.SWORDSMEN]))
+        rule = HasAll(self.ORLEANS, self.TRANSPORT)
+        self.assertIsNone(self.solve_for(rule, [self.ORLEANS, self.CARTS]))
 
     def test_counts_take_as_many_copies_as_asked(self) -> None:
         rule = Has(self.PROGRESSIVE, 2)
-        got = self.solve_for(rule, [self.PROGRESSIVE] * 4 + [self.RAM])
+        got = self.solve_for(rule, [self.PROGRESSIVE] * 4 + [self.ORLEANS])
         self.assertEqual([self.PROGRESSIVE] * 2, got)
 
     def test_location_target_joan_1_victory(self) -> None:
-        # The real thing: what does it take to reach Joan 1's victory from turn one?
+        # The real thing: what does it take to reach Joan 1's victory from turn one? Since the
+        # scenario was loosened the answer is the transport alone - the soldiers and the ram are
+        # no longer in its chain, which is why they are no longer progression items either.
         victory = self.world.get_location(Age2ScenarioLocationData.JOAN1_VICTORY.global_name())
         candidates = [item.name for item in self.multiworld.itempool if item.player == self.player]
         got = solve(self.world, victory, self.multiworld.state, candidates)
         self.assertIsNotNone(got)
-        self.assertEqual(3, len(got))
-        self.assertIn(self.RAM, got)
-        self.assertIn(self.TRANSPORT, got)
-        self.assertTrue(self.SWORDSMEN in got or self.CROSSBOWMEN in got)
+        self.assertEqual([self.TRANSPORT], got)
         # And the answer actually holds.
         self.assertTrue(victory.can_reach(state_with(self.world, self.multiworld.state, got)))
 

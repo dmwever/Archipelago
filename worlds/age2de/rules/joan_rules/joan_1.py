@@ -1,4 +1,4 @@
-from rule_builder.rules import Has, HasAny, Rule
+from rule_builder.rules import Has, Rule
 
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
