@@ -4,39 +4,38 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import Has, Rule, True_
 from ..items.Items import Age2ItemData
 
-from ..locations.Buildings import Age2BuildingData
+from ..locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 
 
 if TYPE_CHECKING:
     from .. import Age2World
     from .Logic import Logic
 
+
 class BuildingLogic:
-    
+
     def __init__(self, logic: 'Logic', world: Age2World):
         self.logic = logic
         self.world = world
 
     def has_building(self, building: Age2BuildingData) -> Rule:
-        has_prerequisites = self.has_prerequisites(building)
+        return self.has_prerequisites(building) & self.has_building_item(building)
+
+    def has_building_item(self, building: Age2BuildingData) -> Rule:
         if building not in self.world.pool.buildings.shuffled:
-            return has_prerequisites
-        return has_prerequisites & Has(building.item.item_name)
+            return True_()
+        return Has(building.item.item_name)
+
+    def prerequisite(self, building: Age2BuildingData) -> Age2BuildingData | None:
+        if building not in BUILDING_PREREQUISITE:
+            return None
+        return BUILDING_PREREQUISITE[building]
 
     def has_prerequisites(self, building: Age2BuildingData) -> Rule:
-        if building in (Age2BuildingData.ARCHERY_RANGE, Age2BuildingData.STABLE):
-            return self.has_building(Age2BuildingData.BARRACKS)
-
-        if building in (Age2BuildingData.FARM, Age2BuildingData.MARKET):
-            return self.has_building(Age2BuildingData.MILL)
-
-        if building == Age2BuildingData.SIEGE_WORKSHOP:
-            return self.has_building(Age2BuildingData.BLACKSMITH)
-
-        if building == Age2BuildingData.FISH_TRAP:
-            return self.has_building(Age2BuildingData.DOCK)
-
-        return True_()
+        prerequisite = self.prerequisite(building)
+        if prerequisite is None:
+            return True_()
+        return self.has_building(prerequisite)
 
     def can_build_tc(self) -> Rule:
         villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type

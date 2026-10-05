@@ -1,0 +1,68 @@
+# Fuzzer meta for age2de: what a random YAML is allowed to say.
+#
+# These are not game balance. They encode the two things inspect_options refuses outright, so
+# the fuzzer spends its generations on logic and fill rather than on YAMLs a player would be
+# told to fix. Without them roughly 55% of generations are discarded before they reach fill.
+#
+# Usage, from this directory:
+#   PYTHONPATH=../../.. python fuzz.py -r 1000 -j 18 -g age2de -n 1-3 -m age2de.yaml -t 90
+#
+# -t 90 matters. The fuzzer's default is 15s, and this world's largest configuration - both
+# campaigns, techsanity all, unitsanity all, three players, ~945 items - takes 20-50s to fill.
+# At 15s roughly 6% of generations are discarded as timeouts; raising it to 90 turned all 61
+# of them into successes, so none were hiding a failure. They are slow, not stuck: 100 of them
+# were run against a 300s cap and every one finished, median 29s, max 52s.
+
+# The game name contains a colon, so the key has to be quoted or YAML reads it as a nesting.
+"Age Of Empires II: Definitive Edition":
+  fuzz_constraints:
+    # "starting_campaigns must include at least one enabled campaign."
+    #
+    # The dependency runs this way round: a campaign you start in has to be one you enabled.
+    # So starting_campaigns is left exactly as rolled and enabled_campaigns is widened to
+    # cover it, rather than the start being overwritten to match what happened to be enabled.
+    # A blank start stays blank - it is legal, and means "pick one of my enabled campaigns
+    # for me", so none of these fire and that path stays under test.
+    #
+    # if_value matches the whole list, so both orderings of the two-campaign case are spelt
+    # out; the fuzzer does not promise a sorted OptionSet.
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Joan of Arc
+
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+
+    # "enabled_campaigns needs at least one campaign." Only reachable once the above have had
+    # their say: a blank start cannot widen anything, so an empty enable list needs a floor.
+    # The fuzzer empties an OptionSet about half the time, which is the single largest source
+    # of discarded generations.
+    - option: enabled_campaigns
+      ensure_any:
+        - Attila the Hun
+        - Joan of Arc

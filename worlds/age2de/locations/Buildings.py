@@ -74,3 +74,12 @@ class Age2BuildingData(enum.IntEnum):
 
 NAME_TO_BUILDING: dict[str, Age2BuildingData] = {building.item.item_name: building
                                                  for building in Age2BuildingData}
+
+BUILDING_PREREQUISITE: dict[Age2BuildingData, Age2BuildingData] = {
+    Age2BuildingData.ARCHERY_RANGE: Age2BuildingData.BARRACKS,
+    Age2BuildingData.STABLE: Age2BuildingData.BARRACKS,
+    Age2BuildingData.FARM: Age2BuildingData.MILL,
+    Age2BuildingData.MARKET: Age2BuildingData.MILL,
+    Age2BuildingData.SIEGE_WORKSHOP: Age2BuildingData.BLACKSMITH,
+    Age2BuildingData.FISH_TRAP: Age2BuildingData.DOCK,
+}

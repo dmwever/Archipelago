@@ -1,10 +1,13 @@
-"""Traps spend the starting-resource surplus and nothing else.
+"""Traps spend the padding the starting resources did not take, and nothing else.
 
-smart_add_starting_resources bin-packs toward four resource targets and then keeps padding with
-random starting resources once every target is met. That padding is the only budget traps are
-allowed to take, so a seed with no room to spare produces no traps at all rather than a weaker
-opening. The targets-survive test below is the one that encodes that rule; the rest guard the
-option surface around it.
+ResourcePool bin-packs toward four resource targets and may claim at most its share of the
+spare locations; whatever is left over is what TrapPool draws from. The two budgets are
+disjoint, so a trap can never weaken the opening economy however high the percentage goes -
+which is the invariant the targets-survive test encodes. The rest guard the option surface.
+
+Traps used to be carved out of the resources' own leftovers instead. That coupled two
+unrelated things: a seed that met its targets late had no leftovers and so produced no traps,
+however high the percentage was set. Half of minimal seeds got none.
 """
 from collections import Counter
 import unittest
@@ -32,8 +35,8 @@ TARGETS = {
     Items.Resource.STONE: 400,
 }
 
-# Traps only appear where there is surplus, and a single-campaign seed has two filler slots in
-# total. Every pool test here needs a seed large enough to have padding to spend.
+# Traps spend the padding left after the resources take their share, so a pool test needs a
+# seed with room in it. A single-campaign seed has very little.
 BIG_SEED = {
     "enabled_campaigns": {ATTILA, JOAN},
     "starting_campaigns": {ATTILA},
@@ -63,22 +66,22 @@ class TestTrapsAreOptIn(bases.Age2TestBase):
 
 
 class TestTrapsReachThePool(bases.Age2TestBase):
-    """Presence is asserted through roll_traps rather than the generated pool. age2de seeds are
+    """Presence is asserted through TrapPool.roll rather than the generated pool. age2de seeds are
     item-dense -- the filler budget is roughly 15 to 40 slots -- so whether any surplus survives
     the resource targets is genuinely seed-dependent, and a pool-level presence assertion would
     flake. What the pool must hold on every seed are the invariants below."""
 
     options = {**BIG_SEED, "trap_difficulty": 5, "trap_percentage": 100}
 
-    def test_roll_traps_spends_the_whole_surplus_at_full_percentage(self) -> None:
-        traps = self.world.pool.resources.roll_traps(40)
+    def test_roll_spends_the_whole_padding_at_full_percentage(self) -> None:
+        traps = self.world.pool.traps.roll(40)
         self.assertEqual(40, len(traps))
         for trap in traps:
             self.assertIn(trap.item_name, TRAP_NAMES)
 
-    def test_roll_traps_takes_the_percentage_share(self) -> None:
+    def test_roll_takes_the_percentage_share(self) -> None:
         self.world.options.trap_percentage.value = 25
-        self.assertEqual(10, len(self.world.pool.resources.roll_traps(40)))
+        self.assertEqual(10, len(self.world.pool.traps.roll(40)))
 
     def test_the_pool_still_matches_the_location_count(self) -> None:
         unfilled = self.multiworld.get_unfilled_locations(self.player)
@@ -128,7 +131,7 @@ class TestAWeightOfZeroExcludesOneTrap(bases.Age2TestBase):
 
     def test_a_large_roll_never_yields_it_either(self) -> None:
         """200 draws over eight remaining traps: absence here is by construction, not luck."""
-        rolled = Counter(trap.item_name for trap in self.world.pool.resources.roll_traps(200))
+        rolled = Counter(trap.item_name for trap in self.world.pool.traps.roll(200))
         self.assertEqual(0, rolled[self.EXCLUDED])
         self.assertEqual(200, sum(rolled.values()), "zeroing one trap suppressed the rest")
 
@@ -143,7 +146,7 @@ class TestEveryWeightZeroSuppressesTraps(bases.Age2TestBase):
 
     def test_all_weights_zero_overrides_the_percentage(self) -> None:
         self.assertEqual(Counter(), trap_counts(self.multiworld.itempool))
-        self.assertEqual([], self.world.pool.resources.roll_traps(200), "every weight was 0 but traps were rolled")
+        self.assertEqual([], self.world.pool.traps.roll(200), "every weight was 0 but traps were rolled")
 
     def test_the_pool_still_matches_the_location_count(self) -> None:
         unfilled = self.multiworld.get_unfilled_locations(self.player)
@@ -170,30 +173,33 @@ class TestSurplusAccounting(bases.Age2TestBase):
             self.assertEqual(wanted, len(items))
             self.assertLessEqual(surplus, wanted)
 
-    def test_trimming_for_traps_never_eats_into_the_targets(self) -> None:
-        """Starting resources are progression now, and the economy counts what they add up to,
-        so a trap budget must not be able to quietly weaken it.
+    def test_traps_cannot_touch_the_resources_at_all(self) -> None:
+        """Starting resources are progression, and the economy counts what they add up to, so a
+        trap budget must not be able to quietly weaken it.
 
-        It cannot: surplus is only ever non-zero once the four targets have been met in full -
-        halving forfeits it entirely - and the surplus items are the tail of the list, which is
-        the end roll_traps trims. This pins that, because the two are far apart in create_items.
+        It cannot, and the reason is now structural rather than careful: the resources take
+        their share first and the traps only ever see what was left. There is no trimming to
+        get wrong. The same plan is asked for at every trap setting and must come out identical.
         """
         self.world.options.trap_difficulty.value = 5
-        self.world.options.trap_percentage.value = 100
         for wanted in (20, 40, 80, 160):
-            items, surplus = self.world.pool.resources.build(wanted)
-            traps = self.world.pool.resources.roll_traps(surplus)
-            self.assertLessEqual(len(traps), surplus,
-                                 f"{wanted} slots: traps outnumbered the surplus")
-            kept = items[:len(items) - len(traps)]
-            self.assertGreaterEqual(len(kept), len(items) - surplus,
-                                    f"{wanted} slots: trimming reached past the surplus")
+            plans = []
+            for percentage in (0, 50, 100):
+                self.world.options.trap_percentage.value = percentage
+                plan = self.world.pool.resources.plan(wanted)
+                traps = self.world.pool.traps.roll(plan.spare)
+                plans.append((len(plan.items), plan.spare, len(traps)))
+                self.assertLessEqual(len(traps), plan.spare,
+                                     f"{wanted} slots at {percentage}%: traps outran the padding")
+            counts = {(items, spare) for items, spare, _ in plans}
+            self.assertEqual(1, len(counts),
+                             f"{wanted} slots: the resource plan moved with the trap percentage")
 
-    def test_roll_traps_returns_nothing_without_surplus(self) -> None:
+    def test_roll_returns_nothing_without_padding(self) -> None:
         self.world.options.trap_difficulty.value = 5
         self.world.options.trap_percentage.value = 100
-        self.assertEqual([], self.world.pool.resources.roll_traps(0))
-        self.assertEqual([], self.world.pool.resources.roll_traps(-1))
+        self.assertEqual([], self.world.pool.traps.roll(0))
+        self.assertEqual([], self.world.pool.traps.roll(-1))
 
 
 class TestTrapItemGroup(unittest.TestCase):

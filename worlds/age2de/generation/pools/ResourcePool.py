@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from ...items import Items
 from ...items.Items import Age2ItemData, Resource
-from ...Options import TRAP_DEFAULT_WEIGHT
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -28,27 +27,23 @@ TARGETS = {
 }
 
 
+MAX_ITEM_POOL_PERCENT = 0.5
+
+
 @dataclass
 class ResourcePlan:
     items: list[Age2ItemData]
-    traps: list[Age2ItemData]
-    surplus: int
+    spare: int
 
 class ResourcePool:
     def __init__(self, options: 'Age2Options', world: 'Age2World') -> None:
-        self._trap_difficulty = options.trap_difficulty
-        self._trap_percentage = options.trap_percentage
-        self._trap_distribution = options.trap_distribution
         self._world = world
         self.totals: dict[Resource, int] = {resource: 0 for resource in Resource}
 
     def plan(self, locations_to_fill: int) -> ResourcePlan:
-        items, surplus = self.build(locations_to_fill)
-        traps = self.roll_traps(surplus)
-        if traps:
-            items = items[:len(items) - len(traps)]
+        items, _ = self.build(int(locations_to_fill * MAX_ITEM_POOL_PERCENT))
         self._tally(items)
-        return ResourcePlan(items, traps, surplus)
+        return ResourcePlan(items, max(0, locations_to_fill - len(items)))
 
     def build_items(self, locations_to_fill: int) -> list[Age2ItemData]:
         return self.build(locations_to_fill)[0]
@@ -89,26 +84,6 @@ class ResourcePool:
             items.append(item_data)
             locations_to_fill -= 1
         return items, surplus
-
-    def roll_traps(self, surplus: int) -> list[Age2ItemData]:
-        if surplus <= 0 or not self._trap_difficulty.include_traps():
-            return []
-
-        names: list[Age2ItemData] = []
-        weights: list[int] = []
-        for trap in Items.CATEGORY_TO_ITEMS[Items.Trap]:
-            weight = (self._trap_distribution[trap.item_name]
-                      if trap.item_name in self._trap_distribution else TRAP_DEFAULT_WEIGHT)
-            if weight > 0:
-                names.append(trap)
-                weights.append(weight)
-        if not names:
-            return []
-
-        count = int(surplus * self._trap_percentage.value / 100)
-        if count <= 0:
-            return []
-        return self._world.random.choices(names, weights=weights, k=count)
 
     def _tally(self, items: list[Age2ItemData]) -> None:
         tallied = {resource: 0 for resource in Resource}

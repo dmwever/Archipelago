@@ -4,6 +4,7 @@ from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
+from ...locations.Units import Age2UnitData
 from ...items.Items import Age2ItemData
 
 
@@ -17,7 +18,8 @@ class Joan3Rules(ScenarioRules):
     
     def set_rules(self):
         super().set_rules()
-        can_cross_ocean = Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name) | (self.logic.buildings.has_building(Age2BuildingData.DOCK) & Has(Age2ItemData.TOWN_CENTER_WOOD.item_name))
+        can_cross_ocean = (Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
+                           | self.scenario_logic.units.can_train(Age2UnitData.TRANSPORT_SHIP))
         can_destroy_castle: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean & 
