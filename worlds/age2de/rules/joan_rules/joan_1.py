@@ -13,16 +13,8 @@ class Joan1Rules(ScenarioRules):
     
     def set_rules(self):
         super().set_rules()
-        has_soldiers = HasAny(Age2ItemData.AP_JOAN_1_SWORDSMEN.item_name, Age2ItemData.AP_JOAN_1_CROSSBOWMEN.item_name)
-        can_siege_village = has_soldiers & Has(Age2ItemData.AP_JOAN_1_RAM.item_name)
-        can_cross_water = can_siege_village & Has(Age2ItemData.AP_JOAN_1_TRANSPORT.item_name)
+        can_cross_water = Has(Age2ItemData.AP_JOAN_1_TRANSPORT.item_name)
         
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_SOUTH_HIGHWAYMEN], has_soldiers)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_VENISON], has_soldiers)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_RAM], has_soldiers)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_EAST_HIGHWAYMEN], has_soldiers)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_BREAK_INTO_BURGUNDY], can_siege_village)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_DOCK], can_siege_village)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_RECRUITS], can_cross_water)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_RIVER_BURGUNDIANS], can_cross_water)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN1_RIVER_HIGHWAYMEN], can_cross_water)
