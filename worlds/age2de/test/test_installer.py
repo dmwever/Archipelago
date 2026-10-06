@@ -252,8 +252,7 @@ class TestIncludedCampaigns(unittest.TestCase):
 
 class TestTechInstall(InstallerTestBase):
     def techsanity(self, **over):
-        values = {"techsanity": 3, "tech_behavior": 0, "lock_techs": 0,
-                  "shuffle_unique_techs": 1, "existing_techs": 0}
+        values = {"techsanity": 3, "tech_behavior": 0,                   "shuffle_unique_techs": 1, "existing_techs": 0}
         values.update(over)
         return values
 

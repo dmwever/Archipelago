@@ -105,8 +105,8 @@ class ShuffleAges(Toggle):
 
 class Techsanity(Choice):
     """
-    Shuffles technologies. Researching a shuffled technology sends its check, and its item is what
-    makes the technology available.
+    Shuffles technologies. A shuffled technology stays researchable; researching it sends its
+    check, and its item is what applies the effect.
     None: Technologies behave as vanilla.
     Units: Only unit-line upgrades are shuffled, e.g. Man-At-Arms, Crossbowman, Elite Skirmisher.
     Generic: Every other technology is shuffled, e.g. Loom, Fletching, Wheelbarrow.
@@ -124,7 +124,8 @@ class Techsanity(Choice):
 class TechBehavior(Choice):
     """
     When a shuffled technology's effect is applied. Requires Techsanity.
-    Must Research: The item makes the technology available; you still pay for it and research it.
+    Must Research: You research the technology as usual, and its effect lands once the item has
+    arrived.
     Instant: The item applies the effect immediately, for free.
     Unit-line upgrades always behave as Must Research, since an upgrade you did not pay for would
     rewrite an army you already have.
@@ -134,20 +135,6 @@ class TechBehavior(Choice):
     option_must_research = 0
     option_instant = 1
     default = option_must_research
-
-
-class LockTechs(Choice):
-    """
-    What a shuffled technology's item unlocks. Requires Techsanity.
-    Items: The technology is hidden until its item arrives.
-    Effects: The technology is always researchable, but researching it does nothing until its item
-    arrives.
-    """
-    internal_name = "lock_techs"
-    display_name = "Lock Techs"
-    option_items = 0
-    option_effects = 1
-    default = option_items
 
 
 class ShuffleUniqueTechs(Choice):
@@ -319,7 +306,6 @@ class Age2Options(PerGameCommonOptions):
     shuffle_ages: ShuffleAges
     techsanity: Techsanity
     tech_behavior: TechBehavior
-    lock_techs: LockTechs
     shuffle_unique_techs: ShuffleUniqueTechs
     existing_techs: ExistingTechs
     unitsanity: Unitsanity

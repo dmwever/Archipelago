@@ -159,7 +159,6 @@ class TestWhereTheOptionsLive(unittest.TestCase):
 
     RULE_SHAPE = {
         "goal",            # which victory rule, not which scenarios exist
-        "lock_techs",      # whether a tech item gates availability or only the effect
         "local_start",     # a placement policy, applied in pre_fill
         "tech_behavior",   # the game mod's business; slot data only
     }

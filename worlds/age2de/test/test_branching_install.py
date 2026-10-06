@@ -213,7 +213,7 @@ class TestWhatTheInstallDecides(unittest.TestCase):
 
     def test_the_rebase_and_branching_steps_compose(self):
         handler = self.handler(ScenarioBranching.option_any, techsanity=3, tech_behavior=0,
-                               lock_techs=0, shuffle_unique_techs=1, existing_techs=1)
+                               shuffle_unique_techs=1, existing_techs=1)
         steps = handler.steps_for(Age2ScenarioData.AP_JOAN_2)
         self.assertEqual(len(steps), 2)
         self.assertIs(steps[0], ScenarioParser.rebase_to_dark)

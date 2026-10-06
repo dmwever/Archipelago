@@ -6,7 +6,7 @@ reach_something and test_fill against each combination, which is the only
 coverage that exercises fill rather than individual rules.
 """
 
-from ..Options import ExistingTechs, LockTechs, ShuffleUniqueTechs, Techsanity
+from ..Options import ExistingTechs, ShuffleUniqueTechs, Techsanity
 from .bases import Age2TestBase
 
 
@@ -16,16 +16,8 @@ BOTH_CAMPAIGNS = {
 }
 
 
-class TestTechsanityAllWithItems(Age2TestBase):
-    options = {**BOTH_CAMPAIGNS,
-               "techsanity": Techsanity.option_all,
-               "lock_techs": LockTechs.option_items}
-
-
-class TestTechsanityAllWithEffects(Age2TestBase):
-    options = {**BOTH_CAMPAIGNS,
-               "techsanity": Techsanity.option_all,
-               "lock_techs": LockTechs.option_effects}
+class TestTechsanityAll(Age2TestBase):
+    options = {**BOTH_CAMPAIGNS, "techsanity": Techsanity.option_all}
 
 
 class TestTechsanityUnits(Age2TestBase):

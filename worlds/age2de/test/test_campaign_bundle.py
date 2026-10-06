@@ -192,7 +192,6 @@ class TestSlotDataFile(unittest.TestCase):
             "extern const int AP_SEED_LOW = -1;\n"
             "extern const int AP_TS_MODE = 0;\n"
             "extern const int AP_TS_BEHAVIOR = -1;\n"
-            "extern const int AP_TS_LOCK = -1;\n"
             "extern const int AP_TS_UNIQUES = -1;\n"
             "extern const int AP_TS_EXISTING = -1;\n"
             "extern const int AP_SHUFFLE_AGES = 0;\n"
@@ -212,11 +211,9 @@ class TestSlotDataFile(unittest.TestCase):
 
     def test_techsanity_options_are_carried(self):
         values = SlotData.slot_fields(3, Identity.seed_tag(SEED, 3), {
-            "techsanity": 3, "tech_behavior": 1, "lock_techs": 1,
-            "shuffle_unique_techs": 2, "existing_techs": 1})
+            "techsanity": 3, "tech_behavior": 1,             "shuffle_unique_techs": 2, "existing_techs": 1})
         self.assertEqual(values[SlotData.TS_MODE], 3)
         self.assertEqual(values[SlotData.TS_BEHAVIOR], 1)
-        self.assertEqual(values[SlotData.TS_LOCK], 1)
         self.assertEqual(values[SlotData.TS_UNIQUES], 2)
         self.assertEqual(values[SlotData.TS_EXISTING], 1)
 

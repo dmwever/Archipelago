@@ -1,3 +1,5 @@
+import collections
+
 from BaseClasses import CollectionState, ItemClassification
 
 from ..Options import ExistingTechs, Techsanity, Unitsanity
@@ -118,6 +120,8 @@ class TestTechnologyClassification(Age2RuleTestBase):
     declared on Tech rather than derived, because classification is fixed in create_items while
     the rules are not built until set_rules, so this is what keeps the two honest."""
 
+    UNITSANITY = (Unitsanity.option_none, Unitsanity.option_unit_line, Unitsanity.option_all)
+
     def named_by_rules(self, world) -> set[str]:
         named: set[str] = set()
         for scenario in world.rules.logic.scenarios:
@@ -129,26 +133,82 @@ class TestTechnologyClassification(Age2RuleTestBase):
                 named |= set(rule.item_dependencies())
         return named
 
-    def test_a_technology_a_rule_needs_is_never_merely_useful(self):
-        world = self.build(techsanity=Techsanity.option_all, unitsanity=Unitsanity.option_all)
-        named = self.named_by_rules(world)
-        wanted = [tech for tech in world.pool.techs.shuffled if tech.item.item_name in named]
-        self.assertTrue(wanted, "no technology was named by a rule at all")
-        for tech in wanted:
-            with self.subTest(tech=tech.name):
-                self.assertEqual(ItemClassification.progression,
-                                 Items.classification_for(tech.item))
+    def closes_a_location(self, world) -> dict[str, int]:
+        """How many locations shut when one copy of each technology item is taken away."""
+        locations = [loc for loc in self.multiworld.get_locations(world.player)
+                     if loc.item is None]
+        pool, by_name = collections.Counter(), {}
+        for item in self.multiworld.itempool:
+            if item.player == world.player and item.advancement:
+                pool[item.name] += 1
+                by_name.setdefault(item.name, []).append(item)
 
-    def test_a_progression_technology_in_the_pool_always_gates_something(self):
-        # The other direction, and the one that matters for fill: an item classified progression
-        # that no rule names is dead weight the progression fill still has to place.
-        world = self.build(techsanity=Techsanity.option_all, unitsanity=Unitsanity.option_all)
-        named = self.named_by_rules(world)
-        for tech in world.pool.techs.shuffled:
-            if Items.classification_for(tech.item) != ItemClassification.progression:
+        def reach(held):
+            state = CollectionState(self.multiworld)
+            for name, count in held.items():
+                for item in by_name[name][:count]:
+                    state.collect(item, prevent_sweep=True)
+            state.sweep_for_advancements()
+            return {loc.name for loc in locations if loc.can_reach(state)}
+
+        everything = reach(pool)
+        shut = {}
+        for name in pool:
+            data = Items.NAME_TO_ITEM.get(name)
+            if data is None or not isinstance(data.type, Items.Tech):
                 continue
-            with self.subTest(tech=tech.name):
-                self.assertIn(tech.item.item_name, named)
+            trimmed = collections.Counter(pool)
+            trimmed[name] -= 1
+            shut[name] = len(everything - reach(trimmed))
+        return shut
+
+    def test_a_technology_a_rule_needs_is_never_merely_useful(self):
+        for unitsanity in self.UNITSANITY:
+            with self.subTest(unitsanity=unitsanity):
+                world = self.build(techsanity=Techsanity.option_all, unitsanity=unitsanity)
+                named = self.named_by_rules(world)
+                wanted = [tech for tech in world.pool.techs.shuffled
+                          if tech.item.item_name in named]
+                self.assertTrue(wanted, "no technology was named by a rule at all")
+                for tech in wanted:
+                    self.assertEqual(ItemClassification.progression,
+                                     Items.classification_for(tech.item), tech.name)
+
+    def test_only_an_upgrade_is_ever_progression(self):
+        for unitsanity in self.UNITSANITY:
+            with self.subTest(unitsanity=unitsanity):
+                world = self.build(techsanity=Techsanity.option_all, unitsanity=unitsanity)
+                for tech in world.pool.techs.shuffled:
+                    if Items.classification_for(tech.item) != ItemClassification.progression:
+                        continue
+                    self.assertTrue(tech.item.type.is_upgrade, tech.name)
+
+    def test_per_tier_locations_only_ever_add_to_what_an_upgrade_gates(self):
+        """The uncomfortable corner, pinned rather than fixed.
+
+        Under Unitsanity All a location exists per tier, so an upgrade item is the key to its own
+        tier. Below that a line is owned through its base tier, so most upgrade items gate nothing
+        at all - yet they stay progression, because has_upgrade_tech legitimately asks for them
+        and a useful item never enters the collection state. Demoting one would make that rule
+        unsatisfiable and could strand a victory behind an upgraded unit.
+
+        So a number of progression technologies are inert in the narrower modes. That is a
+        deliberate trade. What has to hold is the direction: splitting locations per tier can only
+        give an upgrade item more to gate, never less.
+        """
+        gating = {}
+        for unitsanity in self.UNITSANITY:
+            world = self.build(techsanity=Techsanity.option_all, unitsanity=unitsanity)
+            shut = self.closes_a_location(world)
+            gating[unitsanity] = {name for name, count in shut.items() if count > 0}
+
+        widest = gating[Unitsanity.option_all]
+        self.assertTrue(widest, "per-tier locations, so an upgrade should be the key to one")
+        for unitsanity in (Unitsanity.option_none, Unitsanity.option_unit_line):
+            with self.subTest(unitsanity=unitsanity):
+                self.assertLessEqual(gating[unitsanity], widest,
+                                     "an upgrade gates something here that it does not gate once "
+                                     "locations are split per tier, which should be impossible")
 
 
 class TestAgeGate(Age2RuleTestBase):
