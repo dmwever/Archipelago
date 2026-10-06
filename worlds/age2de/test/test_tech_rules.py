@@ -1,6 +1,7 @@
-from BaseClasses import CollectionState
+from BaseClasses import CollectionState, ItemClassification
 
-from ..Options import ExistingTechs, Techsanity
+from ..Options import ExistingTechs, Techsanity, Unitsanity
+from ..items import Items
 from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Civilizations import Age2CivData
@@ -108,6 +109,46 @@ class TestUpgradesWaitOnTheirItem(Age2RuleTestBase):
                 self.assertTrue(rule.always_true, f"{unit.name} in {scenario.scenario.name}")
                 checked += 1
         self.assertTrue(checked, "no auto-researched upgrade found to test")
+
+
+class TestTechnologyClassification(Age2RuleTestBase):
+    """A technology item is progression only where a rule leans on it. Since a technology is
+    always researchable and its item only applies the effect, the one rule that names a technology
+    item is the unit upgrade path - so progression means upgrade, and nothing else. The flag is
+    declared on Tech rather than derived, because classification is fixed in create_items while
+    the rules are not built until set_rules, so this is what keeps the two honest."""
+
+    def named_by_rules(self, world) -> set[str]:
+        named: set[str] = set()
+        for scenario in world.rules.logic.scenarios:
+            for unit in Age2UnitData:
+                tech = unit.upgrade_tech
+                if tech is None or not world.pool.techs.includes(tech):
+                    continue
+                rule = scenario.units.has_upgrade_tech(unit).resolve(world)
+                named |= set(rule.item_dependencies())
+        return named
+
+    def test_a_technology_a_rule_needs_is_never_merely_useful(self):
+        world = self.build(techsanity=Techsanity.option_all, unitsanity=Unitsanity.option_all)
+        named = self.named_by_rules(world)
+        wanted = [tech for tech in world.pool.techs.shuffled if tech.item.item_name in named]
+        self.assertTrue(wanted, "no technology was named by a rule at all")
+        for tech in wanted:
+            with self.subTest(tech=tech.name):
+                self.assertEqual(ItemClassification.progression,
+                                 Items.classification_for(tech.item))
+
+    def test_a_progression_technology_in_the_pool_always_gates_something(self):
+        # The other direction, and the one that matters for fill: an item classified progression
+        # that no rule names is dead weight the progression fill still has to place.
+        world = self.build(techsanity=Techsanity.option_all, unitsanity=Unitsanity.option_all)
+        named = self.named_by_rules(world)
+        for tech in world.pool.techs.shuffled:
+            if Items.classification_for(tech.item) != ItemClassification.progression:
+                continue
+            with self.subTest(tech=tech.name):
+                self.assertIn(tech.item.item_name, named)
 
 
 class TestAgeGate(Age2RuleTestBase):

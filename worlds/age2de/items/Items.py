@@ -48,6 +48,10 @@ class Tech:
     is_upgrade: bool
     is_unique: bool
 
+    @property
+    def in_logic(self) -> bool:
+        return self.is_upgrade
+
 @dataclass
 class UnitLine:
     line_id: int
@@ -129,7 +133,7 @@ item_type_to_classification = {
     Age2AgeData: ItemClassification.progression,
     Building: ItemClassification.progression,
     Mercenary: PseudoClassification.progression_if_needed,
-    Tech: ItemClassification.progression,
+    Tech: PseudoClassification.progression_if_needed,
     UnitLine: ItemClassification.progression,
     UnitUpgrade: ItemClassification.progression,
     VillagerProfession: ItemClassification.progression,
@@ -141,9 +145,10 @@ item_type_to_classification = {
 }
 
 def classification_for(item: 'Age2ItemData') -> ItemClassification:
-    """A mercenary is progression only where a rule leans on it, and useful otherwise. The flag is
-    declared rather than derived because classification is fixed in create_items while the rules
-    that reference these are not built until set_rules; test_mercenaries pins the two together."""
+    """A mercenary or a technology is progression only where a rule leans on it, and useful
+    otherwise. The flag is declared rather than derived because classification is fixed in
+    create_items while the rules that reference these are not built until set_rules;
+    test_mercenaries pins the two together."""
     classification = item_type_to_classification[item.type_data]
     if classification == PseudoClassification.progression_if_needed:
         if item.type.in_logic:
