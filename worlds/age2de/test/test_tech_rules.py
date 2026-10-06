@@ -1,11 +1,12 @@
 from BaseClasses import CollectionState
 
-from ..Options import ExistingTechs, LockTechs, Techsanity
+from ..Options import ExistingTechs, Techsanity
 from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Civilizations import Age2CivData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from ..locations.Techs import Age2TechData
+from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from .bases import Age2RuleTestBase
 
@@ -13,79 +14,32 @@ from .bases import Age2RuleTestBase
 MILL_CHAIN = (Age2TechData.CROP_ROTATION, Age2TechData.HEAVY_PLOW, Age2TechData.HORSE_COLLAR)
 
 
-class TestPrerequisites(Age2RuleTestBase):
-    def test_a_technology_wants_every_item_below_it_in_the_chain(self):
+class TestTechItemsDoNotGate(Age2RuleTestBase):
+    """A shuffled technology is always researchable; its item only applies the effect. So no
+    technology location asks for a technology item - not its own, and nothing below it."""
+
+    def test_a_chain_asks_for_none_of_its_links(self):
         self.build(techsanity=Techsanity.option_generic)
-        wanted = self.item_requirements(Age2TechData.CROP_ROTATION.location_name)
-        for tech in MILL_CHAIN:
-            self.assertIn(tech.item.item_name, wanted, tech.name)
-        # and only downwards: the bottom of the chain wants nothing above it
-        self.assertNotIn(Age2TechData.HEAVY_PLOW.item.item_name,
-                         self.item_requirements(Age2TechData.HORSE_COLLAR.location_name))
-
-    def test_withholding_any_link_blocks_everything_above_it(self):
-        self.build(techsanity=Techsanity.option_generic)
-        self.assertTrue(self.can_reach(Age2TechData.CROP_ROTATION.location_name))
-        for tech in MILL_CHAIN:
-            with self.subTest(withheld=tech.name):
-                state = self.state_without(tech.item.item_name)
-                self.assertFalse(state.can_reach_location(
-                    Age2TechData.CROP_ROTATION.location_name, self.world.player))
-        # the reverse does not hold -- the bottom does not need the top
-        self.assertTrue(self.can_reach(
-            Age2TechData.HORSE_COLLAR.location_name,
-            self.state_without(Age2TechData.CROP_ROTATION.item.item_name)))
-
-    def test_the_deepest_chain_is_carried_the_whole_way(self):
-        # Champion is four deep, and is the case that catches a walk that stops
-        # after the first prerequisite.
-        self.build(techsanity=Techsanity.option_units)
-        chain = (Age2TechData.CHAMPION, Age2TechData.TWO_HANDED_SWORDSMAN,
-                 Age2TechData.LONG_SWORDSMAN, Age2TechData.MAN_AT_ARMS)
-        wanted = self.item_requirements(Age2TechData.CHAMPION.location_name)
-        for tech in chain:
-            self.assertIn(tech.item.item_name, wanted, tech.name)
-
-
-class TestPrerequisiteOutsideThePool(Age2RuleTestBase):
-    """A prerequisite the seed does not hand out is one the game already
-    researched, so it asks for nothing. Shipped data never produces this --
-    every chain survives every civilization and mode filter -- so the gap has
-    to be made rather than found."""
-
-    def setUp(self):
-        for civ in Age2CivData:
-            original = CIV_TO_TECHS[civ]
-            self.addCleanup(CIV_TO_TECHS.__setitem__, civ, original)
-            CIV_TO_TECHS[civ] = [tech for tech in original if tech is not Age2TechData.HEAVY_PLOW]
-
-    def test_a_prerequisite_outside_the_pool_imposes_nothing(self):
-        self.build(techsanity=Techsanity.option_generic)
-        self.assertNotIn(Age2TechData.HEAVY_PLOW, self.world.pool.techs.shuffled)
-        wanted = self.item_requirements(Age2TechData.CROP_ROTATION.location_name)
-        self.assertNotIn(Age2TechData.HEAVY_PLOW.item.item_name, wanted)
-        self.assertIn(Age2TechData.CROP_ROTATION.item.item_name, wanted)
-
-    def test_the_chain_stops_at_the_gap_rather_than_stepping_over_it(self):
-        # Horse Collar sits below the gap. Heavy Plow being granted means it was
-        # granted too, so asking for it would be asking for something the player
-        # was never given a way to earn.
-        self.build(techsanity=Techsanity.option_generic)
-        self.assertNotIn(Age2TechData.HORSE_COLLAR.item.item_name,
-                         self.item_requirements(Age2TechData.CROP_ROTATION.location_name))
-
-
-class TestLockTechs(Age2RuleTestBase):
-    def test_effects_asks_for_no_tech_item(self):
-        self.build(techsanity=Techsanity.option_generic, lock_techs=LockTechs.option_effects)
         wanted = self.item_requirements(Age2TechData.CROP_ROTATION.location_name)
         for tech in MILL_CHAIN:
             self.assertNotIn(tech.item.item_name, wanted, tech.name)
 
-    def test_effects_still_asks_for_the_age(self):
-        # Effects unlocks the effect, not the age. Crop Rotation is an Imperial
-        # technology whichever way the option is set.
-        self.build(techsanity=Techsanity.option_generic, lock_techs=LockTechs.option_effects)
+    def test_no_technology_in_the_pool_asks_for_its_own_chain(self):
+        # Only the technology's own item and the chain below it. A technology also has to be
+        # afforded, and the economy reaches units, which do ask for their upgrade items - so the
+        # wider "no technology item anywhere" is not the claim being made here.
+        world = self.build(techsanity=Techsanity.option_all)
+        for tech in world.pool.techs.shuffled:
+            with self.subTest(tech=tech.name):
+                wanted = self.item_requirements(tech.location_name)
+                link = tech
+                while link is not None:
+                    self.assertNotIn(link.item.item_name, wanted, link.name)
+                    link = link.prerequisite
+
+    def test_the_age_is_still_asked_for(self):
+        # The item unlocks the effect, not the age. Crop Rotation is Imperial either way.
+        self.build(techsanity=Techsanity.option_generic)
         starved = self.state_without(*self.imperial_blockers())
         self.assertFalse(starved.can_reach_location(
             Age2TechData.CROP_ROTATION.location_name, self.world.player))
@@ -94,6 +48,66 @@ class TestLockTechs(Age2RuleTestBase):
         return [building.item.item_name for building in
                 (Age2BuildingData.MONASTERY, Age2BuildingData.UNIVERSITY,
                  Age2BuildingData.SIEGE_WORKSHOP, Age2BuildingData.CASTLE)]
+
+
+class TestPrerequisitesAddNothing(Age2RuleTestBase):
+    """available() does not walk the prerequisite chain. That is only safe while every
+    prerequisite is researched somewhere its dependent already needs, in an age its dependent has
+    already reached -- which shipped data satisfies for all 49 chains. If it ever stops, the walk
+    has to come back, so this is the tripwire rather than a test of behaviour."""
+
+    def test_a_prerequisite_never_reaches_past_its_dependent(self):
+        for tech in Age2TechData:
+            prerequisite = tech.prerequisite
+            if prerequisite is None:
+                continue
+            with self.subTest(tech=tech.name, prerequisite=prerequisite.name):
+                self.assertFalse(set(prerequisite.buildings) - set(tech.buildings),
+                                 "prerequisite researches somewhere its dependent does not")
+                self.assertLessEqual(prerequisite.age, tech.age,
+                                     "prerequisite sits in a later age than its dependent")
+
+
+class TestUpgradesWaitOnTheirItem(Age2RuleTestBase):
+    """The mod applies an upgrade's effect only once its item arrives, whatever else is true, so
+    researching the technology is not enough to be holding the upgraded unit."""
+
+    def test_an_upgrade_asks_for_its_technology_item(self):
+        world = self.build(techsanity=Techsanity.option_units,
+                           existing_techs=ExistingTechs.option_start_in_dark_age)
+        checked = 0
+        for unit in Age2UnitData:
+            tech = unit.upgrade_tech
+            if tech is None or not world.pool.techs.includes(tech):
+                continue
+            for scenario in world.rules.logic.scenarios:
+                rule = scenario.units.has_upgrade_tech(unit).resolve(world)
+                if rule.always_true or rule.always_false:
+                    continue
+                self.assertIn(tech.item.item_name, set(rule.item_dependencies()), unit.name)
+                checked += 1
+        self.assertTrue(checked, "no scenario asked for an upgrade at all")
+
+    def test_a_technology_the_scenario_researched_itself_asks_for_nothing(self):
+        # Under Vanilla a scenario auto-researches everything below the age it opens in, so the
+        # tier is already upgraded there and the item has no part in it. Asking for it anyway
+        # would price a unit the player was handed.
+        world = self.build(techsanity=Techsanity.option_all,
+                           existing_techs=ExistingTechs.option_vanilla)
+        checked = 0
+        for unit in Age2UnitData:
+            tech = unit.upgrade_tech
+            if tech is None or not world.pool.techs.includes(tech):
+                continue
+            if world.pool.techs.locked_at_start(tech):
+                continue
+            for scenario in world.rules.logic.scenarios:
+                if tech.age >= scenario.scenario.vanilla_age:
+                    continue
+                rule = scenario.units.has_upgrade_tech(unit).resolve(world)
+                self.assertTrue(rule.always_true, f"{unit.name} in {scenario.scenario.name}")
+                checked += 1
+        self.assertTrue(checked, "no auto-researched upgrade found to test")
 
 
 class TestAgeGate(Age2RuleTestBase):

@@ -45,7 +45,7 @@ class UnitLogic:
         tech = unit.upgrade_tech
         if tech is None or not self.world.pool.techs.includes(tech):
             return self.has_unit_items(unit)
-        return self.has_unit_items(unit) & self.logic.techs.has_tech_item(tech)
+        return self.has_unit_items(unit) & Has(tech.item.item_name)
 
     def can_own_line_anywhere(self, line: Age2UnitLineData) -> Rule:
         """Owning any tier is owning the line."""

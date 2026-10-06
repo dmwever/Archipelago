@@ -12,7 +12,6 @@ from .ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
 from .resource_logic import ResourceLogic
-from .tech_logic import TechLogic
 from .unit_logic import UnitLogic
 from rule_builder.rules import False_, Or, Rule
 
@@ -29,7 +28,6 @@ class Logic:
     buildings: BuildingLogic
     ages: AgeLogic
     goal: GoalLogic
-    techs: TechLogic
     units: UnitLogic
     scenarios: list[ScenarioLogic]
 
@@ -49,7 +47,6 @@ class Logic:
 
         self.resources = ResourceLogic(self, world)
         self.buildings = BuildingLogic(self, world)
-        self.techs = TechLogic(self, world)
         self.units = UnitLogic(self, world)
         self.ages =  AgeLogic(self, world)
         

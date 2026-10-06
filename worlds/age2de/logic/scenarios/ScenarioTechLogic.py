@@ -29,15 +29,8 @@ class ScenarioTechLogic:
     def available(self, tech: Age2TechData, age: Rule) -> Rule:
         if not self.scenario.civilization.researches(tech):
             return False_()   # not this civilisation's to research
-        rule = self.has_tech_items(tech)
+        rule = age
         if tech.buildings:
             rule = rule & Or(*[self.scenario.has_building(building)
                                for building in tech.buildings])
-        return rule & age
-
-    def has_tech_items(self, tech: Age2TechData) -> Rule:
-        rule = self.logic.techs.has_tech_item(tech)
-        prerequisite = tech.prerequisite
-        if prerequisite is not None and self.world.pool.techs.includes(prerequisite):
-            rule = rule & self.has_tech(prerequisite)
         return rule

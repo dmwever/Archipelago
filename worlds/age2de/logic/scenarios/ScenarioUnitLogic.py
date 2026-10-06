@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Or, Rule, True_
+from rule_builder.rules import False_, Has, Or, Rule, True_
 
 from ...locations.Ages import Age2AgeData
 from ...locations.EscortUnits import Age2EscortUnitData
@@ -49,15 +49,20 @@ class ScenarioUnitLogic:
                 continue  # withheld, so researching it is your choice and your timing
             if not self.scenario.civilization.researches(tech):
                 continue  # not this civilisation's, so it never fires
-            if self.scenario.scenario.vanilla_age >= tech.age:
-                return True
+            if self.scenario.scenario.vanilla_age > tech.age:
+                return True   # strictly below: a scenario does not research the age it opens in
         return False
 
     def has_upgrade_tech(self, unit: Age2UnitData) -> Rule:
         tech = unit.upgrade_tech
         if tech is None or not self.world.pool.techs.includes(tech):
             return True_()
-        return self.scenario.techs.has_tech(tech)
+        item = Has(tech.item.item_name)
+        if tech.age < self.scenario.scenario.vanilla_age:
+            if not self.world.pool.techs.locked_at_start(tech):
+                return True_()   # the scenario researched it for itself, so the tier is upgraded
+            return item
+        return self.scenario.techs.has_tech(tech) & item
 
     # -- fielding ----------------------------------------------------------------------------
 

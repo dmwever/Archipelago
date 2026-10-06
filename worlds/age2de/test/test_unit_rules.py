@@ -13,9 +13,9 @@ EVERYTHING = dict(unitsanity=Unitsanity.option_all,
 
 
 class TestUpgradedAway(Age2RuleTestBase):
-    """A scenario auto-researches everything below the age it starts in, and an upgrade changes
-    what the building turns out. So a Castle-Age scenario trains Crossbowmen and can never
-    produce an Archer - the tier does not exist there."""
+    """A scenario auto-researches everything STRICTLY below the age it starts in, and an upgrade
+    changes what the building turns out. So an Imperial scenario trains Crossbowmen and can never
+    produce an Archer, while a Castle-Age one has not researched Crossbowman yet and still can."""
 
     def upgraded_away(self, world, unit: Age2UnitData) -> list[str]:
         return [scenario.scenario.name for scenario in world.rules.logic.scenarios
@@ -23,13 +23,14 @@ class TestUpgradedAway(Age2RuleTestBase):
 
     def test_vanilla_technologies_upgrade_the_lower_tiers_away(self):
         world = self.build(existing_techs=ExistingTechs.option_vanilla, **EVERYTHING)
-        # Attila 1 is the only Dark Age scenario the world carries, so it is the only place a
-        # Militia is still a Militia.
+        # Man-at-Arms is Feudal, so it is researched only where the scenario opens above Feudal.
+        # A Militia is still a Militia in the one Dark scenario and in both Feudal ones.
         gone = self.upgraded_away(world, Age2UnitData.MILITIA)
-        self.assertEqual(len(gone), 11)
-        self.assertNotIn("AP_ATTILA_1", gone)
-        # Feudal units survive in the Feudal scenarios too.
-        self.assertEqual(len(self.upgraded_away(world, Age2UnitData.ARCHER)), 9)
+        self.assertEqual(len(gone), 9)
+        for kept in ("AP_ATTILA_1", "AP_JOAN_2", "AP_JOAN_3"):
+            self.assertNotIn(kept, gone)
+        # Crossbowman is Castle, so only the two Imperial scenarios have upgraded the Archer away.
+        self.assertEqual(len(self.upgraded_away(world, Age2UnitData.ARCHER)), 2)
 
     def test_withheld_upgrades_leave_every_tier_trainable(self):
         """Under find_items the upgrade is an item, so when it lands is your choice."""
@@ -49,6 +50,15 @@ class TestOwningAUnit(Age2RuleTestBase):
     def test_everything_placed_is_reachable(self):
         world = self.build(shuffle_villager=ShuffleVillager.option_include_professions,
                            **EVERYTHING)
+        unreachable = [location.name for location in self.multiworld.get_locations(world.player)
+                       if location.name.startswith("Own ") and not self.can_reach(location.name)]
+        self.assertEqual(unreachable, [])
+
+    def test_a_tier_upgraded_away_everywhere_still_has_somewhere_to_be_owned(self):
+        """Under Unitsanity All a location exists per tier, not per line, so a tier every scenario
+        researches past is a location with no way to be reached. Vanilla is the mode that upgrades
+        the most tiers away, so it is the one that would lose them."""
+        world = self.build(existing_techs=ExistingTechs.option_vanilla, **EVERYTHING)
         unreachable = [location.name for location in self.multiworld.get_locations(world.player)
                        if location.name.startswith("Own ") and not self.can_reach(location.name)]
         self.assertEqual(unreachable, [])
