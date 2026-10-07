@@ -4,6 +4,7 @@ import re
 import unittest
 
 from ..Options import MinimumFillerLocations
+from ..generation.pools import FillerPool
 from ..client.handlers.install.FillerData import FillerData
 from ..locations.FillerLocations import (
     Age2FillerLocationData, FillerKind, FILLER_LOCATION_COUNT, KIND_TO_LOCATIONS)
@@ -83,9 +84,9 @@ class TestSelection(Age2TestBase):
             with self.subTest(filler.location_name):
                 self.assertTrue(self.world.pool.filler.is_earnable(filler))
 
-    def test_the_slider_is_honoured_as_a_ceiling(self) -> None:
+    def test_the_slider_is_a_floor_not_a_ceiling(self) -> None:
         pool = self.world.pool.filler
-        self.assertLessEqual(len(pool.locations), pool.minimum)
+        self.assertEqual(len(pool.locations), min(pool.minimum, len(pool.earnable)))
 
     def test_every_selected_milestone_is_a_real_location(self) -> None:
         placed = {location.name for location in self.multiworld.get_locations(self.player)}
@@ -210,6 +211,63 @@ class TestTheGameCanHoldThemAll(unittest.TestCase):
             registered, cap,
             f"a worst-case seed registers {registered} Location structs against a cap of {cap}; "
             "raise MAX_INSTANCE_PER_STRUCT in structs.xs")
+
+
+class TestTheSelectionAlgorithm(unittest.TestCase):
+
+    JOAN, ATTILA = "Joan of Arc", "Attila the Hun"
+
+    def build(self, campaigns, starting, **options):
+        from test.general import setup_solo_multiworld
+        from .. import Age2World
+        world = setup_solo_multiworld(Age2World, (), 7).worlds[1]
+        world.options.enabled_campaigns.value = set(campaigns)
+        world.options.starting_campaigns.value = {starting}
+        for name, value in options.items():
+            getattr(world.options, name).value = value
+        for step in ("generate_early", "create_regions", "create_items", "set_rules"):
+            getattr(world, step)()
+        return world
+
+    def density(self, world):
+        locations = [l for l in world.multiworld.get_locations(world.player)
+                     if l.item is None]
+        progression = sum(1 for i in world.multiworld.itempool
+                          if i.player == world.player and i.advancement)
+        return progression / len(locations)
+
+    def test_a_default_seed_gets_no_milestones(self):
+        for campaign in (self.ATTILA, self.JOAN):
+            with self.subTest(campaign):
+                world = self.build([campaign], campaign)
+                self.assertEqual([], world.pool.filler.locations)
+
+    def test_criterion_one_is_dormant_for_both_current_campaigns(self):
+        for campaign in (self.ATTILA, self.JOAN):
+            with self.subTest(campaign):
+                world = self.build([campaign], campaign)
+                self.assertEqual(0, world.pool.filler.early_shortfall())
+
+    def test_criterion_one_fires_when_the_opening_scenario_is_bare(self):
+        world = self.build([self.ATTILA], self.ATTILA)
+        pool = world.pool.filler
+        self.assertGreater(FillerPool.EARLY_FLOOR, 0)
+        self.assertEqual(max(0, FillerPool.EARLY_FLOOR - pool.opening_locations),
+                         pool.early_shortfall())
+
+    def test_the_worst_density_cell_is_brought_under_target(self):
+        world = self.build([self.JOAN], self.JOAN, techsanity=1, unitsanity=1)
+        self.assertGreater(len(world.pool.filler.locations), 0)
+        self.assertLessEqual(self.density(world), FillerPool.DENSITY_TARGET)
+
+    def test_a_seed_already_under_target_pays_nothing(self):
+        world = self.build([self.ATTILA], self.ATTILA, techsanity=1, unitsanity=1)
+        self.assertLess(self.density(world), FillerPool.DENSITY_TARGET)
+        self.assertEqual([], world.pool.filler.locations)
+
+    def test_the_slider_still_raises_the_count(self):
+        world = self.build([self.ATTILA], self.ATTILA, minimum_filler_locations=20)
+        self.assertEqual(20, len(world.pool.filler.locations))
 
 
 if __name__ == "__main__":

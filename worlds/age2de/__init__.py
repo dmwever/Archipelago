@@ -141,16 +141,6 @@ class Age2World(CachedRuleBuilderWorld):
                 Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
 
-        filler_locations = Region("Filler Locations", self.player, self.multiworld)
-        connection = Entrance(self.player, f"{filler_locations.name}", source)
-        source.exits.append(connection)
-        connection.connect(filler_locations)
-        for filler in self.pool.filler.locations:
-            filler_locations.locations.append(
-                Location(self.player, filler.location_name, filler.id, filler_locations))
-        regions.append(filler_locations)
-        
-        
         building_regions: dict[Buildings.Age2BuildingData, Region] = {}
         for building in Age2BuildingData:
             if not self.pool.buildings.hosts_locations(building):
@@ -183,6 +173,19 @@ class Age2World(CachedRuleBuilderWorld):
         self.unit_regions = UnitRegions(self, building_regions, scenario_regions)
         regions += self.unit_regions.create()
 
+        filler_locations = Region("Filler Locations", self.player, self.multiworld)
+        connection = Entrance(self.player, f"{filler_locations.name}", source)
+        source.exits.append(connection)
+        connection.connect(filler_locations)
+        self.pool.filler.choose(
+            sum(1 for region in regions for location in region.locations
+                if location.address is not None),
+            self.unit_regions.items())
+        for filler in self.pool.filler.locations:
+            filler_locations.locations.append(
+                Location(self.player, filler.location_name, filler.id, filler_locations))
+        regions.append(filler_locations)
+
         regions[0].add_event("Victory", Items.Age2ItemData.VICTORY.item_name)
 
         self.multiworld.regions += regions
@@ -205,65 +208,10 @@ class Age2World(CachedRuleBuilderWorld):
         
     
     def create_items(self) -> None:
-        items: list[Item] = []
-        for item in Items.Age2ItemData:
-            if isinstance(item.type, Items.Victory):
-                continue
-            elif isinstance(item.type, (Items.ScenarioItem, Items.Mercenary)):
-                if item.type.vanilla_scenario in self.pool.scenarios.included:
-                    items.append(self.create_item(item.item_name))
-            elif isinstance(item.type, Items.Campaign):
-                if item.type.vanilla_campaign in self.pool.campaigns.enabled:
-                    ap_item = self.create_item(item.item_name)
-                    if item.type.vanilla_campaign in self.pool.campaigns.starting:
-                        self.multiworld.push_precollected(ap_item)
-                    else:
-                        items.append(ap_item)
-            elif isinstance(item.type, Items.ProgressiveScenario):
-                if item.type.vanilla_campaign in self.pool.campaigns.enabled:
-                    for i in range(item.type.num_additional_scenarios):
-                        items.append(self.create_item(item.item_name))
-            elif isinstance(item.type, Items.Resources):
-                continue
-            elif isinstance(item.type, Items.StartingResources):
-                continue
-            elif isinstance(item.type, Items.TCResources):
-                items.append(self.create_item(item.item_name))
-            elif isinstance(item.type, Items.Age2AgeData):
-                age_item = self.create_item(item.item_name)
-                if item.type in self.pool.ages.locations:
-                    items.append(age_item)
-                else:
-                    self.multiworld.push_precollected(age_item)
-            elif isinstance(item.type, Items.Building):
-                continue
-            elif isinstance(item.type, Items.Tech):
-                continue
-            elif isinstance(item.type, Items.UnitLine):
-                continue
-            elif isinstance(item.type, Items.UnitUpgrade):
-                continue
-            elif isinstance(item.type, Items.UnitBuilding):
-                continue
-            elif isinstance(item.type, Items.VillagerProfession):
-                continue
-            elif isinstance(item.type, Items.Trap):
-                continue
-            else:
-                raise ValueError(f"Item {item} has unknown type {type(item.type)}")
-
-        for building in Age2BuildingData:
-            building_item: Item = self.create_item(building.item.item_name)
-            if building in self.pool.buildings.locations:
-                items.append(building_item)
-            else:
-                self.multiworld.push_precollected(building_item)
-
-        for tech in self.pool.techs.shuffled:
-            items.append(self.create_item(tech.item.item_name))
-
-        for item in self.unit_regions.items():
-            items.append(self.create_item(item.item_name))
+        plan = self.pool.item_plan(self.unit_regions.items())
+        items: list[Item] = [self.create_item(data.item_name) for data in plan.pooled]
+        for data in plan.precollected:
+            self.multiworld.push_precollected(self.create_item(data.item_name))
                 
 
         self.multiworld.itempool += items
