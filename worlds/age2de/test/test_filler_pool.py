@@ -30,6 +30,26 @@ class TestTheCatalogue(unittest.TestCase):
                 self.assertEqual(filler.id, location_name_to_id[filler.location_name])
                 self.assertEqual(filler.location_name, location_id_to_name[filler.id])
 
+    def test_every_name_is_marked_as_a_milestone(self) -> None:
+        """Every one of them, without exception. The prefix is added by __init__ rather than
+        typed into each member, so a new milestone cannot be declared without it."""
+        for filler in Age2FillerLocationData:
+            with self.subTest(filler.location_name):
+                self.assertTrue(filler.location_name.startswith("Milestone: "))
+
+    def test_the_only_character_the_game_rewrites_is_the_percent_sign(self) -> None:
+        """MessageHandler._parse_evil_characters rewrites what would break xsChatData, which
+        takes its argument as a printf format. The percent signs in the explore names are a
+        deliberate exception - in game they read "10 percent" where the spoiler log reads "10%".
+        Nothing else may differ, so a name picking up an accented character fails here.
+        """
+        from ..client.handlers.MessageHandler import _parse_evil_characters
+        for filler in Age2FillerLocationData:
+            with self.subTest(filler.location_name):
+                self.assertEqual(
+                    _parse_evil_characters(filler.location_name.replace("%", "")),
+                    filler.location_name.replace("%", ""))
+
     def test_the_option_ceiling_is_the_whole_catalogue(self) -> None:
         """range_end is a class attribute and cannot import the catalogue, so it is a literal.
         This is what stops the two drifting."""

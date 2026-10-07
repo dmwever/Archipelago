@@ -28,10 +28,10 @@ class Age2FillerLocationData(enum.IntEnum):
         obj._value_ = value
         return obj
 
-    def __init__(self, id: int, location_name: str, kind: FillerKind, threshold: int,
+    def __init__(self, id: int, name: str, kind: FillerKind, threshold: int,
                  tier: FillerTier, resource: Resource = None) -> None:
         self.id = id
-        self.location_name = location_name
+        self.location_name = f"Milestone: {name}"
         self.kind = kind
         self.threshold = threshold
         self.tier = tier
