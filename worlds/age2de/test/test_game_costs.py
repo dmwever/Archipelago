@@ -4,6 +4,8 @@ import unittest
 
 from . import bases
 from ..items.Items import Age2ItemData, Building, Resource
+from ..locations.Ages import Age2AgeData
+from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.UnitLines import Age2UnitLineData
@@ -59,6 +61,44 @@ class TestSpotChecks(unittest.TestCase):
         gate = Age2ItemData.PALISADE_GATE
         self.assertIsInstance(gate.type, Building)
         self.assertEqual(gate.type.needed_resources, {Resource.WOOD: 20.0})
+
+
+class TestAgeAndBuildingCosts(unittest.TestCase):
+    """Ages and buildings were never priced: climbing an age and putting a building up both read
+    as free, so logic could ask for every one of them out of a single opening pile."""
+
+    def test_every_age_past_the_dark_age_costs_something(self):
+        self.assertEqual(Age2AgeData.DARK.cost, {})
+        for age in (Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL):
+            with self.subTest(age.name):
+                self.assertTrue(age.cost)
+
+    def test_the_age_up_costs_are_the_game_s(self):
+        self.assertEqual(Age2AgeData.FEUDAL.cost, {Resource.FOOD: 500})
+        self.assertEqual(Age2AgeData.CASTLE.cost, {Resource.FOOD: 800, Resource.GOLD: 200})
+        self.assertEqual(Age2AgeData.IMPERIAL.cost, {Resource.FOOD: 1000, Resource.GOLD: 800})
+
+    def test_every_building_location_costs_what_its_item_says(self):
+        for building in Age2BuildingData:
+            with self.subTest(building.name):
+                expected = {resource: int(amount) for resource, amount
+                            in building.item.type.needed_resources.items()}
+                self.assertEqual(building.cost, expected)
+                self.assertTrue(building.cost)
+
+    def test_known_building_costs(self):
+        self.assertEqual(Age2BuildingData.TOWN_CENTER.cost,
+                         {Resource.WOOD: 275, Resource.STONE: 100})
+        self.assertEqual(Age2BuildingData.FARM.cost, {Resource.WOOD: 60})
+        self.assertEqual(Age2BuildingData.CASTLE.cost, {Resource.STONE: 650})
+
+    def test_age_and_building_costs_are_whole_positive_amounts(self):
+        for owner in (*Age2AgeData, *Age2BuildingData):
+            for resource, amount in owner.cost.items():
+                with self.subTest(f"{owner.name}.{resource}"):
+                    self.assertIsInstance(resource, Resource)
+                    self.assertIsInstance(amount, int)
+                    self.assertGreater(amount, 0)
 
 
 class TestCostsReachTheRules(bases.Age2RuleTestBase):

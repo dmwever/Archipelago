@@ -179,3 +179,56 @@ class TestProgressiveScenarioCoverage(unittest.TestCase):
             self.assertEqual(1, len(owned),
                              f"{campaign.campaign_name} needs exactly one campaign item, or "
                              "sync_unlocked's any() would open it from the wrong one")
+
+
+class TestTheHouseComesEarly(bases.Age2TestBase):
+    """A civilisation that builds houses has no base without one, so a House found late left
+    Joan 3 with no easy source of anything for most of a seed. It is an early item whenever it is
+    shuffled at all."""
+
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"Economy"},
+    }
+
+    def test_the_house_is_asked_for_early(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertEqual(1, self.multiworld.early_items[self.player].get(house))
+
+    def test_the_house_lands_in_the_first_sphere(self) -> None:
+        from Fill import distribute_items_restrictive
+        distribute_items_restrictive(self.multiworld)
+        house = Items.Age2ItemData.HOUSE.item_name
+        first_sphere = next(iter(self.multiworld.get_spheres()))
+        holders = [location for location in first_sphere
+                   if location.item.player == self.player and location.item.name == house]
+        self.assertEqual(1, len(holders), "the House was not placed in the first sphere")
+
+
+class TestAnUnshuffledHouseIsLeftAlone(bases.Age2TestBase):
+    """With economy buildings unshuffled the House is precollected, so there is nothing to place."""
+
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"Tech"},
+    }
+
+    def test_the_house_is_not_an_early_item(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertNotIn(house, self.multiworld.early_items[self.player])
+
+
+class TestHunsNeverAskForAHouse(bases.Age2TestBase):
+    """Huns build no houses, so an Attila-only seed has no House location and no House item."""
+
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"Economy"},
+    }
+
+    def test_the_house_is_not_an_early_item(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertNotIn(house, self.multiworld.early_items[self.player])

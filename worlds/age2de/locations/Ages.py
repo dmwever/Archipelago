@@ -10,6 +10,7 @@ class Age2AgeData(enum.IntEnum):
     def __init__(self, id: int, location_name: str) -> None:
         self.id = id
         self.location_name = location_name
+        self.cost: dict = {}
 
     @property
     def item(self):

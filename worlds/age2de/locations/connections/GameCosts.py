@@ -1,4 +1,6 @@
 from ...items.Items import Resource
+from ..Ages import Age2AgeData
+from ..Buildings import Age2BuildingData
 from ..Techs import Age2TechData
 from ..Units import Age2UnitData
 
@@ -572,6 +574,14 @@ TECHS_WITHOUT_COST: frozenset[Age2TechData] = frozenset({
 })
 """Technologies the dump does not carry."""
 
+AGE_COSTS: dict[Age2AgeData, dict[Resource, int]] = {
+    Age2AgeData.FEUDAL: {Resource.FOOD: 500},
+    Age2AgeData.CASTLE: {Resource.FOOD: 800, Resource.GOLD: 200},
+    Age2AgeData.IMPERIAL: {Resource.FOOD: 1000, Resource.GOLD: 800},
+}
+"""What advancing into each age costs. Dark Age is where every game starts, so it has no price.
+Neither shipped civilisation discounts an age-up."""
+
 
 for _unit, _cost in UNIT_COSTS.items():
     _unit.cost = _cost
@@ -579,9 +589,24 @@ for _unit, _cost in UNIT_COSTS.items():
 for _tech, _cost in TECH_COSTS.items():
     _tech.cost = _cost
 
+for _age, _cost in AGE_COSTS.items():
+    _age.cost = _cost
+
+for _building in Age2BuildingData:
+    # The building items already carry the price; the location reads the same numbers as whole
+    # amounts so every priced thing looks alike.
+    _building.cost = {resource: int(amount)
+                      for resource, amount in _building.item.type.needed_resources.items()}
+
 
 assert not [unit for unit in Age2UnitData
             if not unit.cost and unit not in UNITS_WITHOUT_COST],     "a unit has no cost and is not on the list of units known to have none"
 
 assert not [tech for tech in Age2TechData
             if not tech.cost and tech not in TECHS_WITHOUT_COST],     "a technology has no cost and is not on the list of those known to have none"
+
+assert not [age for age in Age2AgeData
+            if not age.cost and age is not Age2AgeData.DARK],     "an age past the Dark Age has no age-up cost"
+
+assert not [building for building in Age2BuildingData
+            if not building.cost],     "a building has no cost"

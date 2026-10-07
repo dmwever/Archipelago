@@ -250,6 +250,11 @@ class Age2World(CachedRuleBuilderWorld):
             else:
                 self.multiworld.push_precollected(building_item)
 
+        if Age2BuildingData.HOUSE in self.pool.buildings.locations:
+            # A civilisation that builds houses has no base without one, and no base means no easy
+            # source of anything. A late House left Joan 3 starving for most of a seed.
+            self.multiworld.early_items[self.player][Age2BuildingData.HOUSE.item.item_name] = 1
+
         for tech in self.pool.techs.shuffled:
             items.append(self.create_item(tech.item.item_name))
 
