@@ -15,6 +15,7 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
+from .generation.pools.BudgetPool import BudgetPool
 from .regions.UnitRegions import UnitRegions
 from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching
 from .items import Items
@@ -98,6 +99,7 @@ class Age2World(CachedRuleBuilderWorld):
         self.inspect_options(self.options, self.player_name)
         self.check_installable_name()
         self.pool = Age2Pool(self)
+        self.pool.budget = BudgetPool(self.pool, self.random)
 
     def check_installable_name(self) -> None:
         """/install names each campaign file after the slot, so the name has to survive a file
