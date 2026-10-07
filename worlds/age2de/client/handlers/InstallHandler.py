@@ -17,12 +17,14 @@ from ...locations.Civilizations import Age2CivData
 from ...locations.Locations import (TYPE_TO_LOCATIONS, Age2LocationType,
                                    Age2ScenarioLocationData)
 from ...locations.Scenarios import Age2ScenarioData
+from ...locations.FillerLocations import Age2FillerLocationData
 from ...locations.Techs import Age2TechData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
 from ...locations.UnitLocations import UnitLocation, unit_location
 from ...locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .FolderHandler import FolderHandler
+from .install.FillerData import FillerData
 from .install.TechData import TechData
 from .install.UnitData import UnitData
 
@@ -33,6 +35,7 @@ XS_SUBPATH = "resources/_common/xs"
 SLOT_DATA_FILE = "SlotData.xs"
 TECH_DATA_FILE = "TechData.xs"
 UNIT_DATA_FILE = "UnitData.xs"
+FILLER_DATA_FILE = "FillerData.xs"
 
 class InstallError(Exception):
     pass
@@ -55,6 +58,7 @@ class InstallHandler(FolderHandler):
         self._scenarios: list[Age2ScenarioData] = []
         self._civs: list[Age2CivData] = []
         self._techs: list[Age2TechData] = []
+        self._fillers: list[Age2FillerLocationData] = []
         self._unit_places: list[UnitLocation] = []
         self._disabled_triggers: dict[Age2ScenarioData, list[Age2ScenarioLocationData]] = {}
         self._parsed = 0
@@ -84,6 +88,8 @@ class InstallHandler(FolderHandler):
                                 if id in Age2TechData]
         self._unit_places = [place for place in map(unit_location, location_ids)
                              if place is not None]
+        self._fillers = [Age2FillerLocationData(id) for id in location_ids
+                                if id in Age2FillerLocationData]
         self._disabled_triggers = self.branching_triggers()
 
     def branching_triggers(self) -> dict[Age2ScenarioData, list[Age2ScenarioLocationData]]:
@@ -116,6 +122,9 @@ class InstallHandler(FolderHandler):
 
     def unit_data_path(self) -> Path:
         return self.xs_dir() / UNIT_DATA_FILE
+
+    def filler_data_path(self) -> Path:
+        return self.xs_dir() / FILLER_DATA_FILE
 
     def options(self) -> dict[str, int]:
         return SlotData.options(self._slot_data)
@@ -175,6 +184,7 @@ class InstallHandler(FolderHandler):
         written.append(self._write_slot_data())
         written.append(self._write_tech_data())
         written.append(self._write_unit_data())
+        written.append(self._write_filler_data())
         return written
 
     def scenario_data(self, file_name: str) -> Age2ScenarioData:
@@ -221,6 +231,14 @@ class InstallHandler(FolderHandler):
         data = UnitData(self._unit_places, self._civs, options[SlotData.US_MODE],
                         options[SlotData.US_ITEMS], self._tag)
         target.write_text(data.render(), encoding="utf-8")
+        return target
+
+    def _write_filler_data(self) -> Path:
+        target = self.filler_data_path()
+        if not self._fillers:
+            target.write_text(FillerData().render(), encoding="utf-8")
+            return target
+        target.write_text(FillerData(self._fillers, self._tag).render(), encoding="utf-8")
         return target
 
     def _write_tech_data(self) -> Path:

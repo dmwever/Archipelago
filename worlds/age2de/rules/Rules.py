@@ -7,6 +7,7 @@ from ..logic.Logic import Logic
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
+from .FillerRules import FillerRules
 from .TechRules import TechRules
 from .UnitRules import UnitRules
 from rule_builder.rules import Rule
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
 
 class Rules:
     building_rules: BuildingRules
+    filler_rules: FillerRules
     age_rules: AgeRules
     tech_rules: TechRules
     unit_rules: UnitRules
@@ -32,6 +34,7 @@ class Rules:
         self.age_rules =  AgeRules(self, world)
         self.tech_rules = TechRules(self)
         self.unit_rules = UnitRules(self)
+        self.filler_rules = FillerRules(self)
         self.scenario_rules = []
 
     def set_rule(self, spot: Location | Entrance, rule: CollectionRule | Rule[Age2World]):
@@ -54,3 +57,5 @@ class Rules:
         self.tech_rules.set_rules()
         # After the scenario rules, which is where the per-scenario logic it reads is built.
         self.unit_rules.set_rules()
+        # Last: a milestone rule may lean on any of the above.
+        self.filler_rules.set_rules()

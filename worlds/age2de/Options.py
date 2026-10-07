@@ -275,6 +275,25 @@ class TrapPercentage(Range):
     default = 20
 
 
+class MinimumFillerLocations(Range):
+    """
+    The fewest milestone locations to add. Milestones are earned by playing - exploring the map,
+    killing units, razing buildings - rather than by holding a particular item, so they dilute how
+    much of the item pool has to be progression and give a scarce opening scenario somewhere to
+    start.
+
+    This is a floor, not a target. A seed that needs more of them to generate will take more. They
+    never change how many starting resources are handed out, so raising this does not make the
+    campaigns themselves any easier.
+    """
+    internal_name = "minimum_filler_locations"
+    display_name = "Minimum Filler Locations"
+    range_start = 0
+    # Increase this as filler locations are added.
+    range_end = 87
+    default = 0
+
+
 TRAP_DEFAULT_WEIGHT = 100
 
 
@@ -315,6 +334,7 @@ class Age2Options(PerGameCommonOptions):
     caveman: Caveman
     goal: Goal
     local_start: LocalStart
+    minimum_filler_locations: MinimumFillerLocations
     trap_difficulty: TrapDifficulty
     trap_percentage: TrapPercentage
     trap_distribution: TrapDistribution

@@ -140,6 +140,15 @@ class Age2World(CachedRuleBuilderWorld):
             buildings.locations.append(
                 Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
+
+        filler_locations = Region("Filler Locations", self.player, self.multiworld)
+        connection = Entrance(self.player, f"{filler_locations.name}", source)
+        source.exits.append(connection)
+        connection.connect(filler_locations)
+        for filler in self.pool.filler.locations:
+            filler_locations.locations.append(
+                Location(self.player, filler.location_name, filler.id, filler_locations))
+        regions.append(filler_locations)
         
         
         building_regions: dict[Buildings.Age2BuildingData, Region] = {}
@@ -264,11 +273,12 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        # Starting resources come first. Traps only ever spend the padding appended once
-        # every resource target is already met, so they never cost the player economy.
-        plan = self.pool.resources.plan(needed_number_of_filler_items)
+        # Exclude filler locations from resource budget
+        filler_locations = len(self.pool.filler.locations)
+        plan = self.pool.resources.plan(needed_number_of_filler_items - filler_locations)
         starting_items = [self.create_item(data.item_name) for data in plan.items]
-        traps = [self.create_item(data.item_name) for data in self.pool.traps.roll(plan.spare)]
+        traps = [self.create_item(data.item_name)
+                 for data in self.pool.traps.roll(plan.spare + filler_locations)]
 
         self.multiworld.itempool += starting_items
         self.multiworld.itempool += traps

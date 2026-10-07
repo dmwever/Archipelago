@@ -1,6 +1,7 @@
 from ..Ages import SHUFFLED_AGES
 from ..Buildings import Age2BuildingData
 from ..EscortUnits import Age2EscortUnitData
+from ..FillerLocations import Age2FillerLocationData
 from ..Heroes import Age2HeroData
 from ..Techs import Age2TechData
 from ..UnitLines import Age2UnitLineData
@@ -59,5 +60,12 @@ for escort in Age2EscortUnitData:
     location_name_list.append(escort.location_name)
     location_name_to_id[escort.location_name] = escort.id
     location_id_to_name[escort.id] = escort.location_name
+
+# The whole milestone catalogue, for the same reason the unit namespace is whole: FillerPool
+# picks a handful per seed, but the datapackage every client reads is static.
+for filler in Age2FillerLocationData:
+    location_name_list.append(filler.location_name)
+    location_name_to_id[filler.location_name] = filler.id
+    location_id_to_name[filler.id] = filler.location_name
 
 assert len(location_name_to_id) == len(location_name_list), "duplicate location name"
