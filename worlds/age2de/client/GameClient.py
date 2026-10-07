@@ -24,7 +24,7 @@ from .handlers.UnitHandler import UnitHandler
 from Utils import Version
 
 from .. import Age2World
-from ..generation import Identity, WorldVersion
+from ..generation import Identity, SlotData, WorldVersion
 from ..campaign import XsdatFile
 from ..items import Items
 from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
@@ -408,6 +408,12 @@ class Age2GameContext:
         self.reported_packet_mismatch = kind
         logger.error(message)
 
+    def seed_halves(self) -> tuple[int, int]:
+        tag = self.client_status.tag
+        if not tag:
+            return SlotData.UNSET, SlotData.UNSET
+        return SlotData.seed_halves(tag)
+
     def ping_game(self) -> None:
         try:
             with open(self.profile_folder() + "AP.xsdat", "wb") as fp:
@@ -416,6 +422,9 @@ class Age2GameContext:
                 XsdatFile.write_int(fp, AP_WORLD_VERSION.major)
                 XsdatFile.write_int(fp, AP_WORLD_VERSION.minor)
                 XsdatFile.write_int(fp, self.client_status.slot_id)
+                high, low = self.seed_halves()
+                XsdatFile.write_int(fp, high)
+                XsdatFile.write_int(fp, low)
                 XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
                 XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations

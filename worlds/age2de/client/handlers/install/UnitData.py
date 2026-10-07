@@ -29,6 +29,7 @@ class Row:
     tier: int
     upgrade_item_id: int
     caveman_exempt: bool
+    untrainable_civs: tuple[int, ...]
     items: tuple[int, ...]
     variants: tuple[int, ...]
 
@@ -67,6 +68,9 @@ class UnitData:
     def is_caveman_exempt(self, unit: Age2UnitData) -> bool:
         return unit.line in VILLAGER_LINES
 
+    def untrainable_civs(self, unit: Age2UnitData) -> tuple[int, ...]:
+        return tuple(civ.game_id for civ in self._civs if unit not in CIV_TO_UNITS[civ])
+
     def upgrade_item_for(self, unit: Age2UnitData) -> int:
         tech = unit.upgrade_tech
         if tech is None or tech.item is None:
@@ -93,16 +97,17 @@ class UnitData:
                 f"{unit.unit_name} needs {len(items)} items; raise MAX_ITEMS here and "
                 "UNIT_ITEM_CAPACITY in AP_Constants.xs to match")
         return Row(unit, location_id, unit.line.id, unit.age.value, unit.tier,
-                   self.upgrade_item_for(unit), self.is_caveman_exempt(unit), items,
+                   self.upgrade_item_for(unit), self.is_caveman_exempt(unit),
+                   self.untrainable_civs(unit), items,
                    tuple(unit.variant_game_ids or ()))
 
     def owned_type_row(self, place: UnitLocation) -> Row:
         if isinstance(place, Age2VillagerJobData):
             return Row(place, place.id, place.line.id, Age2AgeData.DARK.value, 1,
-                       self.NO_UPGRADE_ITEM, True, (place.item.id,), ())
+                       self.NO_UPGRADE_ITEM, True, (), (place.item.id,), ())
 
         return Row(place, place.id, self.NO_LINE, Age2AgeData.DARK.value, 0,
-                   self.NO_UPGRADE_ITEM, True, (), ())
+                   self.NO_UPGRADE_ITEM, True, (), (), ())
 
     def rows_for(self, place: UnitLocation) -> list[Row]:
         if isinstance(place, Age2UnitLineData):
@@ -136,6 +141,8 @@ class UnitData:
                 f"    addUnit({row.location_id}, {row.unit.game_id}, {row.line_id}, "
                 f"{row.age}, {row.tier}, {row.upgrade_item_id}, "
                 f"{int(row.caveman_exempt)});")
+            for civ_id in row.untrainable_civs:
+                lines.append(f"    addUnitUntrainable({row.unit.game_id}, {civ_id});")
             for item_id in row.items:
                 lines.append(f"    addUnitItem({row.unit.game_id}, {item_id});")
             for variant in row.variants:

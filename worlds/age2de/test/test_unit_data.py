@@ -111,6 +111,29 @@ class TestRender(unittest.TestCase):
             self.assertIn(f"addUnitVariant({Age2UnitData.SPEARMAN.game_id}, {variant});",
                           rendered)
 
+    def test_a_unit_the_civilisation_cannot_train_is_marked_per_civ(self):
+        rendered = table([Age2UnitData.MANGUDAI]).render()
+        self.assertIn(f"addUnitUntrainable({Age2UnitData.MANGUDAI.game_id}, "
+                      f"{Age2CivData.FRANKS.game_id});", rendered)
+
+    def test_a_unit_the_civilisation_trains_is_not_marked(self):
+        rendered = table([Age2UnitData.THROWING_AXEMAN]).render()
+        self.assertNotIn(f"addUnitUntrainable({Age2UnitData.THROWING_AXEMAN.game_id},", rendered)
+
+    def test_each_civilisation_answers_for_itself(self):
+        both = (Age2CivData.HUNS, Age2CivData.FRANKS)
+        rendered = table([Age2UnitData.THROWING_AXEMAN, Age2UnitData.TARKAN],
+                         civs=both).render()
+        axeman, tarkan = Age2UnitData.THROWING_AXEMAN, Age2UnitData.TARKAN
+        self.assertIn(f"addUnitUntrainable({axeman.game_id}, {Age2CivData.HUNS.game_id});",
+                      rendered)
+        self.assertNotIn(f"addUnitUntrainable({axeman.game_id}, "
+                         f"{Age2CivData.FRANKS.game_id});", rendered)
+        self.assertIn(f"addUnitUntrainable({tarkan.game_id}, {Age2CivData.FRANKS.game_id});",
+                      rendered)
+        self.assertNotIn(f"addUnitUntrainable({tarkan.game_id}, "
+                         f"{Age2CivData.HUNS.game_id});", rendered)
+
     def test_every_row_is_one_addUnit_call(self):
         data = table([Age2UnitLineData.MILITIA_LINE, Age2UnitLineData.KNIGHT_LINE])
         self.assertEqual(data.render().count("    addUnit("), len(data.rows()))
