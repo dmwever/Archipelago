@@ -26,6 +26,13 @@ class ScenarioUnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train(self, unit: Age2UnitData) -> Rule:
+        rule = self.can_train_structurally(unit) & self.scenario.economy.can_afford(unit.cost)
+        if unit.line in VILLAGER_LINES:
+            rule = rule & self.logic.units.villager_food()
+        return rule
+
+    def can_train_structurally(self, unit: Age2UnitData) -> Rule:
+        """Everything training it asks for except paying for it."""
         if not unit.buildings or not self.scenario.civilization.trains(unit):
             return False_()   # this scenario's civilisation does not have it
         if self.upgraded_away(unit):
@@ -33,24 +40,18 @@ class ScenarioUnitLogic:
         somewhere = Or(*[self.scenario.has_building(building)
                          for building in unit.buildings
                          if self.scenario.civilization.can_build(building)])
-        rule = (self.logic.units.has_unit_items(unit) & self.has_upgrade_tech(unit)
-                & somewhere & self.scenario.ages.has_reached(unit.age)
-                & self.scenario.economy.can_afford(unit.cost))
-        if unit.line in VILLAGER_LINES:
-            rule = rule & self.logic.units.villager_food()
-        return rule
+        return (self.logic.units.has_unit_items(unit) & self.has_upgrade_tech(unit)
+                & somewhere & self.scenario.ages.has_reached(unit.age))
 
     def upgraded_away(self, unit: Age2UnitData) -> bool:
         for successor in unit.line.units:
             if successor.tier != unit.tier + 1:
                 continue
             tech = successor.upgrade_tech
-            if tech is None or self.world.pool.techs.locked_at_start(tech):
-                continue  # withheld, so researching it is your choice and your timing
-            if not self.scenario.civilization.researches(tech):
-                continue  # not this civilisation's, so it never fires
-            if self.scenario.scenario.vanilla_age > tech.age:
-                return True   # strictly below: a scenario does not research the age it opens in
+            if tech is None or not self.scenario.civilization.researches(tech):
+                continue  # none, or not this civilisation's, so it never fires
+            if self.scenario.techs.researched_at_start(tech):
+                return True   # strictly below the opening age, and not withheld
         return False
 
     def has_upgrade_tech(self, unit: Age2UnitData) -> Rule:
@@ -58,9 +59,9 @@ class ScenarioUnitLogic:
         if tech is None or not self.world.pool.techs.includes(tech):
             return True_()
         item = Has(tech.item.item_name)
+        if self.scenario.techs.researched_at_start(tech):
+            return True_()   # the scenario researched it for itself, so the tier is upgraded
         if tech.age < self.scenario.scenario.vanilla_age:
-            if not self.world.pool.techs.locked_at_start(tech):
-                return True_()   # the scenario researched it for itself, so the tier is upgraded
             return item
         return self.scenario.techs.has_tech(tech) & item
 

@@ -10,6 +10,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Techs import Age2TechData
 from ...locations.UnitLocations import VILLAGER_LINES
 from ...locations.Units import Age2UnitData
+from ...locations.connections import ScenarioResources
 
 if TYPE_CHECKING:
     from ...locations.Scenarios import Age2ScenarioData
@@ -35,6 +36,24 @@ TECHS_PER_RESOURCE = 3
 UNITS_PER_RESOURCE = 3
 BUILDINGS_DRAWN = 4
 CHEAP_BUILDING_COST_LIMIT = 100
+
+SOURCE_ALLOWANCE = 250
+"""What one early gathering source is worth to a scenario's budget."""
+RELIC_ALLOWANCE = 50
+"""What each relic a scenario can collect is worth, in gold."""
+SOURCES: tuple[tuple[str, Resource, tuple[str, ...]], ...] = (
+    ("hunt", Resource.FOOD, ("can_hunt",)),
+    ("herd", Resource.FOOD, ("can_herd",)),
+    ("forage", Resource.FOOD, ("can_forage",)),
+    ("fish", Resource.FOOD, ("can_fish_from_shore", "can_fish_by_boat")),
+    ("chop", Resource.WOOD, ("can_chop_some",)),
+    ("mine", Resource.GOLD, ("can_mine_some",)),
+    ("oysters", Resource.GOLD, ("can_gather_oysters",)),
+    ("whales", Resource.GOLD, ("can_hunt_whales",)),
+    ("quarry", Resource.STONE, ("can_quarry_some",)),
+)
+"""The early gathering sources a budget counts: name, resource, and the economy rules any one of
+which switches it on. Shore and boat fishing take the same fish, so they are one source."""
 
 
 def is_cheap_building(building: Age2BuildingData) -> bool:
@@ -78,6 +97,10 @@ class BudgetPool:
 
     def includes(self, kind: BudgetKind, location: BudgetLocation) -> bool:
         return (kind, location) in self.entries
+
+    @staticmethod
+    def relic_allowance(scenario: 'Age2ScenarioData') -> int:
+        return RELIC_ALLOWANCE * ScenarioResources.total(scenario).relic_count
 
     @staticmethod
     def _unit_candidates(pool: 'Age2Pool') -> list[Age2UnitData]:
