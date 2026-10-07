@@ -11,6 +11,7 @@ from ..locations.connections import ScenarioDataLogic
 from .ScenarioLogic import ScenarioLogic
 from .age_logic import AgeLogic
 from .building_logic import BuildingLogic
+from .filler_logic import FillerLogic
 from .resource_logic import ResourceLogic
 from .unit_logic import UnitLogic
 from rule_builder.rules import False_, Or, Rule
@@ -29,6 +30,7 @@ class Logic:
     ages: AgeLogic
     goal: GoalLogic
     units: UnitLogic
+    filler: FillerLogic
     scenarios: list[ScenarioLogic]
 
     def __init__(self, world: Age2World):
@@ -49,6 +51,7 @@ class Logic:
         self.buildings = BuildingLogic(self, world)
         self.units = UnitLogic(self, world)
         self.ages =  AgeLogic(self, world)
+        self.filler = FillerLogic(self)
         
         for campaign in world.pool.campaigns.enabled:
             for scenario in world.pool.scenarios.of(campaign):

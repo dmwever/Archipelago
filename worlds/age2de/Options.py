@@ -290,7 +290,7 @@ class MinimumFillerLocations(Range):
     display_name = "Minimum Filler Locations"
     range_start = 0
     # Increase this as filler locations are added.
-    range_end = 87
+    range_end = 89
     default = 0
 
 

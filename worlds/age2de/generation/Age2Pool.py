@@ -29,4 +29,4 @@ class Age2Pool:
         self.units = UnitPool(world.options, self.civs, self.scenarios.included)
         self.resources = ResourcePool(world.options, world)
         self.traps = TrapPool(world.options, world)
-        self.filler = FillerPool(world.options, world)
+        self.filler = FillerPool(world.options, world, self.scenarios)

@@ -36,13 +36,11 @@ class FillerData:
 
     @staticmethod
     def kind_of(filler: Age2FillerLocationData) -> str:
-        """The XS constant naming the counter this milestone reads."""
         if filler.kind is FillerKind.COLLECT:
             return RESOURCE_TO_XS[filler.resource]
         return KIND_TO_XS[filler.kind]
 
     def rows(self) -> list[Age2FillerLocationData]:
-        """The seed's milestones, in catalogue order so the file is stable across installs."""
         wanted = set(self._locations)
         out = [filler for filler in Age2FillerLocationData if filler in wanted]
         wanted.difference_update(out)
@@ -65,7 +63,7 @@ class FillerData:
         body = len(lines)
         for filler in self.rows():
             lines.append(
-                f"    addFiller({filler.id}, {self.kind_of(filler)}, {filler.threshold});")
+                f"    addFillerLocation({filler.id}, {self.kind_of(filler)}, {filler.threshold});")
         if len(lines) == body:
             lines.append("    return;")
         lines.append("}")
