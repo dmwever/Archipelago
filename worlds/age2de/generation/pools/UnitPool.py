@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from ...Options import (Age2Options, IncludeUniqueUnits, ShuffleVillager, Unitsanity,
-                        UnitsanityItems)
+                        UnitsanityItems, upgrade_techs_shuffled)
 from ...items.Items import Age2ItemData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Civilizations import Age2CivData
@@ -28,6 +28,7 @@ class UnitPool:
                  scenarios: Iterable[Age2ScenarioData]) -> None:
         self._unitsanity = options.unitsanity
         self._unitsanity_items = options.unitsanity_items
+        self._techsanity = options.techsanity
         self._include_unique_units = options.include_unique_units
         self._shuffle_villager = options.shuffle_villager
         self._caveman = options.caveman
@@ -192,7 +193,9 @@ class UnitPool:
             chosen = [line.item for line in lines
                       if self.is_trainable(line) or self._caveman]
         elif self._unitsanity_items == UnitsanityItems.option_upgrades:
-            wanted = {token for unit in units for token in unit.upgrade_tokens}
+            heads_only = not upgrade_techs_shuffled(self._techsanity)
+            wanted = {token for unit in units if unit.tier == 0 or not heads_only
+                      for token in unit.upgrade_tokens}
             chosen = [token for token in Age2ItemData if token in wanted]
         else:
             producers = set(buildings)

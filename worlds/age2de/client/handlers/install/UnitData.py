@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from ....Options import Unitsanity, UnitsanityItems
+from ....Options import Techsanity, Unitsanity, UnitsanityItems, upgrade_techs_shuffled
 from ....generation import SlotData
 from ....locations.UnitLocations import VILLAGER_LINES, UnitLocation
 from ....locations.Ages import Age2AgeData
@@ -48,11 +48,13 @@ class UnitData:
 
     def __init__(self, locations: Iterable[UnitLocation] = (),
                  civs: Iterable[Age2CivData] = (), mode: int = Unitsanity.option_none,
-                 items_mode: int = UnitsanityItems.option_unit_line, tag: str = None):
+                 items_mode: int = UnitsanityItems.option_unit_line, tag: str = None,
+                 techsanity: int = Techsanity.option_none):
         self._locations = set(locations)
         self._civs = tuple(civs)
         self._mode = mode
         self._items_mode = items_mode
+        self._techsanity = techsanity
         self._tag = tag
         self._trainable = {unit for civ in self._civs for unit in CIV_TO_UNITS[civ]}
         if Age2UnitData.VILLAGER_MALE in self._trainable:
@@ -93,6 +95,8 @@ class UnitData:
             item = unit.line.item
             return (item.id,) if item is not None else ()
         if self._items_mode == UnitsanityItems.option_upgrades:
+            if unit.tier > 0 and not upgrade_techs_shuffled(self._techsanity):
+                return ()
             return tuple(token.id for token in unit.upgrade_tokens or ())
         return tuple(BUILDING_TO_UNITS_ITEM[building].id for building in unit.buildings or ()
                      if building in BUILDING_TO_UNITS_ITEM and self.civs_build(building))

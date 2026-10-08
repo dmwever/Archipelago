@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
-from ..Options import Caveman, ShuffleVillager, Unitsanity, UnitsanityItems
+from ..Options import (Caveman, ShuffleVillager, Unitsanity, UnitsanityItems,
+                       upgrade_techs_shuffled)
 from ..items.Items import Age2ItemData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
@@ -116,6 +117,8 @@ class UnitLogic:
         return Has(line.item.item_name)
 
     def has_upgrade_tokens(self, unit: Age2UnitData) -> Rule:
+        if unit.tier > 0 and not upgrade_techs_shuffled(self.world.options.techsanity):
+            return True_()
         tokens = [token for token in unit.upgrade_tokens if self.token_applies(unit, token)]
         if not tokens:
             return True_()

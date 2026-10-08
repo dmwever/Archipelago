@@ -121,6 +121,12 @@ class Techsanity(Choice):
     default = option_none
 
 
+def upgrade_techs_shuffled(techsanity: int) -> bool:
+    """Whether unit-line upgrade technologies are items. Generic shuffles Loom and Fletching
+    and leaves the upgrades free, so it does not count."""
+    return techsanity in (Techsanity.option_units, Techsanity.option_all)
+
+
 class TechBehavior(Choice):
     """
     When a shuffled technology's effect is applied. Requires Techsanity.
@@ -191,6 +197,7 @@ class UnitsanityItems(Choice):
     Unit Line: One item per line, e.g. Militia Line, Archer Line.
     Upgrades: Units need the equipment they are known for, so a Knight wants a Horse, a Sword and
     a Shield while an Archer only wants a Bow. A unit becomes trainable once it has all of its own.
+    Adapts to techsanity.
     Buildings: One item per producing building, e.g. Barracks Units, Archery Range Units.
     """
     internal_name = "unitsanity_items"
