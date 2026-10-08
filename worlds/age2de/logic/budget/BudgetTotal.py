@@ -80,11 +80,11 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         for mask in masks:
             waived = frozenset(building for _, buildings, _ in on(mask) for building in buildings)
             parts.append(order.seed_parts(needs[mask], required(needs[mask], waived), waived))
-        rules = (*(rule for rule, _, _ in switches), *order.way_rules)
+        rules = [*(rule for rule, _, _ in switches), *order.way_rules]
         return self.Resolved(
             tuple(rule.resolve(world) for rule in rules),
             needs,
-            tuple(buildings for _, buildings, _ in switches),
+            tuple(tuple(buildings) for _, buildings, _ in switches),
             order.worth,
             order.ways,
             tuple(parts),
@@ -101,6 +101,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         return f"BudgetTotal({self.scenario.scenario_name}, {self.location.location_name})"
 
     class Resolved(NestedRule.Resolved):
+        # Every field is a tuple, not a list: a resolved rule has to hash.
         needs: tuple[Need, ...]
         """The running total for each combination of switches, by bit mask: a switch can make a
         purchase unnecessary, which takes it out of the total."""
@@ -135,9 +136,9 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             on = [rule(state) for rule in self.children[len(self.switches):]]
             return [index for index, (_, rule) in enumerate(self.ways) if on[rule]]
 
-        def sources_on(self, state: CollectionState) -> tuple[tuple[str, Resource, int], ...]:
+        def sources_on(self, state: CollectionState) -> list[tuple[str, Resource, int]]:
             on = {self.ways[index][0] for index in self.usable(state)}
-            return tuple(source for index, source in enumerate(self.sources) if index in on)
+            return [source for index, source in enumerate(self.sources) if index in on]
 
         def allowance(self, state: CollectionState) -> dict[Resource, int]:
             return income({self.ways[index][0] for index in self.usable(state)}, self.sources)

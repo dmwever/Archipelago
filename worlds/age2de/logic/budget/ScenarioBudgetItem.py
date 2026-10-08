@@ -41,7 +41,7 @@ class ScenarioBudgetItem(BudgetItem):
         return self.item.node
 
     @property
-    def children(self) -> tuple[TechBudgetItem, ...]:
+    def children(self) -> list[TechBudgetItem]:
         return self.item.children
 
     def __repr__(self) -> str:

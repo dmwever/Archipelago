@@ -40,7 +40,7 @@ _ITEMS: dict[type, type[BudgetItem]] = {Age2AgeData: AgeBudgetItem,
                                         Age2BaseData: BaseBudgetItem}
 
 
-Switch = tuple[Rule, tuple[Age2BuildingData, ...], tuple[PricedLocation, ...]]
+Switch = tuple[Rule, list[Age2BuildingData], list[PricedLocation]]
 
 
 class ScenarioSource(NamedTuple):
@@ -48,7 +48,7 @@ class ScenarioSource(NamedTuple):
     name: str
     resource: Resource
     allowance: int
-    ways: tuple[tuple[Rule, Need], ...]
+    ways: list[tuple[Rule, Need]]
 
     @property
     def rule(self) -> Rule:
@@ -114,7 +114,7 @@ class _ScenarioOrder:
         self.worth = tuple((source.name, source.resource, source.allowance)
                            for source in self.sources)
         self.way_rules: list[Rule] = []
-        self.picks: list[tuple[int, int, Need, tuple[Age2BuildingData, ...]]] = []
+        self.picks: list[tuple[int, int, Need, list[Age2BuildingData]]] = []
         """Each way to bring a source in, once per pick of dropsite: its source, its rule (an
         index into way_rules), its seed, and the pick."""
         for index, source in enumerate(self.sources):
@@ -158,9 +158,9 @@ class _ScenarioOrder:
         relics = relic_allowance(self.scenario.scenario)
         sources = []
         for source in SOURCES:
-            ways = tuple((rule, seed.in_scenario(self.start, self.climbs, self.could_have))
-                         for rule, seed in ((way(economy), seed) for way, seed in source.ways)
-                         if not self.impossible(rule))
+            ways = [(rule, seed.in_scenario(self.start, self.climbs, self.could_have))
+                    for rule, seed in ((way(economy), seed) for way, seed in source.ways)
+                    if not self.impossible(rule)]
             allowance = relics if source.per_relic else SOURCE_ALLOWANCE
             if ways and allowance:
                 sources.append(ScenarioSource(source.name, source.resource, allowance, ways))
@@ -176,6 +176,7 @@ class _ScenarioOrder:
 
     def seed_parts(self, need: Need, requirement: Requirement,
                    waived: frozenset[Age2BuildingData]) -> tuple[tuple[Part, ...], ...]:
+        # Tuples: a resolved rule keeps these, and it has to hash.
         """What each way's seed buys, against this running total."""
         return tuple(seed_parts(seed, pick, need, requirement, waived, self.start)
                      for _, _, seed, pick in self.picks)
@@ -210,7 +211,7 @@ class _ScenarioOrder:
                 building = BUILDING_PREREQUISITE.get(building)
             buildings += reversed(chain)
         paid = {identity for identity, _ in entry.need.own}
-        techs = [tech.location for tech in reversed(tuple(entry.item.below()))
+        techs = [tech.location for tech in reversed(list(entry.item.below()))
                  if tech.location in paid]
         found = ([self.priced(building) for building in buildings
                   if building in pool.buildings.locations]
@@ -220,7 +221,7 @@ class _ScenarioOrder:
                        if precursor is not None and precursor.location is not entry.location),
                       key=lambda precursor: (precursor.age, precursor.item.rank))
 
-    def _build_order(self) -> tuple[tuple[_Priced, ...], tuple[_Priced, ...]]:
+    def _build_order(self) -> tuple[list[_Priced], list[_Priced]]:
         """The sample, the scenario's own purchases and its base by age: its purchases first, then
         the base, then the scenario's random rank; each entry after its precursors, less what
         could never fit the most the scenario could ever have: every starting resource in the
@@ -249,7 +250,7 @@ class _ScenarioOrder:
             fits = pays(pile, dict(requirement.cost), every_way, self.ways,
                         self.seed_parts(need, requirement, every_waiver), self.worth)
             (kept if fits else pruned).append(entry)
-        return tuple(kept), tuple(pruned)
+        return kept, pruned
 
     def needed(self, dropped: frozenset[PricedLocation]) -> frozenset[PricedLocation]:
         """What the order still needs once these purchases are unnecessary: everything but them
@@ -277,9 +278,9 @@ class _ScenarioOrder:
         """The waivers as switches: buildings that stand on the same rule (all of a camp's) and
         purchases that rule makes unnecessary are one switch, so a cost table needs one entry per
         combination of switches, not per building."""
-        switches: list[tuple[Rule, list[Age2BuildingData], list[PricedLocation]]] = []
+        switches: list[Switch] = []
 
-        def switch(rule: Rule) -> tuple[Rule, list[Age2BuildingData], list[PricedLocation]]:
+        def switch(rule: Rule) -> Switch:
             same = next((switch for switch in switches if switch[0] == rule), None)
             if same is None:
                 same = (rule, [], [])
@@ -290,5 +291,4 @@ class _ScenarioOrder:
             switch(rule)[1].append(building)
         for location, rule in self.purchases.items():
             switch(rule)[2].append(location)
-        return [(rule, tuple(buildings), tuple(purchases))
-                for rule, buildings, purchases in switches]
+        return switches

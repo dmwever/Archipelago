@@ -52,8 +52,6 @@ class BudgetItem:
     node: Need
     """What it charges for itself: its price, the age it needs, where it is made."""
 
-    children: tuple[TechBudgetItem, ...] = ()
-    """The techs directly below it."""
 
     first_in_age: ClassVar[bool] = False
     """Whether it goes ahead of the sample's own entries of its age in the scenario's order."""
@@ -68,6 +66,11 @@ class BudgetItem:
     def structural(self, scenario: ScenarioLogic) -> Rule:
         """Its own rule in the scenario, less paying."""
         raise NotImplementedError
+
+    @property
+    def children(self) -> list[TechBudgetItem]:
+        """The techs directly below it."""
+        return []
 
     def below(self) -> Iterator[TechBudgetItem]:
         """Every tech below it, nearest first."""

@@ -29,9 +29,9 @@ class UnitBudgetItem(BudgetItem):
     def node(self) -> Need:
         unit = self.location
         return (Need.pay(unit.line, unit.cost) + Need.reach(unit.age)
-                + Need.one_of(tuple(unit.buildings)))
+                + Need.one_of(*unit.buildings))
 
     @functools.cached_property
-    def children(self) -> tuple[TechBudgetItem, ...]:
+    def children(self) -> list[TechBudgetItem]:
         upgrade = self.location.upgrade_tech
-        return (TechBudgetItem(upgrade),) if upgrade is not None else ()
+        return [TechBudgetItem(upgrade)] if upgrade is not None else []

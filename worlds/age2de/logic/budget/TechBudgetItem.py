@@ -29,12 +29,12 @@ class TechBudgetItem(BudgetItem):
     @functools.cached_property
     def node(self) -> Need:
         tech = self.location
-        return Need.pay(tech, tech.cost) + Need.reach(tech.age) + Need.one_of(tuple(tech.buildings))
+        return Need.pay(tech, tech.cost) + Need.reach(tech.age) + Need.one_of(*tech.buildings)
 
     @functools.cached_property
-    def children(self) -> tuple[TechBudgetItem, ...]:
+    def children(self) -> list[TechBudgetItem]:
         prerequisite = self.location.prerequisite
-        return (TechBudgetItem(prerequisite),) if prerequisite is not None else ()
+        return [TechBudgetItem(prerequisite)] if prerequisite is not None else []
 
     def charged_in(self, scenario: ScenarioLogic) -> bool:
         """Whether a scenario pays for it below another item."""

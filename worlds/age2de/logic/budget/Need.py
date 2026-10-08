@@ -9,7 +9,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 
 
-CLIMBED_AGES = (Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL)
+CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 
 Climb = tuple[Age2AgeData, tuple[Age2BuildingData, ...], Age2BuildingData | None]
 """Per age: the buildings two of which leave the age before it, and the one counting for both."""
@@ -48,7 +48,7 @@ class Need:
         return Need(entry_buildings=frozenset({building}))
 
     @staticmethod
-    def one_of(options: tuple[Age2BuildingData, ...]) -> 'Need':
+    def one_of(*options: Age2BuildingData) -> 'Need':
         return Need(groups=frozenset({options})) if options else Need()
 
     @staticmethod

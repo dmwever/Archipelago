@@ -36,6 +36,7 @@ def relic_allowance(scenario: Age2ScenarioData) -> int:
 
 
 Cost = tuple[tuple[Resource, int], ...]
+"""Tuples, not lists: a part's cost ends up in a resolved rule, and those have to hash."""
 
 
 class Part(NamedTuple):
@@ -53,53 +54,51 @@ class BudgetSource:
     switches the way on, less paying for its seed, and the seed itself."""
     name: str
     resource: Resource
-    ways: tuple[tuple[Callable[[ScenarioResourceLogic], Rule], Need], ...]
+    ways: list[tuple[Callable[[ScenarioResourceLogic], Rule], Need]]
     per_relic: bool = False
     """Worth 50 gold a relic rather than the flat 250."""
-
-
-def _dropsite(options: tuple[Age2BuildingData, ...]) -> Need:
-    return Need.one_of(options)
 
 
 _BOATS = UnitBudgetItem(Age2UnitData.FISHING_SHIP).node     # a Dock, and a Fishing Ship to crew
 _MONKS = UnitBudgetItem(Age2UnitData.MONK).node              # a Monastery, a Monk, the Castle Age
 
-SOURCES: tuple[BudgetSource, ...] = (
-    BudgetSource("hunt", Resource.FOOD, ((lambda economy: economy.can_hunt(),
-                                          _dropsite(HUNT_DROPSITES)),)),
-    BudgetSource("herd", Resource.FOOD, ((lambda economy: economy.can_herd(),
-                                          _dropsite(FOOD_DROPSITES)),)),
-    BudgetSource("forage", Resource.FOOD, ((lambda economy: economy.can_forage(),
-                                            _dropsite(FOOD_DROPSITES)),)),
-    BudgetSource("fish", Resource.FOOD, (
-        (lambda economy: economy.can_fish_from_shore(), _dropsite(FISHERMAN_DROPSITES)),
-        (lambda economy: economy.can_fish_by_boat(seeded=False), _BOATS))),
-    BudgetSource("chop", Resource.WOOD, ((lambda economy: economy.can_chop_some(),
-                                          _dropsite(WOOD_DROPSITES)),)),
-    BudgetSource("mine", Resource.GOLD, ((lambda economy: economy.can_mine_some(),
-                                          _dropsite(GOLD_DROPSITES)),)),
-    BudgetSource("oysters", Resource.GOLD, (
-        (lambda economy: economy.can_gather_oysters_from_shore(), _dropsite(FISHERMAN_DROPSITES)),
-        (lambda economy: economy.can_gather_oysters_by_boat(seeded=False), _BOATS))),
-    BudgetSource("whales", Resource.GOLD, ((lambda economy: economy.can_hunt_whales(seeded=False),
-                                            _BOATS),)),
-    BudgetSource("quarry", Resource.STONE, ((lambda economy: economy.can_quarry_some(),
-                                             _dropsite(STONE_DROPSITES)),)),
+SOURCES: list[BudgetSource] = [
+    BudgetSource("hunt", Resource.FOOD,
+                 [(lambda economy: economy.can_hunt(), Need.one_of(*HUNT_DROPSITES))]),
+    BudgetSource("herd", Resource.FOOD,
+                 [(lambda economy: economy.can_herd(), Need.one_of(*FOOD_DROPSITES))]),
+    BudgetSource("forage", Resource.FOOD,
+                 [(lambda economy: economy.can_forage(), Need.one_of(*FOOD_DROPSITES))]),
+    BudgetSource("fish", Resource.FOOD,
+                 [(lambda economy: economy.can_fish_from_shore(),
+                   Need.one_of(*FISHERMAN_DROPSITES)),
+                  (lambda economy: economy.can_fish_by_boat(seeded=False), _BOATS)]),
+    BudgetSource("chop", Resource.WOOD,
+                 [(lambda economy: economy.can_chop_some(), Need.one_of(*WOOD_DROPSITES))]),
+    BudgetSource("mine", Resource.GOLD,
+                 [(lambda economy: economy.can_mine_some(), Need.one_of(*GOLD_DROPSITES))]),
+    BudgetSource("oysters", Resource.GOLD,
+                 [(lambda economy: economy.can_gather_oysters_from_shore(),
+                   Need.one_of(*FISHERMAN_DROPSITES)),
+                  (lambda economy: economy.can_gather_oysters_by_boat(seeded=False), _BOATS)]),
+    BudgetSource("whales", Resource.GOLD,
+                 [(lambda economy: economy.can_hunt_whales(seeded=False), _BOATS)]),
+    BudgetSource("quarry", Resource.STONE,
+                 [(lambda economy: economy.can_quarry_some(), Need.one_of(*STONE_DROPSITES))]),
     BudgetSource("relics", Resource.GOLD,
-                 ((lambda economy: economy.can_collect_relics(seeded=False), _MONKS),),
+                 [(lambda economy: economy.can_collect_relics(seeded=False), _MONKS)],
                  per_relic=True),
-)
+]
 """Shore and boat take the same fish, and the same oysters, so each is one source with two ways.
 Trade is no source here: when it is on it is an easy source of gold and wood outright."""
 
-def options(seed: Need) -> list[tuple[Age2BuildingData, ...]]:
+def options(seed: Need) -> list[list[Age2BuildingData]]:
     """Each way to put the seed's buildings up: one pick from each of its groups."""
     groups = sorted(seed.groups, key=lambda group: tuple(map(int, group)))
-    return [tuple(pick) for pick in itertools.product(*groups)]
+    return [list(pick) for pick in itertools.product(*groups)]
 
 
-def seed_parts(seed: Need, picks: tuple[Age2BuildingData, ...], need: Need,
+def seed_parts(seed: Need, picks: list[Age2BuildingData], need: Need,
                requirement: Requirement, waived: frozenset[Age2BuildingData],
                start: Age2AgeData) -> tuple[Part, ...]:
     """What working a source this way buys, against one location's running total: each
@@ -121,7 +120,7 @@ def seed_parts(seed: Need, picks: tuple[Age2BuildingData, ...], need: Need,
     for age in CLIMBED_AGES:
         if start < age <= seed.top:
             parts.append(Part(("age", age), _cost(age.cost), age in requirement.ages))
-    return tuple(parts)
+    return tuple(parts)   # kept in a resolved rule, which has to hash
 
 
 def _cost(cost: dict[Resource, int]) -> Cost:

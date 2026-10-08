@@ -14,14 +14,14 @@ if TYPE_CHECKING:
 
 
 B = Age2BuildingData
-GOLD_DROPSITES = (B.MINING_CAMP, B.TOWN_CENTER, B.MULE_CART)
-STONE_DROPSITES = (B.MINING_CAMP, B.TOWN_CENTER, B.MULE_CART)
-WOOD_DROPSITES = (B.LUMBER_CAMP, B.TOWN_CENTER, B.MULE_CART)
-FOOD_DROPSITES = (B.MILL, B.TOWN_CENTER, B.FOLWARK)
-HUNT_DROPSITES = FOOD_DROPSITES + (B.MULE_CART,)
+GOLD_DROPSITES = [B.MINING_CAMP, B.TOWN_CENTER, B.MULE_CART]
+STONE_DROPSITES = [B.MINING_CAMP, B.TOWN_CENTER, B.MULE_CART]
+WOOD_DROPSITES = [B.LUMBER_CAMP, B.TOWN_CENTER, B.MULE_CART]
+FOOD_DROPSITES = [B.MILL, B.TOWN_CENTER, B.FOLWARK]
+HUNT_DROPSITES = FOOD_DROPSITES + [B.MULE_CART]
 """A mule cart takes meat, but no other food - not fish, not herdables."""
-FISHERMAN_DROPSITES = FOOD_DROPSITES + (B.DOCK,)
-FISHING_BOAT_DROPSITES = (B.DOCK, B.HARBOR)
+FISHERMAN_DROPSITES = FOOD_DROPSITES + [B.DOCK]
+FISHING_BOAT_DROPSITES = [B.DOCK, B.HARBOR]
 """Where each kind of gatherer can drop off, here and in the budget's seeds."""
 
 
@@ -92,7 +92,7 @@ class ScenarioBuildingLogic:
     def has_hunt_dropsite(self) -> Rule:
         return self._any_of(HUNT_DROPSITES)
 
-    def _any_of(self, buildings: tuple[Age2BuildingData, ...]) -> Rule:
+    def _any_of(self, buildings: list[Age2BuildingData]) -> Rule:
         return Or(*[self.scenario.has_building(building) for building in buildings])
 
     def has_fishing_boat_dropsite(self) -> Rule:

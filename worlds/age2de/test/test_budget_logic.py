@@ -87,7 +87,7 @@ class TestAgeUps(BudgetTestBase):
     def test_a_dark_start_pays_for_feudal_and_its_town_center(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
         cost = self.cost_of(budget, Age2TechData.TOWN_WATCH)
-        self.assertEqual(cost.ages, (Age2AgeData.FEUDAL,))
+        self.assertEqual(cost.ages, [Age2AgeData.FEUDAL])
         self.assertIn(Age2BuildingData.TOWN_CENTER, cost.buildings)
         self.assertGreaterEqual(cost.cost[Resource.FOOD], 500)
 
@@ -261,7 +261,7 @@ class TestSourcesAndBudget(BudgetTestBase):
                 continue
             with self.subTest(scenario.scenario_name):
                 self.assertEqual([], budget.sources)
-                self.assertEqual((), budget.order)
+                self.assertEqual([], budget.order)
 
     def test_what_is_kept_could_be_paid_for(self):
         """With every starting resource, every building standing and every source brought in,
