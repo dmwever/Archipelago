@@ -6,7 +6,7 @@ import dataclasses
 import functools
 from typing import TYPE_CHECKING, Iterable, NamedTuple
 
-from rule_builder.rules import False_, Or, Rule
+from rule_builder.rules import False_, Rule
 
 from ...generation.pools.BudgetPool import SAMPLED_RESOURCES, VILLAGER
 from ...items.Items import Resource
@@ -44,15 +44,12 @@ Switch = tuple[Rule, list[Age2BuildingData], list[PricedLocation]]
 
 
 class ScenarioSource(NamedTuple):
-    """A gathering source as one scenario could work it: each way, and the seed it buys."""
+    """A gathering source as one scenario could work it: each way - its rule, already resolved -
+    and the seed it buys."""
     name: str
     resource: Resource
     allowance: int
-    ways: list[tuple[Rule, Need]]
-
-    @property
-    def rule(self) -> Rule:
-        return Or(*[rule for rule, _ in self.ways])
+    ways: list[tuple[Rule.Resolved, Need]]
 """One waiver rule, the buildings it stands up and the purchases it makes unnecessary."""
 
 
@@ -114,7 +111,7 @@ class _ScenarioOrder:
         self.sources = self._sources()
         self.worth = tuple((source.name, source.resource, source.allowance)
                            for source in self.sources)
-        self.way_rules: list[Rule] = []
+        self.way_rules: list[Rule.Resolved] = []
         self.picks: list[tuple[int, int, Need, list[Age2BuildingData]]] = []
         """Each way to bring a source in, once per pick of dropsite: its source, its rule (an
         index into way_rules), its seed, and the pick."""
@@ -128,6 +125,10 @@ class _ScenarioOrder:
                           in scenario.starting_state.required_purchases.items()
                           if not isinstance(rule, False_)}
         """The scenario's purchases that something can make unnecessary, and the rule that does."""
+        self.switches: list[Switch] = self._switches()
+        self.switch_rules: list[Rule.Resolved] = [rule.resolve(world)
+                                                  for rule, _, _ in self.switches]
+        """Each switch's rule, resolved once for every budget total in the scenario."""
         self._precursors: dict[PricedLocation, list[_Priced]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
@@ -163,10 +164,12 @@ class _ScenarioOrder:
         relics = relic_allowance(self.scenario.scenario)
         sources = []
         for source in SOURCES:
-            ways = [(rule, seed.in_scenario(self.start, self.climbs, self.could_have,
-                                            self.choice_order))
-                    for rule, seed in ((way(economy), seed) for way, seed in source.ways)
-                    if not self.impossible(rule)]
+            ways: list[tuple[Rule.Resolved, Need]] = []
+            for way, seed in source.ways:
+                rule = way(economy).resolve(self.world)   # once: every budget total reuses it
+                if not rule.always_false:
+                    ways.append((rule, seed.in_scenario(self.start, self.climbs, self.could_have,
+                                                        self.choice_order)))
             allowance = relics if source.per_relic else SOURCE_ALLOWANCE
             if ways and allowance:
                 sources.append(ScenarioSource(source.name, source.resource, allowance, ways))
@@ -280,7 +283,7 @@ class _ScenarioOrder:
         return self.plan(entry for entry in self.order[:index + 1]
                          if entry.location in needed or entry.location is location)
 
-    def switches(self) -> list[Switch]:
+    def _switches(self) -> list[Switch]:
         """The waivers as switches: buildings that stand on the same rule (all of a camp's) and
         purchases that rule makes unnecessary are one switch, so a cost table needs one entry per
         combination of switches, not per building."""

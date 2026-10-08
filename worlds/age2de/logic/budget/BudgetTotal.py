@@ -64,7 +64,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         order = budget_order(world.rules.logic.for_scenario(self.scenario), world)
         if order.need_for(self.location) is None:
             return False_().resolve(world)   # not in this scenario's order
-        switches = order.switches()
+        switches = order.switches
         masks = range(1 << len(switches))
 
         def on(mask: int) -> list[Switch]:
@@ -81,9 +81,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             needs.append(need)
             costs.append(tuple(requirement.cost.items()))
             parts.append(order.seed_parts(need, requirement, waived))
-        rules = [*(rule for rule, _, _ in switches), *order.way_rules]
         return self.Resolved(   # tuples throughout: a resolved rule has to hash
-            tuple(rule.resolve(world) for rule in rules),
+            (*order.switch_rules, *order.way_rules),   # resolved once, by the order
             tuple(needs),
             tuple(tuple(buildings) for _, buildings, _ in switches),
             order.worth,
