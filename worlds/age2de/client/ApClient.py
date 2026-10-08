@@ -104,6 +104,9 @@ class Age2CommandProcessor(ClientCommandProcessor):
             for path in written:
                 self.output(f"Wrote {path}")
             self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
+            if ctx.game_ctx.storage_handler.try_clear():
+                self.game_ctx.mercenary_handler.reset_used()
+                self.output("Cleared this seed's spent mercenaries.")
         finally:
             handler.report = logger.info
             handler.installing = False

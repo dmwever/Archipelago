@@ -45,6 +45,41 @@ class MercenaryHandlerTestBase(unittest.TestCase):
         return DataStorage(EVERY_CAMPAIGN if campaigns is None else campaigns).mercenaries
 
 
+class TestSpentStateAgainstWhatWasReceived(MercenaryHandlerTestBase):
+    """The local spent store is keyed by seed tag and outlives the apsave, so a reset playthrough
+    starts out claiming mercenaries the server has never handed out."""
+
+    def test_a_spent_mercenary_that_was_never_received_is_forgotten(self) -> None:
+        handler = self.handler()
+        roster = self.roster()
+        spent, held = roster[0], roster[1]
+        handler.set_used(spent)
+        handler.try_sync_mercenaries([held])
+        self.assertFalse(handler.is_used(spent),
+                         "a mercenary the server never sent cannot have been spent")
+        self.assertNotIn(spent, handler.queued() + handler.seated(),
+                         "clearing the spent flag must not offer an item that never arrived")
+
+    def test_a_spent_mercenary_that_was_received_stays_spent(self) -> None:
+        handler = self.handler()
+        roster = self.roster()
+        spent = roster[0]
+        handler.set_used(spent)
+        handler.try_sync_mercenaries([spent])
+        self.assertTrue(handler.is_used(spent), "a genuinely spent mercenary was resurrected")
+        self.assertNotIn(spent, handler.queued() + handler.seated())
+
+    def test_an_empty_received_list_changes_nothing(self) -> None:
+        """The used-reply can land before ReceivedItems; acting on an empty list would wipe",
+        real progress and push the wipe to the server."""
+        handler = self.handler()
+        spent = self.roster()[0]
+        handler.set_used(spent)
+        handler.try_sync_mercenaries([])
+        self.assertTrue(handler.is_used(spent),
+                        "an empty received list must not be read as proof of nothing received")
+
+
 class TestSeating(MercenaryHandlerTestBase):
 
     def test_arrival_order_fills_the_seats(self) -> None:

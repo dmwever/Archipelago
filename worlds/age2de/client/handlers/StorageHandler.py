@@ -49,6 +49,17 @@ class StorageHandler(FolderHandler):
                              self.mercenary_path())
             return None
 
+    def try_clear(self) -> bool:
+        try:
+            path = self.mercenary_path()
+            if not path.exists():
+                return False
+            path.unlink()
+            return True
+        except Exception:
+            logger.exception("Could not clear %s.", self.mercenary_path())
+            return False
+
     def try_save(self, used: set[int]) -> None:
         try:
             self._write(used)

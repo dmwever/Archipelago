@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import io
+import zlib
 import logging
 import os
 
@@ -56,6 +57,10 @@ class MercenaryHandler(FolderHandler):
         if mercenary in self._queue:
             self._queue.remove(mercenary)
 
+    def reset_used(self) -> None:
+        for managed in self._mercenaries.values():
+            managed.used = False
+
     def is_used(self, mercenary: Age2ItemData) -> bool:
         if mercenary not in self._mercenaries:
             return False
@@ -106,6 +111,7 @@ class MercenaryHandler(FolderHandler):
                 print(ex)
 
     def _enqueue_unlocked(self, unlocked_items: list[Age2ItemData]) -> None:
+        self._forget_unreceived(unlocked_items)
         for item in unlocked_items:
             if item not in self._mercenaries:
                 continue
@@ -114,6 +120,16 @@ class MercenaryHandler(FolderHandler):
             if managed.used or managed.seat != NO_SEAT or item in self._queue:
                 continue
             self._queue.append(item)
+
+    def _forget_unreceived(self, unlocked_items: list[Age2ItemData]) -> None:
+        received = set(unlocked_items)
+        if not received:
+            return
+        for item, managed in self._mercenaries.items():
+            if managed.used and item not in received:
+                logger.info("Mercenary %s was marked spent but has not been received; "
+                            "treating it as unspent.", item.item_name)
+                self.set_used(item, False)
 
     def _fill_seats(self) -> None:
         for seat in range(SEAT_COUNT):
@@ -143,9 +159,8 @@ class MercenaryHandler(FolderHandler):
                 XsdatFile.write_int(body, unit_id)
 
         seats = body.getvalue()
-        if seats != self._queue_bytes:
-            self._queue_bytes = seats
-            self._queue_serial = self._queue_serial + 1
+        self._queue_bytes = seats
+        self._queue_serial = zlib.crc32(seats) & 0x7FFFFFFF
 
         with open(self._user_folder + "mercenary_queue.xsdat", "wb") as fp:
             XsdatFile.write_int(fp, self._queue_serial)

@@ -2,10 +2,10 @@ from dataclasses import dataclass
 
 from .FolderHandler import FolderHandler
 from ...campaign import XsdatFile
-from ...items.Items import Age2ItemData, UnitBuilding, UnitLine, UnitUpgrade
+from ...items.Items import (Age2ItemData, UnitBuilding, UnitLine, UnitUpgrade,
+                            VillagerProfession)
 
-
-UNIT_ITEM_TYPES = (UnitLine, UnitUpgrade, UnitBuilding)
+UNIT_ITEM_TYPES = (UnitLine, UnitUpgrade, UnitBuilding, VillagerProfession)
 
 
 @dataclass

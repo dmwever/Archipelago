@@ -68,8 +68,15 @@ class UnitData:
     def is_caveman_exempt(self, unit: Age2UnitData) -> bool:
         return unit.line in VILLAGER_LINES
 
+    def civ_trains(self, civ: Age2CivData, unit: Age2UnitData) -> bool:
+        if unit in CIV_TO_UNITS[civ]:
+            return True
+        if unit is Age2UnitData.VILLAGER_FEMALE:
+            return Age2UnitData.VILLAGER_MALE in CIV_TO_UNITS[civ]
+        return False
+
     def untrainable_civs(self, unit: Age2UnitData) -> tuple[int, ...]:
-        return tuple(civ.game_id for civ in self._civs if unit not in CIV_TO_UNITS[civ])
+        return tuple(civ.game_id for civ in self._civs if not self.civ_trains(civ, unit))
 
     def upgrade_item_for(self, unit: Age2UnitData) -> int:
         tech = unit.upgrade_tech

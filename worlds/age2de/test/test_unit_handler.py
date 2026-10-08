@@ -39,6 +39,17 @@ class TestUnitHandler(unittest.TestCase):
         techish = [item for item in Age2ItemData if item.type_data not in UNIT_ITEM_TYPES][:4]
         self.assertEqual(self.sync(techish), [])
 
+    def test_a_profession_is_replayed(self):
+        """A profession unlocks no unit, but the game strips every profession at init and
+        restores it from this file, so one held at connect has to be in here or it is lost."""
+        wanted = [Age2ItemData.PROFESSION_FISHERMAN, Age2ItemData.PROFESSION_GOLD_MINER]
+        self.assertEqual(sorted(self.sync(wanted)), sorted(item.id for item in wanted))
+
+    def test_every_profession_is_a_unit_item(self):
+        missing = [item.item_name for item in Age2ItemData
+                   if 700 <= item.id <= 799 and item.type_data not in UNIT_ITEM_TYPES]
+        self.assertEqual(missing, [], "a profession that cannot be replayed will be stripped")
+
     def test_it_covers_all_three_item_modes(self):
         """One file serves every mode, because the installer already resolved which ids gate a
         unit - the game replays ids and never asks which mode produced them."""
