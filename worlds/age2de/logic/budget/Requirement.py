@@ -7,7 +7,7 @@ from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
-from .Need import CLIMBED_AGES, Need
+from .Need import CLIMBED_AGES, AgeUpBuildings, Need
 
 
 class Requirement:
@@ -21,11 +21,8 @@ class Requirement:
         self._owned_buildings: set[Age2BuildingData] = set(need.entry_buildings)
         self._resource_costs: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
 
-        self._age_up_choices: dict[
-            Age2AgeData, tuple[tuple[Age2BuildingData, ...], Age2BuildingData | None]] = {
-                age: (options, single_building)
-                for age, options, single_building in need.age_up_buildings
-            }
+        self._age_up_choices: dict[Age2AgeData, AgeUpBuildings] = {
+            age_up.age: age_up for age_up in need.age_up_buildings}
 
         building_choices: list[tuple[Age2BuildingData, ...]] = sorted(
             need.building_choices, key=lambda choices: (len(choices), tuple(map(int, choices))))
@@ -72,15 +69,18 @@ class Requirement:
         self._owned_buildings.update(buildings)
 
     def _needed_age_up_buildings(self, age: Age2AgeData) -> list[Age2BuildingData]:
-        options, single_building = self._age_up_choices[age]
-        if single_building is not None and self._has(single_building):
+        age_up = self._age_up_choices[age]
+        if age_up.single_building is not None and self._has(age_up.single_building):
             return []
-        already_held = [option for option in options if self._has(option)]
+        already_held = [choice for choice in age_up.choices if self._has(choice)]
         if len(already_held) >= 2:
             return []
-        missing = [option for option in options if not self._has(option)][:2 - len(already_held)]
+        missing = [choice for choice in age_up.choices
+                   if not self._has(choice)][:2 - len(already_held)]
         if len(already_held) + len(missing) < 2:
-            return self._prerequisite_chain(single_building) if single_building is not None else []
+            if age_up.single_building is None:
+                return []
+            return self._prerequisite_chain(age_up.single_building)
         bought: list[Age2BuildingData] = []
         for option in missing:
             bought += [building for building in self._prerequisite_chain(option) if building not in bought]

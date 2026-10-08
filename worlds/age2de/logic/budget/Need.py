@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Callable, Iterable
+from typing import Callable, Iterable, NamedTuple
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -11,8 +11,19 @@ from ...locations.Buildings import Age2BuildingData
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 
-Climb = tuple[Age2AgeData, tuple[Age2BuildingData, ...], Age2BuildingData | None]
-"""Per age: the buildings two of which leave the age before it, and the one counting for both."""
+class AgeUpBuildings(NamedTuple):
+    """What leaves the age before this one: two of the choices, or the single building that
+    counts for both. A tuple, as a Need keeps it and hashes."""
+    age: Age2AgeData
+    choices: tuple[Age2BuildingData, ...]
+    single_building: Age2BuildingData | None
+
+
+class OwnPrice(NamedTuple):
+    """What one thing costs for itself, charged once per identity: a tech, a unit line, the
+    villager. A tuple, as a Need keeps it and hashes."""
+    identity: object
+    cost: tuple[tuple[Resource, int], ...]
 
 
 
@@ -20,7 +31,7 @@ Climb = tuple[Age2AgeData, tuple[Age2BuildingData, ...], Age2BuildingData | None
 class Need:
     """What one location makes a scenario pay for. Adding two is a union, so whatever both need
     is charged once."""
-    own: frozenset[tuple[object, tuple[tuple[Resource, int], ...]]] = frozenset()
+    own: frozenset[OwnPrice] = frozenset()
     """Paid for itself, once per identity: a tech, a unit line, the villager."""
     entry_buildings: frozenset[Age2BuildingData] = frozenset()
     """Buildings that are themselves locations: always charged, never waived."""
@@ -30,7 +41,7 @@ class Need:
     """The highest age it needs."""
     starting_age: Age2AgeData = Age2AgeData.DARK
     """The age the scenario pays its way up from; set by in_scenario."""
-    age_up_buildings: tuple[Climb, ...] = ()
+    age_up_buildings: tuple[AgeUpBuildings, ...] = ()
     """What leaves each age in this scenario; set by in_scenario."""
 
     def __add__(self, other: 'Need') -> 'Need':
@@ -41,7 +52,7 @@ class Need:
     def pay(identity: object, cost: dict[Resource, int]) -> 'Need':
         priced = tuple(sorted(((resource, amount) for resource, amount in cost.items() if amount > 0),
                               key=lambda item: item[0].value))
-        return Need(own=frozenset({(identity, priced)}))
+        return Need(own=frozenset({OwnPrice(identity, priced)}))
 
     @staticmethod
     def build(building: Age2BuildingData) -> 'Need':
@@ -57,7 +68,7 @@ class Need:
 
     def in_scenario(self,
                     start: Age2AgeData,
-                    age_up_buildings: tuple[Climb, ...],
+                    age_up_buildings: tuple[AgeUpBuildings, ...],
                     could_have: Callable[[Age2BuildingData], bool],
                     choice_order: Callable[[Age2BuildingData], int]) -> 'Need':
         """Settled for one scenario: the age it starts in, what leaves each age there, and only
@@ -74,11 +85,13 @@ class Need:
             if kept:
                 building_choices.add(kept)
 
-        settled_age_ups: list[Climb] = []
-        for age, options, single_building in age_up_buildings:
+        settled_age_ups: list[AgeUpBuildings] = []
+        for age_up in age_up_buildings:
+            single_building = age_up.single_building
             if single_building is not None and not could_have(single_building):
                 single_building = None
-            settled_age_ups.append((age, settled(options), single_building))
+            settled_age_ups.append(AgeUpBuildings(age_up.age, settled(age_up.choices),
+                                                  single_building))
 
         # Frozen and tupled again: a Need is kept in resolved rules, which hash.
         return dataclasses.replace(self,
@@ -89,7 +102,7 @@ class Need:
 
     def own_cost(self) -> dict[Resource, int]:
         cost: dict[Resource, int] = {}
-        for _, priced in self.own:
-            for resource, amount in priced:
+        for price in self.own:
+            for resource, amount in price.cost:
                 cost[resource] = cost.get(resource, 0) + amount
         return cost

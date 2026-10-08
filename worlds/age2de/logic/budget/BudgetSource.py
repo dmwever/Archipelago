@@ -48,13 +48,20 @@ class Part(NamedTuple):
     in_requirement: bool
 
 
+class GatheringWay(NamedTuple):
+    """One way to work a source: the economy rule that switches it on, less paying for its seed,
+    and the seed itself."""
+    rule: Callable[[ScenarioResourceLogic], Rule]
+    seed: Need
+
+
 @dataclasses.dataclass(frozen=True)
 class BudgetSource:
     """An early gathering source: what it brings in, and each way to work it - the rule that
     switches the way on, less paying for its seed, and the seed itself."""
     name: str
     resource: Resource
-    ways: list[tuple[Callable[[ScenarioResourceLogic], Rule], Need]]
+    ways: list[GatheringWay]
     per_relic: bool = False
     """Worth 50 gold a relic rather than the flat 250."""
 
@@ -64,29 +71,29 @@ _MONKS = UnitBudgetItem(Age2UnitData.MONK).node              # a Monastery, a Mo
 
 SOURCES: list[BudgetSource] = [
     BudgetSource("hunt", Resource.FOOD,
-                 [(lambda economy: economy.can_hunt(), Need.one_of(*HUNT_DROPSITES))]),
+                 [GatheringWay(lambda economy: economy.can_hunt(), Need.one_of(*HUNT_DROPSITES))]),
     BudgetSource("herd", Resource.FOOD,
-                 [(lambda economy: economy.can_herd(), Need.one_of(*FOOD_DROPSITES))]),
+                 [GatheringWay(lambda economy: economy.can_herd(), Need.one_of(*FOOD_DROPSITES))]),
     BudgetSource("forage", Resource.FOOD,
-                 [(lambda economy: economy.can_forage(), Need.one_of(*FOOD_DROPSITES))]),
+                 [GatheringWay(lambda economy: economy.can_forage(), Need.one_of(*FOOD_DROPSITES))]),
     BudgetSource("fish", Resource.FOOD,
-                 [(lambda economy: economy.can_fish_from_shore(),
+                 [GatheringWay(lambda economy: economy.can_fish_from_shore(),
                    Need.one_of(*FISHERMAN_DROPSITES)),
-                  (lambda economy: economy.can_fish_by_boat(seeded=False), _BOATS)]),
+                  GatheringWay(lambda economy: economy.can_fish_by_boat(seeded=False), _BOATS)]),
     BudgetSource("chop", Resource.WOOD,
-                 [(lambda economy: economy.can_chop_some(), Need.one_of(*WOOD_DROPSITES))]),
+                 [GatheringWay(lambda economy: economy.can_chop_some(), Need.one_of(*WOOD_DROPSITES))]),
     BudgetSource("mine", Resource.GOLD,
-                 [(lambda economy: economy.can_mine_some(), Need.one_of(*GOLD_DROPSITES))]),
+                 [GatheringWay(lambda economy: economy.can_mine_some(), Need.one_of(*GOLD_DROPSITES))]),
     BudgetSource("oysters", Resource.GOLD,
-                 [(lambda economy: economy.can_gather_oysters_from_shore(),
+                 [GatheringWay(lambda economy: economy.can_gather_oysters_from_shore(),
                    Need.one_of(*FISHERMAN_DROPSITES)),
-                  (lambda economy: economy.can_gather_oysters_by_boat(seeded=False), _BOATS)]),
+                  GatheringWay(lambda economy: economy.can_gather_oysters_by_boat(seeded=False), _BOATS)]),
     BudgetSource("whales", Resource.GOLD,
-                 [(lambda economy: economy.can_hunt_whales(seeded=False), _BOATS)]),
+                 [GatheringWay(lambda economy: economy.can_hunt_whales(seeded=False), _BOATS)]),
     BudgetSource("quarry", Resource.STONE,
-                 [(lambda economy: economy.can_quarry_some(), Need.one_of(*STONE_DROPSITES))]),
+                 [GatheringWay(lambda economy: economy.can_quarry_some(), Need.one_of(*STONE_DROPSITES))]),
     BudgetSource("relics", Resource.GOLD,
-                 [(lambda economy: economy.can_collect_relics(seeded=False), _MONKS)],
+                 [GatheringWay(lambda economy: economy.can_collect_relics(seeded=False), _MONKS)],
                  per_relic=True),
 ]
 """Shore and boat take the same fish, and the same oysters, so each is one source with two ways.
@@ -106,10 +113,10 @@ def seed_parts(seed: Need, picks: list[Age2BuildingData], need: Need,
     Age-ups past the total's are charged their price alone: the climb buildings and the Town
     Center a later age asks are left to the total that reaches it."""
     in_total = set(requirement.buildings) | set(need.entry_buildings)
-    owned = {identity for identity, _ in need.own}
+    owned = {price.identity for price in need.own}
     parts: list[Part] = []
-    for identity, priced in sorted(seed.own, key=lambda item: str(item[0])):
-        parts.append(Part(("own", identity), priced, identity in owned))
+    for price in sorted(seed.own, key=lambda price: str(price.identity)):
+        parts.append(Part(("own", price.identity), price.cost, price.identity in owned))
     seen: set[Age2BuildingData] = set()
     for building in picks:
         while building is not None and building not in waived and building not in seen:
@@ -128,6 +135,12 @@ def _cost(cost: dict[Resource, int]) -> Cost:
                         key=lambda item: item[0].value))
 
 
+class SourceWay(NamedTuple):
+    """One way to work a source in one scenario: its rule, already resolved, and its seed."""
+    rule: Rule.Resolved
+    seed: Need
+
+
 class ScenarioSource(NamedTuple):
     """A gathering source as one scenario could work it: what it brings in, and each way to work
     it - the way's rule, already resolved, and the seed it buys. Tuples throughout: a resolved
@@ -135,13 +148,20 @@ class ScenarioSource(NamedTuple):
     name: str
     resource: Resource
     allowance: int
-    ways: tuple[tuple[Rule.Resolved, Need], ...]
+    ways: tuple[SourceWay, ...]
 
 
-Way = tuple[int, int]
-"""One way to bring a source in, with one pick of dropsite: its source, and the rule switching it."""
-Bootstrap = tuple[frozenset[int], dict[Resource, int]]
-"""The ways that paid, and what their seeds added to the total."""
+class Way(NamedTuple):
+    """One way to bring a source in, with one pick of dropsite, by index: its source, and the
+    child rule that switches it on. A tuple, as a resolved budget total keeps it and hashes."""
+    source: int
+    rule: int
+
+
+class Bootstrap(NamedTuple):
+    """What paid for a total: the ways brought in, and what their seeds added to it."""
+    ways: frozenset[int]
+    seeds_added: dict[Resource, int]
 
 
 def income(working: Iterable[int], sources: Sequence[ScenarioSource]) -> dict[Resource, int]:
@@ -158,7 +178,7 @@ def pays(pile: dict[Resource, int], need: dict[Resource, int], usable: list[int]
     """Whether the pile, and the sources it can bring in, cover the need."""
     if all(pile[resource] >= amount for resource, amount in need.items()):
         return True
-    most = income({ways[way][0] for way in usable}, sources)
+    most = income({ways[way].source for way in usable}, sources)
     if any(pile[resource] + most[resource] < amount for resource, amount in need.items()):
         return False   # seeds only ever add to the total
     return bootstrap(pile, need, usable, ways, parts, sources) is not None
@@ -171,7 +191,7 @@ def bootstrap(pile: dict[Resource, int], need: dict[Resource, int], usable: list
     the sources already working bring in, trying every order. The first set that covers the need
     and its own seeds is the answer. A set's funds do not depend on the order it was reached in,
     so each set is looked at once."""
-    most = income({ways[way][0] for way in usable}, sources)
+    most = income({ways[way].source for way in usable}, sources)
     stack: list[frozenset[int]] = [frozenset()]
     seen: set[frozenset[int]] = set()
     while stack:
@@ -190,16 +210,16 @@ def bootstrap(pile: dict[Resource, int], need: dict[Resource, int], usable: list
                 spent[resource] += amount
                 if not part.in_requirement:
                     extra[resource] += amount
-        working = {ways[way][0] for way in chosen}
+        working = {ways[way].source for way in chosen}
         income_now = income(working, sources)
         if all(pile[resource] + income_now[resource] >= need.get(resource, 0) + extra[resource]
                for resource in SAMPLED_RESOURCES):
-            return chosen, extra
+            return Bootstrap(chosen, extra)
         if any(pile[resource] + most[resource] < need.get(resource, 0) + extra[resource]
                for resource in SAMPLED_RESOURCES):
             continue   # not even every source switched on could cover what this set bought
         for way in usable:
-            if ways[way][0] in working:
+            if ways[way].source in working:
                 continue
             cost = dict.fromkeys(SAMPLED_RESOURCES, 0)
             for part in parts[way]:

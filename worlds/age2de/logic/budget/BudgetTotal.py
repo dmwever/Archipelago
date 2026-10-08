@@ -73,8 +73,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         costs: list[tuple[tuple[Resource, int], ...]] = []
         parts: list[tuple[tuple[Part, ...], ...]] = []
         for mask in masks:
-            waived = frozenset(building for _, buildings, _ in on(mask) for building in buildings)
-            dropped = frozenset(purchase for _, _, purchases in on(mask) for purchase in purchases)
+            waived = frozenset(building for switch in on(mask) for building in switch.buildings)
+            dropped = frozenset(purchase for switch in on(mask) for purchase in switch.purchases)
             need = order.need_for(self.location, dropped)
             requirement = Requirement(need, waived)
             needs.append(need)
@@ -83,7 +83,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         return self.Resolved(   # tuples throughout: a resolved rule has to hash
             (*order.switch_rules, *order.way_rules),   # resolved once, by the order
             tuple(needs),
-            tuple(tuple(buildings) for _, buildings, _ in switches),
+            tuple(tuple(switch.buildings) for switch in switches),
             tuple(order.sources),
             order.ways,
             tuple(parts),
@@ -133,14 +133,14 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         def usable(self, state: CollectionState) -> list[int]:
             """The ways switched on."""
             on = [rule(state) for rule in self.children[len(self.switches):]]
-            return [index for index, (_, rule) in enumerate(self.ways) if on[rule]]
+            return [index for index, way in enumerate(self.ways) if on[way.rule]]
 
         def sources_on(self, state: CollectionState) -> list[ScenarioSource]:
-            on = {self.ways[index][0] for index in self.usable(state)}
+            on = {self.ways[index].source for index in self.usable(state)}
             return [source for index, source in enumerate(self.sources) if index in on]
 
         def allowance(self, state: CollectionState) -> dict[Resource, int]:
-            return income({self.ways[index][0] for index in self.usable(state)}, self.sources)
+            return income({self.ways[index].source for index in self.usable(state)}, self.sources)
 
         def bootstrap(self, state: CollectionState) -> Bootstrap | None:
             """The ways that pay for it, and the seeds they add to the total, if any do."""
@@ -199,7 +199,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             found = None if state is None else self.bootstrap(state)
             if found is None:
                 return []
-            return sorted({self.sources[self.ways[way][0]].name for way in found[0]})
+            return sorted({self.sources[self.ways[way].source].name for way in found.ways})
 
         def _totals(self, state: CollectionState | None) -> list[tuple[Resource, int, bool | None]]:
             need = dict(self.costs[0 if state is None else self.mask(state)])
@@ -208,9 +208,9 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                         for resource in SAMPLED_RESOURCES if need.get(resource, 0) > 0]
             found = self.bootstrap(state)
             if found is not None:   # the total with the seeds of the sources that paid for it
-                return [(resource, need.get(resource, 0) + found[1][resource], True)
+                return [(resource, need.get(resource, 0) + found.seeds_added[resource], True)
                         for resource in SAMPLED_RESOURCES
-                        if need.get(resource, 0) + found[1][resource] > 0]
+                        if need.get(resource, 0) + found.seeds_added[resource] > 0]
             pile, allowance = self.pile(state), self.allowance(state)
             return [(resource, need[resource], pile[resource] + allowance[resource] >= need[resource])
                     for resource in SAMPLED_RESOURCES if need.get(resource, 0) > 0]
