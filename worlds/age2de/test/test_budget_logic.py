@@ -254,14 +254,14 @@ class TestTheTotalNeverGrows(BudgetTestBase):
 class TestSourcesAndBudget(BudgetTestBase):
     def test_relics_add_fifty_gold_each(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_3)
-        relics = [source for source in budget.sources if source[0] == "relics"]
+        relics = [source for source in budget.resource_origins if source[0] == "relics"]
         self.assertEqual(1, len(relics))
         count = budget.scenario.economy.counts.relic_count
         self.assertEqual(relics[0][1:3], (Resource.GOLD, RELIC_ALLOWANCE * count))
 
     def test_every_other_source_is_worth_the_same(self):
         for scenario in self.world.pool.scenarios.included:
-            for name, _, amount, _ in self.budget(scenario).sources:
+            for name, _, amount, _ in self.budget(scenario).resource_origins:
                 if name != "relics":
                     self.assertEqual(SOURCE_ALLOWANCE, amount)
 
@@ -271,7 +271,7 @@ class TestSourcesAndBudget(BudgetTestBase):
             if not budget.scenario.starting_state.fixed_force:
                 continue
             with self.subTest(scenario.scenario_name):
-                self.assertEqual([], budget.sources)
+                self.assertEqual([], budget.resource_origins)
                 self.assertEqual([], budget.order)
 
     def test_what_is_kept_could_be_paid_for(self):
@@ -287,10 +287,10 @@ class TestSourcesAndBudget(BudgetTestBase):
             need = budget.plan(budget.order)
             requirement = Requirement(need, every_waiver)
             with self.subTest(scenario.scenario_name):
-                self.assertTrue(pays(pile, dict(requirement.cost), list(range(len(budget.ways))),
-                                     budget.ways,
+                self.assertTrue(pays(pile, dict(requirement.cost), list(range(len(budget.gather_method_choices))),
+                                     budget.gather_method_choices,
                                      budget.seed_parts(need, requirement, every_waiver),
-                                     budget.sources))
+                                     budget.resource_origins))
 
 
 class TestTheRule(BudgetTestBase):
@@ -368,7 +368,7 @@ class TestRequiredPurchases(BudgetTestBase):
         budget = self.joan_3()
         spared = frozenset({self.SHIP})
         only_for_ship = ({precursor.location for precursor in budget._precursors[self.SHIP]}
-                         - {precursor.location for entry in budget._base
+                         - {precursor.location for entry in budget._initial_order
                             if entry.location is not self.SHIP
                             for precursor in (*budget._precursors[entry.location], entry)})
         self.assertFalse(({self.SHIP} | only_for_ship) & budget.needed(spared))
@@ -376,7 +376,7 @@ class TestRequiredPurchases(BudgetTestBase):
             if entry.location is self.SHIP:
                 continue   # its own location still pays for itself
             with self.subTest(entry.location.name):
-                need = budget.need_for(entry.location, spared)
+                need = budget.running_total_for(entry.location, spared)
                 self.assertNotIn(self.SHIP.line, {identity for identity, _ in need.own})
 
     def test_a_switch_only_ever_lowers_the_total(self):
@@ -388,7 +388,7 @@ class TestRequiredPurchases(BudgetTestBase):
                                        location=entry.location).resolve(self.world)
                 costs = [dict(cost) for cost in resolved.costs]
                 for mask, bit in itertools.product(range(len(costs)),
-                                                   range(len(resolved.switches))):
+                                                   range(len(resolved.waived_buildings))):
                     with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
                         for resource, amount in costs[mask | 1 << bit].items():
                             self.assertLessEqual(amount, costs[mask].get(resource, 0))
@@ -404,13 +404,13 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
         for scenario in self.world.pool.scenarios.included:
             for entry in self.budget(scenario).order:
                 resolved = BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world)
-                if not hasattr(resolved, "ways"):
+                if not hasattr(resolved, "gather_method_choices"):
                     continue
                 found = {}
                 for name, identities in wanted.items():
-                    for way, (source, _) in enumerate(resolved.ways):
+                    for way, (source, _) in enumerate(resolved.gather_method_choices):
                         parts = resolved.parts[0][way]
-                        if (resolved.sources[source][0] == name
+                        if (resolved.resource_origins[source][0] == name
                                 and {part.identity for part in parts} == identities
                                 and not any(part.in_requirement for part in parts)):
                             found[name] = way
@@ -425,7 +425,7 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
     @staticmethod
     def search(resolved) -> tuple:
         """The rest of what the search is given, with no switch on."""
-        return resolved.ways, resolved.parts[0], resolved.sources
+        return resolved.gather_method_choices, resolved.parts[0], resolved.resource_origins
 
     def pile(self, wood: int) -> dict:
         return {Resource.FOOD: 0, Resource.WOOD: wood, Resource.GOLD: 0, Resource.STONE: 0}
