@@ -40,7 +40,7 @@ class UnitData:
     NO_LOCATION = -1
     NO_LINE = -1
     NO_UPGRADE_ITEM = -1
-    MAX_ITEMS = 3
+    MAX_ITEMS = 5
     MAX_VARIANTS = 16
 
     SEED_HIGH = "US_SEED_HIGH"
@@ -95,9 +95,10 @@ class UnitData:
             item = unit.line.item
             return (item.id,) if item is not None else ()
         if self._items_mode == UnitsanityItems.option_upgrades:
+            gated_by = unit
             if unit.tier > 0 and not upgrade_techs_shuffled(self._techsanity):
-                return ()
-            return tuple(token.id for token in unit.upgrade_tokens or ())
+                gated_by = unit.line.head
+            return tuple(token.id for token in gated_by.upgrade_tokens or ())
         return tuple(BUILDING_TO_UNITS_ITEM[building].id for building in unit.buildings or ()
                      if building in BUILDING_TO_UNITS_ITEM and self.civs_build(building))
 

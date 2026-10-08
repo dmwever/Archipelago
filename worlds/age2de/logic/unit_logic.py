@@ -117,9 +117,10 @@ class UnitLogic:
         return Has(line.item.item_name)
 
     def has_upgrade_tokens(self, unit: Age2UnitData) -> Rule:
+        gated_by = unit
         if unit.tier > 0 and not upgrade_techs_shuffled(self.world.options.techsanity):
-            return True_()
-        tokens = [token for token in unit.upgrade_tokens if self.token_applies(unit, token)]
+            gated_by = unit.line.head
+        tokens = [token for token in gated_by.upgrade_tokens if self.token_applies(unit, token)]
         if not tokens:
             return True_()
         return HasAll(*[token.item_name for token in tokens])

@@ -315,13 +315,16 @@ class TestEscorts(UnitPoolTestBase):
 
     def test_an_escort_is_not_a_unit_and_never_an_item(self):
         """Its own enum, so no Age2UnitData invariant has to carve an exception for it - no
-        line, no upgrade token, no producing building, and nothing unlocks one."""
+        line, no upgrade token, no producing building, and nothing unlocks one. Asserted
+        structurally rather than by name: UPGRADE_HORSE and UPGRADE_CART carry the item names
+        "Horse" and "Cart", which are also the escort names, so a pooled-name scan reports the
+        upgrade token and not the escort."""
         self.assertNotIn("CART", Age2UnitData.__members__)
-        world = self.build(unitsanity=Unitsanity.option_all,
-                           include_unique_units=IncludeUniqueUnits.option_both)
-        names = {item.name for item in world.multiworld.itempool}
-        for escort in Age2EscortUnitData:
-            self.assertNotIn(escort.escort_name, names, escort.name)
+        self.assertNotIn("HORSE", Age2UnitData.__members__)
+        escorts = set(Age2EscortUnitData)
+        for item in Age2ItemData:
+            for attribute in ("escort", "unit", "line", "hero", "job"):
+                self.assertNotIn(getattr(item, attribute, None), escorts, item.name)
 
     def test_an_untrainable_line_gets_no_unlock_item(self):
         """The Mangudai has an item, since the Mongols train one, but no seed of these two

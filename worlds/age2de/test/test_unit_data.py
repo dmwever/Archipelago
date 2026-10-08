@@ -1,6 +1,9 @@
+import os
+import re
 import unittest
+from pathlib import Path
 
-from ..Options import Unitsanity, UnitsanityItems
+from ..Options import Techsanity, Unitsanity, UnitsanityItems
 from ..client.handlers.install.UnitData import UnitData
 from ..locations.Civilizations import Age2CivData
 from ..locations.UnitLines import Age2UnitLineData
@@ -12,8 +15,9 @@ FRANKS = (Age2CivData.FRANKS,)
 
 
 def table(places, mode=Unitsanity.option_all,
-          items=UnitsanityItems.option_unit_line, civs=FRANKS, tag=TAG):
-    return UnitData(places, civs, mode, items, tag)
+          items=UnitsanityItems.option_unit_line, civs=FRANKS, tag=TAG,
+          techsanity=Techsanity.option_none):
+    return UnitData(places, civs, mode, items, tag, techsanity)
 
 
 class TestWhichUnitsGetARow(unittest.TestCase):
@@ -61,12 +65,30 @@ class TestTheItemRequirementIsResolvedHere(unittest.TestCase):
                      items=UnitsanityItems.option_unit_line).rows()
         self.assertEqual(rows[0].items, (Age2UnitData.MAN_AT_ARMS.line.item.id,))
 
-    def test_upgrades_mode_gives_the_tokens(self):
-        rows = table([Age2UnitData.MAN_AT_ARMS],
-                     items=UnitsanityItems.option_upgrades).rows()
+    def test_upgrades_mode_gives_every_tier_its_tokens_when_techs_are_shuffled(self):
+        rows = table([Age2UnitData.MAN_AT_ARMS], items=UnitsanityItems.option_upgrades,
+                     techsanity=Techsanity.option_units).rows()
         self.assertEqual(set(rows[0].items),
                          {token.id for token in Age2UnitData.MAN_AT_ARMS.upgrade_tokens})
         self.assertGreater(len(rows[0].items), 1)
+
+    def test_upgrades_mode_gates_a_tier_by_its_head_when_techs_are_free(self):
+        """With the upgrade technology free to research, a tier's own extra tokens would gate
+        nothing - but emitting none would unlock the tier before its line head, so it takes the
+        head's set."""
+        head = Age2UnitData.MAN_AT_ARMS.line.head
+        rows = table([Age2UnitData.MAN_AT_ARMS],
+                     items=UnitsanityItems.option_upgrades).rows()
+        self.assertEqual(set(rows[0].items), {token.id for token in head.upgrade_tokens})
+        self.assertNotEqual(set(), set(rows[0].items),
+                            "a tier gated by nothing unlocks before its line head")
+
+    def test_generic_techsanity_does_not_count_as_shuffled(self):
+        """Generic shuffles Loom and Fletching and leaves the unit upgrades free."""
+        head = Age2UnitData.MAN_AT_ARMS.line.head
+        rows = table([Age2UnitData.MAN_AT_ARMS], items=UnitsanityItems.option_upgrades,
+                     techsanity=Techsanity.option_generic).rows()
+        self.assertEqual(set(rows[0].items), {token.id for token in head.upgrade_tokens})
 
     def test_buildings_mode_gives_the_building_item(self):
         rows = table([Age2UnitData.MAN_AT_ARMS],
@@ -79,10 +101,9 @@ class TestTheItemRequirementIsResolvedHere(unittest.TestCase):
 
     def test_no_unit_carries_more_items_than_xs_expects(self):
         data = table([], items=UnitsanityItems.option_upgrades, civs=tuple(Age2CivData))
-        for civ in Age2CivData:
-            for unit in CIV_TO_UNITS[civ]:
-                with self.subTest(unit=unit.unit_name):
-                    self.assertLessEqual(len(data.items_for(unit)), UnitData.MAX_ITEMS)
+        for unit in Age2UnitData:
+            with self.subTest(unit=unit.unit_name):
+                self.assertLessEqual(len(data.items_for(unit)), UnitData.MAX_ITEMS)
 
 
 class TestRender(unittest.TestCase):
@@ -137,3 +158,26 @@ class TestRender(unittest.TestCase):
     def test_every_row_is_one_addUnit_call(self):
         data = table([Age2UnitLineData.MILITIA_LINE, Age2UnitLineData.KNIGHT_LINE])
         self.assertEqual(data.render().count("    addUnit("), len(data.rows()))
+
+AP_CONSTANTS = Path(
+    os.environ.get("AGEIPELAGO_PATH", "C:/Users/dmwev/Documents/GitHub/Ageipelago")
+) / "age 2 files/resources/_common/xs/AP_Constants.xs"
+
+
+@unittest.skipUnless(AP_CONSTANTS.is_file(), "no local Ageipelago checkout")
+class TestTheCapacityConstantsAgree(unittest.TestCase):
+    def declared(self, name: str) -> int:
+        source = AP_CONSTANTS.read_text(encoding="utf-8")
+        match = re.search(r"^extern const int %s = (\d+);" % name, source, re.M)
+        self.assertIsNotNone(match, f"{name} not declared in AP_Constants.xs")
+        return int(match.group(1))
+
+    def test_unit_item_capacity_matches_max_items(self):
+        self.assertEqual(self.declared("UNIT_ITEM_CAPACITY"), UnitData.MAX_ITEMS,
+                         "AP_Constants.xs UNIT_ITEM_CAPACITY and UnitData.MAX_ITEMS are one "
+                         "value written twice; a row past the XS capacity is silently truncated")
+
+    def test_unit_variant_capacity_matches_max_variants(self):
+        self.assertEqual(self.declared("UNIT_VARIANT_CAPACITY"), UnitData.MAX_VARIANTS,
+                         "AP_Constants.xs UNIT_VARIANT_CAPACITY and UnitData.MAX_VARIANTS are one "
+                         "value written twice")
