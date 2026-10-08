@@ -12,7 +12,8 @@ from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.GameCosts import (GAME_DATA_SOURCE, TECHS_WITHOUT_COST,
                                                UNITS_WITHOUT_COST)
-from ..logic.budget.BudgetTotal import BudgetTotal, budget_order
+from ..logic.budget.BudgetOrder import budget_order
+from ..logic.budget.BudgetTotal import BudgetTotal
 from ..Options import ShuffleVillager
 
 

@@ -17,7 +17,9 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..logic.custom_logic.ResourceAmount import contributors
-from ..logic.budget.BudgetTotal import BudgetTotal, budget_order, required
+from ..logic.budget.BudgetOrder import budget_order
+from ..logic.budget.BudgetTotal import BudgetTotal
+from ..logic.budget.Requirement import required
 from ..generation.pools.BudgetPool import RELIC_ALLOWANCE, SOURCE_ALLOWANCE
 from ..Options import ShuffleVillager, Techsanity, Unitsanity
 

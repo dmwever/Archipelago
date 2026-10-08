@@ -41,9 +41,6 @@ class Logic:
         self.scenario_answers_open: set[tuple] = set()
         """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
 
-        self.budget_orders: dict = {}
-        """Each scenario's budget order, built while its first BudgetTotal resolves."""
-
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
         self._can_research: dict[Age2TechData, Or] = {}
