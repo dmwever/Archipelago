@@ -144,6 +144,10 @@ class _ScenarioOrder:
                 state.has_base if isinstance(standing, False_) else standing | state.has_base)
         return {building: rule for building, rule in rules.items() if not isinstance(rule, False_)}
 
+    def choice_order(self, building: Age2BuildingData) -> int:
+        """Where a building stands among choices: the seed's building order."""
+        return self.world.pool.budget.building_order[building]
+
     def impossible(self, rule: Rule) -> bool:
         return rule.resolve(self.world).always_false
 
@@ -159,7 +163,8 @@ class _ScenarioOrder:
         relics = relic_allowance(self.scenario.scenario)
         sources = []
         for source in SOURCES:
-            ways = [(rule, seed.in_scenario(self.start, self.climbs, self.could_have))
+            ways = [(rule, seed.in_scenario(self.start, self.climbs, self.could_have,
+                                            self.choice_order))
                     for rule, seed in ((way(economy), seed) for way, seed in source.ways)
                     if not self.impossible(rule)]
             allowance = relics if source.per_relic else SOURCE_ALLOWANCE
@@ -188,13 +193,13 @@ class _ScenarioOrder:
         return self._priced(budget_item(location))
 
     def _priced(self, item: BudgetItem) -> _Priced | None:
-        if self.impossible(item.structural(self.scenario)):
+        if self.impossible(item.scenario_rule(self.scenario)):
             return None
         return _Priced(item, item.need_in(self.scenario))
 
     def plan(self, entries: Iterable[_Priced]) -> Need:
         return sum((entry.need for entry in entries), Need()).in_scenario(
-            self.start, self.climbs, self.could_have)
+            self.start, self.climbs, self.could_have, self.choice_order)
 
     def precursors(self, entry: _Priced) -> list[_Priced]:
         """What this location cannot be had without, that is a location this scenario could do:
@@ -212,7 +217,7 @@ class _ScenarioOrder:
                 building = BUILDING_PREREQUISITE.get(building)
             buildings += reversed(chain)
         paid = {identity for identity, _ in entry.need.own}
-        techs = [tech.location for tech in reversed(list(entry.item.below()))
+        techs = [tech.location for tech in reversed(list(entry.item.prerequisite_techs()))
                  if tech.location in paid]
         found = ([self.priced(building) for building in buildings
                   if building in pool.buildings.locations]
@@ -229,7 +234,7 @@ class _ScenarioOrder:
         pool, every building it could find standing, every source it could bring in - seeds
         paid for."""
         budget = self.world.pool.budget
-        rank = budget.rank.get(self.scenario.scenario, {})
+        rank = budget.rank
         purchases = self.scenario.starting_state.required_purchases
         items = ([ScenarioBudgetItem(budget_item(location)) for location in purchases]
                  + [budget_item(BASE)]

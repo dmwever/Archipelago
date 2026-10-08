@@ -95,12 +95,15 @@ class TestTheSampleIsTheSizeItClaims(bases.Age2TestBase):
         self.assertEqual(self.budget.entries, set().union(*kinds))
         self.assertEqual(len(self.budget.entries), sum(len(kind) for kind in kinds))
 
-    def test_every_included_scenario_ranks_every_entry_once(self) -> None:
-        self.assertEqual(set(self.budget.rank), set(self.world.pool.scenarios.included))
-        for scenario, rank in self.budget.rank.items():
-            with self.subTest(scenario.scenario_name):
-                self.assertEqual(set(rank), set(self.budget.entries))
-                self.assertEqual(sorted(rank.values()), list(range(len(self.budget.entries))))
+    def test_the_seed_ranks_every_entry_once(self) -> None:
+        """One rank for the seed, shared by every scenario's order."""
+        self.assertEqual(set(self.budget.rank), set(self.budget.entries))
+        self.assertEqual(sorted(self.budget.rank.values()), list(range(len(self.budget.entries))))
+
+    def test_the_seed_orders_every_building_once(self) -> None:
+        self.assertEqual(set(self.budget.building_order), set(Age2BuildingData))
+        self.assertEqual(sorted(self.budget.building_order.values()),
+                         list(range(len(Age2BuildingData))))
 
 
 class TestVillagerLinesStillMeanOneVillager(bases.Age2TestBase):
@@ -156,6 +159,7 @@ class TestTheSampleIsDeterministic(unittest.TestCase):
         first, second = self.world_for(7).pool.budget, self.world_for(7).pool.budget
         self.assertEqual(first.entries, second.entries)
         self.assertEqual(first.rank, second.rank)
+        self.assertEqual(first.building_order, second.building_order)
 
     def test_different_seeds_draw_different_samples(self) -> None:
         samples = {self.world_for(seed).pool.budget.entries for seed in range(6)}

@@ -33,7 +33,7 @@ class Requirement:
         self._owned_buildings: set[Age2BuildingData] = set(need.entry_buildings)
         self._resource_costs: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
 
-        self._age_up_options: dict[
+        self._age_up_choices: dict[
             Age2AgeData, tuple[tuple[Age2BuildingData, ...], Age2BuildingData | None]] = {
                 age: (options, single_building)
                 for age, options, single_building in need.age_up_buildings
@@ -41,7 +41,7 @@ class Requirement:
 
         # One-building groups first, so a group with a choice sees what they have already bought.
         building_choices: list[tuple[Age2BuildingData, ...]] = sorted(
-            need.building_groups, key=lambda group: (len(group), tuple(map(int, group))))
+            need.building_choices, key=lambda group: (len(group), tuple(map(int, group))))
         self.buildings = []
         self.ages = [age for age in CLIMBED_AGES
                      if need.starting_age < age <= need.needed_age]
@@ -85,7 +85,7 @@ class Requirement:
         self._owned_buildings.update(buildings)
 
     def _needed_age_up_buildings(self, age: Age2AgeData) -> list[Age2BuildingData]:
-        options, single_building = self._age_up_options[age]
+        options, single_building = self._age_up_choices[age]
         if single_building is not None and self._has(single_building):
             return []
         already_held = [option for option in options if self._has(option)]

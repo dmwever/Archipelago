@@ -24,7 +24,7 @@ class Need:
     """Paid for itself, once per identity: a tech, a unit line, the villager."""
     entry_buildings: frozenset[Age2BuildingData] = frozenset()
     """Buildings that are themselves locations: always charged, never waived."""
-    building_groups: frozenset[tuple[Age2BuildingData, ...]] = frozenset()
+    building_choices: frozenset[tuple[Age2BuildingData, ...]] = frozenset()
     """Buildings it needs, each as the options any one of which will do."""
     needed_age: Age2AgeData = Age2AgeData.DARK
     """The highest age it needs."""
@@ -35,7 +35,7 @@ class Need:
 
     def __add__(self, other: 'Need') -> 'Need':
         return Need(self.own | other.own, self.entry_buildings | other.entry_buildings,
-                    self.building_groups | other.building_groups, max(self.needed_age, other.needed_age))
+                    self.building_choices | other.building_choices, max(self.needed_age, other.needed_age))
 
     @staticmethod
     def pay(identity: object, cost: dict[Resource, int]) -> 'Need':
@@ -49,19 +49,22 @@ class Need:
 
     @staticmethod
     def one_of(*options: Age2BuildingData) -> 'Need':
-        return Need(building_groups=frozenset({options})) if options else Need()
+        return Need(building_choices=frozenset({options})) if options else Need()
 
     @staticmethod
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
     def in_scenario(self, start: Age2AgeData, missing_age_up_buildings: tuple[Climb, ...],
-                    could_have: Callable[[Age2BuildingData], bool]) -> 'Need':
+                    could_have: Callable[[Age2BuildingData], bool],
+                    choice_order: Callable[[Age2BuildingData], int]) -> 'Need':
         """Settled for one scenario: where it starts, how it climbs, and only the building
-        options it could ever have."""
-        building_groups = frozenset(kept for group in self.building_groups
-                                    if (kept := tuple(filter(could_have, group))))
-        missing_age_up_buildings = tuple((age, tuple(filter(could_have, options)),
+        options it could ever have, each set of choices in the seed's order."""
+        building_groups = frozenset(kept for group in self.building_choices
+                                    if (kept := tuple(sorted(filter(could_have, group),
+                                                             key=choice_order))))
+        missing_age_up_buildings = tuple((age, tuple(sorted(filter(could_have, options),
+                                                            key=choice_order)),
                                           single if single is not None and could_have(single)
                                           else None)
                                          for age, options, single in missing_age_up_buildings)

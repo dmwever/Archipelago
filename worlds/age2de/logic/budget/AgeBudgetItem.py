@@ -15,9 +15,6 @@ if TYPE_CHECKING:
 
 
 class AgeBudgetItem(BudgetItem):
-    """Its node is only the age itself: the age-ups, the Town Center and the climb buildings are
-    worked out by the scenario's trim, from where the scenario starts."""
-
     rank = 0
     location: Age2AgeData
 
@@ -25,7 +22,7 @@ class AgeBudgetItem(BudgetItem):
     def age(self) -> Age2AgeData:
         return self.location
 
-    def structural(self, scenario: ScenarioLogic) -> Rule:
+    def scenario_rule(self, scenario: ScenarioLogic) -> Rule:
         return scenario.ages.can_research(self.location)
 
     @functools.cached_property

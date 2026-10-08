@@ -20,7 +20,7 @@ class BuildingBudgetItem(BudgetItem):
     rank = 1
     location: Age2BuildingData
 
-    def structural(self, scenario: ScenarioLogic) -> Rule:
+    def scenario_rule(self, scenario: ScenarioLogic) -> Rule:
         return scenario.buildings.can_build_building(self.location)
 
     @functools.cached_property

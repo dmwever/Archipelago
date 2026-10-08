@@ -94,7 +94,7 @@ Trade is no source here: when it is on it is an easy source of gold and wood out
 
 def options(seed: Need) -> list[list[Age2BuildingData]]:
     """Each way to put the seed's buildings up: one pick from each of its groups."""
-    groups = sorted(seed.building_groups, key=lambda group: tuple(map(int, group)))
+    groups = sorted(seed.building_choices, key=lambda group: tuple(map(int, group)))
     return [list(pick) for pick in itertools.product(*groups)]
 
 

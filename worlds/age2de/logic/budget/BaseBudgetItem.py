@@ -16,15 +16,11 @@ if TYPE_CHECKING:
 
 
 class BaseBudgetItem(BudgetItem):
-    """Villagers fed, a Town Center and, where the civilisation builds them, a House. A Town Center
-    or House standing is let off like any building; the food never is, since a base with nobody in
-    front of it is none. The food is the villager entry's, so the two are charged once."""
-
     rank = 0
     first_in_age = True
     location: Age2BaseData
 
-    def structural(self, scenario: ScenarioLogic) -> Rule:
+    def scenario_rule(self, scenario: ScenarioLogic) -> Rule:
         return scenario.can_have_base()
 
     @functools.cached_property

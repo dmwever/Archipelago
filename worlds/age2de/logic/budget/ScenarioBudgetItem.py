@@ -33,8 +33,8 @@ class ScenarioBudgetItem(BudgetItem):
     def age(self) -> Age2AgeData:
         return self.item.age
 
-    def structural(self, scenario: ScenarioLogic) -> Rule:
-        return self.item.structural(scenario)
+    def scenario_rule(self, scenario: ScenarioLogic) -> Rule:
+        return self.item.scenario_rule(scenario)
 
     @property
     def node(self) -> Need:

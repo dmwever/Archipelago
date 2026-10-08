@@ -23,7 +23,7 @@ class UnitBudgetItem(BudgetItem):
     rank = 3
     location: Age2UnitData
 
-    def structural(self, scenario: ScenarioLogic) -> Rule:
+    def scenario_rule(self, scenario: ScenarioLogic) -> Rule:
         return scenario.units.can_train_structurally(self.location)
 
     @functools.cached_property

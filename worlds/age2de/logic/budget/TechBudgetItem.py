@@ -23,7 +23,7 @@ class TechBudgetItem(BudgetItem):
     rank = 2
     location: Age2TechData
 
-    def structural(self, scenario: ScenarioLogic) -> Rule:
+    def scenario_rule(self, scenario: ScenarioLogic) -> Rule:
         return scenario.techs.can_research_structurally(self.location)
 
     @functools.cached_property

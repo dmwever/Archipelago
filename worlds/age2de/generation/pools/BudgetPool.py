@@ -64,10 +64,14 @@ class BudgetPool:
             | (frozenset({VILLAGER}) if self.villager else frozenset()))
 
         ordered = sorted(self.entries, key=int)
-        self.rank: dict['Age2ScenarioData', dict[Drawn, int]] = {
-            scenario: {location: position
-                       for position, location in enumerate(rng.sample(ordered, len(ordered)))}
-            for scenario in sorted(pool.scenarios.included, key=lambda scenario: scenario.id)}
+        self.rank: dict[Drawn, int] = {
+            location: position
+            for position, location in enumerate(rng.sample(ordered, len(ordered)))}
+
+        every_building = sorted(Age2BuildingData, key=int)
+        self.building_order: dict[Age2BuildingData, int] = {
+            building: position
+            for position, building in enumerate(rng.sample(every_building, len(every_building)))}
 
     @staticmethod
     def _unit_candidates(pool: 'Age2Pool') -> list[Age2UnitData]:
