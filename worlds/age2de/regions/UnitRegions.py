@@ -9,6 +9,7 @@ from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
+from ..locations.connections.UnitBuildings import logic_buildings
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -61,7 +62,7 @@ class UnitRegions:
     def add_line_region(self, line: Age2UnitLineData,
                         locations: list[UnitLocation]) -> UnitRegion | None:
         units = self.world.pool.units
-        trainable = [building for building in units.root_unit_data(line).buildings
+        trainable = [building for building in logic_buildings(units.root_unit_data(line))
                      if building in self.building_regions] \
             if units.is_trainable(line) else []
         granting = [scenario for scenario in self.scenario_regions

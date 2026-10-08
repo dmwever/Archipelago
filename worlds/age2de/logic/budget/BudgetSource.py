@@ -94,7 +94,7 @@ Trade is no source here: when it is on it is an easy source of gold and wood out
 
 def options(seed: Need) -> list[list[Age2BuildingData]]:
     """Each way to put the seed's buildings up: one pick from each of its groups."""
-    groups = sorted(seed.groups, key=lambda group: tuple(map(int, group)))
+    groups = sorted(seed.building_groups, key=lambda group: tuple(map(int, group)))
     return [list(pick) for pick in itertools.product(*groups)]
 
 
@@ -118,7 +118,7 @@ def seed_parts(seed: Need, picks: list[Age2BuildingData], need: Need,
                               building in in_total))
             building = BUILDING_PREREQUISITE.get(building)
     for age in CLIMBED_AGES:
-        if start < age <= seed.top:
+        if start < age <= seed.needed_age:
             parts.append(Part(("age", age), _cost(age.cost), age in requirement.ages))
     return tuple(parts)   # kept in a resolved rule, which has to hash
 

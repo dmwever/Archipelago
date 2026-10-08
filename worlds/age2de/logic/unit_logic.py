@@ -13,7 +13,7 @@ from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
-from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM, logic_buildings
 
 NOT_CAVEMAN = OptionFilter(Caveman, Caveman.option_false)
 
@@ -68,7 +68,7 @@ class UnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train_anywhere(self, unit: Age2UnitData) -> Rule:
-        if not self.world.pool.units.is_trainable_unit(unit) or not unit.buildings:
+        if not self.world.pool.units.is_trainable_unit(unit) or not logic_buildings(unit):
             return False_()
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
@@ -139,7 +139,7 @@ class UnitLogic:
         return any(self.world.pool.civs.any_trains(unit) for unit in HORSE_LINE.units)
 
     def has_building_item(self, unit: Age2UnitData) -> Rule:
-        wanted = [BUILDING_TO_UNITS_ITEM[building].item_name for building in unit.buildings
+        wanted = [BUILDING_TO_UNITS_ITEM[building].item_name for building in logic_buildings(unit)
                   if building in self.world.unit_regions.shuffled_unit_building_items]
         if not wanted:
             return True_()

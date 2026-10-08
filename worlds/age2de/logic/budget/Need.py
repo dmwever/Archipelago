@@ -24,18 +24,18 @@ class Need:
     """Paid for itself, once per identity: a tech, a unit line, the villager."""
     entry_buildings: frozenset[Age2BuildingData] = frozenset()
     """Buildings that are themselves locations: always charged, never waived."""
-    groups: frozenset[tuple[Age2BuildingData, ...]] = frozenset()
+    building_groups: frozenset[tuple[Age2BuildingData, ...]] = frozenset()
     """Buildings it needs, each as the options any one of which will do."""
-    top: Age2AgeData = Age2AgeData.DARK
+    needed_age: Age2AgeData = Age2AgeData.DARK
     """The highest age it needs."""
-    start: Age2AgeData = Age2AgeData.DARK
+    starting_age: Age2AgeData = Age2AgeData.DARK
     """The age the scenario pays its way up from; set by in_scenario."""
-    climbs: tuple[Climb, ...] = ()
+    age_up_buildings: tuple[Climb, ...] = ()
     """What leaves each age in this scenario; set by in_scenario."""
 
     def __add__(self, other: 'Need') -> 'Need':
         return Need(self.own | other.own, self.entry_buildings | other.entry_buildings,
-                    self.groups | other.groups, max(self.top, other.top))
+                    self.building_groups | other.building_groups, max(self.needed_age, other.needed_age))
 
     @staticmethod
     def pay(identity: object, cost: dict[Resource, int]) -> 'Need':
@@ -49,22 +49,25 @@ class Need:
 
     @staticmethod
     def one_of(*options: Age2BuildingData) -> 'Need':
-        return Need(groups=frozenset({options})) if options else Need()
+        return Need(building_groups=frozenset({options})) if options else Need()
 
     @staticmethod
     def reach(age: Age2AgeData) -> 'Need':
-        return Need(top=age)
+        return Need(needed_age=age)
 
-    def in_scenario(self, start: Age2AgeData, climbs: tuple[Climb, ...],
+    def in_scenario(self, start: Age2AgeData, missing_age_up_buildings: tuple[Climb, ...],
                     could_have: Callable[[Age2BuildingData], bool]) -> 'Need':
         """Settled for one scenario: where it starts, how it climbs, and only the building
         options it could ever have."""
-        groups = frozenset(kept for group in self.groups if (kept := tuple(filter(could_have, group))))
-        climbs = tuple((age, tuple(filter(could_have, options)),
-                        alone if alone is not None and could_have(alone) else None)
-                       for age, options, alone in climbs)
-        return dataclasses.replace(self, groups=groups, top=max(start, self.top), start=start,
-                                   climbs=climbs)
+        building_groups = frozenset(kept for group in self.building_groups
+                                    if (kept := tuple(filter(could_have, group))))
+        missing_age_up_buildings = tuple((age, tuple(filter(could_have, options)),
+                                          single if single is not None and could_have(single)
+                                          else None)
+                                         for age, options, single in missing_age_up_buildings)
+        return dataclasses.replace(self, building_groups=building_groups,
+                                   needed_age=max(start, self.needed_age), starting_age=start,
+                                   age_up_buildings=missing_age_up_buildings)
 
     def own_cost(self) -> dict[Resource, int]:
         cost: dict[Resource, int] = {}

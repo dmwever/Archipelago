@@ -1,8 +1,6 @@
-"""What a settled Need costs: the cheapest way to cover it once some buildings are standing."""
+"""What a settled Need costs once some buildings are standing."""
 from __future__ import annotations
 
-import dataclasses
-import itertools
 from typing import Iterable
 
 from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
@@ -12,70 +10,91 @@ from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from .Need import CLIMBED_AGES, Need
 
 
-@dataclasses.dataclass(frozen=True)
 class Requirement:
+    """What a settled Need costs once the buildings in `waived` are standing for free.
+
+    Its own price and its entry buildings are always paid. A group of buildings is free if one
+    of its options is already owned or standing, and otherwise takes its first option,
+    prerequisites and all. Each age climbed pays its age-up, a Town Center, and the buildings
+    that leave the age before it: nothing if the single building or two of the others are owned
+    or standing, otherwise the first ones listed. A building already paid for or standing is
+    never charged again. Not always the cheapest choice - the order things are listed in
+    decides - but never more than once."""
+
     cost: dict[Resource, int]
+    """What it all comes to, per resource; nothing listed at zero."""
     buildings: list[Age2BuildingData]
+    """The buildings charged, in the order they were taken."""
     ages: list[Age2AgeData]
+    """The ages climbed."""
 
+    def __init__(self, need: Need, waived: frozenset[Age2BuildingData]) -> None:
+        self._waived: frozenset[Age2BuildingData] = waived
+        self._owned_buildings: set[Age2BuildingData] = set(need.entry_buildings)
+        self._resource_costs: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
 
-def required(need: Need, waived: frozenset[Age2BuildingData]) -> Requirement:
-    cost: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
-    have: set[Age2BuildingData] = set(need.entry_buildings)
-    charged: list[Age2BuildingData] = []
-    groups: list[tuple[Age2BuildingData, ...]] = sorted(
-        need.groups, key=lambda group: (len(group), tuple(map(int, group))))
-    ages: list[Age2AgeData] = [age for age in CLIMBED_AGES if need.start < age <= need.top]
-    climbs: dict[Age2AgeData, tuple[tuple[Age2BuildingData, ...], Age2BuildingData | None]] = {
-        age: (options, alone) for age, options, alone in need.climbs}
+        self._age_up_options: dict[
+            Age2AgeData, tuple[tuple[Age2BuildingData, ...], Age2BuildingData | None]] = {
+                age: (options, single_building)
+                for age, options, single_building in need.age_up_buildings
+            }
 
-    def pay(price: Iterable[tuple[Resource, int]]) -> None:
+        # One-building groups first, so a group with a choice sees what they have already bought.
+        building_choices: list[tuple[Age2BuildingData, ...]] = sorted(
+            need.building_groups, key=lambda group: (len(group), tuple(map(int, group))))
+        self.buildings = []
+        self.ages = [age for age in CLIMBED_AGES
+                     if need.starting_age < age <= need.needed_age]
+
+        self._pay(need.own_cost().items())
+        for building in need.entry_buildings:
+            self._pay(building.cost.items())
+        for choices in building_choices:
+            if not any(self._has(choice) for choice in choices):
+                self._charge(self._prerequisite_chain(choices[0]))
+        if self.ages:
+            self._charge(self._prerequisite_chain(Age2BuildingData.TOWN_CENTER))   # every age-up happens there
+        for age in self.ages:
+            self._pay(age.cost.items())
+            self._charge(self._needed_age_up_buildings(age))
+        for building in self.buildings:
+            self._pay(building.cost.items())
+        self.cost = {resource: amount for resource, amount in self._resource_costs.items()
+                     if amount > 0}
+
+    def _has(self, building: Age2BuildingData) -> bool:
+        """Owned already, or standing."""
+        return building in self._owned_buildings or building in self._waived
+
+    def _pay(self, price: Iterable[tuple[Resource, int]]) -> None:
         for resource, amount in price:
-            cost[resource] += amount
+            self._resource_costs[resource] += amount
 
-    def chain(building: Age2BuildingData | None) -> list[Age2BuildingData]:
-        """The building and its prerequisites, up to the first one already paid or standing."""
-        out: list[Age2BuildingData] = []
-        while building is not None and building not in waived | have and building not in out:
-            out.append(building)
+    def _prerequisite_chain(self, building: Age2BuildingData | None) -> list[Age2BuildingData]:
+        """The building and its prerequisites, up to the first one already owned or standing."""
+        chain: list[Age2BuildingData] = []
+        while building is not None and not self._has(building) and building not in chain:
+            chain.append(building)
             building = BUILDING_PREREQUISITE.get(building)
-        return out
+        return chain
 
-    def take(buildings: Iterable[Age2BuildingData]) -> None:
-        charged.extend(building for building in buildings if building not in have)
-        have.update(buildings)
+    def _charge(self, buildings: Iterable[Age2BuildingData]) -> None:
+        """Charge what is not owned yet, and own all of it from here on."""
+        self.buildings.extend(building for building in buildings
+                              if building not in self._owned_buildings)
+        self._owned_buildings.update(buildings)
 
-    def worth(buildings: Iterable[Age2BuildingData]) -> int:
-        return sum(sum(building.cost.values()) for building in buildings)
-
-    def cheapest_climb(age: Age2AgeData) -> list[Age2BuildingData] | None:
-        """The cheapest two buildings that leave the age before this one, or the one that
-        counts for both, with what they stand on; None if the scenario can have none."""
-        options, alone = climbs[age]
-        candidates: list[tuple[int, list[int], list[Age2BuildingData]]] = []
-        for first, second in itertools.combinations(options, 2):
-            both = chain(first)
-            both += [building for building in chain(second) if building not in both]
-            candidates.append((worth(both), [int(first), int(second)], both))
-        if alone is not None:
-            candidates.append((worth(chain(alone)), [int(alone)], chain(alone)))
-        if not candidates:
-            return None
-        return min(candidates, key=lambda candidate: candidate[:2])[2]
-
-    pay(need.own_cost().items())
-    for building in need.entry_buildings:
-        pay(building.cost.items())
-    for options in groups:
-        take(chain(min(options, key=lambda option: (worth(chain(option)), int(option)))))
-    if ages:
-        take(chain(Age2BuildingData.TOWN_CENTER))   # every age is researched at a Town Center
-    for age in ages:
-        pay(age.cost.items())
-        climb = cheapest_climb(age)
-        if climb is not None:
-            take(climb)
-    for building in charged:
-        pay(building.cost.items())
-    return Requirement({resource: amount for resource, amount in cost.items() if amount > 0},
-                       charged, ages)
+    def _needed_age_up_buildings(self, age: Age2AgeData) -> list[Age2BuildingData]:
+        options, single_building = self._age_up_options[age]
+        if single_building is not None and self._has(single_building):
+            return []
+        already_held = [option for option in options if self._has(option)]
+        if len(already_held) >= 2:
+            return []
+        missing = [option for option in options if not self._has(option)][:2 - len(already_held)]
+        if len(already_held) + len(missing) < 2:
+            return self._prerequisite_chain(single_building) if single_building is not None else []
+        bought: list[Age2BuildingData] = []
+        for option in missing:
+            bought += [building for building in self._prerequisite_chain(option) if building not in bought]
+        return bought

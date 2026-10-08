@@ -9,6 +9,7 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Techs import Age2TechData
 from ...locations.UnitLocations import VILLAGER_LINES
 from ...locations.Units import Age2UnitData
+from ...locations.connections.UnitBuildings import logic_buildings
 
 if TYPE_CHECKING:
     from ...locations.Scenarios import Age2ScenarioData
@@ -73,7 +74,7 @@ class BudgetPool:
         """Units a scenario could train and has to pay for, to draw from. The villager is not drawn:
         it is its own entry."""
         return [unit for unit in sorted(pool.units.units, key=int)
-                if pool.units.is_trainable_unit(unit) and unit.buildings
+                if pool.units.is_trainable_unit(unit) and logic_buildings(unit)
                 and unit.line not in VILLAGER_LINES
                 and any(amount > 0 for amount in unit.cost.values())]
 

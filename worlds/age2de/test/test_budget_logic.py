@@ -19,7 +19,7 @@ from ..locations.Units import Age2UnitData
 from ..logic.custom_logic.ResourceAmount import contributors
 from ..logic.budget.BudgetOrder import budget_order
 from ..logic.budget.BudgetTotal import BudgetTotal
-from ..logic.budget.Requirement import required
+from ..logic.budget.Requirement import Requirement
 from ..logic.budget.BudgetSource import RELIC_ALLOWANCE, SOURCE_ALLOWANCE, bootstrap, pays
 from ..Options import ShuffleVillager, Techsanity, Unitsanity
 
@@ -51,7 +51,7 @@ class BudgetTestBase(bases.Age2RuleTestBase):
                          if rule.resolve(self.world)(state))
 
     def cost_of(self, budget, location, waived: frozenset = frozenset()):
-        return required(budget.plan([budget.priced(location)]), waived)
+        return Requirement(budget.plan([budget.priced(location)]), waived)
 
 
 class TestStartingBuildingsAreLetOff(BudgetTestBase):
@@ -170,8 +170,8 @@ class TestPrecursors(BudgetTestBase):
             budget = self.budget(scenario)
             for entry in budget.order:
                 with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
-                    alone = required(budget.plan([entry]), frozenset())
-                    listed = required(budget.plan([*budget.precursors(entry), entry]), frozenset())
+                    alone = Requirement(budget.plan([entry]), frozenset())
+                    listed = Requirement(budget.plan([*budget.precursors(entry), entry]), frozenset())
                     self.assertEqual(alone.cost, listed.cost)
 
     def test_precursors_come_before_their_entry(self):
@@ -183,7 +183,7 @@ class TestPrecursors(BudgetTestBase):
             order = budget.order
             position = {entry.location: index for index, entry in enumerate(order)}
             for index, entry in enumerate(order):
-                charged = required(budget.plan(order[:index + 1]), frozenset()).buildings
+                charged = Requirement(budget.plan(order[:index + 1]), frozenset()).buildings
                 for precursor in budget.precursors(entry):
                     if precursor.location not in position:
                         continue
@@ -216,11 +216,11 @@ class TestTheTotalNeverGrows(BudgetTestBase):
                 plan = budget.plan(order[:end])
                 for size in range(len(waivable) + 1):
                     for waived in itertools.combinations(waivable, size):
-                        base = required(plan, frozenset(waived)).cost
+                        base = Requirement(plan, frozenset(waived)).cost
                         for extra in waivable:
                             if extra in waived:
                                 continue
-                            more = required(plan, frozenset((*waived, extra))).cost
+                            more = Requirement(plan, frozenset((*waived, extra))).cost
                             for resource, amount in more.items():
                                 if amount > base.get(resource, 0):
                                     self.fail(f"{scenario.scenario_name}: waiving {extra.name} on "
@@ -234,7 +234,7 @@ class TestTheTotalNeverGrows(BudgetTestBase):
             order = budget.order
             previous: dict = {}
             for end in range(1, len(order) + 1):
-                cost = required(budget.plan(order[:end]), frozenset()).cost
+                cost = Requirement(budget.plan(order[:end]), frozenset()).cost
                 for resource, amount in previous.items():
                     self.assertGreaterEqual(cost.get(resource, 0), amount)
                 previous = cost
@@ -274,7 +274,7 @@ class TestSourcesAndBudget(BudgetTestBase):
                     for resource in budget.max_budget()}
             every_waiver = frozenset(budget.waivers)
             need = budget.plan(budget.order)
-            requirement = required(need, every_waiver)
+            requirement = Requirement(need, every_waiver)
             with self.subTest(scenario.scenario_name):
                 self.assertTrue(pays(pile, dict(requirement.cost), list(range(len(budget.ways))),
                                      budget.ways,

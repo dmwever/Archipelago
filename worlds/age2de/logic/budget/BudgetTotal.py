@@ -18,7 +18,7 @@ from .BudgetItem import PricedLocation
 from .BudgetOrder import Switch, budget_order
 from .BudgetSource import Bootstrap, Part, Way, bootstrap, income, pays
 from .Need import Need
-from .Requirement import Requirement, required
+from .Requirement import Requirement
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -77,7 +77,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             waived = frozenset(building for _, buildings, _ in on(mask) for building in buildings)
             dropped = frozenset(purchase for _, _, purchases in on(mask) for purchase in purchases)
             need = order.need_for(self.location, dropped)
-            requirement = required(need, waived)
+            requirement = Requirement(need, waived)
             needs.append(need)
             costs.append(tuple(requirement.cost.items()))
             parts.append(order.seed_parts(need, requirement, waived))
@@ -159,7 +159,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             return self.needs[0 if state is None else self.mask(state)]
 
         def requirement(self, state: CollectionState | None) -> Requirement:
-            return required(self.need(state),
+            return Requirement(self.need(state),
                             frozenset() if state is None else self.waived_now(state))
 
         @override

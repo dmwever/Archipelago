@@ -14,7 +14,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
-from ..scenarios.ScenarioAgeLogic import AGE_BUILDINGS, PREVIOUS
+from ..scenarios.ScenarioAgeLogic import PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
@@ -22,7 +22,7 @@ from .BudgetSource import (SOURCE_ALLOWANCE, SOURCES, Part, Way, options, pays,
                            relic_allowance, seed_parts)
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, Need
-from .Requirement import Requirement, required
+from .Requirement import Requirement
 from .ScenarioBudgetItem import ScenarioBudgetItem
 from .TechBudgetItem import TechBudgetItem
 from .UnitBudgetItem import UnitBudgetItem
@@ -104,10 +104,11 @@ class _ScenarioOrder:
         ages = world.pool.ages
         # The age the scenario pays its way up from: Dark when starts are pulled back.
         self.start = Age2AgeData.DARK if ages.dark_start else ages.starts_in(scenario.scenario)
-        # What leaves each age, as two_from reads it: two of these, or a Castle alone.
-        self.climbs = tuple((age, AGE_BUILDINGS[PREVIOUS[age]],
-                             Age2BuildingData.CASTLE if PREVIOUS[age] is Age2AgeData.CASTLE else None)
-                            for age in CLIMBED_AGES)
+        # What leaves the age before each one, read off the rule that asks it. A tuple, as it
+        # ends up in a Need, which hashes.
+        self.climbs = tuple((age, climb.buildings, climb.single_building)
+                            for age in CLIMBED_AGES
+                            for climb in [scenario.ages.two_from(PREVIOUS[age])])
         self.waivers = self._waivers()
         self._could_have: dict[Age2BuildingData, bool] = {}
         self.sources = self._sources()
@@ -202,7 +203,7 @@ class _ScenarioOrder:
         just before it, a tech chain runs oldest first, and grouping by age then kind puts an age
         ahead of its buildings and techs and the climb buildings ahead of the age-up."""
         pool = self.world.pool
-        requirement = required(self.plan([entry]), frozenset())
+        requirement = Requirement(self.plan([entry]), frozenset())
         charged, buildings = set(requirement.buildings), []
         for building in requirement.buildings:
             chain = []
@@ -246,7 +247,7 @@ class _ScenarioOrder:
         kept, pruned = [], []
         for entry in ordered:
             need = self.plan(kept + [entry])
-            requirement = required(need, every_waiver)
+            requirement = Requirement(need, every_waiver)
             fits = pays(pile, dict(requirement.cost), every_way, self.ways,
                         self.seed_parts(need, requirement, every_waiver), self.worth)
             (kept if fits else pruned).append(entry)

@@ -10,6 +10,7 @@ from ...locations.Units import Age2UnitData
 from .BudgetItem import BudgetItem
 from .Need import Need
 from .TechBudgetItem import TechBudgetItem
+from ...locations.connections.UnitBuildings import logic_buildings
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -29,7 +30,7 @@ class UnitBudgetItem(BudgetItem):
     def node(self) -> Need:
         unit = self.location
         return (Need.pay(unit.line, unit.cost) + Need.reach(unit.age)
-                + Need.one_of(*unit.buildings))
+                + Need.one_of(*logic_buildings(unit)))
 
     @functools.cached_property
     def children(self) -> list[TechBudgetItem]:
