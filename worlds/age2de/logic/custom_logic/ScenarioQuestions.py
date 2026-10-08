@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, override
 from BaseClasses import CollectionState
 from NetUtils import JSONMessagePart
 
-from rule_builder.rules import Rule
+from rule_builder.rules import Or, Rule
 
 from .SufficientRawResources import SufficientRawResources
 
@@ -14,6 +14,9 @@ from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
+from ...locations.Techs import Age2TechData
+from ...locations.Units import Age2UnitData
+from ...locations.connections.UnitBuildings import logic_buildings
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -156,6 +159,54 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
         building = self.building.location_name.removeprefix("Build ")
         article = "an" if building[0] in "AEIOU" else "a"
         return f"{scenario.scenario_name} can build {article} {building}"
+
+
+@dataclass
+class ScenarioCanResearch(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario can research this tech."""
+
+    tech: Age2TechData
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.tech)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        if scenario.logic.world.pool.techs.locked_at_start(self.tech):
+            age = scenario.ages.has_reached(self.tech.age)
+        else:
+            age = scenario.ages.can_reach(self.tech.age)
+        return scenario.techs.available(self.tech, age)
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        tech = self.tech.location_name.removeprefix("Research ")
+        return f"{scenario.scenario_name} can research {tech}"
+
+
+@dataclass
+class ScenarioCanTrain(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario can train this unit."""
+
+    unit: Age2UnitData
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.unit)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        somewhere = Or(*[scenario.has_building(building)
+                         for building in logic_buildings(self.unit)
+                         if scenario.civilization.can_build(building)])
+        return (scenario.logic.units.has_unit_items(self.unit)
+                & scenario.units.has_upgrade_tech(self.unit)
+                & somewhere & scenario.ages.has_reached(self.unit.age))
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        return f"{scenario.scenario_name} can train a {self.unit.unit_name}"
 
 
 @dataclass

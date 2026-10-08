@@ -11,6 +11,7 @@ from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData
 from ...locations.connections.UnitBuildings import logic_buildings
+from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -32,11 +33,7 @@ class ScenarioUnitLogic:
             return False_()   # this scenario's civilisation does not have it
         if self.upgraded_away(unit):
             return False_()
-        somewhere = Or(*[self.scenario.has_building(building)
-                         for building in logic_buildings(unit)
-                         if self.scenario.civilization.can_build(building)])
-        return (self.logic.units.has_unit_items(unit) & self.has_upgrade_tech(unit)
-                & somewhere & self.scenario.ages.has_reached(unit.age))
+        return ScenarioCanTrain(scenario=self.scenario.scenario, unit=unit)
 
     def upgraded_away(self, unit: Age2UnitData) -> bool:
         for successor in unit.line.units:

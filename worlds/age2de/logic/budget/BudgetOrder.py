@@ -77,18 +77,18 @@ class _Priced:
 
 
 def budget_order(scenario: 'ScenarioLogic', world: 'Age2World') -> '_ScenarioOrder':
-    """The scenario's budget order, built once and kept with the scenario questions' answers.
+    """The scenario's budget order, built once and kept with the budget's other answers.
     Rules have to be resolvable, so this is for resolving BudgetTotal and for what reads the
     result once rules exist (the spoiler)."""
     logic = scenario.logic
     key = ("BudgetOrder", scenario.scenario)
-    order = logic.scenario_answers.get(key)
+    order = logic.budget_answers.get(key)
     if order is None:
         if key in logic.scenario_answers_open:
             raise RecursionError(f"{key} asks itself; the order would never be built")
         logic.scenario_answers_open.add(key)
         try:
-            order = logic.scenario_answers[key] = _ScenarioOrder(scenario, world)
+            order = logic.budget_answers[key] = _ScenarioOrder(scenario, world)
         finally:
             logic.scenario_answers_open.discard(key)
     return order

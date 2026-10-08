@@ -228,16 +228,27 @@ class TestTheTotalNeverGrows(BudgetTestBase):
                                               f"{resource.name} from {base.get(resource, 0)} "
                                               f"to {amount} at entry {end}")
 
-    def test_a_longer_prefix_never_asks_for_less(self):
+    def test_a_longer_prefix_never_pays_for_less_of_itself(self):
+        """Each entry's own price, and every age climbed, stays charged further down the order.
+
+        Buildings can move: an age-up charges the first two of its choices in the seed's order,
+        and a later entry that buys another of them - a Barracks for a Militia - counts towards
+        it instead, so a longer total can drop one building for another. That is accepted, so
+        only the entries' own prices and the ages are checked here."""
         for scenario in self.world.pool.scenarios.included:
             budget = self.budget(scenario)
             order = budget.order
-            previous: dict = {}
+            previous_own: dict = {}
+            previous_ages: list = []
             for end in range(1, len(order) + 1):
-                cost = Requirement(budget.plan(order[:end]), frozenset()).cost
-                for resource, amount in previous.items():
-                    self.assertGreaterEqual(cost.get(resource, 0), amount)
-                previous = cost
+                plan = budget.plan(order[:end])
+                own = plan.own_cost()
+                ages = Requirement(plan, frozenset()).ages
+                with self.subTest(f"{scenario.scenario_name}: entry {end}"):
+                    for resource, amount in previous_own.items():
+                        self.assertGreaterEqual(own.get(resource, 0), amount)
+                    self.assertLessEqual(set(previous_ages), set(ages))
+                previous_own, previous_ages = own, ages
 
 
 class TestSourcesAndBudget(BudgetTestBase):

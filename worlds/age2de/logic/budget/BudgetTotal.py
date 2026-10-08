@@ -49,13 +49,13 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         in every has_base, and its seeds and source rules are not cheap to work out again."""
         logic = world.rules.logic
         key = ("BudgetTotal", self.scenario, self.location)
-        resolved = logic.scenario_answers.get(key)
+        resolved = logic.budget_answers.get(key)
         if resolved is None:
             if key in logic.scenario_answers_open:
                 raise RecursionError(f"{key} asks itself; the rule would never terminate")
             logic.scenario_answers_open.add(key)
             try:
-                resolved = logic.scenario_answers[key] = self._resolve(world)
+                resolved = logic.budget_answers[key] = self._resolve(world)
             finally:
                 logic.scenario_answers_open.discard(key)
         return resolved
