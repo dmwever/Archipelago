@@ -15,4 +15,4 @@ class BuildingRules:
     
     def set_rules(self):
         for building in self.world.pool.buildings.locations:
-            self.world.set_rule(self.world.get_location(building.location_name), self.logic.can_build_building_anywhere(building))
+            self.world.set_rule(self.world.get_location(building.location_name), self.logic.can_build_location_anywhere(building))

@@ -41,6 +41,9 @@ class Logic:
         self.scenario_answers_open: set[tuple] = set()
         """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
 
+        self.budget_orders: dict = {}
+        """Each scenario's budget order, built while its first BudgetTotal resolves."""
+
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
         self._can_research: dict[Age2TechData, Or] = {}
@@ -87,3 +90,9 @@ class Logic:
 
     def can_build_building_anywhere(self, building: Age2BuildingData) -> Rule:
         return self._can_build[building]
+
+    def can_build_location_anywhere(self, building: Age2BuildingData) -> Rule:
+        """The Build location: putting it up, paid for."""
+        return Or(*[scenario.is_unlocked() & scenario.buildings.can_build_building(building)
+                    & scenario.economy.can_pay(building.cost, building)
+                    for scenario in self.scenarios])

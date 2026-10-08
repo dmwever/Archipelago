@@ -29,6 +29,7 @@ class AgeLogic:
         for age in Age2AgeData:
             self.can_reach_age[age].children = tuple(
                 scenario.is_unlocked() & scenario.ages.can_research(age)
+                & scenario.economy.can_pay(age.cost, age)
                 for scenario in scenarios)
     
     def has_age(self, age: Age2AgeData) -> Rule:

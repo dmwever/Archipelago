@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 from random import Random
 from typing import TYPE_CHECKING
 
@@ -17,18 +16,13 @@ if TYPE_CHECKING:
     from ..Age2Pool import Age2Pool
 
 
-class BudgetKind(enum.IntEnum):
-    AGE = 0
-    BUILDING = 1
-    TECH = 2
-    UNIT = 3
-    VILLAGER = 4
-
+PricedLocation = Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData
+"""A location the budget can price. Location ids are unique across the game, so one is its own
+key whatever its type."""
 
 VILLAGER = Age2UnitData.VILLAGER_MALE
-
-BudgetLocation = Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData
-BudgetEntry = tuple[BudgetKind, BudgetLocation]
+"""The one villager entry. Villagers are never drawn as units, so this only ever means 'a
+villager', whichever villager location."""
 
 SAMPLED_RESOURCES: tuple[Resource, ...] = (Resource.FOOD, Resource.WOOD, Resource.GOLD, Resource.STONE)
 
@@ -82,21 +76,15 @@ class BudgetPool:
         
         self.ages: frozenset[Age2AgeData] = frozenset(pool.ages.locations)
 
-        self.entries: frozenset[BudgetEntry] = frozenset(
-            [(BudgetKind.AGE, age) for age in self.ages]
-            + [(BudgetKind.BUILDING, building) for building in self.buildings]
-            + [(BudgetKind.TECH, tech) for tech in self.techs]
-            + [(BudgetKind.UNIT, unit) for unit in self.units]
-            + ([(BudgetKind.VILLAGER, VILLAGER)] if self.villager else []))
+        self.entries: frozenset[PricedLocation] = (
+            self.ages | self.buildings | self.techs | self.units
+            | (frozenset({VILLAGER}) if self.villager else frozenset()))
 
-        ordered = sorted(self.entries, key=lambda entry: (entry[0], int(entry[1])))
-        self.rank: dict['Age2ScenarioData', dict[BudgetEntry, int]] = {
-            scenario: {entry: position
-                       for position, entry in enumerate(rng.sample(ordered, len(ordered)))}
+        ordered = sorted(self.entries, key=int)
+        self.rank: dict['Age2ScenarioData', dict[PricedLocation, int]] = {
+            scenario: {location: position
+                       for position, location in enumerate(rng.sample(ordered, len(ordered)))}
             for scenario in sorted(pool.scenarios.included, key=lambda scenario: scenario.id)}
-
-    def includes(self, kind: BudgetKind, location: BudgetLocation) -> bool:
-        return (kind, location) in self.entries
 
     @staticmethod
     def relic_allowance(scenario: 'Age2ScenarioData') -> int:

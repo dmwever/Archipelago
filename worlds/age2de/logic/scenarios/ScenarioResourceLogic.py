@@ -11,6 +11,8 @@ from ...locations.connections.ScenarioResources import Tier
 from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
+from ...generation.pools.BudgetPool import PricedLocation
+from ..budget.BudgetTotal import BudgetTotal
 from ..custom_logic.ScenarioQuestions import ScenarioHasResource
 
 if TYPE_CHECKING:
@@ -268,6 +270,15 @@ class ScenarioResourceLogic:
         if not resources:
             return True_()
         return And(*[self.has_easy_source(resource) for resource in resources])
+
+    def can_pay(self, costs: Mapping[Resource, float], location: PricedLocation) -> Rule:
+        """What a location asks of its price: an easy source of everything it costs, or its place
+        in this scenario's budget order. Nothing at all if it is free."""
+        priced = [resource for resource, amount in costs.items() if amount > 0]
+        if not priced:
+            return True_()
+        return self.can_sustain(priced) | BudgetTotal(scenario=self.scenario.scenario,
+                                                      location=location)
 
     # -- private methods -------------------------------------------------------------
 

@@ -12,7 +12,7 @@ from test.general import setup_multiworld
 from . import bases
 from .. import Age2World
 from ..generation.pools.BudgetPool import (BUILDINGS_DRAWN, SAMPLED_RESOURCES, TECHS_PER_RESOURCE,
-                                           UNITS_PER_RESOURCE, VILLAGER, BudgetKind,
+                                           UNITS_PER_RESOURCE, VILLAGER,
                                            BudgetPool, is_cheap_building)
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Campaigns import Age2CampaignData
@@ -69,8 +69,9 @@ class TestTheSampleIsTheSizeItClaims(bases.Age2TestBase):
                 self.assertTrue(any(amount > 0 for amount in unit.cost.values()))
 
     def test_one_villager_stands_for_every_villager_location(self) -> None:
-        villagers = [entry for entry in self.budget.entries if entry[0] is BudgetKind.VILLAGER]
-        self.assertEqual([(BudgetKind.VILLAGER, VILLAGER)], villagers)
+        villagers = [entry for entry in self.budget.entries
+                     if getattr(entry, "line", None) in VILLAGER_LINES]
+        self.assertEqual([VILLAGER], villagers)
         self.assertFalse({unit for unit in self.budget.units if unit.line in VILLAGER_LINES})
 
     def test_every_cheap_dark_age_building_is_in(self) -> None:
@@ -89,13 +90,10 @@ class TestTheSampleIsTheSizeItClaims(bases.Age2TestBase):
         self.assertTrue(self.budget.ages)
 
     def test_entries_are_the_union_of_the_kinds(self) -> None:
-        kinds = {BudgetKind.AGE: self.budget.ages, BudgetKind.BUILDING: self.budget.buildings,
-                 BudgetKind.TECH: self.budget.techs, BudgetKind.UNIT: self.budget.units,
-                 BudgetKind.VILLAGER: {VILLAGER}}
-        for kind, locations in kinds.items():
-            for location in locations:
-                self.assertTrue(self.budget.includes(kind, location))
-        self.assertEqual(len(self.budget.entries), sum(len(v) for v in kinds.values()))
+        kinds = [self.budget.ages, self.budget.buildings, self.budget.techs, self.budget.units,
+                 {VILLAGER}]
+        self.assertEqual(self.budget.entries, set().union(*kinds))
+        self.assertEqual(len(self.budget.entries), sum(len(kind) for kind in kinds))
 
     def test_every_included_scenario_ranks_every_entry_once(self) -> None:
         self.assertEqual(set(self.budget.rank), set(self.world.pool.scenarios.included))
@@ -115,7 +113,7 @@ class TestVillagerLinesStillMeanOneVillager(bases.Age2TestBase):
         budget = self.world.pool.budget
         self.assertTrue(budget.villager)
         self.assertEqual(1, len([entry for entry in budget.entries
-                                 if entry[0] is BudgetKind.VILLAGER]))
+                                 if getattr(entry, "line", None) in VILLAGER_LINES]))
 
 
 class TestNoVillagerLocationsNoVillager(bases.Age2TestBase):
@@ -123,7 +121,7 @@ class TestNoVillagerLocationsNoVillager(bases.Age2TestBase):
 
     def test_the_villager_is_out(self) -> None:
         self.assertFalse(self.world.pool.budget.villager)
-        self.assertFalse(self.world.pool.budget.includes(BudgetKind.VILLAGER, VILLAGER))
+        self.assertNotIn(VILLAGER, self.world.pool.budget.entries)
 
 
 class TestTheCheapRule(unittest.TestCase):

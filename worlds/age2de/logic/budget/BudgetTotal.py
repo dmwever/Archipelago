@@ -1,10 +1,3 @@
-"""BudgetTotal: whether a scenario's opening pile, plus what its early gathering brings in, covers
-its running total up to and including one location in the seed's budget order.
-
-That is the one rule. Everything behind it is worked out while it resolves: a location's place in
-its scenario's order depends on what the scenario could ever do, which is asked of the scenario's
-own rules, and a rule only answers that once resolved. The order is built once per scenario, by
-the first of its locations to resolve, and kept with the scenario questions' answers on Logic."""
 from __future__ import annotations
 
 import dataclasses
@@ -17,7 +10,7 @@ from NetUtils import JSONMessagePart
 from rule_builder.rules import False_, NestedRule, Or, Rule
 
 from ...generation.pools.BudgetPool import (SAMPLED_RESOURCES, SOURCE_ALLOWANCE, SOURCES,
-                                            BudgetKind, BudgetLocation)
+                                            VILLAGER, PricedLocation)
 from ...items.Items import Age2ItemData, Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
@@ -25,7 +18,7 @@ from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
 from ..scenarios.ScenarioAgeLogic import AGE_BUILDINGS, PREVIOUS
-from .ResourceAmount import contributors
+from ..custom_logic.ResourceAmount import contributors
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -158,14 +151,13 @@ def required(need: Need, waived: frozenset[Age2BuildingData]) -> Requirement:
 @dataclasses.dataclass(frozen=True)
 class _Priced:
     """One location as one scenario would pay for it."""
-    kind: BudgetKind
-    location: BudgetLocation
+    location: PricedLocation
     age: Age2AgeData
     need: Need
 
-    @property
-    def key(self) -> tuple[BudgetKind, BudgetLocation]:
-        return self.kind, self.location
+
+_TYPE_RANK = {Age2AgeData: 0, Age2BuildingData: 1, Age2TechData: 2, Age2UnitData: 3}
+"""Within an age, an age-up comes before its buildings, and buildings before what is made there."""
 
 
 def budget_order(scenario: 'ScenarioLogic', world: 'Age2World') -> '_ScenarioOrder':
@@ -242,23 +234,24 @@ class _ScenarioOrder:
             budget[resource] += amount
         return budget
 
-    def priced(self, kind: BudgetKind, location: BudgetLocation) -> _Priced | None:
+    def priced(self, location: PricedLocation) -> _Priced | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
         could never be true here."""
         scenario = self.scenario
-        if kind is BudgetKind.AGE:
+        if isinstance(location, Age2AgeData):
             rule, need = scenario.ages.can_research(location), Need.reach(location)
-        elif kind is BudgetKind.BUILDING:
+        elif isinstance(location, Age2BuildingData):
             rule, need = scenario.buildings.can_build_building(location), self._build(location)
-        elif kind is BudgetKind.TECH:
+        elif isinstance(location, Age2TechData):
             rule, need = (scenario.techs.can_research_structurally(location),
                           self._research(location))
         else:
             rule = scenario.units.can_train_structurally(location)
-            need = self._villager() if kind is BudgetKind.VILLAGER else self._train(location)
+            need = self._villager() if location is VILLAGER else self._train(location)
         if self.impossible(rule):
             return None
-        return _Priced(kind, location, location if kind is BudgetKind.AGE else location.age, need)
+        return _Priced(location, location if isinstance(location, Age2AgeData) else location.age,
+                       need)
 
     @staticmethod
     def _build(building: Age2BuildingData) -> Need:
@@ -313,30 +306,31 @@ class _ScenarioOrder:
                 building = BUILDING_PREREQUISITE.get(building)
             buildings += reversed(chain)
         paid = {identity for identity, _ in entry.need.own}
-        tech, chain = (entry.location if entry.kind is BudgetKind.TECH else
-                       entry.location.upgrade_tech if entry.kind is BudgetKind.UNIT else None), []
+        location = entry.location
+        tech, chain = (location if isinstance(location, Age2TechData) else
+                       location.upgrade_tech
+                       if isinstance(location, Age2UnitData) and location is not VILLAGER
+                       else None), []
         while tech is not None:
             chain.append(tech)
             tech = tech.prerequisite
         techs = [tech for tech in reversed(chain) if tech in paid and tech is not entry.location]
-        found = ([self.priced(BudgetKind.BUILDING, building) for building in buildings
+        found = ([self.priced(building) for building in buildings
                   if building in pool.buildings.locations]
-                 + [self.priced(BudgetKind.AGE, age) for age in requirement.ages
-                    if age in pool.ages.locations]
-                 + [self.priced(BudgetKind.TECH, tech) for tech in techs
-                    if tech in pool.techs.shuffled])
+                 + [self.priced(age) for age in requirement.ages if age in pool.ages.locations]
+                 + [self.priced(tech) for tech in techs if tech in pool.techs.shuffled])
         return sorted((precursor for precursor in found
-                       if precursor is not None and precursor.key != entry.key),
-                      key=lambda precursor: (precursor.age, precursor.kind))
+                       if precursor is not None and precursor.location is not entry.location),
+                      key=lambda precursor: (precursor.age, _TYPE_RANK[type(precursor.location)]))
 
     def _build_order(self) -> tuple[tuple[_Priced, ...], tuple[_Priced, ...]]:
         """The sample by age, then the scenario's random rank, each entry after its precursors,
         less what could never fit the most the scenario could ever have."""
         budget = self.world.pool.budget
         rank = budget.rank.get(self.scenario.scenario, {})
-        base = sorted(filter(None, (self.priced(*key) for key in budget.entries)),
-                      key=lambda entry: (entry.age, rank[entry.key]))
-        ordered = list({precursor.key: precursor for entry in base
+        base = sorted(filter(None, map(self.priced, budget.entries)),
+                      key=lambda entry: (entry.age, rank[entry.location]))
+        ordered = list({precursor.location: precursor for entry in base
                         for precursor in (*self.precursors(entry), entry)}.values())
         most, every_waiver = self.max_budget(), frozenset(self.waivers)
         kept, pruned = [], []
@@ -346,9 +340,9 @@ class _ScenarioOrder:
             (kept if fits else pruned).append(entry)
         return tuple(kept), tuple(pruned)
 
-    def need_for(self, kind: BudgetKind, location: BudgetLocation) -> Need | None:
+    def need_for(self, location: PricedLocation) -> Need | None:
         """The running total up to and including this location, if the order holds it."""
-        index = next((n for n, entry in enumerate(self.order) if entry.key == (kind, location)),
+        index = next((n for n, entry in enumerate(self.order) if entry.location is location),
                      None)
         return None if index is None else self.plan(self.order[:index + 1])
 
@@ -379,13 +373,12 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
     """
 
     scenario: Age2ScenarioData
-    kind: BudgetKind
-    location: BudgetLocation
+    location: PricedLocation
 
     @override
     def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
         order = budget_order(world.rules.logic.for_scenario(self.scenario), world)
-        need = order.need_for(self.kind, self.location)
+        need = order.need_for(self.location)
         if need is None:
             return False_().resolve(world)   # not in this scenario's order
         switches = order.switches()

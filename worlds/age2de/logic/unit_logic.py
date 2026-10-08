@@ -6,6 +6,7 @@ from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
 from ..Options import Caveman, ShuffleVillager, Unitsanity, UnitsanityItems
+from ..generation.pools.BudgetPool import VILLAGER
 from ..items.Items import Age2ItemData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
@@ -71,10 +72,23 @@ class UnitLogic:
             return False_()
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
-            answer = scenario.units.can_train(unit)
+            answer = scenario.units.can_train_structurally(unit)
             if isinstance(answer, False_):
                 continue
-            ways.append(scenario.is_unlocked() & answer)
+            ways.append(scenario.is_unlocked() & answer
+                        & scenario.economy.can_pay(unit.cost, unit))
+        return Or(*ways)
+
+    def can_get_villager_anywhere(self) -> Rule:
+        """Any villager location: one villager, priced at the food that staffs a base."""
+        villager, food = Age2UnitData.VILLAGER_MALE, Age2ItemData.STARTING_VILLAGER_FOOD.type
+        ways: list[Rule] = []
+        for scenario in self.logic.scenarios:
+            answer = scenario.units.can_train_structurally(villager)
+            if isinstance(answer, False_):
+                continue
+            ways.append(scenario.is_unlocked() & answer
+                        & scenario.economy.can_pay({food.type: food.amount}, VILLAGER))
         return Or(*ways)
 
     # -- villagers ---------------------------------------------------------------------------
