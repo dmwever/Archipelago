@@ -28,5 +28,4 @@ class Attila3StartingState(ScenarioStartingState):
 
         gold_lump = HasAny(Age2ItemData.AP_ATTILA_3_RED_GOLD.item_name,
                            Age2ItemData.AP_ATTILA_3_GREEN_GOLD.item_name)
-        self.resource_sources[Resource.GOLD] = gold_lump
         self.easy_resource_sources[Resource.GOLD] = gold_lump

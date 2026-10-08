@@ -104,7 +104,7 @@ class TestResolveTimeDegrade(bases.Age2RuleTestBase):
                               .resolve(self.world), True_.Resolved)
 
     def test_more_than_the_seed_holds_is_false(self):
-        """Not an unsatisfiable rule - an honest False, so the Or in can_afford drops this
+        """Not an unsatisfiable rule - an honest False, so an Or around it drops this
         branch and the gathering branch carries the cost alone."""
         self.build()
         self.world.pool.resources.totals[Resource.STONE] = 100

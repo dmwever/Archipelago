@@ -179,43 +179,20 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
 
 @dataclass
-class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
-    """Whether this scenario can bring a resource in at all, or bring it in freely."""
+class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario can bring a resource in freely: enough of it to keep paying."""
 
     resource: Resource
-    easy: bool = False
 
     @override
     def key(self) -> tuple:
-        return (type(self).__name__, self.scenario, self.resource, self.easy)
+        return (type(self).__name__, self.scenario, self.resource)
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return self._easily(scenario) if self.easy else self._at_all(scenario)
-
-    def _at_all(self, scenario: 'ScenarioLogic') -> Rule:
-        return (self._GATHERED[self.resource](self, scenario)
-                | scenario.starting_state.resource_sources[self.resource]
-                | self._easily(scenario))
-
-    def _easily(self, scenario: 'ScenarioLogic') -> Rule:
         return (self._GATHERED_EASILY[self.resource](self, scenario)
                 | scenario.starting_state.easy_resource_sources[self.resource]
                 | scenario.economy.market_trades())
-
-    def _food(self, scenario: 'ScenarioLogic') -> Rule:
-        economy = scenario.economy
-        return (economy.can_hunt() | economy.can_herd() | economy.can_forage()
-                | economy.can_fish_some() | economy.endless_food())
-
-    def _gold(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.can_gather_gold() | scenario.economy.ally_trade_gold()
-
-    def _stone(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.can_quarry_some()
-
-    def _wood(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.can_chop_some() | scenario.economy.ally_trade_wood()
 
     def _food_easily(self, scenario: 'ScenarioLogic') -> Rule:
         economy = scenario.economy
@@ -263,13 +240,6 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
         return (scenario.buildings.can_build_building(camp)
                 | scenario.buildings.can_build_multiple_tc())
 
-    _GATHERED = {
-        Resource.WOOD: _wood,
-        Resource.FOOD: _food,
-        Resource.GOLD: _gold,
-        Resource.STONE: _stone,
-    }
-
     _GATHERED_EASILY = {
         Resource.WOOD: _wood_easily,
         Resource.FOOD: _food_easily,
@@ -279,8 +249,7 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
-        adverb = "easily " if self.easy else ""
-        return f"{scenario.scenario_name} can {adverb}gather {self.resource.name.lower()}"
+        return f"{scenario.scenario_name} can easily gather {self.resource.name.lower()}"
 
 
 def _question_identity(self: ScenarioQuestion.Resolved) -> int:

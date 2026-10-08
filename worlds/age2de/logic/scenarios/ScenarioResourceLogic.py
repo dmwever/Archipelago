@@ -13,7 +13,7 @@ from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ...generation.pools.BudgetPool import PricedLocation
 from ..budget.BudgetTotal import BudgetTotal
-from ..custom_logic.ScenarioQuestions import ScenarioHasResource
+from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -251,20 +251,10 @@ class ScenarioResourceLogic:
 
     # -- aggregates ---------------------------------------------------------------------------
 
-    def has_source(self, resource: Resource) -> Rule:
-        return ScenarioHasResource(scenario=self.scenario.scenario, resource=resource)
-
     def has_easy_source(self, resource: Resource) -> Rule:
-        return ScenarioHasResource(scenario=self.scenario.scenario, resource=resource, easy=True)
+        return ScenarioHasEasyResource(scenario=self.scenario.scenario, resource=resource)
 
     # -- what units and techs ask -------------------------------------------------------------
-
-    def can_afford(self, costs: Mapping[Resource, float]) -> Rule:
-        priced = [resource for resource, amount in costs.items() if amount > 0]
-        if not priced:
-            return True_()
-        return And(*[self.logic.resources.has_amount(resource, costs[resource])
-                     | self.has_source(resource) for resource in priced])
 
     def can_sustain(self, resources: Collection[Resource]) -> Rule:
         if not resources:

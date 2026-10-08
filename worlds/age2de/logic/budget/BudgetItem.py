@@ -30,6 +30,9 @@ class BudgetItem:
     children: tuple[TechBudgetItem, ...] = ()
     """The techs directly below it."""
 
+    first_in_age: ClassVar[bool] = False
+    """Whether it goes ahead of the sample's own entries of its age in the scenario's order."""
+
     def __init__(self, location: PricedLocation) -> None:
         self.location = location
 

@@ -565,7 +565,7 @@ UNITS_WITHOUT_COST: frozenset[Age2UnitData] = frozenset({
     Age2UnitData.ELITE_WAR_CHARIOT_ANTIQUITY,
 })
 """Units the dump does not carry, all of them Chronicles-era. No shipped civilisation trains one,
-and a unit with no cost on file is free rather than untrainable - see can_afford."""
+and a unit with no cost on file is free rather than untrainable - see can_pay."""
 
 TECHS_WITHOUT_COST: frozenset[Age2TechData] = frozenset({
     Age2TechData.BEARDED_AXE_FRANKS,

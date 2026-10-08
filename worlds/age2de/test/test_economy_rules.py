@@ -13,7 +13,8 @@ from ..locations.Buildings import Age2BuildingData
 from ..locations.connections.ScenarioResources import Tier, total
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
-from ..logic.custom_logic.ScenarioQuestions import ScenarioHasResource
+from ..locations.Units import Age2UnitData
+from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 
 class EconomyTestBase(bases.Age2RuleTestBase):
@@ -30,7 +31,7 @@ class EconomyTestBase(bases.Age2RuleTestBase):
 
     def easy(self, scenario: Age2ScenarioData, resource: Resource):
         """The gathering half of has_easy_source, without the scenario's declared sources."""
-        question = ScenarioHasResource(scenario=scenario, resource=resource, easy=True)
+        question = ScenarioHasEasyResource(scenario=scenario, resource=resource)
         return question._GATHERED_EASILY[resource](
             question, self.world.rules.logic.for_scenario(scenario))
 
@@ -122,7 +123,7 @@ class TestFixedForceNeedsNoSpecialCase(EconomyTestBase):
             self.assertTrue(scenario.logic(self.world.rules.logic).fixed_force)
             for resource in Resource:
                 with self.subTest(f"{scenario.name}.{resource.name}"):
-                    self.assertTrue(self.is_false(self.economy(scenario).has_source(resource)))
+                    self.assertTrue(self.is_false(self.economy(scenario).has_easy_source(resource)))
 
 
 class TestAttila3Gold(EconomyTestBase):
@@ -239,41 +240,31 @@ class TestAffordability(EconomyTestBase):
         state = CollectionState(self.multiworld)
         for costs in ({}, {Resource.GOLD: 0}, {Resource.GOLD: 0, Resource.FOOD: 0}):
             with self.subTest(str(costs)):
-                self.assertTrue(self.resolved(economy.can_afford(costs))(state))
+                self.assertTrue(self.resolved(
+                    economy.can_pay(costs, Age2UnitData.KNIGHT))(state))
                 self.assertTrue(self.resolved(
                     self.world.rules.logic.resources.has_amounts(costs))(state))
         # can_sustain is asked which resources to keep coming, not what they cost, so the
         # zero-cost filtering happens in can_field and nothing priced at nothing reaches here.
         self.assertTrue(self.resolved(economy.can_sustain(()))(state))
 
-    def test_a_cost_can_be_paid_from_the_bank_or_from_the_ground(self):
-        self.build()
-        rule = self.economy(Age2ScenarioData.AP_ATTILA_1).can_afford({Resource.GOLD: 50})
-        names = set(self.resolved(rule).item_dependencies())
-        self.assertIn("+50 Starting Gold", names)
-        self.assertIn(Age2BuildingData.MINING_CAMP.item.item_name, names)
-
 
 class TestTheQuestionIsShared(EconomyTestBase):
     def test_asking_twice_gives_the_same_answer_object(self):
         self.build()
         scenario = Age2ScenarioData.AP_ATTILA_1
-        first = self.resolved(ScenarioHasResource(scenario=scenario, resource=Resource.FOOD))
-        second = self.resolved(ScenarioHasResource(scenario=scenario, resource=Resource.FOOD))
+        first = self.resolved(ScenarioHasEasyResource(scenario=scenario, resource=Resource.FOOD))
+        second = self.resolved(ScenarioHasEasyResource(scenario=scenario, resource=Resource.FOOD))
         self.assertIs(first, second)
 
     def test_the_question_answers_what_the_economy_would_have_built(self):
         self.build()
         for scenario in Age2ScenarioData:
             for resource in Resource:
-                for easy in (False, True):
-                    with self.subTest(f"{scenario.name}.{resource.name}.{easy}"):
-                        question = ScenarioHasResource(scenario=scenario, resource=resource,
-                                                     easy=easy)
-                        answer = question.answer(
-                            self.world.rules.logic.for_scenario(scenario))
-                        self.assertIs(self.resolved(question).answer,
-                                      self.resolved(answer))
+                with self.subTest(f"{scenario.name}.{resource.name}"):
+                    question = ScenarioHasEasyResource(scenario=scenario, resource=resource)
+                    answer = question.answer(self.world.rules.logic.for_scenario(scenario))
+                    self.assertIs(self.resolved(question).answer, self.resolved(answer))
 
     def test_the_answers_stay_within_budget(self):
         self.build()
@@ -327,7 +318,7 @@ class TestEveryScenarioCanLive(EconomyTestBase):
 
     def easy_answer(self, scenario: Age2ScenarioData, resource: Resource):
         """The whole easy question - gathering, the scenario's declared sources, and trade."""
-        question = ScenarioHasResource(scenario=scenario, resource=resource, easy=True)
+        question = ScenarioHasEasyResource(scenario=scenario, resource=resource)
         return question.answer(self.world.rules.logic.for_scenario(scenario))
 
     def test_every_scenario_can_qualify_for_every_resource(self):

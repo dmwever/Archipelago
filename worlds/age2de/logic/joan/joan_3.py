@@ -24,6 +24,7 @@ class Joan3StartingState(ScenarioStartingState):
 
         has_boats = Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
         self.obtains_unit[U.TRANSPORT_SHIP] = has_boats
+        self.required_purchases = {U.TRANSPORT_SHIP: has_boats}
         self.obtains_unit[U.DEMOLITION_SHIP] = has_boats
         self.meets_additional_base_requirements = has_boats | (
             logic.buildings.has_building(Age2BuildingData.DOCK)

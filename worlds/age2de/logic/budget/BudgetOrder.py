@@ -21,6 +21,7 @@ from .BudgetItem import BudgetItem
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, Need
 from .Requirement import required
+from .ScenarioBudgetItem import ScenarioBudgetItem
 from .TechBudgetItem import TechBudgetItem
 from .UnitBudgetItem import UnitBudgetItem
 from .VillagerBudgetItem import VillagerBudgetItem
@@ -34,6 +35,10 @@ _ITEMS: dict[type, type[BudgetItem]] = {Age2AgeData: AgeBudgetItem,
                                         Age2BuildingData: BuildingBudgetItem,
                                         Age2TechData: TechBudgetItem,
                                         Age2UnitData: UnitBudgetItem}
+
+
+Switch = tuple[Rule, tuple[Age2BuildingData, ...], tuple[PricedLocation, ...]]
+"""One waiver rule, the buildings it stands up and the purchases it makes unnecessary."""
 
 
 @functools.cache
@@ -91,6 +96,12 @@ class _ScenarioOrder:
         self.waivers = self._waivers()
         self._could_have: dict[Age2BuildingData, bool] = {}
         self.sources = self._sources()
+        self.purchases = {location: rule for location, rule
+                          in scenario.starting_state.required_purchases.items()
+                          if not isinstance(rule, False_)}
+        """The scenario's purchases that something can make unnecessary, and the rule that does."""
+        self._precursors: dict[PricedLocation, list[_Priced]] = {}
+        self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
 
     def _waivers(self) -> dict[Age2BuildingData, Rule]:
@@ -136,7 +147,9 @@ class _ScenarioOrder:
     def priced(self, location: PricedLocation) -> _Priced | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
         could never be true here."""
-        item = budget_item(location)
+        return self._priced(budget_item(location))
+
+    def _priced(self, item: BudgetItem) -> _Priced | None:
         if self.impossible(item.structural(self.scenario)):
             return None
         return _Priced(item, item.need_in(self.scenario))
@@ -172,14 +185,21 @@ class _ScenarioOrder:
                       key=lambda precursor: (precursor.age, precursor.item.rank))
 
     def _build_order(self) -> tuple[tuple[_Priced, ...], tuple[_Priced, ...]]:
-        """The sample by age, then the scenario's random rank, each entry after its precursors,
-        less what could never fit the most the scenario could ever have."""
+        """The sample and the scenario's own purchases by age, its purchases first, then the
+        scenario's random rank; each entry after its precursors, less what could never fit the
+        most the scenario could ever have."""
         budget = self.world.pool.budget
         rank = budget.rank.get(self.scenario.scenario, {})
-        base = sorted(filter(None, map(self.priced, budget.entries)),
-                      key=lambda entry: (entry.age, rank[entry.location]))
-        ordered = list({precursor.location: precursor for entry in base
-                        for precursor in (*self.precursors(entry), entry)}.values())
+        purchases = self.scenario.starting_state.required_purchases
+        items = ([ScenarioBudgetItem(budget_item(location)) for location in purchases]
+                 + [budget_item(location) for location in budget.entries
+                    if location not in purchases])
+        self._base = sorted(filter(None, map(self._priced, items)),
+                            key=lambda entry: (entry.age, 0, 0) if entry.item.first_in_age
+                            else (entry.age, 1, rank[entry.location]))
+        self._precursors = {entry.location: self.precursors(entry) for entry in self._base}
+        ordered = list({precursor.location: precursor for entry in self._base
+                        for precursor in (*self._precursors[entry.location], entry)}.values())
         most, every_waiver = self.max_budget(), frozenset(self.waivers)
         kept, pruned = [], []
         for entry in ordered:
@@ -188,20 +208,44 @@ class _ScenarioOrder:
             (kept if fits else pruned).append(entry)
         return tuple(kept), tuple(pruned)
 
-    def need_for(self, location: PricedLocation) -> Need | None:
-        """The running total up to and including this location, if the order holds it."""
+    def needed(self, dropped: frozenset[PricedLocation]) -> frozenset[PricedLocation]:
+        """What the order still needs once these purchases are unnecessary: everything but them
+        and what only they brought in."""
+        if dropped not in self._needed:
+            self._needed[dropped] = frozenset(
+                precursor.location for entry in self._base if entry.location not in dropped
+                for precursor in (*self._precursors[entry.location], entry))
+        return self._needed[dropped]
+
+    def need_for(self, location: PricedLocation,
+                 dropped: frozenset[PricedLocation] = frozenset()) -> Need | None:
+        """The running total up to and including this location, if the order holds it, with
+        these purchases unnecessary. The order itself never moves, and the location always pays
+        for itself, so sparing a purchase only ever takes cost away."""
         index = next((n for n, entry in enumerate(self.order) if entry.location is location),
                      None)
-        return None if index is None else self.plan(self.order[:index + 1])
+        if index is None:
+            return None
+        needed = self.needed(dropped)
+        return self.plan(entry for entry in self.order[:index + 1]
+                         if entry.location in needed or entry.location is location)
 
-    def switches(self) -> list[tuple[Rule, tuple[Age2BuildingData, ...]]]:
-        """The waivers as switches: buildings that stand on the same rule (all of a camp's) are
-        one switch, so a cost table needs one entry per combination of switches, not buildings."""
-        switches: list[tuple[Rule, list[Age2BuildingData]]] = []
-        for building, rule in self.waivers.items():
+    def switches(self) -> list[Switch]:
+        """The waivers as switches: buildings that stand on the same rule (all of a camp's) and
+        purchases that rule makes unnecessary are one switch, so a cost table needs one entry per
+        combination of switches, not per building."""
+        switches: list[tuple[Rule, list[Age2BuildingData], list[PricedLocation]]] = []
+
+        def switch(rule: Rule) -> tuple[Rule, list[Age2BuildingData], list[PricedLocation]]:
             same = next((switch for switch in switches if switch[0] == rule), None)
             if same is None:
-                switches.append((rule, [building]))
-            else:
-                same[1].append(building)
-        return [(rule, tuple(buildings)) for rule, buildings in switches]
+                same = (rule, [], [])
+                switches.append(same)
+            return same
+
+        for building, rule in self.waivers.items():
+            switch(rule)[1].append(building)
+        for location, rule in self.purchases.items():
+            switch(rule)[2].append(location)
+        return [(rule, tuple(buildings), tuple(purchases))
+                for rule, buildings, purchases in switches]

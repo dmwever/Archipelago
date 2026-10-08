@@ -109,14 +109,6 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
     def deps(self, rule):
         return set(rule.resolve(self.world).item_dependencies())
 
-    def test_training_a_unit_asks_for_what_it_costs(self):
-        self.build()
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        wanted = self.deps(scenario.units.can_train(Age2UnitData.KNIGHT))
-        # A knight is food and gold: either banked, or a source on the map.
-        self.assertIn("+250 Starting Food", wanted)
-        self.assertIn("+250 Starting Gold", wanted)
-
     def budget_terms(self, rule) -> list:
         """The budget totals a resolved rule can be satisfied through."""
         found, stack = [], [rule.resolve(self.world)]
@@ -162,7 +154,8 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
         explicitly or it becomes untrainable."""
         self.build()
         economy = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).economy
-        self.assertTrue(economy.can_afford({}).resolve(self.world).always_true)
+        self.assertTrue(economy.can_pay({}, Age2UnitData.KNIGHT).resolve(self.world)
+                        .always_true)
 
 
 class TestVillagersCostFood(bases.Age2RuleTestBase):
@@ -171,15 +164,9 @@ class TestVillagersCostFood(bases.Age2RuleTestBase):
 
     def test_a_shuffled_villager_wants_the_starting_food_item(self):
         self.build(shuffle_villager=ShuffleVillager.option_yes)
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        wanted = set(scenario.units.can_train(Age2UnitData.VILLAGER_MALE)
+        wanted = set(self.world.rules.logic.units.can_get_villager_anywhere()
                      .resolve(self.world).item_dependencies())
         self.assertIn(Age2ItemData.STARTING_VILLAGER_FOOD.item_name, wanted)
-
-    def test_an_unshuffled_villager_does_not(self):
-        self.build(shuffle_villager=ShuffleVillager.option_no)
-        rule = self.world.rules.logic.units.villager_food()
-        self.assertTrue(rule.resolve(self.world).always_true)
 
 
 class TestABaseNeedsVillagers(bases.Age2RuleTestBase):

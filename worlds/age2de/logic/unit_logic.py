@@ -91,12 +91,6 @@ class UnitLogic:
                         & scenario.economy.can_pay({food.type: food.amount}, VILLAGER))
         return Or(*ways)
 
-    # -- villagers ---------------------------------------------------------------------------
-
-    def villager_food(self) -> Rule:
-        if self.world.options.shuffle_villager == ShuffleVillager.option_no:
-            return True_()
-        return Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
 
     def has_profession_item(self, job: Age2VillagerJobData) -> Rule:
         if self.world.options.shuffle_villager != ShuffleVillager.option_include_professions:

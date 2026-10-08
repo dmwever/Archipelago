@@ -25,12 +25,6 @@ class ScenarioUnitLogic:
 
     # -- training ----------------------------------------------------------------------------
 
-    def can_train(self, unit: Age2UnitData) -> Rule:
-        rule = self.can_train_structurally(unit) & self.scenario.economy.can_afford(unit.cost)
-        if unit.line in VILLAGER_LINES:
-            rule = rule & self.logic.units.villager_food()
-        return rule
-
     def can_train_structurally(self, unit: Age2UnitData) -> Rule:
         """Everything training it asks for except paying for it."""
         if not unit.buildings or not self.scenario.civilization.trains(unit):
@@ -73,7 +67,8 @@ class ScenarioUnitLogic:
             return False_()
         sustained = {resource for unit in tiers
                      for resource, amount in unit.cost.items() if amount > 0}
-        return (Or(*[self.can_train(unit) for unit in tiers]) & self.scenario.has_base()
+        return (Or(*[self.can_train_structurally(unit) for unit in tiers])
+                & self.scenario.has_base()
                 & self.scenario.economy.can_sustain(sustained))
 
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:

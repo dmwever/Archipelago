@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from .. import Age2World
     from ..locations.Scenarios import Age2ScenarioData
     from .Logic import Logic
+    from ..generation.pools.BudgetPool import PricedLocation
 
 @dataclass
 class ScenarioStartingState:
@@ -45,8 +46,9 @@ class ScenarioStartingState:
     starting_whales: Rule = field(default_factory=lambda: False_())
     starting_relics: Rule = field(default_factory=lambda: True_())
     trading_ally: Rule = field(default_factory=lambda: False_())
-    resource_sources: dict[Resource, Rule] = field(
-        default_factory=lambda: {resource: False_() for resource in Resource})
+    required_purchases: 'dict[PricedLocation, Rule]' = field(default_factory=dict)
+    """What the scenario has to buy to be beaten, and the rule that makes buying it unnecessary
+    (False_ if nothing does). Each joins its budget order, drawn or not."""
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
 

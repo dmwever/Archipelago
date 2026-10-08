@@ -13,9 +13,8 @@ class Attila3Rules(ScenarioRules):
     
     def set_rules(self):
         super().set_rules()
-        has_some_gold: Rule = self.scenario_logic.economy.has_source(Resource.GOLD)
         has_much_gold: Rule = self.scenario_logic.economy.has_easy_source(Resource.GOLD)
-        can_win_water: Rule = self.scenario_logic.military.has_navy() & has_some_gold
+        can_win_water: Rule = self.scenario_logic.military.has_navy()
         can_beat_blue: Rule = self.scenario_logic.military.has_siege() & has_much_gold
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BUILD_CASTLE], self.scenario_logic.buildings.can_build_building(Age2BuildingData.CASTLE))

@@ -18,8 +18,10 @@ class Joan3Rules(ScenarioRules):
     
     def set_rules(self):
         super().set_rules()
+        transport = Age2UnitData.TRANSPORT_SHIP
         can_cross_ocean = (Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
-                           | self.scenario_logic.units.can_train(Age2UnitData.TRANSPORT_SHIP))
+                           | (self.scenario_logic.units.can_train_structurally(transport)
+                              & self.scenario_logic.economy.can_pay(transport.cost, transport)))
         can_destroy_castle: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean & 

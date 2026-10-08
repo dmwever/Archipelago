@@ -14,7 +14,7 @@ from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
-from .BudgetOrder import budget_order
+from .BudgetOrder import Switch, budget_order
 from .Need import Need
 from .Requirement import Requirement, required
 
@@ -27,8 +27,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
     """Is this location's place in its scenario's budget order in logic yet?
 
     Unresolved it is only the question: which scenario, which location. Resolved, its children
-    are the waiver switches (buildings the scenario starts with), then the rules that switch a
-    gathering source on. Every combination of switches has its cost worked out at resolve time,
+    are the waiver switches (buildings the scenario starts with, purchases it can be spared),
+    then the rules that switch a gathering source on. Every combination of switches has its cost worked out at resolve time,
     so evaluating is a lookup and a sum of the pile. More items only ever turn more switches on
     and the pile only grows, so the rule never goes from true to false.
     """
@@ -39,19 +39,25 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
     @override
     def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
         order = budget_order(world.rules.logic.for_scenario(self.scenario), world)
-        need = order.need_for(self.location)
-        if need is None:
+        if order.need_for(self.location) is None:
             return False_().resolve(world)   # not in this scenario's order
         switches = order.switches()
+        masks = range(1 << len(switches))
+
+        def on(mask: int) -> list[Switch]:
+            return [switch for bit, switch in enumerate(switches) if mask >> bit & 1]
+
+        needs = tuple(order.need_for(self.location, frozenset(
+            purchase for _, _, purchases in on(mask) for purchase in purchases)) for mask in masks)
         costs = tuple(
-            tuple(required(need, frozenset(building for bit, (_, buildings) in enumerate(switches)
-                                           if mask >> bit & 1 for building in buildings)).cost.items())
-            for mask in range(1 << len(switches)))
-        rules = (*(rule for rule, _ in switches), *(source[3] for source in order.sources))
+            tuple(required(needs[mask], frozenset(
+                building for _, buildings, _ in on(mask) for building in buildings)).cost.items())
+            for mask in masks)
+        rules = (*(rule for rule, _, _ in switches), *(source[3] for source in order.sources))
         return self.Resolved(
             tuple(rule.resolve(world) for rule in rules),
-            need,
-            tuple(buildings for _, buildings in switches),
+            needs,
+            tuple(buildings for _, buildings, _ in switches),
             tuple(source[:3] for source in order.sources),
             self.scenario,
             tuple((resource, contributors(resource)) for resource in SAMPLED_RESOURCES),
@@ -65,7 +71,9 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         return f"BudgetTotal({self.scenario.scenario_name}, {self.location.location_name})"
 
     class Resolved(NestedRule.Resolved):
-        need: Need
+        needs: tuple[Need, ...]
+        """The running total for each combination of switches, by bit mask: a switch can make a
+        purchase unnecessary, which takes it out of the total."""
         switches: tuple[tuple[Age2BuildingData, ...], ...]
         sources: tuple[tuple[str, Resource, int], ...]
         scenario: Age2ScenarioData
@@ -101,8 +109,12 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             return {resource: sum(held[name] * each for name, each in items)
                     for resource, items in self.contributors}
 
+        def need(self, state: CollectionState | None) -> Need:
+            return self.needs[0 if state is None else self.mask(state)]
+
         def requirement(self, state: CollectionState | None) -> Requirement:
-            return required(self.need, frozenset() if state is None else self.waived_now(state))
+            return required(self.need(state),
+                            frozenset() if state is None else self.waived_now(state))
 
         @override
         def _evaluate(self, state: CollectionState) -> bool:
@@ -141,8 +153,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             return {
                 "scenario": self.scenario.scenario_name,
                 "requirement": dict(requirement.cost),
-                "own": self.need.own_cost(),
-                "building_entries": sorted(self.need.entry_buildings, key=int),
+                "own": self.need(state).own_cost(),
+                "building_entries": sorted(self.need(state).entry_buildings, key=int),
                 "buildings_charged": list(requirement.buildings),
                 "ages_charged": list(requirement.ages),
                 "waived": sorted(self.waived_now(state), key=int) if state is not None else [],

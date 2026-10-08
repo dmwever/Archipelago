@@ -322,6 +322,58 @@ class TestTheRule(BudgetTestBase):
         text = self.resolved(Age2ScenarioData.AP_ATTILA_1, budget.order[-1].location).explain_str()
         self.assertIn("The Scourge of God", text)
         self.assertIn("food", text)
+class TestRequiredPurchases(BudgetTestBase):
+    """Joan 3 cannot be crossed without a Transport Ship: the scenario buys one, unless the
+    Transport item hands it the boats."""
+
+    SHIP = Age2UnitData.TRANSPORT_SHIP
+
+    def joan_3(self):
+        if Age2ScenarioData.AP_JOAN_3 not in self.world.pool.scenarios.included:
+            self.skipTest("Joan 3 is not in this playthrough")
+        return self.budget(Age2ScenarioData.AP_JOAN_3)
+
+    def test_the_ship_leads_its_age(self):
+        """Only the ship's own precursors come before it in its age."""
+        budget = self.joan_3()
+        order = [entry.location for entry in budget.order]
+        ship = budget.order[order.index(self.SHIP)]
+        self.assertTrue(ship.item.first_in_age)
+        its_own = {precursor.location for precursor in budget._precursors[self.SHIP]}
+        self.assertEqual([], [entry.location for entry in budget.order[:order.index(self.SHIP)]
+                              if entry.age == ship.age and entry.location not in its_own])
+
+    def test_the_transport_item_spares_the_purchase(self):
+        """With the boats in hand nothing pays for the ship, nor for what only it needed."""
+        budget = self.joan_3()
+        spared = frozenset({self.SHIP})
+        only_for_ship = ({precursor.location for precursor in budget._precursors[self.SHIP]}
+                         - {precursor.location for entry in budget._base
+                            if entry.location is not self.SHIP
+                            for precursor in (*budget._precursors[entry.location], entry)})
+        self.assertFalse(({self.SHIP} | only_for_ship) & budget.needed(spared))
+        for entry in budget.order:
+            if entry.location is self.SHIP:
+                continue   # its own location still pays for itself
+            with self.subTest(entry.location.name):
+                need = budget.need_for(entry.location, spared)
+                self.assertNotIn(self.SHIP.line, {identity for identity, _ in need.own})
+
+    def test_a_switch_only_ever_lowers_the_total(self):
+        """Standing a building up or sparing a purchase can only take cost away, so turning
+        any switch on never turns a rule from true to false."""
+        for scenario in self.world.pool.scenarios.included:
+            for entry in self.budget(scenario).order:
+                resolved = BudgetTotal(scenario=scenario,
+                                       location=entry.location).resolve(self.world)
+                costs = [dict(cost) for cost in resolved.costs]
+                for mask, bit in itertools.product(range(len(costs)),
+                                                   range(len(resolved.switches))):
+                    with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
+                        for resource, amount in costs[mask | 1 << bit].items():
+                            self.assertLessEqual(amount, costs[mask].get(resource, 0))
+
+
 class TestCouldEverHave(BudgetTestBase):
     def test_a_fixed_force_scenario_can_build_nothing(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_1)
