@@ -14,6 +14,7 @@ from ...locations.Units import Age2UnitData, UnitType
 from ...locations.VillagerJobs import Age2VillagerJobData
 from ...locations.connections.CivilizationUnits import CIV_TO_UNITS, UNTRAINABLE
 from ...locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from ...locations.connections.VillagerJobResources import JOB_TO_SCENARIOS
 from .CivilizationPool import CivilizationPool
 
 UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
@@ -111,7 +112,12 @@ class UnitPool:
         return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] + [job for job in Age2VillagerJobData if self.job_possible(job)]
 
     def job_possible(self, job: Age2VillagerJobData) -> bool:
-        return job.building is None or self._civs.builds(job.building)
+        if job.building is not None and not self._civs.builds(job.building):
+            return False
+        scenarios = JOB_TO_SCENARIOS.get(job.job_name)
+        if scenarios is None:
+            return True
+        return any(scenario in scenarios for scenario in self._scenarios)
 
     @property
     def line_locations(self) -> dict[Age2UnitLineData, list[UnitLocation]]:

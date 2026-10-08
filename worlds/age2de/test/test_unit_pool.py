@@ -8,6 +8,7 @@ from ..items.Items import (Age2ItemData, UnitBuilding, UnitLine, UnitUpgrade,
                            NAME_TO_ITEM)
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from ..locations.connections.VillagerJobResources import JOB_TO_SCENARIOS
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.EscortUnits import Age2EscortUnitData
@@ -86,14 +87,16 @@ class TestUnitPool(UnitPoolTestBase):
 
         jobs = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
         placed = set(self.own_locations(jobs))
-        # Two idle villagers and eleven of the twelve jobs, twice. The Herder is the one left
-        # out: it works a Pasture, which is the Gurjaras' building and nobody else's.
-        self.assertEqual(len(placed), 24)
+        # Two idle villagers and ten of the twelve jobs, twice. The Herder works a Pasture,
+        # the Gurjaras' building and nobody else's; the Oyster Gatherer wants an oyster, and
+        # no Attila or Joan map holds one.
+        self.assertEqual(len(placed), 22)
         self.assertNotIn(Age2UnitLineData.VILLAGER_MALE_LINE.location_name, placed)
         self.assertIn(Age2UnitData.VILLAGER_MALE.location_name, placed)
         self.assertIn(Age2UnitData.VILLAGER_FEMALE.location_name, placed)
         self.assertTrue({job.location_name for job in Age2VillagerJobData
-                         if job.job_name != "Herder"} <= placed)
+                         if job.job_name not in ("Herder", "Oyster Gatherer")} <= placed)
+        self.assertNotIn(Age2VillagerJobData.OYSTER_GATHERER_MALE.location_name, placed)
         self.assertNotIn(Age2VillagerJobData.HERDER_MALE.location_name, placed)
 
     def test_professions_are_evenly_split_between_the_sexes(self):
@@ -141,6 +144,27 @@ class TestUnitPool(UnitPoolTestBase):
                            include_unique_units=IncludeUniqueUnits.option_both)
         self.assertNotIn(Age2UnitLineData.MANGUDAI_LINE.location_name,
                          self.own_locations(world))
+
+
+class TestJobsNeedTheirResource(UnitPoolTestBase):
+    """A gathering job needs its resource on a map, not just a civilisation that can build."""
+
+    def test_the_oyster_gatherer_is_never_placed(self):
+        """No Attila or Joan map holds an oyster, so the location could never be completed."""
+        world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        placed = self.own_locations(world)
+        self.assertNotIn("Own Oyster Gatherer (Male)", placed)
+        self.assertNotIn("Own Oyster Gatherer (Female)", placed)
+
+    def test_a_job_whose_resource_exists_is_still_placed(self):
+        world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        placed = self.own_locations(world)
+        self.assertIn("Own Fisherman (Male)", placed)
+        self.assertIn("Own Gold Miner (Male)", placed)
+
+    def test_every_named_job_resource_matches_a_real_job(self):
+        names = {job.job_name for job in Age2VillagerJobData}
+        self.assertEqual([name for name in JOB_TO_SCENARIOS if name not in names], [])
 
 
 class TestUnitItems(UnitPoolTestBase):
@@ -259,9 +283,11 @@ class TestUnitRegions(UnitPoolTestBase):
                   for line in (Age2UnitLineData.VILLAGER_MALE_LINE,
                                Age2UnitLineData.VILLAGER_FEMALE_LINE)
                   for location in world.multiworld.get_region(line.line_name, 1).locations]
-        self.assertEqual(len(placed), 24)   # the Herder needs a Pasture that neither civ builds
+        # the Herder needs a Pasture neither civ builds; the Oyster Gatherer needs an oyster
+        # and no map has one
+        self.assertEqual(len(placed), 22)
         for job in Age2VillagerJobData:
-            if job.job_name == "Herder":
+            if job.job_name in ("Herder", "Oyster Gatherer"):
                 continue
             self.assertIn(job.location_name, placed, job.name)
         self.assertIn(Age2UnitData.VILLAGER_FEMALE.location_name, placed)
