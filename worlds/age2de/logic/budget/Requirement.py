@@ -11,22 +11,10 @@ from .Need import CLIMBED_AGES, Need
 
 
 class Requirement:
-    """What a settled Need costs once the buildings in `waived` are standing for free.
-
-    Its own price and its entry buildings are always paid. A group of buildings is free if one
-    of its options is already owned or standing, and otherwise takes its first option,
-    prerequisites and all. Each age climbed pays its age-up, a Town Center, and the buildings
-    that leave the age before it: nothing if the single building or two of the others are owned
-    or standing, otherwise the first ones listed. A building already paid for or standing is
-    never charged again. Not always the cheapest choice - the order things are listed in
-    decides - but never more than once."""
-
+    """What a settled Need costs once the buildings in `waived` are standing for free."""
     cost: dict[Resource, int]
-    """What it all comes to, per resource; nothing listed at zero."""
     buildings: list[Age2BuildingData]
-    """The buildings charged, in the order they were taken."""
     ages: list[Age2AgeData]
-    """The ages climbed."""
 
     def __init__(self, need: Need, waived: frozenset[Age2BuildingData]) -> None:
         self._waived: frozenset[Age2BuildingData] = waived
@@ -39,9 +27,8 @@ class Requirement:
                 for age, options, single_building in need.age_up_buildings
             }
 
-        # One-building groups first, so a group with a choice sees what they have already bought.
         building_choices: list[tuple[Age2BuildingData, ...]] = sorted(
-            need.building_choices, key=lambda group: (len(group), tuple(map(int, group))))
+            need.building_choices, key=lambda choices: (len(choices), tuple(map(int, choices))))
         self.buildings = []
         self.ages = [age for age in CLIMBED_AGES
                      if need.starting_age < age <= need.needed_age]

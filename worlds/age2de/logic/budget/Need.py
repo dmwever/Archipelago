@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Callable
+from typing import Callable, Iterable
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -55,22 +55,37 @@ class Need:
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
-    def in_scenario(self, start: Age2AgeData, missing_age_up_buildings: tuple[Climb, ...],
+    def in_scenario(self,
+                    start: Age2AgeData,
+                    age_up_buildings: tuple[Climb, ...],
                     could_have: Callable[[Age2BuildingData], bool],
                     choice_order: Callable[[Age2BuildingData], int]) -> 'Need':
-        """Settled for one scenario: where it starts, how it climbs, and only the building
-        options it could ever have, each set of choices in the seed's order."""
-        building_groups = frozenset(kept for group in self.building_choices
-                                    if (kept := tuple(sorted(filter(could_have, group),
-                                                             key=choice_order))))
-        missing_age_up_buildings = tuple((age, tuple(sorted(filter(could_have, options),
-                                                            key=choice_order)),
-                                          single if single is not None and could_have(single)
-                                          else None)
-                                         for age, options, single in missing_age_up_buildings)
-        return dataclasses.replace(self, building_groups=building_groups,
-                                   needed_age=max(start, self.needed_age), starting_age=start,
-                                   age_up_buildings=missing_age_up_buildings)
+        """Settled for one scenario: the age it starts in, what leaves each age there, and only
+        the buildings it could ever have, each set of choices in the seed's order. A set of
+        choices left empty is dropped; so is a single building the scenario can never have."""
+
+        def settled(buildings: Iterable[Age2BuildingData]) -> tuple[Age2BuildingData, ...]:
+            """What the scenario could have of these, in the seed's order."""
+            return tuple(sorted(filter(could_have, buildings), key=choice_order))
+
+        building_choices: set[tuple[Age2BuildingData, ...]] = set()
+        for choices in self.building_choices:
+            kept = settled(choices)
+            if kept:
+                building_choices.add(kept)
+
+        settled_age_ups: list[Climb] = []
+        for age, options, single_building in age_up_buildings:
+            if single_building is not None and not could_have(single_building):
+                single_building = None
+            settled_age_ups.append((age, settled(options), single_building))
+
+        # Frozen and tupled again: a Need is kept in resolved rules, which hash.
+        return dataclasses.replace(self,
+                                   building_choices=frozenset(building_choices),
+                                   needed_age=max(start, self.needed_age),
+                                   starting_age=start,
+                                   age_up_buildings=tuple(settled_age_ups))
 
     def own_cost(self) -> dict[Resource, int]:
         cost: dict[Resource, int] = {}
