@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, NamedTuple
 
 from rule_builder.rules import False_, Or, Rule
 
-from ...generation.pools.BudgetPool import (SAMPLED_RESOURCES, SOURCE_ALLOWANCE, SOURCES,
+from ...generation.pools.BudgetPool import (SAMPLED_RESOURCES, SOURCE_ALLOWANCE,
                                             BASE, VILLAGER, Age2BaseData, PricedLocation)
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -19,6 +19,7 @@ from ..scenarios.ScenarioAgeLogic import AGE_BUILDINGS, PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BudgetItem
+from .BudgetSource import SOURCES
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, Need
 from .Requirement import required
@@ -40,6 +41,18 @@ _ITEMS: dict[type, type[BudgetItem]] = {Age2AgeData: AgeBudgetItem,
 
 
 Switch = tuple[Rule, tuple[Age2BuildingData, ...], tuple[PricedLocation, ...]]
+
+
+class ScenarioSource(NamedTuple):
+    """A gathering source as one scenario could work it: each way, and the seed it buys."""
+    name: str
+    resource: Resource
+    allowance: int
+    ways: tuple[tuple[Rule, Need], ...]
+
+    @property
+    def rule(self) -> Rule:
+        return Or(*[rule for rule, _ in self.ways])
 """One waiver rule, the buildings it stands up and the purchases it makes unnecessary."""
 
 
@@ -126,17 +139,20 @@ class _ScenarioOrder:
             self._could_have[building] = not self.impossible(self.scenario.has_building(building))
         return self._could_have[building]
 
-    def _sources(self) -> list[tuple[str, Resource, int, Rule]]:
-        """The early gathering sources this scenario could ever count toward its budget."""
+    def _sources(self) -> list[ScenarioSource]:
+        """The early gathering sources this scenario could ever count toward its budget, each
+        with the ways it could be worked here and the seed each way is paid for with."""
         economy = self.scenario.economy
+        relics = self.world.pool.budget.relic_allowance(self.scenario.scenario)
         sources = []
-        for name, resource, methods in SOURCES:
-            rules = [getattr(economy, method)() for method in methods]
-            sources.append((name, resource, SOURCE_ALLOWANCE,
-                            rules[0] if len(rules) == 1 else Or(*rules)))
-        if relics := self.world.pool.budget.relic_allowance(self.scenario.scenario):
-            sources.append(("relics", Resource.GOLD, relics, economy.can_collect_relics()))
-        return [source for source in sources if not self.impossible(source[3])]
+        for source in SOURCES:
+            ways = tuple((rule, seed.in_scenario(self.start, self.climbs, self.could_have))
+                         for rule, seed in ((way(economy), seed) for way, seed in source.ways)
+                         if not self.impossible(rule))
+            allowance = relics if source.per_relic else SOURCE_ALLOWANCE
+            if ways and allowance:
+                sources.append(ScenarioSource(source.name, source.resource, allowance, ways))
+        return sources
 
     def max_budget(self) -> dict[Resource, int]:
         """Every starting resource in the pool, and every source the scenario could ever count."""

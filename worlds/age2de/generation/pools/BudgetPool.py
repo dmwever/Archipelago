@@ -52,19 +52,6 @@ SOURCE_ALLOWANCE = 250
 """What one early gathering source is worth to a scenario's budget."""
 RELIC_ALLOWANCE = 50
 """What each relic a scenario can collect is worth, in gold."""
-SOURCES: tuple[tuple[str, Resource, tuple[str, ...]], ...] = (
-    ("hunt", Resource.FOOD, ("can_hunt",)),
-    ("herd", Resource.FOOD, ("can_herd",)),
-    ("forage", Resource.FOOD, ("can_forage",)),
-    ("fish", Resource.FOOD, ("can_fish_from_shore", "can_fish_by_boat")),
-    ("chop", Resource.WOOD, ("can_chop_some",)),
-    ("mine", Resource.GOLD, ("can_mine_some",)),
-    ("oysters", Resource.GOLD, ("can_gather_oysters",)),
-    ("whales", Resource.GOLD, ("can_hunt_whales",)),
-    ("quarry", Resource.STONE, ("can_quarry_some",)),
-)
-"""The early gathering sources a budget counts: name, resource, and the economy rules any one of
-which switches it on. Shore and boat fishing take the same fish, so they are one source."""
 
 
 def is_cheap_building(building: Age2BuildingData) -> bool:

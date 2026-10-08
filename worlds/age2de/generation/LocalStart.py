@@ -220,7 +220,9 @@ def apply(world: 'Age2World') -> None:
     if not win_set and not base_set:
         return
 
-    base_only = list((Counter(base_set) - Counter(win_set)).elements())
+    # base_items already solves on top of the win set, so what it returns is only what the win set
+    # does not cover. Taking the win set away again would drop a second copy the base needs.
+    base_only = base_set
     logging.info("Local Start: %s placing win=%s base=%s",
                  world.player_name, sorted(win_set), sorted(base_only))
 

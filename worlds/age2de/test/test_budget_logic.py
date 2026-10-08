@@ -374,6 +374,75 @@ class TestRequiredPurchases(BudgetTestBase):
                             self.assertLessEqual(amount, costs[mask].get(resource, 0))
 
 
+class TestSourcesPayForTheirSeeds(BudgetTestBase):
+    """A source brings nothing in until its seed stands: boats want a Dock and a Fishing Ship, and
+    the wood for them has to be in hand first - banked, or chopped by a source already working."""
+
+    def find(self, wanted):
+        """A resolved total in some scenario whose sources include every way `wanted` asks for:
+        name -> the part identities that way's seed must be exactly, none already bought."""
+        for scenario in self.world.pool.scenarios.included:
+            for entry in self.budget(scenario).order:
+                resolved = BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world)
+                if not hasattr(resolved, "ways"):
+                    continue
+                found = {}
+                for name, identities in wanted.items():
+                    for way, (source, _) in enumerate(resolved.ways):
+                        parts = resolved.parts[0][way]
+                        if (resolved.sources[source][0] == name
+                                and {part.identity for part in parts} == identities
+                                and not any(part.in_requirement for part in parts)):
+                            found[name] = way
+                            break
+                if len(found) == len(wanted):
+                    return resolved, found
+        self.skipTest("no scenario in this seed has those ways")
+
+    BOAT = {("building", Age2BuildingData.DOCK), ("own", Age2UnitData.FISHING_SHIP.line)}
+    CAMP = {("building", Age2BuildingData.LUMBER_CAMP)}
+
+    def pile(self, wood: int) -> dict:
+        return {Resource.FOOD: 0, Resource.WOOD: wood, Resource.GOLD: 0, Resource.STONE: 0}
+
+    def test_no_wood_no_boats(self):
+        resolved, ways = self.find({"fish": self.BOAT})
+        need = {Resource.FOOD: 200}
+        self.assertIsNone(resolved._bootstrap(0, self.pile(0), need, [ways["fish"]]))
+        self.assertIsNotNone(resolved._bootstrap(0, self.pile(225), need, [ways["fish"]]))
+
+    def test_chopping_can_pay_for_the_boats(self):
+        """100 wood puts up a Lumber Camp; what it brings in pays for the Dock and the ship."""
+        resolved, ways = self.find({"fish": self.BOAT, "chop": self.CAMP})
+        need = {Resource.FOOD: 200}
+        self.assertIsNone(resolved._bootstrap(0, self.pile(100), need, [ways["fish"]]))
+        found = resolved._bootstrap(0, self.pile(100), need, [ways["fish"], ways["chop"]])
+        self.assertIsNotNone(found)
+        self.assertEqual({ways["fish"], ways["chop"]}, set(found[0]))
+
+    def test_more_items_never_take_a_location_away(self):
+        """Collect the pool one item at a time; once a total is in logic it stays in."""
+        import random
+        rng = random.Random(1)
+        pool = list(self.multiworld.itempool)
+        rng.shuffle(pool)
+        for scenario in (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_JOAN_3):
+            if scenario not in self.world.pool.scenarios.included:
+                continue
+            rules = [(entry.location.name,
+                      BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world))
+                     for entry in self.budget(scenario).order]
+            state, held = CollectionState(self.multiworld), set()
+            for item in pool[:len(pool) // 2]:
+                state.collect(item, prevent_sweep=True)
+                for name, rule in rules:
+                    now = rule(state)
+                    self.assertFalse(name in held and not now,
+                                     f"{scenario.scenario_name}: {name} fell out on {item.name}")
+                    if now:
+                        held.add(name)
+
+
 class TestCouldEverHave(BudgetTestBase):
     def test_a_fixed_force_scenario_can_build_nothing(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_1)
