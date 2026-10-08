@@ -47,7 +47,7 @@ class BudgetTestBase(bases.Age2RuleTestBase):
         return state
 
     def waived(self, budget, state: CollectionState) -> frozenset:
-        return frozenset(building for building, rule in budget.waivers.items()
+        return frozenset(building for building, rule in budget.standing_buildings.items()
                          if rule.resolve(self.world)(state))
 
     def cost_of(self, budget, location, waived: frozenset = frozenset()):
@@ -211,7 +211,7 @@ class TestTheTotalNeverGrows(BudgetTestBase):
         for scenario in self.world.pool.scenarios.included:
             budget = self.budget(scenario)
             order = budget.order
-            waivable = sorted(budget.waivers, key=int)
+            waivable = sorted(budget.standing_buildings, key=int)
             for end in range(1, len(order) + 1):
                 plan = budget.plan(order[:end])
                 for size in range(len(waivable) + 1):
@@ -283,7 +283,7 @@ class TestSourcesAndBudget(BudgetTestBase):
                 continue
             pile = {resource: self.world.pool.resources.totals[resource]
                     for resource in budget.max_budget()}
-            every_waiver = frozenset(budget.waivers)
+            every_waiver = frozenset(budget.standing_buildings)
             need = budget.plan(budget.order)
             requirement = Requirement(need, every_waiver)
             with self.subTest(scenario.scenario_name):
