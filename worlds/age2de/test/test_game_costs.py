@@ -109,12 +109,13 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
     def deps(self, rule):
         return set(rule.resolve(self.world).item_dependencies())
 
-    def budget_terms(self, rule) -> list:
-        """The budget totals a resolved rule can be satisfied through."""
+    def budget_terms(self, rule, location) -> list:
+        """The budget totals for this location a resolved rule can be satisfied through. Others
+        turn up too - an easy source of wood asks for a base, and the base is paid that way."""
         found, stack = [], [rule.resolve(self.world)]
         while stack:
             node = stack.pop()
-            if isinstance(node, BudgetTotal.Resolved):
+            if isinstance(node, BudgetTotal.Resolved) and node.location is location:
                 found.append(node)
             stack.extend(getattr(node, "children", ()))
             stack.extend(child for child in (getattr(node, "child", None),
@@ -132,7 +133,7 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
             self.skipTest("this seed's order holds no tech in Attila 1")
         for tech in held:
             with self.subTest(tech.name):
-                self.assertTrue(self.budget_terms(scenario.techs.can_research(tech)))
+                self.assertTrue(self.budget_terms(scenario.techs.can_research(tech), tech))
 
     def test_a_tech_outside_the_budget_order_needs_an_easy_source(self):
         """Loom used to be researchable on the opening pile in every scenario, which is how
@@ -147,7 +148,7 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
         self.assertTrue(outside)
         for tech in outside:
             with self.subTest(tech.name):
-                self.assertEqual([], self.budget_terms(scenario.techs.can_research(tech)))
+                self.assertEqual([], self.budget_terms(scenario.techs.can_research(tech), tech))
 
     def test_a_free_unit_is_free_rather_than_untrainable(self):
         """An empty And resolves to False_, so a unit with no cost on file has to be handled

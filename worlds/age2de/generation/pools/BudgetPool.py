@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 from random import Random
 from typing import TYPE_CHECKING
 
@@ -16,8 +17,24 @@ if TYPE_CHECKING:
     from ..Age2Pool import Age2Pool
 
 
-PricedLocation = Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData
-"""A location the budget can price. Location ids are unique across the game, so one is its own
+class Age2BaseData(enum.IntEnum):
+    """Not a location: the base a scenario works from, given a key so the budget can charge for it
+    like one. Its value is outside every location id band."""
+    BASE = 1
+
+    @property
+    def location_name(self) -> str:
+        return "Base"
+
+    @property
+    def age(self) -> Age2AgeData:
+        return Age2AgeData.DARK
+
+
+BASE = Age2BaseData.BASE
+
+PricedLocation = Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData | Age2BaseData
+"""A location the budget can price, or the base. Location ids are unique across the game, so one is its own
 key whatever its type."""
 
 VILLAGER = Age2UnitData.VILLAGER_MALE

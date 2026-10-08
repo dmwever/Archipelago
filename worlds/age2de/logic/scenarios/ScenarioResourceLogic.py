@@ -128,7 +128,9 @@ class ScenarioResourceLogic:
         ship = Age2UnitData.FISHING_SHIP
         return (self.logic.units.has_unit_items(ship)
                 & self.scenario.ages.has_reached(ship.age)
-                & (self.can_gather_wood()
+                # Chopping, not can_gather_wood: that asks for a base, which the budget pays out of
+                # sources including these boats.
+                & (self.can_chop_some()
                    | self.logic.resources.has_amount(Resource.WOOD,
                                                      ship.cost.get(Resource.WOOD, 0))))
 

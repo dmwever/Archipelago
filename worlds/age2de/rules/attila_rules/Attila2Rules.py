@@ -2,6 +2,7 @@ from rule_builder.rules import Has, Rule
 
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
+from ...locations.Buildings import Age2BuildingData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
@@ -25,7 +26,10 @@ class Attila2Rules(ScenarioRules):
                 self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
             )
         )
-        can_build_tc = self.scenario_logic.buildings.can_build_tc() & self.scenario_logic.has_vils()
+        town_center = Age2BuildingData.TOWN_CENTER
+        can_build_tc = (self.scenario_logic.buildings.can_build_tc()
+                        & self.scenario_logic.has_vils()
+                        & self.scenario_logic.economy.can_pay(town_center.cost, town_center))
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_beat_blue & can_build_tc)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_beat_blue & can_build_tc)

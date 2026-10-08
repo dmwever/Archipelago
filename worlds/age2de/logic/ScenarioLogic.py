@@ -10,6 +10,8 @@ from ..locations.VillagerJobs import Age2VillagerJobData
 from rule_builder.rules import False_, Has, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
+from ..generation.pools.BudgetPool import BASE
+from .budget.BudgetTotal import BudgetTotal
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -88,12 +90,17 @@ class ScenarioLogic:
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils
     
-    def has_base(self) -> Rule:
-        villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
-        starts_with_base = (self.starting_state.has_base
-                   & self.logic.resources.has_amount(villager_food.type, villager_food.amount))
-        return ((starts_with_base | self.buildings.can_build_base())
+    def can_have_base(self) -> Rule:
+        """A base, less paying for it: one to start with or one to put up, and the ground to
+        stand it on."""
+        return ((self.starting_state.has_base | self.buildings.can_build_base())
                 & self.starting_state.meets_additional_base_requirements)
+
+    def has_base(self) -> Rule:
+        """A base, paid for: the villagers' food, and the Town Center and House where none
+        stands. Through the budget only - the easy sources of wood and gold ask for a base
+        themselves."""
+        return self.can_have_base() & BudgetTotal(scenario=self.scenario, location=BASE)
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access

@@ -9,7 +9,7 @@ from NetUtils import JSONMessagePart
 
 from rule_builder.rules import False_, NestedRule, Rule
 
-from ...generation.pools.BudgetPool import SAMPLED_RESOURCES, PricedLocation
+from ...generation.pools.BudgetPool import BASE, SAMPLED_RESOURCES, PricedLocation
 from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
@@ -53,13 +53,17 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             tuple(required(needs[mask], frozenset(
                 building for _, buildings, _ in on(mask) for building in buildings)).cost.items())
             for mask in masks)
-        rules = (*(rule for rule, _, _ in switches), *(source[3] for source in order.sources))
+        # The base counts no gathering until a source's dropsite is charged too: chopping is
+        # worth nothing to a scenario with no wood for a Lumber Camp or the Town Center itself.
+        sources = () if self.location is BASE else order.sources
+        rules = (*(rule for rule, _, _ in switches), *(source[3] for source in sources))
         return self.Resolved(
             tuple(rule.resolve(world) for rule in rules),
             needs,
             tuple(buildings for _, buildings, _ in switches),
-            tuple(source[:3] for source in order.sources),
+            tuple(source[:3] for source in sources),
             self.scenario,
+            self.location,
             tuple((resource, contributors(resource)) for resource in SAMPLED_RESOURCES),
             costs,
             player=world.player,
@@ -77,6 +81,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         switches: tuple[tuple[Age2BuildingData, ...], ...]
         sources: tuple[tuple[str, Resource, int], ...]
         scenario: Age2ScenarioData
+        location: PricedLocation
         contributors: tuple[tuple[Resource, tuple[tuple[str, int], ...]], ...]
         costs: tuple[tuple[tuple[Resource, int], ...], ...]
         """What the running total costs for each combination of switches, by bit mask. Pairs

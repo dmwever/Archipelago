@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Iterable
 from rule_builder.rules import False_, Or, Rule
 
 from ...generation.pools.BudgetPool import (SAMPLED_RESOURCES, SOURCE_ALLOWANCE, SOURCES,
-                                            VILLAGER, PricedLocation)
+                                            BASE, VILLAGER, Age2BaseData, PricedLocation)
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
@@ -17,6 +17,7 @@ from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
 from ..scenarios.ScenarioAgeLogic import AGE_BUILDINGS, PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
+from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BudgetItem
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, Need
@@ -34,7 +35,8 @@ if TYPE_CHECKING:
 _ITEMS: dict[type, type[BudgetItem]] = {Age2AgeData: AgeBudgetItem,
                                         Age2BuildingData: BuildingBudgetItem,
                                         Age2TechData: TechBudgetItem,
-                                        Age2UnitData: UnitBudgetItem}
+                                        Age2UnitData: UnitBudgetItem,
+                                        Age2BaseData: BaseBudgetItem}
 
 
 Switch = tuple[Rule, tuple[Age2BuildingData, ...], tuple[PricedLocation, ...]]
@@ -185,13 +187,14 @@ class _ScenarioOrder:
                       key=lambda precursor: (precursor.age, precursor.item.rank))
 
     def _build_order(self) -> tuple[tuple[_Priced, ...], tuple[_Priced, ...]]:
-        """The sample and the scenario's own purchases by age, its purchases first, then the
-        scenario's random rank; each entry after its precursors, less what could never fit the
-        most the scenario could ever have."""
+        """The sample, the scenario's own purchases and its base by age: its purchases first, then
+        the base, then the scenario's random rank; each entry after its precursors, less what
+        could never fit the most the scenario could ever have."""
         budget = self.world.pool.budget
         rank = budget.rank.get(self.scenario.scenario, {})
         purchases = self.scenario.starting_state.required_purchases
         items = ([ScenarioBudgetItem(budget_item(location)) for location in purchases]
+                 + [budget_item(BASE)]
                  + [budget_item(location) for location in budget.entries
                     if location not in purchases])
         self._base = sorted(filter(None, map(self._priced, items)),
