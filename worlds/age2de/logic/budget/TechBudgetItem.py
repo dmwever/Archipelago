@@ -11,6 +11,7 @@ from .BudgetItem import BudgetItem
 from .Need import Need
 
 if TYPE_CHECKING:
+    from ...generation.Age2Pool import Age2Pool
     from ..ScenarioLogic import ScenarioLogic
 
 
@@ -25,6 +26,9 @@ class TechBudgetItem(BudgetItem):
 
     def scenario_rule(self, scenario: ScenarioLogic) -> Rule:
         return scenario.techs.can_research_structurally(self.location)
+
+    def is_location(self, pool: Age2Pool) -> bool:
+        return self.location in pool.techs.shuffled
 
     @functools.cached_property
     def node(self) -> Need:

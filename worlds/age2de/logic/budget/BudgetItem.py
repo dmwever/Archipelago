@@ -14,6 +14,7 @@ from ...locations.Units import Age2UnitData
 from .Need import Need
 
 if TYPE_CHECKING:
+    from ...generation.Age2Pool import Age2Pool
     from ..ScenarioLogic import ScenarioLogic
     from .TechBudgetItem import TechBudgetItem
 
@@ -53,6 +54,11 @@ class BudgetItem:
         """Its own rule in the scenario, less paying."""
         raise NotImplementedError
 
+    def is_location(self, pool: Age2Pool) -> bool:
+        """Whether it is a location this seed, so it can stand in an order as a precursor. Only
+        ages, buildings and techs are ever precursors; anything else answers no."""
+        return False
+
     @property
     def children(self) -> list[TechBudgetItem]:
         """The techs directly below it."""
@@ -64,7 +70,7 @@ class BudgetItem:
             yield child
             yield from child.prerequisite_techs()
 
-    def need_in(self, scenario: ScenarioLogic) -> Need:
+    def charges_in_scenario(self, scenario: ScenarioLogic) -> Need:
         """As the scenario pays for it: its own node, and every tech below it the scenario does not
         have for itself. A tech let off takes its building and age with it."""
         return sum((tech.node for tech in self.prerequisite_techs() if tech.charged_in(scenario)), self.node)

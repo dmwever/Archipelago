@@ -31,7 +31,7 @@ class OwnPrice(NamedTuple):
 class Need:
     """What one location makes a scenario pay for. Adding two is a union, so whatever both need
     is charged once."""
-    own: frozenset[OwnPrice] = frozenset()
+    own_price: frozenset[OwnPrice] = frozenset()
     """Paid for itself, once per identity: a tech, a unit line, the villager."""
     entry_buildings: frozenset[Age2BuildingData] = frozenset()
     """Buildings that are themselves locations: always charged, never waived."""
@@ -45,14 +45,14 @@ class Need:
     """What leaves each age in this scenario; set by in_scenario."""
 
     def __add__(self, other: 'Need') -> 'Need':
-        return Need(self.own | other.own, self.entry_buildings | other.entry_buildings,
+        return Need(self.own_price | other.own_price, self.entry_buildings | other.entry_buildings,
                     self.building_choices | other.building_choices, max(self.needed_age, other.needed_age))
 
     @staticmethod
     def pay(identity: object, cost: dict[Resource, int]) -> 'Need':
         priced = tuple(sorted(((resource, amount) for resource, amount in cost.items() if amount > 0),
                               key=lambda item: item[0].value))
-        return Need(own=frozenset({OwnPrice(identity, priced)}))
+        return Need(own_price=frozenset({OwnPrice(identity, priced)}))
 
     @staticmethod
     def build(building: Age2BuildingData) -> 'Need':
@@ -102,7 +102,7 @@ class Need:
 
     def own_cost(self) -> dict[Resource, int]:
         cost: dict[Resource, int] = {}
-        for price in self.own:
+        for price in self.own_price:
             for resource, amount in price.cost:
                 cost[resource] = cost.get(resource, 0) + amount
         return cost

@@ -112,9 +112,9 @@ def seed_parts(seed: Need, picks: list[Age2BuildingData], need: Need,
     Age-ups past the total's are charged their price alone: the climb buildings and the Town
     Center a later age asks are left to the total that reaches it."""
     in_total = set(requirement.buildings) | set(need.entry_buildings)
-    owned = {price.identity for price in need.own}
+    owned = {price.identity for price in need.own_price}
     parts: list[Part] = []
-    for price in sorted(seed.own, key=lambda price: str(price.identity)):
+    for price in sorted(seed.own_price, key=lambda price: str(price.identity)):
         parts.append(Part(("own", price.identity), price.cost, price.identity in owned))
     seen: set[Age2BuildingData] = set()
     for building in picks:
