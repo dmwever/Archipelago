@@ -15,17 +15,23 @@ from .Need import CLIMBED_AGES, Need
 @dataclasses.dataclass(frozen=True)
 class Requirement:
     cost: dict[Resource, int]
-    buildings: tuple[Age2BuildingData, ...]
-    ages: tuple[Age2AgeData, ...]
+    buildings: list[Age2BuildingData]
+    ages: list[Age2AgeData]
 
 
 def required(need: Need, waived: frozenset[Age2BuildingData]) -> Requirement:
-    """What a settled Need costs once the buildings in `waived` are standing for free."""
-    cost = dict.fromkeys(SAMPLED_RESOURCES, 0)
-    for resource, amount in tuple(need.own_cost().items()) + tuple(
-            item for building in need.entry_buildings for item in building.cost.items()):
-        cost[resource] += amount
-    have, charged = set(need.entry_buildings), []
+    cost: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
+    have: set[Age2BuildingData] = set(need.entry_buildings)
+    charged: list[Age2BuildingData] = []
+    groups: list[tuple[Age2BuildingData, ...]] = sorted(
+        need.groups, key=lambda group: (len(group), tuple(map(int, group))))
+    ages: list[Age2AgeData] = [age for age in CLIMBED_AGES if need.start < age <= need.top]
+    climbs: dict[Age2AgeData, tuple[tuple[Age2BuildingData, ...], Age2BuildingData | None]] = {
+        age: (options, alone) for age, options, alone in need.climbs}
+
+    def pay(price: Iterable[tuple[Resource, int]]) -> None:
+        for resource, amount in price:
+            cost[resource] += amount
 
     def chain(building: Age2BuildingData | None) -> list[Age2BuildingData]:
         """The building and its prerequisites, up to the first one already paid or standing."""
@@ -42,26 +48,34 @@ def required(need: Need, waived: frozenset[Age2BuildingData]) -> Requirement:
     def worth(buildings: Iterable[Age2BuildingData]) -> int:
         return sum(sum(building.cost.values()) for building in buildings)
 
-    for options in sorted(need.groups, key=lambda group: (len(group), tuple(map(int, group)))):
-        take(chain(min(options, key=lambda option: (worth(chain(option)), int(option)))))
-    ages = tuple(age for age in CLIMBED_AGES if need.start < age <= need.top)
-    if ages:
-        take(chain(Age2BuildingData.TOWN_CENTER))   # every age is researched at a Town Center
-    climbs = {age: (options, alone) for age, options, alone in need.climbs}
-    for age in ages:
-        for resource, amount in age.cost.items():
-            cost[resource] += amount
+    def cheapest_climb(age: Age2AgeData) -> list[Age2BuildingData] | None:
+        """The cheapest two buildings that leave the age before this one, or the one that
+        counts for both, with what they stand on; None if the scenario can have none."""
         options, alone = climbs[age]
-        candidates = []
+        candidates: list[tuple[int, list[int], list[Age2BuildingData]]] = []
         for first, second in itertools.combinations(options, 2):
             both = chain(first)
             both += [building for building in chain(second) if building not in both]
-            candidates.append((worth(both), (int(first), int(second)), both))
+            candidates.append((worth(both), [int(first), int(second)], both))
         if alone is not None:
-            candidates.append((worth(chain(alone)), (int(alone),), chain(alone)))
-        if candidates:
-            take(min(candidates, key=lambda candidate: candidate[:2])[2])
-    for resource, amount in (item for building in charged for item in building.cost.items()):
-        cost[resource] += amount
+            candidates.append((worth(chain(alone)), [int(alone)], chain(alone)))
+        if not candidates:
+            return None
+        return min(candidates, key=lambda candidate: candidate[:2])[2]
+
+    pay(need.own_cost().items())
+    for building in need.entry_buildings:
+        pay(building.cost.items())
+    for options in groups:
+        take(chain(min(options, key=lambda option: (worth(chain(option)), int(option)))))
+    if ages:
+        take(chain(Age2BuildingData.TOWN_CENTER))   # every age is researched at a Town Center
+    for age in ages:
+        pay(age.cost.items())
+        climb = cheapest_climb(age)
+        if climb is not None:
+            take(climb)
+    for building in charged:
+        pay(building.cost.items())
     return Requirement({resource: amount for resource, amount in cost.items() if amount > 0},
-                       tuple(charged), ages)
+                       charged, ages)

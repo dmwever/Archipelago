@@ -70,20 +70,21 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         def on(mask: int) -> list[Switch]:
             return [switch for bit, switch in enumerate(switches) if mask >> bit & 1]
 
-        needs = tuple(order.need_for(self.location, frozenset(
-            purchase for _, _, purchases in on(mask) for purchase in purchases)) for mask in masks)
-        costs = tuple(
-            tuple(required(needs[mask], frozenset(
-                building for _, buildings, _ in on(mask) for building in buildings)).cost.items())
-            for mask in masks)
-        parts = []
+        needs: list[Need] = []
+        costs: list[tuple[tuple[Resource, int], ...]] = []
+        parts: list[tuple[tuple[Part, ...], ...]] = []
         for mask in masks:
             waived = frozenset(building for _, buildings, _ in on(mask) for building in buildings)
-            parts.append(order.seed_parts(needs[mask], required(needs[mask], waived), waived))
+            dropped = frozenset(purchase for _, _, purchases in on(mask) for purchase in purchases)
+            need = order.need_for(self.location, dropped)
+            requirement = required(need, waived)
+            needs.append(need)
+            costs.append(tuple(requirement.cost.items()))
+            parts.append(order.seed_parts(need, requirement, waived))
         rules = [*(rule for rule, _, _ in switches), *order.way_rules]
-        return self.Resolved(
+        return self.Resolved(   # tuples throughout: a resolved rule has to hash
             tuple(rule.resolve(world) for rule in rules),
-            needs,
+            tuple(needs),
             tuple(tuple(buildings) for _, buildings, _ in switches),
             order.worth,
             order.ways,
@@ -91,7 +92,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             self.scenario,
             self.location,
             tuple((resource, contributors(resource)) for resource in SAMPLED_RESOURCES),
-            costs,
+            tuple(costs),
             player=world.player,
             caching_enabled=False,
         )

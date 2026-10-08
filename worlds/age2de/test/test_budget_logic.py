@@ -101,7 +101,7 @@ class TestAgeUps(BudgetTestBase):
         budget = self.budget(Age2ScenarioData.AP_JOAN_2)
         self.assertIsNone(budget.priced(Age2AgeData.FEUDAL))
         cost = self.cost_of(budget, Age2TechData.TOWN_WATCH)
-        self.assertEqual(cost.ages, ())
+        self.assertEqual(cost.ages, [])
 
 
 class TestPrerequisiteTechs(BudgetTestBase):
