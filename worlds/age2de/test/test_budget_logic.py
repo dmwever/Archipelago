@@ -20,7 +20,7 @@ from ..logic.custom_logic.ResourceAmount import contributors
 from ..logic.budget.BudgetOrder import budget_order
 from ..logic.budget.BudgetTotal import BudgetTotal
 from ..logic.budget.Requirement import required
-from ..generation.pools.BudgetPool import RELIC_ALLOWANCE, SOURCE_ALLOWANCE
+from ..logic.budget.BudgetSource import RELIC_ALLOWANCE, SOURCE_ALLOWANCE, bootstrap, pays
 from ..Options import ShuffleVillager, Techsanity, Unitsanity
 
 HARD = dict(
@@ -263,14 +263,23 @@ class TestSourcesAndBudget(BudgetTestBase):
                 self.assertEqual([], budget.sources)
                 self.assertEqual((), budget.order)
 
-    def test_pruned_entries_could_never_be_paid_for(self):
+    def test_what_is_kept_could_be_paid_for(self):
+        """With every starting resource, every building standing and every source brought in,
+        seeds paid for, the whole order fits: pruning keeps nothing that could never go true."""
         for scenario in self.world.pool.scenarios.included:
             budget = self.budget(scenario)
-            most = budget.max_budget()
+            if not budget.order:
+                continue
+            pile = {resource: self.world.pool.resources.totals[resource]
+                    for resource in budget.max_budget()}
             every_waiver = frozenset(budget.waivers)
-            need = required(budget.plan(budget.order), every_waiver).cost
-            for resource, amount in need.items():
-                self.assertLessEqual(amount, most[resource])
+            need = budget.plan(budget.order)
+            requirement = required(need, every_waiver)
+            with self.subTest(scenario.scenario_name):
+                self.assertTrue(pays(pile, dict(requirement.cost), list(range(len(budget.ways))),
+                                     budget.ways,
+                                     budget.seed_parts(need, requirement, every_waiver),
+                                     budget.worth))
 
 
 class TestTheRule(BudgetTestBase):
@@ -402,21 +411,27 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
     BOAT = {("building", Age2BuildingData.DOCK), ("own", Age2UnitData.FISHING_SHIP.line)}
     CAMP = {("building", Age2BuildingData.LUMBER_CAMP)}
 
+    @staticmethod
+    def search(resolved) -> tuple:
+        """The rest of what the search is given, with no switch on."""
+        return resolved.ways, resolved.parts[0], resolved.sources
+
     def pile(self, wood: int) -> dict:
         return {Resource.FOOD: 0, Resource.WOOD: wood, Resource.GOLD: 0, Resource.STONE: 0}
 
     def test_no_wood_no_boats(self):
         resolved, ways = self.find({"fish": self.BOAT})
         need = {Resource.FOOD: 200}
-        self.assertIsNone(resolved._bootstrap(0, self.pile(0), need, [ways["fish"]]))
-        self.assertIsNotNone(resolved._bootstrap(0, self.pile(225), need, [ways["fish"]]))
+        self.assertIsNone(bootstrap(self.pile(0), need, [ways["fish"]], *self.search(resolved)))
+        self.assertIsNotNone(bootstrap(self.pile(225), need, [ways["fish"]], *self.search(resolved)))
 
     def test_chopping_can_pay_for_the_boats(self):
         """100 wood puts up a Lumber Camp; what it brings in pays for the Dock and the ship."""
         resolved, ways = self.find({"fish": self.BOAT, "chop": self.CAMP})
         need = {Resource.FOOD: 200}
-        self.assertIsNone(resolved._bootstrap(0, self.pile(100), need, [ways["fish"]]))
-        found = resolved._bootstrap(0, self.pile(100), need, [ways["fish"], ways["chop"]])
+        self.assertIsNone(bootstrap(self.pile(100), need, [ways["fish"]], *self.search(resolved)))
+        found = bootstrap(self.pile(100), need, [ways["fish"], ways["chop"]],
+                          *self.search(resolved))
         self.assertIsNotNone(found)
         self.assertEqual({ways["fish"], ways["chop"]}, set(found[0]))
 

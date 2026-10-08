@@ -11,7 +11,7 @@ from ...locations.connections.ScenarioResources import Tier
 from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
-from ...generation.pools.BudgetPool import PricedLocation
+from ..budget.BudgetItem import PricedLocation
 from ..budget.BudgetTotal import BudgetTotal
 from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 

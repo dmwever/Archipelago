@@ -1,17 +1,42 @@
 """One priced location as the budget sees it, the same in every scenario."""
 from __future__ import annotations
 
+import enum
+
 from typing import TYPE_CHECKING, ClassVar, Iterator
 
 from rule_builder.rules import Rule
 
-from ...generation.pools.BudgetPool import PricedLocation
 from ...locations.Ages import Age2AgeData
+from ...locations.Buildings import Age2BuildingData
+from ...locations.Techs import Age2TechData
+from ...locations.Units import Age2UnitData
 from .Need import Need
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
     from .TechBudgetItem import TechBudgetItem
+
+
+class Age2BaseData(enum.IntEnum):
+    """Not a location: the base a scenario works from, given a key so the budget can charge for it
+    like one. Its value is outside every location id band."""
+    BASE = 1
+
+    @property
+    def location_name(self) -> str:
+        return "Base"
+
+    @property
+    def age(self) -> Age2AgeData:
+        return Age2AgeData.DARK
+
+
+BASE = Age2BaseData.BASE
+
+PricedLocation = Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData | Age2BaseData
+"""A location the budget can price, or the base. Location ids are unique across the game, so one
+is its own key whatever its type."""
 
 
 class BudgetItem:

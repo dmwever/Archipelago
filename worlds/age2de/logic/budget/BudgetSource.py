@@ -3,14 +3,16 @@ from __future__ import annotations
 
 import dataclasses
 import itertools
-from typing import TYPE_CHECKING, Callable, NamedTuple
+from typing import TYPE_CHECKING, Callable, Iterable, NamedTuple, Sequence
 
 from rule_builder.rules import Rule
 
+from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Units import Age2UnitData
+from ...locations.connections import ScenarioResources
 from ..scenarios.ScenarioBuildingLogic import (FISHERMAN_DROPSITES, FOOD_DROPSITES,
                                                GOLD_DROPSITES, HUNT_DROPSITES, STONE_DROPSITES,
                                                WOOD_DROPSITES)
@@ -19,7 +21,18 @@ from .Requirement import Requirement
 from .UnitBudgetItem import UnitBudgetItem
 
 if TYPE_CHECKING:
+    from ...locations.Scenarios import Age2ScenarioData
     from ..scenarios.ScenarioResourceLogic import ScenarioResourceLogic
+
+
+SOURCE_ALLOWANCE = 250
+"""What one early gathering source is worth to a scenario's budget."""
+RELIC_ALLOWANCE = 50
+"""What each relic a scenario can collect is worth, in gold."""
+
+
+def relic_allowance(scenario: Age2ScenarioData) -> int:
+    return RELIC_ALLOWANCE * ScenarioResources.total(scenario).relic_count
 
 
 Cost = tuple[tuple[Resource, int], ...]
@@ -114,3 +127,78 @@ def seed_parts(seed: Need, picks: tuple[Age2BuildingData, ...], need: Need,
 def _cost(cost: dict[Resource, int]) -> Cost:
     return tuple(sorted(((resource, amount) for resource, amount in cost.items() if amount > 0),
                         key=lambda item: item[0].value))
+
+
+Worth = Sequence[tuple[str, Resource, int]]
+"""Each source: its name, what it brings in, and how much."""
+Way = tuple[int, int]
+"""One way to bring a source in, with one pick of dropsite: its source, and the rule switching it."""
+Bootstrap = tuple[frozenset[int], dict[Resource, int]]
+"""The ways that paid, and what their seeds added to the total."""
+
+
+def income(sources: Iterable[int], worth: Worth) -> dict[Resource, int]:
+    total = dict.fromkeys(SAMPLED_RESOURCES, 0)
+    for index in sources:
+        _, resource, amount = worth[index]
+        total[resource] += amount
+    return total
+
+
+def pays(pile: dict[Resource, int], need: dict[Resource, int], usable: list[int],
+         ways: Sequence[Way], parts: Sequence[tuple[Part, ...]], worth: Worth) -> bool:
+    """Whether the pile, and the sources it can bring in, cover the need."""
+    if all(pile[resource] >= amount for resource, amount in need.items()):
+        return True
+    most = income({ways[way][0] for way in usable}, worth)
+    if any(pile[resource] + most[resource] < amount for resource, amount in need.items()):
+        return False   # seeds only ever add to the total
+    return bootstrap(pile, need, usable, ways, parts, worth) is not None
+
+
+def bootstrap(pile: dict[Resource, int], need: dict[Resource, int], usable: list[int],
+              ways: Sequence[Way], parts: Sequence[tuple[Part, ...]],
+              worth: Worth) -> Bootstrap | None:
+    """Bring sources in one at a time, each once its seed is paid for out of the pile and what
+    the sources already working bring in, trying every order. The first set that covers the need
+    and its own seeds is the answer. A set's funds do not depend on the order it was reached in,
+    so each set is looked at once."""
+    most = income({ways[way][0] for way in usable}, worth)
+    stack: list[frozenset[int]] = [frozenset()]
+    seen: set[frozenset[int]] = set()
+    while stack:
+        chosen = stack.pop()
+        if chosen in seen:
+            continue
+        seen.add(chosen)
+        funded: dict[object, Part] = {}
+        for way in chosen:
+            for part in parts[way]:
+                funded[part.identity] = part
+        spent = dict.fromkeys(SAMPLED_RESOURCES, 0)
+        extra = dict.fromkeys(SAMPLED_RESOURCES, 0)
+        for part in funded.values():
+            for resource, amount in part.cost:
+                spent[resource] += amount
+                if not part.in_requirement:
+                    extra[resource] += amount
+        working = {ways[way][0] for way in chosen}
+        income_now = income(working, worth)
+        if all(pile[resource] + income_now[resource] >= need.get(resource, 0) + extra[resource]
+               for resource in SAMPLED_RESOURCES):
+            return chosen, extra
+        if any(pile[resource] + most[resource] < need.get(resource, 0) + extra[resource]
+               for resource in SAMPLED_RESOURCES):
+            continue   # not even every source switched on could cover what this set bought
+        for way in usable:
+            if ways[way][0] in working:
+                continue
+            cost = dict.fromkeys(SAMPLED_RESOURCES, 0)
+            for part in parts[way]:
+                if part.identity not in funded:
+                    for resource, amount in part.cost:
+                        cost[resource] += amount
+            if all(pile[resource] + income_now[resource] - spent[resource] >= cost[resource]
+                   for resource in SAMPLED_RESOURCES):
+                stack.append(chosen | {way})
+    return None

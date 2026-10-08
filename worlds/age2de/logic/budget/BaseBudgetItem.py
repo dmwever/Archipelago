@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 
 from rule_builder.rules import Rule
 
-from ...generation.pools.BudgetPool import Age2BaseData
 from ...locations.Buildings import Age2BuildingData
-from .BudgetItem import BudgetItem
+from .BudgetItem import Age2BaseData, BudgetItem
 from .Need import Need
 from .VillagerBudgetItem import staffing
 

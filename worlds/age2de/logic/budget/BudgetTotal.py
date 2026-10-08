@@ -9,21 +9,19 @@ from NetUtils import JSONMessagePart
 
 from rule_builder.rules import False_, NestedRule, Rule
 
-from ...generation.pools.BudgetPool import SAMPLED_RESOURCES, PricedLocation
+from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
+from .BudgetItem import PricedLocation
 from .BudgetOrder import Switch, budget_order
-from .BudgetSource import Part, options, seed_parts
+from .BudgetSource import Bootstrap, Part, Way, bootstrap, income, pays
 from .Need import Need
 from .Requirement import Requirement, required
 
 if TYPE_CHECKING:
     from ... import Age2World
-
-Bootstrap = tuple[frozenset[int], dict[Resource, int]]
-"""The ways that paid, and what their seeds added to the total."""
 
 
 @dataclasses.dataclass
@@ -78,26 +76,17 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             tuple(required(needs[mask], frozenset(
                 building for _, buildings, _ in on(mask) for building in buildings)).cost.items())
             for mask in masks)
-        way_rules: list[Rule] = []
-        picks: list[tuple[int, int, Need, tuple[Age2BuildingData, ...]]] = []
-        for index, source in enumerate(order.sources):
-            for rule, seed in source.ways:
-                way_rules.append(rule)
-                picks += [(index, len(way_rules) - 1, seed, pick) for pick in options(seed)]
         parts = []
         for mask in masks:
             waived = frozenset(building for _, buildings, _ in on(mask) for building in buildings)
-            requirement = required(needs[mask], waived)
-            parts.append(tuple(seed_parts(seed, pick, needs[mask], requirement, waived,
-                                          order.start)
-                               for _, _, seed, pick in picks))
-        rules = (*(rule for rule, _, _ in switches), *way_rules)
+            parts.append(order.seed_parts(needs[mask], required(needs[mask], waived), waived))
+        rules = (*(rule for rule, _, _ in switches), *order.way_rules)
         return self.Resolved(
             tuple(rule.resolve(world) for rule in rules),
             needs,
             tuple(buildings for _, buildings, _ in switches),
-            tuple((source.name, source.resource, source.allowance) for source in order.sources),
-            tuple((source, rule) for source, rule, _, _ in picks),
+            order.worth,
+            order.ways,
             tuple(parts),
             self.scenario,
             self.location,
@@ -117,7 +106,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         purchase unnecessary, which takes it out of the total."""
         switches: tuple[tuple[Age2BuildingData, ...], ...]
         sources: tuple[tuple[str, Resource, int], ...]
-        ways: tuple[tuple[int, int], ...]
+        ways: tuple[Way, ...]
         """Each way to bring a source in, with one pick of dropsite: its source, and the child
         (after the switches) whose rule switches that way on."""
         parts: tuple[tuple[tuple[Part, ...], ...], ...]
@@ -151,63 +140,13 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             return tuple(source for index, source in enumerate(self.sources) if index in on)
 
         def allowance(self, state: CollectionState) -> dict[Resource, int]:
-            return self._income({self.ways[index][0] for index in self.usable(state)})
+            return income({self.ways[index][0] for index in self.usable(state)}, self.sources)
 
-        def _income(self, sources: set[int]) -> dict[Resource, int]:
-            total = dict.fromkeys(SAMPLED_RESOURCES, 0)
-            for index in sources:
-                _, resource, amount = self.sources[index]
-                total[resource] += amount
-            return total
-
-        def bootstrap(self, state: CollectionState) -> 'Bootstrap | None':
+        def bootstrap(self, state: CollectionState) -> Bootstrap | None:
             """The ways that pay for it, and the seeds they add to the total, if any do."""
             mask = self.mask(state)
-            return self._bootstrap(mask, self.pile(state), dict(self.costs[mask]),
-                                   self.usable(state))
-
-        def _bootstrap(self, mask: int, pile: dict[Resource, int], need: dict[Resource, int],
-                       usable: list[int]) -> 'Bootstrap | None':
-            parts = self.parts[mask]
-            most = self._income({self.ways[way][0] for way in usable})
-            stack: list[frozenset[int]] = [frozenset()]
-            seen: set[frozenset[int]] = set()
-            while stack:
-                chosen = stack.pop()
-                if chosen in seen:
-                    continue
-                seen.add(chosen)
-                funded: dict[object, Part] = {}
-                for way in chosen:
-                    for part in parts[way]:
-                        funded[part.identity] = part
-                spent = dict.fromkeys(SAMPLED_RESOURCES, 0)
-                extra = dict.fromkeys(SAMPLED_RESOURCES, 0)
-                for part in funded.values():
-                    for resource, amount in part.cost:
-                        spent[resource] += amount
-                        if not part.in_requirement:
-                            extra[resource] += amount
-                working = {self.ways[way][0] for way in chosen}
-                income = self._income(working)
-                if all(pile[resource] + income[resource] >= need.get(resource, 0) + extra[resource]
-                       for resource in SAMPLED_RESOURCES):
-                    return chosen, extra
-                if any(pile[resource] + most[resource] < need.get(resource, 0) + extra[resource]
-                       for resource in SAMPLED_RESOURCES):
-                    continue   # not even every source switched on could cover what this set bought
-                for way in usable:
-                    if self.ways[way][0] in working:
-                        continue
-                    cost = dict.fromkeys(SAMPLED_RESOURCES, 0)
-                    for part in parts[way]:
-                        if part.identity not in funded:
-                            for resource, amount in part.cost:
-                                cost[resource] += amount
-                    if all(pile[resource] + income[resource] - spent[resource] >= cost[resource]
-                           for resource in SAMPLED_RESOURCES):
-                        stack.append(chosen | {way})
-            return None
+            return bootstrap(self.pile(state), dict(self.costs[mask]), self.usable(state),
+                             self.ways, self.parts[mask], self.sources)
 
         def pile(self, state: CollectionState) -> dict[Resource, int]:
             held = state.prog_items[self.player]
@@ -224,15 +163,10 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         @override
         def _evaluate(self, state: CollectionState) -> bool:
             mask = self.mask(state)
-            need = dict(self.costs[mask])
-            pile = self.pile(state)
+            pile, need = self.pile(state), dict(self.costs[mask])
             if all(pile[resource] >= amount for resource, amount in need.items()):
-                return True
-            usable = self.usable(state)
-            most = self._income({self.ways[way][0] for way in usable})
-            if any(pile[resource] + most[resource] < amount for resource, amount in need.items()):
-                return False   # seeds only ever add to the total
-            return self._bootstrap(mask, pile, need, usable) is not None
+                return True   # before asking which sources are on
+            return pays(pile, need, self.usable(state), self.ways, self.parts[mask], self.sources)
 
         @override
         def item_dependencies(self) -> dict[str, set[int]]:

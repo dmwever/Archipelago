@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING, Iterable, NamedTuple
 
 from rule_builder.rules import False_, Or, Rule
 
-from ...generation.pools.BudgetPool import (SAMPLED_RESOURCES, SOURCE_ALLOWANCE,
-                                            BASE, VILLAGER, Age2BaseData, PricedLocation)
+from ...generation.pools.BudgetPool import SAMPLED_RESOURCES, VILLAGER
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
@@ -18,11 +17,12 @@ from ...locations.Units import Age2UnitData
 from ..scenarios.ScenarioAgeLogic import AGE_BUILDINGS, PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
-from .BudgetItem import BudgetItem
-from .BudgetSource import SOURCES
+from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
+from .BudgetSource import (SOURCE_ALLOWANCE, SOURCES, Part, Way, options, pays,
+                           relic_allowance, seed_parts)
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, Need
-from .Requirement import required
+from .Requirement import Requirement, required
 from .ScenarioBudgetItem import ScenarioBudgetItem
 from .TechBudgetItem import TechBudgetItem
 from .UnitBudgetItem import UnitBudgetItem
@@ -111,6 +111,18 @@ class _ScenarioOrder:
         self.waivers = self._waivers()
         self._could_have: dict[Age2BuildingData, bool] = {}
         self.sources = self._sources()
+        self.worth = tuple((source.name, source.resource, source.allowance)
+                           for source in self.sources)
+        self.way_rules: list[Rule] = []
+        self.picks: list[tuple[int, int, Need, tuple[Age2BuildingData, ...]]] = []
+        """Each way to bring a source in, once per pick of dropsite: its source, its rule (an
+        index into way_rules), its seed, and the pick."""
+        for index, source in enumerate(self.sources):
+            for rule, seed in source.ways:
+                self.way_rules.append(rule)
+                self.picks += [(index, len(self.way_rules) - 1, seed, pick)
+                               for pick in options(seed)]
+        self.ways: tuple[Way, ...] = tuple((source, rule) for source, rule, _, _ in self.picks)
         self.purchases = {location: rule for location, rule
                           in scenario.starting_state.required_purchases.items()
                           if not isinstance(rule, False_)}
@@ -143,7 +155,7 @@ class _ScenarioOrder:
         """The early gathering sources this scenario could ever count toward its budget, each
         with the ways it could be worked here and the seed each way is paid for with."""
         economy = self.scenario.economy
-        relics = self.world.pool.budget.relic_allowance(self.scenario.scenario)
+        relics = relic_allowance(self.scenario.scenario)
         sources = []
         for source in SOURCES:
             ways = tuple((rule, seed.in_scenario(self.start, self.climbs, self.could_have))
@@ -161,6 +173,12 @@ class _ScenarioOrder:
         for _, resource, amount, _ in self.sources:
             budget[resource] += amount
         return budget
+
+    def seed_parts(self, need: Need, requirement: Requirement,
+                   waived: frozenset[Age2BuildingData]) -> tuple[tuple[Part, ...], ...]:
+        """What each way's seed buys, against this running total."""
+        return tuple(seed_parts(seed, pick, need, requirement, waived, self.start)
+                     for _, _, seed, pick in self.picks)
 
     def priced(self, location: PricedLocation) -> _Priced | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
@@ -205,7 +223,9 @@ class _ScenarioOrder:
     def _build_order(self) -> tuple[tuple[_Priced, ...], tuple[_Priced, ...]]:
         """The sample, the scenario's own purchases and its base by age: its purchases first, then
         the base, then the scenario's random rank; each entry after its precursors, less what
-        could never fit the most the scenario could ever have."""
+        could never fit the most the scenario could ever have: every starting resource in the
+        pool, every building it could find standing, every source it could bring in - seeds
+        paid for."""
         budget = self.world.pool.budget
         rank = budget.rank.get(self.scenario.scenario, {})
         purchases = self.scenario.starting_state.required_purchases
@@ -219,11 +239,15 @@ class _ScenarioOrder:
         self._precursors = {entry.location: self.precursors(entry) for entry in self._base}
         ordered = list({precursor.location: precursor for entry in self._base
                         for precursor in (*self._precursors[entry.location], entry)}.values())
-        most, every_waiver = self.max_budget(), frozenset(self.waivers)
+        pile = {resource: self.world.pool.resources.totals[resource]
+                for resource in SAMPLED_RESOURCES}
+        every_waiver, every_way = frozenset(self.waivers), list(range(len(self.ways)))
         kept, pruned = [], []
         for entry in ordered:
-            need = required(self.plan(kept + [entry]), every_waiver).cost
-            fits = all(amount <= most[resource] for resource, amount in need.items())
+            need = self.plan(kept + [entry])
+            requirement = required(need, every_waiver)
+            fits = pays(pile, dict(requirement.cost), every_way, self.ways,
+                        self.seed_parts(need, requirement, every_waiver), self.worth)
             (kept if fits else pruned).append(entry)
         return tuple(kept), tuple(pruned)
 

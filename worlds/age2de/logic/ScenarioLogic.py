@@ -10,7 +10,7 @@ from ..locations.VillagerJobs import Age2VillagerJobData
 from rule_builder.rules import False_, Has, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
-from ..generation.pools.BudgetPool import BASE
+from .budget.BudgetItem import BASE
 from .budget.BudgetTotal import BudgetTotal
 from ..locations.Ages import Age2AgeData
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from .. import Age2World
     from ..locations.Scenarios import Age2ScenarioData
     from .Logic import Logic
-    from ..generation.pools.BudgetPool import PricedLocation
+    from .budget.BudgetItem import PricedLocation
 
 @dataclass
 class ScenarioStartingState:
