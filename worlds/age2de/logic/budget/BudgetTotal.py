@@ -16,7 +16,7 @@ from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
 from .BudgetItem import PricedLocation
 from .BudgetOrder import Switch, budget_order
-from .BudgetSource import Bootstrap, Part, Way, bootstrap, income, pays
+from .BudgetSource import Bootstrap, Part, ScenarioSource, Way, bootstrap, income, pays
 from .Need import Need
 from .Requirement import Requirement
 
@@ -84,7 +84,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             (*order.switch_rules, *order.way_rules),   # resolved once, by the order
             tuple(needs),
             tuple(tuple(buildings) for _, buildings, _ in switches),
-            order.worth,
+            tuple(order.sources),
             order.ways,
             tuple(parts),
             self.scenario,
@@ -105,7 +105,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         """The running total for each combination of switches, by bit mask: a switch can make a
         purchase unnecessary, which takes it out of the total."""
         switches: tuple[tuple[Age2BuildingData, ...], ...]
-        sources: tuple[tuple[str, Resource, int], ...]
+        sources: tuple[ScenarioSource, ...]
         ways: tuple[Way, ...]
         """Each way to bring a source in, with one pick of dropsite: its source, and the child
         (after the switches) whose rule switches that way on."""
@@ -135,7 +135,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             on = [rule(state) for rule in self.children[len(self.switches):]]
             return [index for index, (_, rule) in enumerate(self.ways) if on[rule]]
 
-        def sources_on(self, state: CollectionState) -> list[tuple[str, Resource, int]]:
+        def sources_on(self, state: CollectionState) -> list[ScenarioSource]:
             on = {self.ways[index][0] for index in self.usable(state)}
             return [source for index, source in enumerate(self.sources) if index in on]
 
@@ -188,7 +188,9 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 "buildings_charged": list(requirement.buildings),
                 "ages_charged": list(requirement.ages),
                 "waived": sorted(self.waived_now(state), key=int) if state is not None else [],
-                "sources_on": list(self.sources_on(state)) if state is not None else [],
+                "sources_on": ([(source.name, source.resource, source.allowance)
+                                for source in self.sources_on(state)]
+                               if state is not None else []),
                 "sources_used": self._used(state),
                 "pile": self.pile(state) if state is not None else {},
             }
@@ -197,7 +199,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             found = None if state is None else self.bootstrap(state)
             if found is None:
                 return []
-            return sorted({self.sources[self.ways[way][0]][0] for way in found[0]})
+            return sorted({self.sources[self.ways[way][0]].name for way in found[0]})
 
         def _totals(self, state: CollectionState | None) -> list[tuple[Resource, int, bool | None]]:
             need = dict(self.costs[0 if state is None else self.mask(state)])

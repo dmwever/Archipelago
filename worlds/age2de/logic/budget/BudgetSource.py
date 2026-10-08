@@ -128,41 +128,50 @@ def _cost(cost: dict[Resource, int]) -> Cost:
                         key=lambda item: item[0].value))
 
 
-Worth = Sequence[tuple[str, Resource, int]]
-"""Each source: its name, what it brings in, and how much."""
+class ScenarioSource(NamedTuple):
+    """A gathering source as one scenario could work it: what it brings in, and each way to work
+    it - the way's rule, already resolved, and the seed it buys. Tuples throughout: a resolved
+    budget total keeps these, and it has to hash."""
+    name: str
+    resource: Resource
+    allowance: int
+    ways: tuple[tuple[Rule.Resolved, Need], ...]
+
+
 Way = tuple[int, int]
 """One way to bring a source in, with one pick of dropsite: its source, and the rule switching it."""
 Bootstrap = tuple[frozenset[int], dict[Resource, int]]
 """The ways that paid, and what their seeds added to the total."""
 
 
-def income(sources: Iterable[int], worth: Worth) -> dict[Resource, int]:
+def income(working: Iterable[int], sources: Sequence[ScenarioSource]) -> dict[Resource, int]:
+    """What the sources at these indices bring in, per resource."""
     total = dict.fromkeys(SAMPLED_RESOURCES, 0)
-    for index in sources:
-        _, resource, amount = worth[index]
-        total[resource] += amount
+    for index in working:
+        source = sources[index]
+        total[source.resource] += source.allowance
     return total
 
 
 def pays(pile: dict[Resource, int], need: dict[Resource, int], usable: list[int],
-         ways: Sequence[Way], parts: Sequence[tuple[Part, ...]], worth: Worth) -> bool:
+         ways: Sequence[Way], parts: Sequence[tuple[Part, ...]], sources: Sequence[ScenarioSource]) -> bool:
     """Whether the pile, and the sources it can bring in, cover the need."""
     if all(pile[resource] >= amount for resource, amount in need.items()):
         return True
-    most = income({ways[way][0] for way in usable}, worth)
+    most = income({ways[way][0] for way in usable}, sources)
     if any(pile[resource] + most[resource] < amount for resource, amount in need.items()):
         return False   # seeds only ever add to the total
-    return bootstrap(pile, need, usable, ways, parts, worth) is not None
+    return bootstrap(pile, need, usable, ways, parts, sources) is not None
 
 
 def bootstrap(pile: dict[Resource, int], need: dict[Resource, int], usable: list[int],
               ways: Sequence[Way], parts: Sequence[tuple[Part, ...]],
-              worth: Worth) -> Bootstrap | None:
+              sources: Sequence[ScenarioSource]) -> Bootstrap | None:
     """Bring sources in one at a time, each once its seed is paid for out of the pile and what
     the sources already working bring in, trying every order. The first set that covers the need
     and its own seeds is the answer. A set's funds do not depend on the order it was reached in,
     so each set is looked at once."""
-    most = income({ways[way][0] for way in usable}, worth)
+    most = income({ways[way][0] for way in usable}, sources)
     stack: list[frozenset[int]] = [frozenset()]
     seen: set[frozenset[int]] = set()
     while stack:
@@ -182,7 +191,7 @@ def bootstrap(pile: dict[Resource, int], need: dict[Resource, int], usable: list
                 if not part.in_requirement:
                     extra[resource] += amount
         working = {ways[way][0] for way in chosen}
-        income_now = income(working, worth)
+        income_now = income(working, sources)
         if all(pile[resource] + income_now[resource] >= need.get(resource, 0) + extra[resource]
                for resource in SAMPLED_RESOURCES):
             return chosen, extra

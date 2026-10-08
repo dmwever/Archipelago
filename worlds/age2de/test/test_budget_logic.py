@@ -290,7 +290,7 @@ class TestSourcesAndBudget(BudgetTestBase):
                 self.assertTrue(pays(pile, dict(requirement.cost), list(range(len(budget.ways))),
                                      budget.ways,
                                      budget.seed_parts(need, requirement, every_waiver),
-                                     budget.worth))
+                                     budget.sources))
 
 
 class TestTheRule(BudgetTestBase):

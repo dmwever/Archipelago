@@ -18,7 +18,7 @@ from ..scenarios.ScenarioAgeLogic import PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
-from .BudgetSource import (SOURCE_ALLOWANCE, SOURCES, Part, Way, options, pays,
+from .BudgetSource import (SOURCE_ALLOWANCE, SOURCES, Part, ScenarioSource, Way, options, pays,
                            relic_allowance, seed_parts)
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, Need
@@ -41,15 +41,6 @@ _ITEMS: dict[type, type[BudgetItem]] = {Age2AgeData: AgeBudgetItem,
 
 
 Switch = tuple[Rule, list[Age2BuildingData], list[PricedLocation]]
-
-
-class ScenarioSource(NamedTuple):
-    """A gathering source as one scenario could work it: each way - its rule, already resolved -
-    and the seed it buys."""
-    name: str
-    resource: Resource
-    allowance: int
-    ways: list[tuple[Rule.Resolved, Need]]
 """One waiver rule, the buildings it stands up and the purchases it makes unnecessary."""
 
 
@@ -99,35 +90,33 @@ class BudgetOrder:
         self.scenario = scenario
         self.world = world
         ages = world.pool.ages
-        # The age the scenario pays its way up from: Dark when starts are pulled back.
-        self.start = Age2AgeData.DARK if ages.dark_start else ages.starts_in(scenario.scenario)
-        # What leaves the age before each one, read off the rule that asks it. A tuple, as it
-        # ends up in a Need, which hashes.
-        self.climbs = tuple((age, climb.buildings, climb.single_building)
+        self.start_age = Age2AgeData.DARK if ages.dark_start else ages.starts_in(scenario.scenario)
+        self.age_up_buildings = tuple((age, age_up_building.buildings, age_up_building.single_building)
                             for age in CLIMBED_AGES
-                            for climb in [scenario.ages.two_from(PREVIOUS[age])])
-        self.waivers = self._waivers()
-        self._could_have: dict[Age2BuildingData, bool] = {}
+                            for age_up_building in [scenario.ages.two_from(PREVIOUS[age])])
+        self.standing_buildings = self._waivers()
+        self._could_have_building: dict[Age2BuildingData, bool] = {}
         self.sources = self._sources()
-        self.worth = tuple((source.name, source.resource, source.allowance)
-                           for source in self.sources)
         self.way_rules: list[Rule.Resolved] = []
-        self.picks: list[tuple[int, int, Need, list[Age2BuildingData]]] = []
-        """Each way to bring a source in, once per pick of dropsite: its source, its rule (an
-        index into way_rules), its seed, and the pick."""
+        self.source_choices: list[tuple[int, int, Need, list[Age2BuildingData]]] = []
+
         for index, source in enumerate(self.sources):
             for rule, seed in source.ways:
                 self.way_rules.append(rule)
-                self.picks += [(index, len(self.way_rules) - 1, seed, pick)
+                self.source_choices += [(index, len(self.way_rules) - 1, seed, pick)
                                for pick in options(seed)]
-        self.ways: tuple[Way, ...] = tuple((source, rule) for source, rule, _, _ in self.picks)
-        self.purchases = {location: rule for location, rule
+        
+        self.ways: tuple[Way, ...] = tuple((source, rule) for source, rule, _, _ in self.source_choices)
+
+        self.required_purchases = {location: rule for location, rule
                           in scenario.starting_state.required_purchases.items()
                           if not isinstance(rule, False_)}
+        
         """The scenario's purchases that something can make unnecessary, and the rule that does."""
         self.switches: list[Switch] = self._switches()
         self.switch_rules: list[Rule.Resolved] = [rule.resolve(world)
                                                   for rule, _, _ in self.switches]
+        
         """Each switch's rule, resolved once for every budget total in the scenario."""
         self._precursors: dict[PricedLocation, list[_Priced]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
@@ -153,9 +142,9 @@ class BudgetOrder:
         return rule.resolve(self.world).always_false
 
     def could_have(self, building: Age2BuildingData) -> bool:
-        if building not in self._could_have:
-            self._could_have[building] = not self.impossible(self.scenario.has_building(building))
-        return self._could_have[building]
+        if building not in self._could_have_building:
+            self._could_have_building[building] = not self.impossible(self.scenario.has_building(building))
+        return self._could_have_building[building]
 
     def _sources(self) -> list[ScenarioSource]:
         """The early gathering sources this scenario could ever count toward its budget, each
@@ -168,11 +157,12 @@ class BudgetOrder:
             for way, seed in source.ways:
                 rule = way(economy).resolve(self.world)   # once: every budget total reuses it
                 if not rule.always_false:
-                    ways.append((rule, seed.in_scenario(self.start, self.climbs, self.could_have,
+                    ways.append((rule, seed.in_scenario(self.start_age, self.age_up_buildings, self.could_have,
                                                         self.choice_order)))
             allowance = relics if source.per_relic else SOURCE_ALLOWANCE
             if ways and allowance:
-                sources.append(ScenarioSource(source.name, source.resource, allowance, ways))
+                sources.append(ScenarioSource(source.name, source.resource, allowance,
+                                              tuple(ways)))
         return sources
 
     def max_budget(self) -> dict[Resource, int]:
@@ -187,8 +177,8 @@ class BudgetOrder:
                    waived: frozenset[Age2BuildingData]) -> tuple[tuple[Part, ...], ...]:
         # Tuples: a resolved rule keeps these, and it has to hash.
         """What each way's seed buys, against this running total."""
-        return tuple(seed_parts(seed, pick, need, requirement, waived, self.start)
-                     for _, _, seed, pick in self.picks)
+        return tuple(seed_parts(seed, pick, need, requirement, waived, self.start_age)
+                     for _, _, seed, pick in self.source_choices)
 
     def priced(self, location: PricedLocation) -> _Priced | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
@@ -202,7 +192,7 @@ class BudgetOrder:
 
     def plan(self, entries: Iterable[_Priced]) -> Need:
         return sum((entry.need for entry in entries), Need()).in_scenario(
-            self.start, self.climbs, self.could_have, self.choice_order)
+            self.start_age, self.age_up_buildings, self.could_have, self.choice_order)
 
     def precursors(self, entry: _Priced) -> list[_Priced]:
         """What this location cannot be had without, that is a location this scenario could do:
@@ -251,13 +241,13 @@ class BudgetOrder:
                         for precursor in (*self._precursors[entry.location], entry)}.values())
         pile = {resource: self.world.pool.resources.totals[resource]
                 for resource in SAMPLED_RESOURCES}
-        every_waiver, every_way = frozenset(self.waivers), list(range(len(self.ways)))
+        every_waiver, every_way = frozenset(self.standing_buildings), list(range(len(self.ways)))
         kept, pruned = [], []
         for entry in ordered:
             need = self.plan(kept + [entry])
             requirement = Requirement(need, every_waiver)
             fits = pays(pile, dict(requirement.cost), every_way, self.ways,
-                        self.seed_parts(need, requirement, every_waiver), self.worth)
+                        self.seed_parts(need, requirement, every_waiver), self.sources)
             (kept if fits else pruned).append(entry)
         return kept, pruned
 
@@ -296,8 +286,8 @@ class BudgetOrder:
                 switches.append(same)
             return same
 
-        for building, rule in self.waivers.items():
+        for building, rule in self.standing_buildings.items():
             switch(rule)[1].append(building)
-        for location, rule in self.purchases.items():
+        for location, rule in self.required_purchases.items():
             switch(rule)[2].append(location)
         return switches
