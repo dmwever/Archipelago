@@ -48,17 +48,16 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         """Resolved once per seed and shared, like the scenario questions: the base's total sits
         in every has_base, and its seeds and source rules are not cheap to work out again."""
         logic = world.rules.logic
-        key = ("BudgetTotal", self.scenario, self.location)
-        resolved = logic.budget_answers.get(key)
-        if resolved is None:
-            if key in logic.scenario_answers_open:
-                raise RecursionError(f"{key} asks itself; the rule would never terminate")
-            logic.scenario_answers_open.add(key)
+        key = (self.scenario, self.location)
+        if key not in logic.budget_totals:
+            if key in logic.budget_totals_open:
+                raise RecursionError(f"{self} asks for itself; the rule would never terminate")
+            logic.budget_totals_open.add(key)
             try:
-                resolved = logic.budget_answers[key] = self._resolve(world)
+                logic.budget_totals[key] = self._resolve(world)
             finally:
-                logic.scenario_answers_open.discard(key)
-        return resolved
+                logic.budget_totals_open.discard(key)
+        return logic.budget_totals[key]
 
     def _resolve(self, world: 'Age2World') -> Rule.Resolved:
         order = budget_order(world.rules.logic.for_scenario(self.scenario), world)
