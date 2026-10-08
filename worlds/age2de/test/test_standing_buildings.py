@@ -57,3 +57,30 @@ class TestStandingBuildingsCount(bases.Age2RuleTestBase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestABaseStandsATownCenter(bases.Age2RuleTestBase):
+    """A base is more than a Town Center, but never less: whatever gives a scenario its base has
+    to declare the Town Center standing too. Attila 1's Bleda's Camp once did not, and the budget
+    and the age-ups quietly paid for a Town Center the camp had already put up."""
+
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def test_every_base_declares_its_town_center(self):
+        from BaseClasses import CollectionState
+        self.build()
+        for scenario in self.world.rules.logic.scenarios:
+            state = scenario.starting_state
+            base = state.has_base.resolve(self.world)
+            if base.always_false:
+                continue
+            town_center = state.starts_with_building[Age2BuildingData.TOWN_CENTER].resolve(self.world)
+            with_base = CollectionState(self.multiworld)
+            for name in base.item_dependencies():
+                with_base.collect(self.world.create_item(name), prevent_sweep=True)
+            with self.subTest(scenario.scenario.scenario_name):
+                self.assertTrue(base(with_base), "collecting the base's items should give the base")
+                self.assertTrue(town_center(with_base),
+                                "the base is there but its Town Center is not declared standing")
+

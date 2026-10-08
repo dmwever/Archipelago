@@ -41,8 +41,9 @@ _ITEMS: dict[type, type[BudgetItem]] = {Age2AgeData: AgeBudgetItem,
 
 
 class Switch(NamedTuple):
-    """One waiver rule, the buildings it stands up and the purchases it makes unnecessary."""
-    rule: Rule
+    """One waiver rule, the buildings it stands up and the purchases it makes unnecessary. The
+    rule is resolved once, here, for every budget total in the scenario."""
+    rule: Rule.Resolved
     buildings: list[Age2BuildingData]
     purchases: list[PricedLocation]
 
@@ -106,46 +107,41 @@ class BudgetOrder:
         self.age_up_buildings: tuple[AgeUpBuildings, ...] = tuple(
             AgeUpBuildings(age, rule.buildings, rule.single_building)
             for age in CLIMBED_AGES for rule in [scenario.ages.two_from(PREVIOUS[age])])
-        self.standing_buildings = self._waivers()
+        self.standing_buildings = self._standing_buildings()
         self._could_have_building: dict[Age2BuildingData, bool] = {}
         self.sources = self._sources()
-        self.way_rules: list[Rule.Resolved] = []
         self.source_choices: list[SourceChoice] = []
-
+        rule_index = 0   # where the way's rule sits in way_rules
         for index, source in enumerate(self.sources):
             for way in source.ways:
-                self.way_rules.append(way.rule)
-                self.source_choices += [SourceChoice(index, len(self.way_rules) - 1, way.seed, pick)
+                self.source_choices += [SourceChoice(index, rule_index, way.seed, pick)
                                         for pick in options(way.seed)]
+                rule_index += 1
         
         self.ways: tuple[Way, ...] = tuple(Way(choice.source, choice.rule)
                                            for choice in self.source_choices)
 
         self.required_purchases = {location: rule for location, rule
-                          in scenario.starting_state.required_purchases.items()
-                          if not isinstance(rule, False_)}
+                                   in scenario.starting_state.required_purchases.items()
+                                   if not isinstance(rule, False_)}
         
-        """The scenario's purchases that something can make unnecessary, and the rule that does."""
         self.switches: list[Switch] = self._switches()
-        self.switch_rules: list[Rule.Resolved] = [switch.rule.resolve(world)
-                                                  for switch in self.switches]
-        
-        """Each switch's rule, resolved once for every budget total in the scenario."""
         self._precursors: dict[PricedLocation, list[_Priced]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
 
-    def _waivers(self) -> dict[Age2BuildingData, Rule]:
-        """The buildings the scenario can find standing, and the rule that says so. A base is a
-        standing Town Center."""
-        state = self.scenario.starting_state
-        rules = {building: state.starts_with_building[building] for building in Age2BuildingData
-                 if self.scenario.civilization.can_build(building)}
-        if Age2BuildingData.TOWN_CENTER in rules and not isinstance(state.has_base, False_):
-            standing = rules[Age2BuildingData.TOWN_CENTER]
-            rules[Age2BuildingData.TOWN_CENTER] = (
-                state.has_base if isinstance(standing, False_) else standing | state.has_base)
-        return {building: rule for building, rule in rules.items() if not isinstance(rule, False_)}
+    @property
+    def way_rules(self) -> list[Rule.Resolved]:
+        """Every way's rule, flat, in the order SourceChoice.rule counts them."""
+        return [way.rule for source in self.sources for way in source.ways]
+
+    def _standing_buildings(self) -> dict[Age2BuildingData, Rule]:
+        """The buildings the scenario can find standing, and the rule that says so - each as its
+        starting state declares it. One that never stands is left out, so it is no switch."""
+        standing = self.scenario.starting_state.starts_with_building
+        return {building: standing[building] for building in Age2BuildingData
+                if self.scenario.civilization.can_build(building)
+                and not isinstance(standing[building], False_)}
 
     def choice_order(self, building: Age2BuildingData) -> int:
         """Where a building stands among choices: the seed's building order."""
@@ -239,21 +235,19 @@ class BudgetOrder:
                       key=lambda precursor: (precursor.age, precursor.item.rank))
 
     def _build_order(self) -> tuple[list[_Priced], list[_Priced]]:
-        """The sample, the scenario's own purchases and its base by age: its purchases first, then
-        the base, then the scenario's random rank; each entry after its precursors, less what
-        could never fit the most the scenario could ever have: every starting resource in the
-        pool, every building it could find standing, every source it could bring in - seeds
-        paid for."""
         budget = self.world.pool.budget
         rank = budget.rank
         purchases = self.scenario.starting_state.required_purchases
+
         items = ([ScenarioBudgetItem(budget_item(location)) for location in purchases]
                  + [budget_item(BASE)]
                  + [budget_item(location) for location in budget.entries
                     if location not in purchases])
+        
         self._base = sorted(filter(None, map(self._priced, items)),
                             key=lambda entry: (entry.age, 0, 0) if entry.item.first_in_age
                             else (entry.age, 1, rank[entry.location]))
+        
         self._precursors = {entry.location: self.precursors(entry) for entry in self._base}
         ordered = list({precursor.location: precursor for entry in self._base
                         for precursor in (*self._precursors[entry.location], entry)}.values())
@@ -298,9 +292,10 @@ class BudgetOrder:
         switches: list[Switch] = []
 
         def switch(rule: Rule) -> Switch:
-            same = next((switch for switch in switches if switch.rule == rule), None)
+            resolved = rule.resolve(self.world)
+            same = next((switch for switch in switches if switch.rule == resolved), None)
             if same is None:
-                same = Switch(rule, [], [])
+                same = Switch(resolved, [], [])
                 switches.append(same)
             return same
 

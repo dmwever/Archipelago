@@ -26,20 +26,6 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass
 class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
-    """Is this location's place in its scenario's budget order in logic yet?
-
-    Unresolved it is only the question: which scenario, which location. Resolved, its children
-    are the waiver switches (buildings the scenario starts with, purchases it can be spared),
-    then the rules that switch a way of working a gathering source on. Every combination of
-    switches has its cost, and each way's seed, worked out at resolve time.
-
-    Evaluating, the pile alone may cover it. Otherwise sources are brought in one at a time, each
-    once its seed - a dropsite, a crew, an age - is paid for out of what is in hand, which is the
-    pile plus what the sources already working bring in. Every order is tried. More items only
-    turn more switches and ways on and the pile only grows, so the rule never goes from true to
-    false.
-    """
-
     scenario: Age2ScenarioData
     location: PricedLocation
 
@@ -81,7 +67,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             costs.append(tuple(requirement.cost.items()))
             parts.append(order.seed_parts(need, requirement, waived))
         return self.Resolved(   # tuples throughout: a resolved rule has to hash
-            (*order.switch_rules, *order.way_rules),   # resolved once, by the order
+            # Resolved once, by the order: the switches' rules, then every way's.
+            (*(switch.rule for switch in order.switches), *order.way_rules),
             tuple(needs),
             tuple(tuple(switch.buildings) for switch in switches),
             tuple(order.sources),
@@ -102,21 +89,14 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
     class Resolved(NestedRule.Resolved):
         # Every field is a tuple, not a list: a resolved rule has to hash.
         needs: tuple[Need, ...]
-        """The running total for each combination of switches, by bit mask: a switch can make a
-        purchase unnecessary, which takes it out of the total."""
         switches: tuple[tuple[Age2BuildingData, ...], ...]
         sources: tuple[ScenarioSource, ...]
         ways: tuple[Way, ...]
-        """Each way to bring a source in, with one pick of dropsite: its source, and the child
-        (after the switches) whose rule switches that way on."""
         parts: tuple[tuple[tuple[Part, ...], ...], ...]
-        """What each way's seed buys, for each combination of switches, by bit mask."""
         scenario: Age2ScenarioData
         location: PricedLocation
         contributors: tuple[tuple[Resource, tuple[tuple[str, int], ...]], ...]
         costs: tuple[tuple[tuple[Resource, int], ...], ...]
-        """What the running total costs for each combination of switches, by bit mask. Pairs
-        rather than dicts, because a resolved rule has to hash."""
 
         skip_cache = True
         """Sums over the pile, which is no child; item_dependencies names every pile item instead."""
