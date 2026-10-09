@@ -81,6 +81,14 @@ SCENARIO_TO_STARTUP_UNITS: dict[Age2ScenarioData, list[ScenarioUnit]] = {
         Age2EscortUnitData.CART,
         Age2HeroData.GUY_JOSSELYNE,
     ],
+    # Genghis Khan: no startup units authored yet. The assert below wants an entry for every
+    # scenario, empty or not.
+    Age2ScenarioData.AP_GENGHIS_1: [],
+    Age2ScenarioData.AP_GENGHIS_2: [],
+    Age2ScenarioData.AP_GENGHIS_3: [],
+    Age2ScenarioData.AP_GENGHIS_4: [],
+    Age2ScenarioData.AP_GENGHIS_5: [],
+    Age2ScenarioData.AP_GENGHIS_6: [],
 }
 
 

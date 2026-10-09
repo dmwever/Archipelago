@@ -79,6 +79,7 @@ class StartingCampaigns(OptionSet):
     Determines which vanilla campaigns will start unlocked for the player.
         Attila the Hun
         Joan of Arc
+        Genghis Khan
     Leave blank for a random start: one of your enabled campaigns is chosen for you.
     """
     display_name = "Starting Campaigns"
@@ -90,6 +91,7 @@ class EnabledCampaigns(OptionSet):
     Determines which vanilla campaigns will be unlocked for the player.
         Attila the Hun
         Joan of Arc
+        Genghis Khan
     """
     display_name = "Enabled Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}

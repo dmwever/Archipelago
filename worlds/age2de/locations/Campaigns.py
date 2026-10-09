@@ -13,5 +13,6 @@ class Age2CampaignData(enum.IntEnum):
     
     ATTILA  =       1, "Attila the Hun", "AP Attila the Hun"
     JOAN  =         2, "Joan of Arc", "AP Joan of Arc"
+    GENGHIS  =      3, "Genghis Khan", "AP Genghis Khan"
 
 NAME_TO_CAMPAIGN = {campaign.campaign_name: campaign for campaign in Age2CampaignData}

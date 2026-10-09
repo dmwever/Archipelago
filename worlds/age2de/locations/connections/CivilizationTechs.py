@@ -13,6 +13,14 @@ Age2CivData.FRANKS.included_techs = [
     Age2TechData.CHIVALRY_FRANKS,
 ]
 
+Age2CivData.MONGOLS.included_techs = [
+    Age2TechData.DRILL_MONGOLS,
+    Age2TechData.NOMADS_MONGOLS,
+    Age2TechData.ELITE_MANGUDAI_MONGOLS,
+    Age2TechData.ELITE_STEPPE_LANCER,
+    Age2TechData.HEAVY_CAMEL_RIDER,
+]
+
 Age2CivData.HUNS.excluded_techs = [
     Age2TechData.CROP_ROTATION,
     Age2TechData.ARCHITECTURE,
@@ -65,6 +73,17 @@ Age2CivData.FRANKS.excluded_techs = [
     Age2TechData.PARTHIAN_TACTICS,
     Age2TechData.THUMB_RING,
     Age2TechData.INCENDIARIES,
+]
+
+Age2CivData.MONGOLS.excluded_techs = [
+    Age2TechData.ARCHITECTURE, Age2TechData.ARROWSLITS, Age2TechData.BLOCK_PRINTING,
+    Age2TechData.BOMBARD_TOWER_TECH, Age2TechData.CROP_ROTATION, Age2TechData.DRY_DOCK,
+    Age2TechData.ELITE_CANNON_GALLEON, Age2TechData.GAMBESONS, Age2TechData.GUILDS,
+    Age2TechData.HALBERDIER, Age2TechData.HEATED_SHOT, Age2TechData.ILLUMINATION,
+    Age2TechData.INCENDIARIES, Age2TechData.KEEP, Age2TechData.PALADIN,
+    Age2TechData.PLATE_BARDING_ARMOR, Age2TechData.REDEMPTION, Age2TechData.RING_ARCHER_ARMOR,
+    Age2TechData.SANCTITY, Age2TechData.THEOCRACY, Age2TechData.TREADMILL_CRANE,
+    Age2TechData.TWO_MAN_SAW,
 ]
 
 

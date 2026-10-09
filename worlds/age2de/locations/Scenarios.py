@@ -56,7 +56,15 @@ class Age2ScenarioData(enum.IntEnum):
     AP_JOAN_4 =                   "The Rising", "AP_Joan_4", "JOAN4.xsdat", Age2CampaignData.JOAN, 4, Age2CivData.FRANKS, Age2AgeData.CASTLE
     AP_JOAN_5 =           "The Siege of Paris", "AP_Joan_5", "JOAN5.xsdat", Age2CampaignData.JOAN, 5, Age2CivData.FRANKS, Age2AgeData.IMPERIAL
     AP_JOAN_6 =             "A Perfect Martyr", "AP_Joan_6", "JOAN6.xsdat", Age2CampaignData.JOAN, 6, Age2CivData.FRANKS, Age2AgeData.CASTLE
-    
+
+    # Ages read from the scenarios themselves (player 1's starting age), not from the wiki.
+    AP_GENGHIS_1 =                   "Crucible", "AP_Genghis_1", "GEN1.xsdat", Age2CampaignData.GENGHIS, 1, Age2CivData.MONGOLS, Age2AgeData.DARK
+    AP_GENGHIS_2 =          "A Life of Revenge", "AP_Genghis_2", "GEN2.xsdat", Age2CampaignData.GENGHIS, 2, Age2CivData.MONGOLS, Age2AgeData.DARK
+    AP_GENGHIS_3 =                 "Into China", "AP_Genghis_3", "GEN3.xsdat", Age2CampaignData.GENGHIS, 3, Age2CivData.MONGOLS, Age2AgeData.FEUDAL
+    AP_GENGHIS_4 =       "The Horde Rides West", "AP_Genghis_4", "GEN4.xsdat", Age2CampaignData.GENGHIS, 4, Age2CivData.MONGOLS, Age2AgeData.CASTLE
+    AP_GENGHIS_5 =                "The Promise", "AP_Genghis_5", "GEN5.xsdat", Age2CampaignData.GENGHIS, 5, Age2CivData.MONGOLS, Age2AgeData.CASTLE
+    AP_GENGHIS_6 =              "Pax Mongolica", "AP_Genghis_6", "GEN6.xsdat", Age2CampaignData.GENGHIS, 6, Age2CivData.MONGOLS, Age2AgeData.IMPERIAL
+
 scenario_from_id = {_scenario.id: _scenario for _scenario in Age2ScenarioData}
 scenario_names: list[Age2ScenarioData] = [scn.scenario_name for scn in Age2ScenarioData]
 CAMPAIGN_TO_SCENARIOS: dict[Age2CampaignData, list[Age2ScenarioData]] = {_campaign: [] for _campaign in Age2CampaignData}

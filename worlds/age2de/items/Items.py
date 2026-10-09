@@ -479,10 +479,12 @@ class Age2ItemData(enum.IntEnum):
     # Progressive Scenarios (Campaign Count - 1)
     PROGRESSIVE_ATTILA_SCENARIO = 3000, "Progressive Attila Scenario", ProgressiveScenario(Age2CampaignData.ATTILA, 5)
     PROGRESSIVE_JOAN_SCENARIO = 3001, "Progressive Joan of Arc Scenario", ProgressiveScenario(Age2CampaignData.JOAN, 5)
+    PROGRESSIVE_GENGHIS_SCENARIO = 3002, "Progressive Genghis Khan Scenario", ProgressiveScenario(Age2CampaignData.GENGHIS, 5)
     
     # Campaign Unlocks (Unlocks first level)
     ATTILA_THE_HUN = 3500, "Attila the Hun Campaign", Campaign(Age2CampaignData.ATTILA)
     JOAN_OF_ARC = 3501, "Joan of Arc Campaign", Campaign(Age2CampaignData.JOAN)
+    GENGHIS_KHAN = 3502, "Genghis Khan Campaign", Campaign(Age2CampaignData.GENGHIS)
     
     #3600 - 3999 = Techs
 

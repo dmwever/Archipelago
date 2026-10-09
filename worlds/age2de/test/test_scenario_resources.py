@@ -13,7 +13,8 @@ from ..locations.connections import ScenarioResources  # noqa: F401  - assigns o
 from ..locations.connections.ScenarioResources import ScenarioResourceCount, Tier, total
 from ..locations.Scenarios import Age2ScenarioData
 
-FIXED_FORCE = (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5)
+FIXED_FORCE = (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5,
+               Age2ScenarioData.AP_GENGHIS_1)
 """No villagers, so the yields are deliberately all zero however much the map holds."""
 
 COUNT_FIELDS = tuple(field.name for field in fields(ScenarioResourceCount))
@@ -121,7 +122,7 @@ class TestTheFactsLogicLeansOn(unittest.TestCase):
     def test_relics_are_where_we_think(self):
         with_relics = {scenario.name: total(scenario).relic_count
                        for scenario in Age2ScenarioData if total(scenario).relic_count}
-        self.assertEqual(with_relics, {"AP_ATTILA_3": 2, "AP_ATTILA_4": 4})
+        self.assertEqual(with_relics, {"AP_ATTILA_3": 2, "AP_ATTILA_4": 4, "AP_GENGHIS_5": 1})
 
     def test_no_map_has_an_oyster_or_a_whale_yet(self):
         """Both fields exist for scenarios not yet written. If this ever fails, a map gained

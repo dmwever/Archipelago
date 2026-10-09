@@ -169,7 +169,18 @@ class Age2ScenarioLocationData(enum.IntEnum):
     JOAN6_FRENCH_ARMY =             20602, "Locate the French Army",                    Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
     JOAN6_FRENCH_ARTILLERY =        20603, "Locate the French Artillery",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
     JOAN6_BURGUNDIAN_TOWN =         20604, "Capture the Burgundian Town",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.SIDE_QUEST
-    
+
+    # Genghis Khan. Victory only for now - the objectives are not authored yet. A VICTORY
+    # location is not optional: add_scenario_region only creates the "Complete <scenario>"
+    # event and its "Unlock Next Scenario" item for scenarios that have one, and without that
+    # the campaign does not chain.
+    GEN1_VICTORY =                  30100, "Victory",                                   Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.VICTORY
+    GEN2_VICTORY =                  30200, "Victory",                                   Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.VICTORY
+    GEN3_VICTORY =                  30300, "Victory",                                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.VICTORY
+    GEN4_VICTORY =                  30400, "Victory",                                   Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.VICTORY
+    GEN5_VICTORY =                  30500, "Victory",                                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.VICTORY
+    GEN6_VICTORY =                  30600, "Victory",                                   Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.VICTORY
+
 location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2ScenarioLocationData}
 location_id_to_name = {_location.id: _location.global_name() for _location in Age2ScenarioLocationData}

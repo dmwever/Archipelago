@@ -18,7 +18,7 @@ from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 
 class EconomyTestBase(bases.Age2RuleTestBase):
-    campaigns = ["Attila the Hun", "Joan of Arc"]
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
 
     def economy(self, scenario: Age2ScenarioData):
         return self.world.rules.logic.for_scenario(scenario).economy
@@ -110,7 +110,8 @@ class TestSourcesPerScenario(EconomyTestBase):
         self.build()
         with_relics = {scenario for scenario in Age2ScenarioData
                        if not self.is_false(self.economy(scenario).can_collect_relics())}
-        self.assertEqual(with_relics, {Age2ScenarioData.AP_ATTILA_3, Age2ScenarioData.AP_ATTILA_4})
+        self.assertEqual(with_relics, {Age2ScenarioData.AP_ATTILA_3, Age2ScenarioData.AP_ATTILA_4,
+                                       Age2ScenarioData.AP_GENGHIS_5})
 
 
 class TestFixedForceNeedsNoSpecialCase(EconomyTestBase):

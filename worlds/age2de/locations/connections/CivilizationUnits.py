@@ -76,6 +76,15 @@ Age2CivData.FRANKS.included_units = [
     Age2UnitData.HEAVY_MOUNTED_CROSSBOWMAN,
 ]
 
+Age2CivData.MONGOLS.included_units = [
+    Age2UnitData.MANGUDAI,
+    Age2UnitData.ELITE_MANGUDAI,
+    Age2UnitData.STEPPE_LANCER,
+    Age2UnitData.ELITE_STEPPE_LANCER,
+    Age2UnitData.CAMEL_RIDER,
+    Age2UnitData.HEAVY_CAMEL_RIDER,
+]
+
 Age2CivData.HUNS.excluded_units = [
     Age2UnitData.HAND_CANNONEER,
     Age2UnitData.BOMBARD_CANNON,
@@ -95,6 +104,14 @@ Age2CivData.FRANKS.excluded_units = [
     Age2UnitData.ARBALESTER,
     Age2UnitData.SIEGE_RAM,
     Age2UnitData.SIEGE_ONAGER,
+    Age2UnitData.ELITE_CANNON_GALLEON,
+]
+
+Age2CivData.MONGOLS.excluded_units = [
+    Age2UnitData.HAND_CANNONEER,
+    Age2UnitData.BOMBARD_CANNON,
+    Age2UnitData.HALBERDIER,
+    Age2UnitData.PALADIN,
     Age2UnitData.ELITE_CANNON_GALLEON,
 ]
 

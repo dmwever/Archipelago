@@ -305,6 +305,153 @@ Age2ScenarioData.AP_JOAN_6.resources[Tier.ENEMY] = ScenarioResourceCount(
     oyster_count=0, whale_count=0, relic_count=0)
 
 # A fixed force has no villagers, so there is nothing to gather whatever the map holds.
+
+# Genghis Khan. Scanned from the maps; chapter 1 is a fixed force and is set to EMPTY below.
+#
+# TODO: five tier assignments are still outstanding. Counting every Gold Mine (800) and Stone
+# Mine (350) object on each map and comparing with the totals declared here - the convention
+# every Attila and Joan scenario already follows exactly - leaves these unaccounted for:
+#     chapter 3   6 gold mines     (4800 gold)
+#     chapter 4   6 stone quarries (2100 stone) and 11 gold mines (8800 gold)
+#     chapter 5   4 stone quarries (1400 stone) declared that the map does not hold
+#     chapter 6   5 stone quarries (1750 stone)
+# The counts are known; which tier each pile belongs to is a judgement about map regions.
+
+Age2ScenarioData.AP_GENGHIS_2.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
+
+Age2ScenarioData.AP_GENGHIS_3.demand = ScenarioResourceDemand(gold=12000, stone=4000, food=40000)
+
+Age2ScenarioData.AP_GENGHIS_4.demand = ScenarioResourceDemand(gold=6000, stone=2000, food=20000)
+
+Age2ScenarioData.AP_GENGHIS_5.demand = ScenarioResourceDemand(gold=4500, stone=4000, food=15000)
+
+Age2ScenarioData.AP_GENGHIS_6.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
+
+Age2ScenarioData.AP_GENGHIS_2.resources[Tier.BASE] = ScenarioResourceCount(
+    gold_count=8000, stone_count=1050,
+    hunt_count=1400, herd_count=0, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_2.resources[Tier.OPEN] = ScenarioResourceCount(
+    gold_count=7200, stone_count=1050,
+    hunt_count=5040, herd_count=300, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_2.resources[Tier.ALLY] = ScenarioResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_2.resources[Tier.ENEMY] = ScenarioResourceCount(
+    gold_count=12000, stone_count=2450,
+    hunt_count=1120, herd_count=0, bush_count=2500,
+    shore_fish_count=600, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_3.resources[Tier.BASE] = ScenarioResourceCount(
+    gold_count=3200, stone_count=3500,
+    hunt_count=680, herd_count=300, bush_count=1500,
+    shore_fish_count=800, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+# stone was 10050, which is not a whole number of quarries. The map holds 83 at 350
+# each = 29050, and BASE 3500 + ENEMY 15750 leaves exactly 9800 here.
+Age2ScenarioData.AP_GENGHIS_3.resources[Tier.OPEN] = ScenarioResourceCount(
+    gold_count=12000, stone_count=9800,
+    hunt_count=1660, herd_count=200, bush_count=0,
+    shore_fish_count=2275, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_3.resources[Tier.ALLY] = ScenarioResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_3.resources[Tier.ENEMY] = ScenarioResourceCount(
+    gold_count=40800, stone_count=15750,
+    hunt_count=2980, herd_count=600, bush_count=5125,
+    shore_fish_count=3000, deep_fish_count=12525,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources[Tier.BASE] = ScenarioResourceCount(
+    gold_count=8000, stone_count=0,
+    hunt_count=1660, herd_count=1000, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources[Tier.OPEN] = ScenarioResourceCount(
+    gold_count=4000, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=625,
+    shore_fish_count=3600, deep_fish_count=2475,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources[Tier.ALLY] = ScenarioResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_4.resources[Tier.ENEMY] = ScenarioResourceCount(
+    gold_count=28000, stone_count=4900,
+    hunt_count=980, herd_count=0, bush_count=1500,
+    shore_fish_count=800, deep_fish_count=400,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_5.resources[Tier.BASE] = ScenarioResourceCount(
+    gold_count=3200, stone_count=3850,
+    hunt_count=840, herd_count=0, bush_count=0,
+    shore_fish_count=800, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_5.resources[Tier.OPEN] = ScenarioResourceCount(
+    gold_count=4000, stone_count=2450,
+    hunt_count=1120, herd_count=0, bush_count=0,
+    shore_fish_count=1000, deep_fish_count=425,
+    oyster_count=0, whale_count=0, relic_count=1)
+
+Age2ScenarioData.AP_GENGHIS_5.resources[Tier.ALLY] = ScenarioResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_5.resources[Tier.ENEMY] = ScenarioResourceCount(
+    gold_count=17600, stone_count=5600,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=1000, deep_fish_count=425,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources[Tier.BASE] = ScenarioResourceCount(
+    gold_count=8000, stone_count=3500,
+    hunt_count=980, herd_count=800, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources[Tier.OPEN] = ScenarioResourceCount(
+    gold_count=8000, stone_count=3500,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources[Tier.ALLY] = ScenarioResourceCount(
+    gold_count=0, stone_count=0,
+    hunt_count=0, herd_count=0, bush_count=0,
+    shore_fish_count=0, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+Age2ScenarioData.AP_GENGHIS_6.resources[Tier.ENEMY] = ScenarioResourceCount(
+    gold_count=16000, stone_count=5950,
+    hunt_count=1660, herd_count=900, bush_count=875,
+    shore_fish_count=225, deep_fish_count=0,
+    oyster_count=0, whale_count=0, relic_count=0)
+
+# Chapter 1 has no villagers and the map holds no gold or stone at all.
+Age2ScenarioData.AP_GENGHIS_1.resources = {tier: EMPTY for tier in Tier}
+
 Age2ScenarioData.AP_JOAN_1.resources = {tier: EMPTY for tier in Tier}
 Age2ScenarioData.AP_JOAN_5.resources = {tier: EMPTY for tier in Tier}
 

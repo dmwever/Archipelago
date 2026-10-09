@@ -244,10 +244,14 @@ class TestIncludedCampaigns(unittest.TestCase):
         self.assertEqual(handler.included_campaigns(), [Age2CampaignData.JOAN])
 
     def test_a_key_that_starts_locked_is_still_included(self):
+        """Inclusion follows which keys slot_data carries, not their value - a campaign the seed
+        starts with locked is still part of the seed. Named explicitly rather than compared to
+        the whole enum, so adding a campaign does not break this."""
         handler = CampaignHandler(list(Age2CampaignData))
         handler.setup_victory_requirements({
             "Joan of Arc_unlocked": True, "Attila the Hun_unlocked": False})
-        self.assertEqual(set(handler.included_campaigns()), set(Age2CampaignData))
+        self.assertEqual(set(handler.included_campaigns()),
+                         {Age2CampaignData.JOAN, Age2CampaignData.ATTILA})
 
 
 class TestTechInstall(InstallerTestBase):

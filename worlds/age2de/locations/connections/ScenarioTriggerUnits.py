@@ -55,6 +55,13 @@ AUTHORED_TRIGGER_UNITS: dict[Age2ScenarioData, list[ScenarioUnit]] = {
         Age2HeroData.LA_HIRE,
         Age2HeroData.CONSTABLE_RICHEMONT,
     ],
+    # Genghis Khan: no authored trigger units yet; mercenary musters add themselves below.
+    Age2ScenarioData.AP_GENGHIS_1: [],
+    Age2ScenarioData.AP_GENGHIS_2: [],
+    Age2ScenarioData.AP_GENGHIS_3: [],
+    Age2ScenarioData.AP_GENGHIS_4: [],
+    Age2ScenarioData.AP_GENGHIS_5: [],
+    Age2ScenarioData.AP_GENGHIS_6: [],
 }
 
 
