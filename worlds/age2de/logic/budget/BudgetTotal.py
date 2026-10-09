@@ -15,7 +15,8 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
 from .BudgetItem import PricedLocation
-from .BudgetOrder import CostWaiver, budget_order
+from .BudgetOrder import budget_order
+from .CostWaiver import CostWaiver
 from .BudgetSource import Bootstrap, Part, ScenarioResourceOrigin, ScenarioResourceOrigins
 from .Need import Cost, Need, as_cost
 from .Requirement import Requirement

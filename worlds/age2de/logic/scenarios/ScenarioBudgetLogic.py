@@ -5,6 +5,8 @@ from __future__ import annotations
 import functools
 from typing import TYPE_CHECKING
 
+from rule_builder.rules import False_, Rule
+
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ..budget.Need import CLIMBED_AGES, Need
@@ -38,6 +40,16 @@ class ScenarioBudgetLogic:
             )
                 for age in CLIMBED_AGES
         )
+
+    @functools.cached_property
+    def standing_buildings(self) -> dict[Age2BuildingData, Rule]:
+        """The buildings that might stand at the start, and the rule that has them standing. One
+        standing counts whether or not the civilisation could build it."""
+        standing = self.scenario.starting_state.starts_with_building
+        return {
+            building: standing[building] for building in Age2BuildingData
+                if not isinstance(standing[building], False_)
+        }
 
     def choice_order(self, building: Age2BuildingData) -> int:
         """Where a building stands among choices: the seed's building order."""

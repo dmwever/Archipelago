@@ -4,8 +4,6 @@ import dataclasses
 import functools
 from typing import TYPE_CHECKING, Iterable
 
-from rule_builder.rules import False_, Rule
-
 from ...generation.pools.BudgetPool import SAMPLED_RESOURCES, VILLAGER
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -16,6 +14,7 @@ from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
 from .BudgetSource import ScenarioResourceOrigins
+from .CostWaiver import CostWaiver
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import Need
 from .Requirement import Requirement
@@ -35,12 +34,6 @@ _ITEMS: dict[type, type[BudgetItem]] = {
     Age2UnitData: UnitBudgetItem,
     Age2BaseData: BaseBudgetItem,
 }
-
-@dataclasses.dataclass(frozen=True, eq=False)
-class CostWaiver:
-    rule: Rule.Resolved
-    buildings: list[Age2BuildingData]
-    purchases: list[PricedLocation]
 
 @dataclasses.dataclass(frozen=True, order=True)
 class OrderPlace:
@@ -95,14 +88,8 @@ class BudgetOrder:
         self.scenario = scenario
         self.world = world
 
-        self.standing_buildings = self._standing_buildings()
         self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world)
-
-        self.required_purchases = {
-            location: rule for location, rule in scenario.starting_state.required_purchases.items()
-                if not isinstance(rule, False_)
-        }
-        self.cost_waivers: list[CostWaiver] = self._waivers()
+        self.cost_waivers = CostWaiver.for_scenario(scenario, world)
 
         self._precursors: dict[PricedLocation, list[_Priced]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
@@ -208,7 +195,7 @@ class BudgetOrder:
             resource: self.world.pool.resources.totals[resource] for resource in SAMPLED_RESOURCES
         }
 
-        every_standing_building = frozenset(self.standing_buildings)
+        every_standing_building = frozenset(self.scenario.budget.standing_buildings)
         funded: list[_Priced] = []
         pruned: list[_Priced] = []
 
@@ -281,30 +268,3 @@ class BudgetOrder:
             entry for entry in self.order[:index + 1]
                 if entry.location in needed or entry.location is location
         )
-
-    # -- waivers ------------------------------------------------------------------------------
-
-    def _standing_buildings(self) -> dict[Age2BuildingData, Rule]:
-        standing = self.scenario.starting_state.starts_with_building
-        return {
-            building: standing[building] for building in Age2BuildingData
-                if self.scenario.civilization.can_build(building)
-                and not isinstance(standing[building], False_)
-        }
-
-    def _waivers(self) -> list[CostWaiver]:
-        waivers: list[CostWaiver] = []
-
-        def waiver(rule: Rule) -> CostWaiver:
-            resolved = rule.resolve(self.world)
-            same = next((waiver for waiver in waivers if waiver.rule == resolved), None)
-            if same is None:
-                same = CostWaiver(resolved, [], [])
-                waivers.append(same)
-            return same
-
-        for building, rule in self.standing_buildings.items():
-            waiver(rule).buildings.append(building)
-        for location, rule in self.required_purchases.items():
-            waiver(rule).purchases.append(location)
-        return waivers
