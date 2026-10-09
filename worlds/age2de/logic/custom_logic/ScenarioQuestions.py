@@ -326,16 +326,19 @@ class ScenarioCostWaived(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
+        """What it lets off; the explanation follows it with the rule that does it."""
         let_off = []
         if self.buildings:
             standing = ", ".join(
                 building.location_name.removeprefix("Build ") for building in self.buildings
             )
-            let_off.append(f"has {standing} standing")
+            let_off.append(f"{standing} standing")
         if self.purchases:
-            spared = ", ".join(purchase.location_name for purchase in self.purchases)
-            let_off.append(f"is spared {spared}")
-        return f"{scenario.scenario_name} {' and '.join(let_off)}"
+            spared = ", ".join(
+                purchase.location_name.removeprefix("Own ") for purchase in self.purchases
+            )
+            let_off.append(f"{spared} spared")
+        return ", ".join(let_off)
 
     @override
     def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
@@ -353,6 +356,18 @@ class ScenarioCostWaived(ScenarioQuestion, game="Age Of Empires II: Definitive E
         """The buildings it waives while it holds."""
         purchases: tuple[PricedLocation, ...]
         """The purchases it spares while it holds."""
+
+        @override
+        def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
+            """What it lets off, then the rule that does it - the items, by name."""
+            return [
+                {"type": "text", "text": f"{self.description}: "},
+                *self.answer.explain_json(state),
+            ]
+
+        @override
+        def explain_str(self, state: CollectionState | None = None) -> str:
+            return f"{self.description}: {self.answer.explain_str(state)}"
 
 
 def _question_identity(self: ScenarioQuestion.Resolved) -> int:

@@ -42,7 +42,8 @@ class CostTable:
         if order.running_total_for(location) is None:
             return None
 
-        waivers = tuple(order.scenario.budget.cost_waivers)
+        budget = order.scenario.budget
+        waivers = tuple(budget.cost_waivers)
 
         def on(mask: int) -> list[ScenarioCostWaived.Resolved]:
             """The waivers this combination holds: one bit per waiver."""
@@ -50,11 +51,11 @@ class CostTable:
 
         totals_by_mask: list[RunningTotal] = []
         for mask in range(1 << len(waivers)):
-            waived = frozenset(
+            waived = budget.always_standing | frozenset(
                 building for waiver in on(mask)
                     for building in waiver.buildings
             )
-            dropped = frozenset(
+            dropped = budget.always_spared | frozenset(
                 purchase for waiver in on(mask)
                     for purchase in waiver.purchases
             )
