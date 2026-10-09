@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from ..budget.Need import CLIMBED_AGES, AgeUpBuildings, Need
-from .ScenarioAgeLogic import PREVIOUS
+from ..budget.Need import CLIMBED_AGES, Need
+from ..custom_logic.AgeUpRequirement import AgeUpRequirement
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -28,10 +28,15 @@ class ScenarioPriceLogic:
         return Age2AgeData.DARK if ages.dark_start else ages.starts_in(self.scenario.scenario)
 
     @functools.cached_property
-    def age_up_buildings(self) -> tuple[AgeUpBuildings, ...]:
+    def age_up_requirements(self) -> tuple[AgeUpRequirement, ...]:
+        """What leaves each age, in climbing order, less the buildings that could never stand
+        here."""
         return tuple(
-            AgeUpBuildings(age, rule.buildings, rule.single_building) for age in CLIMBED_AGES
-                for rule in [self.scenario.ages.two_from(PREVIOUS[age])]
+            self.scenario.ages.age_up_requirement(age).narrowed_by_scenario(
+                self.could_have,
+                self.choice_order,
+            )
+                for age in CLIMBED_AGES
         )
 
     def choice_order(self, building: Age2BuildingData) -> int:

@@ -8,28 +8,33 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...generation.pools.AgePool import DARK_START, VANILLA_AGE_START
 from ..custom_logic.ScenarioQuestions import ScenarioHasReached
-from ..custom_logic.TwoBuildings import AgeUpRequirement
+from ..custom_logic.AgeUpRequirement import AgeUpRequirement
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
 
-AGE_BUILDINGS: dict[Age2AgeData, tuple[Age2BuildingData, ...]] = {
-    Age2AgeData.DARK: (Age2BuildingData.MILL, Age2BuildingData.LUMBER_CAMP,
-                       Age2BuildingData.MINING_CAMP, Age2BuildingData.DOCK,
-                       Age2BuildingData.BARRACKS),
-    Age2AgeData.FEUDAL: (Age2BuildingData.ARCHERY_RANGE, Age2BuildingData.STABLE,
-                         Age2BuildingData.MARKET, Age2BuildingData.BLACKSMITH),
-    Age2AgeData.CASTLE: (Age2BuildingData.MONASTERY, Age2BuildingData.UNIVERSITY,
-                         Age2BuildingData.SIEGE_WORKSHOP),
+AGE_UP_BUILDINGS: dict[Age2AgeData, tuple[Age2BuildingData, ...]] = {
+    Age2AgeData.FEUDAL: (
+        Age2BuildingData.MILL,
+        Age2BuildingData.LUMBER_CAMP,
+        Age2BuildingData.MINING_CAMP,
+        Age2BuildingData.DOCK,
+        Age2BuildingData.BARRACKS,
+    ),
+    Age2AgeData.CASTLE: (
+        Age2BuildingData.ARCHERY_RANGE,
+        Age2BuildingData.STABLE,
+        Age2BuildingData.MARKET,
+        Age2BuildingData.BLACKSMITH,
+    ),
+    Age2AgeData.IMPERIAL: (
+        Age2BuildingData.MONASTERY,
+        Age2BuildingData.UNIVERSITY,
+        Age2BuildingData.SIEGE_WORKSHOP,
+    ),
 }
-"""Two of these have to be standing before you can leave that age."""
-
-PREVIOUS: dict[Age2AgeData, Age2AgeData] = {
-    Age2AgeData.FEUDAL: Age2AgeData.DARK,
-    Age2AgeData.CASTLE: Age2AgeData.FEUDAL,
-    Age2AgeData.IMPERIAL: Age2AgeData.CASTLE,
-}
+"""Two of these, from the age before, have to be standing before you can climb into that age."""
 
 
 class ScenarioAgeLogic:
@@ -51,13 +56,14 @@ class ScenarioAgeLogic:
             self._climb[into] = self._climb_rule(into)
         return self._climb[into]
 
-    def two_from(self, age: Age2AgeData) -> AgeUpRequirement:
-        """What leaves this age: two of its buildings, or - from the Castle Age - a Castle, which
-        counts for both on its own."""
-        single = Age2BuildingData.CASTLE if age is Age2AgeData.CASTLE else None
+    def age_up_requirement(self, into_age: Age2AgeData) -> AgeUpRequirement:
+        """What climbs into this age: two of the age before's buildings, or - into the Imperial
+        Age - a Castle, which counts for both on its own."""
+        single = Age2BuildingData.CASTLE if into_age is Age2AgeData.IMPERIAL else None
         return AgeUpRequirement.from_buildings(
             self.scenario.has_building,
-            list(AGE_BUILDINGS[age]),
+            into_age,
+            list(AGE_UP_BUILDINGS[into_age]),
             single,
         )
 
@@ -105,4 +111,4 @@ class ScenarioAgeLogic:
             return True_()   # nowhere to advance from
         return (self.logic.ages.has_age(into)
                 & self.scenario.buildings.has_tc()
-                & self.two_from(PREVIOUS[into]))
+                & self.age_up_requirement(into))

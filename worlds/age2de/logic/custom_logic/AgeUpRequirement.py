@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, override
 
@@ -8,6 +9,7 @@ from BaseClasses import CollectionState
 
 from rule_builder.rules import NestedRule, Rule
 
+from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 
 
@@ -28,11 +30,14 @@ class AgeUpRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definit
     fields are."""
     single_building: Age2BuildingData | None = None
     """One that counts for two on its own - a Castle - and the last child when there is one."""
+    into_age: Age2AgeData | None = None
+    """The age these buildings climb into."""
 
     @classmethod
     def from_buildings(
         cls,
         has_building: Callable[[Age2BuildingData], Rule],
+        into_age: Age2AgeData,
         buildings: list[Age2BuildingData],
         single_building: Age2BuildingData | None = None,
     ) -> AgeUpRequirement:
@@ -40,7 +45,41 @@ class AgeUpRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definit
         children = [has_building(building) for building in buildings]
         if single_building is not None:
             children.append(has_building(single_building))
-        return cls(children, buildings=tuple(buildings), single_building=single_building)
+        return cls(
+            children,
+            buildings=tuple(buildings),
+            single_building=single_building,
+            into_age=into_age,
+        )
+
+    def narrowed_by_scenario(
+        self,
+        could_have: Callable[[Age2BuildingData], bool],
+        choice_order: Callable[[Age2BuildingData], int],
+    ) -> AgeUpRequirement:
+        """The same rule, less the buildings that could never stand, the rest in choice order.
+        Those children are always false, so two of the rest is the same answer."""
+        kept = sorted(
+            (
+                (building, child) for building, child in zip(self.buildings, self.children)
+                    if could_have(building)
+            ),
+            key=lambda pair: choice_order(pair[0]),
+        )
+        children = [child for _, child in kept]
+
+        single_building = self.single_building
+        if single_building is not None and could_have(single_building):
+            children.append(self.children[-1])
+        else:
+            single_building = None
+
+        return dataclasses.replace(
+            self,
+            children=children,
+            buildings=tuple(building for building, _ in kept),
+            single_building=single_building,
+        )
 
     @override
     def _instantiate(self, world: Age2World) -> Rule.Resolved:

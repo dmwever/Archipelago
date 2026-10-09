@@ -9,17 +9,10 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 
 if TYPE_CHECKING:
+    from ..custom_logic.AgeUpRequirement import AgeUpRequirement
     from ..scenarios.ScenarioPriceLogic import ScenarioPriceLogic
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
-
-@dataclasses.dataclass(frozen=True, eq=False)
-class AgeUpBuildings:
-    """What leaves the age before this one: two of the choices, or the single building that
-    counts for both."""
-    age: Age2AgeData
-    choices: tuple[Age2BuildingData, ...]
-    single_building: Age2BuildingData | None
 
 type Cost = tuple[tuple[Resource, int], ...]
 """A price as (resource, amount) pairs: a tuple, so whatever keeps it can hash."""
@@ -56,8 +49,9 @@ class Need:
     """The highest age it needs."""
     starting_age: Age2AgeData = Age2AgeData.DARK
     """The age the scenario pays its way up from; set by by_scenario."""
-    age_up_buildings: tuple[AgeUpBuildings, ...] = ()
-    """What leaves each age in this scenario; set by by_scenario."""
+    age_up_requirements: tuple[AgeUpRequirement, ...] = ()
+    """What leaves each age in this scenario, narrowed to what could stand; set by
+    by_scenario."""
 
     def __add__(self, other: 'Need') -> 'Need':
         return Need(
@@ -83,14 +77,13 @@ class Need:
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
-    def by_scenario(self, prices: ScenarioPriceLogic) -> 'Need':
-        could_have = prices.could_have
-
+    def by_scenario(self, price_logic: ScenarioPriceLogic) -> 'Need':
         def could_be_in_scenario(
             buildings: Iterable[Age2BuildingData],
         ) -> tuple[Age2BuildingData, ...]:
-            """What the scenario could have of these, in the seed's order."""
-            return tuple(sorted(filter(could_have, buildings), key=prices.choice_order))
+            
+            available_buildings = filter(price_logic.could_have, buildings)
+            return tuple(sorted(available_buildings, key=price_logic.choice_order))
 
         possible_building_choices: set[tuple[Age2BuildingData, ...]] = set()
         for choices in self.building_choices:
@@ -98,26 +91,13 @@ class Need:
             if building_in_scenario:
                 possible_building_choices.add(building_in_scenario)
 
-        possible_age_up_buildings: list[AgeUpBuildings] = []
-        for age_up_building in prices.age_up_buildings:
-            single_building = age_up_building.single_building
-            if single_building is not None and not could_have(single_building):
-                single_building = None
-            possible_age_up_buildings.append(
-                AgeUpBuildings(
-                    age_up_building.age,
-                    could_be_in_scenario(age_up_building.choices),
-                    single_building,
-                )
-            )
-
         # Frozen and tupled again: a Need is kept in resolved rules, which hash.
         return dataclasses.replace(
             self,
             building_choices=frozenset(possible_building_choices),
-            needed_age=max(prices.start_age, self.needed_age),
-            starting_age=prices.start_age,
-            age_up_buildings=tuple(possible_age_up_buildings),
+            needed_age=max(price_logic.start_age, self.needed_age),
+            starting_age=price_logic.start_age,
+            age_up_requirements=price_logic.age_up_requirements,
         )
 
     def own_cost(self) -> dict[Resource, int]:
