@@ -9,7 +9,6 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from .Need import CLIMBED_AGES, AgeUpBuildings, Need
 
-
 class Requirement:
     """What a settled Need costs once the buildings in `waived` are standing for free."""
     cost: dict[Resource, int]

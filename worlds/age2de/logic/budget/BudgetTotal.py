@@ -17,12 +17,19 @@ from ..custom_logic.ResourceAmount import contributors
 from .BudgetItem import PricedLocation
 from .BudgetOrder import CostWaiver, budget_order
 from .BudgetSource import Bootstrap, Part, ScenarioResourceOrigin, ScenarioResourceOrigins
-from .Need import Need
+from .Need import Cost, Need, as_cost
 from .Requirement import Requirement
 
 if TYPE_CHECKING:
     from ... import Age2World
 
+@dataclasses.dataclass(eq=False)
+class ShownTotal:
+    """One resource as an explanation shows it: how much, and whether it is covered - None when
+    no state was given to check against."""
+    resource: Resource
+    amount: int
+    covered: bool | None
 
 @dataclasses.dataclass
 class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
@@ -58,7 +65,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             return [waiver for bit, waiver in enumerate(waivers) if mask >> bit & 1]
 
         needs: list[Need] = []
-        costs: list[tuple[tuple[Resource, int], ...]] = []
+        costs: list[Cost] = []
         parts: list[tuple[tuple[Part, ...], ...]] = []
         for mask in masks:
             waived = frozenset(
@@ -72,7 +79,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             need = order.running_total_for(self.location, dropped)
             requirement = Requirement(need, waived)
             needs.append(need)
-            costs.append(tuple(requirement.cost.items()))
+            costs.append(as_cost(requirement.cost))
             parts.append(order.resource_origins.seed_parts(need, requirement, waived,
                                                            order.start_age))
 
@@ -109,11 +116,13 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         scenario: Age2ScenarioData
         location: PricedLocation
         contributors: tuple[tuple[Resource, tuple[tuple[str, int], ...]], ...]
-        costs: tuple[tuple[tuple[Resource, int], ...], ...]
+        costs: tuple[Cost, ...]
 
         skip_cache = True
         """Sums over the pile, which is no child; item_dependencies names every pile item
         instead."""
+
+        # -- evaluating -----------------------------------------------------------------------
 
         def mask(self, state: CollectionState) -> int:
             waiver_rules = self.children[:len(self.waived_buildings)]
@@ -179,7 +188,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             pile, need = self.pile(state), dict(self.costs[mask])
             if all(pile[resource] >= amount for resource, amount in need.items()):
                 return True   # before asking which sources are on
-            return self.resource_origins.pays(
+            return self.resource_origins.can_cover(
                 pile,
                 need,
                 self.usable(state),
@@ -194,6 +203,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 for name, _ in items:
                     deps.setdefault(name, set()).add(id(self))
             return deps
+
+        # -- explaining -----------------------------------------------------------------------
 
         def breakdown(self, state: CollectionState | None = None) -> dict[str, Any]:
             """Everything the short explanation sums up, for a longer view to show."""
@@ -227,28 +238,32 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 return []
             return sorted({
                 self.resource_origins.origins[self.resource_origins.choices[way].source].name
-                    for way in found.ways
+                    for way in found.choices
             })
 
-        def _totals(self, state: CollectionState | None) -> list[tuple[Resource, int, bool | None]]:
+        def _totals(self, state: CollectionState | None) -> list[ShownTotal]:
             need = dict(self.costs[0 if state is None else self.mask(state)])
             if state is None:
                 return [
-                    (resource, need[resource], None) for resource in SAMPLED_RESOURCES
+                    ShownTotal(resource, need[resource], None) for resource in SAMPLED_RESOURCES
                         if need.get(resource, 0) > 0
                 ]
 
             found = self.bootstrap(state)
             if found is not None:   # the total with the seeds of the sources that paid for it
                 return [
-                    (resource, need.get(resource, 0) + found.seeds_added[resource], True)
+                    ShownTotal(resource, need.get(resource, 0) + found.seeds_added[resource], True)
                         for resource in SAMPLED_RESOURCES
-                            if need.get(resource, 0) + found.seeds_added[resource] > 0
+                        if need.get(resource, 0) + found.seeds_added[resource] > 0
                 ]
 
             pile, allowance = self.pile(state), self.allowance(state)
             return [
-                (resource, need[resource], pile[resource] + allowance[resource] >= need[resource])
+                ShownTotal(
+                    resource,
+                    need[resource],
+                    pile[resource] + allowance[resource] >= need[resource],
+                )
                     for resource in SAMPLED_RESOURCES
                         if need.get(resource, 0) > 0
             ]
@@ -262,16 +277,16 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                     "text": f"{scenario}: starting pile + early gathering covers ",
                 },
             ]
-            for index, (resource, amount, met) in enumerate(self._totals(state)):
+            for index, total in enumerate(self._totals(state)):
                 if index:
                     parts.append({"type": "text", "text": ", "})
-                text = f"{amount} {resource.name.lower()}"
-                if met is None:
+                text = f"{total.amount} {total.resource.name.lower()}"
+                if total.covered is None:
                     parts.append({"type": "text", "text": text})
                 else:
                     parts.append({
                         "type": "color",
-                        "color": "green" if met else "salmon",
+                        "color": "green" if total.covered else "salmon",
                         "text": text,
                     })
             return parts

@@ -21,7 +21,7 @@ from ..scenarios.ScenarioBuildingLogic import (
     STONE_DROPSITES,
     WOOD_DROPSITES,
 )
-from .Need import CLIMBED_AGES, Need
+from .Need import CLIMBED_AGES, Cost, Need, as_cost
 from .Requirement import Requirement
 from .UnitBudgetItem import UnitBudgetItem
 
@@ -31,36 +31,23 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
     from ..scenarios.ScenarioResourceLogic import ScenarioResourceLogic
 
+# -- what an origin is worth ------------------------------------------------------------------
 
 SOURCE_ALLOWANCE = 250
 """What one early gathering source is worth to a scenario's budget."""
 RELIC_ALLOWANCE = 50
 """What each relic a scenario can collect is worth, in gold."""
 
-
 def relic_allowance(scenario: Age2ScenarioData) -> int:
     return RELIC_ALLOWANCE * ScenarioResources.total(scenario).relic_count
 
-
-Cost = tuple[tuple[Resource, int], ...]
-"""Tuples, not lists: a part's cost ends up in a resolved rule, and those have to hash."""
-
-
-class Part(NamedTuple):
-    """One thing a seed buys: a building, a unit, the age-ups. Charged once however many seeds
-    want it. `in_requirement` parts are bought for the location anyway; a seed only has to have
-    them paid for before its source produces."""
-    identity: object
-    cost: Cost
-    in_requirement: bool
-
+# -- every resource origin --------------------------------------------------------------------
 
 class GatheringMethod(NamedTuple):
     """One way to work a source: the economy rule that switches it on, less paying for its seed,
     and the seed itself."""
     rule: Callable[[ScenarioResourceLogic], Rule]
     seed: Need
-
 
 @dataclasses.dataclass(frozen=True)
 class ResourceOrigin:
@@ -71,7 +58,6 @@ class ResourceOrigin:
     gather_methods: list[GatheringMethod]
     per_relic: bool = False
     """Worth 50 gold a relic rather than the flat 250."""
-
 
 _BOATS = UnitBudgetItem(Age2UnitData.FISHING_SHIP).node     # a Dock, and a Fishing Ship to crew
 _MONKS = UnitBudgetItem(Age2UnitData.MONK).node              # a Monastery, a Monk, the Castle Age
@@ -148,12 +134,20 @@ RESOURCE_ORIGINS: list[ResourceOrigin] = [
     ),
 ]
 
+# -- seeds ------------------------------------------------------------------------------------
+
+class Part(NamedTuple):
+    """One thing a seed buys: a building, a unit, the age-ups. Charged once however many seeds
+    want it. `in_requirement` parts are bought for the location anyway; a seed only has to have
+    them paid for before its source produces."""
+    identity: object
+    cost: Cost
+    in_requirement: bool
 
 def dropsite_choices(seed: Need) -> list[tuple[Age2BuildingData, ...]]:
     """Each way to put the seed's buildings up: one pick from each of its building choices."""
     groups = sorted(seed.building_choices, key=lambda group: tuple(map(int, group)))
     return list(itertools.product(*groups))
-
 
 def seed_parts(
     seed: Need,
@@ -179,31 +173,22 @@ def seed_parts(
         while building is not None and building not in waived and building not in seen:
             seen.add(building)
             parts.append(
-                Part(("building", building), _cost(building.cost), building in in_total)
+                Part(("building", building), as_cost(building.cost), building in in_total)
             )
             building = BUILDING_PREREQUISITE.get(building)
 
     for age in CLIMBED_AGES:
         if start < age <= seed.needed_age:
-            parts.append(Part(("age", age), _cost(age.cost), age in requirement.ages))
+            parts.append(Part(("age", age), as_cost(age.cost), age in requirement.ages))
 
     return tuple(parts)   # kept in a resolved rule, which has to hash
 
-
-def _cost(cost: dict[Resource, int]) -> Cost:
-    return tuple(
-        sorted(
-            ((resource, amount) for resource, amount in cost.items() if amount > 0),
-            key=lambda item: item[0].value,
-        )
-    )
-
+# -- one scenario's origins -------------------------------------------------------------------
 
 class ResolvedGatherMethod(NamedTuple):
     """One way to work a source in one scenario: its rule, already resolved, and its seed."""
     rule: Rule.Resolved
     seed: Need
-
 
 class ScenarioResourceOrigin(NamedTuple):
     """A gathering source as one scenario could work it: what it brings in, and each way to work
@@ -213,7 +198,6 @@ class ScenarioResourceOrigin(NamedTuple):
     allowance: int
     gather_methods: tuple[ResolvedGatherMethod, ...]
 
-
 class DropsiteChoice(NamedTuple):
     """One gather method with one pick of dropsite, by index: its origin, and the method's rule
     among ScenarioResourceOrigins.rules; then its seed, and the buildings picked."""
@@ -222,12 +206,10 @@ class DropsiteChoice(NamedTuple):
     seed: Need
     site: tuple[Age2BuildingData, ...]
 
-
 class Bootstrap(NamedTuple):
     """What paid for a total: the choices brought in, and what their seeds added to it."""
-    ways: frozenset[int]
+    choices: frozenset[int]
     seeds_added: dict[Resource, int]
-
 
 @dataclasses.dataclass(frozen=True, eq=False)
 class ScenarioResourceOrigins:
@@ -315,7 +297,7 @@ class ScenarioResourceOrigins:
                 for choice in self.choices
         )
 
-    def pays(
+    def can_cover(
         self,
         pile: dict[Resource, int],
         need: dict[Resource, int],

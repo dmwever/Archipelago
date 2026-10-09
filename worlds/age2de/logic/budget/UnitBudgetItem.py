@@ -15,7 +15,6 @@ from ...locations.connections.UnitBuildings import logic_buildings
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
-
 class UnitBudgetItem(BudgetItem):
     """One unit of its line - every tier costs the same, so units of one line share it - where it
     is trained and its age; below it, the upgrade techs that make this tier."""

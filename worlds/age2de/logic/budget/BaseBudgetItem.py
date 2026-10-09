@@ -14,7 +14,6 @@ from .VillagerBudgetItem import villager_food
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
-
 class BaseBudgetItem(BudgetItem):
     rank = 0
     first_in_age = True

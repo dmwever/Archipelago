@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
     from .TechBudgetItem import TechBudgetItem
 
-
 class Age2BaseData(enum.IntEnum):
     BASE = 1
 
@@ -30,11 +29,9 @@ class Age2BaseData(enum.IntEnum):
     def age(self) -> Age2AgeData:
         return Age2AgeData.DARK
 
-
 BASE = Age2BaseData.BASE
 
 PricedLocation = Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData | Age2BaseData
-
 
 class BudgetItem:
     rank: ClassVar[int]

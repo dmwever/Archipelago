@@ -290,7 +290,7 @@ class TestSourcesAndBudget(BudgetTestBase):
                 origins = budget.resource_origins
                 parts = origins.seed_parts(need, requirement, every_waiver, budget.start_age)
                 self.assertTrue(
-                    origins.pays(pile, dict(requirement.cost), origins.every_choice, parts)
+                    origins.can_cover(pile, dict(requirement.cost), origins.every_choice, parts)
                 )
 
 

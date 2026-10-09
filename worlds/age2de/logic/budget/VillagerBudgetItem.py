@@ -8,13 +8,11 @@ from .Need import Need
 from .TechBudgetItem import TechBudgetItem
 from .UnitBudgetItem import UnitBudgetItem
 
-
 def villager_food() -> Need:
     """One villager, priced at the food that staffs a base. The villager entry and the base both
     ask it under one identity, so a scenario pays it once."""
     food = Age2ItemData.STARTING_VILLAGER_FOOD.type
     return Need.pay("villager", {food.type: food.amount})
-
 
 class VillagerBudgetItem(UnitBudgetItem):
     """Male, female and every profession are the same unit: one villager, priced at the food that

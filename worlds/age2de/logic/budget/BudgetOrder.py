@@ -29,7 +29,6 @@ if TYPE_CHECKING:
     from ... import Age2World
     from ..ScenarioLogic import ScenarioLogic
 
-
 _ITEMS: dict[type, type[BudgetItem]] = {
     Age2AgeData: AgeBudgetItem,
     Age2BuildingData: BuildingBudgetItem,
@@ -38,12 +37,10 @@ _ITEMS: dict[type, type[BudgetItem]] = {
     Age2BaseData: BaseBudgetItem,
 }
 
-
 class CostWaiver(NamedTuple):
     rule: Rule.Resolved
     buildings: list[Age2BuildingData]
     purchases: list[PricedLocation]
-
 
 class OrderPlace(NamedTuple):
     """Where an entry goes in a scenario's order, compared field by field: by age, then the
@@ -55,14 +52,12 @@ class OrderPlace(NamedTuple):
     rank: int
     """The seed's rank for a sampled entry."""
 
-
 @functools.cache
 def budget_item(location: PricedLocation) -> BudgetItem:
     """The one item per location, so each tree is built once whatever the scenario."""
     if location is VILLAGER:
         return VillagerBudgetItem(location)
     return _ITEMS[type(location)](location)
-
 
 @dataclasses.dataclass(frozen=True)
 class _Priced:
@@ -78,7 +73,6 @@ class _Priced:
     def age(self) -> Age2AgeData:
         return self.item.age
 
-
 def budget_order(scenario: 'ScenarioLogic', world: 'Age2World') -> 'BudgetOrder':
     logic = scenario.logic
     key = scenario.scenario
@@ -93,7 +87,6 @@ def budget_order(scenario: 'ScenarioLogic', world: 'Age2World') -> 'BudgetOrder'
         finally:
             logic.budget_orders_open.discard(key)
     return logic.budget_orders[key]
-
 
 class BudgetOrder:
     def __init__(self, scenario: 'ScenarioLogic', world: 'Age2World') -> None:
@@ -122,26 +115,28 @@ class BudgetOrder:
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
 
-    def _standing_buildings(self) -> dict[Age2BuildingData, Rule]:
-        standing = self.scenario.starting_state.starts_with_building
-        return {
-            building: standing[building] for building in Age2BuildingData
-                if self.scenario.civilization.can_build(building)
-                and not isinstance(standing[building], False_)
-        }
+    # -- the scenario's terms -----------------------------------------------------------------
 
     def choice_order(self, building: Age2BuildingData) -> int:
         """Where a building stands among choices: the seed's building order."""
         return self.world.pool.budget.building_order[building]
 
-    def impossible(self, rule: Rule) -> bool:
+    def is_impossible(self, rule: Rule) -> bool:
         return rule.resolve(self.world).always_false
 
     def could_have(self, building: Age2BuildingData) -> bool:
         if building not in self._could_have_building:
             has_building = self.scenario.has_building(building)
-            self._could_have_building[building] = not self.impossible(has_building)
+            self._could_have_building[building] = not self.is_impossible(has_building)
         return self._could_have_building[building]
+
+    def settle(self, need: Need) -> Need:
+        return need.by_scenario(
+            self.start_age,
+            self.age_up_buildings,
+            self.could_have,
+            self.choice_order,
+        )
 
     def max_budget(self) -> dict[Resource, int]:
         """Every starting resource in the pool, and every source the scenario could ever count."""
@@ -153,26 +148,22 @@ class BudgetOrder:
             max_budget[resource] += amount
         return max_budget
 
+    # -- pricing ------------------------------------------------------------------------------
+
     def priced(self, location: PricedLocation) -> _Priced | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
         could never be true here."""
         return self._priced(budget_item(location))
 
     def _priced(self, item: BudgetItem) -> _Priced | None:
-        if self.impossible(item.scenario_rule(self.scenario)):
+        if self.is_impossible(item.scenario_rule(self.scenario)):
             return None
         return _Priced(item, item.need_in(self.scenario))
 
-    def settle(self, need: Need) -> Need:
-        return need.by_scenario(
-            self.start_age,
-            self.age_up_buildings,
-            self.could_have,
-            self.choice_order,
-        )
-
     def plan(self, budget_items: Iterable[_Priced]) -> Need:
         return self.settle(sum((budget_item.need for budget_item in budget_items), Need()))
+
+    # -- the order ----------------------------------------------------------------------------
 
     def _build_order(self) -> tuple[list[_Priced], list[_Priced]]:
         """The order, and what was pruned from it."""
@@ -257,7 +248,7 @@ class BudgetOrder:
                 every_standing_building,
                 self.start_age,
             )
-            can_fund = self.resource_origins.pays(
+            can_fund = self.resource_origins.can_cover(
                 pile,
                 dict(requirement.cost),
                 self.resource_origins.every_choice,
@@ -290,6 +281,8 @@ class BudgetOrder:
                 if tech.location in paid
         ]
 
+    # -- running totals -----------------------------------------------------------------------
+
     def needed(self, dropped: frozenset[PricedLocation]) -> frozenset[PricedLocation]:
         if dropped not in self._needed:
             self._needed[dropped] = frozenset(
@@ -316,6 +309,16 @@ class BudgetOrder:
             entry for entry in self.order[:index + 1]
                 if entry.location in needed or entry.location is location
         )
+
+    # -- waivers ------------------------------------------------------------------------------
+
+    def _standing_buildings(self) -> dict[Age2BuildingData, Rule]:
+        standing = self.scenario.starting_state.starts_with_building
+        return {
+            building: standing[building] for building in Age2BuildingData
+                if self.scenario.civilization.can_build(building)
+                and not isinstance(standing[building], False_)
+        }
 
     def _waivers(self) -> list[CostWaiver]:
         waivers: list[CostWaiver] = []

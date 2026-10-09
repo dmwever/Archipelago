@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
     from .TechBudgetItem import TechBudgetItem
 
-
 class ScenarioBudgetItem(BudgetItem):
     """Something the scenario has to buy to be beaten, such as Joan 3's Transport Ship: priced
     exactly as the item it wraps, but always in that scenario's order, drawn or not, and first in

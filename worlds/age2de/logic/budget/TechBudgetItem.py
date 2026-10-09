@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from ...generation.Age2Pool import Age2Pool
     from ..ScenarioLogic import ScenarioLogic
 
-
 class TechBudgetItem(BudgetItem):
     """Its price, its age and the buildings it is researched at; below it, its prerequisite.
 

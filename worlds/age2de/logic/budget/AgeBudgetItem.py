@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from ...generation.Age2Pool import Age2Pool
     from ..ScenarioLogic import ScenarioLogic
 
-
 class AgeBudgetItem(BudgetItem):
     rank = 0
     location: Age2AgeData
