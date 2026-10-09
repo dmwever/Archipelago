@@ -124,7 +124,10 @@ class TestPrerequisiteTechs(BudgetTestBase):
         unit = Age2UnitData.TWO_HANDED_SWORDSMAN
         priced = budget.priced(unit)
         plan = budget.plan([priced])
-        charged = {identity for identity, _ in priced.need.own_price if isinstance(identity, Age2TechData)}
+        charged = {
+            price.identity for price in priced.need.own_price
+                if isinstance(price.identity, Age2TechData)
+        }
         # The Rising opens in Castle: Long Swordsman is paid for, Man-at-Arms it did itself.
         self.assertEqual(charged, {unit.upgrade_tech, unit.upgrade_tech.prerequisite})
         self.assertNotIn(Age2TechData.MAN_AT_ARMS, charged)
@@ -379,7 +382,7 @@ class TestRequiredPurchases(BudgetTestBase):
                 continue   # its own location still pays for itself
             with self.subTest(entry.location.name):
                 need = budget.running_total_for(entry.location, spared)
-                self.assertNotIn(self.SHIP.line, {identity for identity, _ in need.own_price})
+                self.assertNotIn(self.SHIP.line, {price.identity for price in need.own_price})
 
     def test_a_switch_only_ever_lowers_the_total(self):
         """Standing a building up or sparing a purchase can only take cost away, so turning
