@@ -33,7 +33,11 @@ class TechBudgetItem(BudgetItem):
     @functools.cached_property
     def node(self) -> Need:
         tech = self.location
-        return Need.pay(tech, tech.cost) + Need.reach(tech.age) + Need.one_of(*tech.buildings)
+        return (
+            Need.pay(tech, tech.cost)
+            + Need.reach(tech.age)
+            + Need.one_of(*tech.buildings)
+        )
 
     @functools.cached_property
     def children(self) -> list[TechBudgetItem]:
@@ -42,5 +46,7 @@ class TechBudgetItem(BudgetItem):
 
     def charged_in(self, scenario: ScenarioLogic) -> bool:
         """Whether a scenario pays for it below another item."""
-        return (scenario.civilization.researches(self.location)
-                and not scenario.techs.researched_at_start(self.location))
+        return (
+            scenario.civilization.researches(self.location)
+            and not scenario.techs.researched_at_start(self.location)
+        )

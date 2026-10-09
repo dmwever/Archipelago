@@ -11,6 +11,7 @@ from ...locations.Buildings import Age2BuildingData
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 
+
 class AgeUpBuildings(NamedTuple):
     """What leaves the age before this one: two of the choices, or the single building that
     counts for both. A tuple, as a Need keeps it and hashes."""
@@ -26,7 +27,6 @@ class OwnPrice(NamedTuple):
     cost: tuple[tuple[Resource, int], ...]
 
 
-
 @dataclasses.dataclass(frozen=True)
 class Need:
     """What one location makes a scenario pay for. Adding two is a union, so whatever both need
@@ -40,22 +40,26 @@ class Need:
     needed_age: Age2AgeData = Age2AgeData.DARK
     """The highest age it needs."""
     starting_age: Age2AgeData = Age2AgeData.DARK
-    """The age the scenario pays its way up from; set by in_scenario."""
+    """The age the scenario pays its way up from; set by by_scenario."""
     age_up_buildings: tuple[AgeUpBuildings, ...] = ()
-    """What leaves each age in this scenario; set by in_scenario."""
+    """What leaves each age in this scenario; set by by_scenario."""
 
     def __add__(self, other: 'Need') -> 'Need':
         return Need(
             self.own_price | other.own_price,
             self.entry_buildings | other.entry_buildings,
             self.building_choices | other.building_choices,
-            max(self.needed_age, other.needed_age)
+            max(self.needed_age, other.needed_age),
         )
 
     @staticmethod
     def pay(identity: object, cost: dict[Resource, int]) -> 'Need':
-        priced = tuple(sorted(((resource, amount) for resource, amount in cost.items() if amount > 0),
-                              key=lambda item: item[0].value))
+        priced = tuple(
+            sorted(
+                ((resource, amount) for resource, amount in cost.items() if amount > 0),
+                key=lambda item: item[0].value,
+            )
+        )
         return Need(own_price=frozenset({OwnPrice(identity, priced)}))
 
     @staticmethod
@@ -75,10 +79,12 @@ class Need:
         start: Age2AgeData,
         age_up_buildings: tuple[AgeUpBuildings, ...],
         could_have: Callable[[Age2BuildingData], bool],
-        choice_order: Callable[[Age2BuildingData], int]
+        choice_order: Callable[[Age2BuildingData], int],
     ) -> 'Need':
-        
-        def could_be_in_scenario(buildings: Iterable[Age2BuildingData]) -> tuple[Age2BuildingData, ...]:
+
+        def could_be_in_scenario(
+            buildings: Iterable[Age2BuildingData],
+        ) -> tuple[Age2BuildingData, ...]:
             """What the scenario could have of these, in the seed's order."""
             return tuple(sorted(filter(could_have, buildings), key=choice_order))
 
@@ -97,7 +103,7 @@ class Need:
                 AgeUpBuildings(
                     age_up_building.age,
                     could_be_in_scenario(age_up_building.choices),
-                    single_building
+                    single_building,
                 )
             )
 
@@ -107,7 +113,7 @@ class Need:
             building_choices=frozenset(possible_building_choices),
             needed_age=max(start, self.needed_age),
             starting_age=start,
-            age_up_buildings=tuple(possible_age_up_buildings)
+            age_up_buildings=tuple(possible_age_up_buildings),
         )
 
     def own_cost(self) -> dict[Resource, int]:

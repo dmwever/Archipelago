@@ -31,5 +31,8 @@ class BuildingBudgetItem(BudgetItem):
     def node(self) -> Need:
         building = self.location
         prerequisite = BUILDING_PREREQUISITE.get(building)
-        return (Need.build(building) + Need.reach(building.age)
-                + (Need.one_of(prerequisite) if prerequisite is not None else Need()))
+        return (
+            Need.build(building)
+            + Need.reach(building.age)
+            + (Need.one_of(prerequisite) if prerequisite is not None else Need())
+        )

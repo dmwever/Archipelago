@@ -16,8 +16,18 @@ from ..scenarios.ScenarioAgeLogic import PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
-from .BudgetSource import (SOURCE_ALLOWANCE, RESOURCE_ORIGINS, Part, ScenarioOrigin, ResolvedGatherMethod, GatherMethodChoice, dropsite_chioces, pays,
-                           relic_allowance, seed_parts)
+from .BudgetSource import (
+    RESOURCE_ORIGINS,
+    SOURCE_ALLOWANCE,
+    GatherMethodChoice,
+    Part,
+    ResolvedGatherMethod,
+    ScenarioResourceOrigin,
+    dropsite_choices,
+    pays,
+    relic_allowance,
+    seed_parts,
+)
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, AgeUpBuildings, Need
 from .Requirement import Requirement
@@ -36,7 +46,7 @@ _ITEMS: dict[type, type[BudgetItem]] = {
     Age2BuildingData: BuildingBudgetItem,
     Age2TechData: TechBudgetItem,
     Age2UnitData: UnitBudgetItem,
-    Age2BaseData: BaseBudgetItem
+    Age2BaseData: BaseBudgetItem,
 }
 
 
@@ -97,8 +107,9 @@ def budget_order(scenario: 'ScenarioLogic', world: 'Age2World') -> 'BudgetOrder'
     key = scenario.scenario
     if key not in logic.budget_orders:
         if key in logic.budget_orders_open:
-            raise RecursionError(f"{key.scenario_name}'s budget order asks for itself; "
-                                 f"it would never be built")
+            raise RecursionError(
+                f"{key.scenario_name}'s budget order asks for itself; it would never be built"
+            )
         logic.budget_orders_open.add(key)
         try:
             logic.budget_orders[key] = BudgetOrder(scenario, world)
@@ -111,33 +122,29 @@ class BudgetOrder:
     def __init__(self, scenario: 'ScenarioLogic', world: 'Age2World') -> None:
         self.scenario = scenario
         self.world = world
+
         ages = world.pool.ages
         self.start_age = Age2AgeData.DARK if ages.dark_start else ages.starts_in(scenario.scenario)
         self.age_up_buildings: tuple[AgeUpBuildings, ...] = tuple(
-            AgeUpBuildings(age, rule.buildings, rule.single_building)
-            for age in CLIMBED_AGES for rule in [scenario.ages.two_from(PREVIOUS[age])])
+            AgeUpBuildings(age, rule.buildings, rule.single_building) for age in CLIMBED_AGES
+                for rule in [scenario.ages.two_from(PREVIOUS[age])]
+        )
+
         self.standing_buildings = self._standing_buildings()
         self._could_have_building: dict[Age2BuildingData, bool] = {}
+
         self.resource_origins = self._resource_origins()
-        self.dropsite_choices: list[DropsiteChoice] = []
-        rule_index = 0   # where the method's rule sits in gather_method_rules
-        
-        for index, origin in enumerate(self.resource_origins):
-            for method in origin.gather_methods:
-                self.dropsite_choices += [DropsiteChoice(index, rule_index, method.seed, choice)
-                                        for choice in dropsite_chioces(method.seed)]
-                rule_index += 1
-        
-        self.gather_method_choices: tuple[GatherMethodChoice, ...] = tuple(GatherMethodChoice(choice.source, choice.rule)
-                                           for choice in self.dropsite_choices)
+        self.dropsite_choices = self._dropsite_choices()
+        self.gather_method_choices: tuple[GatherMethodChoice, ...] = tuple(
+            GatherMethodChoice(choice.source, choice.rule) for choice in self.dropsite_choices
+        )
 
         self.required_purchases = {
-            location: rule for location, rule
-            in scenario.starting_state.required_purchases.items()
-            if not isinstance(rule, False_)
+            location: rule for location, rule in scenario.starting_state.required_purchases.items()
+                if not isinstance(rule, False_)
         }
-        
         self.cost_waivers: list[CostWaiver] = self._waivers()
+
         self._precursors: dict[PricedLocation, list[_Priced]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
@@ -145,14 +152,18 @@ class BudgetOrder:
     @property
     def gather_method_rules(self) -> list[Rule.Resolved]:
         """Every gather method's rule, flat, in the order DropsiteChoice.rule counts them."""
-        return [method.rule for origin in self.resource_origins
-                for method in origin.gather_methods]
+        return [
+            method.rule for origin in self.resource_origins
+                for method in origin.gather_methods
+        ]
 
     def _standing_buildings(self) -> dict[Age2BuildingData, Rule]:
         standing = self.scenario.starting_state.starts_with_building
-        return {building: standing[building] for building in Age2BuildingData
+        return {
+            building: standing[building] for building in Age2BuildingData
                 if self.scenario.civilization.can_build(building)
-                and not isinstance(standing[building], False_)}
+                and not isinstance(standing[building], False_)
+        }
 
     def choice_order(self, building: Age2BuildingData) -> int:
         """Where a building stands among choices: the seed's building order."""
@@ -163,26 +174,55 @@ class BudgetOrder:
 
     def could_have(self, building: Age2BuildingData) -> bool:
         if building not in self._could_have_building:
-            self._could_have_building[building] = not self.impossible(self.scenario.has_building(building))
+            has_building = self.scenario.has_building(building)
+            self._could_have_building[building] = not self.impossible(has_building)
         return self._could_have_building[building]
 
-    def _resource_origins(self) -> list[ScenarioOrigin]:
+    def _resource_origins(self) -> list[ScenarioResourceOrigin]:
         economy = self.scenario.economy
         relic_sum = relic_allowance(self.scenario.scenario)
-        origins = []
+        origins: list[ScenarioResourceOrigin] = []
+
         for origin in RESOURCE_ORIGINS:
             resolved_methods: list[ResolvedGatherMethod] = []
             for method in origin.gather_methods:
-                resolved = method.rule(economy).resolve(self.world)   # once: every budget total reuses it
-                if not resolved.always_false:
-                    resolved_methods.append(ResolvedGatherMethod(resolved, method.seed.by_scenario(
-                        self.start_age, self.age_up_buildings, self.could_have,
-                        self.choice_order)))
+                # Resolved once: every budget total in the scenario reuses it.
+                resolved = method.rule(economy).resolve(self.world)
+                if resolved.always_false:
+                    continue
+                seed = method.seed.by_scenario(
+                    self.start_age,
+                    self.age_up_buildings,
+                    self.could_have,
+                    self.choice_order,
+                )
+                resolved_methods.append(ResolvedGatherMethod(resolved, seed))
+
             allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
             if resolved_methods and allowance:
-                origins.append(ScenarioOrigin(origin.name, origin.resource, allowance,
-                                              tuple(resolved_methods)))
+                origins.append(
+                    ScenarioResourceOrigin(
+                        origin.name,
+                        origin.resource,
+                        allowance,
+                        tuple(resolved_methods),
+                    )
+                )
         return origins
+
+    def _dropsite_choices(self) -> list[DropsiteChoice]:
+        """Each gather method once per pick of dropsite."""
+        choices: list[DropsiteChoice] = []
+        rule_index = 0   # where the method's rule sits in gather_method_rules
+
+        for index, origin in enumerate(self.resource_origins):
+            for method in origin.gather_methods:
+                choices += [
+                    DropsiteChoice(index, rule_index, method.seed, site)
+                        for site in dropsite_choices(method.seed)
+                ]
+                rule_index += 1
+        return choices
 
     def max_budget(self) -> dict[Resource, int]:
         """Every starting resource in the pool, and every source the scenario could ever count."""
@@ -194,12 +234,17 @@ class BudgetOrder:
             max_budget[origin.resource] += origin.allowance
         return max_budget
 
-    def seed_parts(self, need: Need, requirement: Requirement,
-                   waived: frozenset[Age2BuildingData]) -> tuple[tuple[Part, ...], ...]:
+    def seed_parts(
+        self,
+        need: Need,
+        requirement: Requirement,
+        waived: frozenset[Age2BuildingData],
+    ) -> tuple[tuple[Part, ...], ...]:
         """What each way's seed buys, against this running total."""
-        return tuple(seed_parts(choice.seed, choice.site, need, requirement, waived,
-                                self.start_age)
-                     for choice in self.dropsite_choices)
+        return tuple(
+            seed_parts(choice.seed, choice.site, need, requirement, waived, self.start_age)
+                for choice in self.dropsite_choices
+        )
 
     def priced(self, location: PricedLocation) -> _Priced | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
@@ -209,7 +254,7 @@ class BudgetOrder:
     def _priced(self, item: BudgetItem) -> _Priced | None:
         if self.impossible(item.scenario_rule(self.scenario)):
             return None
-        return _Priced(item, item.charges_in_scenario(self.scenario))
+        return _Priced(item, item.need_in(self.scenario))
 
     def plan(self, budget_items: Iterable[_Priced]) -> Need:
         need: Need = sum((budget_item.need for budget_item in budget_items), Need())
@@ -217,13 +262,13 @@ class BudgetOrder:
             self.start_age,
             self.age_up_buildings,
             self.could_have,
-            self.choice_order
+            self.choice_order,
         )
 
     def _build_order(self) -> tuple[list[_Priced], list[_Priced]]:
         """The order, and what was pruned from it."""
         self._initial_order = self._entries()
-        
+
         self._precursors = {
             entry.location: self.precursors(entry) for entry in self._initial_order
         }
@@ -237,12 +282,10 @@ class BudgetOrder:
 
         # Added in order: scenario item, starting base, budget entries.
         items: list[BudgetItem] = [
-            *(ScenarioBudgetItem(budget_item(location)) 
-                for location in required_purchases),
+            *(ScenarioBudgetItem(budget_item(location)) for location in required_purchases),
             budget_item(BASE),
-            *(budget_item(location)
-                for location in budget.entries
-                    if location not in required_purchases),
+            *(budget_item(location) for location in budget.entries
+                if location not in required_purchases),
         ]
 
         def place(entry: _Priced) -> OrderPlace:
@@ -259,19 +302,23 @@ class BudgetOrder:
         candidates: list[PricedLocation] = [
             *self._prerequisite_buildings(requirement),
             *requirement.ages,
-            *self._prerequisite_techs(entry)
+            *self._prerequisite_techs(entry),
         ]
 
         pool = self.world.pool
         found = [
-            self._priced(item)
-                for item in map(budget_item, candidates)
-                    if item.is_location(pool)
+            self._priced(item) for item in map(budget_item, candidates)
+                if item.is_location(pool)
         ]
-        
-        return sorted((precursor for precursor in found
-                       if precursor is not None and precursor.location is not entry.location),
-                      key=lambda precursor: (precursor.age, precursor.item.rank))
+
+        # Only an age can name itself here: reaching the Castle Age charges the Castle Age.
+        return sorted(
+            (
+                precursor for precursor in found
+                    if precursor is not None and precursor.location is not entry.location
+            ),
+            key=lambda precursor: (precursor.age, precursor.item.rank),
+        )
 
     def _with_precursors(self) -> list[_Priced]:
         placed: dict[PricedLocation, _Priced] = {}
@@ -280,10 +327,12 @@ class BudgetOrder:
                 placed[precursor.location] = precursor
         return list(placed.values())
 
-    def _prune_order(self, ordered_budget: list[_Priced]) -> tuple[list[_Priced], list[_Priced]]:
+    def _prune_order(
+        self,
+        ordered_budget: list[_Priced],
+    ) -> tuple[list[_Priced], list[_Priced]]:
         pile = {
-            resource: self.world.pool.resources.totals[resource]
-                for resource in SAMPLED_RESOURCES
+            resource: self.world.pool.resources.totals[resource] for resource in SAMPLED_RESOURCES
         }
 
         every_standing_building = frozenset(self.standing_buildings)
@@ -295,11 +344,12 @@ class BudgetOrder:
             need = self.plan(funded + [budget_item])
             requirement = Requirement(need, every_standing_building)
             can_fund = pays(
-                pile, dict(requirement.cost),
+                pile,
+                dict(requirement.cost),
                 every_gather_method_choice,
                 self.gather_method_choices,
                 self.seed_parts(need, requirement, every_standing_building),
-                self.resource_origins
+                self.resource_origins,
             )
 
             (funded if can_fund else pruned).append(budget_item)
@@ -315,33 +365,45 @@ class BudgetOrder:
             while building in charged and building not in ordered and building not in chain:
                 chain.append(building)
                 building = BUILDING_PREREQUISITE.get(building)
-            ordered += reversed(chain)  # earliest in the chain first.
+            ordered += reversed(chain)   # earliest in the chain first
         return ordered
 
     @staticmethod
     def _prerequisite_techs(entry: _Priced) -> list[Age2TechData]:
         """The techs below the entry it actually pays for, oldest first."""
         paid = {price.identity for price in entry.need.own_price}
-        return [tech.location for tech 
-                in reversed(list(entry.item.prerequisite_techs()))   # earliest in the chain first.
-                if tech.location in paid]
+        oldest_first = reversed(list(entry.item.prerequisite_techs()))
+        return [
+            tech.location for tech in oldest_first
+                if tech.location in paid
+        ]
 
     def needed(self, dropped: frozenset[PricedLocation]) -> frozenset[PricedLocation]:
         if dropped not in self._needed:
             self._needed[dropped] = frozenset(
-                precursor.location for entry in self._initial_order if entry.location not in dropped
-                for precursor in (*self._precursors[entry.location], entry))
+                precursor.location for entry in self._initial_order
+                    if entry.location not in dropped
+                        for precursor in (*self._precursors[entry.location], entry)
+            )
         return self._needed[dropped]
 
-    def running_total_for(self, location: PricedLocation,
-                 dropped: frozenset[PricedLocation] = frozenset()) -> Need | None:
-        index = next((n for n, entry in enumerate(self.order) if entry.location is location),
-                     None)
+    def running_total_for(
+        self,
+        location: PricedLocation,
+        dropped: frozenset[PricedLocation] = frozenset(),
+    ) -> Need | None:
+        index = next(
+            (n for n, entry in enumerate(self.order) if entry.location is location),
+            None,
+        )
         if index is None:
             return None
+
         needed = self.needed(dropped)
-        return self.plan(entry for entry in self.order[:index + 1]
-                         if entry.location in needed or entry.location is location)
+        return self.plan(
+            entry for entry in self.order[:index + 1]
+                if entry.location in needed or entry.location is location
+        )
 
     def _waivers(self) -> list[CostWaiver]:
         waivers: list[CostWaiver] = []

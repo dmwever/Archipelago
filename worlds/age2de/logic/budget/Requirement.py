@@ -22,29 +22,40 @@ class Requirement:
         self._resource_costs: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
 
         self._age_up_choices: dict[Age2AgeData, AgeUpBuildings] = {
-            age_up.age: age_up for age_up in need.age_up_buildings}
+            age_up.age: age_up for age_up in need.age_up_buildings
+        }
 
         building_choices: list[tuple[Age2BuildingData, ...]] = sorted(
-            need.building_choices, key=lambda choices: (len(choices), tuple(map(int, choices))))
+            need.building_choices,
+            key=lambda choices: (len(choices), tuple(map(int, choices))),
+        )
         self.buildings = []
-        self.ages = [age for age in CLIMBED_AGES
-                     if need.starting_age < age <= need.needed_age]
+        self.ages = [
+            age for age in CLIMBED_AGES
+                if need.starting_age < age <= need.needed_age
+        ]
 
         self._pay(need.own_cost().items())
         for building in need.entry_buildings:
             self._pay(building.cost.items())
+
         for choices in building_choices:
             if not any(self._has(choice) for choice in choices):
                 self._charge(self._prerequisite_chain(choices[0]))
+
         if self.ages:
-            self._charge(self._prerequisite_chain(Age2BuildingData.TOWN_CENTER))   # every age-up happens there
+            # Every age-up is researched at a Town Center.
+            self._charge(self._prerequisite_chain(Age2BuildingData.TOWN_CENTER))
         for age in self.ages:
             self._pay(age.cost.items())
             self._charge(self._needed_age_up_buildings(age))
+
         for building in self.buildings:
             self._pay(building.cost.items())
-        self.cost = {resource: amount for resource, amount in self._resource_costs.items()
-                     if amount > 0}
+        self.cost = {
+            resource: amount for resource, amount in self._resource_costs.items()
+                if amount > 0
+        }
 
     def _has(self, building: Age2BuildingData) -> bool:
         """Owned already, or standing."""
@@ -64,24 +75,34 @@ class Requirement:
 
     def _charge(self, buildings: Iterable[Age2BuildingData]) -> None:
         """Charge what is not owned yet, and own all of it from here on."""
-        self.buildings.extend(building for building in buildings
-                              if building not in self._owned_buildings)
+        self.buildings.extend(
+            building for building in buildings
+                if building not in self._owned_buildings
+        )
         self._owned_buildings.update(buildings)
 
     def _needed_age_up_buildings(self, age: Age2AgeData) -> list[Age2BuildingData]:
         age_up = self._age_up_choices[age]
         if age_up.single_building is not None and self._has(age_up.single_building):
             return []
+
         already_held = [choice for choice in age_up.choices if self._has(choice)]
         if len(already_held) >= 2:
             return []
-        missing = [choice for choice in age_up.choices
-                   if not self._has(choice)][:2 - len(already_held)]
+
+        missing = [
+            choice for choice in age_up.choices
+                if not self._has(choice)
+        ][:2 - len(already_held)]
         if len(already_held) + len(missing) < 2:
             if age_up.single_building is None:
                 return []
             return self._prerequisite_chain(age_up.single_building)
+
         bought: list[Age2BuildingData] = []
         for option in missing:
-            bought += [building for building in self._prerequisite_chain(option) if building not in bought]
+            bought += [
+                building for building in self._prerequisite_chain(option)
+                    if building not in bought
+            ]
         return bought

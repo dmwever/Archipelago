@@ -26,5 +26,8 @@ class BaseBudgetItem(BudgetItem):
     @functools.cached_property
     def node(self) -> Need:
         # A civilisation without Houses cannot have one, so the scenario's trim drops that group.
-        return (villager_food() + Need.one_of(Age2BuildingData.TOWN_CENTER)
-                + Need.one_of(Age2BuildingData.HOUSE))
+        return (
+            villager_food()
+            + Need.one_of(Age2BuildingData.TOWN_CENTER)
+            + Need.one_of(Age2BuildingData.HOUSE)
+        )

@@ -27,4 +27,8 @@ class VillagerBudgetItem(UnitBudgetItem):
     @functools.cached_property
     def node(self) -> Need:
         villager = self.location
-        return villager_food() + Need.reach(villager.age) + Need.one_of(*villager.buildings)
+        return (
+            villager_food()
+            + Need.reach(villager.age)
+            + Need.one_of(*villager.buildings)
+        )

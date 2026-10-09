@@ -29,8 +29,11 @@ class UnitBudgetItem(BudgetItem):
     @functools.cached_property
     def node(self) -> Need:
         unit = self.location
-        return (Need.pay(unit.line, unit.cost) + Need.reach(unit.age)
-                + Need.one_of(*logic_buildings(unit)))
+        return (
+            Need.pay(unit.line, unit.cost)
+            + Need.reach(unit.age)
+            + Need.one_of(*logic_buildings(unit))
+        )
 
     @functools.cached_property
     def children(self) -> list[TechBudgetItem]:
