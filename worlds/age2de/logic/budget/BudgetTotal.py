@@ -31,6 +31,15 @@ class ShownTotal:
     amount: int
     covered: bool | None
 
+@dataclasses.dataclass(frozen=True, eq=False)
+class RunningTotal:
+    """The running total under one combination of waivers: the buildings they waive, what it
+    needs, what that costs, and what each dropsite choice's seed would buy on top."""
+    waived: frozenset[Age2BuildingData]
+    need: Need
+    cost: Cost
+    seed_parts: tuple[tuple[Part, ...], ...]
+
 @dataclasses.dataclass
 class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
     scenario: Age2ScenarioData
@@ -64,9 +73,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             """The waivers this combination holds: one bit per waiver."""
             return [waiver for bit, waiver in enumerate(waivers) if mask >> bit & 1]
 
-        needs: list[Need] = []
-        costs: list[Cost] = []
-        parts: list[tuple[tuple[Part, ...], ...]] = []
+        totals_by_mask: list[RunningTotal] = []
         for mask in masks:
             waived = frozenset(
                 building for waiver in on(mask)
@@ -78,10 +85,20 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             )
             need = order.running_total_for(self.location, dropped)
             requirement = Requirement(need, waived)
-            needs.append(need)
-            costs.append(as_cost(requirement.cost))
-            parts.append(order.resource_origins.seed_parts(need, requirement, waived,
-                                                           order.start_age))
+            seed_parts = order.resource_origins.seed_parts(
+                need,
+                requirement,
+                waived,
+                order.start_age,
+            )
+            totals_by_mask.append(
+                RunningTotal(
+                    waived,
+                    need,
+                    as_cost(requirement.cost),
+                    seed_parts,
+                )
+            )
 
         # Tuples throughout: a resolved rule has to hash. Its children were resolved once, by
         # the order: the waivers' rules, then every gather method's.
@@ -90,14 +107,12 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 *(waiver.rule for waiver in waivers),
                 *order.resource_origins.rules,
             ),
-            tuple(needs),
-            tuple(tuple(waiver.buildings) for waiver in waivers),
+            tuple(waivers),
+            tuple(totals_by_mask),
             order.resource_origins,
-            tuple(parts),
             self.scenario,
             self.location,
             tuple((resource, contributors(resource)) for resource in SAMPLED_RESOURCES),
-            tuple(costs),
             player=world.player,
             caching_enabled=False,
         )
@@ -107,16 +122,15 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         return f"BudgetTotal({self.scenario.scenario_name}, {self.location.location_name})"
 
     class Resolved(NestedRule.Resolved):
-        # Every field is a tuple, not a list: a resolved rule has to hash.
-        needs: tuple[Need, ...]
-        waived_buildings: tuple[tuple[Age2BuildingData, ...], ...]
-        """The buildings each waiver stands up, one entry per waiver - per bit of the mask."""
+        # Every field hashes: tuples, and records compared by identity.
+        waivers: tuple[CostWaiver, ...]
+        """One per bit of the mask; their rules are the first children."""
+        totals_by_mask: tuple[RunningTotal, ...]
+        """The running total under each combination of waivers, indexed by mask."""
         resource_origins: ScenarioResourceOrigins
-        parts: tuple[tuple[tuple[Part, ...], ...], ...]
         scenario: Age2ScenarioData
         location: PricedLocation
         contributors: tuple[tuple[Resource, tuple[tuple[str, int], ...]], ...]
-        costs: tuple[Cost, ...]
 
         skip_cache = True
         """Sums over the pile, which is no child; item_dependencies names every pile item
@@ -125,23 +139,18 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         # -- evaluating -----------------------------------------------------------------------
 
         def mask(self, state: CollectionState) -> int:
-            waiver_rules = self.children[:len(self.waived_buildings)]
+            waiver_rules = self.children[:len(self.waivers)]
             return sum(
                 1 << bit for bit, rule in enumerate(waiver_rules)
                     if rule(state)
             )
 
         def waived_now(self, state: CollectionState) -> frozenset[Age2BuildingData]:
-            mask = self.mask(state)
-            return frozenset(
-                building for bit, buildings in enumerate(self.waived_buildings)
-                    if mask >> bit & 1
-                        for building in buildings
-            )
+            return self.totals_by_mask[self.mask(state)].waived
 
         def usable(self, state: CollectionState) -> list[int]:
             """The dropsite choices whose gather method is switched on."""
-            on = [rule(state) for rule in self.children[len(self.waived_buildings):]]
+            on = [rule(state) for rule in self.children[len(self.waivers):]]
             return [
                 index for index, choice in enumerate(self.resource_origins.choices)
                     if on[choice.rule]
@@ -163,9 +172,9 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             mask = self.mask(state)
             return self.resource_origins.bootstrap(
                 self.pile(state),
-                dict(self.costs[mask]),
+                dict(self.totals_by_mask[mask].cost),
                 self.usable(state),
-                self.parts[mask],
+                self.totals_by_mask[mask].seed_parts,
             )
 
         def pile(self, state: CollectionState) -> dict[Resource, int]:
@@ -176,7 +185,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             }
 
         def need(self, state: CollectionState | None) -> Need:
-            return self.needs[0 if state is None else self.mask(state)]
+            return self.totals_by_mask[0 if state is None else self.mask(state)].need
 
         def requirement(self, state: CollectionState | None) -> Requirement:
             waived = frozenset() if state is None else self.waived_now(state)
@@ -185,14 +194,14 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         @override
         def _evaluate(self, state: CollectionState) -> bool:
             mask = self.mask(state)
-            pile, need = self.pile(state), dict(self.costs[mask])
+            pile, need = self.pile(state), dict(self.totals_by_mask[mask].cost)
             if all(pile[resource] >= amount for resource, amount in need.items()):
                 return True   # before asking which sources are on
             return self.resource_origins.can_cover(
                 pile,
                 need,
                 self.usable(state),
-                self.parts[mask],
+                self.totals_by_mask[mask].seed_parts,
             )
 
         @override
@@ -242,7 +251,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             })
 
         def _totals(self, state: CollectionState | None) -> list[ShownTotal]:
-            need = dict(self.costs[0 if state is None else self.mask(state)])
+            need = dict(self.totals_by_mask[0 if state is None else self.mask(state)].cost)
             if state is None:
                 return [
                     ShownTotal(resource, need[resource], None) for resource in SAMPLED_RESOURCES

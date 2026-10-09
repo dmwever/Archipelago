@@ -257,13 +257,14 @@ class TestSourcesAndBudget(BudgetTestBase):
         relics = [origin for origin in budget.resource_origins.origins if origin.name == "relics"]
         self.assertEqual(1, len(relics))
         count = budget.scenario.economy.counts.relic_count
-        self.assertEqual(relics[0][1:3], (Resource.GOLD, RELIC_ALLOWANCE * count))
+        self.assertEqual((relics[0].resource, relics[0].allowance),
+                         (Resource.GOLD, RELIC_ALLOWANCE * count))
 
     def test_every_other_source_is_worth_the_same(self):
         for scenario in self.world.pool.scenarios.included:
-            for name, _, amount, _ in self.budget(scenario).resource_origins.origins:
-                if name != "relics":
-                    self.assertEqual(SOURCE_ALLOWANCE, amount)
+            for origin in self.budget(scenario).resource_origins.origins:
+                if origin.name != "relics":
+                    self.assertEqual(SOURCE_ALLOWANCE, origin.allowance)
 
     def test_a_fixed_force_scenario_has_no_budget(self):
         for scenario in (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5):
@@ -387,9 +388,9 @@ class TestRequiredPurchases(BudgetTestBase):
             for entry in self.budget(scenario).order:
                 resolved = BudgetTotal(scenario=scenario,
                                        location=entry.location).resolve(self.world)
-                costs = [dict(cost) for cost in resolved.costs]
+                costs = [dict(total.cost) for total in resolved.totals_by_mask]
                 for mask, bit in itertools.product(range(len(costs)),
-                                                   range(len(resolved.waived_buildings))):
+                                                   range(len(resolved.waivers))):
                     with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
                         for resource, amount in costs[mask | 1 << bit].items():
                             self.assertLessEqual(amount, costs[mask].get(resource, 0))
@@ -411,7 +412,7 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
                 for name, identities in wanted.items():
                     origins = resolved.resource_origins
                     for way, choice in enumerate(origins.choices):
-                        parts = resolved.parts[0][way]
+                        parts = resolved.totals_by_mask[0].seed_parts[way]
                         if (origins.origins[choice.source].name == name
                                 and {part.identity for part in parts} == identities
                                 and not any(part.in_requirement for part in parts)):
@@ -427,7 +428,8 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
     @staticmethod
     def bootstrap(resolved, pile: dict, need: dict, usable: list):
         """The search, with no waiver on."""
-        return resolved.resource_origins.bootstrap(pile, need, usable, resolved.parts[0])
+        return resolved.resource_origins.bootstrap(pile, need, usable,
+                                                   resolved.totals_by_mask[0].seed_parts)
 
     def pile(self, wood: int) -> dict:
         return {Resource.FOOD: 0, Resource.WOOD: wood, Resource.GOLD: 0, Resource.STONE: 0}
@@ -445,7 +447,7 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
         self.assertIsNone(self.bootstrap(resolved, self.pile(100), need, [ways["fish"]]))
         found = self.bootstrap(resolved, self.pile(100), need, [ways["fish"], ways["chop"]])
         self.assertIsNotNone(found)
-        self.assertEqual({ways["fish"], ways["chop"]}, set(found[0]))
+        self.assertEqual({ways["fish"], ways["chop"]}, set(found.choices))
 
     def test_more_items_never_take_a_location_away(self):
         """Collect the pool one item at a time; once a total is in logic it stays in."""

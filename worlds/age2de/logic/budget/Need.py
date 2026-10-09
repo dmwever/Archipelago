@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Callable, Iterable, NamedTuple
+from typing import Callable, Iterable
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -10,9 +10,10 @@ from ...locations.Buildings import Age2BuildingData
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 
-class AgeUpBuildings(NamedTuple):
+@dataclasses.dataclass(frozen=True, eq=False)
+class AgeUpBuildings:
     """What leaves the age before this one: two of the choices, or the single building that
-    counts for both. A tuple, as a Need keeps it and hashes."""
+    counts for both."""
     age: Age2AgeData
     choices: tuple[Age2BuildingData, ...]
     single_building: Age2BuildingData | None
@@ -30,9 +31,11 @@ def as_cost(amounts: dict[Resource, int]) -> Cost:
         )
     )
 
-class OwnPrice(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class OwnPrice:
     """What one thing costs for itself, charged once per identity: a tech, a unit line, the
-    villager. A tuple, as a Need keeps it and hashes."""
+    villager. Compared by value, not identity: the villager entry and the base each build their
+    own, and a Need's union has to see them as one to charge the food once."""
     identity: object
     cost: Cost
 

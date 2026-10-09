@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import dataclasses
 import itertools
-from typing import TYPE_CHECKING, Callable, Iterable, NamedTuple, Sequence
+from typing import TYPE_CHECKING, Callable, Iterable, Sequence
 
 from rule_builder.rules import Rule
 
@@ -43,13 +43,14 @@ def relic_allowance(scenario: Age2ScenarioData) -> int:
 
 # -- every resource origin --------------------------------------------------------------------
 
-class GatheringMethod(NamedTuple):
+@dataclasses.dataclass(frozen=True, eq=False)
+class GatheringMethod:
     """One way to work a source: the economy rule that switches it on, less paying for its seed,
     and the seed itself."""
     rule: Callable[[ScenarioResourceLogic], Rule]
     seed: Need
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, eq=False)
 class ResourceOrigin:
     """An early gathering source: what it brings in, and each way to work it - the rule that
     switches the way on, less paying for its seed, and the seed itself."""
@@ -136,7 +137,8 @@ RESOURCE_ORIGINS: list[ResourceOrigin] = [
 
 # -- seeds ------------------------------------------------------------------------------------
 
-class Part(NamedTuple):
+@dataclasses.dataclass(frozen=True, eq=False)
+class Part:
     """One thing a seed buys: a building, a unit, the age-ups. Charged once however many seeds
     want it. `in_requirement` parts are bought for the location anyway; a seed only has to have
     them paid for before its source produces."""
@@ -185,20 +187,30 @@ def seed_parts(
 
 # -- one scenario's origins -------------------------------------------------------------------
 
-class ResolvedGatherMethod(NamedTuple):
+@dataclasses.dataclass(frozen=True, eq=False)
+class ResolvedGatherMethod:
     """One way to work a source in one scenario: its rule, already resolved, and its seed."""
     rule: Rule.Resolved
     seed: Need
 
-class ScenarioResourceOrigin(NamedTuple):
-    """A gathering source as one scenario could work it: what it brings in, and each way to work
-    it - the way's rule, already resolved, and the seed it buys."""
-    name: str
-    resource: Resource
+@dataclasses.dataclass(frozen=True, eq=False)
+class ScenarioResourceOrigin:
+    """A resource origin as one scenario could work it: what it brings in there, and each gather
+    method it could use - the method's rule, already resolved, and its seed."""
+    origin: ResourceOrigin
     allowance: int
     gather_methods: tuple[ResolvedGatherMethod, ...]
 
-class DropsiteChoice(NamedTuple):
+    @property
+    def name(self) -> str:
+        return self.origin.name
+
+    @property
+    def resource(self) -> Resource:
+        return self.origin.resource
+
+@dataclasses.dataclass(frozen=True, eq=False)
+class DropsiteChoice:
     """One gather method with one pick of dropsite, by index: its origin, and the method's rule
     among ScenarioResourceOrigins.rules; then its seed, and the buildings picked."""
     source: int
@@ -206,7 +218,8 @@ class DropsiteChoice(NamedTuple):
     seed: Need
     site: tuple[Age2BuildingData, ...]
 
-class Bootstrap(NamedTuple):
+@dataclasses.dataclass(frozen=True, eq=False)
+class Bootstrap:
     """What paid for a total: the choices brought in, and what their seeds added to it."""
     choices: frozenset[int]
     seeds_added: dict[Resource, int]
@@ -241,7 +254,7 @@ class ScenarioResourceOrigins:
             allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
             if methods and allowance:
                 origins.append(
-                    ScenarioResourceOrigin(origin.name, origin.resource, allowance, tuple(methods))
+                    ScenarioResourceOrigin(origin, allowance, tuple(methods))
                 )
 
         choices: list[DropsiteChoice] = []

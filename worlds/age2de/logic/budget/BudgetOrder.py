@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-from typing import TYPE_CHECKING, Iterable, NamedTuple
+from typing import TYPE_CHECKING, Iterable
 
 from rule_builder.rules import False_, Rule
 
@@ -37,13 +37,16 @@ _ITEMS: dict[type, type[BudgetItem]] = {
     Age2BaseData: BaseBudgetItem,
 }
 
-class CostWaiver(NamedTuple):
+@dataclasses.dataclass(frozen=True, eq=False)
+class CostWaiver:
     rule: Rule.Resolved
     buildings: list[Age2BuildingData]
     purchases: list[PricedLocation]
 
-class OrderPlace(NamedTuple):
-    """Where an entry goes in a scenario's order, compared field by field: by age, then the
+@dataclasses.dataclass(frozen=True, order=True)
+class OrderPlace:
+    """Where an entry goes in a scenario's order - compared by value, field by field, as it is a
+    sort key: by age, then the
     scenario's own entries - its purchases, then its base - ahead of the sample, then the sample
     in the seed's rank."""
     age: Age2AgeData
