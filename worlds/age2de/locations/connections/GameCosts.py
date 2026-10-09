@@ -247,7 +247,8 @@ UNIT_COSTS: dict[Age2UnitData, dict[Resource, int]] = {
 TECH_COSTS: dict[Age2TechData, dict[Resource, int]] = {
     Age2TechData.ELITE_TARKAN_HUNS: {Resource.FOOD: 1000, Resource.GOLD: 500},
     Age2TechData.YEOMEN_BRITONS: {Resource.GOLD: 450, Resource.WOOD: 750},
-    Age2TechData.COTTON_ARMORS_MAYANS: {Resource.FOOD: 750, Resource.GOLD: 450},
+    Age2TechData.HOLCANS_MAYANS: {Resource.FOOD: 750, Resource.GOLD: 450},
+    Age2TechData.ORDONNANCE_COMPANIES_FRANKS: {Resource.FOOD: 400, Resource.GOLD: 250},
     Age2TechData.FUROR_CELTICA_CELTS: {Resource.FOOD: 750, Resource.GOLD: 450},
     Age2TechData.DRILL_MONGOLS: {Resource.GOLD: 450, Resource.WOOD: 500},
     Age2TechData.CITADELS_PERSIANS: {Resource.GOLD: 300, Resource.WOOD: 600},
@@ -392,7 +393,7 @@ TECH_COSTS: dict[Age2TechData, dict[Resource, int]] = {
     Age2TechData.STRONGHOLD_CELTS: {Resource.FOOD: 250, Resource.GOLD: 200},
     Age2TechData.MARAUDERS_HUNS: {Resource.GOLD: 200, Resource.WOOD: 300},
     Age2TechData.YASAMA_JAPANESE: {Resource.FOOD: 300, Resource.WOOD: 300},
-    Age2TechData.OBSIDIAN_ARROWS_MAYANS: {Resource.FOOD: 300, Resource.GOLD: 300},
+    Age2TechData.HULCHE_JAVELINEERS_MAYANS: {Resource.FOOD: 300, Resource.GOLD: 300},
     Age2TechData.EUPSEONG_KOREANS: {Resource.FOOD: 300, Resource.WOOD: 300},
     Age2TechData.NOMADS_MONGOLS: {Resource.GOLD: 150, Resource.WOOD: 300},
     Age2TechData.KAMANDARAN_PERSIANS: {Resource.FOOD: 400, Resource.GOLD: 300},
@@ -470,7 +471,7 @@ TECH_COSTS: dict[Age2TechData, dict[Resource, int]] = {
     Age2TechData.ELITE_HUSSITE_WAGON_BOHEMIANS: {Resource.GOLD: 600, Resource.WOOD: 800},
     Age2TechData.SZLACHTA_PRIVILEGES_POLES: {Resource.FOOD: 500, Resource.GOLD: 300},
     Age2TechData.LECHITIC_LEGACY_POLES: {Resource.FOOD: 750, Resource.GOLD: 550},
-    Age2TechData.EASTERN_SETTLEMENT_BOHEMIANS: {Resource.FOOD: 300, Resource.GOLD: 300},
+    Age2TechData.WAGENBURG_TACTICS_BOHEMIANS: {Resource.FOOD: 300, Resource.GOLD: 300},
     Age2TechData.HUSSITE_REFORMS_BOHEMIANS: {Resource.FOOD: 500, Resource.GOLD: 450},
     Age2TechData.WINGED_HUSSAR: {Resource.FOOD: 600, Resource.GOLD: 800},
     Age2TechData.HOUFNICE_BOHEMIANS: {Resource.FOOD: 1100, Resource.GOLD: 800},
@@ -577,7 +578,6 @@ UNITS_WITHOUT_COST: frozenset[Age2UnitData] = frozenset({
 and a unit with no cost on file is free rather than untrainable - see can_pay."""
 
 TECHS_WITHOUT_COST: frozenset[Age2TechData] = frozenset({
-    Age2TechData.BEARDED_AXE_FRANKS,
     Age2TechData.DRAGON_SHIP_CHINESE,
     Age2TechData.CHAMPI_SCOUT,
 })

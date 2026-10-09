@@ -9,7 +9,7 @@ Age2CivData.HUNS.included_techs = [
 ]
 Age2CivData.FRANKS.included_techs = [
     Age2TechData.HEAVY_MOUNTED_CROSSBOWMAN,
-    Age2TechData.BEARDED_AXE_FRANKS,
+    Age2TechData.ORDONNANCE_COMPANIES_FRANKS,
     Age2TechData.ELITE_THROWING_AXEMAN_FRANKS,
     Age2TechData.CHIVALRY_FRANKS,
 ]

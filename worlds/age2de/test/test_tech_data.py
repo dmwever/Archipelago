@@ -45,7 +45,7 @@ class TestTechCatalogue(unittest.TestCase):
 class TestRowSelection(unittest.TestCase):
     def test_locations_only_when_nothing_was_rebased(self):
         table = TechData(
-            [Age2TechData.ELITE_TARKAN_HUNS, Age2TechData.BEARDED_AXE_FRANKS], civs=SEED_CIVS).rows()
+            [Age2TechData.ELITE_TARKAN_HUNS, Age2TechData.ORDONNANCE_COMPANIES_FRANKS], civs=SEED_CIVS).rows()
         self.assertEqual([row.item_id for row in table], [3600, 3649])
         self.assertTrue(all(row.is_location for row in table))
 
