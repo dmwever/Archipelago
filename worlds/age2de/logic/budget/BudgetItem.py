@@ -31,7 +31,7 @@ class Age2BaseData(enum.IntEnum):
 
 BASE = Age2BaseData.BASE
 
-PricedLocation = Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData | Age2BaseData
+type PricedLocation = (Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData | Age2BaseData)
 
 class BudgetItem:
     rank: ClassVar[int]

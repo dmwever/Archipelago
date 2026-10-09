@@ -102,10 +102,8 @@ class BudgetOrder:
 
         # Added in order: scenario item, starting base, budget entries.
         items: list[BudgetItem] = [
-            *(
-                ScenarioBudgetItem(BudgetItemFactory.for_location(location))
-                    for location in required_purchases
-            ),
+            *(ScenarioBudgetItem(BudgetItemFactory.for_location(location)) 
+                for location in required_purchases),
             BudgetItemFactory.for_location(BASE),
             *(BudgetItemFactory.for_location(location) for location in budget.entries
                 if location not in required_purchases),
@@ -138,10 +136,8 @@ class BudgetOrder:
 
         # Only an age can name itself here: reaching the Castle Age charges the Castle Age.
         return sorted(
-            (
-                precursor for precursor in found
-                    if precursor is not None and precursor.location is not entry.location
-            ),
+            (precursor for precursor in found
+                    if precursor is not None and precursor.location is not entry.location),
             key=lambda precursor: (precursor.age, precursor.item.rank),
         )
 
