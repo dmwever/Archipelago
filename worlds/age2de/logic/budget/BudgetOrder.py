@@ -134,7 +134,7 @@ class BudgetOrder:
 
     def plan(self, budget_items: Iterable[_Priced]) -> Need:
         total = sum((budget_item.need for budget_item in budget_items), Need())
-        return self.scenario.prices.settle(total)
+        return self.scenario.budget.settle(total)
 
     # -- the order ----------------------------------------------------------------------------
 

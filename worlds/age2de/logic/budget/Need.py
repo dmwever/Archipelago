@@ -10,7 +10,7 @@ from ...locations.Buildings import Age2BuildingData
 
 if TYPE_CHECKING:
     from ..custom_logic.AgeUpRequirement import AgeUpRequirement
-    from ..scenarios.ScenarioPriceLogic import ScenarioPriceLogic
+    from ..scenarios.ScenarioBudgetLogic import ScenarioBudgetLogic
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 
@@ -77,13 +77,13 @@ class Need:
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
-    def by_scenario(self, price_logic: ScenarioPriceLogic) -> 'Need':
+    def by_scenario(self, budget_logic: ScenarioBudgetLogic) -> 'Need':
         def could_be_in_scenario(
             buildings: Iterable[Age2BuildingData],
         ) -> tuple[Age2BuildingData, ...]:
             
-            available_buildings = filter(price_logic.could_have, buildings)
-            return tuple(sorted(available_buildings, key=price_logic.choice_order))
+            available_buildings = filter(budget_logic.could_have, buildings)
+            return tuple(sorted(available_buildings, key=budget_logic.choice_order))
 
         possible_building_choices: set[tuple[Age2BuildingData, ...]] = set()
         for choices in self.building_choices:
@@ -95,9 +95,9 @@ class Need:
         return dataclasses.replace(
             self,
             building_choices=frozenset(possible_building_choices),
-            needed_age=max(price_logic.start_age, self.needed_age),
-            starting_age=price_logic.start_age,
-            age_up_requirements=price_logic.age_up_requirements,
+            needed_age=max(budget_logic.start_age, self.needed_age),
+            starting_age=budget_logic.start_age,
+            age_up_requirements=budget_logic.age_up_requirements,
         )
 
     def own_cost(self) -> dict[Resource, int]:

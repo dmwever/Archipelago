@@ -76,7 +76,7 @@ class ScenarioLogic:
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
-        from .scenarios.ScenarioPriceLogic import ScenarioPriceLogic
+        from .scenarios.ScenarioBudgetLogic import ScenarioBudgetLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioResourceLogic import ScenarioResourceLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
@@ -87,7 +87,7 @@ class ScenarioLogic:
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
-        self.prices = ScenarioPriceLogic(self)
+        self.budget = ScenarioBudgetLogic(self)
     
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils

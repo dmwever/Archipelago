@@ -13,7 +13,7 @@ from ..custom_logic.AgeUpRequirement import AgeUpRequirement
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
-class ScenarioPriceLogic:
+class ScenarioBudgetLogic:
     def __init__(self, scenario: 'ScenarioLogic'):
         self.scenario = scenario
         self.logic = scenario.logic

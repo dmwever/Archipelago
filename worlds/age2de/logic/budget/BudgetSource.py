@@ -230,8 +230,8 @@ class ScenarioResourceOrigins:
     and each pick of dropsite for those. Frozen and tupled throughout: a resolved budget total
     keeps it, and it has to hash. It hashes by identity: there is one per scenario, shared by
     every budget total there, and hashing its contents for each would be slow. It keeps the
-    scenario's start age, not its ScenarioPriceLogic: a resolved rule outlives its world, and
-    holding the price logic would hold the world with it."""
+    scenario's start age, not its ScenarioBudgetLogic: a resolved rule outlives its world, and
+    holding the budget logic would hold the world with it."""
     start_age: Age2AgeData
     origins: tuple[ScenarioResourceOrigin, ...]
     choices: tuple[DropsiteChoice, ...]
@@ -252,7 +252,7 @@ class ScenarioResourceOrigins:
                 resolved = method.rule(scenario.economy).resolve(world)
                 if not resolved.always_false:
                     methods.append(
-                        ResolvedGatherMethod(resolved, scenario.prices.settle(method.seed))
+                        ResolvedGatherMethod(resolved, scenario.budget.settle(method.seed))
                     )
 
             allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
@@ -271,7 +271,7 @@ class ScenarioResourceOrigins:
                 ]
                 rule_index += 1
 
-        return cls(scenario.prices.start_age, tuple(origins), tuple(choices))
+        return cls(scenario.budget.start_age, tuple(origins), tuple(choices))
 
     @property
     def rules(self) -> list[Rule.Resolved]:
