@@ -2,32 +2,39 @@
 buildings it could ever have."""
 from __future__ import annotations
 
+import functools
 from typing import TYPE_CHECKING
 
 from rule_builder.rules import Rule
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from ..scenarios.ScenarioAgeLogic import PREVIOUS
-from .Need import CLIMBED_AGES, AgeUpBuildings, Need
+from ..budget.Need import CLIMBED_AGES, AgeUpBuildings, Need
+from .ScenarioAgeLogic import PREVIOUS
 
 if TYPE_CHECKING:
-    from ... import Age2World
     from ..ScenarioLogic import ScenarioLogic
 
-class ScenarioPrices:
-    def __init__(self, scenario: 'ScenarioLogic', world: 'Age2World') -> None:
+class ScenarioPriceLogic:
+    def __init__(self, scenario: 'ScenarioLogic'):
         self.scenario = scenario
-        self.world = world
-
-        ages = world.pool.ages
-        self.start_age = Age2AgeData.DARK if ages.dark_start else ages.starts_in(scenario.scenario)
-        self.age_up_buildings: tuple[AgeUpBuildings, ...] = tuple(
-            AgeUpBuildings(age, rule.buildings, rule.single_building) for age in CLIMBED_AGES
-                for rule in [scenario.ages.two_from(PREVIOUS[age])]
-        )
-
+        self.logic = scenario.logic
+        self.world = scenario.logic.world
         self._could_have_building: dict[Age2BuildingData, bool] = {}
+
+    @functools.cached_property
+    def start_age(self) -> Age2AgeData:
+        """The age the scenario pays its way up from: the Dark Age when every scenario starts
+        there."""
+        ages = self.world.pool.ages
+        return Age2AgeData.DARK if ages.dark_start else ages.starts_in(self.scenario.scenario)
+
+    @functools.cached_property
+    def age_up_buildings(self) -> tuple[AgeUpBuildings, ...]:
+        return tuple(
+            AgeUpBuildings(age, rule.buildings, rule.single_building) for age in CLIMBED_AGES
+                for rule in [self.scenario.ages.two_from(PREVIOUS[age])]
+        )
 
     def choice_order(self, building: Age2BuildingData) -> int:
         """Where a building stands among choices: the seed's building order."""

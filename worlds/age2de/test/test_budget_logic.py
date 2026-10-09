@@ -478,7 +478,7 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
 class TestCouldEverHave(BudgetTestBase):
     def test_a_fixed_force_scenario_can_build_nothing(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_1)
-        self.assertFalse(any(budget.prices.could_have(building)
+        self.assertFalse(any(budget.scenario.prices.could_have(building)
                              for building in Age2BuildingData))
 
 

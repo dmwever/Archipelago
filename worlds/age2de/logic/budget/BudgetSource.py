@@ -29,7 +29,6 @@ if TYPE_CHECKING:
     from ... import Age2World
     from ...locations.Scenarios import Age2ScenarioData
     from ..ScenarioLogic import ScenarioLogic
-    from .ScenarioPrices import ScenarioPrices
     from ..scenarios.ScenarioResourceLogic import ScenarioResourceLogic
 
 # -- what an origin is worth ------------------------------------------------------------------
@@ -231,8 +230,8 @@ class ScenarioResourceOrigins:
     and each pick of dropsite for those. Frozen and tupled throughout: a resolved budget total
     keeps it, and it has to hash. It hashes by identity: there is one per scenario, shared by
     every budget total there, and hashing its contents for each would be slow. It keeps the
-    scenario's start age, not its ScenarioPrices: a resolved rule outlives its world, and
-    holding the prices would hold the world with it."""
+    scenario's start age, not its ScenarioPriceLogic: a resolved rule outlives its world, and
+    holding the price logic would hold the world with it."""
     start_age: Age2AgeData
     origins: tuple[ScenarioResourceOrigin, ...]
     choices: tuple[DropsiteChoice, ...]
@@ -243,7 +242,6 @@ class ScenarioResourceOrigins:
         cls,
         scenario: ScenarioLogic,
         world: Age2World,
-        prices: ScenarioPrices,
     ) -> ScenarioResourceOrigins:
         relic_sum = relic_allowance(scenario.scenario)
         origins: list[ScenarioResourceOrigin] = []
@@ -253,7 +251,9 @@ class ScenarioResourceOrigins:
             for method in origin.gather_methods:
                 resolved = method.rule(scenario.economy).resolve(world)
                 if not resolved.always_false:
-                    methods.append(ResolvedGatherMethod(resolved, prices.settle(method.seed)))
+                    methods.append(
+                        ResolvedGatherMethod(resolved, scenario.prices.settle(method.seed))
+                    )
 
             allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
             if methods and allowance:
@@ -271,7 +271,7 @@ class ScenarioResourceOrigins:
                 ]
                 rule_index += 1
 
-        return cls(prices.start_age, tuple(origins), tuple(choices))
+        return cls(scenario.prices.start_age, tuple(origins), tuple(choices))
 
     @property
     def rules(self) -> list[Rule.Resolved]:

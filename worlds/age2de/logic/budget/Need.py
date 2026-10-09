@@ -9,7 +9,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 
 if TYPE_CHECKING:
-    from .ScenarioPrices import ScenarioPrices
+    from ..scenarios.ScenarioPriceLogic import ScenarioPriceLogic
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 
@@ -83,7 +83,7 @@ class Need:
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
-    def by_scenario(self, prices: ScenarioPrices) -> 'Need':
+    def by_scenario(self, prices: ScenarioPriceLogic) -> 'Need':
         could_have = prices.could_have
 
         def could_be_in_scenario(

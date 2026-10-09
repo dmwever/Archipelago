@@ -20,7 +20,6 @@ from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import Need
 from .Requirement import Requirement
 from .ScenarioBudgetItem import ScenarioBudgetItem
-from .ScenarioPrices import ScenarioPrices
 from .TechBudgetItem import TechBudgetItem
 from .UnitBudgetItem import UnitBudgetItem
 from .VillagerBudgetItem import VillagerBudgetItem
@@ -96,9 +95,8 @@ class BudgetOrder:
         self.scenario = scenario
         self.world = world
 
-        self.prices = ScenarioPrices(scenario, world)
         self.standing_buildings = self._standing_buildings()
-        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world, self.prices)
+        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world)
 
         self.required_purchases = {
             location: rule for location, rule in scenario.starting_state.required_purchases.items()
@@ -130,12 +128,13 @@ class BudgetOrder:
         return self._priced(budget_item(location))
 
     def _priced(self, item: BudgetItem) -> _Priced | None:
-        if self.prices.is_impossible(item.scenario_rule(self.scenario)):
+        if self.scenario.prices.is_impossible(item.scenario_rule(self.scenario)):
             return None
         return _Priced(item, item.need_in(self.scenario))
 
     def plan(self, budget_items: Iterable[_Priced]) -> Need:
-        return self.prices.settle(sum((budget_item.need for budget_item in budget_items), Need()))
+        total = sum((budget_item.need for budget_item in budget_items), Need())
+        return self.scenario.prices.settle(total)
 
     # -- the order ----------------------------------------------------------------------------
 
