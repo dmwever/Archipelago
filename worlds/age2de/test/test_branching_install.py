@@ -17,6 +17,7 @@ import unittest
 from pathlib import Path
 
 from .test_campaign_bundle import AGEIPELAGO_ROOT, SEED
+from ..AoE2ScenarioParser.datasets.conditions import ConditionId
 from ..AoE2ScenarioParser.datasets.effects import EffectId
 from ..AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 from ..campaign import ScenarioParser
@@ -33,6 +34,7 @@ AGEIPELAGO_SCENARIOS = AGEIPELAGO_ROOT / "scenario"
 BRANCHING_SCENARIOS = (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_ATTILA_4,
                        Age2ScenarioData.AP_JOAN_2, Age2ScenarioData.AP_JOAN_3)
 WRAPPER = re.compile(r"void\s+(\w+)\s*\(\s*\)\s*\{(.*?)\}", re.DOTALL)
+CALL_CONDITION = re.compile(r"^\s*([A-Za-z_]\w*)\s*\(\s*\)\s*;?\s*$")
 CHECK = re.compile(r"AP_Check_Location\s*\(\s*(\d+)\s*\)")
 TRAILING_TAG = re.compile(r"\((?:Any|All)\)\s*$", re.IGNORECASE)
 NULL = chr(0)
@@ -66,6 +68,23 @@ def read(body: bytes) -> AoE2DEScenario:
         source = Path(folder, "in.aoe2scenario")
         source.write_bytes(body)
         return AoE2DEScenario.from_file(str(source))
+
+
+def condition_calls(scenario: AoE2DEScenario) -> set[str]:
+    """The XS functions this scenario's trigger conditions call, bare of parens and semicolon.
+
+    Conditions, not effects: a SCRIPT_CALL condition is how a scenario asks the mod whether an
+    item has arrived, and it lives in the compressed section where grep cannot see it.
+    """
+    calls = set()
+    for trigger in scenario.trigger_manager.triggers:
+        for condition in trigger.conditions:
+            if int(getattr(condition, "condition_type", -1)) != int(ConditionId.SCRIPT_CALL):
+                continue
+            match = CALL_CONDITION.match((condition.xs_function or "").replace(chr(0), ""))
+            if match:
+                calls.add(match.group(1))
+    return calls
 
 
 def scenario_bodies(campaign: Age2CampaignData) -> dict[str, bytes]:
@@ -227,6 +246,25 @@ class TestWhatTheInstallDecides(unittest.TestCase):
 
 @unittest.skipUnless(AGEIPELAGO_SCENARIOS.is_dir(), "Set AGEIPELAGO_PATH to run this")
 class TestAgainstTheAgeipelagoCheckout(unittest.TestCase):
+    def test_every_condition_resolves_to_an_xs_reader(self):
+        """A SCRIPT_CALL condition naming a function the XS does not define is silent: no error,
+        no log, the condition simply never comes true and the item it gates never arrives. This
+        is the condition-side mirror of the effect-side check below, and the only automated
+        thing that catches a half-applied rename across the two repos."""
+        readers = set()
+        for path in sorted(AGEIPELAGO_XS.glob("*.xs")):
+            readers |= set(re.findall(r"^bool\s+(\w+)\s*\(", path.read_text(
+                encoding="utf-8", errors="replace"), re.M))
+
+        for scenario in Age2ScenarioData:
+            path = AGEIPELAGO_SCENARIOS / f"{scenario.file_stem}.aoe2scenario"
+            if not path.is_file():
+                continue
+            with self.subTest(scenario.file_stem):
+                for name in sorted(condition_calls(read(path.read_bytes()))):
+                    self.assertIn(name, readers,
+                                  f"{scenario.file_stem} calls {name}(), which no XS file defines")
+
     def test_every_trigger_call_resolves_to_its_recorded_location_id(self):
         found = {}
         for path in sorted(AGEIPELAGO_XS.glob("AP_*.xs")):

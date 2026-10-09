@@ -5,12 +5,12 @@ from ...rules.joan_rules.joan_4 import Joan4Rules
 from ...rules.joan_rules.joan_3 import Joan3Rules
 from ...rules.joan_rules.joan_2 import Joan2Rules
 from ...rules.joan_rules.joan_1 import Joan1Rules
-from ...rules.attila_rules.Attila6Rules import Attila6Rules
-from ...rules.attila_rules.Attila5Rules import Attila5Rules
-from ...rules.attila_rules.Attila4Rules import Attila4Rules
-from ...rules.attila_rules.Attila3Rules import Attila3Rules
-from ...rules.attila_rules.Attila2Rules import Attila2Rules
-from ...rules.attila_rules.Attila1Rules import Attila1Rules
+from ...rules.attila_rules.attila_6 import Attila6Rules
+from ...rules.attila_rules.attila_5 import Attila5Rules
+from ...rules.attila_rules.attila_4 import Attila4Rules
+from ...rules.attila_rules.attila_3 import Attila3Rules
+from ...rules.attila_rules.attila_2 import Attila2Rules
+from ...rules.attila_rules.attila_1 import Attila1Rules
 
 from ..Scenarios import Age2ScenarioData
 
