@@ -82,10 +82,11 @@ class ScenarioBudgetLogic:
     @functools.cached_property
     def cost_waivers(self) -> list[ScenarioCostWaived.Resolved]:
         """The waivers a running total switches on and off: one bit of the mask each. One that
-        always holds is no switch - its buildings and purchases are always let off instead."""
+        always holds is no switch - its buildings and purchases are always let off instead - and
+        neither is one that never does."""
         return [
             waiver for waiver in self._every_cost_waiver
-                if not waiver.always_true
+                if not waiver.always_true and not waiver.always_false
         ]
 
     @functools.cached_property
