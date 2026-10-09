@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from .. import Age2World
     from ..locations.Scenarios import Age2ScenarioData
     from .budget.BudgetItem import PricedLocation
-    from .budget.BudgetOrder import BudgetOrder
 
 
 class Logic:
@@ -42,12 +41,6 @@ class Logic:
         """Resolved answers to the scenario questions, one per seed. See logic/custom_logic."""
         self.scenario_answers_open: set[tuple] = set()
         """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
-
-        self.budget_orders: dict[Age2ScenarioData, BudgetOrder] = {}
-        """Each scenario's budget order, built once per seed while its first budget total
-        resolves. See logic/budget."""
-        self.budget_orders_open: set[Age2ScenarioData] = set()
-        """Orders part-way through being built, so one that asks for itself fails loudly."""
 
         self.budget_totals: dict[tuple[Age2ScenarioData, PricedLocation], Rule.Resolved] = {}
         """Each budget total, resolved once per seed and shared by every rule that asks it."""

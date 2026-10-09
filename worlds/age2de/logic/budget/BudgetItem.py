@@ -68,7 +68,7 @@ class BudgetItem:
             yield child
             yield from child.prerequisite_techs()
 
-    def need_in(self, scenario: ScenarioLogic) -> Need:
+    def need_in_scenario(self, scenario: ScenarioLogic) -> Need:
         """As the scenario pays for it: its own node, and every tech below it the scenario does not
         have for itself. A tech let off takes its building and age with it."""
         charged_techs = [

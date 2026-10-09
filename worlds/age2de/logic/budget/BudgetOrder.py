@@ -1,38 +1,22 @@
 from __future__ import annotations
 
 import dataclasses
-import functools
 from typing import TYPE_CHECKING, Iterable
 
-from ...generation.pools.BudgetPool import SAMPLED_RESOURCES, VILLAGER
+from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
-from ...locations.Units import Age2UnitData
-from .AgeBudgetItem import AgeBudgetItem
-from .BaseBudgetItem import BaseBudgetItem
-from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
+from .BudgetItem import BASE, BudgetItem, PricedLocation
+from .BudgetItemFactory import BudgetItemFactory
 from .BudgetSource import ScenarioResourceOrigins
-from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import Need
 from .Requirement import Requirement
 from .ScenarioBudgetItem import ScenarioBudgetItem
-from .TechBudgetItem import TechBudgetItem
-from .UnitBudgetItem import UnitBudgetItem
-from .VillagerBudgetItem import VillagerBudgetItem
 
 if TYPE_CHECKING:
-    from ... import Age2World
     from ..ScenarioLogic import ScenarioLogic
-
-_ITEMS: dict[type, type[BudgetItem]] = {
-    Age2AgeData: AgeBudgetItem,
-    Age2BuildingData: BuildingBudgetItem,
-    Age2TechData: TechBudgetItem,
-    Age2UnitData: UnitBudgetItem,
-    Age2BaseData: BaseBudgetItem,
-}
 
 @dataclasses.dataclass(frozen=True, order=True)
 class OrderPlace:
@@ -46,16 +30,10 @@ class OrderPlace:
     rank: int
     """The seed's rank for a sampled entry."""
 
-@functools.cache
-def budget_item(location: PricedLocation) -> BudgetItem:
-    """The one item per location, so each tree is built once whatever the scenario."""
-    if location is VILLAGER:
-        return VillagerBudgetItem(location)
-    return _ITEMS[type(location)](location)
-
 @dataclasses.dataclass(frozen=True)
-class _Priced:
-    """One location as one scenario would pay for it: its item, trimmed for the scenario."""
+class ScenarioPricedBudgetItem:
+    """One budget item as one scenario would pay for it: the item, and its need in that
+    scenario - its own node and the techs below it the scenario does not have for itself."""
     item: BudgetItem
     need: Need
 
@@ -67,29 +45,14 @@ class _Priced:
     def age(self) -> Age2AgeData:
         return self.item.age
 
-def budget_order(scenario: 'ScenarioLogic', world: 'Age2World') -> 'BudgetOrder':
-    logic = scenario.logic
-    key = scenario.scenario
-    if key not in logic.budget_orders:
-        if key in logic.budget_orders_open:
-            raise RecursionError(
-                f"{key.scenario_name}'s budget order asks for itself; it would never be built"
-            )
-        logic.budget_orders_open.add(key)
-        try:
-            logic.budget_orders[key] = BudgetOrder(scenario, world)
-        finally:
-            logic.budget_orders_open.discard(key)
-    return logic.budget_orders[key]
-
 class BudgetOrder:
-    def __init__(self, scenario: 'ScenarioLogic', world: 'Age2World') -> None:
+    def __init__(self, scenario: 'ScenarioLogic') -> None:
         self.scenario = scenario
-        self.world = world
+        self.world = scenario.logic.world
 
-        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world)
+        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, self.world)
 
-        self._precursors: dict[PricedLocation, list[_Priced]] = {}
+        self._precursors: dict[PricedLocation, list[ScenarioPricedBudgetItem]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
 
@@ -107,23 +70,29 @@ class BudgetOrder:
 
     # -- pricing ------------------------------------------------------------------------------
 
-    def priced(self, location: PricedLocation) -> _Priced | None:
+    def get_scenario_priced_location(
+        self,
+        location: PricedLocation,
+    ) -> ScenarioPricedBudgetItem | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
         could never be true here."""
-        return self._priced(budget_item(location))
+        return self.get_scenario_priced_budget_item(BudgetItemFactory.for_location(location))
 
-    def _priced(self, item: BudgetItem) -> _Priced | None:
+    def get_scenario_priced_budget_item(
+        self,
+        item: BudgetItem,
+    ) -> ScenarioPricedBudgetItem | None:
         if self.scenario.logic.is_impossible(item.scenario_rule(self.scenario)):
             return None
-        return _Priced(item, item.need_in(self.scenario))
+        return ScenarioPricedBudgetItem(item, item.need_in_scenario(self.scenario))
 
-    def plan(self, budget_items: Iterable[_Priced]) -> Need:
+    def plan(self, budget_items: Iterable[ScenarioPricedBudgetItem]) -> Need:
         total = sum((budget_item.need for budget_item in budget_items), Need())
         return self.scenario.budget.settle(total)
 
     # -- the order ----------------------------------------------------------------------------
 
-    def _build_order(self) -> tuple[list[_Priced], list[_Priced]]:
+    def _build_order(self) -> tuple[list[ScenarioPricedBudgetItem], list[ScenarioPricedBudgetItem]]:
         """The order, and what was pruned from it."""
         self._initial_order = self._entries()
 
@@ -133,27 +102,31 @@ class BudgetOrder:
 
         return self._prune_order(self._with_precursors())
 
-    def _entries(self) -> list[_Priced]:
+    def _entries(self) -> list[ScenarioPricedBudgetItem]:
         """The scenario's own purchases, its base, and the seed's sample."""
         budget = self.world.pool.budget
         required_purchases = self.scenario.starting_state.required_purchases
 
         # Added in order: scenario item, starting base, budget entries.
         items: list[BudgetItem] = [
-            *(ScenarioBudgetItem(budget_item(location)) for location in required_purchases),
-            budget_item(BASE),
-            *(budget_item(location) for location in budget.entries
+            *(
+                ScenarioBudgetItem(BudgetItemFactory.for_location(location))
+                    for location in required_purchases
+            ),
+            BudgetItemFactory.for_location(BASE),
+            *(BudgetItemFactory.for_location(location) for location in budget.entries
                 if location not in required_purchases),
         ]
 
-        def place(entry: _Priced) -> OrderPlace:
+        def place(entry: ScenarioPricedBudgetItem) -> OrderPlace:
             if entry.item.first_in_age:
                 return OrderPlace(entry.age, from_seed=False, rank=0)
             return OrderPlace(entry.age, from_seed=True, rank=budget.rank[entry.location])
 
-        return sorted(filter(None, map(self._priced, items)), key=place)
+        priced = map(self.get_scenario_priced_budget_item, items)
+        return sorted(filter(None, priced), key=place)
 
-    def precursors(self, entry: _Priced) -> list[_Priced]:
+    def precursors(self, entry: ScenarioPricedBudgetItem) -> list[ScenarioPricedBudgetItem]:
         """The locations this seed that the entry cannot be had without."""
         requirement = Requirement(self.plan([entry]), frozenset())
 
@@ -165,7 +138,8 @@ class BudgetOrder:
 
         pool = self.world.pool
         found = [
-            self._priced(item) for item in map(budget_item, candidates)
+            self.get_scenario_priced_budget_item(item)
+                for item in map(BudgetItemFactory.for_location, candidates)
                 if item.is_location(pool)
         ]
 
@@ -178,8 +152,8 @@ class BudgetOrder:
             key=lambda precursor: (precursor.age, precursor.item.rank),
         )
 
-    def _with_precursors(self) -> list[_Priced]:
-        placed: dict[PricedLocation, _Priced] = {}
+    def _with_precursors(self) -> list[ScenarioPricedBudgetItem]:
+        placed: dict[PricedLocation, ScenarioPricedBudgetItem] = {}
         for entry in self._initial_order:
             for precursor in (*self._precursors[entry.location], entry):
                 placed[precursor.location] = precursor
@@ -187,15 +161,15 @@ class BudgetOrder:
 
     def _prune_order(
         self,
-        ordered_budget: list[_Priced],
-    ) -> tuple[list[_Priced], list[_Priced]]:
+        ordered_budget: list[ScenarioPricedBudgetItem],
+    ) -> tuple[list[ScenarioPricedBudgetItem], list[ScenarioPricedBudgetItem]]:
         pile = {
             resource: self.world.pool.resources.totals[resource] for resource in SAMPLED_RESOURCES
         }
 
         every_standing_building = frozenset(self.scenario.budget.standing_buildings)
-        funded: list[_Priced] = []
-        pruned: list[_Priced] = []
+        funded: list[ScenarioPricedBudgetItem] = []
+        pruned: list[ScenarioPricedBudgetItem] = []
 
         for budget_item in ordered_budget:
             need = self.plan(funded + [budget_item])
@@ -229,7 +203,7 @@ class BudgetOrder:
         return ordered
 
     @staticmethod
-    def _prerequisite_techs(entry: _Priced) -> list[Age2TechData]:
+    def _prerequisite_techs(entry: ScenarioPricedBudgetItem) -> list[Age2TechData]:
         """The techs below the entry it actually pays for, oldest first."""
         paid = {price.identity for price in entry.need.own_price}
         oldest_first = reversed(list(entry.item.prerequisite_techs()))

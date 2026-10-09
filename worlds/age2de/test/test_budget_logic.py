@@ -17,7 +17,6 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..logic.custom_logic.ResourceAmount import contributors
-from ..logic.budget.BudgetOrder import budget_order
 from ..logic.budget.BudgetTotal import BudgetTotal
 from ..logic.budget.Requirement import Requirement
 from ..logic.budget.BudgetSource import RELIC_ALLOWANCE, SOURCE_ALLOWANCE
@@ -37,8 +36,7 @@ class BudgetTestBase(bases.Age2RuleTestBase):
         self.build(**HARD)
 
     def budget(self, scenario: Age2ScenarioData):
-        return budget_order(self.world.rules.logic.for_scenario(scenario),
-                                 self.world)
+        return self.world.rules.logic.for_scenario(scenario).budget.order
 
     def state_with(self, *item_names: str) -> CollectionState:
         state = CollectionState(self.multiworld)
@@ -54,7 +52,7 @@ class BudgetTestBase(bases.Age2RuleTestBase):
         )
 
     def cost_of(self, budget, location, waived: frozenset = frozenset()):
-        return Requirement(budget.plan([budget.priced(location)]), waived)
+        return Requirement(budget.plan([budget.get_scenario_priced_location(location)]), waived)
 
 
 class TestStartingBuildingsAreLetOff(BudgetTestBase):
@@ -102,7 +100,7 @@ class TestAgeUps(BudgetTestBase):
 
     def test_a_feudal_start_does_not_pay_for_feudal(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_2)
-        self.assertIsNone(budget.priced(Age2AgeData.FEUDAL))
+        self.assertIsNone(budget.get_scenario_priced_location(Age2AgeData.FEUDAL))
         cost = self.cost_of(budget, Age2TechData.TOWN_WATCH)
         self.assertEqual(cost.ages, [])
 
@@ -110,7 +108,7 @@ class TestAgeUps(BudgetTestBase):
 class TestPrerequisiteTechs(BudgetTestBase):
     def test_town_patrol_pays_for_town_watch_from_the_dark_age(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
-        plan = budget.plan([budget.priced(Age2TechData.TOWN_PATROL)])
+        plan = budget.plan([budget.get_scenario_priced_location(Age2TechData.TOWN_PATROL)])
         own = plan.own_cost()
         expected = {resource: Age2TechData.TOWN_PATROL.cost.get(resource, 0)
                     + Age2TechData.TOWN_WATCH.cost.get(resource, 0) for resource in Resource}
@@ -118,14 +116,14 @@ class TestPrerequisiteTechs(BudgetTestBase):
 
     def test_a_castle_start_has_town_watch_for_free(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_4)
-        plan = budget.plan([budget.priced(Age2TechData.TOWN_PATROL)])
+        plan = budget.plan([budget.get_scenario_priced_location(Age2TechData.TOWN_PATROL)])
         self.assertEqual(plan.own_cost(), {resource: amount for resource, amount
                                           in Age2TechData.TOWN_PATROL.cost.items() if amount})
 
     def test_an_upgraded_unit_pays_for_its_upgrade_chain(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_4)
         unit = Age2UnitData.TWO_HANDED_SWORDSMAN
-        priced = budget.priced(unit)
+        priced = budget.get_scenario_priced_location(unit)
         plan = budget.plan([priced])
         charged = {
             price.identity for price in priced.need.own_price
@@ -146,8 +144,8 @@ class TestOneLineOnePurchase(BudgetTestBase):
 
     def test_two_tiers_of_a_line_cost_one_unit(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_2)
-        archer = budget.priced(Age2UnitData.ARCHER)
-        crossbow = budget.priced(Age2UnitData.CROSSBOWMAN)
+        archer = budget.get_scenario_priced_location(Age2UnitData.ARCHER)
+        crossbow = budget.get_scenario_priced_location(Age2UnitData.CROSSBOWMAN)
         self.assertIsNotNone(archer)
         self.assertIsNotNone(crossbow)
         both = budget.plan([archer, crossbow]).own_cost()
@@ -158,7 +156,7 @@ class TestOneLineOnePurchase(BudgetTestBase):
 class TestTheVillager(BudgetTestBase):
     def test_the_villager_costs_the_food_that_staffs_a_base(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_2)
-        plan = budget.plan([budget.priced(VILLAGER)])
+        plan = budget.plan([budget.get_scenario_priced_location(VILLAGER)])
         food = Age2ItemData.STARTING_VILLAGER_FOOD.type.amount
         self.assertEqual(plan.own_cost(), {Resource.FOOD: food})
 
@@ -331,7 +329,7 @@ class TestTheRule(BudgetTestBase):
     def test_a_location_outside_the_order_is_never_afforded(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
         outside = next(building for building in Age2BuildingData
-                       if budget.priced(building) is None)
+                       if budget.get_scenario_priced_location(building) is None)
         self.assertTrue(self.resolved(Age2ScenarioData.AP_ATTILA_1, outside).always_false)
 
     def test_the_breakdown_adds_up_to_the_requirement(self):

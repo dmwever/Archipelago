@@ -12,7 +12,6 @@ from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.GameCosts import (GAME_DATA_SOURCE, TECHS_WITHOUT_COST,
                                                UNITS_WITHOUT_COST)
-from ..logic.budget.BudgetOrder import budget_order
 from ..logic.budget.BudgetTotal import BudgetTotal
 from ..Options import ShuffleVillager
 
@@ -127,7 +126,7 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
         as from an easy source, so its rule carries the running total."""
         self.build(techsanity=3)
         scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        held = [entry.location for entry in budget_order(scenario, self.world).order
+        held = [entry.location for entry in scenario.budget.order.order
                 if isinstance(entry.location, Age2TechData)]
         if not held:
             self.skipTest("this seed's order holds no tech in Attila 1")
@@ -141,10 +140,10 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
         only an easy source of what it costs."""
         self.build(techsanity=3)
         scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        order = budget_order(scenario, self.world)
+        order = scenario.budget.order
         held = {entry.location for entry in order.order if isinstance(entry.location, Age2TechData)}
         outside = [tech for tech in self.world.pool.techs.shuffled if tech not in held
-                   and order.priced(tech) is not None]
+                   and order.get_scenario_priced_location(tech) is not None]
         self.assertTrue(outside)
         for tech in outside:
             with self.subTest(tech.name):

@@ -15,6 +15,7 @@ from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
+    from ..budget.BudgetOrder import BudgetOrder
     from ..budget.BudgetItem import PricedLocation
 
 class ScenarioBudgetLogic:
@@ -23,6 +24,31 @@ class ScenarioBudgetLogic:
         self.logic = scenario.logic
         self.world = scenario.logic.world
         self._could_have_building: dict[Age2BuildingData, bool] = {}
+        self._order: BudgetOrder | None = None
+        self.is_building_order = False
+        """Part-way through building the order, so one that asks for itself fails loudly."""
+
+    @property
+    def has_order(self) -> bool:
+        return self._order is not None
+
+    @property
+    def order(self) -> BudgetOrder:
+        """The scenario's budget order, built once per seed while its first budget total
+        resolves."""
+        if self._order is None:
+            if self.is_building_order:
+                raise RecursionError(
+                    f"{self.scenario.scenario.scenario_name}'s budget order asks for itself; "
+                    "it would never be built"
+                )
+            from ..budget.BudgetOrder import BudgetOrder   # the order reads this logic back
+            self.is_building_order = True
+            try:
+                self._order = BudgetOrder(self.scenario)
+            finally:
+                self.is_building_order = False
+        return self._order
 
     @functools.cached_property
     def start_age(self) -> Age2AgeData:
@@ -55,8 +81,35 @@ class ScenarioBudgetLogic:
 
     @functools.cached_property
     def cost_waivers(self) -> list[ScenarioCostWaived.Resolved]:
-        """Every waiver the scenario has: one per distinct rule among its standing buildings and
-        the rules that spare its required purchases."""
+        """The waivers a running total switches on and off: one bit of the mask each. One that
+        always holds is no switch - its buildings and purchases are always let off instead."""
+        return [
+            waiver for waiver in self._every_cost_waiver
+                if not waiver.always_true
+        ]
+
+    @functools.cached_property
+    def always_standing(self) -> frozenset[Age2BuildingData]:
+        """Buildings that stand whatever the items: no running total ever pays for them."""
+        return frozenset(
+            building for waiver in self._every_cost_waiver
+                if waiver.always_true
+                    for building in waiver.buildings
+        )
+
+    @functools.cached_property
+    def always_spared(self) -> frozenset[PricedLocation]:
+        """Required purchases that something always spares: no running total ever has them."""
+        return frozenset(
+            purchase for waiver in self._every_cost_waiver
+                if waiver.always_true
+                    for purchase in waiver.purchases
+        )
+
+    @functools.cached_property
+    def _every_cost_waiver(self) -> list[ScenarioCostWaived.Resolved]:
+        """One waiver per distinct rule among the standing buildings and the rules that spare the
+        required purchases."""
         buildings: dict[Rule.Resolved, list[Age2BuildingData]] = {}
         purchases: dict[Rule.Resolved, list[PricedLocation]] = {}
 

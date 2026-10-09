@@ -14,7 +14,6 @@ from ...items.Items import Resource
 from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
 from .BudgetItem import PricedLocation
-from .BudgetOrder import budget_order
 from .BudgetSource import Bootstrap
 from .CostTable import CostTable
 from .Need import Need
@@ -53,7 +52,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         return logic.budget_totals[key]
 
     def _resolve(self, world: 'Age2World') -> Rule.Resolved:
-        order = budget_order(world.rules.logic.for_scenario(self.scenario), world)
+        order = world.rules.logic.for_scenario(self.scenario).budget.order
         table = CostTable.for_location(order, self.location)
         if table is None:
             return False_().resolve(world)   # not in this scenario's order
