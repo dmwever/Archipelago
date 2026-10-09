@@ -294,7 +294,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         @override
         def explain_str(self, state: CollectionState | None = None) -> str:
             totals = ", ".join(
-                f"{amount} {resource.name.lower()}" for resource, amount, _ in self._totals(state)
+                f"{total.amount} {total.resource.name.lower()}" for total in self._totals(state)
             )
             scenario = self.scenario.scenario_name
             return f"{scenario}: starting pile + early gathering covers {totals}"
