@@ -8,7 +8,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...generation.pools.AgePool import DARK_START, VANILLA_AGE_START
 from ..custom_logic.ScenarioQuestions import ScenarioHasReached
-from ..custom_logic.TwoBuildings import TwoBuildingsRequirement
+from ..custom_logic.TwoBuildings import AgeUpRequirement
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -51,13 +51,12 @@ class ScenarioAgeLogic:
             self._climb[into] = self._climb_rule(into)
         return self._climb[into]
 
-    def two_from(self, age: Age2AgeData) -> Rule:
-        rule: Rule = TwoBuildingsRequirement(
-            [self.scenario.has_building(building) for building in AGE_BUILDINGS[age]])
-        if age is Age2AgeData.CASTLE:
-            # A Castle counts for both on its own.
-            rule = rule | self.scenario.has_building(Age2BuildingData.CASTLE)
-        return rule
+    def two_from(self, age: Age2AgeData) -> AgeUpRequirement:
+        """What leaves this age: two of its buildings, or - from the Castle Age - a Castle, which
+        counts for both on its own."""
+        single = Age2BuildingData.CASTLE if age is Age2AgeData.CASTLE else None
+        return AgeUpRequirement.of(self.scenario.has_building, list(AGE_BUILDINGS[age]),
+                                          single)
 
     def has_reached(self, age: Age2AgeData) -> Rule:
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)

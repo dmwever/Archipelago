@@ -13,6 +13,18 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
 
+B = Age2BuildingData
+GOLD_DROPSITES = [B.MINING_CAMP, B.TOWN_CENTER, B.MULE_CART]
+STONE_DROPSITES = [B.MINING_CAMP, B.TOWN_CENTER, B.MULE_CART]
+WOOD_DROPSITES = [B.LUMBER_CAMP, B.TOWN_CENTER, B.MULE_CART]
+FOOD_DROPSITES = [B.MILL, B.TOWN_CENTER, B.FOLWARK]
+HUNT_DROPSITES = FOOD_DROPSITES + [B.MULE_CART]
+"""A mule cart takes meat, but no other food - not fish, not herdables."""
+FISHERMAN_DROPSITES = FOOD_DROPSITES + [B.DOCK]
+FISHING_BOAT_DROPSITES = [B.DOCK, B.HARBOR]
+"""Where each kind of gatherer can drop off, here and in the budget's seeds."""
+
+
 class ScenarioBuildingLogic:
     def __init__(self, scenario: 'ScenarioLogic'):
         self.scenario = scenario
@@ -66,32 +78,25 @@ class ScenarioBuildingLogic:
                 | self.scenario.has_building(Age2BuildingData.DOCK))
 
     def has_gold_dropsite(self) -> Rule:
-        return Or(*[self.scenario.has_building(building) for building in
-                    (Age2BuildingData.MINING_CAMP, Age2BuildingData.TOWN_CENTER,
-                     Age2BuildingData.MULE_CART)])
+        return self._any_of(GOLD_DROPSITES)
 
     def has_stone_dropsite(self) -> Rule:
-        return Or(*[self.scenario.has_building(building) for building in
-                    (Age2BuildingData.MINING_CAMP, Age2BuildingData.TOWN_CENTER,
-                     Age2BuildingData.MULE_CART)])
+        return self._any_of(STONE_DROPSITES)
 
     def has_wood_dropsite(self) -> Rule:
-        return Or(*[self.scenario.has_building(building) for building in
-                    (Age2BuildingData.LUMBER_CAMP, Age2BuildingData.TOWN_CENTER,
-                     Age2BuildingData.MULE_CART)])
+        return self._any_of(WOOD_DROPSITES)
 
     def has_food_dropsite(self) -> Rule:
-        return Or(*[self.scenario.has_building(building) for building in
-                    (Age2BuildingData.MILL, Age2BuildingData.TOWN_CENTER,
-                     Age2BuildingData.FOLWARK)])
+        return self._any_of(FOOD_DROPSITES)
 
     def has_hunt_dropsite(self) -> Rule:
-        """A mule cart takes meat, but no other food - not fish, not herdables."""
-        return self.has_food_dropsite() | self.scenario.has_building(Age2BuildingData.MULE_CART)
+        return self._any_of(HUNT_DROPSITES)
+
+    def _any_of(self, buildings: list[Age2BuildingData]) -> Rule:
+        return Or(*[self.scenario.has_building(building) for building in buildings])
 
     def has_fishing_boat_dropsite(self) -> Rule:
-        return (self.scenario.has_building(Age2BuildingData.DOCK)
-                | self.scenario.has_building(Age2BuildingData.HARBOR))
+        return self._any_of(FISHING_BOAT_DROPSITES)
 
     def has_fisherman_dropsite(self) -> Rule:
-        return self.has_food_dropsite() | self.scenario.has_building(Age2BuildingData.DOCK)
+        return self._any_of(FISHERMAN_DROPSITES)

@@ -22,6 +22,7 @@ class Attila2StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario")
         self.max_age = Age2AgeData.CASTLE
         self.has_vils = self.purple_vils
+        self.required_purchases = {Age2BuildingData.TOWN_CENTER: False_()}   # Build TC, to win
 
         self.obtains_unit[U.VILLAGER_MALE] = self.purple_vils
         self.obtains_unit[U.VILLAGER_FEMALE] = self.purple_vils

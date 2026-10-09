@@ -23,6 +23,22 @@ for building, building_units in BUILDING_TO_UNITS.items():
         unit.buildings.append(building)
 
 
+LOGIC_SKIPS: set[tuple[Age2UnitData, Age2BuildingData]] = {
+    (Age2UnitData.TARKAN, Age2BuildingData.STABLE),
+    (Age2UnitData.ELITE_TARKAN, Age2BuildingData.STABLE),
+    (Age2UnitData.HUSKARL, Age2BuildingData.BARRACKS),
+    (Age2UnitData.ELITE_HUSKARL, Age2BuildingData.BARRACKS),
+}
+"""Where the game trains a unit only once a tech is researched at another of its buildings: the
+Huns' Marauders and the Goths' Anarchy, both at the Castle that trains the unit anyway. Never the
+cheaper way in, so logic counts only the Castle. The game still gets every building."""
+
+
+def logic_buildings(unit: Age2UnitData) -> list[Age2BuildingData]:
+    """Where logic lets a unit be trained: its buildings, less what LOGIC_SKIPS."""
+    return [building for building in unit.buildings if (unit, building) not in LOGIC_SKIPS]
+
+
 # The item that unlocks everything a building trains, for unitsanity_items: buildings. Spelled
 # out rather than derived from the member name, so a renamed building fails at import instead of
 # silently losing its item.

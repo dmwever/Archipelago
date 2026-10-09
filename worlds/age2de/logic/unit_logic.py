@@ -7,13 +7,14 @@ from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
 from ..Options import (Caveman, ShuffleVillager, Unitsanity, UnitsanityItems,
                        upgrade_techs_shuffled)
+from ..generation.pools.BudgetPool import VILLAGER
 from ..items.Items import Age2ItemData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
-from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM, logic_buildings
 
 NOT_CAVEMAN = OptionFilter(Caveman, Caveman.option_false)
 
@@ -68,22 +69,29 @@ class UnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train_anywhere(self, unit: Age2UnitData) -> Rule:
-        if not self.world.pool.units.is_trainable_unit(unit) or not unit.buildings:
+        if not self.world.pool.units.is_trainable_unit(unit) or not logic_buildings(unit):
             return False_()
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
-            answer = scenario.units.can_train(unit)
+            answer = scenario.units.can_train_structurally(unit)
             if isinstance(answer, False_):
                 continue
-            ways.append(scenario.is_unlocked() & answer)
+            ways.append(scenario.is_unlocked() & answer
+                        & scenario.economy.can_pay(unit.cost, unit))
         return Or(*ways)
 
-    # -- villagers ---------------------------------------------------------------------------
+    def can_get_villager_anywhere(self) -> Rule:
+        """Any villager location: one villager, priced at the food that staffs a base."""
+        villager, food = Age2UnitData.VILLAGER_MALE, Age2ItemData.STARTING_VILLAGER_FOOD.type
+        ways: list[Rule] = []
+        for scenario in self.logic.scenarios:
+            answer = scenario.units.can_train_structurally(villager)
+            if isinstance(answer, False_):
+                continue
+            ways.append(scenario.is_unlocked() & answer
+                        & scenario.economy.can_pay({food.type: food.amount}, VILLAGER))
+        return Or(*ways)
 
-    def villager_food(self) -> Rule:
-        if self.world.options.shuffle_villager == ShuffleVillager.option_no:
-            return True_()
-        return Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
 
     def has_profession_item(self, job: Age2VillagerJobData) -> Rule:
         if self.world.options.shuffle_villager != ShuffleVillager.option_include_professions:
@@ -135,7 +143,7 @@ class UnitLogic:
         return any(self.world.pool.civs.any_trains(unit) for unit in HORSE_LINE.units)
 
     def has_building_item(self, unit: Age2UnitData) -> Rule:
-        wanted = [BUILDING_TO_UNITS_ITEM[building].item_name for building in unit.buildings
+        wanted = [BUILDING_TO_UNITS_ITEM[building].item_name for building in logic_buildings(unit)
                   if building in self.world.unit_regions.shuffled_unit_building_items]
         if not wanted:
             return True_()

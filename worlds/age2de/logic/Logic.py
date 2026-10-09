@@ -21,6 +21,9 @@ from ..locations.Techs import Age2TechData
 
 if TYPE_CHECKING:
     from .. import Age2World
+    from ..locations.Scenarios import Age2ScenarioData
+    from .budget.BudgetItem import PricedLocation
+    from .budget.BudgetOrder import BudgetOrder
 
 
 class Logic:
@@ -35,11 +38,21 @@ class Logic:
         self.world = world
         self.scenarios = []
 
-        self.scenario_answers: dict[tuple, object] = {}
+        self.scenario_answers: dict[tuple, Rule.Resolved] = {}
         """Resolved answers to the scenario questions, one per seed. See logic/custom_logic."""
-
         self.scenario_answers_open: set[tuple] = set()
         """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
+
+        self.budget_orders: dict[Age2ScenarioData, BudgetOrder] = {}
+        """Each scenario's budget order, built once per seed while its first budget total
+        resolves. See logic/budget."""
+        self.budget_orders_open: set[Age2ScenarioData] = set()
+        """Orders part-way through being built, so one that asks for itself fails loudly."""
+
+        self.budget_totals: dict[tuple[Age2ScenarioData, PricedLocation], Rule.Resolved] = {}
+        """Each budget total, resolved once per seed and shared by every rule that asks it."""
+        self.budget_totals_open: set[tuple[Age2ScenarioData, PricedLocation]] = set()
+        """Budget totals part-way through resolving, so one that asks for itself fails loudly."""
 
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
@@ -87,3 +100,9 @@ class Logic:
 
     def can_build_building_anywhere(self, building: Age2BuildingData) -> Rule:
         return self._can_build[building]
+
+    def can_build_location_anywhere(self, building: Age2BuildingData) -> Rule:
+        """The Build location: putting it up, paid for."""
+        return Or(*[scenario.is_unlocked() & scenario.buildings.can_build_building(building)
+                    & scenario.economy.can_pay(building.cost, building)
+                    for scenario in self.scenarios])

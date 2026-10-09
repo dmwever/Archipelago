@@ -11,7 +11,9 @@ from ...locations.connections.ScenarioResources import Tier
 from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
-from ..custom_logic.ScenarioQuestions import ScenarioHasResource
+from ..budget.BudgetItem import PricedLocation
+from ..budget.BudgetTotal import BudgetTotal
+from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -122,19 +124,28 @@ class ScenarioResourceLogic:
                 & self.has_job(Job.FISHERMAN_MALE)
                 & self.scenario.starting_state.starting_fish)
 
-    def can_crew_fishing_ships(self) -> Rule:
+    def has_fishing_ships(self) -> Rule:
+        """Fishing Ships to put to sea, less paying for one."""
         ship = Age2UnitData.FISHING_SHIP
-        return (self.logic.units.has_unit_items(ship)
-                & self.scenario.ages.has_reached(ship.age)
+        return self.logic.units.has_unit_items(ship) & self.scenario.ages.has_reached(ship.age)
+
+    def can_crew_fishing_ships(self) -> Rule:
+        """Fishing Ships, and the wood for one: banked, or chopped."""
+        ship = Age2UnitData.FISHING_SHIP
+        return (self.has_fishing_ships()
                 & (self.can_gather_wood()
                    | self.logic.resources.has_amount(Resource.WOOD,
                                                      ship.cost.get(Resource.WOOD, 0))))
 
-    def can_fish_by_boat(self) -> Rule:
+    def _crew(self, seeded: bool) -> Rule:
+        """Unseeded, a boat source is what the budget switches on: it pays for the ship itself."""
+        return self.can_crew_fishing_ships() if seeded else self.has_fishing_ships()
+
+    def can_fish_by_boat(self, seeded: bool = True) -> Rule:
         if not self.counts.deep_fish_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.can_crew_fishing_ships()
+                & self._crew(seeded)
                 & self.scenario.starting_state.starting_fish)
 
     def can_fish_some(self) -> Rule:
@@ -147,33 +158,36 @@ class ScenarioResourceLogic:
                 & self.has_job(Job.OYSTER_GATHERER_MALE)
                 & self.scenario.starting_state.starting_oysters)
 
-    def can_gather_oysters_by_boat(self) -> Rule:
+    def can_gather_oysters_by_boat(self, seeded: bool = True) -> Rule:
         if not self.counts.oyster_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.can_crew_fishing_ships()
+                & self._crew(seeded)
                 & self.scenario.starting_state.starting_oysters)
 
     def can_gather_oysters(self) -> Rule:
         return self.can_gather_oysters_from_shore() | self.can_gather_oysters_by_boat()
 
-    def can_hunt_whales(self) -> Rule:
+    def can_hunt_whales(self, seeded: bool = True) -> Rule:
         if not self.counts.whale_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.can_crew_fishing_ships()
+                & self._crew(seeded)
                 & self.scenario.starting_state.starting_whales)
 
-    def can_collect_relics(self) -> Rule:
+    def can_collect_relics(self, seeded: bool = True) -> Rule:
+        """Unseeded, it is what the budget switches on: it pays for the Monk itself."""
         if not self.counts.relic_count:
             return False_()
         monk = Age2UnitData.MONK
-        return (self.scenario.has_building(Age2BuildingData.MONASTERY)
+        rule = (self.scenario.has_building(Age2BuildingData.MONASTERY)
                 & self.logic.units.has_unit_items(monk)
                 & self.scenario.ages.has_reached(monk.age)
-                & self.logic.resources.has_amount(Resource.GOLD,
-                                                  monk.cost.get(Resource.GOLD, 0))
                 & self.scenario.starting_state.starting_relics)
+        if seeded:
+            rule = rule & self.logic.resources.has_amount(Resource.GOLD,
+                                                          monk.cost.get(Resource.GOLD, 0))
+        return rule
 
     def can_gather_gold(self) -> Rule:
         return (self.can_mine_some() | self.can_gather_oysters() | self.can_hunt_whales()
@@ -249,25 +263,24 @@ class ScenarioResourceLogic:
 
     # -- aggregates ---------------------------------------------------------------------------
 
-    def has_source(self, resource: Resource) -> Rule:
-        return ScenarioHasResource(scenario=self.scenario.scenario, resource=resource)
-
     def has_easy_source(self, resource: Resource) -> Rule:
-        return ScenarioHasResource(scenario=self.scenario.scenario, resource=resource, easy=True)
+        return ScenarioHasEasyResource(scenario=self.scenario.scenario, resource=resource)
 
     # -- what units and techs ask -------------------------------------------------------------
-
-    def can_afford(self, costs: Mapping[Resource, float]) -> Rule:
-        priced = [resource for resource, amount in costs.items() if amount > 0]
-        if not priced:
-            return True_()
-        return And(*[self.logic.resources.has_amount(resource, costs[resource])
-                     | self.has_source(resource) for resource in priced])
 
     def can_sustain(self, resources: Collection[Resource]) -> Rule:
         if not resources:
             return True_()
         return And(*[self.has_easy_source(resource) for resource in resources])
+
+    def can_pay(self, costs: Mapping[Resource, float], location: PricedLocation) -> Rule:
+        """What a location asks of its price: an easy source of everything it costs, or its place
+        in this scenario's budget order. Nothing at all if it is free."""
+        priced = [resource for resource, amount in costs.items() if amount > 0]
+        if not priced:
+            return True_()
+        return self.can_sustain(priced) | BudgetTotal(scenario=self.scenario.scenario,
+                                                      location=location)
 
     # -- private methods -------------------------------------------------------------
 

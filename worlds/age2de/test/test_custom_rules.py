@@ -3,6 +3,9 @@ from rule_builder.rules import Rule
 from ..Options import IncludeUniqueUnits, Techsanity, Unitsanity
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
+from ..locations.Techs import Age2TechData
+from ..locations.Units import Age2UnitData
+from ..items.Items import Resource
 from ..logic.custom_logic.ScenarioQuestions import ScenarioCanBuild, ScenarioHasReached
 from .bases import Age2RuleTestBase
 
@@ -89,13 +92,21 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
 class TestTheAnswersAreActuallyShared(Age2RuleTestBase):
 
     def test_one_answer_per_question_asked(self):
-        """The point of the exercise: a few hundred answers, not a million resolutions."""
+        """The point of the exercise: one answer per question, not one per time it is asked. A
+        question is about one scenario and one thing - a tech, a unit, a building, an age, a
+        resource - so there can never be more answers than that."""
         world = self.build(**EVERYTHING)
-        self.assertTrue(world.rules.logic.scenario_answers)
-        self.assertLess(len(world.rules.logic.scenario_answers), 1000)
-        for answer in world.rules.logic.scenario_answers.values():
+        logic = world.rules.logic
+        subjects = (len(Age2TechData) + len(Age2UnitData) + len(Age2BuildingData)
+                    + len(Age2AgeData) + len(Resource))
+        self.assertTrue(logic.scenario_answers)
+        self.assertLessEqual(len(logic.scenario_answers), len(logic.scenarios) * subjects)
+        for answer in logic.scenario_answers.values():
             self.assertIsInstance(answer, Rule.Resolved)
-        self.assertFalse(world.rules.logic.scenario_answers_open, "a question was left part-way answered")
+        self.assertFalse(logic.scenario_answers_open, "a question was left part-way answered")
+        self.assertFalse(logic.budget_orders_open, "a budget order was left part-way built")
+        self.assertFalse(logic.budget_totals_open, "a budget total was left part-way resolved")
+        self.assertTrue(logic.budget_orders, "no budget order was built, so nothing above was tried")
 
 
 class TestOneScenarioLogicPerScenario(Age2RuleTestBase):

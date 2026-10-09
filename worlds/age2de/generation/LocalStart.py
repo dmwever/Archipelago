@@ -13,7 +13,7 @@ from Fill import FillError, fill_restrictive, sweep_from_pool
 from rule_builder.rules import And, Rule, True_
 
 from ..Options import LocalStart
-from ..items.Items import NAME_TO_ITEM, Campaign, ProgressiveScenario
+from ..items.Items import NAME_TO_ITEM, Age2ItemData, Campaign, ProgressiveScenario
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
 from ..locations.Scenarios import Age2ScenarioData
@@ -127,7 +127,12 @@ def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
     Attila player a House would be handing over something they can never place.
     """
     logic = world.rules.logic
-    target = logic.buildings.can_build_tc()
+    villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
+    # Paid for out of the opening pile: what is placed here is what the player starts holding,
+    # and a scenario with no base yet has no gathering to count on. Logic itself asks the budget.
+    target = (logic.buildings.can_build_tc()
+              & logic.resources.has_amounts(Age2ItemData.TOWN_CENTER.type.needed_resources)
+              & logic.resources.has_amount(villager_food.type, villager_food.amount))
     if scenario_logic(world, scenario).civilization.can_build(Age2BuildingData.HOUSE):
         target = target & logic.can_build_building_anywhere(Age2BuildingData.HOUSE)
     return target & scenario_base_rule(world, scenario)
@@ -215,7 +220,9 @@ def apply(world: 'Age2World') -> None:
     if not win_set and not base_set:
         return
 
-    base_only = list((Counter(base_set) - Counter(win_set)).elements())
+    # base_items already solves on top of the win set, so what it returns is only what the win set
+    # does not cover. Taking the win set away again would drop a second copy the base needs.
+    base_only = base_set
     logging.info("Local Start: %s placing win=%s base=%s",
                  world.player_name, sorted(win_set), sorted(base_only))
 

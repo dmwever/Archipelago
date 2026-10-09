@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, override
 from BaseClasses import CollectionState
 from NetUtils import JSONMessagePart
 
-from rule_builder.rules import Rule
+from rule_builder.rules import Or, Rule
 
 from .SufficientRawResources import SufficientRawResources
 
@@ -14,6 +14,9 @@ from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
+from ...locations.Techs import Age2TechData
+from ...locations.Units import Age2UnitData
+from ...locations.connections.UnitBuildings import logic_buildings
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -159,6 +162,54 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
 
 
 @dataclass
+class ScenarioCanResearch(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario can research this tech."""
+
+    tech: Age2TechData
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.tech)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        if scenario.logic.world.pool.techs.locked_at_start(self.tech):
+            age = scenario.ages.has_reached(self.tech.age)
+        else:
+            age = scenario.ages.can_reach(self.tech.age)
+        return scenario.techs.available(self.tech, age)
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        tech = self.tech.location_name.removeprefix("Research ")
+        return f"{scenario.scenario_name} can research {tech}"
+
+
+@dataclass
+class ScenarioCanTrain(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario can train this unit."""
+
+    unit: Age2UnitData
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.unit)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        somewhere = Or(*[scenario.has_building(building)
+                         for building in logic_buildings(self.unit)
+                         if scenario.civilization.can_build(building)])
+        return (scenario.logic.units.has_unit_items(self.unit)
+                & scenario.units.has_upgrade_tech(self.unit)
+                & somewhere & scenario.ages.has_reached(self.unit.age))
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        return f"{scenario.scenario_name} can train a {self.unit.unit_name}"
+
+
+@dataclass
 class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
     """Whether this scenario is at or past this age."""
 
@@ -179,43 +230,20 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
 
 @dataclass
-class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
-    """Whether this scenario can bring a resource in at all, or bring it in freely."""
+class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario can bring a resource in freely: enough of it to keep paying."""
 
     resource: Resource
-    easy: bool = False
 
     @override
     def key(self) -> tuple:
-        return (type(self).__name__, self.scenario, self.resource, self.easy)
+        return (type(self).__name__, self.scenario, self.resource)
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return self._easily(scenario) if self.easy else self._at_all(scenario)
-
-    def _at_all(self, scenario: 'ScenarioLogic') -> Rule:
-        return (self._GATHERED[self.resource](self, scenario)
-                | scenario.starting_state.resource_sources[self.resource]
-                | self._easily(scenario))
-
-    def _easily(self, scenario: 'ScenarioLogic') -> Rule:
         return (self._GATHERED_EASILY[self.resource](self, scenario)
                 | scenario.starting_state.easy_resource_sources[self.resource]
                 | scenario.economy.market_trades())
-
-    def _food(self, scenario: 'ScenarioLogic') -> Rule:
-        economy = scenario.economy
-        return (economy.can_hunt() | economy.can_herd() | economy.can_forage()
-                | economy.can_fish_some() | economy.endless_food())
-
-    def _gold(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.can_gather_gold() | scenario.economy.ally_trade_gold()
-
-    def _stone(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.can_quarry_some()
-
-    def _wood(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.can_chop_some() | scenario.economy.ally_trade_wood()
 
     def _food_easily(self, scenario: 'ScenarioLogic') -> Rule:
         economy = scenario.economy
@@ -263,13 +291,6 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
         return (scenario.buildings.can_build_building(camp)
                 | scenario.buildings.can_build_multiple_tc())
 
-    _GATHERED = {
-        Resource.WOOD: _wood,
-        Resource.FOOD: _food,
-        Resource.GOLD: _gold,
-        Resource.STONE: _stone,
-    }
-
     _GATHERED_EASILY = {
         Resource.WOOD: _wood_easily,
         Resource.FOOD: _food_easily,
@@ -279,8 +300,7 @@ class ScenarioHasResource(ScenarioQuestion, game="Age Of Empires II: Definitive 
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
-        adverb = "easily " if self.easy else ""
-        return f"{scenario.scenario_name} can {adverb}gather {self.resource.name.lower()}"
+        return f"{scenario.scenario_name} can easily gather {self.resource.name.lower()}"
 
 
 def _question_identity(self: ScenarioQuestion.Resolved) -> int:

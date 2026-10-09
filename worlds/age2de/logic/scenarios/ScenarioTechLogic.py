@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import False_, Or, Rule
 
 from ...locations.Techs import Age2TechData
+from ..custom_logic.ScenarioQuestions import ScenarioCanResearch
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -17,11 +18,19 @@ class ScenarioTechLogic:
         self.world = scenario.logic.world
 
     def can_research(self, tech: Age2TechData) -> Rule:
-        if self.world.pool.techs.locked_at_start(tech):
-            age = self.scenario.ages.has_reached(tech.age)
-        else:
-            age = self.scenario.ages.can_reach(tech.age)
-        return self.available(tech, age) & self.scenario.economy.can_afford(tech.cost)
+        return self.can_research_structurally(tech) & self.scenario.economy.can_pay(tech.cost, tech)
+
+    def can_research_structurally(self, tech: Age2TechData) -> Rule:
+        """Everything researching it asks for except paying for it."""
+        if not self.scenario.civilization.researches(tech):
+            return False_()
+        return ScenarioCanResearch(scenario=self.scenario.scenario, tech=tech)
+
+    def researched_at_start(self, tech: Age2TechData) -> bool:
+        """The scenario researched it for itself: it belongs below the age the scenario opens in,
+        and it is not withheld."""
+        return (tech.age < self.scenario.scenario.vanilla_age
+                and not self.world.pool.techs.locked_at_start(tech))
 
     def has_tech(self, tech: Age2TechData) -> Rule:
         return self.available(tech, self.scenario.ages.has_reached(tech.age))

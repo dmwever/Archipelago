@@ -29,6 +29,7 @@ class Age2BuildingData(enum.IntEnum):
         self.item = item
         self.age = age
         self.building_options = building_options
+        self.cost: dict = {}
         
     WONDER =                200, "Build Wonder", Age2ItemData.WONDER, Age2AgeData.IMPERIAL, [BuildingOption.wonder]
     OUTPOST =               201, "Build Outpost", Age2ItemData.OUTPOST, Age2AgeData.DARK, [BuildingOption.defense]
