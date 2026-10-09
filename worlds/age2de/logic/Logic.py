@@ -64,7 +64,7 @@ class Logic:
         self.ages =  AgeLogic(self, world)
         
         for campaign in world.pool.campaigns.enabled:
-            for scenario in world.pool.scenarios.of(campaign):
+            for scenario in world.pool.scenarios.in_campaign(campaign):
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
     
         for building in Age2BuildingData:

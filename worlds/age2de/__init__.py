@@ -122,7 +122,7 @@ class Age2World(CachedRuleBuilderWorld):
         scenario_regions: dict[Scenarios.Age2ScenarioData, Region] = {}
         
         for campaign in self.pool.campaigns.enabled:
-            scenarios = self.pool.scenarios.of(campaign)
+            scenarios = self.pool.scenarios.in_campaign(campaign)
             prev_region: Region = regions[0]
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)

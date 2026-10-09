@@ -16,6 +16,6 @@ class GoalLogic:
     def completed_all_campaigns(self) -> Rule:
         completed: Rule = True_()
         for campaign in self.world.pool.campaigns.enabled:
-            for scenario in self.world.pool.scenarios.of(campaign):
+            for scenario in self.world.pool.scenarios.in_campaign(campaign):
                 completed = completed & Has(scenario.scenario_name + ": Unlock Next Scenario")
         return completed

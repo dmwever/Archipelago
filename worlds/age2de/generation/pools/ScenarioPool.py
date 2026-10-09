@@ -23,7 +23,7 @@ class ScenarioPool:
     def all_scenario_branches(self) -> bool:
         return self._mode == ScenarioBranching.option_all
 
-    def of(self, campaign: 'Age2CampaignData') -> list[Age2ScenarioData]:
+    def in_campaign(self, campaign: 'Age2CampaignData') -> list[Age2ScenarioData]:
         return self._by_campaign[campaign]
 
     def first_scenario(self, campaign: 'Age2CampaignData') -> Age2ScenarioData:

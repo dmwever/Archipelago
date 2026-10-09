@@ -43,7 +43,7 @@ class Rules:
         self.set_rule(self.world.get_location("Victory"), self.logic.has_goal())
 
         for campaign in self.world.pool.campaigns.enabled:
-            for scenario in self.world.pool.scenarios.of(campaign):
+            for scenario in self.world.pool.scenarios.in_campaign(campaign):
                 self.scenario_rules.append(scenario.rules(self))
 
         for scenario in self.scenario_rules:

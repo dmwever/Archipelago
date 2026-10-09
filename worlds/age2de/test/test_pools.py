@@ -70,7 +70,7 @@ class TestScenarioPool(bases.Age2RuleTestBase):
     def test_included_is_the_campaigns_expanded_in_order(self):
         world = self.build()
         expected = [scenario for campaign in world.pool.campaigns.enabled
-                    for scenario in world.pool.scenarios.of(campaign)]
+                    for scenario in world.pool.scenarios.in_campaign(campaign)]
         self.assertEqual(expected, world.pool.scenarios.included)
 
     def test_first_scenario_opens_its_campaign(self):
@@ -78,8 +78,8 @@ class TestScenarioPool(bases.Age2RuleTestBase):
         for campaign in world.pool.campaigns.enabled:
             with self.subTest(campaign.campaign_name):
                 first = world.pool.scenarios.first_scenario(campaign)
-                self.assertEqual(world.pool.scenarios.of(campaign)[0], first)
-                self.assertEqual(min(s.chapter for s in world.pool.scenarios.of(campaign)),
+                self.assertEqual(world.pool.scenarios.in_campaign(campaign)[0], first)
+                self.assertEqual(min(s.chapter for s in world.pool.scenarios.in_campaign(campaign)),
                                  first.chapter)
 
 
