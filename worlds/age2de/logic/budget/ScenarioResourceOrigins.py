@@ -92,7 +92,7 @@ class ScenarioResourceOrigins:
                 resolved = method.rule(scenario.economy).resolve(world)
                 if not resolved.always_false:
                     methods.append(
-                        ResolvedGatherMethod(resolved, scenario.budget.settle(method.need))
+                        ResolvedGatherMethod(resolved, scenario.budget.calculate(method.need))
                     )
 
             allowance = origin.allowance_in_scenario(scenario.scenario)

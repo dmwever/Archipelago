@@ -146,5 +146,5 @@ class ScenarioBudgetLogic:
             self._could_have_building[building] = not self.logic.is_impossible(has_building)
         return self._could_have_building[building]
 
-    def settle(self, need: Need) -> Need:
+    def calculate(self, need: Need) -> Need:
         return need.by_scenario(self)
