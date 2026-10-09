@@ -55,8 +55,11 @@ class ScenarioAgeLogic:
         """What leaves this age: two of its buildings, or - from the Castle Age - a Castle, which
         counts for both on its own."""
         single = Age2BuildingData.CASTLE if age is Age2AgeData.CASTLE else None
-        return AgeUpRequirement.of(self.scenario.has_building, list(AGE_BUILDINGS[age]),
-                                          single)
+        return AgeUpRequirement.from_buildings(
+            self.scenario.has_building,
+            list(AGE_BUILDINGS[age]),
+            single,
+        )
 
     def has_reached(self, age: Age2AgeData) -> Rule:
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)

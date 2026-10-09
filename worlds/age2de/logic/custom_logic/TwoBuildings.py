@@ -30,9 +30,12 @@ class AgeUpRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definit
     """One that counts for two on its own - a Castle - and the last child when there is one."""
 
     @classmethod
-    def of(cls, has_building: Callable[[Age2BuildingData], Rule],
-           buildings: list[Age2BuildingData],
-           single_building: Age2BuildingData | None = None) -> AgeUpRequirement:
+    def from_buildings(
+        cls,
+        has_building: Callable[[Age2BuildingData], Rule],
+        buildings: list[Age2BuildingData],
+        single_building: Age2BuildingData | None = None,
+    ) -> AgeUpRequirement:
         """The rule, its children asked of `has_building` for each building."""
         children = [has_building(building) for building in buildings]
         if single_building is not None:

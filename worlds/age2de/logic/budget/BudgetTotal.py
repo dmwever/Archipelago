@@ -16,15 +16,7 @@ from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
 from .BudgetItem import PricedLocation
 from .BudgetOrder import CostWaiver, budget_order
-from .BudgetSource import (
-    Bootstrap,
-    GatherMethodChoice,
-    Part,
-    ScenarioResourceOrigin,
-    bootstrap,
-    income,
-    pays,
-)
+from .BudgetSource import Bootstrap, Part, ScenarioResourceOrigin, ScenarioResourceOrigins
 from .Need import Need
 from .Requirement import Requirement
 
@@ -81,19 +73,19 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             requirement = Requirement(need, waived)
             needs.append(need)
             costs.append(tuple(requirement.cost.items()))
-            parts.append(order.seed_parts(need, requirement, waived))
+            parts.append(order.resource_origins.seed_parts(need, requirement, waived,
+                                                           order.start_age))
 
         # Tuples throughout: a resolved rule has to hash. Its children were resolved once, by
         # the order: the waivers' rules, then every gather method's.
         return self.Resolved(
             (
                 *(waiver.rule for waiver in waivers),
-                *order.gather_method_rules,
+                *order.resource_origins.rules,
             ),
             tuple(needs),
             tuple(tuple(waiver.buildings) for waiver in waivers),
-            tuple(order.resource_origins),
-            order.gather_method_choices,
+            order.resource_origins,
             tuple(parts),
             self.scenario,
             self.location,
@@ -112,8 +104,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         needs: tuple[Need, ...]
         waived_buildings: tuple[tuple[Age2BuildingData, ...], ...]
         """The buildings each waiver stands up, one entry per waiver - per bit of the mask."""
-        resource_origins: tuple[ScenarioResourceOrigin, ...]
-        gather_method_choices: tuple[GatherMethodChoice, ...]
+        resource_origins: ScenarioResourceOrigins
         parts: tuple[tuple[tuple[Part, ...], ...], ...]
         scenario: Age2ScenarioData
         location: PricedLocation
@@ -140,36 +131,32 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             )
 
         def usable(self, state: CollectionState) -> list[int]:
-            """The gather method choices switched on."""
+            """The dropsite choices whose gather method is switched on."""
             on = [rule(state) for rule in self.children[len(self.waived_buildings):]]
             return [
-                index for index, choice in enumerate(self.gather_method_choices)
+                index for index, choice in enumerate(self.resource_origins.choices)
                     if on[choice.rule]
             ]
 
-        def _working_origins(self, state: CollectionState) -> set[int]:
-            return {self.gather_method_choices[index].source for index in self.usable(state)}
-
         def sources_on(self, state: CollectionState) -> list[ScenarioResourceOrigin]:
-            working = self._working_origins(state)
+            working = self.resource_origins.working(self.usable(state))
             return [
-                origin for index, origin in enumerate(self.resource_origins)
+                origin for index, origin in enumerate(self.resource_origins.origins)
                     if index in working
             ]
 
         def allowance(self, state: CollectionState) -> dict[Resource, int]:
-            return income(self._working_origins(state), self.resource_origins)
+            origins = self.resource_origins
+            return origins.income(origins.working(self.usable(state)))
 
         def bootstrap(self, state: CollectionState) -> Bootstrap | None:
-            """The ways that pay for it, and the seeds they add to the total, if any do."""
+            """The choices that pay for it, and the seeds they add to the total, if any do."""
             mask = self.mask(state)
-            return bootstrap(
+            return self.resource_origins.bootstrap(
                 self.pile(state),
                 dict(self.costs[mask]),
                 self.usable(state),
-                self.gather_method_choices,
                 self.parts[mask],
-                self.resource_origins,
             )
 
         def pile(self, state: CollectionState) -> dict[Resource, int]:
@@ -192,13 +179,11 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             pile, need = self.pile(state), dict(self.costs[mask])
             if all(pile[resource] >= amount for resource, amount in need.items()):
                 return True   # before asking which sources are on
-            return pays(
+            return self.resource_origins.pays(
                 pile,
                 need,
                 self.usable(state),
-                self.gather_method_choices,
                 self.parts[mask],
-                self.resource_origins,
             )
 
         @override
@@ -241,7 +226,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             if found is None:
                 return []
             return sorted({
-                self.resource_origins[self.gather_method_choices[way].source].name
+                self.resource_origins.origins[self.resource_origins.choices[way].source].name
                     for way in found.ways
             })
 

@@ -16,18 +16,7 @@ from ..scenarios.ScenarioAgeLogic import PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
-from .BudgetSource import (
-    RESOURCE_ORIGINS,
-    SOURCE_ALLOWANCE,
-    GatherMethodChoice,
-    Part,
-    ResolvedGatherMethod,
-    ScenarioResourceOrigin,
-    dropsite_choices,
-    pays,
-    relic_allowance,
-    seed_parts,
-)
+from .BudgetSource import ScenarioResourceOrigins
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import CLIMBED_AGES, AgeUpBuildings, Need
 from .Requirement import Requirement
@@ -67,15 +56,6 @@ class OrderPlace(NamedTuple):
     """The seed's rank for a sampled entry."""
 
 
-class DropsiteChoice(NamedTuple):
-    """One gather method with one pick of dropsite: its origin and the method's rule by index
-    (into gather_method_rules), its seed, and the buildings picked."""
-    source: int
-    rule: int
-    seed: Need
-    site: list[Age2BuildingData]
-
-
 @functools.cache
 def budget_item(location: PricedLocation) -> BudgetItem:
     """The one item per location, so each tree is built once whatever the scenario."""
@@ -100,9 +80,6 @@ class _Priced:
 
 
 def budget_order(scenario: 'ScenarioLogic', world: 'Age2World') -> 'BudgetOrder':
-    """The scenario's budget order, built once and kept on Logic.
-    Rules have to be resolvable, so this is for resolving BudgetTotal and for what reads the
-    result once rules exist (the spoiler)."""
     logic = scenario.logic
     key = scenario.scenario
     if key not in logic.budget_orders:
@@ -133,11 +110,7 @@ class BudgetOrder:
         self.standing_buildings = self._standing_buildings()
         self._could_have_building: dict[Age2BuildingData, bool] = {}
 
-        self.resource_origins = self._resource_origins()
-        self.dropsite_choices = self._dropsite_choices()
-        self.gather_method_choices: tuple[GatherMethodChoice, ...] = tuple(
-            GatherMethodChoice(choice.source, choice.rule) for choice in self.dropsite_choices
-        )
+        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world, self.settle)
 
         self.required_purchases = {
             location: rule for location, rule in scenario.starting_state.required_purchases.items()
@@ -148,14 +121,6 @@ class BudgetOrder:
         self._precursors: dict[PricedLocation, list[_Priced]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
-
-    @property
-    def gather_method_rules(self) -> list[Rule.Resolved]:
-        """Every gather method's rule, flat, in the order DropsiteChoice.rule counts them."""
-        return [
-            method.rule for origin in self.resource_origins
-                for method in origin.gather_methods
-        ]
 
     def _standing_buildings(self) -> dict[Age2BuildingData, Rule]:
         standing = self.scenario.starting_state.starts_with_building
@@ -178,73 +143,15 @@ class BudgetOrder:
             self._could_have_building[building] = not self.impossible(has_building)
         return self._could_have_building[building]
 
-    def _resource_origins(self) -> list[ScenarioResourceOrigin]:
-        economy = self.scenario.economy
-        relic_sum = relic_allowance(self.scenario.scenario)
-        origins: list[ScenarioResourceOrigin] = []
-
-        for origin in RESOURCE_ORIGINS:
-            resolved_methods: list[ResolvedGatherMethod] = []
-            for method in origin.gather_methods:
-                # Resolved once: every budget total in the scenario reuses it.
-                resolved = method.rule(economy).resolve(self.world)
-                if resolved.always_false:
-                    continue
-                seed = method.seed.by_scenario(
-                    self.start_age,
-                    self.age_up_buildings,
-                    self.could_have,
-                    self.choice_order,
-                )
-                resolved_methods.append(ResolvedGatherMethod(resolved, seed))
-
-            allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
-            if resolved_methods and allowance:
-                origins.append(
-                    ScenarioResourceOrigin(
-                        origin.name,
-                        origin.resource,
-                        allowance,
-                        tuple(resolved_methods),
-                    )
-                )
-        return origins
-
-    def _dropsite_choices(self) -> list[DropsiteChoice]:
-        """Each gather method once per pick of dropsite."""
-        choices: list[DropsiteChoice] = []
-        rule_index = 0   # where the method's rule sits in gather_method_rules
-
-        for index, origin in enumerate(self.resource_origins):
-            for method in origin.gather_methods:
-                choices += [
-                    DropsiteChoice(index, rule_index, method.seed, site)
-                        for site in dropsite_choices(method.seed)
-                ]
-                rule_index += 1
-        return choices
-
     def max_budget(self) -> dict[Resource, int]:
         """Every starting resource in the pool, and every source the scenario could ever count."""
         max_budget = {
             resource: self.world.pool.resources.totals[resource] for resource in SAMPLED_RESOURCES
         }
 
-        for origin in self.resource_origins:
-            max_budget[origin.resource] += origin.allowance
+        for resource, amount in self.resource_origins.allowance().items():
+            max_budget[resource] += amount
         return max_budget
-
-    def seed_parts(
-        self,
-        need: Need,
-        requirement: Requirement,
-        waived: frozenset[Age2BuildingData],
-    ) -> tuple[tuple[Part, ...], ...]:
-        """What each way's seed buys, against this running total."""
-        return tuple(
-            seed_parts(choice.seed, choice.site, need, requirement, waived, self.start_age)
-                for choice in self.dropsite_choices
-        )
 
     def priced(self, location: PricedLocation) -> _Priced | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
@@ -256,14 +163,16 @@ class BudgetOrder:
             return None
         return _Priced(item, item.need_in(self.scenario))
 
-    def plan(self, budget_items: Iterable[_Priced]) -> Need:
-        need: Need = sum((budget_item.need for budget_item in budget_items), Need())
+    def settle(self, need: Need) -> Need:
         return need.by_scenario(
             self.start_age,
             self.age_up_buildings,
             self.could_have,
             self.choice_order,
         )
+
+    def plan(self, budget_items: Iterable[_Priced]) -> Need:
+        return self.settle(sum((budget_item.need for budget_item in budget_items), Need()))
 
     def _build_order(self) -> tuple[list[_Priced], list[_Priced]]:
         """The order, and what was pruned from it."""
@@ -336,20 +245,23 @@ class BudgetOrder:
         }
 
         every_standing_building = frozenset(self.standing_buildings)
-        every_gather_method_choice = list(range(len(self.gather_method_choices)))
         funded: list[_Priced] = []
         pruned: list[_Priced] = []
 
         for budget_item in ordered_budget:
             need = self.plan(funded + [budget_item])
             requirement = Requirement(need, every_standing_building)
-            can_fund = pays(
+            parts = self.resource_origins.seed_parts(
+                need,
+                requirement,
+                every_standing_building,
+                self.start_age,
+            )
+            can_fund = self.resource_origins.pays(
                 pile,
                 dict(requirement.cost),
-                every_gather_method_choice,
-                self.gather_method_choices,
-                self.seed_parts(need, requirement, every_standing_building),
-                self.resource_origins,
+                self.resource_origins.every_choice,
+                parts,
             )
 
             (funded if can_fund else pruned).append(budget_item)
