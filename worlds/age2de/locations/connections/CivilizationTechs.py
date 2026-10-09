@@ -8,6 +8,7 @@ Age2CivData.HUNS.included_techs = [
     Age2TechData.MARAUDERS_HUNS,
 ]
 Age2CivData.FRANKS.included_techs = [
+    Age2TechData.HEAVY_MOUNTED_CROSSBOWMAN,
     Age2TechData.BEARDED_AXE_FRANKS,
     Age2TechData.ELITE_THROWING_AXEMAN_FRANKS,
     Age2TechData.CHIVALRY_FRANKS,
@@ -53,7 +54,7 @@ Age2CivData.HUNS.excluded_techs = [
 ]
 Age2CivData.FRANKS.excluded_techs = [
     Age2TechData.GUILDS,
-    Age2TechData.TREADMILL_CRANE,
+    Age2TechData.HEAVY_CAVALRY_ARCHER,
     Age2TechData.KEEP,
     Age2TechData.BOMBARD_TOWER_TECH,
     Age2TechData.BRACER,
