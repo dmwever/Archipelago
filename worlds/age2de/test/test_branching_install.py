@@ -16,21 +16,20 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from .test_campaign_bundle import AGEIPELAGO_BUNDLES, SEED
+from .test_campaign_bundle import AGEIPELAGO_ROOT, SEED
 from ..AoE2ScenarioParser.datasets.effects import EffectId
 from ..AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 from ..campaign import ScenarioParser
-from ..campaign.CampaignReader import Campaign
 from ..client.handlers.InstallHandler import InstallHandler
 from ..generation import Identity
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Locations import (TYPE_TO_LOCATIONS, Age2LocationType,
                                    Age2ScenarioLocationData)
-from ..locations.Scenarios import Age2ScenarioData
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS, Age2ScenarioData
 from ..Options import ScenarioBranching
 
-AGEIPELAGO_XS = AGEIPELAGO_BUNDLES.parent / "xs"
-AGEIPELAGO_SCENARIOS = AGEIPELAGO_BUNDLES.parent / "scenario"
+AGEIPELAGO_XS = AGEIPELAGO_ROOT / "xs"
+AGEIPELAGO_SCENARIOS = AGEIPELAGO_ROOT / "scenario"
 BRANCHING_SCENARIOS = (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_ATTILA_4,
                        Age2ScenarioData.AP_JOAN_2, Age2ScenarioData.AP_JOAN_3)
 WRAPPER = re.compile(r"void\s+(\w+)\s*\(\s*\)\s*\{(.*?)\}", re.DOTALL)
@@ -69,9 +68,11 @@ def read(body: bytes) -> AoE2DEScenario:
         return AoE2DEScenario.from_file(str(source))
 
 
-def bundle_bodies(campaign: Age2CampaignData) -> dict[str, bytes]:
-    path = AGEIPELAGO_BUNDLES / Identity.source_campaign_file_name(campaign.file_stem)
-    return {scenario.file_name: scenario.body for scenario in Campaign(str(path)).scenarios}
+def scenario_bodies(campaign: Age2CampaignData) -> dict[str, bytes]:
+    """The chapters as they sit on disk, which is what /install now packs a bundle from."""
+    return {f"{scenario.file_stem}.aoe2scenario":
+            (AGEIPELAGO_SCENARIOS / f"{scenario.file_stem}.aoe2scenario").read_bytes()
+            for scenario in CAMPAIGN_TO_SCENARIOS[campaign]}
 
 
 def branching_locations(scenario: Age2ScenarioData) -> list[Age2ScenarioLocationData]:
@@ -224,7 +225,7 @@ class TestWhatTheInstallDecides(unittest.TestCase):
         self.assertEqual(set(parsed), set(BRANCHING_SCENARIOS))
 
 
-@unittest.skipUnless(AGEIPELAGO_BUNDLES.is_dir(), "Set AGEIPELAGO_PATH to run this")
+@unittest.skipUnless(AGEIPELAGO_SCENARIOS.is_dir(), "Set AGEIPELAGO_PATH to run this")
 class TestAgainstTheAgeipelagoCheckout(unittest.TestCase):
     def test_every_trigger_call_resolves_to_its_recorded_location_id(self):
         found = {}
@@ -240,7 +241,7 @@ class TestAgainstTheAgeipelagoCheckout(unittest.TestCase):
 
     def test_every_branching_location_has_exactly_one_trigger_in_the_bundles(self):
         for campaign in Age2CampaignData:
-            bodies = bundle_bodies(campaign)
+            bodies = scenario_bodies(campaign)
             for scenario in BRANCHING_SCENARIOS:
                 file_name = f"{scenario.file_stem}.aoe2scenario"
                 if file_name not in bodies:
@@ -254,7 +255,7 @@ class TestAgainstTheAgeipelagoCheckout(unittest.TestCase):
                     self.assertEqual(counted, {name: 1 for name in wanted})
 
     def test_a_real_scenario_survives_a_branching_pass(self):
-        body = bundle_bodies(Age2CampaignData.ATTILA)["AP_Attila_1.aoe2scenario"]
+        body = scenario_bodies(Age2CampaignData.ATTILA)["AP_Attila_1.aoe2scenario"]
         before = read(body).trigger_manager.triggers
         names = [trigger.name for trigger in before]
         for type, turned_off in ((Age2LocationType.OBJECTIVE_BRANCHING_ALL, 5),
