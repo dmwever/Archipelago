@@ -1,5 +1,3 @@
-"""A scenario's budget order: the sample by age and the scenario's rank, each entry after its
-precursors, less what could never fit the most the scenario could ever have."""
 from __future__ import annotations
 
 import dataclasses
@@ -33,17 +31,30 @@ if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
 
-_ITEMS: dict[type, type[BudgetItem]] = {Age2AgeData: AgeBudgetItem,
-                                        Age2BuildingData: BuildingBudgetItem,
-                                        Age2TechData: TechBudgetItem,
-                                        Age2UnitData: UnitBudgetItem,
-                                        Age2BaseData: BaseBudgetItem}
+_ITEMS: dict[type, type[BudgetItem]] = {
+    Age2AgeData: AgeBudgetItem,
+    Age2BuildingData: BuildingBudgetItem,
+    Age2TechData: TechBudgetItem,
+    Age2UnitData: UnitBudgetItem,
+    Age2BaseData: BaseBudgetItem
+}
 
 
 class CostWaiver(NamedTuple):
     rule: Rule.Resolved
     buildings: list[Age2BuildingData]
     purchases: list[PricedLocation]
+
+
+class OrderPlace(NamedTuple):
+    """Where an entry goes in a scenario's order, compared field by field: by age, then the
+    scenario's own entries - its purchases, then its base - ahead of the sample, then the sample
+    in the seed's rank."""
+    age: Age2AgeData
+    from_seed: bool
+    """True if from the world's BudgetPool."""
+    rank: int
+    """The seed's rank for a sampled entry."""
 
 
 class DropsiteChoice(NamedTuple):
@@ -156,8 +167,6 @@ class BudgetOrder:
         return self._could_have_building[building]
 
     def _resource_origins(self) -> list[ScenarioOrigin]:
-        """The resource origins this scenario could ever count toward its budget, each with the
-        gather methods it could use here and the seed each is paid for with."""
         economy = self.scenario.economy
         relic_sum = relic_allowance(self.scenario.scenario)
         origins = []
@@ -166,7 +175,7 @@ class BudgetOrder:
             for method in origin.gather_methods:
                 resolved = method.rule(economy).resolve(self.world)   # once: every budget total reuses it
                 if not resolved.always_false:
-                    resolved_methods.append(ResolvedGatherMethod(resolved, method.seed.in_scenario(
+                    resolved_methods.append(ResolvedGatherMethod(resolved, method.seed.by_scenario(
                         self.start_age, self.age_up_buildings, self.could_have,
                         self.choice_order)))
             allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
@@ -177,11 +186,13 @@ class BudgetOrder:
 
     def max_budget(self) -> dict[Resource, int]:
         """Every starting resource in the pool, and every source the scenario could ever count."""
-        budget = {resource: self.world.pool.resources.totals[resource]
-                  for resource in SAMPLED_RESOURCES}
+        max_budget = {
+            resource: self.world.pool.resources.totals[resource] for resource in SAMPLED_RESOURCES
+        }
+
         for origin in self.resource_origins:
-            budget[origin.resource] += origin.allowance
-        return budget
+            max_budget[origin.resource] += origin.allowance
+        return max_budget
 
     def seed_parts(self, need: Need, requirement: Requirement,
                    waived: frozenset[Age2BuildingData]) -> tuple[tuple[Part, ...], ...]:
@@ -200,70 +211,51 @@ class BudgetOrder:
             return None
         return _Priced(item, item.charges_in_scenario(self.scenario))
 
-    def plan(self, entries: Iterable[_Priced]) -> Need:
-        return sum((entry.need for entry in entries), Need()).in_scenario(
-            self.start_age, self.age_up_buildings, self.could_have, self.choice_order)
+    def plan(self, budget_items: Iterable[_Priced]) -> Need:
+        need: Need = sum((budget_item.need for budget_item in budget_items), Need())
+        return need.by_scenario(
+            self.start_age,
+            self.age_up_buildings,
+            self.could_have,
+            self.choice_order
+        )
 
     def _build_order(self) -> tuple[list[_Priced], list[_Priced]]:
-        """The order, and what was pruned from it: every entry, each after its precursors, less
-        what could never fit the most the scenario could ever have."""
+        """The order, and what was pruned from it."""
         self._initial_order = self._entries()
-        self._precursors = {entry.location: self.precursors(entry)
-                            for entry in self._initial_order}
-        return self._prune(self._with_precursors())
+        
+        self._precursors = {
+            entry.location: self.precursors(entry) for entry in self._initial_order
+        }
+
+        return self._prune_order(self._with_precursors())
 
     def _entries(self) -> list[_Priced]:
-        """The scenario's own purchases, its base, and the seed's sample, each as the scenario
-        pays for it - less what its own rule could never allow here - by age. Within an age the
-        purchases come first, then the base, then the sample in the seed's rank."""
+        """The scenario's own purchases, its base, and the seed's sample."""
         budget = self.world.pool.budget
-        purchases = self.scenario.starting_state.required_purchases
+        required_purchases = self.scenario.starting_state.required_purchases
+
+        # Added in order: scenario item, starting base, budget entries.
         items: list[BudgetItem] = [
-            *(ScenarioBudgetItem(budget_item(location)) for location in purchases),
+            *(ScenarioBudgetItem(budget_item(location)) 
+                for location in required_purchases),
             budget_item(BASE),
-            *(budget_item(location) for location in budget.entries
-              if location not in purchases),
+            *(budget_item(location)
+                for location in budget.entries
+                    if location not in required_purchases),
         ]
 
-        def place(entry: _Priced) -> tuple[Age2AgeData, int, int]:
+        def place(entry: _Priced) -> OrderPlace:
             if entry.item.first_in_age:
-                return entry.age, 0, 0   # the sort is stable: purchases, then the base
-            return entry.age, 1, budget.rank[entry.location]
+                return OrderPlace(entry.age, from_seed=False, rank=0)
+            return OrderPlace(entry.age, from_seed=True, rank=budget.rank[entry.location])
 
         return sorted(filter(None, map(self._priced, items)), key=place)
-
-    def _with_precursors(self) -> list[_Priced]:
-        """Every entry, each after its precursors, each location once - where it first comes
-        (a dict keeps a key where it was first put)."""
-        placed: dict[PricedLocation, _Priced] = {}
-        for entry in self._initial_order:
-            for precursor in (*self._precursors[entry.location], entry):
-                placed[precursor.location] = precursor
-        return list(placed.values())
-
-    def _prune(self, ordered: list[_Priced]) -> tuple[list[_Priced], list[_Priced]]:
-        """Walk the order, dropping each entry that, with everything kept before it, could not
-        be paid for even at the most: every starting resource in the pool, every building that
-        can stand standing, every gather method brought in, seeds paid for."""
-        pile = {resource: self.world.pool.resources.totals[resource]
-                for resource in SAMPLED_RESOURCES}
-        every_standing_building = frozenset(self.standing_buildings)
-        every_gather_method_choice = list(range(len(self.gather_method_choices)))
-        kept: list[_Priced] = []
-        pruned: list[_Priced] = []
-        for entry in ordered:
-            need = self.plan(kept + [entry])
-            requirement = Requirement(need, every_standing_building)
-            fits = pays(pile, dict(requirement.cost), every_gather_method_choice,
-                        self.gather_method_choices,
-                        self.seed_parts(need, requirement, every_standing_building),
-                        self.resource_origins)
-            (kept if fits else pruned).append(entry)
-        return kept, pruned
 
     def precursors(self, entry: _Priced) -> list[_Priced]:
         """The locations this seed that the entry cannot be had without."""
         requirement = Requirement(self.plan([entry]), frozenset())
+
         candidates: list[PricedLocation] = [
             *self._prerequisite_buildings(requirement),
             *requirement.ages,
@@ -271,12 +263,47 @@ class BudgetOrder:
         ]
 
         pool = self.world.pool
-        found = [self._priced(item) for item in map(budget_item, candidates)
-                 if item.is_location(pool)]
+        found = [
+            self._priced(item)
+                for item in map(budget_item, candidates)
+                    if item.is_location(pool)
+        ]
         
         return sorted((precursor for precursor in found
                        if precursor is not None and precursor.location is not entry.location),
                       key=lambda precursor: (precursor.age, precursor.item.rank))
+
+    def _with_precursors(self) -> list[_Priced]:
+        placed: dict[PricedLocation, _Priced] = {}
+        for entry in self._initial_order:
+            for precursor in (*self._precursors[entry.location], entry):
+                placed[precursor.location] = precursor
+        return list(placed.values())
+
+    def _prune_order(self, ordered_budget: list[_Priced]) -> tuple[list[_Priced], list[_Priced]]:
+        pile = {
+            resource: self.world.pool.resources.totals[resource]
+                for resource in SAMPLED_RESOURCES
+        }
+
+        every_standing_building = frozenset(self.standing_buildings)
+        every_gather_method_choice = list(range(len(self.gather_method_choices)))
+        funded: list[_Priced] = []
+        pruned: list[_Priced] = []
+
+        for budget_item in ordered_budget:
+            need = self.plan(funded + [budget_item])
+            requirement = Requirement(need, every_standing_building)
+            can_fund = pays(
+                pile, dict(requirement.cost),
+                every_gather_method_choice,
+                self.gather_method_choices,
+                self.seed_parts(need, requirement, every_standing_building),
+                self.resource_origins
+            )
+
+            (funded if can_fund else pruned).append(budget_item)
+        return funded, pruned
 
     @staticmethod
     def _prerequisite_buildings(requirement: Requirement) -> list[Age2BuildingData]:
@@ -300,8 +327,6 @@ class BudgetOrder:
                 if tech.location in paid]
 
     def needed(self, dropped: frozenset[PricedLocation]) -> frozenset[PricedLocation]:
-        """What the order still needs once these purchases are unnecessary: everything but them
-        and what only they brought in."""
         if dropped not in self._needed:
             self._needed[dropped] = frozenset(
                 precursor.location for entry in self._initial_order if entry.location not in dropped
@@ -310,9 +335,6 @@ class BudgetOrder:
 
     def running_total_for(self, location: PricedLocation,
                  dropped: frozenset[PricedLocation] = frozenset()) -> Need | None:
-        """The running total up to and including this location, if the order holds it, with
-        these purchases unnecessary. The order itself never moves, and the location always pays
-        for itself, so sparing a purchase only ever takes cost away."""
         index = next((n for n, entry in enumerate(self.order) if entry.location is location),
                      None)
         if index is None:
@@ -322,7 +344,6 @@ class BudgetOrder:
                          if entry.location in needed or entry.location is location)
 
     def _waivers(self) -> list[CostWaiver]:
-        """The standing buildings and the purchases a rule can spare, gathered by rule."""
         waivers: list[CostWaiver] = []
 
         def waiver(rule: Rule) -> CostWaiver:

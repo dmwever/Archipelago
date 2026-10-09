@@ -45,8 +45,12 @@ class Need:
     """What leaves each age in this scenario; set by in_scenario."""
 
     def __add__(self, other: 'Need') -> 'Need':
-        return Need(self.own_price | other.own_price, self.entry_buildings | other.entry_buildings,
-                    self.building_choices | other.building_choices, max(self.needed_age, other.needed_age))
+        return Need(
+            self.own_price | other.own_price,
+            self.entry_buildings | other.entry_buildings,
+            self.building_choices | other.building_choices,
+            max(self.needed_age, other.needed_age)
+        )
 
     @staticmethod
     def pay(identity: object, cost: dict[Resource, int]) -> 'Need':
@@ -66,39 +70,45 @@ class Need:
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
-    def in_scenario(self,
-                    start: Age2AgeData,
-                    age_up_buildings: tuple[AgeUpBuildings, ...],
-                    could_have: Callable[[Age2BuildingData], bool],
-                    choice_order: Callable[[Age2BuildingData], int]) -> 'Need':
-        """Settled for one scenario: the age it starts in, what leaves each age there, and only
-        the buildings it could ever have, each set of choices in the seed's order. A set of
-        choices left empty is dropped; so is a single building the scenario can never have."""
-
-        def settled(buildings: Iterable[Age2BuildingData]) -> tuple[Age2BuildingData, ...]:
+    def by_scenario(
+        self,
+        start: Age2AgeData,
+        age_up_buildings: tuple[AgeUpBuildings, ...],
+        could_have: Callable[[Age2BuildingData], bool],
+        choice_order: Callable[[Age2BuildingData], int]
+    ) -> 'Need':
+        
+        def could_be_in_scenario(buildings: Iterable[Age2BuildingData]) -> tuple[Age2BuildingData, ...]:
             """What the scenario could have of these, in the seed's order."""
             return tuple(sorted(filter(could_have, buildings), key=choice_order))
 
-        building_choices: set[tuple[Age2BuildingData, ...]] = set()
+        possible_building_choices: set[tuple[Age2BuildingData, ...]] = set()
         for choices in self.building_choices:
-            kept = settled(choices)
-            if kept:
-                building_choices.add(kept)
+            building_in_scenario = could_be_in_scenario(choices)
+            if building_in_scenario:
+                possible_building_choices.add(building_in_scenario)
 
-        settled_age_ups: list[AgeUpBuildings] = []
-        for age_up in age_up_buildings:
-            single_building = age_up.single_building
+        possible_age_up_buildings: list[AgeUpBuildings] = []
+        for age_up_building in age_up_buildings:
+            single_building = age_up_building.single_building
             if single_building is not None and not could_have(single_building):
                 single_building = None
-            settled_age_ups.append(AgeUpBuildings(age_up.age, settled(age_up.choices),
-                                                  single_building))
+            possible_age_up_buildings.append(
+                AgeUpBuildings(
+                    age_up_building.age,
+                    could_be_in_scenario(age_up_building.choices),
+                    single_building
+                )
+            )
 
         # Frozen and tupled again: a Need is kept in resolved rules, which hash.
-        return dataclasses.replace(self,
-                                   building_choices=frozenset(building_choices),
-                                   needed_age=max(start, self.needed_age),
-                                   starting_age=start,
-                                   age_up_buildings=tuple(settled_age_ups))
+        return dataclasses.replace(
+            self,
+            building_choices=frozenset(possible_building_choices),
+            needed_age=max(start, self.needed_age),
+            starting_age=start,
+            age_up_buildings=tuple(possible_age_up_buildings)
+        )
 
     def own_cost(self) -> dict[Resource, int]:
         cost: dict[Resource, int] = {}

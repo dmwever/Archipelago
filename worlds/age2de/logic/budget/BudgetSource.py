@@ -48,7 +48,7 @@ class Part(NamedTuple):
     in_requirement: bool
 
 
-class GatheringWay(NamedTuple):
+class GatheringMethod(NamedTuple):
     """One way to work a source: the economy rule that switches it on, less paying for its seed,
     and the seed itself."""
     rule: Callable[[ScenarioResourceLogic], Rule]
@@ -61,7 +61,7 @@ class ResourceOrigin:
     switches the way on, less paying for its seed, and the seed itself."""
     name: str
     resource: Resource
-    gather_methods: list[GatheringWay]
+    gather_methods: list[GatheringMethod]
     per_relic: bool = False
     """Worth 50 gold a relic rather than the flat 250."""
 
@@ -71,33 +71,33 @@ _MONKS = UnitBudgetItem(Age2UnitData.MONK).node              # a Monastery, a Mo
 
 RESOURCE_ORIGINS: list[ResourceOrigin] = [
     ResourceOrigin("hunt", Resource.FOOD,
-                 [GatheringWay(lambda economy: economy.can_hunt(), Need.one_of(*HUNT_DROPSITES))]),
+                [GatheringMethod(lambda economy: economy.can_hunt(), Need.one_of(*HUNT_DROPSITES))]),
     ResourceOrigin("herd", Resource.FOOD,
-                 [GatheringWay(lambda economy: economy.can_herd(), Need.one_of(*FOOD_DROPSITES))]),
+                [GatheringMethod(lambda economy: economy.can_herd(), Need.one_of(*FOOD_DROPSITES))]),
     ResourceOrigin("forage", Resource.FOOD,
-                 [GatheringWay(lambda economy: economy.can_forage(), Need.one_of(*FOOD_DROPSITES))]),
+                [GatheringMethod(lambda economy: economy.can_forage(), Need.one_of(*FOOD_DROPSITES))]),
     ResourceOrigin("fish", Resource.FOOD,
-                 [GatheringWay(lambda economy: economy.can_fish_from_shore(),
-                   Need.one_of(*FISHERMAN_DROPSITES)),
-                  GatheringWay(lambda economy: economy.can_fish_by_boat(seeded=False), _BOATS)]),
+                [
+                    GatheringMethod(lambda economy: economy.can_fish_from_shore(), Need.one_of(*FISHERMAN_DROPSITES)),
+                    GatheringMethod(lambda economy: economy.can_fish_by_boat(seeded=False), _BOATS)
+                ]),
     ResourceOrigin("chop", Resource.WOOD,
-                 [GatheringWay(lambda economy: economy.can_chop_some(), Need.one_of(*WOOD_DROPSITES))]),
+                [GatheringMethod(lambda economy: economy.can_chop_some(), Need.one_of(*WOOD_DROPSITES))]),
     ResourceOrigin("mine", Resource.GOLD,
-                 [GatheringWay(lambda economy: economy.can_mine_some(), Need.one_of(*GOLD_DROPSITES))]),
+                [GatheringMethod(lambda economy: economy.can_mine_some(), Need.one_of(*GOLD_DROPSITES))]),
     ResourceOrigin("oysters", Resource.GOLD,
-                 [GatheringWay(lambda economy: economy.can_gather_oysters_from_shore(),
-                   Need.one_of(*FISHERMAN_DROPSITES)),
-                  GatheringWay(lambda economy: economy.can_gather_oysters_by_boat(seeded=False), _BOATS)]),
+                [
+                    GatheringMethod(lambda economy: economy.can_gather_oysters_from_shore(), Need.one_of(*FISHERMAN_DROPSITES)),
+                    GatheringMethod(lambda economy: economy.can_gather_oysters_by_boat(seeded=False), _BOATS)
+                ]),
     ResourceOrigin("whales", Resource.GOLD,
-                 [GatheringWay(lambda economy: economy.can_hunt_whales(seeded=False), _BOATS)]),
+                [GatheringMethod(lambda economy: economy.can_hunt_whales(seeded=False), _BOATS)]),
     ResourceOrigin("quarry", Resource.STONE,
-                 [GatheringWay(lambda economy: economy.can_quarry_some(), Need.one_of(*STONE_DROPSITES))]),
+                [GatheringMethod(lambda economy: economy.can_quarry_some(), Need.one_of(*STONE_DROPSITES))]),
     ResourceOrigin("relics", Resource.GOLD,
-                 [GatheringWay(lambda economy: economy.can_collect_relics(seeded=False), _MONKS)],
+                [GatheringMethod(lambda economy: economy.can_collect_relics(seeded=False), _MONKS)],
                  per_relic=True),
 ]
-"""Shore and boat take the same fish, and the same oysters, so each is one source with two ways.
-Trade is no source here: when it is on it is an easy source of gold and wood outright."""
 
 def dropsite_chioces(seed: Need) -> list[list[Age2BuildingData]]:
     groups = sorted(seed.building_choices, key=lambda group: tuple(map(int, group)))
