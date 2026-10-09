@@ -12,8 +12,8 @@ from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 from .BudgetItem import PricedLocation
-from .GatherMethodPurchases import GatherMethodPurchase
-from .Need import Cost, Need, as_cost
+from .GatherMethodPurchase import GatherMethodPurchase
+from .Need import Cost, Need
 from .Requirement import Requirement
 from .ScenarioResourceOrigins import ScenarioResourceOrigin, ScenarioResourceOrigins
 
@@ -71,7 +71,7 @@ class CostTable:
                 RunningTotal(
                     waived,
                     need,
-                    as_cost(requirement.cost),
+                    Need.as_cost(requirement.cost),
                     purchases,
                 )
             )

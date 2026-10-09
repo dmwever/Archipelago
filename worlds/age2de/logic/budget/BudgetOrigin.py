@@ -31,9 +31,6 @@ SOURCE_ALLOWANCE = 250
 RELIC_ALLOWANCE = 50
 """What each relic a scenario can collect is worth, in gold."""
 
-def relic_allowance(scenario: Age2ScenarioData) -> int:
-    return RELIC_ALLOWANCE * ScenarioResources.total(scenario).relic_count
-
 # -- every resource origin --------------------------------------------------------------------
 
 @dataclasses.dataclass(frozen=True, eq=False)
@@ -51,6 +48,13 @@ class ResourceOrigin:
     gather_methods: list[GatheringMethod]
     per_relic: bool = False
     """Worth 50 gold a relic rather than the flat 250."""
+
+    def allowance_in_scenario(self, scenario: Age2ScenarioData) -> int:
+        """What it is worth to one scenario's budget: the flat allowance, or 50 gold for each
+        relic the scenario has to collect."""
+        if self.per_relic:
+            return RELIC_ALLOWANCE * ScenarioResources.total(scenario).relic_count
+        return SOURCE_ALLOWANCE
 
 _BOATS = UnitBudgetItem(Age2UnitData.FISHING_SHIP).node     # a Dock, and a Fishing Ship to crew
 _MONKS = UnitBudgetItem(Age2UnitData.MONK).node              # a Monastery, a Monk, the Castle Age

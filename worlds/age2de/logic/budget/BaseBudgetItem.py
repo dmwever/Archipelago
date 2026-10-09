@@ -9,7 +9,7 @@ from rule_builder.rules import Rule
 from ...locations.Buildings import Age2BuildingData
 from .BudgetItem import Age2BaseData, BudgetItem
 from .Need import Need
-from .VillagerBudgetItem import villager_food
+from .VillagerBudgetItem import VillagerBudgetItem
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -26,7 +26,7 @@ class BaseBudgetItem(BudgetItem):
     def node(self) -> Need:
         # A civilisation without Houses cannot have one, so the scenario's trim drops that group.
         return (
-            villager_food()
+            VillagerBudgetItem.villager_food()
             + Need.one_of(Age2BuildingData.TOWN_CENTER)
             + Need.one_of(Age2BuildingData.HOUSE)
         )

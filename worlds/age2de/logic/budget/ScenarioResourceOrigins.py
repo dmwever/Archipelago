@@ -3,6 +3,7 @@ running total."""
 from __future__ import annotations
 
 import dataclasses
+import itertools
 from typing import TYPE_CHECKING, Iterable, Sequence
 
 from rule_builder.rules import Rule
@@ -11,8 +12,8 @@ from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from .BudgetOrigin import RESOURCE_ORIGINS, SOURCE_ALLOWANCE, ResourceOrigin, relic_allowance
-from .GatherMethodPurchases import GatherMethodPurchase, dropsite_choices, gather_method_purchases
+from .BudgetOrigin import RESOURCE_ORIGINS, ResourceOrigin
+from .GatherMethodPurchase import GatherMethodPurchase
 from .Need import Need
 from .Requirement import Requirement
 
@@ -51,6 +52,13 @@ class DropsiteChoice:
     need: Need
     site: tuple[Age2BuildingData, ...]
 
+    @staticmethod
+    def sites(method_need: Need) -> list[tuple[Age2BuildingData, ...]]:
+        """Each way to put the method's buildings up: one pick from each of its building
+        choices."""
+        groups = sorted(method_need.building_choices, key=lambda group: tuple(map(int, group)))
+        return list(itertools.product(*groups))
+
 @dataclasses.dataclass(frozen=True, eq=False)
 class Bootstrap:
     """What paid for a total: the choices brought in, and what their purchases added to it."""
@@ -76,7 +84,6 @@ class ScenarioResourceOrigins:
         scenario: ScenarioLogic,
         world: Age2World,
     ) -> ScenarioResourceOrigins:
-        relic_sum = relic_allowance(scenario.scenario)
         origins: list[ScenarioResourceOrigin] = []
 
         for origin in RESOURCE_ORIGINS:
@@ -88,7 +95,7 @@ class ScenarioResourceOrigins:
                         ResolvedGatherMethod(resolved, scenario.budget.settle(method.need))
                     )
 
-            allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
+            allowance = origin.allowance_in_scenario(scenario.scenario)
             if methods and allowance:
                 origins.append(
                     ScenarioResourceOrigin(origin, allowance, tuple(methods))
@@ -100,7 +107,7 @@ class ScenarioResourceOrigins:
             for method in origin.gather_methods:
                 choices += [
                     DropsiteChoice(index, rule_index, method.need, site)
-                        for site in dropsite_choices(method.need)
+                        for site in DropsiteChoice.sites(method.need)
                 ]
                 rule_index += 1
 
@@ -142,7 +149,7 @@ class ScenarioResourceOrigins:
     ) -> tuple[tuple[GatherMethodPurchase, ...], ...]:
         """What each choice's gather method buys, against this running total."""
         return tuple(
-            gather_method_purchases(
+            GatherMethodPurchase.for_running_total(
                 choice.need,
                 choice.site,
                 running_total_need,

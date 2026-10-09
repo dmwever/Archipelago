@@ -17,16 +17,6 @@ CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 type Cost = tuple[tuple[Resource, int], ...]
 """A price as (resource, amount) pairs: a tuple, so whatever keeps it can hash."""
 
-def as_cost(amounts: dict[Resource, int]) -> Cost:
-    """A price as sorted (resource, amount) pairs, nothing at zero: the same whichever order the
-    amounts came in."""
-    return tuple(
-        sorted(
-            ((resource, amount) for resource, amount in amounts.items() if amount > 0),
-            key=lambda item: item[0].value,
-        )
-    )
-
 @dataclasses.dataclass(frozen=True)
 class OwnPrice:
     """What one thing costs for itself, charged once per identity: a tech, a unit line, the
@@ -62,8 +52,19 @@ class Need:
         )
 
     @staticmethod
+    def as_cost(amounts: dict[Resource, int]) -> Cost:
+        """A price as sorted (resource, amount) pairs, nothing at zero: the same whichever order
+        the amounts came in."""
+        return tuple(
+            sorted(
+                ((resource, amount) for resource, amount in amounts.items() if amount > 0),
+                key=lambda item: item[0].value,
+            )
+        )
+
+    @staticmethod
     def pay(identity: object, cost: dict[Resource, int]) -> 'Need':
-        return Need(own_price=frozenset({OwnPrice(identity, as_cost(cost))}))
+        return Need(own_price=frozenset({OwnPrice(identity, Need.as_cost(cost))}))
 
     @staticmethod
     def build(building: Age2BuildingData) -> 'Need':
