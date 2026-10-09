@@ -394,9 +394,9 @@ class TestRequiredPurchases(BudgetTestBase):
             for entry in self.budget(scenario).order:
                 resolved = BudgetTotal(scenario=scenario,
                                        location=entry.location).resolve(self.world)
-                costs = [dict(total.cost) for total in resolved.totals_by_mask]
+                costs = [dict(total.cost) for total in resolved.table.totals_by_mask]
                 for mask, bit in itertools.product(range(len(costs)),
-                                                   range(resolved.waiver_count)):
+                                                   range(len(resolved.table.waivers))):
                     with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
                         for resource, amount in costs[mask | 1 << bit].items():
                             self.assertLessEqual(amount, costs[mask].get(resource, 0))
@@ -412,13 +412,13 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
         for scenario in self.world.pool.scenarios.included:
             for entry in self.budget(scenario).order:
                 resolved = BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world)
-                if not hasattr(resolved, "resource_origins"):
-                    continue
+                if not isinstance(resolved, BudgetTotal.Resolved):
+                    continue   # not in the order: False_
                 found = {}
                 for name, identities in wanted.items():
-                    origins = resolved.resource_origins
+                    origins = resolved.table.resource_origins
                     for way, choice in enumerate(origins.choices):
-                        parts = resolved.totals_by_mask[0].seed_parts[way]
+                        parts = resolved.table.totals_by_mask[0].seed_parts[way]
                         if (origins.origins[choice.source].name == name
                                 and {part.identity for part in parts} == identities
                                 and not any(part.in_requirement for part in parts)):
@@ -434,8 +434,12 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
     @staticmethod
     def bootstrap(resolved, pile: dict, need: dict, usable: list):
         """The search, with no waiver on."""
-        return resolved.resource_origins.bootstrap(pile, need, usable,
-                                                   resolved.totals_by_mask[0].seed_parts)
+        return resolved.table.resource_origins.bootstrap(
+            pile,
+            need,
+            usable,
+            resolved.table.totals_by_mask[0].seed_parts,
+        )
 
     def pile(self, wood: int) -> dict:
         return {Resource.FOOD: 0, Resource.WOOD: wood, Resource.GOLD: 0, Resource.STONE: 0}
