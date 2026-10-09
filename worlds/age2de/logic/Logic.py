@@ -82,6 +82,10 @@ class Logic:
         
         self.goal = GoalLogic(self, world)
 
+    def is_impossible(self, rule: Rule) -> bool:
+        """Whether the rule could never be true in this world."""
+        return rule.resolve(self.world).always_false
+
     def for_scenario(self, scenario) -> ScenarioLogic:
         return self._by_scenario[scenario]
 

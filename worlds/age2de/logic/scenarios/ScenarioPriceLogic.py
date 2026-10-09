@@ -5,8 +5,6 @@ from __future__ import annotations
 import functools
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import Rule
-
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ..budget.Need import CLIMBED_AGES, AgeUpBuildings, Need
@@ -40,13 +38,10 @@ class ScenarioPriceLogic:
         """Where a building stands among choices: the seed's building order."""
         return self.world.pool.budget.building_order[building]
 
-    def is_impossible(self, rule: Rule) -> bool:
-        return rule.resolve(self.world).always_false
-
     def could_have(self, building: Age2BuildingData) -> bool:
         if building not in self._could_have_building:
             has_building = self.scenario.has_building(building)
-            self._could_have_building[building] = not self.is_impossible(has_building)
+            self._could_have_building[building] = not self.logic.is_impossible(has_building)
         return self._could_have_building[building]
 
     def settle(self, need: Need) -> Need:

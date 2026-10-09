@@ -128,7 +128,7 @@ class BudgetOrder:
         return self._priced(budget_item(location))
 
     def _priced(self, item: BudgetItem) -> _Priced | None:
-        if self.scenario.prices.is_impossible(item.scenario_rule(self.scenario)):
+        if self.scenario.logic.is_impossible(item.scenario_rule(self.scenario)):
             return None
         return _Priced(item, item.need_in(self.scenario))
 
