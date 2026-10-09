@@ -14,7 +14,6 @@ from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
 from .BudgetSource import ScenarioResourceOrigins
-from .CostWaiver import CostWaiver
 from .BuildingBudgetItem import BuildingBudgetItem
 from .Need import Need
 from .Requirement import Requirement
@@ -89,7 +88,6 @@ class BudgetOrder:
         self.world = world
 
         self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world)
-        self.cost_waivers = CostWaiver.for_scenario(scenario, world)
 
         self._precursors: dict[PricedLocation, list[_Priced]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}

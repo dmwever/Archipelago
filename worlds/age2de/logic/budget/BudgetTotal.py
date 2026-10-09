@@ -14,9 +14,9 @@ from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
+from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 from .BudgetItem import PricedLocation
 from .BudgetOrder import budget_order
-from .CostWaiver import CostWaiver
 from .BudgetSource import Bootstrap, Part, ScenarioResourceOrigin, ScenarioResourceOrigins
 from .Need import Cost, Need, as_cost
 from .Requirement import Requirement
@@ -63,14 +63,15 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         return logic.budget_totals[key]
 
     def _resolve(self, world: 'Age2World') -> Rule.Resolved:
-        order = budget_order(world.rules.logic.for_scenario(self.scenario), world)
+        scenario = world.rules.logic.for_scenario(self.scenario)
+        order = budget_order(scenario, world)
         if order.running_total_for(self.location) is None:
             return False_().resolve(world)   # not in this scenario's order
 
-        waivers = order.cost_waivers
+        waivers = scenario.budget.cost_waivers
         masks = range(1 << len(waivers))
 
-        def on(mask: int) -> list[CostWaiver]:
+        def on(mask: int) -> list[ScenarioCostWaived.Resolved]:
             """The waivers this combination holds: one bit per waiver."""
             return [waiver for bit, waiver in enumerate(waivers) if mask >> bit & 1]
 
@@ -100,14 +101,14 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 )
             )
 
-        # Tuples throughout: a resolved rule has to hash. Its children were resolved once, by
-        # the order: the waivers' rules, then every gather method's.
+        # Tuples throughout: a resolved rule has to hash. Its children were resolved once, per
+        # scenario: the waivers, then every gather method's rule.
         return self.Resolved(
             (
-                *(waiver.rule for waiver in waivers),
+                *waivers,
                 *order.resource_origins.rules,
             ),
-            tuple(waivers),
+            len(waivers),
             tuple(totals_by_mask),
             order.resource_origins,
             self.scenario,
@@ -123,8 +124,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
 
     class Resolved(NestedRule.Resolved):
         # Every field hashes: tuples, and records compared by identity.
-        waivers: tuple[CostWaiver, ...]
-        """One per bit of the mask; their rules are the first children."""
+        waiver_count: int
+        """How many of the children, from the first, are waivers: one per bit of the mask."""
         totals_by_mask: tuple[RunningTotal, ...]
         """The running total under each combination of waivers, indexed by mask."""
         resource_origins: ScenarioResourceOrigins
@@ -139,7 +140,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         # -- evaluating -----------------------------------------------------------------------
 
         def mask(self, state: CollectionState) -> int:
-            waiver_rules = self.children[:len(self.waivers)]
+            waiver_rules = self.children[:self.waiver_count]
             return sum(
                 1 << bit for bit, rule in enumerate(waiver_rules)
                     if rule(state)
@@ -150,7 +151,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
 
         def usable(self, state: CollectionState) -> list[int]:
             """The dropsite choices whose gather method is switched on."""
-            on = [rule(state) for rule in self.children[len(self.waivers):]]
+            on = [rule(state) for rule in self.children[self.waiver_count:]]
             return [
                 index for index, choice in enumerate(self.resource_origins.choices)
                     if on[choice.rule]

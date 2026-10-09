@@ -21,6 +21,7 @@ from ...locations.connections.UnitBuildings import logic_buildings
 if TYPE_CHECKING:
     from ... import Age2World
     from ...logic.ScenarioLogic import ScenarioLogic
+    from ..budget.BudgetItem import PricedLocation
 
 
 @dataclass
@@ -303,6 +304,57 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
         return f"{scenario.scenario_name} can easily gather {self.resource.name.lower()}"
 
 
+@dataclass
+class ScenarioCostWaived(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    """Whether this scenario's running totals are let off these buildings and purchases: the
+    buildings stand, or something spares the purchases. All of them answer to one rule, so the
+    budget switches them together - one bit of a budget total's mask."""
+
+    buildings: tuple[Age2BuildingData, ...] = ()
+    purchases: tuple[PricedLocation, ...] = ()
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.buildings, self.purchases)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        """The one rule they share: any of them will do to ask it."""
+        if self.buildings:
+            return scenario.starting_state.starts_with_building[self.buildings[0]]
+        return scenario.starting_state.required_purchases[self.purchases[0]]
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        let_off = []
+        if self.buildings:
+            standing = ", ".join(
+                building.location_name.removeprefix("Build ") for building in self.buildings
+            )
+            let_off.append(f"has {standing} standing")
+        if self.purchases:
+            spared = ", ".join(purchase.location_name for purchase in self.purchases)
+            let_off.append(f"is spared {spared}")
+        return f"{scenario.scenario_name} {' and '.join(let_off)}"
+
+    @override
+    def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
+        return self.Resolved(
+            self.answered(world),
+            self.describe(self.scenario),
+            self.buildings,
+            self.purchases,
+            player=world.player,
+            caching_enabled=getattr(world, "rule_caching_enabled", False),
+        )
+
+    class Resolved(ScenarioQuestion.Resolved):
+        buildings: tuple[Age2BuildingData, ...]
+        """The buildings it waives while it holds."""
+        purchases: tuple[PricedLocation, ...]
+        """The purchases it spares while it holds."""
+
+
 def _question_identity(self: ScenarioQuestion.Resolved) -> int:
     """Hash a question by what it asks, not by the answer behind it."""
     return hash((type(self).__module__, self.rule_name, self.player, self.description,
@@ -310,3 +362,4 @@ def _question_identity(self: ScenarioQuestion.Resolved) -> int:
 
 
 ScenarioQuestion.Resolved.__hash__ = _question_identity
+ScenarioCostWaived.Resolved.__hash__ = _question_identity

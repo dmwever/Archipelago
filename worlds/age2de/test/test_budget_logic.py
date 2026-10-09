@@ -396,7 +396,7 @@ class TestRequiredPurchases(BudgetTestBase):
                                        location=entry.location).resolve(self.world)
                 costs = [dict(total.cost) for total in resolved.totals_by_mask]
                 for mask, bit in itertools.product(range(len(costs)),
-                                                   range(len(resolved.waivers))):
+                                                   range(resolved.waiver_count)):
                     with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
                         for resource, amount in costs[mask | 1 << bit].items():
                             self.assertLessEqual(amount, costs[mask].get(resource, 0))

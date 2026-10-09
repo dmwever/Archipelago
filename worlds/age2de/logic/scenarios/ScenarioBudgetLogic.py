@@ -11,9 +11,11 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ..budget.Need import CLIMBED_AGES, Need
 from ..custom_logic.AgeUpRequirement import AgeUpRequirement
+from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
+    from ..budget.BudgetItem import PricedLocation
 
 class ScenarioBudgetLogic:
     def __init__(self, scenario: 'ScenarioLogic'):
@@ -50,6 +52,36 @@ class ScenarioBudgetLogic:
             building: standing[building] for building in Age2BuildingData
                 if not isinstance(standing[building], False_)
         }
+
+    @functools.cached_property
+    def cost_waivers(self) -> list[ScenarioCostWaived.Resolved]:
+        """Every waiver the scenario has: one per distinct rule among its standing buildings and
+        the rules that spare its required purchases."""
+        buildings: dict[Rule.Resolved, list[Age2BuildingData]] = {}
+        purchases: dict[Rule.Resolved, list[PricedLocation]] = {}
+
+        def group(rule: Rule) -> Rule.Resolved:
+            """The rule, resolved, with a place for what it waives the first time it comes up."""
+            resolved = rule.resolve(self.world)
+            if resolved not in buildings:
+                buildings[resolved] = []
+                purchases[resolved] = []
+            return resolved
+
+        for building, rule in self.standing_buildings.items():
+            buildings[group(rule)].append(building)
+        for location, rule in self.scenario.starting_state.required_purchases.items():
+            if not isinstance(rule, False_):   # nothing spares it
+                purchases[group(rule)].append(location)
+
+        return [
+            ScenarioCostWaived(
+                scenario=self.scenario.scenario,
+                buildings=tuple(buildings[rule]),
+                purchases=tuple(purchases[rule]),
+            ).resolve(self.world)
+                for rule in buildings
+        ]
 
     def choice_order(self, building: Age2BuildingData) -> int:
         """Where a building stands among choices: the seed's building order."""
