@@ -10,10 +10,10 @@ from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
 from .BudgetItem import BASE, BudgetItem, PricedLocation
 from .BudgetItemFactory import BudgetItemFactory
-from .BudgetSource import ScenarioResourceOrigins
 from .Need import Need
 from .Requirement import Requirement
 from .ScenarioBudgetItem import ScenarioBudgetItem
+from .ScenarioResourceOrigins import ScenarioResourceOrigins
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -174,7 +174,7 @@ class BudgetOrder:
         for budget_item in ordered_budget:
             need = self.plan(funded + [budget_item])
             requirement = Requirement(need, every_standing_building)
-            parts = self.resource_origins.seed_parts(
+            parts = self.resource_origins.gather_method_purchases(
                 need,
                 requirement,
                 every_standing_building,

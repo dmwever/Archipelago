@@ -19,7 +19,7 @@ from ..locations.Units import Age2UnitData
 from ..logic.custom_logic.ResourceAmount import contributors
 from ..logic.budget.BudgetTotal import BudgetTotal
 from ..logic.budget.Requirement import Requirement
-from ..logic.budget.BudgetSource import RELIC_ALLOWANCE, SOURCE_ALLOWANCE
+from ..logic.budget.BudgetOrigin import RELIC_ALLOWANCE, SOURCE_ALLOWANCE
 from ..Options import ShuffleVillager, Techsanity, Unitsanity
 
 HARD = dict(
@@ -281,7 +281,7 @@ class TestSourcesAndBudget(BudgetTestBase):
 
     def test_what_is_kept_could_be_paid_for(self):
         """With every starting resource, every building standing and every source brought in,
-        seeds paid for, the whole order fits: pruning keeps nothing that could never go true."""
+        purchases paid for, the whole order fits: pruning keeps nothing that could never go true."""
         for scenario in self.world.pool.scenarios.included:
             budget = self.budget(scenario)
             if not budget.order:
@@ -293,7 +293,7 @@ class TestSourcesAndBudget(BudgetTestBase):
             requirement = Requirement(need, every_waiver)
             with self.subTest(scenario.scenario_name):
                 origins = budget.resource_origins
-                parts = origins.seed_parts(need, requirement, every_waiver)
+                parts = origins.gather_method_purchases(need, requirement, every_waiver)
                 self.assertTrue(
                     origins.can_cover(pile, dict(requirement.cost), origins.every_choice, parts)
                 )
@@ -401,12 +401,12 @@ class TestRequiredPurchases(BudgetTestBase):
 
 
 class TestSourcesPayForTheirSeeds(BudgetTestBase):
-    """A source brings nothing in until its seed stands: boats want a Dock and a Fishing Ship, and
+    """A source brings nothing in until what it needs stands: boats want a Dock and a Fishing Ship, and
     the wood for them has to be in hand first - banked, or chopped by a source already working."""
 
     def find(self, wanted):
         """A resolved total in some scenario whose sources include every way `wanted` asks for:
-        name -> the part identities that way's seed must be exactly, none already bought."""
+        name -> the purchase identities that way's need must be exactly, none already bought."""
         for scenario in self.world.pool.scenarios.included:
             for entry in self.budget(scenario).order:
                 resolved = BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world)
@@ -416,10 +416,10 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
                 for name, identities in wanted.items():
                     origins = resolved.table.resource_origins
                     for way, choice in enumerate(origins.choices):
-                        parts = resolved.table.totals_by_mask[0].seed_parts[way]
+                        parts = resolved.table.totals_by_mask[0].gather_method_purchases[way]
                         if (origins.origins[choice.source].name == name
                                 and {part.identity for part in parts} == identities
-                                and not any(part.in_requirement for part in parts)):
+                                and not any(part.already_charged for part in parts)):
                             found[name] = way
                             break
                 if len(found) == len(wanted):
@@ -436,7 +436,7 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
             pile,
             need,
             usable,
-            resolved.table.totals_by_mask[0].seed_parts,
+            resolved.table.totals_by_mask[0].gather_method_purchases,
         )
 
     def pile(self, wood: int) -> dict:

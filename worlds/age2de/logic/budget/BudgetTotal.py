@@ -14,10 +14,10 @@ from ...items.Items import Resource
 from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
 from .BudgetItem import PricedLocation
-from .BudgetSource import Bootstrap
 from .CostTable import CostTable
 from .Need import Need
 from .Requirement import Requirement
+from .ScenarioResourceOrigins import Bootstrap
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -38,7 +38,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
     @override
     def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
         """Resolved once per seed and shared, like the scenario questions: the base's total sits
-        in every has_base, and its seeds and source rules are not cheap to work out again."""
+        in every has_base, and its purchases and source rules are not cheap to work out again."""
         logic = world.rules.logic
         key = (self.scenario, self.location)
         if key not in logic.budget_totals:
@@ -87,13 +87,13 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         # -- evaluating -----------------------------------------------------------------------
 
         def bootstrap(self, state: CollectionState) -> Bootstrap | None:
-            """The choices that pay for it, and the seeds they add to the total, if any do."""
+            """The choices that pay for it, and what their purchases add to the total, if any do."""
             total = self.table.total(state)
             return self.table.resource_origins.bootstrap(
                 self.pile(state),
                 dict(total.cost),
                 self.table.usable(state),
-                total.seed_parts,
+                total.gather_method_purchases,
             )
 
         def pile(self, state: CollectionState) -> dict[Resource, int]:
@@ -120,7 +120,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 pile,
                 need,
                 self.table.usable(state),
-                total.seed_parts,
+                total.gather_method_purchases,
             )
 
         @override
@@ -179,11 +179,15 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 ]
 
             found = self.bootstrap(state)
-            if found is not None:   # the total with the seeds of the sources that paid for it
-                return [
-                    ShownTotal(resource, need.get(resource, 0) + found.seeds_added[resource], True)
+            if found is not None:   # the total with what the paying sources had to buy
+                with_purchases = {
+                    resource: need.get(resource, 0) + found.purchases_added[resource]
                         for resource in SAMPLED_RESOURCES
-                        if need.get(resource, 0) + found.seeds_added[resource] > 0
+                }
+                return [
+                    ShownTotal(resource, amount, True)
+                        for resource, amount in with_purchases.items()
+                            if amount > 0
                 ]
 
             pile, allowance = self.pile(state), self.table.allowance(state)

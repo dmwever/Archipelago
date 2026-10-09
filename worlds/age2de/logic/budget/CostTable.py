@@ -12,9 +12,10 @@ from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 from .BudgetItem import PricedLocation
-from .BudgetSource import Part, ScenarioResourceOrigin, ScenarioResourceOrigins
+from .GatherMethodPurchases import GatherMethodPurchase
 from .Need import Cost, Need, as_cost
 from .Requirement import Requirement
+from .ScenarioResourceOrigins import ScenarioResourceOrigin, ScenarioResourceOrigins
 
 if TYPE_CHECKING:
     from .BudgetOrder import BudgetOrder
@@ -22,11 +23,11 @@ if TYPE_CHECKING:
 @dataclasses.dataclass(frozen=True, eq=False)
 class RunningTotal:
     """The running total under one combination of waivers: the buildings they waive, what it
-    needs, what that costs, and what each dropsite choice's seed would buy on top."""
+    needs, what that costs, and what each dropsite choice's gather method would buy on top."""
     waived: frozenset[Age2BuildingData]
     need: Need
     cost: Cost
-    seed_parts: tuple[tuple[Part, ...], ...]
+    gather_method_purchases: tuple[tuple[GatherMethodPurchase, ...], ...]
 
 @dataclasses.dataclass(frozen=True, eq=False)
 class CostTable:
@@ -61,7 +62,7 @@ class CostTable:
             )
             need = order.running_total_for(location, dropped)
             requirement = Requirement(need, waived)
-            seed_parts = order.resource_origins.seed_parts(
+            purchases = order.resource_origins.gather_method_purchases(
                 need,
                 requirement,
                 waived,
@@ -71,7 +72,7 @@ class CostTable:
                     waived,
                     need,
                     as_cost(requirement.cost),
-                    seed_parts,
+                    purchases,
                 )
             )
 
