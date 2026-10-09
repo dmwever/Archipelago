@@ -12,15 +12,15 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
-from ..scenarios.ScenarioAgeLogic import PREVIOUS
 from .AgeBudgetItem import AgeBudgetItem
 from .BaseBudgetItem import BaseBudgetItem
 from .BudgetItem import BASE, Age2BaseData, BudgetItem, PricedLocation
 from .BudgetSource import ScenarioResourceOrigins
 from .BuildingBudgetItem import BuildingBudgetItem
-from .Need import CLIMBED_AGES, AgeUpBuildings, Need
+from .Need import Need
 from .Requirement import Requirement
 from .ScenarioBudgetItem import ScenarioBudgetItem
+from .ScenarioPrices import ScenarioPrices
 from .TechBudgetItem import TechBudgetItem
 from .UnitBudgetItem import UnitBudgetItem
 from .VillagerBudgetItem import VillagerBudgetItem
@@ -96,17 +96,9 @@ class BudgetOrder:
         self.scenario = scenario
         self.world = world
 
-        ages = world.pool.ages
-        self.start_age = Age2AgeData.DARK if ages.dark_start else ages.starts_in(scenario.scenario)
-        self.age_up_buildings: tuple[AgeUpBuildings, ...] = tuple(
-            AgeUpBuildings(age, rule.buildings, rule.single_building) for age in CLIMBED_AGES
-                for rule in [scenario.ages.two_from(PREVIOUS[age])]
-        )
-
+        self.prices = ScenarioPrices(scenario, world)
         self.standing_buildings = self._standing_buildings()
-        self._could_have_building: dict[Age2BuildingData, bool] = {}
-
-        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world, self.settle)
+        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, world, self.prices)
 
         self.required_purchases = {
             location: rule for location, rule in scenario.starting_state.required_purchases.items()
@@ -118,28 +110,7 @@ class BudgetOrder:
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
         self.order, self.pruned = self._build_order()
 
-    # -- the scenario's terms -----------------------------------------------------------------
-
-    def choice_order(self, building: Age2BuildingData) -> int:
-        """Where a building stands among choices: the seed's building order."""
-        return self.world.pool.budget.building_order[building]
-
-    def is_impossible(self, rule: Rule) -> bool:
-        return rule.resolve(self.world).always_false
-
-    def could_have(self, building: Age2BuildingData) -> bool:
-        if building not in self._could_have_building:
-            has_building = self.scenario.has_building(building)
-            self._could_have_building[building] = not self.is_impossible(has_building)
-        return self._could_have_building[building]
-
-    def settle(self, need: Need) -> Need:
-        return need.by_scenario(
-            self.start_age,
-            self.age_up_buildings,
-            self.could_have,
-            self.choice_order,
-        )
+    # -- the budget -----------------------------------------------------------------------------
 
     def max_budget(self) -> dict[Resource, int]:
         """Every starting resource in the pool, and every source the scenario could ever count."""
@@ -159,12 +130,12 @@ class BudgetOrder:
         return self._priced(budget_item(location))
 
     def _priced(self, item: BudgetItem) -> _Priced | None:
-        if self.is_impossible(item.scenario_rule(self.scenario)):
+        if self.prices.is_impossible(item.scenario_rule(self.scenario)):
             return None
         return _Priced(item, item.need_in(self.scenario))
 
     def plan(self, budget_items: Iterable[_Priced]) -> Need:
-        return self.settle(sum((budget_item.need for budget_item in budget_items), Need()))
+        return self.prices.settle(sum((budget_item.need for budget_item in budget_items), Need()))
 
     # -- the order ----------------------------------------------------------------------------
 
@@ -249,7 +220,6 @@ class BudgetOrder:
                 need,
                 requirement,
                 every_standing_building,
-                self.start_age,
             )
             can_fund = self.resource_origins.can_cover(
                 pile,

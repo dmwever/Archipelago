@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Callable, Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
+
+if TYPE_CHECKING:
+    from .ScenarioPrices import ScenarioPrices
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
 
@@ -80,19 +83,14 @@ class Need:
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
-    def by_scenario(
-        self,
-        start: Age2AgeData,
-        age_up_buildings: tuple[AgeUpBuildings, ...],
-        could_have: Callable[[Age2BuildingData], bool],
-        choice_order: Callable[[Age2BuildingData], int],
-    ) -> 'Need':
+    def by_scenario(self, prices: ScenarioPrices) -> 'Need':
+        could_have = prices.could_have
 
         def could_be_in_scenario(
             buildings: Iterable[Age2BuildingData],
         ) -> tuple[Age2BuildingData, ...]:
             """What the scenario could have of these, in the seed's order."""
-            return tuple(sorted(filter(could_have, buildings), key=choice_order))
+            return tuple(sorted(filter(could_have, buildings), key=prices.choice_order))
 
         possible_building_choices: set[tuple[Age2BuildingData, ...]] = set()
         for choices in self.building_choices:
@@ -101,7 +99,7 @@ class Need:
                 possible_building_choices.add(building_in_scenario)
 
         possible_age_up_buildings: list[AgeUpBuildings] = []
-        for age_up_building in age_up_buildings:
+        for age_up_building in prices.age_up_buildings:
             single_building = age_up_building.single_building
             if single_building is not None and not could_have(single_building):
                 single_building = None
@@ -117,8 +115,8 @@ class Need:
         return dataclasses.replace(
             self,
             building_choices=frozenset(possible_building_choices),
-            needed_age=max(start, self.needed_age),
-            starting_age=start,
+            needed_age=max(prices.start_age, self.needed_age),
+            starting_age=prices.start_age,
             age_up_buildings=tuple(possible_age_up_buildings),
         )
 

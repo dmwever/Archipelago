@@ -292,7 +292,7 @@ class TestSourcesAndBudget(BudgetTestBase):
             requirement = Requirement(need, every_waiver)
             with self.subTest(scenario.scenario_name):
                 origins = budget.resource_origins
-                parts = origins.seed_parts(need, requirement, every_waiver, budget.start_age)
+                parts = origins.seed_parts(need, requirement, every_waiver)
                 self.assertTrue(
                     origins.can_cover(pile, dict(requirement.cost), origins.every_choice, parts)
                 )
@@ -478,7 +478,7 @@ class TestSourcesPayForTheirSeeds(BudgetTestBase):
 class TestCouldEverHave(BudgetTestBase):
     def test_a_fixed_force_scenario_can_build_nothing(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_1)
-        self.assertFalse(any(budget.could_have(building)
+        self.assertFalse(any(budget.prices.could_have(building)
                              for building in Age2BuildingData))
 
 

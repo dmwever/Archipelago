@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from ... import Age2World
     from ...locations.Scenarios import Age2ScenarioData
     from ..ScenarioLogic import ScenarioLogic
+    from .ScenarioPrices import ScenarioPrices
     from ..scenarios.ScenarioResourceLogic import ScenarioResourceLogic
 
 # -- what an origin is worth ------------------------------------------------------------------
@@ -229,7 +230,10 @@ class ScenarioResourceOrigins:
     """Every resource origin one scenario could bring in, each gather method it could use there,
     and each pick of dropsite for those. Frozen and tupled throughout: a resolved budget total
     keeps it, and it has to hash. It hashes by identity: there is one per scenario, shared by
-    every budget total there, and hashing its contents for each would be slow."""
+    every budget total there, and hashing its contents for each would be slow. It keeps the
+    scenario's start age, not its ScenarioPrices: a resolved rule outlives its world, and
+    holding the prices would hold the world with it."""
+    start_age: Age2AgeData
     origins: tuple[ScenarioResourceOrigin, ...]
     choices: tuple[DropsiteChoice, ...]
     """Each gather method once per pick of dropsite: what the search brings in, one at a time."""
@@ -239,7 +243,7 @@ class ScenarioResourceOrigins:
         cls,
         scenario: ScenarioLogic,
         world: Age2World,
-        settle: Callable[[Need], Need],
+        prices: ScenarioPrices,
     ) -> ScenarioResourceOrigins:
         relic_sum = relic_allowance(scenario.scenario)
         origins: list[ScenarioResourceOrigin] = []
@@ -249,7 +253,7 @@ class ScenarioResourceOrigins:
             for method in origin.gather_methods:
                 resolved = method.rule(scenario.economy).resolve(world)
                 if not resolved.always_false:
-                    methods.append(ResolvedGatherMethod(resolved, settle(method.seed)))
+                    methods.append(ResolvedGatherMethod(resolved, prices.settle(method.seed)))
 
             allowance = relic_sum if origin.per_relic else SOURCE_ALLOWANCE
             if methods and allowance:
@@ -267,7 +271,7 @@ class ScenarioResourceOrigins:
                 ]
                 rule_index += 1
 
-        return cls(tuple(origins), tuple(choices))
+        return cls(prices.start_age, tuple(origins), tuple(choices))
 
     @property
     def rules(self) -> list[Rule.Resolved]:
@@ -302,11 +306,10 @@ class ScenarioResourceOrigins:
         need: Need,
         requirement: Requirement,
         waived: frozenset[Age2BuildingData],
-        start: Age2AgeData,
     ) -> tuple[tuple[Part, ...], ...]:
         """What each choice's seed buys, against this running total."""
         return tuple(
-            seed_parts(choice.seed, choice.site, need, requirement, waived, start)
+            seed_parts(choice.seed, choice.site, need, requirement, waived, self.start_age)
                 for choice in self.choices
         )
 

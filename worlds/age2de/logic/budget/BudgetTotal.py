@@ -89,7 +89,6 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 need,
                 requirement,
                 waived,
-                order.start_age,
             )
             totals_by_mask.append(
                 RunningTotal(
