@@ -86,6 +86,7 @@ Age2CivData.MONGOLS.included_units = [
 ]
 
 Age2CivData.HUNS.excluded_units = [
+    Age2UnitData.CARRACK,
     Age2UnitData.HAND_CANNONEER,
     Age2UnitData.BOMBARD_CANNON,
     Age2UnitData.CANNON_GALLEON,
@@ -108,6 +109,7 @@ Age2CivData.FRANKS.excluded_units = [
 ]
 
 Age2CivData.MONGOLS.excluded_units = [
+    Age2UnitData.CARRACK,
     Age2UnitData.HAND_CANNONEER,
     Age2UnitData.BOMBARD_CANNON,
     Age2UnitData.HALBERDIER,
