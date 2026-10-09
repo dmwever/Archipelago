@@ -163,6 +163,7 @@ class Age2UnitLineData(enum.IntEnum):
     VARANGIAN_GUARD_LINE          = 929, "Own Varangian Guard Line", "Varangian Guard Line", Age2UnitData.VARANGIAN_GUARD, Age2ItemData.UNIT_LINE_VARANGIAN_GUARD
     HEARTH_TROOP_LINE             = 930, "Own Hearth Troop Line", "Hearth Troop Line", Age2UnitData.HEARTH_TROOP, Age2ItemData.UNIT_LINE_HEARTH_TROOP
     JARL_LINE                     = 931, "Own Jarl Line", "Jarl Line", Age2UnitData.JARL, Age2ItemData.UNIT_LINE_JARL
+    HULK_LINE                     = 934, "Own Hulk Line", "Hulk Line", Age2UnitData.HULK, Age2ItemData.UNIT_LINE_HULK
     JOMSVIKING_LINE               = 932, "Own Jomsviking Line", "Jomsviking Line", Age2UnitData.JOMSVIKING, Age2ItemData.UNIT_LINE_JOMSVIKING
 
 

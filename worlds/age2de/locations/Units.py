@@ -299,6 +299,13 @@ class Age2UnitData(enum.IntEnum):
     ELITE_JARL                  = 557, "Own Elite Jarl", "Elite Jarl", 2709, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
     JOMSVIKING                  = 558, "Own Jomsviking", "Jomsviking", 2711, Age2AgeData.CASTLE, UnitType.unique_unit, 0
     ELITE_JOMSVIKING            = 559, "Own Elite Jomsviking", "Elite Jomsviking", 2712, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
+    # The Hulk line: a second Dock line alongside the Galley, available to 56 civilisations.
+    # Ids 596-598, not 560+: Age2UnitData shares one id space with Age2VillagerJobData (560+),
+    # Age2HeroData (584+) and Age2EscortUnitData (600+), and unit_location() resolves an id
+    # against all of them. 596-599 is the gap between the heroes and the escorts.
+    HULK                        = 596, "Own Hulk", "Hulk", 2626, Age2AgeData.FEUDAL, UnitType.unit, 0
+    WAR_HULK                    = 597, "Own War Hulk", "War Hulk", 2627, Age2AgeData.CASTLE, UnitType.unit_upgrade, 1
+    CARRACK                     = 598, "Own Carrack", "Carrack", 2628, Age2AgeData.IMPERIAL, UnitType.unit_upgrade, 2
 
 
 NAME_TO_UNIT: dict[str, Age2UnitData] = {unit.unit_name: unit for unit in Age2UnitData}
