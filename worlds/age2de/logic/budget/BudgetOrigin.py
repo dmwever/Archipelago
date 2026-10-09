@@ -80,7 +80,7 @@ RESOURCE_ORIGINS: list[ResourceOrigin] = [
                 Need.one_of(*FISHERMAN_DROPSITES),
             ),
             GatheringMethod(
-                lambda economy: economy.can_fish_by_boat(seeded=False),
+                lambda economy: economy.can_fish_by_boat(pays_for_need=False),
                 _BOATS,
             ),
         ],
@@ -104,7 +104,7 @@ RESOURCE_ORIGINS: list[ResourceOrigin] = [
                 Need.one_of(*FISHERMAN_DROPSITES),
             ),
             GatheringMethod(
-                lambda economy: economy.can_gather_oysters_by_boat(seeded=False),
+                lambda economy: economy.can_gather_oysters_by_boat(pays_for_need=False),
                 _BOATS,
             ),
         ],
@@ -112,7 +112,7 @@ RESOURCE_ORIGINS: list[ResourceOrigin] = [
     ResourceOrigin(
         "whales",
         Resource.GOLD,
-        [GatheringMethod(lambda economy: economy.can_hunt_whales(seeded=False), _BOATS)],
+        [GatheringMethod(lambda economy: economy.can_hunt_whales(pays_for_need=False), _BOATS)],
     ),
     ResourceOrigin(
         "quarry",
@@ -122,7 +122,7 @@ RESOURCE_ORIGINS: list[ResourceOrigin] = [
     ResourceOrigin(
         "relics",
         Resource.GOLD,
-        [GatheringMethod(lambda economy: economy.can_collect_relics(seeded=False), _MONKS)],
+        [GatheringMethod(lambda economy: economy.can_collect_relics(pays_for_need=False), _MONKS)],
         per_relic=True,
     ),
 ]

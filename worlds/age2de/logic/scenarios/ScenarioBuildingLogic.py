@@ -22,7 +22,7 @@ HUNT_DROPSITES = FOOD_DROPSITES + [B.MULE_CART]
 """A mule cart takes meat, but no other food - not fish, not herdables."""
 FISHERMAN_DROPSITES = FOOD_DROPSITES + [B.DOCK]
 FISHING_BOAT_DROPSITES = [B.DOCK, B.HARBOR]
-"""Where each kind of gatherer can drop off, here and in the budget's seeds."""
+"""Where each kind of gatherer can drop off, here and in what the budget's gather methods need."""
 
 
 class ScenarioBuildingLogic:

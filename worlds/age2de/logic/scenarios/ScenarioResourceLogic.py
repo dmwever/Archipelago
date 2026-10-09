@@ -137,15 +137,16 @@ class ScenarioResourceLogic:
                    | self.logic.resources.has_amount(Resource.WOOD,
                                                      ship.cost.get(Resource.WOOD, 0))))
 
-    def _crew(self, seeded: bool) -> Rule:
-        """Unseeded, a boat source is what the budget switches on: it pays for the ship itself."""
-        return self.can_crew_fishing_ships() if seeded else self.has_fishing_ships()
+    def _crew(self, pays_for_need: bool) -> Rule:
+        """Not paying for its need, a boat source is what the budget switches on: the budget pays
+        for the ship itself."""
+        return self.can_crew_fishing_ships() if pays_for_need else self.has_fishing_ships()
 
-    def can_fish_by_boat(self, seeded: bool = True) -> Rule:
+    def can_fish_by_boat(self, pays_for_need: bool = True) -> Rule:
         if not self.counts.deep_fish_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self._crew(seeded)
+                & self._crew(pays_for_need)
                 & self.scenario.starting_state.starting_fish)
 
     def can_fish_some(self) -> Rule:
@@ -158,25 +159,26 @@ class ScenarioResourceLogic:
                 & self.has_job(Job.OYSTER_GATHERER_MALE)
                 & self.scenario.starting_state.starting_oysters)
 
-    def can_gather_oysters_by_boat(self, seeded: bool = True) -> Rule:
+    def can_gather_oysters_by_boat(self, pays_for_need: bool = True) -> Rule:
         if not self.counts.oyster_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self._crew(seeded)
+                & self._crew(pays_for_need)
                 & self.scenario.starting_state.starting_oysters)
 
     def can_gather_oysters(self) -> Rule:
         return self.can_gather_oysters_from_shore() | self.can_gather_oysters_by_boat()
 
-    def can_hunt_whales(self, seeded: bool = True) -> Rule:
+    def can_hunt_whales(self, pays_for_need: bool = True) -> Rule:
         if not self.counts.whale_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self._crew(seeded)
+                & self._crew(pays_for_need)
                 & self.scenario.starting_state.starting_whales)
 
-    def can_collect_relics(self, seeded: bool = True) -> Rule:
-        """Unseeded, it is what the budget switches on: it pays for the Monk itself."""
+    def can_collect_relics(self, pays_for_need: bool = True) -> Rule:
+        """Not paying for its need, it is what the budget switches on: the budget pays for the
+        Monk itself."""
         if not self.counts.relic_count:
             return False_()
         monk = Age2UnitData.MONK
@@ -184,7 +186,7 @@ class ScenarioResourceLogic:
                 & self.logic.units.has_unit_items(monk)
                 & self.scenario.ages.has_reached(monk.age)
                 & self.scenario.starting_state.starting_relics)
-        if seeded:
+        if pays_for_need:
             rule = rule & self.logic.resources.has_amount(Resource.GOLD,
                                                           monk.cost.get(Resource.GOLD, 0))
         return rule
