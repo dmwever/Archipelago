@@ -381,6 +381,7 @@ class Age2ItemData(enum.IntEnum):
     UNIT_LINE_HEARTH_TROOP             = 430, "Hearth Troop Line", UnitLine(930, Age2AgeData.CASTLE)
     UNIT_LINE_JARL                     = 431, "Jarl Line", UnitLine(931, Age2AgeData.CASTLE)
     UNIT_LINE_JOMSVIKING               = 432, "Jomsviking Line", UnitLine(932, Age2AgeData.CASTLE)
+    UNIT_LINE_HULK                     = 433, "Hulk Line", UnitLine(934, Age2AgeData.FEUDAL)
 
     #500 - 599 = Unit upgrades. The equipment vocabulary, for unitsanity_items: upgrades.
     #Which units want which piece is in locations/connections/UnitUpgradeTokens.py.
@@ -781,6 +782,16 @@ class Age2ItemData(enum.IntEnum):
     TECH_ELITE_TEMPLE_GUARD_MUISCA          = 3890, "Elite Temple Guard (Muisca)",          Tech(1401, 1401, 57, Age2AgeData.IMPERIAL, True, True)
     TECH_CHAMPI_RUNNER                      = 3891, "Champi Runner",                        Tech(1402, 1402, -1, Age2AgeData.FEUDAL, True, False)
     TECH_CIRCUMNAVIGATION_PORTUGUESE        = 3892, "Circumnavigation (Portuguese)",        Tech(1404, 1404, 24, Age2AgeData.CASTLE, False, True)
+
+    # Line upgrades the catalogue was missing. Each unit's tech tree node carries a
+    # "Trigger Tech ID" naming the tech that performs its upgrade; these five had no catalogue
+    # entry, so the units they upgrade were reachable without researching anything.
+    # Ids, civs and effects read from empires2_x2_p1.dat; names from the game's string table.
+    TECH_HEAVY_MOUNTED_CROSSBOWMAN          = 3893, "Heavy Mounted Crossbowman",            Tech(1451, 1451, -1, Age2AgeData.IMPERIAL, True, False)
+    TECH_ELITE_VARANGIAN_GUARD              = 3894, "Elite Varangian Guard",                Tech(1454, 1454, -1, Age2AgeData.IMPERIAL, True, False)
+    TECH_ELITE_HEARTH_TROOP_SAXONS          = 3895, "Elite Hearth Troop (Saxons)",          Tech(1462, 1462, 60, Age2AgeData.IMPERIAL, True, True)
+    TECH_ELITE_JARL_VARANGIANS              = 3896, "Elite Jarl (Varangians)",              Tech(1472, 1472, 61, Age2AgeData.IMPERIAL, True, True)
+    TECH_ELITE_JOMSVIKING_DANES             = 3897, "Elite Jomsviking (Danes)",             Tech(1482, 1482, 62, Age2AgeData.IMPERIAL, True, True)
 
     #4000 - 4999 = Mercenaries
     

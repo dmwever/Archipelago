@@ -337,6 +337,14 @@ class Age2TechData(enum.IntEnum):
     CHAMPI_RUNNER                      = 3891, "Research Champi Runner",                         Age2ItemData.TECH_CHAMPI_RUNNER, Age2AgeData.FEUDAL, [TechOption.units, TechOption.regional], [Age2BuildingData.BARRACKS], "CHAMPI_SCOUT"
     CIRCUMNAVIGATION_PORTUGUESE        = 3892, "Research Circumnavigation (Portuguese)",         Age2ItemData.TECH_CIRCUMNAVIGATION_PORTUGUESE, Age2AgeData.CASTLE, [TechOption.generic, TechOption.unique], [Age2BuildingData.CASTLE], ""
 
+    # Line upgrades the catalogue was missing; see the note in Items.py. Research buildings are
+    # the research_locations the dat gives: 87 Archery Range, 12 Barracks, 82 Castle.
+    HEAVY_MOUNTED_CROSSBOWMAN          = 3893, "Research Heavy Mounted Crossbowman",             Age2ItemData.TECH_HEAVY_MOUNTED_CROSSBOWMAN, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.regional], [Age2BuildingData.ARCHERY_RANGE], ""
+    ELITE_VARANGIAN_GUARD              = 3894, "Research Elite Varangian Guard",                 Age2ItemData.TECH_ELITE_VARANGIAN_GUARD, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.regional], [Age2BuildingData.BARRACKS], ""
+    ELITE_HEARTH_TROOP_SAXONS          = 3895, "Research Elite Hearth Troop (Saxons)",           Age2ItemData.TECH_ELITE_HEARTH_TROOP_SAXONS, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.unique], [Age2BuildingData.CASTLE], ""
+    ELITE_JARL_VARANGIANS              = 3896, "Research Elite Jarl (Varangians)",               Age2ItemData.TECH_ELITE_JARL_VARANGIANS, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.unique], [Age2BuildingData.CASTLE], ""
+    ELITE_JOMSVIKING_DANES             = 3897, "Research Elite Jomsviking (Danes)",              Age2ItemData.TECH_ELITE_JOMSVIKING_DANES, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.unique], [Age2BuildingData.CASTLE], ""
+
 NAME_TO_TECH: dict[str, Age2TechData] = {tech.location_name: tech for tech in Age2TechData}
 ID_TO_TECH: dict[int, Age2TechData] = {tech.id: tech for tech in Age2TechData}
 
