@@ -52,7 +52,7 @@ class BudgetTestBase(bases.Age2RuleTestBase):
         )
 
     def cost_of(self, budget, location, waived: frozenset = frozenset()):
-        return Requirement(budget.plan([budget.get_priced_item(location)]), waived, budget.scenario.budget.terms)
+        return budget.requirement([budget.get_priced_item(location)], waived)
 
 
 class TestStartingBuildingsAreLetOff(BudgetTestBase):
@@ -174,9 +174,8 @@ class TestPrecursors(BudgetTestBase):
             budget = self.budget(scenario)
             for entry in budget.order:
                 with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
-                    alone = Requirement(budget.plan([entry]), frozenset(), budget.scenario.budget.terms)
-                    listed = Requirement(budget.plan([*budget.precursors(entry), entry]), frozenset(),
-                                         budget.scenario.budget.terms)
+                    alone = budget.requirement([entry])
+                    listed = budget.requirement([*budget.precursors(entry), entry])
                     self.assertEqual(alone.cost, listed.cost)
 
     def test_precursors_come_before_their_entry(self):
@@ -188,7 +187,7 @@ class TestPrecursors(BudgetTestBase):
             order = budget.order
             position = {entry.location: index for index, entry in enumerate(order)}
             for index, entry in enumerate(order):
-                charged = Requirement(budget.plan(order[:index + 1]), frozenset(), budget.scenario.budget.terms).buildings
+                charged = budget.requirement(order[:index + 1]).buildings
                 for precursor in budget.precursors(entry):
                     if precursor.location not in position:
                         continue
@@ -379,7 +378,7 @@ class TestTheRule(BudgetTestBase):
         self.assertEqual(breakdown["requirement"], resolved.requirement(state).cost)
         self.assertEqual(breakdown["scenario"], "The Scourge of God")
         self.assertIn("easy_sources", breakdown)
-        self.assertEqual(resolved.breakdown()["waived"], [])
+        self.assertTrue(breakdown["bill"])
 
     def test_the_explanation_names_the_scenario_and_totals(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_1)

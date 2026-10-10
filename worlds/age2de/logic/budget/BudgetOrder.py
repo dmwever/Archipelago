@@ -54,6 +54,14 @@ class BudgetOrder:
         total = sum((budget_item.need for budget_item in budget_items), Need())
         return self.scenario.budget.settle(total)
 
+    def requirement(
+        self,
+        budget_items: Iterable[PricedBudgetItem],
+        waived: frozenset[Age2BuildingData] = frozenset(),
+    ) -> Requirement:
+        """What these entries cost together in this scenario, with `waived` standing."""
+        return Requirement(self.plan(budget_items), waived, self.scenario.budget.terms)
+
     # -- the order ----------------------------------------------------------------------------
 
     def _build_order(self) -> list[PricedBudgetItem]:
@@ -89,7 +97,7 @@ class BudgetOrder:
 
     def precursors(self, entry: PricedBudgetItem) -> list[PricedBudgetItem]:
         """The locations this seed that the entry cannot be had without."""
-        requirement = Requirement(self.plan([entry]), frozenset(), self.scenario.budget.terms)
+        requirement = self.requirement([entry])
 
         candidates: list[PricedLocation] = [
             *self._prerequisite_buildings(requirement),

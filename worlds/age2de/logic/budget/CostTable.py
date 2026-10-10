@@ -3,12 +3,11 @@ that pick between them at runtime."""
 from __future__ import annotations
 
 import dataclasses
+import functools
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionState
-from rule_builder.rules import Rule
 
-from ...locations.Buildings import Age2BuildingData
 from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 from .BudgetItem import PricedLocation
 from .Need import Cost, Need
@@ -19,12 +18,16 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass(frozen=True, eq=False)
 class RunningTotal:
-    """The running total under one combination of waivers: the buildings they waive, what it
-    needs, what that charges, and what that costs."""
-    waived: frozenset[Age2BuildingData]
-    need: Need
+    """The running total under one combination of waivers: what it charges."""
     requirement: Requirement
-    cost: Cost
+
+    @property
+    def need(self) -> Need:
+        return self.requirement.need
+
+    @functools.cached_property
+    def cost(self) -> Cost:
+        return Need.as_cost(self.requirement.cost)
 
 @dataclasses.dataclass(frozen=True, eq=False)
 class CostTable:
@@ -57,17 +60,9 @@ class CostTable:
                     for purchase in waiver.purchases
             )
             need = order.running_total_for(location, dropped)
-            requirement = Requirement(need, waived, budget.terms)
-            totals_by_mask.append(
-                RunningTotal(waived, need, requirement, Need.as_cost(requirement.cost))
-            )
+            totals_by_mask.append(RunningTotal(Requirement(need, waived, budget.terms)))
 
         return cls(waivers, tuple(totals_by_mask))
-
-    @property
-    def rules(self) -> tuple[Rule.Resolved, ...]:
-        """Every rule the table switches on."""
-        return self.waivers
 
     def mask(self, state: CollectionState) -> int:
         """Which waivers hold: one bit each."""
@@ -75,12 +70,6 @@ class CostTable:
             1 << bit for bit, waiver in enumerate(self.waivers)
                 if waiver(state)
         )
-
-    def waivers_holding(self, state: CollectionState | None) -> list[ScenarioCostWaived.Resolved]:
-        """The waivers that hold - none, when there is no state."""
-        if state is None:
-            return []
-        return [waiver for waiver in self.waivers if waiver(state)]
 
     def total(self, state: CollectionState | None) -> RunningTotal:
         """The running total with the waivers that hold - none, when there is no state."""

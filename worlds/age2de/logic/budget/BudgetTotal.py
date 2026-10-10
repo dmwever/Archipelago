@@ -15,20 +15,37 @@ from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
 from .BudgetItem import BASE, PricedLocation
 from .CostTable import CostTable
-from .Need import Need
+from .Need import Cost, Need
 from .Requirement import Requirement
 
 if TYPE_CHECKING:
     from ... import Age2World
 
-@dataclasses.dataclass(eq=False)
-class ShownTotal:
-    """One resource as an explanation shows it: how much, whether it is covered - None when no
-    state was given to check against - and whether an easy source is what covers it."""
-    resource: Resource
-    amount: int
-    covered: bool | None
-    by_easy_source: bool = False
+@dataclasses.dataclass(frozen=True)
+class Bill:
+    """What a player is shown for one location: what it needs and what each part costs, on its
+    own. Not its running total, and nothing about what earlier entries or waivers let off - an
+    Archer and a Skirmisher both show the Archery Range they are made at."""
+    lines: tuple[tuple[str, Cost], ...]
+
+    @classmethod
+    def of(cls, requirement: Requirement) -> Bill:
+        need = requirement.need
+        lines = [
+            *((building.location_name, Need.as_cost(building.cost))
+                for building in sorted(need.entry_buildings, key=int)),
+            *((building.location_name, Need.as_cost(building.cost))
+                for building in requirement.buildings),
+            *((age.location_name, Need.as_cost(age.cost)) for age in requirement.ages),
+            *((_label(price.identity), price.cost)
+                for price in sorted(need.own_price, key=lambda price: str(price.identity))),
+        ]
+        return cls(tuple((label, cost) for label, cost in lines if cost))
+
+
+def _label(identity: object) -> str:
+    """A price's name as the player knows it: a tech, a unit line, the villager."""
+    return getattr(identity, "location_name", None) or str(identity).title()
 
 @dataclasses.dataclass
 class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
@@ -66,15 +83,19 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 for resource in SAMPLED_RESOURCES
         )
 
-        # The table's rules and the easy sources are the children, so they register as
-        # dependencies; it evaluates them itself.
+        # What the player is shown: the location on its own, with nothing standing.
+        bill = Bill.of(order.requirement([order.get_priced_item(self.location)]))
+
+        # The waivers and the easy sources are the children, so they register as dependencies;
+        # it evaluates them itself.
         return self.Resolved(
-            (*table.rules, *(rule for _, rule in easy)),
+            (*table.waivers, *(rule for _, rule in easy)),
             table,
             self.scenario,
             self.location,
             tuple((resource, contributors(resource)) for resource in SAMPLED_RESOURCES),
             easy,
+            bill,
             player=world.player,
             caching_enabled=False,
         )
@@ -92,6 +113,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         easy: tuple[tuple[Resource, Rule.Resolved], ...]
         """Each resource's easy source: while it holds, the total asks the pile for none of that
         resource. Empty for the base, which the pile alone pays for."""
+        bill: Bill
 
         skip_cache = True
         """Sums over the pile, which is no child; item_dependencies names every pile item
@@ -115,14 +137,17 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         def easy_source_holds(self, resource: Resource, state: CollectionState) -> bool:
             return any(each is resource and rule(state) for each, rule in self.easy)
 
+        def covers(self, state: CollectionState) -> dict[Resource, bool]:
+            """Each resource in the total: from the pile, or from an easy source of it."""
+            pile = self.pile(state)
+            return {
+                resource: pile[resource] >= amount or self.easy_source_holds(resource, state)
+                    for resource, amount in self.table.total(state).cost
+            }
+
         @override
         def _evaluate(self, state: CollectionState) -> bool:
-            """Every resource in the total, from the pile or from an easy source of it."""
-            pile = self.pile(state)
-            return all(
-                pile[resource] >= amount or self.easy_source_holds(resource, state)
-                    for resource, amount in self.table.total(state).cost
-            )
+            return all(self.covers(state).values())
 
         @override
         def item_dependencies(self) -> dict[str, set[int]]:
@@ -139,9 +164,8 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             """Everything the short explanation sums up, for a longer view to show."""
             requirement = self.requirement(state)
             if state is None:
-                waived, easy, pile = [], [], {}
+                easy, pile = [], {}
             else:
-                waived = sorted(self.table.total(state).waived, key=int)
                 easy = [
                     resource for resource in SAMPLED_RESOURCES
                         if self.easy_source_holds(resource, state)
@@ -150,75 +174,38 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
 
             return {
                 "scenario": self.scenario.scenario_name,
+                "bill": list(self.bill.lines),
                 "requirement": dict(requirement.cost),
-                "own": self.need(state).own_cost(),
-                "building_entries": sorted(self.need(state).entry_buildings, key=int),
-                "buildings_charged": list(requirement.buildings),
-                "ages_charged": list(requirement.ages),
-                "waived": waived,
                 "easy_sources": easy,
                 "pile": pile,
             }
 
-        def _totals(self, state: CollectionState | None) -> list[ShownTotal]:
-            cost = self.table.total(state).cost
-            if state is None:
-                return [ShownTotal(resource, amount, None) for resource, amount in cost]
-
-            pile = self.pile(state)
-            shown: list[ShownTotal] = []
-            for resource, amount in cost:
-                if pile[resource] >= amount:
-                    shown.append(ShownTotal(resource, amount, True))
-                else:
-                    easy = self.easy_source_holds(resource, state)
-                    shown.append(ShownTotal(resource, amount, easy, by_easy_source=easy))
-            return shown
-
-        @staticmethod
-        def _shown(total: ShownTotal) -> str:
-            text = f"{total.amount} {total.resource.name.lower()}"
-            return f"{text} (easy source)" if total.by_easy_source else text
-
-        @override
-        def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
-            scenario = self.scenario.scenario_name
-            parts: list[JSONMessagePart] = [
-                {"type": "text", "text": f"{scenario}: starting pile covers "},
-            ]
-            for index, total in enumerate(self._totals(state)):
-                if index:
-                    parts.append({"type": "text", "text": ", "})
-                if total.covered is None:
-                    parts.append({"type": "text", "text": self._shown(total)})
-                else:
-                    parts.append({
-                        "type": "color",
-                        "color": "green" if total.covered else "salmon",
-                        "text": self._shown(total),
-                    })
-
-            holding = self.table.waivers_holding(state)
-            if holding:
-                parts.append({"type": "text", "text": " ("})
-                for index, waiver in enumerate(holding):
+        def _json_parts(self, state: CollectionState | None) -> list[tuple[str, bool | None]]:
+            """The bill as text, each amount with whether the rule covers its resource - None
+            with no state to check against."""
+            covers = {} if state is None else self.covers(state)
+            parts: list[tuple[str, bool | None]] = [(f"{self.scenario.scenario_name}: ", None)]
+            for line, (label, cost) in enumerate(self.bill.lines):
+                parts.append((f"{', ' if line else ''}{label} (", None))
+                for index, (resource, amount) in enumerate(cost):
                     if index:
-                        parts.append({"type": "text", "text": "; "})
-                    parts.extend(waiver.explain_json(state))
-                parts.append({"type": "text", "text": ")"})
+                        parts.append((", ", None))
+                    covered = None if state is None else covers.get(resource, True)
+                    parts.append((f"{amount} {resource.name.lower()}", covered))
+                parts.append((")", None))
             return parts
 
         @override
-        def explain_str(self, state: CollectionState | None = None) -> str:
-            totals = ", ".join(self._shown(total) for total in self._totals(state))
-            scenario = self.scenario.scenario_name
-            text = f"{scenario}: starting pile covers {totals}"
+        def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
+            return [
+                {"type": "text", "text": text} if covered is None
+                else {"type": "color", "color": "green" if covered else "salmon", "text": text}
+                    for text, covered in self._json_parts(state)
+            ]
 
-            holding = self.table.waivers_holding(state)
-            if holding:
-                waived = "; ".join(waiver.explain_str(state) for waiver in holding)
-                text += f" ({waived})"
-            return text
+        @override
+        def explain_str(self, state: CollectionState | None = None) -> str:
+            return "".join(text for text, _ in self._json_parts(state))
 
         @override
         def __str__(self) -> str:

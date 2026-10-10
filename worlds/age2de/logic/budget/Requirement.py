@@ -22,6 +22,7 @@ class ScenarioTerms:
 class Requirement:
     """What a settled Need costs in one scenario once the buildings in `waived` are standing for
     free."""
+    need: Need
     cost: dict[Resource, int]
     buildings: list[Age2BuildingData]
     ages: list[Age2AgeData]
@@ -32,6 +33,7 @@ class Requirement:
         waived: frozenset[Age2BuildingData],
         terms: ScenarioTerms,
     ) -> None:
+        self.need = need
         self._waived: frozenset[Age2BuildingData] = waived
         self._owned_buildings: set[Age2BuildingData] = set(need.entry_buildings)
         self._resource_costs: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
