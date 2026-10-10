@@ -16,15 +16,15 @@ Note AP_BARBAROSSA_5 has no counts - the scan starts at chapter 2.
 from ..Scenarios import Age2ScenarioData
 from .ScenarioResources import ScenarioResourceCount, ScenarioResourceDemand, Tier
 
+Age2ScenarioData.AP_BARBAROSSA_1.demand = ScenarioResourceDemand(gold=9000, stone=3000, food=30000)
+
 Age2ScenarioData.AP_BARBAROSSA_2.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
 
-Age2ScenarioData.AP_BARBAROSSA_3.demand = ScenarioResourceDemand(gold=6000, stone=4000, food=20000)
+Age2ScenarioData.AP_BARBAROSSA_3.demand = ScenarioResourceDemand(gold=6000, stone=3000, food=20000)
 
-Age2ScenarioData.AP_BARBAROSSA_4.demand = ScenarioResourceDemand(gold=4500, stone=2000, food=15000)
+Age2ScenarioData.AP_BARBAROSSA_4.demand = ScenarioResourceDemand(gold=9000, stone=3000, food=30000)
 
-Age2ScenarioData.AP_BARBAROSSA_5.demand = ScenarioResourceDemand(gold=7500, stone=3000, food=25000)
-
-Age2ScenarioData.AP_BARBAROSSA_6.demand = ScenarioResourceDemand(gold=6000, stone=3000, food=20000)
+Age2ScenarioData.AP_BARBAROSSA_6.demand = ScenarioResourceDemand(gold=6000, stone=2000, food=20000)
 
 Age2ScenarioData.AP_BARBAROSSA_1.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=9600, stone_count=3500,
