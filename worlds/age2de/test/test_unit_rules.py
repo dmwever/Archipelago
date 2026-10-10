@@ -124,6 +124,11 @@ class TestTheBuilderBuilds(Age2RuleTestBase):
         self.assertTrue(self.can_reach(location))
         self.assertFalse(self.can_reach(location, self.state_without(self.BUILDER)))
 
+    def test_the_builder_comes_early(self):
+        """Like the House: without it nothing gets built, so fill puts it in an early sphere."""
+        world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        self.assertEqual(1, world.multiworld.early_items[world.player].get(self.BUILDER))
+
     def test_without_professions_the_builder_is_no_requirement(self):
         self.build(shuffle_villager=ShuffleVillager.option_yes)
         location = Age2BuildingData.BARRACKS.location_name
