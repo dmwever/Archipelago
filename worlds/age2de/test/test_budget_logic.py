@@ -400,6 +400,33 @@ class TestRequiredPurchases(BudgetTestBase):
                             self.assertLessEqual(amount, costs[mask].get(resource, 0))
 
 
+class TestTheTransportIsACrossing(TestRequiredPurchases):
+    """The given Transport is a crossing of its own, not a discount on building one. Nothing but
+    the ship asks for a Dock here - no Dock location, no ship units - so with the Transport in hand
+    no later location may be charged one."""
+
+    def setUp(self) -> None:
+        self.build(**{**HARD, "shuffle_buildings": {"Tech"}, "unitsanity": Unitsanity.option_none})
+
+    def test_the_transport_item_lets_later_totals_off_the_dock(self):
+        budget = self.joan_3()
+        dock = Age2BuildingData.DOCK
+        order = [entry.location for entry in budget.order]
+        self.assertNotIn(dock, order, "a Dock location would owe the Dock whatever crosses")
+
+        transport = Age2ItemData.AP_JOAN_3_TRANSPORT.item_name
+        with_boats, without_boats = self.state_without(), self.state_without(transport)
+        later = budget.order[order.index(self.SHIP) + 1:]
+        self.assertTrue(later, "nothing comes after the ship to check")
+
+        for entry in later:
+            resolved = BudgetTotal(scenario=Age2ScenarioData.AP_JOAN_3,
+                                   location=entry.location).resolve(self.world)
+            with self.subTest(entry.location.name):
+                self.assertIn(dock, resolved.requirement(without_boats).buildings)
+                self.assertNotIn(dock, resolved.requirement(with_boats).buildings)
+
+
 class TestSourcesPayForTheirSeeds(BudgetTestBase):
     """A source brings nothing in until what it needs stands: boats want a Dock and a Fishing Ship, and
     the wood for them has to be in hand first - banked, or chopped by a source already working."""
