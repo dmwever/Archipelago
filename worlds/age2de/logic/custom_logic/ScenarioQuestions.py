@@ -146,7 +146,7 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
         buildings = scenario.logic.buildings
         rule = (buildings.has_building_item(self.building)
-                & scenario.has_vils()
+                & scenario.has_builders()
                 & scenario.ages.has_reached(self.building.age))
         prerequisite = buildings.prerequisite(self.building)
         if prerequisite is not None:

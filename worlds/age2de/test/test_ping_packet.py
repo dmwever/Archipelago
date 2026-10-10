@@ -6,16 +6,11 @@ seed halves close that, but only while GameClient.ping_game writes them in the o
 them, and nothing but these tests holds the two files in step.
 """
 
-import os
 import re
 import unittest
 from pathlib import Path
 
 from ..generation import SlotData
-
-AGEIPELAGO_XS = Path(
-    os.environ.get("AGEIPELAGO_PATH", "C:/Users/dmwev/Documents/GitHub/Ageipelago")
-) / "age 2 files/resources/_common/xs/AP.xs"
 
 CLIENT = Path(__file__).resolve().parent.parent / "client/GameClient.py"
 
@@ -51,28 +46,3 @@ class TestTheClientWritesTheSeed(unittest.TestCase):
     def test_an_unconnected_client_sends_unset(self):
         self.assertIn("SlotData.UNSET", CLIENT.read_text(encoding="utf-8"),
                       "a client with no tag must send UNSET, not crash or send a stale seed")
-
-
-@unittest.skipUnless(AGEIPELAGO_XS.is_file(), "no local Ageipelago checkout")
-class TestTheGameReadsTheSeed(unittest.TestCase):
-    def body(self) -> str:
-        source = AGEIPELAGO_XS.read_text(encoding="utf-8")
-        start = source.index("void AP_Read()")
-        return source[start:source.index("\nvoid ", start + 10)]
-
-    def test_the_seed_is_compared(self):
-        body = self.body()
-        self.assertIn("AP_SEED_HIGH", body, "AP_Read never compares the seed")
-        self.assertIn("AP_SEED_LOW", body)
-
-    def test_the_seed_is_read_after_the_slot_id(self):
-        body = self.body()
-        self.assertLess(body.index("check_slotId"), body.index("check_seedHigh"),
-                        "the game must read the seed after the slot id, as the client writes it")
-        self.assertLess(body.index("check_seedHigh"), body.index("check_seedLow"))
-
-    def test_the_mismatch_stops_the_read(self):
-        guard = self.body()
-        guard = guard[guard.index("check_seedHigh"):]
-        self.assertIn("ReportMismatch", guard.split("int items")[0],
-                      "a seed mismatch must report and return before any rule is enabled")

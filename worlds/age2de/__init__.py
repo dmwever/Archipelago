@@ -17,11 +17,12 @@ from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
 from .generation.pools.BudgetPool import BudgetPool
 from .regions.UnitRegions import UnitRegions
-from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching
+from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching, ShuffleVillager
 from .items import Items
 from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
                         UnitLines, Units, VillagerJobs)
 from .locations.Techs import Age2TechData
+from .locations.VillagerJobs import Age2VillagerJobData
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, GameCosts, ScenarioResources,
                                     ScenarioStartupUnits,
@@ -256,6 +257,11 @@ class Age2World(CachedRuleBuilderWorld):
             # A civilisation that builds houses has no base without one, and no base means no easy
             # source of anything. A late House left Joan 3 starving for most of a seed.
             self.multiworld.early_items[self.player][Age2BuildingData.HOUSE.item.item_name] = 1
+
+        builder = Age2VillagerJobData.BUILDER_MALE
+        if (self.options.shuffle_villager == ShuffleVillager.option_include_professions
+                and self.pool.units.job_possible(builder)):
+            self.multiworld.early_items[self.player][builder.item.item_name] = 1
 
         for tech in self.pool.techs.shuffled:
             items.append(self.create_item(tech.item.item_name))

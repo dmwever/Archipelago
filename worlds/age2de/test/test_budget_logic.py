@@ -17,9 +17,9 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..logic.custom_logic.ResourceAmount import contributors
+from ..logic.budget.BudgetItem import BASE
 from ..logic.budget.BudgetTotal import BudgetTotal
 from ..logic.budget.Requirement import Requirement
-from ..logic.budget.BudgetOrigin import RELIC_ALLOWANCE, SOURCE_ALLOWANCE
 from ..Options import ShuffleVillager, Techsanity, Unitsanity
 
 HARD = dict(
@@ -52,7 +52,7 @@ class BudgetTestBase(bases.Age2RuleTestBase):
         )
 
     def cost_of(self, budget, location, waived: frozenset = frozenset()):
-        return Requirement(budget.plan([budget.get_priced_location(location)]), waived)
+        return budget.requirement([budget.get_priced_item(location)], waived)
 
 
 class TestStartingBuildingsAreLetOff(BudgetTestBase):
@@ -100,7 +100,7 @@ class TestAgeUps(BudgetTestBase):
 
     def test_a_feudal_start_does_not_pay_for_feudal(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_2)
-        self.assertIsNone(budget.get_priced_location(Age2AgeData.FEUDAL))
+        self.assertIsNone(budget.get_priced_item(Age2AgeData.FEUDAL))
         cost = self.cost_of(budget, Age2TechData.TOWN_WATCH)
         self.assertEqual(cost.ages, [])
 
@@ -108,7 +108,7 @@ class TestAgeUps(BudgetTestBase):
 class TestPrerequisiteTechs(BudgetTestBase):
     def test_town_patrol_pays_for_town_watch_from_the_dark_age(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
-        plan = budget.plan([budget.get_priced_location(Age2TechData.TOWN_PATROL)])
+        plan = budget.plan([budget.get_priced_item(Age2TechData.TOWN_PATROL)])
         own = plan.own_cost()
         expected = {resource: Age2TechData.TOWN_PATROL.cost.get(resource, 0)
                     + Age2TechData.TOWN_WATCH.cost.get(resource, 0) for resource in Resource}
@@ -116,14 +116,14 @@ class TestPrerequisiteTechs(BudgetTestBase):
 
     def test_a_castle_start_has_town_watch_for_free(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_4)
-        plan = budget.plan([budget.get_priced_location(Age2TechData.TOWN_PATROL)])
+        plan = budget.plan([budget.get_priced_item(Age2TechData.TOWN_PATROL)])
         self.assertEqual(plan.own_cost(), {resource: amount for resource, amount
                                           in Age2TechData.TOWN_PATROL.cost.items() if amount})
 
     def test_an_upgraded_unit_pays_for_its_upgrade_chain(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_4)
         unit = Age2UnitData.TWO_HANDED_SWORDSMAN
-        priced = budget.get_priced_location(unit)
+        priced = budget.get_priced_item(unit)
         plan = budget.plan([priced])
         charged = {
             price.identity for price in priced.need.own_price
@@ -144,8 +144,8 @@ class TestOneLineOnePurchase(BudgetTestBase):
 
     def test_two_tiers_of_a_line_cost_one_unit(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_2)
-        archer = budget.get_priced_location(Age2UnitData.ARCHER)
-        crossbow = budget.get_priced_location(Age2UnitData.CROSSBOWMAN)
+        archer = budget.get_priced_item(Age2UnitData.ARCHER)
+        crossbow = budget.get_priced_item(Age2UnitData.CROSSBOWMAN)
         self.assertIsNotNone(archer)
         self.assertIsNotNone(crossbow)
         both = budget.plan([archer, crossbow]).own_cost()
@@ -156,7 +156,7 @@ class TestOneLineOnePurchase(BudgetTestBase):
 class TestTheVillager(BudgetTestBase):
     def test_the_villager_costs_the_food_that_staffs_a_base(self):
         budget = self.budget(Age2ScenarioData.AP_JOAN_2)
-        plan = budget.plan([budget.get_priced_location(VILLAGER)])
+        plan = budget.plan([budget.get_priced_item(VILLAGER)])
         food = Age2ItemData.STARTING_VILLAGER_FOOD.type.amount
         self.assertEqual(plan.own_cost(), {Resource.FOOD: food})
 
@@ -174,8 +174,8 @@ class TestPrecursors(BudgetTestBase):
             budget = self.budget(scenario)
             for entry in budget.order:
                 with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
-                    alone = Requirement(budget.plan([entry]), frozenset())
-                    listed = Requirement(budget.plan([*budget.precursors(entry), entry]), frozenset())
+                    alone = budget.requirement([entry])
+                    listed = budget.requirement([*budget.precursors(entry), entry])
                     self.assertEqual(alone.cost, listed.cost)
 
     def test_precursors_come_before_their_entry(self):
@@ -187,7 +187,7 @@ class TestPrecursors(BudgetTestBase):
             order = budget.order
             position = {entry.location: index for index, entry in enumerate(order)}
             for index, entry in enumerate(order):
-                charged = Requirement(budget.plan(order[:index + 1]), frozenset()).buildings
+                charged = budget.requirement(order[:index + 1]).buildings
                 for precursor in budget.precursors(entry):
                     if precursor.location not in position:
                         continue
@@ -207,6 +207,25 @@ class TestPrecursors(BudgetTestBase):
                              sorted(entry.age for entry in sampled))
 
 
+class TestNeedsAddInAnyOrder(BudgetTestBase):
+    """A Need used to carry its scenario's start age and age-ups, and adding two dropped them: two
+    settled needs summed charged every age from the Dark Age, or raised a KeyError on the first
+    age-up. The terms live in Requirement now, so a Need is a plain union."""
+
+    def test_settling_then_adding_costs_what_adding_then_settling_does(self):
+        for scenario in self.world.pool.scenarios.included:
+            budget = self.budget(scenario)
+            terms, logic = budget.scenario.budget.terms, budget.scenario.budget
+            order = budget.order
+            for first, second in zip(order, order[1:]):
+                with self.subTest(f"{scenario.scenario_name}: {first.location.name} + "
+                                  f"{second.location.name}"):
+                    each = logic.settle(first.need) + logic.settle(second.need)
+                    together = logic.settle(first.need + second.need)
+                    self.assertEqual(Requirement(each, frozenset(), terms).cost,
+                                     Requirement(together, frozenset(), terms).cost)
+
+
 class TestTheTotalNeverGrows(BudgetTestBase):
     """Adding a waived building must never raise what a running total asks for, or a location
     could fall out of logic as items arrive."""
@@ -220,11 +239,11 @@ class TestTheTotalNeverGrows(BudgetTestBase):
                 plan = budget.plan(order[:end])
                 for size in range(len(waivable) + 1):
                     for waived in itertools.combinations(waivable, size):
-                        base = Requirement(plan, frozenset(waived)).cost
+                        base = Requirement(plan, frozenset(waived), budget.scenario.budget.terms).cost
                         for extra in waivable:
                             if extra in waived:
                                 continue
-                            more = Requirement(plan, frozenset((*waived, extra))).cost
+                            more = Requirement(plan, frozenset((*waived, extra)), budget.scenario.budget.terms).cost
                             for resource, amount in more.items():
                                 if amount > base.get(resource, 0):
                                     self.fail(f"{scenario.scenario_name}: waiving {extra.name} on "
@@ -247,7 +266,7 @@ class TestTheTotalNeverGrows(BudgetTestBase):
             for end in range(1, len(order) + 1):
                 plan = budget.plan(order[:end])
                 own = plan.own_cost()
-                ages = Requirement(plan, frozenset()).ages
+                ages = Requirement(plan, frozenset(), budget.scenario.budget.terms).ages
                 with self.subTest(f"{scenario.scenario_name}: entry {end}"):
                     for resource, amount in previous_own.items():
                         self.assertGreaterEqual(own.get(resource, 0), amount)
@@ -255,48 +274,66 @@ class TestTheTotalNeverGrows(BudgetTestBase):
                 previous_own, previous_ages = own, ages
 
 
-class TestSourcesAndBudget(BudgetTestBase):
-    def test_relics_add_fifty_gold_each(self):
-        budget = self.budget(Age2ScenarioData.AP_ATTILA_3)
-        relics = [origin for origin in budget.resource_origins.origins if origin.name == "relics"]
-        self.assertEqual(1, len(relics))
-        count = budget.scenario.economy.counts.relic_count
-        self.assertEqual((relics[0].resource, relics[0].allowance),
-                         (Resource.GOLD, RELIC_ALLOWANCE * count))
-
-    def test_every_other_source_is_worth_the_same(self):
-        for scenario in self.world.pool.scenarios.included:
-            for origin in self.budget(scenario).resource_origins.origins:
-                if origin.name != "relics":
-                    self.assertEqual(SOURCE_ALLOWANCE, origin.allowance)
-
+class TestFixedForce(BudgetTestBase):
     def test_a_fixed_force_scenario_has_no_budget(self):
         for scenario in (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5):
             budget = self.budget(scenario)
             if not budget.scenario.starting_state.fixed_force:
                 continue
             with self.subTest(scenario.scenario_name):
-                self.assertEqual((), budget.resource_origins.origins)
                 self.assertEqual([], budget.order)
 
-    def test_what_is_kept_could_be_paid_for(self):
-        """With every starting resource, every building standing and every source brought in,
-        purchases paid for, the whole order fits: pruning keeps nothing that could never go true."""
+
+class TestEasySources(BudgetTestBase):
+    """A resource with an easy source is left out of the total; the pile pays for the rest."""
+
+    def resolved(self, scenario, location):
+        return BudgetTotal(scenario=scenario, location=location).resolve(self.world)
+
+    def test_the_base_never_asks_an_easy_source(self):
         for scenario in self.world.pool.scenarios.included:
-            budget = self.budget(scenario)
-            if not budget.order:
+            resolved = self.resolved(scenario, BASE)
+            if isinstance(resolved, BudgetTotal.Resolved):
+                with self.subTest(scenario.scenario_name):
+                    self.assertEqual((), resolved.easy)
+
+    def test_an_easy_source_covers_what_the_pile_lacks(self):
+        """With every item but the starting gold, a total that costs gold is in logic exactly when
+        gold has an easy source: the rest of the pile still pays for everything else, the base
+        included."""
+        gold = [name for name, _ in contributors(Resource.GOLD)]
+        state = self.state_without(*gold)
+        checked = 0
+        for entry in self.budget(Age2ScenarioData.AP_ATTILA_1).order:
+            resolved = self.resolved(Age2ScenarioData.AP_ATTILA_1, entry.location)
+            if not dict(resolved.table.total(state).cost).get(Resource.GOLD):
                 continue
-            pile = {resource: self.world.pool.resources.totals[resource]
-                    for resource in budget.max_budget()}
-            every_waiver = frozenset(budget.scenario.budget.standing_buildings)
-            need = budget.plan(budget.order)
-            requirement = Requirement(need, every_waiver)
-            with self.subTest(scenario.scenario_name):
-                origins = budget.resource_origins
-                parts = origins.gather_method_purchases(need, requirement, every_waiver)
-                self.assertTrue(
-                    origins.can_cover(pile, dict(requirement.cost), origins.every_choice, parts)
-                )
+            with self.subTest(entry.location.name):
+                self.assertEqual(resolved.easy_source_holds(Resource.GOLD, state), resolved(state))
+                checked += 1
+        self.assertTrue(checked, "nothing in the order costs gold")
+
+    def test_more_items_never_take_a_location_away(self):
+        """Collect the pool one item at a time; once a total is in logic it stays in."""
+        import random
+        rng = random.Random(1)
+        pool = list(self.multiworld.itempool)
+        rng.shuffle(pool)
+        for scenario in (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_JOAN_3):
+            if scenario not in self.world.pool.scenarios.included:
+                continue
+            rules = [(entry.location.name,
+                      BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world))
+                     for entry in self.budget(scenario).order]
+            state, held = CollectionState(self.multiworld), set()
+            for item in pool[:len(pool) // 2]:
+                state.collect(item, prevent_sweep=True)
+                for name, rule in rules:
+                    now = rule(state)
+                    self.assertFalse(name in held and not now,
+                                     f"{scenario.scenario_name}: {name} fell out on {item.name}")
+                    if now:
+                        held.add(name)
 
 
 class TestTheRule(BudgetTestBase):
@@ -329,7 +366,7 @@ class TestTheRule(BudgetTestBase):
     def test_a_location_outside_the_order_is_never_afforded(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
         outside = next(building for building in Age2BuildingData
-                       if budget.get_priced_location(building) is None)
+                       if budget.get_priced_item(building) is None)
         self.assertTrue(self.resolved(Age2ScenarioData.AP_ATTILA_1, outside).always_false)
 
     def test_the_breakdown_adds_up_to_the_requirement(self):
@@ -340,8 +377,8 @@ class TestTheRule(BudgetTestBase):
         breakdown = resolved.breakdown(state)
         self.assertEqual(breakdown["requirement"], resolved.requirement(state).cost)
         self.assertEqual(breakdown["scenario"], "The Scourge of God")
-        self.assertTrue(breakdown["sources_on"])
-        self.assertEqual(resolved.breakdown()["waived"], [])
+        self.assertIn("easy_sources", breakdown)
+        self.assertTrue(breakdown["bill"])
 
     def test_the_explanation_names_the_scenario_and_totals(self):
         budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
@@ -364,7 +401,6 @@ class TestRequiredPurchases(BudgetTestBase):
         budget = self.joan_3()
         order = [entry.location for entry in budget.order]
         ship = budget.order[order.index(self.SHIP)]
-        self.assertTrue(ship.item.first_in_age)
         its_own = {precursor.location for precursor in budget._precursors[self.SHIP]}
         self.assertEqual([], [entry.location for entry in budget.order[:order.index(self.SHIP)]
                               if entry.age == ship.age and entry.location not in its_own])
@@ -401,9 +437,9 @@ class TestRequiredPurchases(BudgetTestBase):
 
 
 class TestTheTransportIsACrossing(TestRequiredPurchases):
-    """The given Transport is a crossing of its own, not a discount on building one. Nothing but
-    the ship asks for a Dock here - no Dock location, no ship units - so with the Transport in hand
-    no later location may be charged one."""
+    """The given Transport is a crossing of its own, not a discount on building one. No Dock
+    location and no ship units here, so until something after the ship needs a Dock for itself -
+    a Dock tech - the Transport in hand means no later location is charged one."""
 
     def setUp(self) -> None:
         self.build(**{**HARD, "shuffle_buildings": {"Tech"}, "unitsanity": Unitsanity.option_none})
@@ -416,95 +452,17 @@ class TestTheTransportIsACrossing(TestRequiredPurchases):
 
         transport = Age2ItemData.AP_JOAN_3_TRANSPORT.item_name
         with_boats, without_boats = self.state_without(), self.state_without(transport)
-        later = budget.order[order.index(self.SHIP) + 1:]
-        self.assertTrue(later, "nothing comes after the ship to check")
-
-        for entry in later:
+        checked = 0
+        for entry in budget.order[order.index(self.SHIP) + 1:]:
+            if dock in self.cost_of(budget, entry.location).buildings:
+                break   # from here on the Dock is owed whatever crosses the water
             resolved = BudgetTotal(scenario=Age2ScenarioData.AP_JOAN_3,
                                    location=entry.location).resolve(self.world)
             with self.subTest(entry.location.name):
                 self.assertIn(dock, resolved.requirement(without_boats).buildings)
                 self.assertNotIn(dock, resolved.requirement(with_boats).buildings)
-
-
-class TestSourcesPayForTheirSeeds(BudgetTestBase):
-    """A source brings nothing in until what it needs stands: boats want a Dock and a Fishing Ship, and
-    the wood for them has to be in hand first - banked, or chopped by a source already working."""
-
-    def find(self, wanted):
-        """A resolved total in some scenario whose sources include every way `wanted` asks for:
-        name -> the purchase identities that way's need must be exactly, none already bought."""
-        for scenario in self.world.pool.scenarios.included:
-            for entry in self.budget(scenario).order:
-                resolved = BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world)
-                if not isinstance(resolved, BudgetTotal.Resolved):
-                    continue   # not in the order: False_
-                found = {}
-                for name, identities in wanted.items():
-                    origins = resolved.table.resource_origins
-                    for way, choice in enumerate(origins.choices):
-                        parts = resolved.table.totals_by_mask[0].gather_method_purchases[way]
-                        if (origins.origins[choice.source].name == name
-                                and {part.identity for part in parts} == identities
-                                and not any(part.already_charged for part in parts)):
-                            found[name] = way
-                            break
-                if len(found) == len(wanted):
-                    return resolved, found
-        self.skipTest("no scenario in this seed has those ways")
-
-    BOAT = {("building", Age2BuildingData.DOCK), ("own", Age2UnitData.FISHING_SHIP.line)}
-    CAMP = {("building", Age2BuildingData.LUMBER_CAMP)}
-
-    @staticmethod
-    def bootstrap(resolved, pile: dict, need: dict, usable: list):
-        """The search, with no waiver on."""
-        return resolved.table.resource_origins.bootstrap(
-            pile,
-            need,
-            usable,
-            resolved.table.totals_by_mask[0].gather_method_purchases,
-        )
-
-    def pile(self, wood: int) -> dict:
-        return {Resource.FOOD: 0, Resource.WOOD: wood, Resource.GOLD: 0, Resource.STONE: 0}
-
-    def test_no_wood_no_boats(self):
-        resolved, ways = self.find({"fish": self.BOAT})
-        need = {Resource.FOOD: 200}
-        self.assertIsNone(self.bootstrap(resolved, self.pile(0), need, [ways["fish"]]))
-        self.assertIsNotNone(self.bootstrap(resolved, self.pile(225), need, [ways["fish"]]))
-
-    def test_chopping_can_pay_for_the_boats(self):
-        """100 wood puts up a Lumber Camp; what it brings in pays for the Dock and the ship."""
-        resolved, ways = self.find({"fish": self.BOAT, "chop": self.CAMP})
-        need = {Resource.FOOD: 200}
-        self.assertIsNone(self.bootstrap(resolved, self.pile(100), need, [ways["fish"]]))
-        found = self.bootstrap(resolved, self.pile(100), need, [ways["fish"], ways["chop"]])
-        self.assertIsNotNone(found)
-        self.assertEqual({ways["fish"], ways["chop"]}, set(found.choices))
-
-    def test_more_items_never_take_a_location_away(self):
-        """Collect the pool one item at a time; once a total is in logic it stays in."""
-        import random
-        rng = random.Random(1)
-        pool = list(self.multiworld.itempool)
-        rng.shuffle(pool)
-        for scenario in (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_JOAN_3):
-            if scenario not in self.world.pool.scenarios.included:
-                continue
-            rules = [(entry.location.name,
-                      BudgetTotal(scenario=scenario, location=entry.location).resolve(self.world))
-                     for entry in self.budget(scenario).order]
-            state, held = CollectionState(self.multiworld), set()
-            for item in pool[:len(pool) // 2]:
-                state.collect(item, prevent_sweep=True)
-                for name, rule in rules:
-                    now = rule(state)
-                    self.assertFalse(name in held and not now,
-                                     f"{scenario.scenario_name}: {name} fell out on {item.name}")
-                    if now:
-                        held.add(name)
+                checked += 1
+        self.assertTrue(checked, "nothing between the ship and a Dock of its own to check")
 
 
 class TestCouldEverHave(BudgetTestBase):

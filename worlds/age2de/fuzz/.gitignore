@@ -6,3 +6,6 @@ __pycache__/
 
 # Throwaway experiment metas: targeted profiles, A/B overrides. Prefix new ones with _.
 _*.yaml
+
+# Benchmark scripts: local tooling, kept out of the repo like fuzz.py.
+bench/

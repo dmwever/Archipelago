@@ -10,6 +10,7 @@ from rule_builder.rules import False_, Rule
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ..budget.Need import CLIMBED_AGES, Need
+from ..budget.Requirement import ScenarioTerms
 from ..custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 
@@ -24,31 +25,14 @@ class ScenarioBudgetLogic:
         self.logic = scenario.logic
         self.world = scenario.logic.world
         self._could_have_building: dict[Age2BuildingData, bool] = {}
-        self._order: BudgetOrder | None = None
-        self.is_building_order = False
-        """Part-way through building the order, so one that asks for itself fails loudly."""
 
-    @property
-    def has_order(self) -> bool:
-        return self._order is not None
-
-    @property
+    @functools.cached_property
     def order(self) -> BudgetOrder:
         """The scenario's budget order, built once per seed while its first budget total
-        resolves."""
-        if self._order is None:
-            if self.is_building_order:
-                raise RecursionError(
-                    f"{self.scenario.scenario.scenario_name}'s budget order asks for itself; "
-                    "it would never be built"
-                )
-            from ..budget.BudgetOrder import BudgetOrder   # the order reads this logic back
-            self.is_building_order = True
-            try:
-                self._order = BudgetOrder(self.scenario)
-            finally:
-                self.is_building_order = False
-        return self._order
+        resolves. Building it asks only structural rules, which never pay, so it cannot ask for
+        itself."""
+        from ..budget.BudgetOrder import BudgetOrder   # the order reads this logic back
+        return BudgetOrder(self.scenario)
 
     @functools.cached_property
     def start_age(self) -> Age2AgeData:
@@ -68,6 +52,10 @@ class ScenarioBudgetLogic:
             )
                 for age in CLIMBED_AGES
         )
+
+    @functools.cached_property
+    def terms(self) -> ScenarioTerms:
+        return ScenarioTerms(self.start_age, self.age_up_requirements)
 
     @functools.cached_property
     def standing_buildings(self) -> dict[Age2BuildingData, Rule]:
@@ -90,22 +78,10 @@ class ScenarioBudgetLogic:
         ]
 
     @functools.cached_property
-    def always_standing(self) -> frozenset[Age2BuildingData]:
-        """Buildings that stand whatever the items: no running total ever pays for them."""
-        return frozenset(
-            building for waiver in self._every_cost_waiver
-                if waiver.always_true
-                    for building in waiver.buildings
-        )
-
-    @functools.cached_property
-    def always_spared(self) -> frozenset[PricedLocation]:
-        """Required purchases that something always spares: no running total ever has them."""
-        return frozenset(
-            purchase for waiver in self._every_cost_waiver
-                if waiver.always_true
-                    for purchase in waiver.purchases
-        )
+    def always_waived(self) -> list[ScenarioCostWaived.Resolved]:
+        """The waivers that hold whatever the items: no running total ever pays for their
+        buildings or has their purchases."""
+        return [waiver for waiver in self._every_cost_waiver if waiver.always_true]
 
     @functools.cached_property
     def _every_cost_waiver(self) -> list[ScenarioCostWaived.Resolved]:
@@ -147,5 +123,5 @@ class ScenarioBudgetLogic:
             self._could_have_building[building] = not self.logic.is_impossible(has_building)
         return self._could_have_building[building]
 
-    def calculate(self, need: Need) -> Need:
-        return need.by_scenario(self)
+    def settle(self, need: Need) -> Need:
+        return need.settle(self)

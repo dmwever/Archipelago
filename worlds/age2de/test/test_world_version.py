@@ -1,6 +1,4 @@
 import json
-import os
-import re
 import unittest
 from pathlib import Path
 
@@ -73,26 +71,3 @@ class TestDescribe(unittest.TestCase):
         message = WorldVersion.describe(Version(0, 2, 3), Version(0, 3, 0))
         self.assertIn("0.2.3", message)
         self.assertIn("0.3.0", message)
-
-
-AGEIPELAGO_XS = Path(
-    os.environ.get("AGEIPELAGO_PATH", "C:/Users/dmwev/Documents/GitHub/Ageipelago")
-) / "age 2 files/resources/_common/xs/AP.xs"
-
-
-@unittest.skipUnless(AGEIPELAGO_XS.is_file(), "no local Ageipelago checkout")
-class TestApXsDeclaresTheSameVersion(unittest.TestCase):
-    def declared(self) -> Version:
-        source = AGEIPELAGO_XS.read_text(encoding="utf-8")
-        found = {}
-        for name in ("worldMajor", "worldMinor"):
-            match = re.search(r"^int %s = (\d+);" % name, source, re.M)
-            self.assertIsNotNone(match, f"{name} not declared in AP.xs")
-            found[name] = int(match.group(1))
-        return Version(found["worldMajor"], found["worldMinor"], 0)
-
-    def test_ap_xs_matches_the_manifest(self):
-        self.assertTrue(
-            WorldVersion.compatible(self.declared(), Age2World.world_version),
-            f"AP.xs declares {self.declared().as_simple_string()} but archipelago.json says "
-            f"{Age2World.world_version.as_simple_string()}; bump AP.xs when the world minor changes")

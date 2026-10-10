@@ -104,15 +104,8 @@ class TestTheAnswersAreActuallyShared(Age2RuleTestBase):
         for answer in logic.scenario_answers.values():
             self.assertIsInstance(answer, Rule.Resolved)
         self.assertFalse(logic.scenario_answers_open, "a question was left part-way answered")
-        self.assertFalse(
-            any(scenario.budget.is_building_order for scenario in logic.scenarios),
-            "a budget order was left part-way built",
-        )
         self.assertFalse(logic.budget_totals_open, "a budget total was left part-way resolved")
-        self.assertTrue(
-            any(scenario.budget.has_order for scenario in logic.scenarios),
-            "no budget order was built, so nothing above was tried",
-        )
+        self.assertTrue(logic.budget_totals, "no budget total was resolved, so nothing above was tried")
 
 
 class TestOneScenarioLogicPerScenario(Age2RuleTestBase):

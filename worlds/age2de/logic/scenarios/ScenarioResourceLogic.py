@@ -60,10 +60,10 @@ class ScenarioResourceLogic:
 
     def _open_gate(self, kind: str) -> Rule:
         if kind == "afloat":
-            return self.scenario.military.has_navy()
+            return self.scenario.military.can_protect_boats()
         if kind == "shoreline":
             return (self.scenario.buildings.can_hold_a_shoreline()
-                    | self.scenario.military.has_navy())
+                    | self.scenario.military.can_protect_boats())
         return self.scenario.buildings.is_fortified()
 
     def tiered(self, gathers: Rule, field: str,
@@ -137,16 +137,11 @@ class ScenarioResourceLogic:
                    | self.logic.resources.has_amount(Resource.WOOD,
                                                      ship.cost.get(Resource.WOOD, 0))))
 
-    def _crew(self, pays_for_need: bool) -> Rule:
-        """Not paying for its need, a boat source is what the budget switches on: the budget pays
-        for the ship itself."""
-        return self.can_crew_fishing_ships() if pays_for_need else self.has_fishing_ships()
-
-    def can_fish_by_boat(self, pays_for_need: bool = True) -> Rule:
+    def can_fish_by_boat(self) -> Rule:
         if not self.counts.deep_fish_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self._crew(pays_for_need)
+                & self.can_crew_fishing_ships()
                 & self.scenario.starting_state.starting_fish)
 
     def can_fish_some(self) -> Rule:
@@ -159,26 +154,24 @@ class ScenarioResourceLogic:
                 & self.has_job(Job.OYSTER_GATHERER_MALE)
                 & self.scenario.starting_state.starting_oysters)
 
-    def can_gather_oysters_by_boat(self, pays_for_need: bool = True) -> Rule:
+    def can_gather_oysters_by_boat(self) -> Rule:
         if not self.counts.oyster_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self._crew(pays_for_need)
+                & self.can_crew_fishing_ships()
                 & self.scenario.starting_state.starting_oysters)
 
     def can_gather_oysters(self) -> Rule:
         return self.can_gather_oysters_from_shore() | self.can_gather_oysters_by_boat()
 
-    def can_hunt_whales(self, pays_for_need: bool = True) -> Rule:
+    def can_hunt_whales(self) -> Rule:
         if not self.counts.whale_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self._crew(pays_for_need)
+                & self.can_crew_fishing_ships()
                 & self.scenario.starting_state.starting_whales)
 
-    def can_collect_relics(self, pays_for_need: bool = True) -> Rule:
-        """Not paying for its need, it is what the budget switches on: the budget pays for the
-        Monk itself."""
+    def can_collect_relics(self) -> Rule:
         if not self.counts.relic_count:
             return False_()
         monk = Age2UnitData.MONK
@@ -186,10 +179,7 @@ class ScenarioResourceLogic:
                 & self.logic.units.has_unit_items(monk)
                 & self.scenario.ages.has_reached(monk.age)
                 & self.scenario.starting_state.starting_relics)
-        if pays_for_need:
-            rule = rule & self.logic.resources.has_amount(Resource.GOLD,
-                                                          monk.cost.get(Resource.GOLD, 0))
-        return rule
+        return rule & self.logic.resources.has_amount(Resource.GOLD, monk.cost.get(Resource.GOLD, 0))
 
     def can_gather_gold(self) -> Rule:
         return (self.can_mine_some() | self.can_gather_oysters() | self.can_hunt_whales()
@@ -230,16 +220,16 @@ class ScenarioResourceLogic:
 
         seed_gold = (self.can_gather_gold()
                      | resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD))
-        
+
         wood_by_land = (self.scenario.has_building(Age2BuildingData.MARKET)
                    & self.logic.units.has_unit_items(Age2UnitData.TRADE_CART)
                    & self.can_gather_wood())
-        
+
         wood_by_sea = (self.scenario.has_building(Age2BuildingData.DOCK)
                   & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
                   & (self.can_gather_wood()
                      | resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)))
-        
+
         return (self.scenario.starting_state.trading_ally
                 & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
                 & seed_gold & (wood_by_land | wood_by_sea))

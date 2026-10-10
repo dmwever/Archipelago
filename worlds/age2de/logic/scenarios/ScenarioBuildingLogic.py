@@ -42,7 +42,7 @@ class ScenarioBuildingLogic:
                     if self.scenario.civilization.can_build(building)])
 
     def can_build_tc(self) -> Rule:
-        return self.buildings.can_build_tc() & self.scenario.has_vils()
+        return self.buildings.can_build_tc() & self.scenario.has_builders()
 
     def has_tc(self) -> Rule:
         """A Town Centre to work from. One standing on the map counts, and costs nothing - the

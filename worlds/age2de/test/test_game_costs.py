@@ -143,7 +143,7 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
         order = scenario.budget.order
         held = {entry.location for entry in order.order if isinstance(entry.location, Age2TechData)}
         outside = [tech for tech in self.world.pool.techs.shuffled if tech not in held
-                   and order.get_priced_location(tech) is not None]
+                   and order.get_priced_item(tech) is not None]
         self.assertTrue(outside)
         for tech in outside:
             with self.subTest(tech.name):
