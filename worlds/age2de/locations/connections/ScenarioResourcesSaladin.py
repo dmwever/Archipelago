@@ -52,7 +52,7 @@ Age2ScenarioData.AP_SALADIN_2.resources[Tier.ENEMY] = ScenarioResourceCount(
     shore_fish_count=2825, deep_fish_count=6650,
     oyster_count=0, whale_count=0, relic_count=0)
 
-//The enemies don't use docks in the Scenario, leaving all open fish to the Player
+"""The enemies don't use docks in the Scenario, leaving all open fish to the Player"""
 
 Age2ScenarioData.AP_SALADIN_3.resources[Tier.BASE] = ScenarioResourceCount(
     gold_count=12000, stone_count=0,
@@ -117,7 +117,7 @@ Age2ScenarioData.AP_SALADIN_5.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_SALADIN_5.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=10400, stone_count=7000,
     hunt_count=1040, herd_count=600, bush_count=0,
-    shore_fish_count=3000, deep_fish_count=0,   //Please just use Scenario parsing to source the total and subtract it from what I've got for the enemies, it's too much to count manually
+    shore_fish_count=3000, deep_fish_count=0,   # Please just use Scenario parsing to source the total and subtract it from what I've got for the enemies, it's too much to count manually
     oyster_count=0, whale_count=0, relic_count=1)
 
 Age2ScenarioData.AP_SALADIN_5.resources[Tier.ALLY] = ScenarioResourceCount(
@@ -143,7 +143,7 @@ Age2ScenarioData.AP_SALADIN_6.resources[Tier.BASE] = ScenarioResourceCount(
 Age2ScenarioData.AP_SALADIN_6.resources[Tier.OPEN] = ScenarioResourceCount(
     gold_count=15200, stone_count=0,
     hunt_count=0, herd_count=0, bush_count=0,
-    shore_fish_count=400, deep_fish_count=0,   //Please just use Scenario parsing to source the total and subtract it from what I've got for the enemies and Player, then add 1400 for unreachable shore_fish, it's too much to count manually
+    shore_fish_count=400, deep_fish_count=0,   #Please just use Scenario parsing to source the total and subtract it from what I've got for the enemies and Player, then add 1400 for unreachable shore_fish, it's too much to count manually
     oyster_count=0, whale_count=0, relic_count=0)
 
 Age2ScenarioData.AP_SALADIN_6.resources[Tier.ALLY] = ScenarioResourceCount(
