@@ -25,31 +25,14 @@ class ScenarioBudgetLogic:
         self.logic = scenario.logic
         self.world = scenario.logic.world
         self._could_have_building: dict[Age2BuildingData, bool] = {}
-        self._order: BudgetOrder | None = None
-        self.is_building_order = False
-        """Part-way through building the order, so one that asks for itself fails loudly."""
 
-    @property
-    def has_order(self) -> bool:
-        return self._order is not None
-
-    @property
+    @functools.cached_property
     def order(self) -> BudgetOrder:
         """The scenario's budget order, built once per seed while its first budget total
-        resolves."""
-        if self._order is None:
-            if self.is_building_order:
-                raise RecursionError(
-                    f"{self.scenario.scenario.scenario_name}'s budget order asks for itself; "
-                    "it would never be built"
-                )
-            from ..budget.BudgetOrder import BudgetOrder   # the order reads this logic back
-            self.is_building_order = True
-            try:
-                self._order = BudgetOrder(self.scenario)
-            finally:
-                self.is_building_order = False
-        return self._order
+        resolves. Building it asks only structural rules, which never pay, so it cannot ask for
+        itself."""
+        from ..budget.BudgetOrder import BudgetOrder   # the order reads this logic back
+        return BudgetOrder(self.scenario)
 
     @functools.cached_property
     def start_age(self) -> Age2AgeData:

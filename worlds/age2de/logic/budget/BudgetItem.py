@@ -37,8 +37,6 @@ type PricedLocation = (Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitD
 
 @dataclasses.dataclass(frozen=True, eq=False)
 class BudgetItem:
-    """What a priced location charges and where it sits in an order. Made once per location by
-    `for_location` and shared: an item is the same in every scenario."""
     location: PricedLocation
     age: Age2AgeData
     rank: int

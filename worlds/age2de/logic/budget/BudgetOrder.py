@@ -44,18 +44,8 @@ class BudgetOrder:
 
     # -- pricing ------------------------------------------------------------------------------
 
-    def get_priced_location(
-        self,
-        location: PricedLocation,
-    ) -> PricedBudgetItem | None:
-        """The location as this scenario pays for it, or None if its own rule, less paying,
-        could never be true here."""
-        return self.get_priced_budget_item(for_location(location))
-
-    def get_priced_budget_item(
-        self,
-        item: BudgetItem,
-    ) -> PricedBudgetItem | None:
+    def get_priced_item(self, location: PricedLocation) -> PricedBudgetItem | None:
+        item = for_location(location)
         if self.scenario.logic.is_impossible(item.scenario_rule(self.scenario)):
             return None
         return PricedBudgetItem(item, item.need_in_scenario(self.scenario))
@@ -82,11 +72,10 @@ class BudgetOrder:
         required_purchases = self.scenario.starting_state.required_purchases
 
         # Added in order: the scenario's purchases, its base, the seed's sample.
-        items: list[BudgetItem] = [
-            *map(for_location, required_purchases),
-            for_location(BASE),
-            *(for_location(location) for location in budget.entries
-                if location not in required_purchases),
+        locations: list[PricedLocation] = [
+            *required_purchases,
+            BASE,
+            *(location for location in budget.entries if location not in required_purchases),
         ]
 
         def place(entry: PricedBudgetItem) -> OrderPlace:
@@ -96,8 +85,7 @@ class BudgetOrder:
                 return OrderPlace(entry.age, from_seed=False, rank=0)
             return OrderPlace(entry.age, from_seed=True, rank=budget.rank[entry.location])
 
-        priced = map(self.get_priced_budget_item, items)
-        return sorted(filter(None, priced), key=place)
+        return sorted(filter(None, map(self.get_priced_item, locations)), key=place)
 
     def precursors(self, entry: PricedBudgetItem) -> list[PricedBudgetItem]:
         """The locations this seed that the entry cannot be had without."""
@@ -112,7 +100,7 @@ class BudgetOrder:
         # Only an age, building or tech that is a location this seed can stand in the order.
         pool = self.world.pool
         found = [
-            self.get_priced_location(location) for location in candidates
+            self.get_priced_item(location) for location in candidates
                 if location in pool.ages.locations
                     or location in pool.buildings.locations
                     or location in pool.techs.shuffled
