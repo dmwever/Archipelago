@@ -3,8 +3,6 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING, Iterable
 
-from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
-from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
@@ -13,7 +11,6 @@ from .BudgetItemFactory import BudgetItemFactory
 from .Need import Need
 from .Requirement import Requirement
 from .ScenarioBudgetItem import ScenarioBudgetItem
-from .ScenarioResourceOrigins import ScenarioResourceOrigins
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -43,23 +40,9 @@ class BudgetOrder:
         self.scenario = scenario
         self.world = scenario.logic.world
 
-        self.resource_origins = ScenarioResourceOrigins.from_scenario(scenario, self.world)
-
         self._precursors: dict[PricedLocation, list[PricedBudgetItem]] = {}
         self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
-        self.order, self.pruned = self._build_order()
-
-    # -- the budget -----------------------------------------------------------------------------
-
-    def max_budget(self) -> dict[Resource, int]:
-        """Every starting resource in the pool, and every source the scenario could ever count."""
-        max_budget = {
-            resource: self.world.pool.resources.totals[resource] for resource in SAMPLED_RESOURCES
-        }
-
-        for resource, amount in self.resource_origins.allowance().items():
-            max_budget[resource] += amount
-        return max_budget
+        self.order = self._build_order()
 
     # -- pricing ------------------------------------------------------------------------------
 
@@ -85,15 +68,15 @@ class BudgetOrder:
 
     # -- the order ----------------------------------------------------------------------------
 
-    def _build_order(self) -> tuple[list[PricedBudgetItem], list[PricedBudgetItem]]:
-        """The order, and what was pruned from it."""
+    def _build_order(self) -> list[PricedBudgetItem]:
+        """The entries in their places, each after its precursors."""
         self._initial_order = self._entries()
 
         self._precursors = {
             entry.location: self.precursors(entry) for entry in self._initial_order
         }
 
-        return self._prune_order(self._with_precursors())
+        return self._with_precursors()
 
     def _entries(self) -> list[PricedBudgetItem]:
         """The scenario's own purchases, its base, and the seed's sample."""
@@ -147,36 +130,6 @@ class BudgetOrder:
             for precursor in (*self._precursors[entry.location], entry):
                 placed[precursor.location] = precursor
         return list(placed.values())
-
-    def _prune_order(
-        self,
-        ordered_budget: list[PricedBudgetItem],
-    ) -> tuple[list[PricedBudgetItem], list[PricedBudgetItem]]:
-        pile = {
-            resource: self.world.pool.resources.totals[resource] for resource in SAMPLED_RESOURCES
-        }
-
-        every_standing_building = frozenset(self.scenario.budget.standing_buildings)
-        funded: list[PricedBudgetItem] = []
-        pruned: list[PricedBudgetItem] = []
-
-        for budget_item in ordered_budget:
-            need = self.plan(funded + [budget_item])
-            requirement = Requirement(need, every_standing_building)
-            parts = self.resource_origins.gather_method_purchases(
-                need,
-                requirement,
-                every_standing_building,
-            )
-            can_fund = self.resource_origins.can_cover(
-                pile,
-                dict(requirement.cost),
-                self.resource_origins.every_choice,
-                parts,
-            )
-
-            (funded if can_fund else pruned).append(budget_item)
-        return funded, pruned
 
     @staticmethod
     def _prerequisite_buildings(requirement: Requirement) -> list[Age2BuildingData]:

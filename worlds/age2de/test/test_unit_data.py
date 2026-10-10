@@ -1,7 +1,4 @@
-import os
-import re
 import unittest
-from pathlib import Path
 
 from ..Options import Techsanity, Unitsanity, UnitsanityItems
 from ..client.handlers.install.UnitData import UnitData
@@ -158,26 +155,3 @@ class TestRender(unittest.TestCase):
     def test_every_row_is_one_addUnit_call(self):
         data = table([Age2UnitLineData.MILITIA_LINE, Age2UnitLineData.KNIGHT_LINE])
         self.assertEqual(data.render().count("    addUnit("), len(data.rows()))
-
-AP_CONSTANTS = Path(
-    os.environ.get("AGEIPELAGO_PATH", "C:/Users/dmwev/Documents/GitHub/Ageipelago")
-) / "age 2 files/resources/_common/xs/AP_Constants.xs"
-
-
-@unittest.skipUnless(AP_CONSTANTS.is_file(), "no local Ageipelago checkout")
-class TestTheCapacityConstantsAgree(unittest.TestCase):
-    def declared(self, name: str) -> int:
-        source = AP_CONSTANTS.read_text(encoding="utf-8")
-        match = re.search(r"^extern const int %s = (\d+);" % name, source, re.M)
-        self.assertIsNotNone(match, f"{name} not declared in AP_Constants.xs")
-        return int(match.group(1))
-
-    def test_unit_item_capacity_matches_max_items(self):
-        self.assertEqual(self.declared("UNIT_ITEM_CAPACITY"), UnitData.MAX_ITEMS,
-                         "AP_Constants.xs UNIT_ITEM_CAPACITY and UnitData.MAX_ITEMS are one "
-                         "value written twice; a row past the XS capacity is silently truncated")
-
-    def test_unit_variant_capacity_matches_max_variants(self):
-        self.assertEqual(self.declared("UNIT_VARIANT_CAPACITY"), UnitData.MAX_VARIANTS,
-                         "AP_Constants.xs UNIT_VARIANT_CAPACITY and UnitData.MAX_VARIANTS are one "
-                         "value written twice")

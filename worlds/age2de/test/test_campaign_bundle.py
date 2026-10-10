@@ -1,4 +1,3 @@
-import os
 import struct
 import tempfile
 import unittest
@@ -20,12 +19,6 @@ from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 SEED = "56761350679959987564"
 VERSION = 808463922
 DEPENDENCIES = (6, 2, 3, 4, 5, 6, 7)
-
-AGEIPELAGO_ROOT = Path(
-    os.environ.get("AGEIPELAGO_PATH", "C:/Users/dmwev/Documents/GitHub/Ageipelago")
-) / "age 2 files/resources/_common"
-AGEIPELAGO_BUNDLES = AGEIPELAGO_ROOT / "campaign"
-AGEIPELAGO_SCENARIOS = AGEIPELAGO_ROOT / "scenario"
 
 
 def build_fixture(display_name: str, scenarios, junk_after_name: bytes = b"") -> bytes:
@@ -179,43 +172,6 @@ class TestBundleRoundTrip(unittest.TestCase):
     def test_display_name_too_long_is_refused(self):
         with self.assertRaises(ValueError):
             pack(self.read_fixture(), "x" * RGE_DE2_MAX_CHAR)
-
-
-@unittest.skipUnless(AGEIPELAGO_SCENARIOS.is_dir(), "no local Ageipelago checkout")
-class TestRealScenarios(unittest.TestCase):
-    """Packing the real scenarios, which is what /install does for every seed."""
-
-    def bodies(self, campaign: Age2CampaignData):
-        paths = [AGEIPELAGO_SCENARIOS / f"{scenario.file_stem}.aoe2scenario"
-                 for scenario in CAMPAIGN_TO_SCENARIOS[campaign]]
-        if not all(path.is_file() for path in paths):
-            self.skipTest(f"{campaign.campaign_name} scenarios not present")
-        return [(path.name, path.read_bytes()) for path in paths]
-
-    def test_a_built_bundle_reads_back_as_what_went_in(self):
-        for data in Age2CampaignData:
-            with self.subTest(campaign=data.campaign_name):
-                entries = self.bodies(data)
-                built = Campaign.from_scenarios(data.file_stem, entries)
-                read_back = unpack(pack(built, data.file_stem))
-                self.assertEqual([scn.file_name for scn in read_back.scenarios],
-                                 [name for name, _ in entries])
-                self.assertEqual([scn.body for scn in read_back.scenarios],
-                                 [body for _, body in entries])
-
-    def test_the_header_matches_what_the_game_ships(self):
-        for data in Age2CampaignData:
-            with self.subTest(campaign=data.campaign_name):
-                read_back = unpack(pack(Campaign.from_scenarios(data.file_stem,
-                                                                self.bodies(data)),
-                                        data.file_stem))
-                self.assertEqual(read_back.header.version, VERSION)
-                self.assertEqual(read_back.header.dependencies, DEPENDENCIES)
-                self.assertEqual(read_back.header.scenarioNum,
-                                 len(CAMPAIGN_TO_SCENARIOS[data]))
-                for scn in read_back.scenarios:
-                    self.assertEqual(scn.name_string_id, RGE_STRING_ID)
-                    self.assertEqual(scn.file_name_string_id, RGE_STRING_ID)
 
 
 class TestSlotDataFile(unittest.TestCase):

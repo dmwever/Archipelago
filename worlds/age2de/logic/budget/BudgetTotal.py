@@ -13,22 +13,22 @@ from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ...items.Items import Resource
 from ...locations.Scenarios import Age2ScenarioData
 from ..custom_logic.ResourceAmount import contributors
-from .BudgetItem import PricedLocation
+from .BudgetItem import BASE, PricedLocation
 from .CostTable import CostTable
 from .Need import Need
 from .Requirement import Requirement
-from .ScenarioResourceOrigins import Bootstrap
 
 if TYPE_CHECKING:
     from ... import Age2World
 
 @dataclasses.dataclass(eq=False)
 class ShownTotal:
-    """One resource as an explanation shows it: how much, and whether it is covered - None when
-    no state was given to check against."""
+    """One resource as an explanation shows it: how much, whether it is covered - None when no
+    state was given to check against - and whether an easy source is what covers it."""
     resource: Resource
     amount: int
     covered: bool | None
+    by_easy_source: bool = False
 
 @dataclasses.dataclass
 class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
@@ -57,14 +57,24 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         if table is None:
             return False_().resolve(world)   # not in this scenario's order
 
-        # The table's rules are the children, so they register as dependencies; it evaluates
-        # them itself.
+        # Every playable scenario has an easy source of every resource (TestEveryScenarioCanLive),
+        # and a fixed force has no order, so it never gets here. The base asks none: the easy
+        # sources of gold and stone ask for the base themselves.
+        economy = world.rules.logic.for_scenario(self.scenario).economy
+        easy = () if self.location is BASE else tuple(
+            (resource, economy.has_easy_source(resource).resolve(world))
+                for resource in SAMPLED_RESOURCES
+        )
+
+        # The table's rules and the easy sources are the children, so they register as
+        # dependencies; it evaluates them itself.
         return self.Resolved(
-            table.rules,
+            (*table.rules, *(rule for _, rule in easy)),
             table,
             self.scenario,
             self.location,
             tuple((resource, contributors(resource)) for resource in SAMPLED_RESOURCES),
+            easy,
             player=world.player,
             caching_enabled=False,
         )
@@ -79,22 +89,15 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
         scenario: Age2ScenarioData
         location: PricedLocation
         contributors: tuple[tuple[Resource, tuple[tuple[str, int], ...]], ...]
+        easy: tuple[tuple[Resource, Rule.Resolved], ...]
+        """Each resource's easy source: while it holds, the total asks the pile for none of that
+        resource. Empty for the base, which the pile alone pays for."""
 
         skip_cache = True
         """Sums over the pile, which is no child; item_dependencies names every pile item
         instead."""
 
         # -- evaluating -----------------------------------------------------------------------
-
-        def bootstrap(self, state: CollectionState) -> Bootstrap | None:
-            """The choices that pay for it, and what their purchases add to the total, if any do."""
-            total = self.table.total(state)
-            return self.table.resource_origins.bootstrap(
-                self.pile(state),
-                dict(total.cost),
-                self.table.usable(state),
-                total.gather_method_purchases,
-            )
 
         def pile(self, state: CollectionState) -> dict[Resource, int]:
             held = state.prog_items[self.player]
@@ -110,17 +113,16 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             total = self.table.total(state)
             return Requirement(total.need, total.waived)
 
+        def easy_source_holds(self, resource: Resource, state: CollectionState) -> bool:
+            return any(each is resource and rule(state) for each, rule in self.easy)
+
         @override
         def _evaluate(self, state: CollectionState) -> bool:
-            total = self.table.total(state)
-            pile, need = self.pile(state), dict(total.cost)
-            if all(pile[resource] >= amount for resource, amount in need.items()):
-                return True   # before asking which sources are on
-            return self.table.resource_origins.can_cover(
-                pile,
-                need,
-                self.table.usable(state),
-                total.gather_method_purchases,
+            """Every resource in the total, from the pile or from an easy source of it."""
+            pile = self.pile(state)
+            return all(
+                pile[resource] >= amount or self.easy_source_holds(resource, state)
+                    for resource, amount in self.table.total(state).cost
             )
 
         @override
@@ -138,12 +140,12 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             """Everything the short explanation sums up, for a longer view to show."""
             requirement = self.requirement(state)
             if state is None:
-                waived, sources_on, pile = [], [], {}
+                waived, easy, pile = [], [], {}
             else:
                 waived = sorted(self.table.total(state).waived, key=int)
-                sources_on = [
-                    (origin.name, origin.resource, origin.allowance)
-                        for origin in self.table.sources_on(state)
+                easy = [
+                    resource for resource in SAMPLED_RESOURCES
+                        if self.easy_source_holds(resource, state)
                 ]
                 pile = self.pile(state)
 
@@ -155,72 +157,46 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
                 "buildings_charged": list(requirement.buildings),
                 "ages_charged": list(requirement.ages),
                 "waived": waived,
-                "sources_on": sources_on,
-                "sources_used": self._used(state),
+                "easy_sources": easy,
                 "pile": pile,
             }
 
-        def _used(self, state: CollectionState | None) -> list[str]:
-            found = None if state is None else self.bootstrap(state)
-            if found is None:
-                return []
-            origins = self.table.resource_origins
-            return sorted({
-                origins.origins[origins.choices[way].source].name
-                    for way in found.choices
-            })
-
         def _totals(self, state: CollectionState | None) -> list[ShownTotal]:
-            need = dict(self.table.total(state).cost)
+            cost = self.table.total(state).cost
             if state is None:
-                return [
-                    ShownTotal(resource, need[resource], None) for resource in SAMPLED_RESOURCES
-                        if need.get(resource, 0) > 0
-                ]
+                return [ShownTotal(resource, amount, None) for resource, amount in cost]
 
-            found = self.bootstrap(state)
-            if found is not None:   # the total with what the paying sources had to buy
-                with_purchases = {
-                    resource: need.get(resource, 0) + found.purchases_added[resource]
-                        for resource in SAMPLED_RESOURCES
-                }
-                return [
-                    ShownTotal(resource, amount, True)
-                        for resource, amount in with_purchases.items()
-                            if amount > 0
-                ]
+            pile = self.pile(state)
+            shown: list[ShownTotal] = []
+            for resource, amount in cost:
+                if pile[resource] >= amount:
+                    shown.append(ShownTotal(resource, amount, True))
+                else:
+                    easy = self.easy_source_holds(resource, state)
+                    shown.append(ShownTotal(resource, amount, easy, by_easy_source=easy))
+            return shown
 
-            pile, allowance = self.pile(state), self.table.allowance(state)
-            return [
-                ShownTotal(
-                    resource,
-                    need[resource],
-                    pile[resource] + allowance[resource] >= need[resource],
-                )
-                    for resource in SAMPLED_RESOURCES
-                        if need.get(resource, 0) > 0
-            ]
+        @staticmethod
+        def _shown(total: ShownTotal) -> str:
+            text = f"{total.amount} {total.resource.name.lower()}"
+            return f"{text} (easy source)" if total.by_easy_source else text
 
         @override
         def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
             scenario = self.scenario.scenario_name
             parts: list[JSONMessagePart] = [
-                {
-                    "type": "text",
-                    "text": f"{scenario}: starting pile + early gathering covers ",
-                },
+                {"type": "text", "text": f"{scenario}: starting pile covers "},
             ]
             for index, total in enumerate(self._totals(state)):
                 if index:
                     parts.append({"type": "text", "text": ", "})
-                text = f"{total.amount} {total.resource.name.lower()}"
                 if total.covered is None:
-                    parts.append({"type": "text", "text": text})
+                    parts.append({"type": "text", "text": self._shown(total)})
                 else:
                     parts.append({
                         "type": "color",
                         "color": "green" if total.covered else "salmon",
-                        "text": text,
+                        "text": self._shown(total),
                     })
 
             holding = self.table.waivers_holding(state)
@@ -235,11 +211,9 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
 
         @override
         def explain_str(self, state: CollectionState | None = None) -> str:
-            totals = ", ".join(
-                f"{total.amount} {total.resource.name.lower()}" for total in self._totals(state)
-            )
+            totals = ", ".join(self._shown(total) for total in self._totals(state))
             scenario = self.scenario.scenario_name
-            text = f"{scenario}: starting pile + early gathering covers {totals}"
+            text = f"{scenario}: starting pile covers {totals}"
 
             holding = self.table.waivers_holding(state)
             if holding:
