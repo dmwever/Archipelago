@@ -60,6 +60,7 @@ class ScenarioUnitLogic:
     # -- fielding ----------------------------------------------------------------------------
 
     def can_field(self, line: Age2UnitLineData, age: Age2AgeData | None = None) -> Rule:
+        tiers = self.fieldable_tiers(line, age) if age is not None else self.starting_unit(line)
         if not tiers:
             return False_()
         sustained = {resource for unit in tiers
@@ -74,6 +75,9 @@ class ScenarioUnitLogic:
     def starting_unit(self, line: Age2UnitLineData) -> list[Age2UnitData]:
         for unit in sorted(line.units, key=lambda unit: unit.tier):
             if self.scenario.civilization.trains(unit) and not self.upgraded_away(unit):
+                return [unit]
+        return []
+
     def fieldable_tiers(self, line: Age2UnitLineData,
                         age: Age2AgeData) -> list[Age2UnitData]:
         theirs = [unit for unit in line.units
