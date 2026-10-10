@@ -6,11 +6,9 @@ from typing import TYPE_CHECKING, Iterable
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
-from .BudgetItem import BASE, BudgetItem, PricedLocation
-from .BudgetItemFactory import BudgetItemFactory
+from .BudgetItem import BASE, BudgetItem, PricedLocation, for_location
 from .Need import Need
 from .Requirement import Requirement
-from .ScenarioBudgetItem import ScenarioBudgetItem
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -52,7 +50,7 @@ class BudgetOrder:
     ) -> PricedBudgetItem | None:
         """The location as this scenario pays for it, or None if its own rule, less paying,
         could never be true here."""
-        return self.get_priced_budget_item(BudgetItemFactory.for_location(location))
+        return self.get_priced_budget_item(for_location(location))
 
     def get_priced_budget_item(
         self,
@@ -83,17 +81,18 @@ class BudgetOrder:
         budget = self.world.pool.budget
         required_purchases = self.scenario.starting_state.required_purchases
 
-        # Added in order: scenario item, starting base, budget entries.
+        # Added in order: the scenario's purchases, its base, the seed's sample.
         items: list[BudgetItem] = [
-            *(ScenarioBudgetItem(BudgetItemFactory.for_location(location)) 
-                for location in required_purchases),
-            BudgetItemFactory.for_location(BASE),
-            *(BudgetItemFactory.for_location(location) for location in budget.entries
+            *map(for_location, required_purchases),
+            for_location(BASE),
+            *(for_location(location) for location in budget.entries
                 if location not in required_purchases),
         ]
 
         def place(entry: PricedBudgetItem) -> OrderPlace:
-            if entry.item.first_in_age:
+            # The base and a purchase the scenario requires of itself, such as Joan 3's Transport
+            # Ship, lead their age, drawn or not, so the rest of the order is paid for after them.
+            if entry.location is BASE or entry.location in required_purchases:
                 return OrderPlace(entry.age, from_seed=False, rank=0)
             return OrderPlace(entry.age, from_seed=True, rank=budget.rank[entry.location])
 
@@ -110,11 +109,13 @@ class BudgetOrder:
             *self._prerequisite_techs(entry),
         ]
 
+        # Only an age, building or tech that is a location this seed can stand in the order.
         pool = self.world.pool
         found = [
-            self.get_priced_budget_item(item)
-                for item in map(BudgetItemFactory.for_location, candidates)
-                if item.is_location(pool)
+            self.get_priced_location(location) for location in candidates
+                if location in pool.ages.locations
+                    or location in pool.buildings.locations
+                    or location in pool.techs.shuffled
         ]
 
         # Only an age can name itself here: reaching the Castle Age charges the Castle Age.
@@ -148,11 +149,7 @@ class BudgetOrder:
     def _prerequisite_techs(entry: PricedBudgetItem) -> list[Age2TechData]:
         """The techs below the entry it actually pays for, oldest first."""
         paid = {price.identity for price in entry.need.own_price}
-        oldest_first = reversed(list(entry.item.prerequisite_techs()))
-        return [
-            tech.location for tech in oldest_first
-                if tech.location in paid
-        ]
+        return [tech for tech in reversed(entry.item.techs_below) if tech in paid]
 
     # -- running totals -----------------------------------------------------------------------
 

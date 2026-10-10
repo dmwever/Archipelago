@@ -382,7 +382,6 @@ class TestRequiredPurchases(BudgetTestBase):
         budget = self.joan_3()
         order = [entry.location for entry in budget.order]
         ship = budget.order[order.index(self.SHIP)]
-        self.assertTrue(ship.item.first_in_age)
         its_own = {precursor.location for precursor in budget._precursors[self.SHIP]}
         self.assertEqual([], [entry.location for entry in budget.order[:order.index(self.SHIP)]
                               if entry.age == ship.age and entry.location not in its_own])
