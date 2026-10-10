@@ -68,7 +68,6 @@ class BudgetOrder:
         return self._with_precursors()
 
     def _entries(self) -> list[PricedBudgetItem]:
-        """The scenario's own purchases, its base, and the seed's sample."""
         budget = self.world.pool.budget
         required_purchases = self.scenario.starting_state.required_purchases
 
@@ -80,10 +79,6 @@ class BudgetOrder:
         ]
 
         def place(entry: PricedBudgetItem) -> tuple[Age2AgeData, bool, int]:
-            """Its age; then the scenario's own leaders before the seed's sample; then the seed's
-            rank within the sample."""
-            # The base and a purchase the scenario requires of itself, such as Joan 3's Transport
-            # Ship, lead their age, drawn or not, so the rest of the order is paid for after them.
             if entry.location is BASE or entry.location in required_purchases:
                 return entry.age, False, 0
             return entry.age, True, budget.rank[entry.location]
@@ -91,7 +86,6 @@ class BudgetOrder:
         return sorted(filter(None, map(self.get_priced_item, locations)), key=place)
 
     def precursors(self, entry: PricedBudgetItem) -> list[PricedBudgetItem]:
-        """The locations this seed that the entry cannot be had without."""
         requirement = self.requirement([entry])
 
         candidates: list[PricedLocation] = [

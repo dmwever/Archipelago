@@ -30,6 +30,11 @@ class ScenarioMilitaryLogic:
     def has_navy(self, age: Age2AgeData = Age2AgeData.DARK) -> Rule:
         return self.can_field_role(UnitRole.navy, age) & self.scenario.has_water_access()
 
+    def can_protect_boats(self) -> Rule:
+        ways = [self.scenario.units.can_field(line) for line in ROLE_TO_LINES[UnitRole.navy]]
+        return (Or(*[way for way in ways if not isinstance(way, False_)])
+                & self.scenario.has_water_access())
+
     def has_naval_bombardment(self) -> Rule:
         return self.can_field_role(UnitRole.naval_bombardment) & self.scenario.has_water_access()
 

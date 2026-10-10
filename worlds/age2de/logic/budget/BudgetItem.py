@@ -44,13 +44,9 @@ class BudgetItem:
     there."""
     node: Need
     scenario_rule: Callable[[ScenarioLogic], Rule]
-    """Its own rule in the scenario, less paying."""
     techs_below: tuple[Age2TechData, ...] = ()
-    """Every tech below it, nearest first: a tech's prerequisites, a unit's upgrade chain."""
 
     def need_in_scenario(self, scenario: ScenarioLogic) -> Need:
-        """As the scenario pays for it: its own node, and every tech below it the scenario does not
-        have for itself. A tech let off takes its building and age with it."""
         charged = [
             for_location(tech).node for tech in self.techs_below
                 if scenario.civilization.researches(tech)
@@ -63,8 +59,6 @@ class BudgetItem:
 
 
 def villager_food() -> Need:
-    """One villager, priced at the food that staffs a base. The villager entry and the base both
-    ask it under one identity, so a scenario pays it once."""
     food = Age2ItemData.STARTING_VILLAGER_FOOD.type
     return Need.pay("villager", {food.type: food.amount})
 
@@ -94,8 +88,6 @@ def for_location(location: PricedLocation) -> BudgetItem:
                 lambda scenario: scenario.ages.can_research(location),
             )
         case Age2BaseData():
-            # The Huns build no Houses, so their scenarios' trim drops the House group and the base
-            # is the villager and a Town Center alone.
             return BudgetItem(
                 location, location.age, 0,
                 villager_food()
@@ -104,7 +96,6 @@ def for_location(location: PricedLocation) -> BudgetItem:
                 lambda scenario: scenario.can_have_base(),
             )
         case Age2BuildingData():
-            # Itself, always, even where the scenario starts with one standing, and its prerequisite.
             prerequisite = BUILDING_PREREQUISITE.get(location)
             return BudgetItem(
                 location, location.age, 1,
@@ -114,8 +105,6 @@ def for_location(location: PricedLocation) -> BudgetItem:
                 lambda scenario: scenario.buildings.can_build_building(location),
             )
         case Age2TechData():
-            # Asked for itself it is always charged; below another item it is let off where the
-            # scenario cannot research it or researched it for itself.
             return BudgetItem(
                 location, location.age, 2,
                 Need.pay(location, location.cost)
@@ -125,7 +114,6 @@ def for_location(location: PricedLocation) -> BudgetItem:
                 tuple(_chain(location.prerequisite)),
             )
         case Age2UnitData():
-            # One unit of its line - every tier costs the same, so units of one line share it.
             return BudgetItem(
                 location, location.age, 3,
                 Need.pay(location.line, location.cost)

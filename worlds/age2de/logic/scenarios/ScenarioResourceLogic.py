@@ -60,10 +60,10 @@ class ScenarioResourceLogic:
 
     def _open_gate(self, kind: str) -> Rule:
         if kind == "afloat":
-            return self.scenario.military.has_navy()
+            return self.scenario.military.can_protect_boats()
         if kind == "shoreline":
             return (self.scenario.buildings.can_hold_a_shoreline()
-                    | self.scenario.military.has_navy())
+                    | self.scenario.military.can_protect_boats())
         return self.scenario.buildings.is_fortified()
 
     def tiered(self, gathers: Rule, field: str,
@@ -220,16 +220,16 @@ class ScenarioResourceLogic:
 
         seed_gold = (self.can_gather_gold()
                      | resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD))
-        
+
         wood_by_land = (self.scenario.has_building(Age2BuildingData.MARKET)
                    & self.logic.units.has_unit_items(Age2UnitData.TRADE_CART)
                    & self.can_gather_wood())
-        
+
         wood_by_sea = (self.scenario.has_building(Age2BuildingData.DOCK)
                   & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
                   & (self.can_gather_wood()
                      | resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)))
-        
+
         return (self.scenario.starting_state.trading_ally
                 & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
                 & seed_gold & (wood_by_land | wood_by_sea))

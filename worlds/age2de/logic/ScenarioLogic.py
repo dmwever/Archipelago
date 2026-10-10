@@ -62,7 +62,7 @@ class ScenarioStartingState:
             for soldier in item.type.units:
                 self.obtains_unit[soldier.unit] = (
                     self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
-                
+
 class ScenarioLogic:
     starting_state: ScenarioStartingState
 
@@ -88,10 +88,15 @@ class ScenarioLogic:
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
         self.budget = ScenarioBudgetLogic(self)
-    
+
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils
-    
+
+    def has_builders(self) -> Rule:
+        """Villagers who can put a building up. With professions shuffled, only once the Builder
+        profession arrives: without it a villager can never swap into a Builder."""
+        return self.has_vils() & self.logic.units.has_profession_item(Age2VillagerJobData.BUILDER_MALE)
+
     def can_have_base(self) -> Rule:
         """A base, less paying for it: one to start with or one to put up, and the ground to
         stand it on."""
@@ -119,6 +124,6 @@ class ScenarioLogic:
     def has_building(self, building: Age2BuildingData) -> Rule:
         return (self.starting_state.starts_with_building[building]
                 | self.buildings.can_build_building(building))
-    
+
     def is_unlocked(self) -> Rule:
         return self.starting_state.is_unlocked

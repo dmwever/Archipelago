@@ -112,6 +112,24 @@ class TestUnitItems(Age2RuleTestBase):
                                             Age2ItemData.UPGRADE_HORSE))
 
 
+class TestTheBuilderBuilds(Age2RuleTestBase):
+    """With professions shuffled a villager cannot swap into a Builder until the profession
+    arrives, so nothing gets put up without it. Buildings that stand at the start need nobody."""
+
+    BUILDER = Age2ItemData.PROFESSION_BUILDER.item_name
+
+    def test_putting_a_building_up_needs_the_builder(self):
+        self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        location = Age2BuildingData.BARRACKS.location_name
+        self.assertTrue(self.can_reach(location))
+        self.assertFalse(self.can_reach(location, self.state_without(self.BUILDER)))
+
+    def test_without_professions_the_builder_is_no_requirement(self):
+        self.build(shuffle_villager=ShuffleVillager.option_yes)
+        location = Age2BuildingData.BARRACKS.location_name
+        self.assertNotIn(self.BUILDER, self.item_requirements(location))
+
+
 class TestVillagerJobs(Age2RuleTestBase):
 
     def setUp(self) -> None:
