@@ -113,7 +113,7 @@ class Requirement:
         ][:2 - len(already_held)]
         if len(already_held) + len(missing) < 2:
             if age_up_choices.single_building is None:
-                return []
+                raise AssertionError(f"nothing could climb into {age.name} in this scenario")
             return self._prerequisite_chain(age_up_choices.single_building)
 
         bought: list[Age2BuildingData] = []

@@ -13,13 +13,6 @@ from .Requirement import Requirement
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
-@dataclasses.dataclass(frozen=True, order=True)
-class OrderPlace:
-    age: Age2AgeData
-    from_seed: bool
-    rank: int
-    """The seed's rank for a sampled item."""
-
 @dataclasses.dataclass(frozen=True)
 class PricedBudgetItem:
     item: BudgetItem
@@ -86,12 +79,14 @@ class BudgetOrder:
             *(location for location in budget.entries if location not in required_purchases),
         ]
 
-        def place(entry: PricedBudgetItem) -> OrderPlace:
+        def place(entry: PricedBudgetItem) -> tuple[Age2AgeData, bool, int]:
+            """Its age; then the scenario's own leaders before the seed's sample; then the seed's
+            rank within the sample."""
             # The base and a purchase the scenario requires of itself, such as Joan 3's Transport
             # Ship, lead their age, drawn or not, so the rest of the order is paid for after them.
             if entry.location is BASE or entry.location in required_purchases:
-                return OrderPlace(entry.age, from_seed=False, rank=0)
-            return OrderPlace(entry.age, from_seed=True, rank=budget.rank[entry.location])
+                return entry.age, False, 0
+            return entry.age, True, budget.rank[entry.location]
 
         return sorted(filter(None, map(self.get_priced_item, locations)), key=place)
 

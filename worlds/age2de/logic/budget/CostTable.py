@@ -51,14 +51,9 @@ class CostTable:
 
         totals_by_mask: list[RunningTotal] = []
         for mask in range(1 << len(waivers)):
-            waived = budget.always_standing | frozenset(
-                building for waiver in on(mask)
-                    for building in waiver.buildings
-            )
-            dropped = budget.always_spared | frozenset(
-                purchase for waiver in on(mask)
-                    for purchase in waiver.purchases
-            )
+            holding = [*budget.always_waived, *on(mask)]
+            waived = frozenset(building for waiver in holding for building in waiver.buildings)
+            dropped = frozenset(purchase for waiver in holding for purchase in waiver.purchases)
             need = order.running_total_for(location, dropped)
             totals_by_mask.append(RunningTotal(Requirement(need, waived, budget.terms)))
 

@@ -78,22 +78,10 @@ class ScenarioBudgetLogic:
         ]
 
     @functools.cached_property
-    def always_standing(self) -> frozenset[Age2BuildingData]:
-        """Buildings that stand whatever the items: no running total ever pays for them."""
-        return frozenset(
-            building for waiver in self._every_cost_waiver
-                if waiver.always_true
-                    for building in waiver.buildings
-        )
-
-    @functools.cached_property
-    def always_spared(self) -> frozenset[PricedLocation]:
-        """Required purchases that something always spares: no running total ever has them."""
-        return frozenset(
-            purchase for waiver in self._every_cost_waiver
-                if waiver.always_true
-                    for purchase in waiver.purchases
-        )
+    def always_waived(self) -> list[ScenarioCostWaived.Resolved]:
+        """The waivers that hold whatever the items: no running total ever pays for their
+        buildings or has their purchases."""
+        return [waiver for waiver in self._every_cost_waiver if waiver.always_true]
 
     @functools.cached_property
     def _every_cost_waiver(self) -> list[ScenarioCostWaived.Resolved]:
