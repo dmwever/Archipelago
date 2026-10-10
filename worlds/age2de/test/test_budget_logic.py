@@ -52,7 +52,7 @@ class BudgetTestBase(bases.Age2RuleTestBase):
         )
 
     def cost_of(self, budget, location, waived: frozenset = frozenset()):
-        return Requirement(budget.plan([budget.get_priced_location(location)]), waived)
+        return Requirement(budget.plan([budget.get_priced_location(location)]), waived, budget.scenario.budget.terms)
 
 
 class TestStartingBuildingsAreLetOff(BudgetTestBase):
@@ -174,8 +174,9 @@ class TestPrecursors(BudgetTestBase):
             budget = self.budget(scenario)
             for entry in budget.order:
                 with self.subTest(f"{scenario.scenario_name}: {entry.location.name}"):
-                    alone = Requirement(budget.plan([entry]), frozenset())
-                    listed = Requirement(budget.plan([*budget.precursors(entry), entry]), frozenset())
+                    alone = Requirement(budget.plan([entry]), frozenset(), budget.scenario.budget.terms)
+                    listed = Requirement(budget.plan([*budget.precursors(entry), entry]), frozenset(),
+                                         budget.scenario.budget.terms)
                     self.assertEqual(alone.cost, listed.cost)
 
     def test_precursors_come_before_their_entry(self):
@@ -187,7 +188,7 @@ class TestPrecursors(BudgetTestBase):
             order = budget.order
             position = {entry.location: index for index, entry in enumerate(order)}
             for index, entry in enumerate(order):
-                charged = Requirement(budget.plan(order[:index + 1]), frozenset()).buildings
+                charged = Requirement(budget.plan(order[:index + 1]), frozenset(), budget.scenario.budget.terms).buildings
                 for precursor in budget.precursors(entry):
                     if precursor.location not in position:
                         continue
@@ -207,6 +208,25 @@ class TestPrecursors(BudgetTestBase):
                              sorted(entry.age for entry in sampled))
 
 
+class TestNeedsAddInAnyOrder(BudgetTestBase):
+    """A Need used to carry its scenario's start age and age-ups, and adding two dropped them: two
+    settled needs summed charged every age from the Dark Age, or raised a KeyError on the first
+    age-up. The terms live in Requirement now, so a Need is a plain union."""
+
+    def test_settling_then_adding_costs_what_adding_then_settling_does(self):
+        for scenario in self.world.pool.scenarios.included:
+            budget = self.budget(scenario)
+            terms, logic = budget.scenario.budget.terms, budget.scenario.budget
+            order = budget.order
+            for first, second in zip(order, order[1:]):
+                with self.subTest(f"{scenario.scenario_name}: {first.location.name} + "
+                                  f"{second.location.name}"):
+                    each = logic.settle(first.need) + logic.settle(second.need)
+                    together = logic.settle(first.need + second.need)
+                    self.assertEqual(Requirement(each, frozenset(), terms).cost,
+                                     Requirement(together, frozenset(), terms).cost)
+
+
 class TestTheTotalNeverGrows(BudgetTestBase):
     """Adding a waived building must never raise what a running total asks for, or a location
     could fall out of logic as items arrive."""
@@ -220,11 +240,11 @@ class TestTheTotalNeverGrows(BudgetTestBase):
                 plan = budget.plan(order[:end])
                 for size in range(len(waivable) + 1):
                     for waived in itertools.combinations(waivable, size):
-                        base = Requirement(plan, frozenset(waived)).cost
+                        base = Requirement(plan, frozenset(waived), budget.scenario.budget.terms).cost
                         for extra in waivable:
                             if extra in waived:
                                 continue
-                            more = Requirement(plan, frozenset((*waived, extra))).cost
+                            more = Requirement(plan, frozenset((*waived, extra)), budget.scenario.budget.terms).cost
                             for resource, amount in more.items():
                                 if amount > base.get(resource, 0):
                                     self.fail(f"{scenario.scenario_name}: waiving {extra.name} on "
@@ -247,7 +267,7 @@ class TestTheTotalNeverGrows(BudgetTestBase):
             for end in range(1, len(order) + 1):
                 plan = budget.plan(order[:end])
                 own = plan.own_cost()
-                ages = Requirement(plan, frozenset()).ages
+                ages = Requirement(plan, frozenset(), budget.scenario.budget.terms).ages
                 with self.subTest(f"{scenario.scenario_name}: entry {end}"):
                     for resource, amount in previous_own.items():
                         self.assertGreaterEqual(own.get(resource, 0), amount)

@@ -1,6 +1,7 @@
 """What a settled Need costs once some buildings are standing."""
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING, Iterable
 
 from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
@@ -12,19 +13,31 @@ from .Need import CLIMBED_AGES, Need
 if TYPE_CHECKING:
     from ..custom_logic.AgeUpRequirement import AgeUpRequirement
 
+@dataclasses.dataclass(frozen=True)
+class ScenarioTerms:
+    start_age: Age2AgeData
+    age_ups: tuple[AgeUpRequirement, ...]
+
+
 class Requirement:
-    """What a settled Need costs once the buildings in `waived` are standing for free."""
+    """What a settled Need costs in one scenario once the buildings in `waived` are standing for
+    free."""
     cost: dict[Resource, int]
     buildings: list[Age2BuildingData]
     ages: list[Age2AgeData]
 
-    def __init__(self, need: Need, waived: frozenset[Age2BuildingData]) -> None:
+    def __init__(
+        self,
+        need: Need,
+        waived: frozenset[Age2BuildingData],
+        terms: ScenarioTerms,
+    ) -> None:
         self._waived: frozenset[Age2BuildingData] = waived
         self._owned_buildings: set[Age2BuildingData] = set(need.entry_buildings)
         self._resource_costs: dict[Resource, int] = dict.fromkeys(SAMPLED_RESOURCES, 0)
 
         self._age_up_choices: dict[Age2AgeData, AgeUpRequirement] = {
-            age_up.into_age: age_up for age_up in need.age_up_requirements
+            age_up.into_age: age_up for age_up in terms.age_ups
         }
 
         building_choices: list[tuple[Age2BuildingData, ...]] = sorted(
@@ -34,7 +47,7 @@ class Requirement:
         self.buildings = []
         self.ages = [
             age for age in CLIMBED_AGES
-                if need.starting_age < age <= need.needed_age
+                if terms.start_age < age <= need.needed_age
         ]
 
         self._pay(need.own_cost().items())

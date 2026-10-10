@@ -110,8 +110,7 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
             return self.table.total(state).need
 
         def requirement(self, state: CollectionState | None) -> Requirement:
-            total = self.table.total(state)
-            return Requirement(total.need, total.waived)
+            return self.table.total(state).requirement
 
         def easy_source_holds(self, resource: Resource, state: CollectionState) -> bool:
             return any(each is resource and rule(state) for each, rule in self.easy)

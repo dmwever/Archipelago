@@ -20,9 +20,10 @@ if TYPE_CHECKING:
 @dataclasses.dataclass(frozen=True, eq=False)
 class RunningTotal:
     """The running total under one combination of waivers: the buildings they waive, what it
-    needs, and what that costs."""
+    needs, what that charges, and what that costs."""
     waived: frozenset[Age2BuildingData]
     need: Need
+    requirement: Requirement
     cost: Cost
 
 @dataclasses.dataclass(frozen=True, eq=False)
@@ -56,8 +57,10 @@ class CostTable:
                     for purchase in waiver.purchases
             )
             need = order.running_total_for(location, dropped)
-            requirement = Requirement(need, waived)
-            totals_by_mask.append(RunningTotal(waived, need, Need.as_cost(requirement.cost)))
+            requirement = Requirement(need, waived, budget.terms)
+            totals_by_mask.append(
+                RunningTotal(waived, need, requirement, Need.as_cost(requirement.cost))
+            )
 
         return cls(waivers, tuple(totals_by_mask))
 

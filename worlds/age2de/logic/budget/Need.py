@@ -9,7 +9,6 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 
 if TYPE_CHECKING:
-    from ..custom_logic.AgeUpRequirement import AgeUpRequirement
     from ..scenarios.ScenarioBudgetLogic import ScenarioBudgetLogic
 
 CLIMBED_AGES = [Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL]
@@ -37,11 +36,6 @@ class Need:
     """Buildings it needs, each as the options any one of which will do."""
     needed_age: Age2AgeData = Age2AgeData.DARK
     """The highest age it needs."""
-    starting_age: Age2AgeData = Age2AgeData.DARK
-    """The age the scenario pays its way up from; set by by_scenario."""
-    age_up_requirements: tuple[AgeUpRequirement, ...] = ()
-    """What leaves each age in this scenario, narrowed to what could stand; set by
-    by_scenario."""
 
     def __add__(self, other: 'Need') -> 'Need':
         return Need(
@@ -78,11 +72,11 @@ class Need:
     def reach(age: Age2AgeData) -> 'Need':
         return Need(needed_age=age)
 
-    def by_scenario(self, budget_logic: ScenarioBudgetLogic) -> 'Need':
+    def settle(self, budget_logic: ScenarioBudgetLogic) -> 'Need':
         def could_be_in_scenario(
             buildings: Iterable[Age2BuildingData],
         ) -> tuple[Age2BuildingData, ...]:
-            
+
             available_buildings = filter(budget_logic.could_have, buildings)
             return tuple(sorted(available_buildings, key=budget_logic.choice_order))
 
@@ -93,13 +87,7 @@ class Need:
                 possible_building_choices.add(building_in_scenario)
 
         # Frozen and tupled again: a Need is kept in resolved rules, which hash.
-        return dataclasses.replace(
-            self,
-            building_choices=frozenset(possible_building_choices),
-            needed_age=max(budget_logic.start_age, self.needed_age),
-            starting_age=budget_logic.start_age,
-            age_up_requirements=budget_logic.age_up_requirements,
-        )
+        return dataclasses.replace(self, building_choices=frozenset(possible_building_choices))
 
     def own_cost(self) -> dict[Resource, int]:
         cost: dict[Resource, int] = {}

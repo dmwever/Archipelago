@@ -10,6 +10,7 @@ from rule_builder.rules import False_, Rule
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ..budget.Need import CLIMBED_AGES, Need
+from ..budget.Requirement import ScenarioTerms
 from ..custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 
@@ -68,6 +69,10 @@ class ScenarioBudgetLogic:
             )
                 for age in CLIMBED_AGES
         )
+
+    @functools.cached_property
+    def terms(self) -> ScenarioTerms:
+        return ScenarioTerms(self.start_age, self.age_up_requirements)
 
     @functools.cached_property
     def standing_buildings(self) -> dict[Age2BuildingData, Rule]:
@@ -147,5 +152,5 @@ class ScenarioBudgetLogic:
             self._could_have_building[building] = not self.logic.is_impossible(has_building)
         return self._could_have_building[building]
 
-    def calculate(self, need: Need) -> Need:
-        return need.by_scenario(self)
+    def settle(self, need: Need) -> Need:
+        return need.settle(self)
