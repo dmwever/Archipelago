@@ -188,7 +188,7 @@ class TestMercenariesTheSeedNeeds(bases.Age2RuleTestBase):
     the units, because whether a soldier becomes a location is what decides the rest.
     """
 
-    campaigns = ["Attila the Hun", "Joan of Arc"]
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
     starting_campaigns = ["Attila the Hun"]
 
     def referenced(self, world) -> set:

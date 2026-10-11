@@ -31,8 +31,6 @@ from ..Options import ScenarioBranching
 
 AGEIPELAGO_XS = AGEIPELAGO_ROOT / "xs"
 AGEIPELAGO_SCENARIOS = AGEIPELAGO_ROOT / "scenario"
-BRANCHING_SCENARIOS = (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_ATTILA_4,
-                       Age2ScenarioData.AP_JOAN_2, Age2ScenarioData.AP_JOAN_3)
 WRAPPER = re.compile(r"void\s+(\w+)\s*\(\s*\)\s*\{(.*?)\}", re.DOTALL)
 CALL_CONDITION = re.compile(r"^\s*([A-Za-z_]\w*)\s*\(\s*\)\s*;?\s*$")
 CHECK = re.compile(r"AP_Check_Location\s*\(\s*(\d+)\s*\)")
@@ -43,6 +41,10 @@ BRANCHING_TYPES = (Age2LocationType.OBJECTIVE_BRANCHING_ALL,
                    Age2LocationType.OBJECTIVE_BRANCHING_ANY)
 BRANCHING_LOCATIONS = [location for type in BRANCHING_TYPES
                        for location in TYPE_TO_LOCATIONS[type]]
+# Derived, never listed: a scenario is a branching scenario exactly when it owns a branching
+# location. Hand-maintaining this went stale the moment a new campaign grew its first branch.
+BRANCHING_SCENARIOS = tuple(dict.fromkeys(location.scenario
+                                          for location in BRANCHING_LOCATIONS))
 
 
 class FakeEffect:
@@ -118,11 +120,6 @@ class TestTheWrapperNames(unittest.TestCase):
             if location not in branching:
                 with self.subTest(location.name):
                     self.assertEqual(location.trigger_call, "")
-
-    def test_the_branching_locations_sit_in_four_scenarios(self):
-        self.assertEqual({location.scenario for location in BRANCHING_LOCATIONS},
-                         set(BRANCHING_SCENARIOS))
-
 
 class TestReadingTheScriptCall(unittest.TestCase):
     def test_a_plain_call_resolves(self):
@@ -238,7 +235,7 @@ class TestWhatTheInstallDecides(unittest.TestCase):
         self.assertEqual(len(steps), 2)
         self.assertIs(steps[0], ScenarioParser.rebase_to_dark)
 
-    def test_only_the_four_branching_scenarios_are_parsed(self):
+    def test_only_the_branching_scenarios_are_parsed(self):
         handler = self.handler(ScenarioBranching.option_any)
         parsed = [scenario for scenario in Age2ScenarioData if handler.steps_for(scenario)]
         self.assertEqual(set(parsed), set(BRANCHING_SCENARIOS))
