@@ -14,6 +14,7 @@ from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
+from ..locations.UnitLocations import VILLAGER_LINES
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM, logic_buildings
 
 NOT_CAVEMAN = OptionFilter(Caveman, Caveman.option_false)
@@ -110,6 +111,8 @@ class UnitLogic:
     # -- items -------------------------------------------------------------------------------
 
     def has_unit_items(self, unit: Age2UnitData) -> Rule:
+        if unit.line in VILLAGER_LINES:
+            return self.has_villager_item()
         if self.world.options.unitsanity == Unitsanity.option_none:
             return True_()
         mode = self.world.options.unitsanity_items
@@ -118,6 +121,11 @@ class UnitLogic:
         if mode == UnitsanityItems.option_upgrades:
             return self.has_upgrade_tokens(unit)
         return self.has_building_item(unit)
+
+    def has_villager_item(self) -> Rule:
+        if not self.world.unit_regions.shuffled_villager:
+            return True_()
+        return Has(Age2ItemData.UNIT_LINE_VILLAGER.item_name)
 
     def has_line_item(self, line: Age2UnitLineData) -> Rule:
         if line not in self.world.unit_regions.shuffled_lines:

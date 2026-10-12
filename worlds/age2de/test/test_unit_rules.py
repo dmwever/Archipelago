@@ -112,6 +112,31 @@ class TestUnitItems(Age2RuleTestBase):
                                             Age2ItemData.UPGRADE_HORSE))
 
 
+class TestTrainingVillagers(Age2RuleTestBase):
+    """With villagers shuffled the game trains none until the Villager item arrives, whatever
+    unitsanity says. The villagers a scenario starts with need nothing."""
+
+    VILLAGER = Age2ItemData.UNIT_LINE_VILLAGER.item_name
+
+    def test_training_a_villager_needs_the_villager_item(self):
+        for mode in (ShuffleVillager.option_yes, ShuffleVillager.option_include_professions):
+            with self.subTest(shuffle_villager=mode):
+                world = self.build(shuffle_villager=mode)
+                rule = world.rules.logic.units.has_unit_items(Age2UnitData.VILLAGER_FEMALE)
+                self.assertIn(self.VILLAGER, rule.resolve(world).item_dependencies())
+
+    def test_unshuffled_villagers_need_nothing(self):
+        world = self.build(shuffle_villager=ShuffleVillager.option_no)
+        rule = world.rules.logic.units.has_unit_items(Age2UnitData.VILLAGER_MALE)
+        self.assertTrue(rule.resolve(world).always_true)
+
+    def test_a_villager_location_is_out_of_logic_without_it(self):
+        world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        location = Age2UnitData.VILLAGER_MALE.location_name
+        self.assertTrue(self.can_reach(location))
+        self.assertFalse(self.can_reach(location, self.state_without(self.VILLAGER)))
+
+
 class TestTheBuilderBuilds(Age2RuleTestBase):
     """With professions shuffled a villager cannot swap into a Builder until the profession
     arrives, so nothing gets put up without it. Buildings that stand at the start need nobody."""

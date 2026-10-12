@@ -83,6 +83,18 @@ class TestStartingBuildingsAreLetOff(BudgetTestBase):
         cost = self.cost_of(budget, Age2BuildingData.BLACKSMITH, bleda)
         self.assertGreaterEqual(cost.cost[Resource.WOOD], Age2BuildingData.BLACKSMITH.cost[Resource.WOOD])
 
+    def test_a_standing_building_is_no_stepping_stone(self):
+        """The order places Build Town Center ahead of what needs one. With Bleda's Camp standing
+        one up, a running total buys it only where the seed sampled it as a check of its own."""
+        budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
+        bleda = self.waived(budget, self.state_with(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name))
+        sampled = {entry.location for entry in budget._initial_order}
+        for entry in budget.order:
+            need = budget.running_total_for(entry.location, frozenset(), bleda)
+            for building in bleda - sampled - {entry.location}:
+                with self.subTest(f"{entry.location.name} / {building.name}"):
+                    self.assertNotIn(building, need.entry_buildings)
+
 
 class TestAgeUps(BudgetTestBase):
     def test_a_dark_start_pays_for_feudal_and_its_town_center(self):

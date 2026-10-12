@@ -32,7 +32,10 @@ class BudgetOrder:
         self.world = scenario.logic.world
 
         self._precursors: dict[PricedLocation, list[PricedBudgetItem]] = {}
-        self._needed: dict[frozenset[PricedLocation], frozenset[PricedLocation]] = {}
+        self._standing_precursors: dict[frozenset[Age2BuildingData],
+                                        dict[PricedLocation, list[PricedBudgetItem]]] = {}
+        self._needed: dict[tuple[frozenset[PricedLocation], frozenset[Age2BuildingData]],
+                           frozenset[PricedLocation]] = {}
         self.order = self._build_order()
 
     # -- pricing ------------------------------------------------------------------------------
@@ -85,8 +88,9 @@ class BudgetOrder:
 
         return sorted(filter(None, map(self.get_priced_item, locations)), key=place)
 
-    def precursors(self, entry: PricedBudgetItem) -> list[PricedBudgetItem]:
-        requirement = self.requirement([entry])
+    def precursors(self, entry: PricedBudgetItem,
+                   waived: frozenset[Age2BuildingData] = frozenset()) -> list[PricedBudgetItem]:
+        requirement = self.requirement([entry], waived)
 
         candidates: list[PricedLocation] = [
             *self._prerequisite_buildings(requirement),
@@ -138,19 +142,32 @@ class BudgetOrder:
 
     # -- running totals -----------------------------------------------------------------------
 
-    def needed(self, dropped: frozenset[PricedLocation]) -> frozenset[PricedLocation]:
-        if dropped not in self._needed:
-            self._needed[dropped] = frozenset(
+    def needed(self, dropped: frozenset[PricedLocation],
+               waived: frozenset[Age2BuildingData] = frozenset()) -> frozenset[PricedLocation]:
+        key = (dropped, waived)
+        if key not in self._needed:
+            precursors = self._precursors_with(waived)
+            self._needed[key] = frozenset(
                 precursor.location for entry in self._initial_order
                     if entry.location not in dropped
-                        for precursor in (*self._precursors[entry.location], entry)
+                        for precursor in (*precursors[entry.location], entry)
             )
-        return self._needed[dropped]
+        return self._needed[key]
+
+    def _precursors_with(self, waived: frozenset[Age2BuildingData]) -> dict[PricedLocation, list[PricedBudgetItem]]:
+        if not waived:
+            return self._precursors
+        if waived not in self._standing_precursors:
+            self._standing_precursors[waived] = {
+                entry.location: self.precursors(entry, waived) for entry in self._initial_order
+            }
+        return self._standing_precursors[waived]
 
     def running_total_for(
         self,
         location: PricedLocation,
         dropped: frozenset[PricedLocation] = frozenset(),
+        waived: frozenset[Age2BuildingData] = frozenset(),
     ) -> Need | None:
         index = next(
             (n for n, entry in enumerate(self.order) if entry.location is location),
@@ -159,7 +176,7 @@ class BudgetOrder:
         if index is None:
             return None
 
-        needed = self.needed(dropped)
+        needed = self.needed(dropped, waived)
         return self.plan(
             entry for entry in self.order[:index + 1]
                 if entry.location in needed or entry.location is location
