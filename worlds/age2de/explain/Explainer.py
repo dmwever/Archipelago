@@ -9,9 +9,11 @@ from BaseClasses import CollectionState
 from NetUtils import JSONMessagePart
 from rule_builder.rules import Rule
 
-from .Costs import Costs
-from .Layout import Lines, _ranges, colored, text, truth
-from .Lookup import find
+from ..generation.pools.BudgetPool import SAMPLED_RESOURCES
+from ..logic.budget.BudgetItem import for_location
+from .Costs import Costs, budget_label
+from .Layout import BUDGETED_ITEMS, Lines, _ranges, colored, text, truth
+from .Lookup import _BY_NAME, find
 from .Routes import Route, age_name, any_building_item, building_names, routes_for
 
 if TYPE_CHECKING:
@@ -37,6 +39,9 @@ class Explainer:
         """What the last explanation's [/explain_more N] markers open, by N - 1."""
 
     def explain_rule(self, typed: str, state: CollectionState) -> list[JSONMessagePart] | None:
+        if typed.strip().lower() == BUDGETED_ITEMS.lower():
+            self._entries = []
+            return self._budgeted_items(state).parts()
         found = find(self.world, typed)
         if found is None:
             return None
@@ -49,6 +54,48 @@ class Explainer:
         for route in routes_for(self.world, data):
             self._route(lines, name, route, state)
         return lines.parts()
+
+    def _budgeted_items(self, state: CollectionState) -> Lines:
+        """The seed's sample in its one drawn order. Every scenario buys what it has of it age by
+        age, in this order within an age, after its own purchases and its base. An age leads its
+        own: every item of it asks the scenario to reach it, so its order puts the age-up first. An item no
+        included scenario budgets is left out. Each reads as the budget words it, green where it
+        is in logic, with its own price and its costs view to open."""
+        budget = self.world.pool.budget
+        bought = {entry.location for scenario in self.world.pool.scenarios.included
+                  for entry in self.world.rules.logic.for_scenario(scenario).budget.order.order}
+        ordered = sorted((location for location in budget.entries if location in bought),
+                         key=lambda location: (for_location(location).age, location is not for_location(location).age,
+                                                budget.rank[location]))
+        lines = Lines()
+        lines.add(0, text(f"{BUDGETED_ITEMS}: {len(ordered)}, bought age by age in this order"))
+        age = None
+        for number, location in enumerate(ordered, start=1):
+            entry_age = for_location(location).age
+            if entry_age is not age:
+                age = entry_age
+                lines.add(1, text(age_name(age)))
+            name = location.location_name
+            reached = self.world.multiworld.get_location(name, self.world.player).can_reach(state)
+            route = next((route for route in routes_for(self.world, _BY_NAME[name])
+                          if route.price is not None), None)
+            parts = [text(f"{number}. "), colored(budget_label(location), reached)]
+            if route is not None:
+                price = ", ".join(f"{route.price[1][resource]} {resource.name.lower()}"
+                                  for resource in SAMPLED_RESOURCES if route.price[1].get(resource, 0) > 0)
+                parts += [text(f" ({price})" if price else " (free)"),
+                          self._entry(f"what {name} costs",
+                                      lambda st, name=name, route=route: self._costs_view(name, route, st))]
+            lines.add(2, *parts)
+        return lines
+
+    def _costs_view(self, name: str, route: Route, state: CollectionState) -> Lines:
+        """The same costs view as under the location's own /explain."""
+        offering = [self.world.rules.logic.for_scenario(scenario)
+                    for campaign in self.world.pool.campaigns.enabled
+                    for scenario in self.world.pool.scenarios.in_campaign(campaign)
+                    if self._status(route, scenario, state) is not None]
+        return Costs(self.world, route, offering).drill(name, state, self._entry)
 
     def explain_more(self, argument: str, state: CollectionState) -> list[JSONMessagePart]:
         """The entry behind a [/explain_more N] marker of the last explanation."""

@@ -180,3 +180,25 @@ class TestChargeNames(Age2RuleTestBase):
         line = Age2UnitData.MAN_AT_ARMS.line
         self.assertEqual("Train Man-at-Arms",
                          _trained_name(("own", line), {line: Age2UnitData.MAN_AT_ARMS}))
+
+
+class TestBudgetedItems(ExplainTestBase):
+    """/explain Budgeted Items: the seed's sample in its one order, less what nothing buys."""
+
+    def test_it_lists_what_some_scenario_buys_in_the_seeded_order(self):
+        from ..explain.Explainer import BUDGETED_ITEMS
+        from ..logic.budget.BudgetItem import for_location
+        budget = self.world.pool.budget
+        bought = {entry.location for scenario in self.world.pool.scenarios.included
+                  for entry in self.world.rules.logic.for_scenario(scenario).budget.order.order}
+        from ..explain.Costs import budget_label
+        expected = [budget_label(location) for location in sorted(
+            (location for location in budget.entries if location in bought),
+            key=lambda location: (for_location(location).age, location is not for_location(location).age,
+                                   budget.rank[location]))]
+        listed = [line.strip().split(". ", 1)[1].split("  [")[0].rsplit(" (", 1)[0] for line in
+                  "".join(part["text"] for part in self.world.explain_rule(
+                      BUDGETED_ITEMS.lower(), CollectionState(self.multiworld))).split("\n")
+                  if line.startswith("        ")]
+        self.assertTrue(expected)
+        self.assertEqual(expected, listed)

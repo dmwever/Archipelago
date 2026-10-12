@@ -5,6 +5,8 @@ from __future__ import annotations
 from NetUtils import JSONMessagePart
 
 INDENT = "    "
+BUDGETED_ITEMS = "Budgeted Items"
+"""What /explain takes for the seed's budget order rather than a location."""
 WIDTH = 70
 """Characters a line may run to before it continues on the next, one level deeper."""
 

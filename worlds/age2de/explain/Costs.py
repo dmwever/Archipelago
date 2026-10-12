@@ -20,7 +20,7 @@ from ..locations.Units import Age2UnitData
 from ..logic.budget.Need import Cost, Need
 from ..logic.budget.CostTable import CostTable
 from ..logic.custom_logic.ResourceAmount import contributors
-from .Layout import Lines, _ranges, colored, text
+from .Layout import BUDGETED_ITEMS, Lines, _ranges, colored, text
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -73,7 +73,7 @@ class Costs:
         pile = self._pile(state)
         reached = self.world.multiworld.get_location(label, self.world.player).can_reach(state)
         unlocked = [sl for sl in self.offering if sl.is_unlocked().resolve(self.world)(state)]
-        title = [text("Costs of "), colored(label, reached), text(": ")]
+        title = [text("Costs of "), colored(budget_label(self.priced), reached), text(": ")]
         lines.add(0, *title, *self.line(state, unlocked)[1:])
         lines.add(1, text("Starting pile: " + ", ".join(
             f"{pile[resource]} {resource.name.lower()}" for resource in SAMPLED_RESOURCES)))
@@ -110,10 +110,9 @@ class Costs:
             key = (full, tuple(waived), opened)
             by_campaign.setdefault(name, {}).setdefault(key, []).append(sl.scenario.chapter)
         if not by_campaign:
-            lines.add(2, colored("Not in budget", False),
-                      text(" - the starting pile can't pay for it"))
+            lines.add(2, colored("Not in budget", False), text(f"  [/explain {BUDGETED_ITEMS}]"))
             return
-        lines.add(2, text("Budgeted in"))
+        lines.add(2, text("Budgeted in"), text(f"  [/explain {BUDGETED_ITEMS}]"))
         noun = f"starting {resource.name.lower()}"
         for campaign in open_campaign:   # every campaign offering the route, in campaign order
             rows: list[tuple[int, list[JSONMessagePart], tuple]] = []
@@ -127,7 +126,8 @@ class Costs:
                                            marker], waived))
             for opened, chapters in unbudgeted.get(campaign, {}).items():
                 rows.append((chapters[0], [colored(_ranges(chapters), opened), text(" "),
-                                           colored("not in budget", False)], ()))
+                                           colored("not in budget", False),
+                                           text(f"  [/explain {BUDGETED_ITEMS}]")], ()))
             for index, (_, parts, waived) in enumerate(sorted(rows, key=lambda row: row[0])):
                 if index:
                     lines.add(4, *parts)
@@ -349,6 +349,18 @@ class Costs:
         held = state.prog_items[self.world.player]
         return {resource: sum(held[name] * each for name, each in contributors(resource))
                 for resource in SAMPLED_RESOURCES}
+
+
+def budget_label(location) -> str:
+    """A budget item as the budget words it: "Train Man-at-Arms", "Train Villager x3",
+    "Research Feudal Age", "Build Mill"."""
+    if location is VILLAGER:
+        return _trained_name(("own", "villager"), {})
+    if isinstance(location, Age2UnitData):
+        return f"Train {location.location_name.removeprefix('Own ')}"
+    if isinstance(location, Age2AgeData):
+        return location.location_name.replace("Reach ", "Research ", 1)
+    return location.location_name
 
 
 def _trained_name(key, trained: dict[Age2UnitLineData, Age2UnitData]) -> str | None:
