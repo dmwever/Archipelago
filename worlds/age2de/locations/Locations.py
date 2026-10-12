@@ -195,6 +195,8 @@ class Age2ScenarioLocationData(enum.IntEnum):
     GEN1_FLOCK_BY_PURPLE =          30122, "Find the Flock by Purple",                  Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
     
     GEN2_VICTORY =                  30200, "Victory",                                   Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.VICTORY
+    GEN2_KUSHLUK_FLEES =            30201, "Make Kushluk Flee",                          Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.OBJECTIVE
+    GEN2_TAYICHIUD_VILLAGE =        30202, "Take the Tayichi'ud Village",                Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.SIDE_QUEST
     GEN3_VICTORY =                  30300, "Victory",                                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.VICTORY
     GEN4_VICTORY =                  30400, "Victory",                                   Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.VICTORY
     GEN5_VICTORY =                  30500, "Victory",                                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.VICTORY
