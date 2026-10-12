@@ -183,17 +183,32 @@ class TestChargeNames(Age2RuleTestBase):
 
 
 class TestBudgetedItems(ExplainTestBase):
-    """/explain Budgeted Items: the seed's sample in its one order, less what nothing buys."""
+    """/explain Budgeted Items: the seed's sample in its one order, less what no scenario's
+    starting resources could ever pay for."""
 
     def test_it_lists_what_some_scenario_buys_in_the_seeded_order(self):
         from ..explain.Explainer import BUDGETED_ITEMS
         from ..logic.budget.BudgetItem import for_location
         budget = self.world.pool.budget
-        bought = {entry.location for scenario in self.world.pool.scenarios.included
-                  for entry in self.world.rules.logic.for_scenario(scenario).budget.order.order}
         from ..explain.Costs import budget_label
+        from ..explain.Lookup import _BY_NAME
+        from ..logic.budget.BudgetTotal import BudgetTotal
+        most = self.world.rules.logic.most_pile
+
+        def budgeted(location) -> bool:
+            """In some scenario's order, with its pile able to pay some of what it costs."""
+            route = next(route for route in routes_for(self.world, _BY_NAME[location.location_name])
+                         if route.price is not None)
+            own = [resource for resource, amount in route.price[1].items() if amount > 0]
+            for scenario in self.world.pool.scenarios.included:
+                total = BudgetTotal(scenario=scenario, location=location).resolve(self.world)
+                if isinstance(total, BudgetTotal.Resolved) and any(
+                        total.lowest(resource) <= most[resource] for resource in own):
+                    return True
+            return False
+
         expected = [budget_label(location) for location in sorted(
-            (location for location in budget.entries if location in bought),
+            (location for location in budget.entries if budgeted(location)),
             key=lambda location: (for_location(location).age, location is not for_location(location).age,
                                    budget.rank[location]))]
         listed = [line.strip().split(". ", 1)[1].split("  [")[0].rsplit(" (", 1)[0] for line in

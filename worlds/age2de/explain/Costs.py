@@ -339,7 +339,8 @@ class Costs:
 
     def _budget(self, sl: ScenarioLogic) -> BudgetTotal.Resolved | None:
         """The scenario's budget total for it, or None if it isn't in that scenario's order."""
-        resolved = BudgetTotal(scenario=sl.scenario, location=self.priced).resolve(self.world)
+        resolved = BudgetTotal(scenario=sl.scenario, location=self.priced,
+                               easily=tuple(sorted((resource for resource, _ in self.cost), key=lambda resource: resource.value))).resolve(self.world)
         return resolved if isinstance(resolved, BudgetTotal.Resolved) else None
 
     def _easy(self, sl: ScenarioLogic, resource: Resource, state: CollectionState) -> bool:

@@ -11,6 +11,7 @@ from rule_builder.rules import Rule
 
 from ..generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ..logic.budget.BudgetItem import for_location
+from ..logic.budget.BudgetTotal import BudgetTotal
 from .Costs import Costs, budget_label
 from .Layout import BUDGETED_ITEMS, Lines, _ranges, colored, text, truth
 from .Lookup import _BY_NAME, find
@@ -62,9 +63,7 @@ class Explainer:
         included scenario budgets is left out. Each reads as the budget words it, green where it
         is in logic, with its own price and its costs view to open."""
         budget = self.world.pool.budget
-        bought = {entry.location for scenario in self.world.pool.scenarios.included
-                  for entry in self.world.rules.logic.for_scenario(scenario).budget.order.order}
-        ordered = sorted((location for location in budget.entries if location in bought),
+        ordered = sorted((location for location in budget.entries if self._budgeted_anywhere(location)),
                          key=lambda location: (for_location(location).age, location is not for_location(location).age,
                                                 budget.rank[location]))
         lines = Lines()
@@ -77,8 +76,7 @@ class Explainer:
                 lines.add(1, text(age_name(age)))
             name = location.location_name
             reached = self.world.multiworld.get_location(name, self.world.player).can_reach(state)
-            route = next((route for route in routes_for(self.world, _BY_NAME[name])
-                          if route.price is not None), None)
+            route = self._priced_route(location)
             parts = [text(f"{number}. "), colored(budget_label(location), reached)]
             if route is not None:
                 price = ", ".join(f"{route.price[1][resource]} {resource.name.lower()}"
@@ -88,6 +86,20 @@ class Explainer:
                                       lambda st, name=name, route=route: self._costs_view(name, route, st))]
             lines.add(2, *parts)
         return lines
+
+    def _budgeted_anywhere(self, location) -> bool:
+        route = self._priced_route(location)
+        if route is None:
+            return False
+        easily = tuple(sorted((resource for resource, amount in route.price[1].items() if amount > 0),
+                              key=lambda resource: resource.value))
+        return any(isinstance(BudgetTotal(scenario=scenario, location=location, easily=easily).resolve(self.world),
+                              BudgetTotal.Resolved)
+                   for scenario in self.world.pool.scenarios.included)
+
+    def _priced_route(self, location) -> Route | None:
+        return next((route for route in routes_for(self.world, _BY_NAME[location.location_name])
+                     if route.price is not None), None)
 
     def _costs_view(self, name: str, route: Route, state: CollectionState) -> Lines:
         """The same costs view as under the location's own /explain."""

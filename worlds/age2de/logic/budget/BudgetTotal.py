@@ -51,11 +51,20 @@ def _label(identity: object) -> str:
 class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
     scenario: Age2ScenarioData
     location: PricedLocation
+    easily: tuple[Resource, ...] = ()
 
     @override
     def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
         """Resolved once per seed and shared, like the scenario questions: the base's total sits
         in every has_base, and its purchases and source rules are not cheap to work out again."""
+        resolved = self._shared(world)
+        if (self.easily and isinstance(resolved, BudgetTotal.Resolved)
+                and not any(resolved.lowest(resource) <= world.rules.logic.most_pile[resource]
+                            for resource in self.easily)):
+            return False_().resolve(world)   # never from the pile: the easy sources decide alone
+        return resolved
+
+    def _shared(self, world: 'Age2World') -> Rule.Resolved:
         logic = world.rules.logic
         key = (self.scenario, self.location)
         if key not in logic.budget_totals:
@@ -133,6 +142,9 @@ class BudgetTotal(Rule["Age2World"], game="Age Of Empires II: Definitive Edition
 
         def requirement(self, state: CollectionState | None) -> Requirement:
             return self.table.total(state).requirement
+
+        def lowest(self, resource: Resource) -> int:
+            return min(dict(total.cost).get(resource, 0) for total in self.table.totals_by_mask)
 
         def easy_source_holds(self, resource: Resource, state: CollectionState) -> bool:
             return any(each is resource and rule(state) for each, rule in self.easy)

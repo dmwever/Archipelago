@@ -272,7 +272,8 @@ class ScenarioResourceLogic:
         if not priced:
             return True_()
         return self.can_sustain(priced) | BudgetTotal(scenario=self.scenario.scenario,
-                                                      location=location)
+                                                      location=location,
+                                                      easily=tuple(sorted(priced, key=lambda resource: resource.value)))
 
     # -- private methods -------------------------------------------------------------
 

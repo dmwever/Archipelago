@@ -518,3 +518,44 @@ class TestNeverLaterThanEasySources(BudgetTestBase):
                     if easy(state) and not real(state):
                         self.fail(f"{scenario.scenario.scenario_name}: {name} is in logic on easy "
                                   f"sources alone but not under its real rule")
+
+
+class TestANeverPaidBudgetIsNoRule(BudgetTestBase):
+    """A total the opening pile could never pay any of the location's own costs from only holds
+    where the easy sources of them already do, so can_pay drops it. That must change no answer."""
+
+    def states(self) -> list[CollectionState]:
+        import random
+        pool = list(self.multiworld.itempool)
+        random.Random(11).shuffle(pool)
+        states = [CollectionState(self.multiworld), self.multiworld.get_all_state(False)]
+        for share in (4, 3, 2):
+            state = CollectionState(self.multiworld)
+            for item in pool[:len(pool) // share]:
+                state.collect(item, prevent_sweep=True)
+            states.append(state)
+        return states
+
+    def test_dropping_it_changes_no_answer(self):
+        states = self.states()
+        dropped = 0
+        for scenario in self.world.pool.scenarios.included:
+            economy = self.world.rules.logic.for_scenario(scenario).economy
+            for entry in self.budget(scenario).order:
+                location = entry.location
+                if location is BASE or not hasattr(location, "cost"):
+                    continue
+                own = [resource for resource, amount in location.cost.items() if amount > 0]
+                if location is VILLAGER:
+                    own = [Resource.FOOD]
+                if not own:
+                    continue
+                kept = (economy.can_sustain(own)
+                        | BudgetTotal(scenario=scenario, location=location)).resolve(self.world)
+                asked = economy.can_pay(dict.fromkeys(own, 1), location).resolve(self.world)
+                dropped += not any(isinstance(child, BudgetTotal.Resolved)
+                                   for child in getattr(asked, "children", ()))
+                for index, state in enumerate(states):
+                    with self.subTest(f"{scenario.name} / {location.name} / state {index}"):
+                        self.assertEqual(kept(state), asked(state))
+        self.assertGreater(dropped, 0, "nothing was ever dropped, so this proves nothing")
