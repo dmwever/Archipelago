@@ -18,7 +18,7 @@ from .ScenarioResources import ScenarioResourceCount, ScenarioResourceDemand, Ti
 
 Age2ScenarioData.AP_ELCID_1.demand = ScenarioResourceDemand(gold=3000, stone=1000, food=10000)
 
-Age2ScenarioData.AP_ELCID_2.demand = ScenarioResourceDemand(gold=3000, stone12000, food=15000)
+Age2ScenarioData.AP_ELCID_2.demand = ScenarioResourceDemand(gold=3000, stone=1000, food=15000)
 
 Age2ScenarioData.AP_ELCID_3.demand = ScenarioResourceDemand(gold=3000, stone=1000, food=10000)
 
