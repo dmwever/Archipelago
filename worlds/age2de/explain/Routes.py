@@ -53,9 +53,9 @@ class Route:
     at: tuple[Age2BuildingData, ...] = ()
     """The buildings it is made or researched at."""
     age: Age2AgeData | None = None
+    """The age it is first had in."""
     upgrade: Age2TechData | None = None
     """The pooled tech whose item the route asks for, unless a scenario starts with it researched."""
-    """The age it is first had in."""
 
     @property
     def label(self) -> str:

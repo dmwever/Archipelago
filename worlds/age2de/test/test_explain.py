@@ -2,6 +2,7 @@
 unlock, structure and payment ORed together inline, thousands of characters for one unit. These pin
 the indented answer that replaced it - and that it never disagrees with the rule it explains."""
 import random
+import re
 
 from BaseClasses import CollectionState
 
@@ -135,6 +136,37 @@ class TestTheCampaignBudget(ExplainTestBase):
         self.assertGreater(checked, 0)
 
 
+class TestTheCampaignDrill(ExplainTestBase):
+    """A campaign line opens on each chapter offering the route, with the status the line gave -
+    chapters showing the same thing share a block, each still named."""
+
+    def test_each_chapter_once_with_its_status(self):
+        explainer = Explainer(self.world)
+        state = self.states()[-1]
+        checked = 0
+        for name in self.explained()[::7]:
+            _, data = find(self.world, name)
+            for route in routes_for(self.world, data):
+                for campaign in self.world.pool.campaigns.enabled:
+                    expected = []
+                    for scenario in self.world.pool.scenarios.in_campaign(campaign):
+                        status = explainer._status(route, scenario, state)
+                        if status is not None:
+                            expected.append(f"{scenario.chapter}. {scenario.scenario_name}: "
+                                            + explainer._word(route, status)["text"])
+                    if not expected:
+                        continue
+                    shown = []
+                    for line in explainer._campaign_drill(name, route, campaign, state).plain().split("\n"):
+                        if line.startswith("    ") and not line.startswith("        "):
+                            heads, word = line.strip().rsplit(": ", 1)
+                            shown += [f"{head}: {word}" for head in re.split(r", (?=\d+\. )", heads)]
+                    with self.subTest(f"{name} / {route.label} / {campaign.campaign_name}"):
+                        self.assertEqual(sorted(expected), sorted(shown))
+                    checked += 1
+        self.assertGreater(checked, 0)
+
+
 class TestTheLayout(ExplainTestBase):
     def test_no_line_runs_past_the_width(self):
         """The log loses the indentation of any line it has to wrap itself."""
@@ -228,3 +260,48 @@ class TestBudgetedItems(ExplainTestBase):
                   if line.startswith("        ")]
         self.assertTrue(expected)
         self.assertEqual(expected, listed)
+
+
+class TestDirectCommands(ExplainTestBase):
+    """/explain [campaign or scenario] [Costs] <location> goes straight to that branch."""
+
+    def plain_of(self, typed: str) -> str | None:
+        parts = self.world.explain_rule(typed, CollectionState(self.multiworld))
+        return None if parts is None else "".join(part["text"] for part in parts)
+
+    def a_budgeted_location(self) -> str:
+        explainer = Explainer(self.world)
+        return next(location.location_name for location in self.world.pool.budget.entries
+                    if explainer._budgeted_anywhere(location))
+
+    def test_each_form_answers(self):
+        name = self.a_budgeted_location()
+        campaign = self.world.pool.campaigns.enabled[0]
+        scenario = self.world.pool.scenarios.in_campaign(campaign)[0]
+        word = campaign.campaign_name.split()[0]
+        for typed in (f"Costs {name}", f"{campaign.campaign_name} {name}", f"{word} {name}",
+                      f"{word} {scenario.chapter} {name}", f"{scenario.scenario_name} {name}",
+                      f"{word} Costs {name}", f"{word} {scenario.chapter} costs {name.lower()}"):
+            with self.subTest(typed):
+                answer = self.plain_of(typed)
+                self.assertIsNotNone(answer)
+                self.assertNotIn("No location here matches", answer)
+
+    def test_a_scenario_view_names_the_scenario(self):
+        name = self.a_budgeted_location()
+        scenario = self.world.pool.scenarios.included[0]
+        self.assertTrue(self.plain_of(f"{scenario.scenario_name} {name}").startswith(
+            f"{name} in {scenario.scenario_name}"))
+
+    def test_a_scenario_location_is_left_to_ut(self):
+        scenario = self.world.pool.scenarios.included[0]
+        self.assertIsNone(self.plain_of(f"{scenario.scenario_name}: Victory"))
+
+    def test_a_campaign_outside_the_seed_says_so(self):
+        from ..locations.Campaigns import Age2CampaignData
+        missing = next((campaign for campaign in Age2CampaignData
+                        if campaign not in self.world.pool.campaigns.enabled), None)
+        if missing is None:
+            self.skipTest("every campaign is in this seed")
+        self.assertEqual(f"{missing.campaign_name} isn't in this seed.",
+                         self.plain_of(f"{missing.campaign_name} {self.a_budgeted_location()}"))

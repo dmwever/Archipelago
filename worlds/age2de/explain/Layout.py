@@ -32,6 +32,9 @@ class Lines:
     def add(self, depth: int, *parts: JSONMessagePart) -> None:
         self._lines.append((depth, list(parts)))
 
+    def extend(self, other: Lines) -> None:
+        self._lines += other._lines
+
     def add_segments(self, depth: int, head: str, segments: list[list[JSONMessagePart]],
                      separator: str = " · ", tail: tuple[JSONMessagePart, ...] = ()) -> None:
         """`head` then the segments joined by `separator`, continuing one level deeper whenever
