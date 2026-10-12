@@ -123,16 +123,21 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
 
     def test_a_tech_in_the_budget_order_can_be_paid_from_the_pile(self):
         """A tech its scenario's budget order holds may be paid out of the opening pile as well
-        as from an easy source, so its rule carries the running total."""
+        as from an easy source, so its rule carries the running total - unless no pile this seed
+        could hold ever pays any of its cost, when the total adds nothing and is left out."""
         self.build(techsanity=3)
         scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
         held = [entry.location for entry in scenario.budget.order.order
                 if isinstance(entry.location, Age2TechData)]
         if not held:
             self.skipTest("this seed's order holds no tech in Attila 1")
+        most = self.world.rules.logic.most_pile
         for tech in held:
+            total = BudgetTotal(scenario=Age2ScenarioData.AP_ATTILA_1, location=tech).resolve(self.world)
+            payable = any(total.lowest(resource) <= most[resource]
+                          for resource, amount in tech.cost.items() if amount > 0)
             with self.subTest(tech.name):
-                self.assertTrue(self.budget_terms(scenario.techs.can_research(tech), tech))
+                self.assertEqual(payable, bool(self.budget_terms(scenario.techs.can_research(tech), tech)))
 
     def test_a_tech_outside_the_budget_order_needs_an_easy_source(self):
         """Loom used to be researchable on the opening pile in every scenario, which is how

@@ -90,14 +90,15 @@ class Costs:
         line, each with its own budget to open. Campaigns and chapters are green where open to the
         player, amounts where the pile covers them, waivers where they hold."""
         by_campaign: dict[str, dict[tuple, list[int]]] = {}
+        most = self.world.rules.logic.most_pile
         unbudgeted: dict[str, dict[bool, list[int]]] = {}
         open_campaign: dict[str, bool] = {}
         for sl in self.offering:
             total = self._budget(sl)
             name, opened = sl.scenario.campaign.campaign_name, self._open(sl, state)
             open_campaign[name] = open_campaign.get(name, False) or opened
-            if total is None:
-                # It offers the route but never budgets it: only an easy source pays there.
+            if total is None or total.lowest(resource) > most[resource]:
+                # It offers the route but never budgets it, or asks more of this resource than any
                 unbudgeted.setdefault(name, {}).setdefault(opened, []).append(sl.scenario.chapter)
                 continue
             table = total.table
@@ -184,7 +185,7 @@ class Costs:
                 head += [text(", ") if index else text(""), colored(condition, held)]
             if conditions:
                 head.append(text(": "))
-            lines.add(0, *head, *(self._amounts(cost, pile) if cost else [colored("free", True)]))
+            lines.add(0, *head, *(self._asked(cost, pile, scenarios, state) if cost else [colored("free", True)]))
             keys = tuple(key for key, _ in charged)
             colours = self._spend(keys, dict(charged), pile)
             for key, (name, each) in charged:
@@ -286,6 +287,23 @@ class Costs:
             if index:
                 parts.append(text(", "))
             parts.append(colored(sl.scenario.scenario_name, self._open(sl, state)))
+        return parts
+
+    def _asked(self, cost: Cost, pile: dict[Resource, int], scenarios: list[ScenarioLogic],
+               state: CollectionState) -> list[JSONMessagePart]:
+        """A total as it can be paid: "1420 Gold", green while the pile covers it, or "Easy Wood
+        Source" where no pile this seed could ever hold that much, green where every scenario
+        sharing the total has one."""
+        most = self.world.rules.logic.most_pile
+        parts: list[JSONMessagePart] = []
+        for index, (resource, amount) in enumerate(cost):
+            if index:
+                parts.append(text(", "))
+            noun = resource.name.title()
+            if amount > most[resource]:
+                parts.append(colored(f"Easy {noun} Source", all(self._easy(sl, resource, state) for sl in scenarios)))
+            else:
+                parts.append(colored(f"{amount} {noun}", pile[resource] >= amount))
         return parts
 
     @staticmethod

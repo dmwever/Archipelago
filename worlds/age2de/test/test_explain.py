@@ -102,26 +102,37 @@ class TestCantMeansNever(ExplainTestBase):
 
 class TestTheCampaignBudget(ExplainTestBase):
     def test_it_opens_on_the_full_total(self):
-        """No title line: it opens on the first scenario's full total, no waiver holding."""
+        """No title line: it opens on the first scenario's full total, no waiver holding - each
+        amount as itself, or as an easy source where no pile this seed could ever hold it."""
         from ..explain.Costs import Costs
+        from ..explain.Lookup import _BY_NAME
         state = CollectionState(self.multiworld)
-        _, data = find(self.world, "Build Market")
-        route = routes_for(self.world, data)[0]
+        most = self.world.rules.logic.most_pile
         offering = [self.world.rules.logic.for_scenario(scenario)
                     for scenario in self.world.pool.scenarios.included]
-        costs = Costs(self.world, route, offering)
-        for campaign in self.world.pool.campaigns.enabled:
-            budgeted = [sl for sl in offering if sl.scenario.campaign is campaign
-                        and costs._budget(sl) is not None]
-            if not budgeted:
+        checked = 0
+        for location in self.world.pool.budget.entries:
+            route = next((route for route in routes_for(self.world, _BY_NAME[location.location_name])
+                          if route.price is not None), None)
+            if route is None:
                 continue
-            first = costs.campaign_budget("Build Market", campaign.campaign_name, state).plain().split("\n")[0]
-            with self.subTest(campaign.campaign_name):
-                self.assertNotIn("grouped by", first)
-                fulls = {"".join(f"{amount} {resource.name.lower()}, " for resource, amount in
-                                 costs._budget(sl).table.totals_by_mask[0].cost).rstrip(", ")
+            costs = Costs(self.world, route, offering)
+            for campaign in self.world.pool.campaigns.enabled:
+                budgeted = [sl for sl in offering if sl.scenario.campaign is campaign
+                            and costs._budget(sl) is not None]
+                if not budgeted or not costs.cost:
+                    continue
+                first = costs.campaign_budget(location.location_name, campaign.campaign_name,
+                                              state).plain().split("\n")[0]
+                fulls = {", ".join(f"Easy {resource.name.title()} Source" if amount > most[resource]
+                                   else f"{amount} {resource.name.title()}"
+                                   for resource, amount in costs._budget(sl).table.totals_by_mask[0].cost)
                          for sl in budgeted}
-                self.assertTrue(any(first.endswith(": " + full) for full in fulls), first)
+                with self.subTest(f"{location.name} / {campaign.campaign_name}"):
+                    self.assertNotIn("grouped by", first)
+                    self.assertTrue(any(first.endswith(": " + full) for full in fulls), first)
+                checked += 1
+        self.assertGreater(checked, 0)
 
 
 class TestTheLayout(ExplainTestBase):
