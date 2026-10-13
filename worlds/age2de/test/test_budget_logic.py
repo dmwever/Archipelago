@@ -83,6 +83,18 @@ class TestStartingBuildingsAreLetOff(BudgetTestBase):
         cost = self.cost_of(budget, Age2BuildingData.BLACKSMITH, bleda)
         self.assertGreaterEqual(cost.cost[Resource.WOOD], Age2BuildingData.BLACKSMITH.cost[Resource.WOOD])
 
+    def test_a_standing_building_is_no_stepping_stone(self):
+        """The order places Build Town Center ahead of what needs one. With Bleda's Camp standing
+        one up, a running total buys it only where the seed sampled it as a check of its own."""
+        budget = self.budget(Age2ScenarioData.AP_ATTILA_1)
+        bleda = self.waived(budget, self.state_with(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name))
+        sampled = {entry.location for entry in budget._initial_order}
+        for entry in budget.order:
+            need = budget.running_total_for(entry.location, frozenset(), bleda)
+            for building in bleda - sampled - {entry.location}:
+                with self.subTest(f"{entry.location.name} / {building.name}"):
+                    self.assertNotIn(building, need.entry_buildings)
+
 
 class TestAgeUps(BudgetTestBase):
     def test_a_dark_start_pays_for_feudal_and_its_town_center(self):
@@ -506,3 +518,44 @@ class TestNeverLaterThanEasySources(BudgetTestBase):
                     if easy(state) and not real(state):
                         self.fail(f"{scenario.scenario.scenario_name}: {name} is in logic on easy "
                                   f"sources alone but not under its real rule")
+
+
+class TestANeverPaidBudgetIsNoRule(BudgetTestBase):
+    """A total the opening pile could never pay any of the location's own costs from only holds
+    where the easy sources of them already do, so can_pay drops it. That must change no answer."""
+
+    def states(self) -> list[CollectionState]:
+        import random
+        pool = list(self.multiworld.itempool)
+        random.Random(11).shuffle(pool)
+        states = [CollectionState(self.multiworld), self.multiworld.get_all_state(False)]
+        for share in (4, 3, 2):
+            state = CollectionState(self.multiworld)
+            for item in pool[:len(pool) // share]:
+                state.collect(item, prevent_sweep=True)
+            states.append(state)
+        return states
+
+    def test_dropping_it_changes_no_answer(self):
+        states = self.states()
+        dropped = 0
+        for scenario in self.world.pool.scenarios.included:
+            economy = self.world.rules.logic.for_scenario(scenario).economy
+            for entry in self.budget(scenario).order:
+                location = entry.location
+                if location is BASE or not hasattr(location, "cost"):
+                    continue
+                own = [resource for resource, amount in location.cost.items() if amount > 0]
+                if location is VILLAGER:
+                    own = [Resource.FOOD]
+                if not own:
+                    continue
+                kept = (economy.can_sustain(own)
+                        | BudgetTotal(scenario=scenario, location=location)).resolve(self.world)
+                asked = economy.can_pay(dict.fromkeys(own, 1), location).resolve(self.world)
+                dropped += not any(isinstance(child, BudgetTotal.Resolved)
+                                   for child in getattr(asked, "children", ()))
+                for index, state in enumerate(states):
+                    with self.subTest(f"{scenario.name} / {location.name} / state {index}"):
+                        self.assertEqual(kept(state), asked(state))
+        self.assertGreater(dropped, 0, "nothing was ever dropped, so this proves nothing")

@@ -54,7 +54,7 @@ class CostTable:
             holding = [*budget.always_waived, *on(mask)]
             waived = frozenset(building for waiver in holding for building in waiver.buildings)
             dropped = frozenset(purchase for waiver in holding for purchase in waiver.purchases)
-            need = order.running_total_for(location, dropped)
+            need = order.running_total_for(location, dropped, waived)
             totals_by_mask.append(RunningTotal(Requirement(need, waived, budget.terms)))
 
         return cls(waivers, tuple(totals_by_mask))

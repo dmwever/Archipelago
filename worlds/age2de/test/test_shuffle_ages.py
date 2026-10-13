@@ -271,3 +271,19 @@ class TestAgeEventsNeedAClimb(Age2RuleTestBase):
             with self.subTest(age.name):
                 rule = self.world.rules.logic.can_reach_age_anywhere(age).resolve(self.world)
                 self.assertTrue(rule(state))
+
+
+class TestAnAgeClimbsFromTheOneBefore(Age2RuleTestBase):
+    """The Castle Age is researched in the Feudal Age. Its age-up buildings usually imply that, but
+    a building standing at the start - Bleda's Camp's Archery Range and Blacksmith - does not, so
+    the climb asks for the age before itself."""
+
+    def test_no_castle_age_without_the_feudal_age(self):
+        world = self.build(shuffle_ages=True)
+        state = self.state_without(Age2AgeData.FEUDAL.item.item_name)
+        for scenario in world.pool.scenarios.included:
+            if world.pool.ages.starts_in(scenario) >= Age2AgeData.FEUDAL:
+                continue   # it opens in the Feudal Age or later: already there, no item asked
+            sl = world.rules.logic.for_scenario(scenario)
+            with self.subTest(scenario.name):
+                self.assertFalse(sl.ages.can_reach(Age2AgeData.CASTLE).resolve(world)(state))

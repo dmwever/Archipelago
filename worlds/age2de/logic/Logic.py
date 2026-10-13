@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import functools
+from collections import Counter
 from typing import TYPE_CHECKING
 
 from ..Options import Goal
@@ -17,6 +19,7 @@ from rule_builder.rules import False_, Or, Rule
 
 from ..locations.Ages import Age2AgeData
 from ..locations.Techs import Age2TechData
+from ..items.Items import Resource
 
 
 if TYPE_CHECKING:
@@ -32,6 +35,17 @@ class Logic:
     goal: GoalLogic
     units: UnitLogic
     scenarios: list[ScenarioLogic]
+
+    @functools.cached_property
+    def most_pile(self) -> dict[Resource, int]:
+        from ..generation.pools.BudgetPool import SAMPLED_RESOURCES
+        from .custom_logic.ResourceAmount import contributors
+        player = self.world.player
+        made = Counter(item.name for item in self.world.multiworld.itempool if item.player == player)
+        made.update(item.name for item in self.world.multiworld.precollected_items[player])
+        assert made, "most_pile asked before create_items made anything"
+        return {resource: sum(made[name] * each for name, each in contributors(resource))
+                for resource in SAMPLED_RESOURCES}
 
     def __init__(self, world: Age2World):
         self.world = world

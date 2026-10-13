@@ -1,12 +1,14 @@
 # world/age2DE/__init__.py
 
+import functools
 from math import ceil
 import logging
 from Options import OptionError
 from rule_builder.cached_world import CachedRuleBuilderWorld
 import settings
 from typing import Any, ClassVar, Mapping, TextIO
-from BaseClasses import Entrance, Item, ItemClassification, Location, MultiWorld, Region
+from BaseClasses import CollectionState, Entrance, Item, ItemClassification, Location, MultiWorld, Region
+from NetUtils import JSONMessagePart
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, icon_paths, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
@@ -31,6 +33,7 @@ from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     UnitLineUnits, UnitRoles, UnitTechs,
                                     UnitUpgradeTokens, UnitVariants,
                                     VillagerJobBuildings)
+from .explain import Explainer
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
@@ -46,6 +49,10 @@ class Age2Settings(settings.Group):
     
     user_folder: UserDirectory = UserDirectory(AGE2_DE)
         
+UT_SEED = "ut_seed"
+"""Slot data key: the world's own seed, for Universal Tracker to rebuild the same world."""
+
+
 class Age2World(CachedRuleBuilderWorld):
     """
     Age of Empires II: Definitive Edition is a Real-Time Strategy game centered around the medieval
@@ -97,10 +104,21 @@ class Age2World(CachedRuleBuilderWorld):
                 raise OptionError(f"{player_name}: {campaign.campaign_name} has no scenarios.")
 
     def generate_early(self) -> None:
+        self.seed_for_tracker()
         self.inspect_options(self.options, self.player_name)
         self.check_installable_name()
         self.pool = Age2Pool(self)
         self.pool.budget = BudgetPool(self.pool, self.random)
+
+    def seed_for_tracker(self) -> None:
+        regen = getattr(self.multiworld, "re_gen_passthrough", {}).get(self.game, {})
+        self.ut_seed: int = regen.get(UT_SEED) if UT_SEED in regen else self.random.getrandbits(64)
+        self.random.seed(self.ut_seed)
+
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, Any]) -> dict[str, Any]:
+        """Universal Tracker: rebuild with the server's slot data, so seed_for_tracker can match it."""
+        return slot_data
 
     def check_installable_name(self) -> None:
         """/install names each campaign file after the slot, so the name has to survive a file
@@ -346,6 +364,17 @@ class Age2World(CachedRuleBuilderWorld):
         spoiler_handle.write(f"\nAge2 budget orders ({self.player_name}):\n")
         for order in orders:
             spoiler_handle.write("\n" + "\n".join(order.spoiler_lines()) + "\n")
+    # -- Universal Tracker asks the world first, before its own /explain ---------------------
+
+    def explain_rule(self, dest_name: str, state: CollectionState) -> list[JSONMessagePart] | None:
+        return self.explainer.explain_rule(dest_name, state)
+
+    def explain_more(self, argument: str, state: CollectionState) -> list[JSONMessagePart]:
+        return self.explainer.explain_more(argument, state)
+
+    @functools.cached_property
+    def explainer(self) -> Explainer:
+        return Explainer(self)
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {
@@ -356,6 +385,7 @@ class Age2World(CachedRuleBuilderWorld):
         for option_name in SlotData.OPTIONS.values():
             mapping[option_name] = int(getattr(self.options, option_name).value)
         mapping[ScenarioBranching.internal_name] = int(self.options.scenario_branching.value)
+        mapping[UT_SEED] = self.ut_seed
         return mapping
 
 

@@ -109,6 +109,10 @@ class ScenarioAgeLogic:
     def _climb_rule(self, into: Age2AgeData) -> Rule:
         if into is Age2AgeData.DARK:
             return True_()   # nowhere to advance from
-        return (self.logic.ages.has_age(into)
+        rule = (self.logic.ages.has_age(into)
                 & self.scenario.buildings.has_tc()
                 & self.age_up_requirement(into))
+        before = Age2AgeData(into.value - 1)
+        if before is not Age2AgeData.DARK:
+            rule = rule & self.has_reached(before)
+        return rule
