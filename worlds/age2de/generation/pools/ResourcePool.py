@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from math import ceil
 from typing import TYPE_CHECKING
 
@@ -33,6 +34,8 @@ class ResourcePool:
     def __init__(self, options: 'Age2Options', world: 'Age2World') -> None:
         self._world = world
         self.totals: dict[Resource, int] = {resource: 0 for resource in Resource}
+        self.pile: Counter[Age2ItemData] = Counter()
+        """Every item that adds to the starting pile, pooled or precollected, and how many."""
 
     def plan(self, locations_to_fill: int) -> list[Age2ItemData]:
         """The starting resources for this seed, out of at most its share of the open locations,
@@ -84,9 +87,39 @@ class ResourcePool:
         precollected = [Items.NAME_TO_ITEM[item.name]
                         for item in self._world.multiworld.precollected_items[self._world.player]]
         pooled = items + Items.CATEGORY_TO_ITEMS[Items.TCResources]
+        self.pile.clear()
         for item in pooled + precollected:
             payload = item.type
             if isinstance(payload, (Items.StartingResources, Items.TCResources)):
                 tallied[payload.type] += payload.amount
+                self.pile[item] += 1
         self.totals.clear()
         self.totals.update(tallied)
+
+    # -- the spoiler --------------------------------------------------------------------------
+
+    def spoiler_lines(self) -> list[str]:
+        """Every starting resource item the seed has, by resource, largest first after the town
+        centre's own, with the running total each one brings the pile to."""
+        def place(item: Age2ItemData) -> tuple[bool, int]:
+            return not isinstance(item.type, Items.TCResources), -item.type.amount
+
+        width = max((len(item.item_name) for item in self.pile), default=0)
+        lines: list[str] = []
+        for resource in (Resource.FOOD, Resource.WOOD, Resource.GOLD, Resource.STONE):
+            held = sorted(
+                (item for item in self.pile if item.type.type is resource),
+                key=place,
+            )
+            if not held:
+                continue
+            lines.append(f"    {resource.name.title()}:")
+            running = 0
+            for item in held:
+                count, each = self.pile[item], item.type.amount
+                running += count * each
+                lines.append(
+                    f"        {item.item_name:<{width}}  {count:>2} x {each:>3} = {count * each:>4}"
+                    f"   running {running:>5}"
+                )
+        return lines

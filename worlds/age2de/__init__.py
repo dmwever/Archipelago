@@ -348,10 +348,13 @@ class Age2World(CachedRuleBuilderWorld):
         LocalStart.apply(self)
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
-        """The budget: the pool this seed draws from, then each scenario's order over it - what is
-        in logic off the starting pile, in what order."""
+        """The budget: the pool this seed draws from, the starting pile it pays from, then each
+        scenario's order over the pool - what is in logic off that pile, in what order."""
         spoiler_handle.write(f"\nAge2 budget pool ({self.player_name}):\n")
         spoiler_handle.write("\n".join(self.pool.budget.spoiler_lines()) + "\n")
+
+        spoiler_handle.write(f"\nAge2 starting resources ({self.player_name}):\n")
+        spoiler_handle.write("\n".join(self.pool.resources.spoiler_lines()) + "\n")
 
         included = set(self.pool.scenarios.included)
         orders = [
@@ -364,6 +367,7 @@ class Age2World(CachedRuleBuilderWorld):
         spoiler_handle.write(f"\nAge2 budget orders ({self.player_name}):\n")
         for order in orders:
             spoiler_handle.write("\n" + "\n".join(order.spoiler_lines()) + "\n")
+
     # -- Universal Tracker asks the world first, before its own /explain ---------------------
 
     def explain_rule(self, dest_name: str, state: CollectionState) -> list[JSONMessagePart] | None:
