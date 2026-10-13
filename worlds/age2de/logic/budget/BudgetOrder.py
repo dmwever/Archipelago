@@ -206,7 +206,7 @@ class BudgetOrder:
         rows: list[tuple[int, str, str, str]] = []
         for number, entry in enumerate(self.order, start=1):
             table = CostTable.for_location(self, entry.location)
-            alone = Need.as_cost(self.requirement([entry]).cost)
+            alone = self._own_price(entry)
             least, most = table.totals_by_mask[-1].cost, table.totals_by_mask[0].cost
             # The base asks no easy source: the pile alone pays for it.
             pile_limit = None if entry.location is BASE else most_pile
@@ -226,6 +226,14 @@ class BudgetOrder:
                 f"alone {alone:<{alone_width}}  total {total}"
             )
         return lines
+
+    def _own_price(self, entry: PricedBudgetItem) -> Cost:
+        """What the entry costs for itself, with nothing it needs first. The base is what it is
+        made of: its villagers' food, a Town Center and, where the civilisation needs one, a
+        House."""
+        if entry.location is BASE:
+            return Need.as_cost(self.requirement([entry]).cost)
+        return Need.as_cost(entry.location.cost)
 
     @staticmethod
     def _is_paid_only_by_easy(
