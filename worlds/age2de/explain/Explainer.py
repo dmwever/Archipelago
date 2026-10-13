@@ -32,8 +32,9 @@ if TYPE_CHECKING:
 _EASY_SOURCE = re.compile(r"easy (wood|food|gold|stone)(?: source)?")
 """What /explain takes for an easy source rather than a location."""
 
-OPENED = 2
-"""How many scenario questions deep a breakdown opens in place."""
+OPENED = 1
+"""How deep a breakdown opens in place: the question being explained, with every question beneath
+it - "Can build a Mill", "Has reached the Feudal Age" - one line with its marker."""
 
 LOOPED = 50
 """The depth a question asked inside itself counts as where the loop closes: deeper than any tree."""
@@ -264,7 +265,8 @@ class Explainer:
                        state: CollectionState, depth: int = 1) -> Lines:
         lines = Lines()
         self._opened = {question.description}
-        self._breakdown(lines, question.answer, depth, sl, state, OPENED)
+        # The question itself is the level that opens: its answer is drawn, questions in it are not.
+        self._breakdown(lines, question.answer, depth, sl, state, OPENED - 1)
         return lines
 
     def _budgeted_items(self, state: CollectionState) -> Lines:
