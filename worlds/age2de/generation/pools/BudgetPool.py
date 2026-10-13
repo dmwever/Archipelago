@@ -78,8 +78,10 @@ class BudgetPool:
     def spoiler_lines(self) -> list[str]:
         """The pool as the spoiler lists it: what every seed has, then what this seed drew, each
         kind with every entry's own price. A cheap building is always in, even when drawn too. The
-        base - three villagers' food and a Town Center - is in every order that needs one."""
+        base - three villagers' food and a Town Center - is in every order that needs one, so a
+        drawn Town Center is listed there and not again."""
         cheap = {building for building in self.buildings if is_cheap_building(building)}
+        drawn = self.buildings - cheap - {Age2BuildingData.TOWN_CENTER}
         sections: list[tuple[str, list[tuple[str, list[Drawn]]]]] = [
             (
                 "Always",
@@ -93,7 +95,7 @@ class BudgetPool:
                 [
                     (
                         "Buildings",
-                        sorted(self.buildings - cheap, key=lambda building: building.location_name),
+                        sorted(drawn, key=lambda building: building.location_name),
                     ),
                     ("Techs", sorted(self.techs, key=lambda tech: tech.location_name)),
                     ("Units", sorted(self.units, key=lambda unit: unit.location_name)),
