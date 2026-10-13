@@ -11,7 +11,7 @@ from NetUtils import JSONMessagePart
 from rule_builder.rules import And, Has, HasAll, HasAllCounts, HasAny, Or, Rule
 
 from ..generation.pools.BudgetPool import SAMPLED_RESOURCES
-from ..items.Items import Resource
+from ..items.Items import Age2ItemData, Campaign, Resource
 from ..logic.budget.BudgetItem import for_location
 from ..logic.budget.BudgetTotal import BudgetTotal
 from ..locations.Campaigns import Age2CampaignData
@@ -64,6 +64,12 @@ def _signature(lines: Lines) -> tuple:
 def _says(held: bool) -> list[JSONMessagePart]:
     """How every line that states something ends: "-> True" or "-> False"."""
     return [text(" -> "), truth(held)]
+
+
+def _campaign_item(campaign: Age2CampaignData) -> str:
+    """The item that opens a campaign: "Attila the Hun Campaign"."""
+    return next(item.item_name for item in Age2ItemData
+                if isinstance(item.type, Campaign) and item.type.vanilla_campaign is campaign)
 
 
 def _joined(groups: list[list[JSONMessagePart]], word: str) -> list[JSONMessagePart]:
@@ -379,16 +385,26 @@ class Explainer:
                           self._entry(f"what {name} costs",
                                       lambda st: costs.drill(name, st, self._entry)))
         for campaign, chapters in campaigns:
-            for index, (numbers, parts) in enumerate(self._runs(chapters)):
-                marker = self._entry(f"{name}: {route.label} in {campaign.campaign_name} {_ranges(numbers)}",
-                                     lambda st, route=route, campaign=campaign, numbers=tuple(numbers):
-                                         self._campaign_drill(name, route, campaign, st, numbers))
-                if index:
-                    lines.add(3, *parts, marker)
-                else:
-                    lines.add(2, text(f"{campaign.campaign_name}: "), *parts, marker)
+            item = _campaign_item(campaign)
+            held = state.has(item, self.world.player)
+            lines.add(2, colored(f"Has {item}", held), *_says(held))
+            for chapter, status in chapters:
+                sl = self.world.rules.logic.for_scenario(self._scenario(campaign, chapter))
+                available = status is Status.AVAILABLE
+                lines.add(3, colored(f"{chapter}. {sl.scenario.scenario_name}", available), *_says(available),
+                          self._entry(f"{name}: {route.label} in {sl.scenario.scenario_name}",
+                                      lambda st, route=route, sl=sl: self._scenario_route(name, route, sl, st)))
 
     # -- one campaign on one route -----------------------------------------------------------------
+
+    def _scenario_route(self, name: str, route: Route, sl: ScenarioLogic, state: CollectionState) -> Lines:
+        """One chapter on one route: the scenario level."""
+        scenario = sl.scenario
+        lines = Lines()
+        lines.add(0, text(f"{name} in "), colored(f"{scenario.scenario_name} ({scenario.campaign.campaign_name} "
+                                                  f"{scenario.chapter})", self._holds(sl.is_unlocked(), state)))
+        self._chapter(lines, name, route, scenario, self._label(route, state), state)
+        return lines
 
     def _campaign_drill(self, name: str, route: Route, campaign, state: CollectionState,
                         chapters: tuple[int, ...] | None = None) -> Lines:
@@ -505,8 +521,7 @@ class Explainer:
             lines.add(depth, colored(f"Budget for {budget_label(resolved.location)}", held), *_says(held))
             return
         if isinstance(resolved, SufficientRawResources.Resolved):
-            expects = f"Scenario expects {resolved.needed} {resolved.resource}".rstrip()
-            lines.add(depth, colored(expects, held), *_says(held))
+            lines.add(depth, colored(f"Scenario expects {resolved.needed}", held), *_says(held))
             for child, amount in zip(resolved.children, resolved.amounts):   # by map area, as counted
                 start = len(lines._lines)
                 self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)

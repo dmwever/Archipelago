@@ -176,20 +176,28 @@ class TestTheLayout(ExplainTestBase):
                 with self.subTest(name):
                     self.assertLessEqual(len(line), WIDTH + 20, line)
 
-    def test_one_line_per_campaign_per_route(self):
+    def test_each_chapter_says_whether_it_has_it_on_the_route(self):
+        """Under each route, the campaign item, then every chapter offering the route, True where
+        that chapter has the location on it by some means."""
+        explainer = Explainer(self.world)
         state = self.states()[-1]
-        campaigns = [campaign.campaign_name for campaign in self.world.pool.campaigns.enabled]
-        for name in self.explained():
-            counts: dict[str, int] = {}
-            route = None
-            for line in self.plain(name, state).split("\n"):
-                if line.startswith("    ") and not line.startswith("        "):
-                    route, counts = line.strip(), {}
-                elif any(line.strip().startswith(f"{campaign}: ") for campaign in campaigns):
-                    head = line.strip().split(":")[0]
-                    counts[head] = counts.get(head, 0) + 1
-                    with self.subTest(f"{name} / {route}"):
-                        self.assertEqual(1, counts[head])
+        checked = 0
+        for name in self.explained()[::3]:
+            _, data = find(self.world, name)
+            expected = []
+            for route in routes_for(self.world, data):
+                for campaign in self.world.pool.campaigns.enabled:
+                    for scenario in self.world.pool.scenarios.in_campaign(campaign):
+                        status = explainer._status(route, scenario, state)
+                        if status is not None:
+                            expected.append(f"{scenario.chapter}. {scenario.scenario_name} -> "
+                                            f"{status is Status.AVAILABLE}")
+            shown = [line.strip().split("  [")[0] for line in self.plain(name, state).split("\n")
+                     if re.match(r"^ {12}\d+\. .+ -> (True|False)", line)]
+            with self.subTest(name):
+                self.assertEqual(expected, shown)
+            checked += 1
+        self.assertGreater(checked, 0)
 
     def test_explain_more_always_answers(self):
         """UT reports a world that answers nothing as not supporting the command at all."""
