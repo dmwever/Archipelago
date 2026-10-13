@@ -73,6 +73,70 @@ class BudgetPool:
             building: position
             for position, building in enumerate(rng.sample(every_building, len(every_building)))}
 
+    # -- the spoiler --------------------------------------------------------------------------
+
+    def spoiler_lines(self) -> list[str]:
+        """The pool as the spoiler lists it: what every seed has, then what this seed drew, each
+        kind with every entry's own price. A cheap building is always in, even when drawn too. The
+        base - three villagers' food and a Town Center - is in every order that needs one."""
+        cheap = {building for building in self.buildings if is_cheap_building(building)}
+        sections: list[tuple[str, list[tuple[str, list[Drawn]]]]] = [
+            (
+                "Always",
+                [
+                    ("Ages", sorted(self.ages, key=int)),
+                    ("Buildings", sorted(cheap, key=lambda building: building.location_name)),
+                ],
+            ),
+            (
+                "Seed-specific",
+                [
+                    (
+                        "Buildings",
+                        sorted(self.buildings - cheap, key=lambda building: building.location_name),
+                    ),
+                    ("Techs", sorted(self.techs, key=lambda tech: tech.location_name)),
+                    ("Units", sorted(self.units, key=lambda unit: unit.location_name)),
+                ],
+            ),
+        ]
+        base = [
+            ("Villager (x3)", {Resource.FOOD: 150}),
+            ("Town Center", Age2BuildingData.TOWN_CENTER.cost),
+        ]
+        width = max(
+            len(name) for name in [
+                *(location.location_name for location in self.entries),
+                *(name for name, _ in base),
+            ]
+        )
+
+        lines: list[str] = []
+        for section, groups in sections:
+            lines.append(f"    {section}:")
+            for kind, locations in groups:
+                if not locations:
+                    continue
+                lines.append(f"        {kind}:")
+                for location in locations:
+                    lines.append(
+                        f"            {location.location_name:<{width}}  "
+                        f"{self._cost_text(location.cost)}"
+                    )
+            if section == "Always":
+                lines.append("        Base:")
+                for name, cost in base:
+                    lines.append(f"            {name:<{width}}  {self._cost_text(cost)}")
+        return lines
+
+    @staticmethod
+    def _cost_text(cost: dict[Resource, int]) -> str:
+        return ", ".join(
+            f"{amount} {resource.name.lower()}"
+                for resource, amount in sorted(cost.items(), key=lambda item: item[0].value)
+                if amount > 0
+        ) or "free"
+
     @staticmethod
     def _unit_candidates(pool: 'Age2Pool') -> list[Age2UnitData]:
         """Units a scenario could train and has to pay for, to draw from. The villager is not drawn:

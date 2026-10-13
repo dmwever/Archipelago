@@ -5,7 +5,7 @@ import logging
 from Options import OptionError
 from rule_builder.cached_world import CachedRuleBuilderWorld
 import settings
-from typing import Any, ClassVar, Mapping
+from typing import Any, ClassVar, Mapping, TextIO
 from BaseClasses import Entrance, Item, ItemClassification, Location, MultiWorld, Region
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, icon_paths, launch as launch_subprocess
@@ -326,6 +326,14 @@ class Age2World(CachedRuleBuilderWorld):
 
     def pre_fill(self) -> None:
         LocalStart.apply(self)
+
+    def write_spoiler(self, spoiler_handle: TextIO) -> None:
+        """The budget pool: the priced locations this seed lets in logic off the starting pile."""
+        lines = self.pool.budget.spoiler_lines()
+        if not lines:
+            return
+        spoiler_handle.write(f"\nAge2 budget pool ({self.player_name}):\n")
+        spoiler_handle.write("\n".join(lines) + "\n")
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {
