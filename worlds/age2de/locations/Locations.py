@@ -195,9 +195,16 @@ class Age2ScenarioLocationData(enum.IntEnum):
     GEN1_FLOCK_BY_PURPLE =          30122, "Find the Flock by Purple",                  Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
     
     GEN2_VICTORY =                  30200, "Victory",                                   Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.VICTORY
-    GEN2_KUSHLUK_FLEES =            30201, "Make Kushluk Flee",                          Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.OBJECTIVE
-    GEN2_TAYICHIUD_VILLAGE =        30202, "Take the Tayichi'ud Village",                Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.SIDE_QUEST
+    GEN2_KUSHLUK_FLEES =            30201, "Make Kushluk Flee",                         Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.OBJECTIVE
+    GEN2_TAYICHIUD_VILLAGE =        30202, "Take the Tayichi'ud Village",               Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.SIDE_QUEST
     GEN3_VICTORY =                  30300, "Victory",                                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.VICTORY
+    GEN3_DEFEAT_TANGUTS =           30301, "Defeat the Tanguts",                        Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_DEFEAT_XI_XIA =            30302, "Defeat the Xi Xia",                         Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_DEFEAT_JIN =               30303, "Defeat the Jin",                            Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_DEFEAT_SONG =              30304, "Defeat the Song",                           Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_FIND_ENGINEERS =           30305, "Find the Engineers",                        Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
+    GEN3_FIND_BOMBARDS =            30306, "Find the Bombard Cannons",                  Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
+    GEN3_FIND_TRANSPORT =           30307, "Find the Transport Ship",                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
     GEN4_VICTORY =                  30400, "Victory",                                   Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.VICTORY
     GEN5_VICTORY =                  30500, "Victory",                                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.VICTORY
     GEN6_VICTORY =                  30600, "Victory",                                   Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.VICTORY
