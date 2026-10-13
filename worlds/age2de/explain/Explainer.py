@@ -214,51 +214,30 @@ class Explainer:
 
     def _easy_view(self, resource: Resource, campaign, scenario, state: CollectionState,
                    chapters: tuple[int, ...] | None = None) -> Lines:
-        """An easy source of the resource: everywhere as runs of chapters that have one or not, a
-        campaign chapter by chapter - the same ones merged - or one scenario opened."""
+        """An easy source of the resource, laid out like a location: each campaign's item, then
+        every chapter, True where it has one, each opening that scenario's easy source - or, for one
+        scenario, that view straight away."""
         noun = f"Easy {resource.name.title()} Source"
         if scenario is not None:
             sl = self.world.rules.logic.for_scenario(scenario)
             return self._question_drill(self._resolved(sl.economy.has_easy_source(resource)), sl, state)
         lines = Lines()
-        if campaign is None:
-            lines.add(0, text(noun))
-            for each in self.world.pool.campaigns.enabled:
-                by_held: dict[bool, list[int]] = {}
-                for one in self.world.pool.scenarios.in_campaign(each):
-                    sl = self.world.rules.logic.for_scenario(one)
-                    by_held.setdefault(self._holds(sl.economy.has_easy_source(resource), state),
-                                       []).append(one.chapter)
-                for index, (held, numbers) in enumerate(sorted(by_held.items(), key=lambda row: row[1][0])):
-                    marker = self._entry(f"{noun} in {each.campaign_name} {_ranges(numbers)}",
-                                         lambda st, each=each, numbers=tuple(numbers):
-                                             self._easy_view(resource, each, None, st, numbers))
-                    row = [colored(_ranges(numbers), held), *_says(held), marker]
-                    if index:
-                        lines.add(2, *row)
-                    else:
-                        lines.add(1, text(f"{each.campaign_name}: "), *row)
-            return lines
-        which = f" {_ranges(list(chapters))}" if chapters is not None else ""
-        lines.add(0, text(f"{noun} in {campaign.campaign_name}{which}"))
-        groups: dict[tuple, list[ScenarioLogic]] = {}
-        for one in self.world.pool.scenarios.in_campaign(campaign):
-            if chapters is not None and one.chapter not in chapters:
+        lines.add(0, text(noun))
+        for each in self.world.pool.campaigns.enabled:
+            if campaign is not None and each is not campaign:
                 continue
-            sl = self.world.rules.logic.for_scenario(one)
-            question = self._resolved(sl.economy.has_easy_source(resource))
-            self._dry = True
-            try:
-                body = self._question_body(question, sl, state)
-            finally:
-                self._dry = False
-            groups.setdefault((question(state), _signature(body)), []).append(sl)
-        for (held, _), together in groups.items():
-            head = _joined([[colored(f"{sl.scenario.chapter}. {sl.scenario.scenario_name}",
-                                     self._holds(sl.is_unlocked(), state))] for sl in together], ", ")
-            lines.add(1, *head, *_says(held))
-            question = self._resolved(together[0].economy.has_easy_source(resource))
-            lines.extend(self._question_body(question, together[0], state, depth=2))
+            item = _campaign_item(each)
+            held = state.has(item, self.world.player)
+            lines.add(1, colored(f"Has {item}", held), *_says(held))
+            for one in self.world.pool.scenarios.in_campaign(each):
+                if chapters is not None and one.chapter not in chapters:
+                    continue
+                sl = self.world.rules.logic.for_scenario(one)
+                question = self._resolved(sl.economy.has_easy_source(resource))
+                has = question(state)
+                lines.add(2, colored(f"{one.chapter}. {one.scenario_name}", has), *_says(has),
+                          self._entry(f"{noun} in {one.scenario_name}",
+                                      lambda st, question=question, sl=sl: self._question_drill(question, sl, st)))
         return lines
 
     def _question_body(self, question: ScenarioQuestion.Resolved, sl: ScenarioLogic,
