@@ -479,6 +479,9 @@ class Age2ItemData(enum.IntEnum):
     AP_GENGHIS_1_KEREYID_TRIBE = 1025, "Genghis Khan, Crucible: Kereyid Tribe",                      ScenarioItem(Age2ScenarioData.AP_GENGHIS_1)
     AP_GENGHIS_2_TAYICHIUD_BASE = 1026, "Genghis Khan, A Life of Revenge: Tayichi'ud Base",     ScenarioItem(Age2ScenarioData.AP_GENGHIS_2)
     AP_ATTILA_5_DEATHMATCH = 1027, "Attila, The Catalunian Fields: Deathmatch Resources",    ScenarioItem(Age2ScenarioData.AP_ATTILA_5)
+    AP_GENGHIS_3_ENGINEERS = 1028, "Genghis Khan, Into China: Chinese Engineers",            ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
+    AP_GENGHIS_3_BOMBARDS = 1029, "Genghis Khan, Into China: Bombard Cannons",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
+    AP_GENGHIS_3_TRANSPORT = 1030, "Genghis Khan, Into China: Transport Ship",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
 
     #3000 - 3499 = Progressive scenarios, 3500 - 3599 = Campaign unlocks
     
