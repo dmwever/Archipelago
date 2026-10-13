@@ -328,12 +328,22 @@ class Age2World(CachedRuleBuilderWorld):
         LocalStart.apply(self)
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
-        """The budget pool: the priced locations this seed lets in logic off the starting pile."""
-        lines = self.pool.budget.spoiler_lines()
-        if not lines:
-            return
+        """The budget: the pool this seed draws from, then each scenario's order over it - what is
+        in logic off the starting pile, in what order."""
         spoiler_handle.write(f"\nAge2 budget pool ({self.player_name}):\n")
-        spoiler_handle.write("\n".join(lines) + "\n")
+        spoiler_handle.write("\n".join(self.pool.budget.spoiler_lines()) + "\n")
+
+        included = set(self.pool.scenarios.included)
+        orders = [
+            scenario.budget.order for scenario in self.rules.logic.scenarios
+                if scenario.scenario in included
+        ]
+        orders = [order for order in orders if order.order]
+        if not orders:
+            return
+        spoiler_handle.write(f"\nAge2 budget orders ({self.player_name}):\n")
+        for order in orders:
+            spoiler_handle.write("\n" + "\n".join(order.spoiler_lines()) + "\n")
 
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {

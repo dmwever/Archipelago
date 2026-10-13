@@ -3,11 +3,12 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING, Iterable
 
+from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
 from .BudgetItem import BASE, BudgetItem, PricedLocation, for_location
-from .Need import Need
+from .Need import Cost, Need
 from .Requirement import Requirement
 
 if TYPE_CHECKING:
@@ -164,3 +165,72 @@ class BudgetOrder:
             entry for entry in self.order[:index + 1]
                 if entry.location in needed or entry.location is location
         )
+
+    # -- the spoiler --------------------------------------------------------------------------
+
+    def spoiler_lines(self) -> list[str]:
+        """The order as the spoiler lists it: each entry, what it would cost alone, and the
+        running total it asks - with no waiver holding, and with every one.
+
+        A resource the total asks more of than every pile item in the seed adds up to can only
+        come from an easy source, so it shows as easy. An entry whose own price is paid only in
+        easy resources, even with every waiver, gets nothing from the budget, and is left out."""
+        from .CostTable import CostTable   # the table reads the order back
+
+        most_pile = self.world.pool.resources.totals
+        budget = self.scenario.budget
+        name = self.scenario.scenario.scenario_name
+        lines = [f"{name} (pays up from the {budget.start_age.name.title()} Age)"]
+        for waiver in budget.always_waived:
+            lines.append(f"    always: {waiver.explain_str()}")
+        for waiver in budget.cost_waivers:
+            lines.append(f"    waiver: {waiver.explain_str()}")
+
+        rows: list[tuple[int, str, str, str]] = []
+        for number, entry in enumerate(self.order, start=1):
+            table = CostTable.for_location(self, entry.location)
+            alone = Need.as_cost(self.requirement([entry]).cost)
+            least, most = table.totals_by_mask[-1].cost, table.totals_by_mask[0].cost
+            # The base asks no easy source: the pile alone pays for it.
+            pile_limit = None if entry.location is BASE else most_pile
+            if pile_limit is not None and self._is_paid_only_by_easy(entry, least, pile_limit):
+                continue
+            total = self._cost_text(most, pile_limit)
+            if least != most:
+                total += f" ({self._cost_text(least, pile_limit)} with every waiver)"
+            rows.append((number, entry.location.location_name, self._cost_text(alone), total))
+
+        # Columns as wide as their longest cell, so the total always starts past every cost.
+        name_width = max((len(location_name) for _, location_name, _, _ in rows), default=0)
+        alone_width = max((len(alone) for _, _, alone, _ in rows), default=0)
+        for number, location_name, alone, total in rows:
+            lines.append(
+                f"    {number:>3}. {location_name:<{name_width}}  "
+                f"alone {alone:<{alone_width}}  total {total}"
+            )
+        return lines
+
+    @staticmethod
+    def _is_paid_only_by_easy(
+        entry: BudgetItem,
+        total: Cost,
+        pile_limit: dict[Resource, int],
+    ) -> bool:
+        """Whether every resource the entry's own price asks is one the total has run past the
+        pile on. Stone left under its limit does not keep a food-and-gold tech in."""
+        asked = dict(total)
+        paid_in = [resource for resource, amount in entry.location.cost.items() if amount > 0]
+        return bool(paid_in) and all(
+            resource in asked and asked[resource] > pile_limit[resource]
+                for resource in paid_in
+        )
+
+    @staticmethod
+    def _cost_text(cost: Cost, pile_limit: dict[Resource, int] | None = None) -> str:
+        """A cost as text. With a pile limit, an amount past it shows as easy."""
+        return ", ".join(
+            f"easy {resource.name.lower()}"
+                if pile_limit is not None and amount > pile_limit[resource]
+                else f"{amount} {resource.name.lower()}"
+                for resource, amount in cost
+        ) or "free"
