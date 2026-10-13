@@ -206,6 +206,10 @@ class Age2ScenarioLocationData(enum.IntEnum):
     GEN3_FIND_BOMBARDS =            30306, "Find the Bombard Cannons",                  Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
     GEN3_FIND_TRANSPORT =           30307, "Find the Transport Ship",                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
     GEN4_VICTORY =                  30400, "Victory",                                   Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.VICTORY
+    GEN4_DEFEAT_RUSSIANS =          30401, "Defeat the Russians",                       Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    GEN4_DEFEAT_KHWARAZM =          30402, "Defeat the Khwarazm",                       Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    GEN4_KIPCHAKS_SURRENDER =       30403, "Make the Kipchaks Surrender",               Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    GEN4_ASSASSINATE_SHAH =         30404, "Assassinate the Shah",                      Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
     GEN5_VICTORY =                  30500, "Victory",                                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.VICTORY
     GEN6_VICTORY =                  30600, "Victory",                                   Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.VICTORY
 

@@ -482,6 +482,7 @@ class Age2ItemData(enum.IntEnum):
     AP_GENGHIS_3_ENGINEERS = 1028, "Genghis Khan, Into China: Chinese Engineers",            ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
     AP_GENGHIS_3_BOMBARDS = 1029, "Genghis Khan, Into China: Bombard Cannons",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
     AP_GENGHIS_3_TRANSPORT = 1030, "Genghis Khan, Into China: Transport Ship",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
+    AP_GENGHIS_4_KIPCHAK_CAMP = 1031, "Genghis Khan, The Horde Rides West: Kipchak Camp",    ScenarioItem(Age2ScenarioData.AP_GENGHIS_4)
 
     #3000 - 3499 = Progressive scenarios, 3500 - 3599 = Campaign unlocks
     
