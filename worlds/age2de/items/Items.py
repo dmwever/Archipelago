@@ -479,9 +479,7 @@ class Age2ItemData(enum.IntEnum):
     AP_GENGHIS_1_KEREYID_TRIBE = 1025, "Genghis Khan, Crucible: Kereyid Tribe",                      ScenarioItem(Age2ScenarioData.AP_GENGHIS_1)
     AP_GENGHIS_2_TAYICHIUD_BASE = 1026, "Genghis Khan, A Life of Revenge: Tayichi'ud Base",     ScenarioItem(Age2ScenarioData.AP_GENGHIS_2)
     AP_ATTILA_5_DEATHMATCH = 1027, "Attila, The Catalunian Fields: Deathmatch Resources",    ScenarioItem(Age2ScenarioData.AP_ATTILA_5)
-    AP_GENGHIS_3_ENGINEERS = 1028, "Genghis Khan, Into China: Chinese Engineers",            ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
-    AP_GENGHIS_3_BOMBARDS = 1029, "Genghis Khan, Into China: Bombard Cannons",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
-    AP_GENGHIS_3_TRANSPORT = 1030, "Genghis Khan, Into China: Transport Ship",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
+    AP_GENGHIS_3_TRANSPORT = 1028, "Genghis Khan, Into China: Transport Ship",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
     AP_GENGHIS_4_KIPCHAK_CAMP = 1031, "Genghis Khan, The Horde Rides West: Kipchak Camp",    ScenarioItem(Age2ScenarioData.AP_GENGHIS_4)
 
     #3000 - 3499 = Progressive scenarios, 3500 - 3599 = Campaign unlocks
@@ -825,6 +823,9 @@ class Age2ItemData(enum.IntEnum):
     AP_GENGHIS_1_UNGIRRAD_TRIBE =       4013, "Genghis Khan, Crucible: Ungirrad Tribe",                      Mercenary(Age2ScenarioData.AP_GENGHIS_1, [MercenaryUnit(Age2UnitData.MANGUDAI, 3), MercenaryUnit(Age2UnitData.MONK, 1)], icon_id=326, name_string_id=990014)
     AP_GENGHIS_1_NAIMAN_TRIBE =         4014, "Genghis Khan, Crucible: Naiman Tribe",                   Mercenary(Age2ScenarioData.AP_GENGHIS_1, [MercenaryUnit(Age2UnitData.CAVALRY_ARCHER, 5)], icon_id=327, name_string_id=990015)
     AP_GENGHIS_1_UIGHUR_TRIBE =         4015, "Genghis Khan, Crucible: Uighur Tribe",                    Mercenary(Age2ScenarioData.AP_GENGHIS_1, [MercenaryUnit(Age2UnitData.CAMEL_RIDER, 5)], icon_id=328, name_string_id=990016)
+    AP_GENGHIS_3_ENGINEERS =            4016, "Genghis Khan, Into China: Chinese Engineers",                    Mercenary(Age2ScenarioData.AP_GENGHIS_3, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 1), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5), MercenaryUnit(Age2UnitData.BATTERING_RAM, 1), MercenaryUnit(Age2UnitData.ROCKET_CART, 1)], icon_id=329, name_string_id=990017)
+    AP_GENGHIS_3_BOMBARDS =             4017, "Genghis Khan, Into China: Bombard Cannons",                      Mercenary(Age2ScenarioData.AP_GENGHIS_3, [MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 6)], icon_id=330, name_string_id=990018)
+    AP_GENGHIS_5_HERMITS =              4018, "Genghis Khan, The Promise: Hermit Monks",                        Mercenary(Age2ScenarioData.AP_GENGHIS_5, [MercenaryUnit(Age2UnitData.MONK, 1), MercenaryUnit(Age2UnitData.ELITE_LEITIS, 10)], icon_id=331, name_string_id=990019)
 
     #5000 - 5099 = Traps
     TRAP_WOLOLO =                       5000, "Wololo Trap",                                  Trap()

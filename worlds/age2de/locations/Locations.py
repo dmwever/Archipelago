@@ -211,6 +211,13 @@ class Age2ScenarioLocationData(enum.IntEnum):
     GEN4_KIPCHAKS_SURRENDER =       30403, "Make the Kipchaks Surrender",               Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
     GEN4_ASSASSINATE_SHAH =         30404, "Assassinate the Shah",                      Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
     GEN5_VICTORY =                  30500, "Victory",                                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.VICTORY
+    GEN5_GERMAN_FLAG =              30501, "Capture the German Flag",                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_POLISH_FLAG =              30502, "Capture the Polish Flag",                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BOHEMIAN_FLAG =            30503, "Capture the Bohemian Flag",                 Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BUILD_ONE_CASTLE =         30504, "Build One Castle",                          Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BUILD_TWO_CASTLES =        30505, "Build Two Castles",                         Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BUILD_THREE_CASTLES =      30506, "Build Three Castles",                       Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_RESCUE_HERMIT =            30507, "Rescue the Hermit",                         Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.SIDE_QUEST
     GEN6_VICTORY =                  30600, "Victory",                                   Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.VICTORY
 
 location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
