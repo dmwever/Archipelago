@@ -277,11 +277,13 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        # Starting resources come first. Traps only ever spend the padding appended once
-        # every resource target is already met, so they never cost the player economy.
-        plan = self.pool.resources.plan(needed_number_of_filler_items)
-        starting_items = [self.create_item(data.item_name) for data in plan.items]
-        traps = [self.create_item(data.item_name) for data in self.pool.traps.roll(plan.spare)]
+        # Starting resources come first, up to half the open locations, and stop once every
+        # target is met. Traps only roll over the locations left after that, so they never cost
+        # the player economy.
+        planned = self.pool.resources.plan(needed_number_of_filler_items)
+        spare = needed_number_of_filler_items - len(planned)
+        starting_items = [self.create_item(data.item_name) for data in planned]
+        traps = [self.create_item(data.item_name) for data in self.pool.traps.roll(spare)]
 
         self.multiworld.itempool += starting_items
         self.multiworld.itempool += traps
