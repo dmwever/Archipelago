@@ -152,15 +152,15 @@ class TestTheCampaignDrill(ExplainTestBase):
                     for scenario in self.world.pool.scenarios.in_campaign(campaign):
                         status = explainer._status(route, scenario, state)
                         if status is not None:
-                            expected.append(f"{scenario.chapter}. {scenario.scenario_name}: "
-                                            + explainer._word(route, status)["text"])
+                            expected.append(f"{scenario.chapter}. {scenario.scenario_name} -> "
+                                            + str(status is Status.AVAILABLE))
                     if not expected:
                         continue
                     shown = []
                     for line in explainer._campaign_drill(name, route, campaign, state).plain().split("\n"):
                         if line.startswith("    ") and not line.startswith("        "):
-                            heads, word = line.strip().rsplit(": ", 1)
-                            shown += [f"{head}: {word}" for head in re.split(r", (?=\d+\. )", heads)]
+                            heads, word = line.strip().rsplit(" -> ", 1)
+                            shown += [f"{head} -> {word}" for head in re.split(r", (?=\d+\. )", heads)]
                     with self.subTest(f"{name} / {route.label} / {campaign.campaign_name}"):
                         self.assertEqual(sorted(expected), sorted(shown))
                     checked += 1
@@ -305,3 +305,35 @@ class TestDirectCommands(ExplainTestBase):
             self.skipTest("every campaign is in this seed")
         self.assertEqual(f"{missing.campaign_name} isn't in this seed.",
                          self.plain_of(f"{missing.campaign_name} {self.a_budgeted_location()}"))
+
+
+class TestEasySourceCommands(ExplainTestBase):
+    """/explain [campaign or scenario] Easy <resource> Source opens the easy source at that level."""
+
+    def test_each_level_answers_with_the_question(self):
+        from ..items.Items import Resource
+        state = CollectionState(self.multiworld)
+        campaign = self.world.pool.campaigns.enabled[0]
+        scenario = self.world.pool.scenarios.in_campaign(campaign)[0]
+        word = campaign.campaign_name.split()[0]
+        for resource in (Resource.WOOD, Resource.FOOD, Resource.GOLD, Resource.STONE):
+            noun = resource.name.lower()
+            for typed, opens in ((f"Easy {noun} Source", f"Easy {noun.title()} Source"),
+                                 (f"easy {noun}", f"Easy {noun.title()} Source"),
+                                 (f"{word} Easy {noun} Source", f"Easy {noun.title()} Source in {campaign.campaign_name}"),
+                                 (f"{word} {scenario.chapter} Easy {noun}", f"{scenario.scenario_name}: ")):
+                with self.subTest(typed):
+                    parts = self.world.explain_rule(typed, state)
+                    self.assertIsNotNone(parts)
+                    self.assertTrue("".join(part["text"] for part in parts).startswith(opens))
+
+    def test_a_scenario_view_agrees_with_the_question(self):
+        from ..items.Items import Resource
+        for state in self.states():
+            for scenario in self.world.pool.scenarios.included:
+                sl = self.world.rules.logic.for_scenario(scenario)
+                held = sl.economy.has_easy_source(Resource.WOOD).resolve(self.world)(state)
+                parts = Explainer(self.world)._easy_view(Resource.WOOD, scenario.campaign, scenario, state).parts()
+                question = next(part for part in parts if part["text"] == "Can easily gather wood")
+                with self.subTest(scenario.name):
+                    self.assertEqual("green" if held else "salmon", question["color"])

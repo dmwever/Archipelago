@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import enum
 import functools
+import re
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState
@@ -10,6 +11,7 @@ from NetUtils import JSONMessagePart
 from rule_builder.rules import And, Has, HasAll, HasAllCounts, HasAny, Or, Rule
 
 from ..generation.pools.BudgetPool import SAMPLED_RESOURCES
+from ..items.Items import Resource
 from ..logic.budget.BudgetItem import for_location
 from ..logic.budget.BudgetTotal import BudgetTotal
 from ..locations.Campaigns import Age2CampaignData
@@ -18,7 +20,7 @@ from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
 from .Costs import Costs, budget_label
-from .Layout import BUDGETED_ITEMS, Lines, _ranges, colored, text, truth
+from .Layout import BUDGETED_ITEMS, INDENT, WIDTH, Lines, _ranges, colored, text, truth
 from .Lookup import _BY_NAME, find
 from .Routes import Route, age_name, any_building_item, building_names, routes_for
 
@@ -27,8 +29,17 @@ if TYPE_CHECKING:
     from ..logic.ScenarioLogic import ScenarioLogic
 
 
+_EASY_SOURCE = re.compile(r"easy (wood|food|gold|stone)(?: source)?")
+"""What /explain takes for an easy source rather than a location."""
+
 OPENED = 2
-"""How many scenario questions deep a failing chapter's breakdown opens."""
+"""How many scenario questions deep a breakdown opens in place."""
+
+LOOPED = 50
+"""The depth a question asked inside itself counts as where the loop closes: deeper than any tree."""
+
+_GROUPS = (And.Resolved, Or.Resolved, SufficientRawResources.Resolved, AgeUpRequirement.Resolved)
+"""The rules drawn as a group of parts beneath them; anything else is one line."""
 
 
 def _distinct(children: tuple[Rule.Resolved, ...]) -> list[Rule.Resolved]:
@@ -48,6 +59,11 @@ def _signature(lines: Lines) -> tuple:
     return tuple((depth, tuple((part["text"], part.get("color")) for part in parts
                                if not part["text"].startswith("  [/explain_more")))
                  for depth, parts in lines._lines)
+
+
+def _says(held: bool) -> list[JSONMessagePart]:
+    """How every line that states something ends: "-> True" or "-> False"."""
+    return [text(" -> "), truth(held)]
 
 
 def _joined(groups: list[list[JSONMessagePart]], word: str) -> list[JSONMessagePart]:
@@ -75,9 +91,13 @@ class Explainer:
     def __init__(self, world: Age2World) -> None:
         self.world = world
         self._entries: list[tuple[str, Callable[[CollectionState], Lines]]] = []
+        """What the last explanation's [/explain_more N] markers open, by N - 1."""
+        self._opened: set[str] = set()
+        """The questions already opened in the block being drawn: a later mention is one line."""
+        self._depths: dict[int, int] = {}
+        """Each resolved part's depth, by identity: resolved rules live as long as the world."""
         self._dry = False
         """While set, markers are drawn but nothing is kept: a block rendered only to compare it."""
-        """What the last explanation's [/explain_more N] markers open, by N - 1."""
 
     def explain_rule(self, typed: str, state: CollectionState) -> list[JSONMessagePart] | None:
         if typed.strip().lower() == BUDGETED_ITEMS.lower():
@@ -126,12 +146,20 @@ class Explainer:
         costs = rest.lower().startswith("costs ")
         if costs:
             rest = rest[len("costs "):].strip()
-        if campaign is None and not costs:
+        easy = _EASY_SOURCE.fullmatch(rest.lower())
+        if campaign is None and not costs and easy is None:
             return None
         if campaign is not None and campaign not in self.world.pool.campaigns.enabled:
             return lambda state: [text(f"{campaign.campaign_name} isn't in this seed.")]
         if scenario is not None and scenario not in self.world.pool.scenarios.included:
             return lambda state: [text(f"{scenario.scenario_name} isn't in this seed.")]
+        if easy is not None:
+            resource = Resource[easy.group(1).upper()]
+
+            def eased(state: CollectionState) -> list[JSONMessagePart]:
+                self._entries = []
+                return self._easy_view(resource, campaign, scenario, state).parts()
+            return eased
         found = find(self.world, rest)
         if found is None:
             return lambda state: [text(f"No location here matches \"{rest}\".")]
@@ -173,6 +201,64 @@ class Explainer:
         if not lines._lines:
             where = scenario.scenario_name if scenario is not None else campaign.campaign_name
             lines.add(0, text(f"Nothing in {where} offers {name}."))
+        return lines
+
+    # -- easy sources ---------------------------------------------------------------------------
+
+    def _easy_view(self, resource: Resource, campaign, scenario, state: CollectionState,
+                   chapters: tuple[int, ...] | None = None) -> Lines:
+        """An easy source of the resource: everywhere as runs of chapters that have one or not, a
+        campaign chapter by chapter - the same ones merged - or one scenario opened."""
+        noun = f"Easy {resource.name.title()} Source"
+        if scenario is not None:
+            sl = self.world.rules.logic.for_scenario(scenario)
+            return self._question_drill(self._resolved(sl.economy.has_easy_source(resource)), sl, state)
+        lines = Lines()
+        if campaign is None:
+            lines.add(0, text(noun))
+            for each in self.world.pool.campaigns.enabled:
+                by_held: dict[bool, list[int]] = {}
+                for one in self.world.pool.scenarios.in_campaign(each):
+                    sl = self.world.rules.logic.for_scenario(one)
+                    by_held.setdefault(self._holds(sl.economy.has_easy_source(resource), state),
+                                       []).append(one.chapter)
+                for index, (held, numbers) in enumerate(sorted(by_held.items(), key=lambda row: row[1][0])):
+                    marker = self._entry(f"{noun} in {each.campaign_name} {_ranges(numbers)}",
+                                         lambda st, each=each, numbers=tuple(numbers):
+                                             self._easy_view(resource, each, None, st, numbers))
+                    row = [colored(_ranges(numbers), held), *_says(held), marker]
+                    if index:
+                        lines.add(2, *row)
+                    else:
+                        lines.add(1, text(f"{each.campaign_name}: "), *row)
+            return lines
+        which = f" {_ranges(list(chapters))}" if chapters is not None else ""
+        lines.add(0, text(f"{noun} in {campaign.campaign_name}{which}"))
+        groups: dict[tuple, list[ScenarioLogic]] = {}
+        for one in self.world.pool.scenarios.in_campaign(campaign):
+            if chapters is not None and one.chapter not in chapters:
+                continue
+            sl = self.world.rules.logic.for_scenario(one)
+            question = self._resolved(sl.economy.has_easy_source(resource))
+            self._dry = True
+            try:
+                body = self._question_body(question, sl, state)
+            finally:
+                self._dry = False
+            groups.setdefault((question(state), _signature(body)), []).append(sl)
+        for (held, _), together in groups.items():
+            head = _joined([[colored(f"{sl.scenario.chapter}. {sl.scenario.scenario_name}",
+                                     self._holds(sl.is_unlocked(), state))] for sl in together], ", ")
+            lines.add(1, *head, *_says(held))
+            question = self._resolved(together[0].economy.has_easy_source(resource))
+            lines.extend(self._question_body(question, together[0], state, depth=2))
+        return lines
+
+    def _question_body(self, question: ScenarioQuestion.Resolved, sl: ScenarioLogic,
+                       state: CollectionState, depth: int = 1) -> Lines:
+        lines = Lines()
+        self._opened = {question.description}
+        self._breakdown(lines, question.answer, depth, sl, state, OPENED)
         return lines
 
     def _budgeted_items(self, state: CollectionState) -> Lines:
@@ -274,24 +360,26 @@ class Explainer:
         if not campaigns:
             return   # no scenario offers it
 
-        lines.add(1, *self._label(route, state))
+        self._add_wrapped(lines, 1, [*self._label(route, state), *_says(
+            any(status is Status.AVAILABLE for _, chapters in campaigns for _, status in chapters))])
         required = self._requirements(route.requires, state)
         costs = Costs(self.world, route, offering) if route.price is not None else None
         if costs is not None and not costs.cost:
             costs = None   # free
         if required or costs is not None:
             lines.add(2, text("Requires"))
-            for line in required:
-                lines.add(3, *line)
+            for nested, line in required:
+                lines.add(3 + nested, *line)
                 if route.upgrade is not None and line[0]["text"] == f"Has {route.upgrade.item.item_name}":
                     self._started_researched(lines, route, campaigns)
             if costs is not None:
-                lines.add(3, *costs.line(state, unlocked),
+                priced = costs.line(state, unlocked)
+                lines.add(3, *priced, *_says(all(part.get("color") == "green" for part in priced
+                                                  if part["type"] == "color")),
                           self._entry(f"what {name} costs",
                                       lambda st: costs.drill(name, st, self._entry)))
         for campaign, chapters in campaigns:
-            every = len(self.world.pool.scenarios.in_campaign(campaign))
-            for index, (numbers, parts) in enumerate(self._runs(route, chapters, every)):
+            for index, (numbers, parts) in enumerate(self._runs(chapters)):
                 marker = self._entry(f"{name}: {route.label} in {campaign.campaign_name} {_ranges(numbers)}",
                                      lambda st, route=route, campaign=campaign, numbers=tuple(numbers):
                                          self._campaign_drill(name, route, campaign, st, numbers))
@@ -325,7 +413,7 @@ class Explainer:
         for (status, _), together in groups.items():
             head = _joined([[colored(f"{sl.scenario.chapter}. {sl.scenario.scenario_name}",
                                      self._holds(sl.is_unlocked(), state))] for sl in together], ", ")
-            lines.add(1, *head, text(": "), self._word(route, status))
+            lines.add(1, *head, *_says(status is Status.AVAILABLE))
             if status is Status.LOCKED:
                 for sl in together:   # each chapter is unlocked by its own items
                     start = len(lines._lines)
@@ -341,6 +429,7 @@ class Explainer:
         """What a chapter asks on the route, past its unlock: the route's items, then what pays each
         resource, with the budget of every chapter in `together`."""
         lines = Lines()
+        self._opened = set()
         ways = [way.structural for way in route.ways(sl) if way.structural is not None]
         for rule in (*route.gates, *(ways[:1] if len(ways) == 1 else [Or(*ways)] if ways else [])):
             self._breakdown(lines, rule, 2, sl, state, OPENED)
@@ -356,66 +445,69 @@ class Explainer:
         if status is None:
             return
         sl = self.world.rules.logic.for_scenario(scenario)
-        lines.add(1, *head, text(": "), self._word(route, status))
+        lines.add(1, *head, *_says(status is Status.AVAILABLE))
         if status is Status.LOCKED:
             self._breakdown(lines, sl.is_unlocked(), 2, sl, state, OPENED)
         lines.extend(self._body(name, route, sl, [sl], state))
 
     def _breakdown(self, lines: Lines, rule: Rule | Rule.Resolved, depth: int, sl: ScenarioLogic,
                    state: CollectionState, opening: int, choice: bool = False) -> None:
-        """The rule a part a line, green where it holds: an "and" as its parts side by side, an "or"
-        of items as one line and any other "or" as its choices under "Any of", a scenario question
-        by what it asks - opened into its own parts `opening` levels deep, held or not, so the
-        player sees why it holds as well as why it doesn't; deeper ones get a marker instead. An
-        "and" that is one `choice` among others keeps its parts together under "All of"."""
+        """The rule a part a line, each ending in whether it holds, shallowest parts first. Every
+        "or" is an "Any of" and every "and" an "All of", a part a line beneath it - except the
+        parts straight under a question or chapter, which are all asked by that line already. A
+        scenario question opens into its own parts `opening` levels deep, held or not, so the
+        player sees why it holds as well as why it doesn't; deeper ones, and one already opened in
+        this block, get a marker instead."""
         resolved = rule if isinstance(rule, Rule.Resolved) else self._resolved(rule)
         if resolved.always_true:
             return
         held = resolved(state)
         own = f"{sl.scenario.scenario_name}: "
         if isinstance(resolved, ScenarioQuestion.Resolved):
-            if opening:
-                lines.add(depth, colored(self._asks(resolved, sl), held))
+            if opening and resolved.description not in self._opened:
+                self._opened.add(resolved.description)
+                lines.add(depth, colored(self._asks(resolved, sl), held), *_says(held))
                 self._breakdown(lines, resolved.answer, depth + 1, sl, state, opening - 1)
             else:
-                lines.add(depth, colored(self._asks(resolved, sl), held), self._question_entry(resolved, sl))
+                lines.add(depth, colored(self._asks(resolved, sl), held), *_says(held),
+                          self._question_entry(resolved, sl))
+            return
+        items = self._items(resolved, own, state)
+        if items is not None:
+            every, each = items
+            if len(each) == 1:
+                lines.add(depth, text("Has "), *each[0][0], *_says(each[0][1]))
+                return
+            if every and not choice:
+                for parts, has in each:
+                    lines.add(depth, text("Has "), *parts, *_says(has))
+                return
+            lines.add(depth, colored("All of" if every else "Any of", held), *_says(held))
+            for parts, has in each:
+                lines.add(depth + 1, text("Has "), *parts, *_says(has))
             return
         if isinstance(resolved, And.Resolved):
             if choice:
-                lines.add(depth, colored("All of", held))
+                lines.add(depth, colored("All of", held), *_says(held))
                 depth += 1
-            for child in _distinct(resolved.children):
+            for child in self._shallowest_first(_distinct(resolved.children)):
                 self._breakdown(lines, child, depth, sl, state, opening)
             return
         if isinstance(resolved, Or.Resolved):
-            names = [self._item_parts(child, own, state) for child in resolved.children]
-            if all(names):
-                lines.add(depth, text("Has "), *_joined(names, " or "))
-                return
-            if all(name or isinstance(child, ScenarioQuestion.Resolved)
-                   for child, name in zip(resolved.children, names)):
-                parts: list[JSONMessagePart] = []
-                for index, (child, name) in enumerate(zip(resolved.children, names)):
-                    if index:
-                        parts.append(text(", or "))
-                    parts += [text("has "), *name] if name else [colored(self._asks(child, sl), child(state))]
-                parts[0] = {**parts[0], "text": parts[0]["text"][:1].upper() + parts[0]["text"][1:]}
-                lines.add(depth, *parts, *(self._question_entry(child, sl) for child in resolved.children
-                                           if isinstance(child, ScenarioQuestion.Resolved)))
-                return
-            lines.add(depth, colored("Any of", held))
-            for child in self._why(_distinct(resolved.children), held, lines, depth + 1, state):
-                self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
+            lines.add(depth, colored("Any of", held), *_says(held))
+            for _, item, child in self._choices(resolved, own, state):
+                if item is not None:
+                    lines.add(depth + 1, text("Has "), *item[0], *_says(item[1]))
+                else:
+                    self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
             return
         if isinstance(resolved, BudgetTotal.Resolved):
-            lines.add(depth, colored(f"Budget for {budget_label(resolved.location)}", held))
+            lines.add(depth, colored(f"Budget for {budget_label(resolved.location)}", held), *_says(held))
             return
         if isinstance(resolved, SufficientRawResources.Resolved):
-            lines.add(depth, colored(f"{resolved.needed} worth of", held))
-            shown = self._why(list(resolved.children), held, lines, depth + 1, state)
-            for child, amount in zip(resolved.children, resolved.amounts):
-                if child not in shown:
-                    continue
+            expects = f"Scenario expects {resolved.needed} {resolved.resource}".rstrip()
+            lines.add(depth, colored(expects, held), *_says(held))
+            for child, amount in zip(resolved.children, resolved.amounts):   # by map area, as counted
                 start = len(lines._lines)
                 self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
                 if len(lines._lines) > start:   # the source's first line carries what it is worth
@@ -423,56 +515,107 @@ class Explainer:
                     lines._lines[start] = (first_depth, [text(f"{amount} from "), *first])
             return
         if isinstance(resolved, AgeUpRequirement.Resolved):
-            lines.add(depth, colored(f"Any {resolved.num_needed} of", held))
-            for child in self._why(list(resolved.pairs), held, lines, depth + 1, state):
+            lines.add(depth, colored(f"Any {resolved.num_needed} of", held), *_says(held))
+            for child in self._shallowest_first(list(resolved.pairs)):
                 self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
             if resolved.has_single:
-                lines.add(depth, colored("Or by itself", held))
+                alone = resolved.children[-1](state)
+                lines.add(depth, colored("Or by itself", alone), *_says(alone))
                 self._breakdown(lines, resolved.children[-1], depth + 1, sl, state, opening, choice=True)
             return
         if resolved.always_false:
-            lines.add(depth, colored("Never", False))
+            lines.add(depth, colored("Never", False), *_says(False))
             return
-        named = self._item_parts(resolved, own, state)
-        if named:
-            lines.add(depth, text("Has "), *named)
+        lines.add(depth, colored(resolved.explain_str(state), held), *_says(held))
+
+    def _choices(self, rule: Or.Resolved, own: str, state: CollectionState) -> list[tuple]:
+        """An "or"'s choices with every "any of" inside it folded in - an any of an any is one
+        choice among the rest - each once, shallowest first: (depth, item or None, rule or None)."""
+        found: list[tuple] = []
+        seen: set[str] = set()
+
+        def gather(each: Rule.Resolved) -> None:
+            if isinstance(each, Or.Resolved):
+                for child in each.children:
+                    gather(child)
+                return
+            items = self._items(each, own, state)
+            if items is not None and (not items[0] or len(items[1]) == 1):
+                for item in items[1]:
+                    key = "".join(part["text"] for part in item[0])
+                    if key not in seen:
+                        seen.add(key)
+                        found.append((0, item, None))
+                return
+            key = each.explain_str()
+            if key not in seen:
+                seen.add(key)
+                found.append((self._depth(each), None, each))
+
+        for child in rule.children:
+            gather(child)
+        return sorted(found, key=lambda choice: choice[0])
+
+    def _shallowest_first(self, children: list[Rule.Resolved]) -> list[Rule.Resolved]:
+        """Quick facts before what needs opening: stable, so equals keep the rule's order."""
+        return sorted(children, key=self._depth)
+
+    def _depth(self, rule: Rule.Resolved) -> int:
+        """How deep a part's breakdown goes: an item or a budget 0, a group of items 1, a question
+        one more than its answer, any other group one more than its deepest part."""
+        return self._measure(rule, frozenset())[0]
+
+    def _measure(self, rule: Rule.Resolved, path: frozenset[int]) -> tuple[int, bool]:
+        """The depth, and whether it passed through a question asked inside itself. Such a loop
+        counts as deep where it closes - it never bottoms out - so it sorts last; a depth that went
+        through one depends on where it was entered, so only the others are kept - the order
+        things are measured in can't change it."""
+        known = self._depths.get(id(rule))
+        if known is not None:
+            return known, False
+        if id(rule) in path:
+            return LOOPED, True
+        looped = False
+        items = self._items(rule, "", None)
+        if items is not None:
+            depth = 0 if len(items[1]) == 1 else 1
+        elif isinstance(rule, ScenarioQuestion.Resolved):
+            inner, looped = self._measure(rule.answer, path | {id(rule)})
+            depth = 1 + inner
+        elif isinstance(rule, _GROUPS):
+            depth = 0
+            for child in rule.children:
+                inner, loop = self._measure(child, path | {id(rule)})
+                depth, looped = max(depth, inner), looped or loop
+            depth += 1
         else:
-            lines.add(depth, colored(resolved.explain_str(state), held))
+            depth = 0
+        if not looped:
+            self._depths[id(rule)] = depth
+        return depth, looped
 
-    def _item_parts(self, rule: Rule.Resolved, own: str,
-                    state: CollectionState) -> list[JSONMessagePart] | None:
-        """An item rule as its items, each green where held: "Builder and Castle", "Attila's Camp
-        or Bleda's Camp"; a counted one says how many are held, "Progressive Attila Scenario x2
-        Has x1". None for anything else. A scenario's own items lose its name."""
-        def item(name: str, count: int = 1) -> list[JSONMessagePart]:
-            held = state.count(name, self.world.player)
-            shown = name.split(own, 1)[-1] + (f" x{count}" if count > 1 else "")
-            parts = [colored(shown, held >= count)]
+    def _items(self, rule: Rule.Resolved, own: str, state: CollectionState | None
+               ) -> tuple[bool, list[tuple[list[JSONMessagePart], bool]]] | None:
+        """An item rule as its items, each with whether it is held: whether all are asked or any
+        will do, and each one's parts - green where held, a counted one with how many are held,
+        "Progressive Attila Scenario x2 Has x1". None for anything else. A scenario's own items
+        lose its name."""
+        def item(name: str, count: int = 1) -> tuple[list[JSONMessagePart], bool]:
+            have = state.count(name, self.world.player) if state is not None else 0
+            shown = (name.split(own, 1)[-1] if own else name) + (f" x{count}" if count > 1 else "")
+            parts = [colored(shown, have >= count)]
             if count > 1:
-                parts += [text(" "), colored(f"Has x{held}", held > 0)]
-            return parts
+                parts += [text(" "), colored(f"Has x{have}", have > 0)]
+            return parts, have >= count
         if isinstance(rule, Has.Resolved):
-            return item(rule.item_name, rule.count)
+            return True, [item(rule.item_name, rule.count)]
         if isinstance(rule, HasAll.Resolved):
-            return _joined([item(name) for name in rule.item_names], " and ")
+            return True, [item(name) for name in rule.item_names]
         if isinstance(rule, HasAny.Resolved):
-            return _joined([item(name) for name in rule.item_names], " or ")
+            return False, [item(name) for name in rule.item_names]
         if isinstance(rule, HasAllCounts.Resolved):
-            return _joined([item(name, count) for name, count in rule.item_counts], " and ")
+            return True, [item(name, count) for name, count in rule.item_counts]
         return None
-
-    @staticmethod
-    def _why(choices: list[Rule.Resolved], held: bool, lines: Lines, depth: int,
-             state: CollectionState) -> list[Rule.Resolved]:
-        """The choices worth showing: where the whole holds, only those that hold - why it does -
-        with a line for how many others there are; where it fails, every one, as any could open it."""
-        if not held:
-            return choices
-        holding = [choice for choice in choices if choice(state)]
-        others = len(choices) - len(holding)
-        if others:
-            lines.add(depth, text(f"({others} other way{'s' if others > 1 else ''} not held)"))
-        return holding
 
     def _question_entry(self, question: ScenarioQuestion.Resolved, sl: ScenarioLogic) -> JSONMessagePart:
         """The marker that opens a scenario question not opened in place."""
@@ -481,11 +624,11 @@ class Explainer:
 
     def _question_drill(self, question: ScenarioQuestion.Resolved, sl: ScenarioLogic,
                         state: CollectionState) -> Lines:
-        """One scenario question broken down, as a failing one is in place."""
+        """One scenario question broken down, as it is in place."""
         lines = Lines()
         lines.add(0, colored(sl.scenario.scenario_name, self._holds(sl.is_unlocked(), state)), text(": "),
-                  colored(self._asks(question, sl), question(state)))
-        self._breakdown(lines, question.answer, 1, sl, state, OPENED)
+                  colored(self._asks(question, sl), question(state)), *_says(question(state)))
+        lines.extend(self._question_body(question, sl, state))
         return lines
 
     @staticmethod
@@ -507,14 +650,16 @@ class Explainer:
             easy = self._resolved(sl.economy.has_easy_source(resource))
             why = (self._question_entry(easy, sl),) if isinstance(easy, ScenarioQuestion.Resolved) else ()
             if easy(state):
-                lines.add(2, colored(f"{amount} {noun}", True), text(": an easy source"), *why)
+                lines.add(2, colored(f"{amount} {noun}", True), text(": an easy source"), *_says(True), *why)
                 continue
             asked = dict(total.table.total(state).cost).get(resource, 0) if total is not None else None
             if asked is None or total.lowest(resource) > most[resource]:
-                lines.add(2, colored(f"{amount} {noun}", False), text(": not in budget, and no easy source yet"), *why)
+                lines.add(2, colored(f"{amount} {noun}", False), text(": not in budget, and no easy source yet"),
+                          *_says(False), *why)
                 continue
             lines.add(2, colored(f"{amount} {noun}", pile[resource] >= asked),
-                      text(f": budget {asked}, starting pile {pile[resource]}, no easy source yet"), *why)
+                      text(f": budget {asked}, starting pile {pile[resource]}, no easy source yet"),
+                      *_says(pile[resource] >= asked), *why)
         if total is not None:
             # The budget pays for what comes before it too, so it can fail on what it doesn't cost.
             own = {resource for resource, _ in costs.cost}
@@ -525,18 +670,21 @@ class Explainer:
                 easy = self._resolved(sl.economy.has_easy_source(resource))
                 why = (self._question_entry(easy, sl),) if isinstance(easy, ScenarioQuestion.Resolved) else ()
                 if easy(state):
-                    lines.add(2, colored(f"{asked} {noun}", True), text(" in its budget: an easy source"), *why)
+                    lines.add(2, colored(f"{asked} {noun}", True), text(" in its budget: an easy source"),
+                              *_says(True), *why)
                 elif total.lowest(resource) > most[resource]:
                     lines.add(2, colored(f"{asked} {noun}", False),
-                              text(" in its budget: more than any starting pile, no easy source yet"), *why)
+                              text(" in its budget: more than any starting pile, no easy source yet"),
+                              *_says(False), *why)
                 else:
                     lines.add(2, colored(f"{asked} {noun}", pile[resource] >= asked),
-                              text(f" in its budget: starting pile {pile[resource]}, no easy source yet"), *why)
+                              text(f" in its budget: starting pile {pile[resource]}, no easy source yet"),
+                              *_says(pile[resource] >= asked), *why)
             together = together or [sl]
             campaign = sl.scenario.campaign.campaign_name
             chapters = tuple(each.scenario.chapter for each in together)
             budgets = Costs(self.world, route, together)
-            lines.add(2, text("Its budget"),
+            lines.add(2, colored("Its budget", total(state)), *_says(total(state)),
                       self._entry(f"{name}'s budget in {campaign} {_ranges(list(chapters))}",
                                   lambda st: budgets.campaign_budget(name, campaign, st, chapters)))
 
@@ -553,6 +701,20 @@ class Explainer:
     def _scenario(self, campaign, chapter: int):
         return next(scenario for scenario in self.world.pool.scenarios.in_campaign(campaign)
                     if scenario.chapter == chapter)
+
+    @staticmethod
+    def _add_wrapped(lines: Lines, depth: int, parts: list[JSONMessagePart]) -> None:
+        """A route line, continued one level deeper from its age when it would run past WIDTH:
+        the log loses the indentation of a line it wraps itself."""
+        if len(INDENT * depth) + sum(len(part["text"]) for part in parts) <= WIDTH:
+            lines.add(depth, *parts)
+            return
+        cut_at = next((index for index, part in enumerate(parts) if part["text"] == " in the "), None)
+        if cut_at is None:
+            lines.add(depth, *parts)
+            return
+        lines.add(depth, *parts[:cut_at])
+        lines.add(depth + 1, text("in the "), *parts[cut_at + 1:])
 
     def _label(self, route: Route, state: CollectionState) -> list[JSONMessagePart]:
         """"Trains it at the Stable in the Feudal Age", the building and age green where their
@@ -589,38 +751,22 @@ class Explainer:
             return Status.AVAILABLE
         return best
 
-    def _runs(self, route: Route, chapters: list[tuple[int, Status]],
-              every: int) -> list[tuple[list[int], list[JSONMessagePart]]]:
-        """Each status once, a row each, with the chapters that have it as runs: "1, 3–5 locked".
-        A campaign whose every chapter is on the route and locked is just "locked"."""
-        if len(chapters) == every and all(status is Status.LOCKED for _, status in chapters):
-            return [([chapter for chapter, _ in chapters], [text("locked")])]
-        by_status: dict[Status, list[int]] = {}
-        for chapter, status in chapters:
-            by_status.setdefault(status, []).append(chapter)
-        ordered = sorted(by_status.items(), key=lambda item: item[1][0])
-        return [(numbers, [text(f"{_ranges(numbers)} "), self._word(route, status)])
-                for status, numbers in ordered]
-
     @staticmethod
-    def _word(route: Route, status: Status) -> JSONMessagePart:
-        if status is Status.AVAILABLE:
-            return colored("available", True)
-        if status is Status.CANT_AFFORD:
-            return colored("can't afford", False)
-        if status is Status.SHORT:
-            return colored("missing items", False)
-        if status is Status.NEVER:
-            return colored(route.verb, False)
-        return text("locked")
+    def _runs(chapters: list[tuple[int, Status]]) -> list[tuple[list[int], list[JSONMessagePart]]]:
+        """The chapters where the route is open and where it isn't, a row each: "1, 3–5 -> True"."""
+        by_held: dict[bool, list[int]] = {}
+        for chapter, status in chapters:
+            by_held.setdefault(status is Status.AVAILABLE, []).append(chapter)
+        ordered = sorted(by_held.items(), key=lambda item: item[1][0])
+        return [(numbers, [colored(_ranges(numbers), held), *_says(held)]) for held, numbers in ordered]
 
     # -- general requirements --------------------------------------------------------------------
 
     def _requirements(self, rules: tuple[Rule, ...],
-                      state: CollectionState) -> list[list[JSONMessagePart]]:
-        """One line an item, "Has Militia Line -> True"; an "any of" shares one line,
-        "Has Castle or Krepost -> False". An item asked twice is listed once."""
-        lines: list[list[JSONMessagePart]] = []
+                      state: CollectionState) -> list[tuple[int, list[JSONMessagePart]]]:
+        """One line an item, "Has Militia Line -> True"; an "any of" as "Any of" with an item a
+        line beneath it, each with how much deeper it sits. An item asked twice is listed once."""
+        lines: list[tuple[int, list[JSONMessagePart]]] = []
         seen: set[str] = set()
         for rule in rules:
             resolved = self._resolved(rule)
@@ -630,13 +776,14 @@ class Explainer:
             if not names:
                 continue
             seen.update(names)
+            nested = 0
             if len(names) > 1 and type(resolved).__qualname__.startswith(("HasAny", "Or")):
                 held = resolved(state)
-                lines.append([colored("Has " + " or ".join(names), held), text(" -> "), truth(held)])
-                continue
+                lines.append((0, [colored("Any of", held), text(" -> "), truth(held)]))
+                nested = 1
             for name in names:
                 held = state.has(name, self.world.player)
-                lines.append([colored(f"Has {name}", held), text(" -> "), truth(held)])
+                lines.append((nested, [colored(f"Has {name}", held), text(" -> "), truth(held)]))
         return lines
 
     # -- evaluating -----------------------------------------------------------------------------
