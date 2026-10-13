@@ -231,63 +231,6 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
 
 @dataclass
-class ScenarioCanGather(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
-    """Whether this scenario can work one gathering source: hunt, chop wood, crew Fishing Ships.
-    The easy sources ask these again and again, so each is answered once and explained once."""
-
-    source: str
-    """Which: the name of the economy method that answers it, less its underscore."""
-
-    _ASKS = {
-        "mine_gold": "can mine gold",
-        "quarry_stone": "can quarry stone",
-        "hunt": "can hunt",
-        "herd": "can herd sheep",
-        "forage": "can forage berries",
-        "fish_from_shore": "can fish from the shore",
-        "crew_fishing_ships": "can crew Fishing Ships",
-        "fish_by_boat": "can fish by boat",
-        "oysters_from_shore": "can gather oysters from the shore",
-        "oysters_by_boat": "can gather oysters by boat",
-        "hunt_whales": "can hunt whales",
-        "collect_relics": "can collect relics",
-        "chop_wood": "can chop wood",
-        "farm": "can farm",
-        "work_fish_traps": "can work fish traps",
-        "endless_food": "has endless food",
-        "endless_farming": "can farm endlessly",
-        "endless_fish_traps": "can fish endlessly with traps",
-        "defend_open_ground": "can defend resources",
-        "hold_shoreline": "can hold a shoreline",
-    }
-
-    @override
-    def key(self) -> tuple:
-        return (type(self).__name__, self.scenario, self.source)
-
-    @override
-    def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return getattr(scenario.economy, f"_{self.source}")()
-
-    @override
-    def describe(self, scenario: Age2ScenarioData) -> str:
-        return f"{scenario.scenario_name} {self._ASKS[self.source]}"
-
-
-@dataclass
-class ScenarioCanProtectBoats(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
-    """Whether this scenario can field a navy to guard its boats in open water."""
-
-    @override
-    def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.military.protecting_boats()
-
-    @override
-    def describe(self, scenario: Age2ScenarioData) -> str:
-        return f"{scenario.scenario_name} can protect its boats"
-
-
-@dataclass
 class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
     """Whether this scenario can bring a resource in freely: enough of it to keep paying."""
 

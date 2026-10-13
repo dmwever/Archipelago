@@ -12,6 +12,7 @@ from rule_builder.rules import False_, Has, Rule, True_
 from ..items.Items import Age2ItemData, Resource
 from .budget.BudgetItem import BASE
 from .budget.BudgetTotal import BudgetTotal
+from .custom_logic.Named import Named
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -121,7 +122,17 @@ class ScenarioLogic:
             return authored
         return False_()
 
+    def named(self, asks: str, rule: Rule) -> Rule:
+        """A rule of this scenario under a name - `asks` is how it reads after the scenario's name,
+        "can hunt". It holds exactly when `rule` does; /explain shows it as one line."""
+        return Named(rule, label=f"{self.scenario.scenario_name} {asks}")
+
     def has_building(self, building: Age2BuildingData) -> Rule:
+        name = building.location_name.removeprefix("Build ")
+        article = "an" if name[0] in "AEIOU" else "a"
+        return self.named(f"has {article} {name}, standing or buildable", self._has_building(building))
+
+    def _has_building(self, building: Age2BuildingData) -> Rule:
         return (self.starting_state.starts_with_building[building]
                 | self.buildings.can_build_building(building))
 

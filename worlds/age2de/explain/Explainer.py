@@ -17,6 +17,7 @@ from ..logic.budget.BudgetTotal import BudgetTotal
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
+from ..logic.custom_logic.Named import Named
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
 from .Costs import Costs, budget_label
@@ -42,6 +43,9 @@ _SOURCE_NAMES = {
     "stone_count": "Stone Quarrying",
 }
 """What a source that is more than one question is called, by the map count it gathers."""
+
+_NAMED = (ScenarioQuestion.Resolved, Named.Resolved)
+"""What /explain shows by name, one line with its rule behind a marker: questions, and named rules."""
 
 OPENED = 1
 """How deep a breakdown opens in place: the question being explained, with every question beneath
@@ -471,7 +475,7 @@ class Explainer:
             return
         held = resolved(state)
         own = f"{sl.scenario.scenario_name}: "
-        if isinstance(resolved, ScenarioQuestion.Resolved):
+        if isinstance(resolved, _NAMED):
             if opening and resolved.description not in self._opened:
                 self._opened.add(resolved.description)
                 lines.add(depth, colored(self._asks(resolved, sl), held), *_says(held))
@@ -553,7 +557,7 @@ class Explainer:
             total = sum(amount for _, amount, _, _ in areas)
             counted = sum(amount for child, amount, _, _ in areas if child(state))
             works = gathers(state)
-            label = (self._asks(gathers, sl) if isinstance(gathers, ScenarioQuestion.Resolved)
+            label = (self._asks(gathers, sl) if isinstance(gathers, _NAMED)
                      else _SOURCE_NAMES.get(kinds[gathers.explain_str()], "Any of"))
             lines.add(depth, text(f"{total}{resource} ("), colored(f"{counted} in logic", counted > 0), text(") "),
                       colored(label, works), *_says(works))
@@ -629,7 +633,7 @@ class Explainer:
         items = self._items(rule, "", None)
         if items is not None:
             depth = 0 if len(items[1]) == 1 else 1
-        elif isinstance(rule, ScenarioQuestion.Resolved):
+        elif isinstance(rule, _NAMED):
             inner, looped = self._measure(rule.answer, path | {id(rule)})
             depth = 1 + inner
         elif isinstance(rule, _GROUPS):
@@ -698,7 +702,7 @@ class Explainer:
         for resource, amount in costs.cost:
             noun = resource.name.lower()
             easy = self._resolved(sl.economy.has_easy_source(resource))
-            why = (self._question_entry(easy, sl),) if isinstance(easy, ScenarioQuestion.Resolved) else ()
+            why = (self._question_entry(easy, sl),) if isinstance(easy, _NAMED) else ()
             if easy(state):
                 lines.add(2, colored(f"{amount} {noun}", True), text(": an easy source"), *_says(True), *why)
                 continue
@@ -718,7 +722,7 @@ class Explainer:
                     continue
                 noun = resource.name.lower()
                 easy = self._resolved(sl.economy.has_easy_source(resource))
-                why = (self._question_entry(easy, sl),) if isinstance(easy, ScenarioQuestion.Resolved) else ()
+                why = (self._question_entry(easy, sl),) if isinstance(easy, _NAMED) else ()
                 if easy(state):
                     lines.add(2, colored(f"{asked} {noun}", True), text(" in its budget: an easy source"),
                               *_says(True), *why)

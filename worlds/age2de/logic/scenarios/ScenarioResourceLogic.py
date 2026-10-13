@@ -13,7 +13,7 @@ from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ..budget.BudgetItem import PricedLocation
 from ..budget.BudgetTotal import BudgetTotal
-from ..custom_logic.ScenarioQuestions import ScenarioCanGather, ScenarioHasEasyResource
+from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -64,7 +64,7 @@ class ScenarioResourceLogic:
         if kind == "afloat":
             return self.scenario.military.can_protect_boats()
         if kind == "shoreline":
-            return self._gathers("hold_shoreline")
+            return self.scenario.named("can hold a shoreline", self._hold_shoreline())
         return self.can_defend_resources()
 
     def _hold_shoreline(self) -> Rule:
@@ -72,7 +72,7 @@ class ScenarioResourceLogic:
                 | self.scenario.military.can_protect_boats())
 
     def can_defend_resources(self) -> Rule:
-        return self._gathers("defend_open_ground")
+        return self.scenario.named("can defend resources", self._defend_open_ground())
 
     def _defend_open_ground(self) -> Rule:
         return self.scenario.buildings._fortified()
@@ -91,7 +91,7 @@ class ScenarioResourceLogic:
         return self.scenario.units.can_do_job(job) & self.logic.units.has_profession_item(job)
 
     def can_mine_some(self) -> Rule:
-        return self._gathers("mine_gold")
+        return self.scenario.named("can mine gold", self._mine_gold())
 
     def _mine_gold(self) -> Rule:
         if not self.counts.gold_count:
@@ -101,7 +101,7 @@ class ScenarioResourceLogic:
                 & self.scenario.starting_state.starting_gold_mine)
 
     def can_quarry_some(self) -> Rule:
-        return self._gathers("quarry_stone")
+        return self.scenario.named("can quarry stone", self._quarry_stone())
 
     def _quarry_stone(self) -> Rule:
         if not self.counts.stone_count:
@@ -116,7 +116,7 @@ class ScenarioResourceLogic:
                 & self.scenario.starting_state.starting_trees)
 
     def can_hunt(self) -> Rule:
-        return self._gathers("hunt")
+        return self.scenario.named("can hunt", self._hunt())
 
     def _hunt(self) -> Rule:
         if not self.counts.hunt_count:
@@ -126,7 +126,7 @@ class ScenarioResourceLogic:
                 & self.scenario.starting_state.starting_hunting)
 
     def can_herd(self) -> Rule:
-        return self._gathers("herd")
+        return self.scenario.named("can herd sheep", self._herd())
 
     def _herd(self) -> Rule:
         if not self.counts.herd_count:
@@ -136,7 +136,7 @@ class ScenarioResourceLogic:
                 & self.scenario.starting_state.starting_sheep)
 
     def can_forage(self) -> Rule:
-        return self._gathers("forage")
+        return self.scenario.named("can forage berries", self._forage())
 
     def _forage(self) -> Rule:
         if not self.counts.bush_count:
@@ -146,7 +146,7 @@ class ScenarioResourceLogic:
                 & self.scenario.starting_state.starting_bushes)
 
     def can_fish_from_shore(self) -> Rule:
-        return self._gathers("fish_from_shore")
+        return self.scenario.named("can fish from the shore", self._fish_from_shore())
 
     def _fish_from_shore(self) -> Rule:
         if not self.counts.shore_fish_count:
@@ -161,7 +161,7 @@ class ScenarioResourceLogic:
         return self.logic.units.has_unit_items(ship) & self.scenario.ages.has_reached(ship.age)
 
     def can_crew_fishing_ships(self) -> Rule:
-        return self._gathers("crew_fishing_ships")
+        return self.scenario.named("can crew Fishing Ships", self._crew_fishing_ships())
 
     def _crew_fishing_ships(self) -> Rule:
         """Fishing Ships, and the wood for one: banked, or chopped."""
@@ -172,7 +172,7 @@ class ScenarioResourceLogic:
                                                      ship.cost.get(Resource.WOOD, 0))))
 
     def can_fish_by_boat(self) -> Rule:
-        return self._gathers("fish_by_boat")
+        return self.scenario.named("can fish by boat", self._fish_by_boat())
 
     def _fish_by_boat(self) -> Rule:
         if not self.counts.deep_fish_count:
@@ -185,7 +185,7 @@ class ScenarioResourceLogic:
         return self.can_fish_from_shore() | self.can_fish_by_boat()
 
     def can_gather_oysters_from_shore(self) -> Rule:
-        return self._gathers("oysters_from_shore")
+        return self.scenario.named("can gather oysters from the shore", self._oysters_from_shore())
 
     def _oysters_from_shore(self) -> Rule:
         if not self.counts.oyster_count:
@@ -195,7 +195,7 @@ class ScenarioResourceLogic:
                 & self.scenario.starting_state.starting_oysters)
 
     def can_gather_oysters_by_boat(self) -> Rule:
-        return self._gathers("oysters_by_boat")
+        return self.scenario.named("can gather oysters by boat", self._oysters_by_boat())
 
     def _oysters_by_boat(self) -> Rule:
         if not self.counts.oyster_count:
@@ -208,7 +208,7 @@ class ScenarioResourceLogic:
         return self.can_gather_oysters_from_shore() | self.can_gather_oysters_by_boat()
 
     def can_hunt_whales(self) -> Rule:
-        return self._gathers("hunt_whales")
+        return self.scenario.named("can hunt whales", self._hunt_whales())
 
     def _hunt_whales(self) -> Rule:
         if not self.counts.whale_count:
@@ -218,7 +218,7 @@ class ScenarioResourceLogic:
                 & self.scenario.starting_state.starting_whales)
 
     def can_collect_relics(self) -> Rule:
-        return self._gathers("collect_relics")
+        return self.scenario.named("can collect relics", self._collect_relics())
 
     def _collect_relics(self) -> Rule:
         if not self.counts.relic_count:
@@ -235,7 +235,7 @@ class ScenarioResourceLogic:
                 | self.can_collect_relics())
 
     def can_gather_wood(self) -> Rule:
-        return self._gathers("chop_wood")
+        return self.scenario.named("can chop wood", self._chop_wood())
 
     def _chop_wood(self) -> Rule:
         return (self.can_chop_some() & self.scenario.has_base()
@@ -245,33 +245,33 @@ class ScenarioResourceLogic:
     # -- food that grows back -----------------------------------------------------------------
 
     def has_infinite_food(self) -> Rule:
-        return self._gathers("farm")
+        return self.scenario.named("can farm", self._farm())
 
     def _farm(self) -> Rule:
         return Or(*[self.scenario.has_building(building) & self.has_job(job)
                     for building, job in RENEWABLE_FOOD])
 
     def has_infinite_fish(self) -> Rule:
-        return self._gathers("work_fish_traps")
+        return self.scenario.named("can work fish traps", self._work_fish_traps())
 
     def _work_fish_traps(self) -> Rule:
         return (self.can_crew_fishing_ships()
                 & self.scenario.has_building(Age2BuildingData.FISH_TRAP))
 
     def endless_food(self) -> Rule:
-        return self._gathers("endless_food")
+        return self.scenario.named("has endless food", self._endless_food())
 
     def _endless_food(self) -> Rule:
         return (self.endless_farming() | self.endless_fish_traps()) & self._can_get_wood_easily()
 
     def endless_farming(self) -> Rule:
-        return self._gathers("endless_farming")
+        return self.scenario.named("can farm endlessly", self._endless_farming())
 
     def _endless_farming(self) -> Rule:
         return self.has_infinite_food() & self.scenario.buildings.has_food_dropsite()
 
     def endless_fish_traps(self) -> Rule:
-        return self._gathers("endless_fish_traps")
+        return self.scenario.named("can fish endlessly with traps", self._endless_fish_traps())
 
     def _endless_fish_traps(self) -> Rule:
         return self.has_infinite_fish() & self.scenario.buildings.has_fishing_boat_dropsite()
@@ -323,10 +323,6 @@ class ScenarioResourceLogic:
                         | self.can_gather_gold()
                     )
                 )
-
-    def _gathers(self, source: str) -> Rule:
-        """One gathering source as a scenario question: answered once, shown as one line."""
-        return ScenarioCanGather(scenario=self.scenario.scenario, source=source)
 
     # -- aggregates ---------------------------------------------------------------------------
 

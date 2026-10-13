@@ -130,3 +130,20 @@ class TestOneScenarioLogicPerScenario(Age2RuleTestBase):
         owned = {id(scenario_logic) for scenario_logic in world.rules.logic.scenarios}
         owned.update(id(rules.scenario_logic) for rules in world.rules.scenario_rules)
         self.assertEqual(len(owned), len(world.rules.logic.scenarios))
+
+
+class TestNamedRules(Age2RuleTestBase):
+    """A named rule only gives a rule a name: it holds exactly when that rule does, carries its
+    items for the cache, and prints as its name alone."""
+
+    def test_a_named_rule_is_its_rule(self):
+        from ..logic.custom_logic.Named import Named
+        world = self.build()
+        sl = world.rules.logic.for_scenario(world.pool.scenarios.included[0])
+        named = sl.economy.can_hunt().resolve(world)
+        self.assertIsInstance(named, Named.Resolved)
+        self.assertIs(named.child, sl.economy._hunt().resolve(world))
+        self.assertEqual(set(named.child.item_dependencies()), set(named.item_dependencies()))
+        state = self.multiworld.get_all_state(False)
+        self.assertEqual(named.child(state), named(state))
+        self.assertEqual(f"{sl.scenario.scenario_name} can hunt", named.explain_str(state))
