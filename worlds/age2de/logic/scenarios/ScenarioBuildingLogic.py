@@ -59,6 +59,11 @@ class ScenarioBuildingLogic:
         return self.can_build_tc() & self.scenario.ages.has_reached(Age2AgeData.CASTLE)
 
     def is_fortified(self) -> Rule:
+        """Somewhere to fall back to: one shared question - "can defend resources" - as gathering in
+        the open and holding a shoreline both ask it."""
+        return self.scenario.economy.can_defend_resources()
+
+    def _fortified(self) -> Rule:
         strongpoint = Or(*[self.scenario.has_building(building) for building in
                            (Age2BuildingData.TOWN_CENTER, Age2BuildingData.CASTLE,
                             Age2BuildingData.FORTIFIED_CHURCH, Age2BuildingData.KREPOST,

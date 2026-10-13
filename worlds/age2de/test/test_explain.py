@@ -328,7 +328,8 @@ class TestEasySourceCommands(ExplainTestBase):
             noun = resource.name.lower()
             for typed, opens in ((f"Easy {noun} Source", f"Easy {noun.title()} Source"),
                                  (f"easy {noun}", f"Easy {noun.title()} Source"),
-                                 (f"{word} Easy {noun} Source", f"Easy {noun.title()} Source in {campaign.campaign_name}"),
+                                 (f"{word} Easy {noun} Source",
+                                  f"Easy {noun.title()} Source\n    Has {campaign.campaign_name} Campaign"),
                                  (f"{word} {scenario.chapter} Easy {noun}", f"{scenario.scenario_name}: ")):
                 with self.subTest(typed):
                     parts = self.world.explain_rule(typed, state)

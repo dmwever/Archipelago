@@ -32,6 +32,17 @@ if TYPE_CHECKING:
 _EASY_SOURCE = re.compile(r"easy (wood|food|gold|stone)(?: source)?")
 """What /explain takes for an easy source rather than a location."""
 
+_AREAS = {"base": "in base", "open": "in the open", "ally": "with an ally", "enemy": "in enemy territory"}
+"""How each map area reads after an amount: "3900 food (in base) from"."""
+
+_SOURCE_NAMES = {
+    "hunt_count": "Hunting", "herd_count": "Herding", "bush_count": "Foraging",
+    "shore_fish_count": "Shore Fishing", "deep_fish_count": "Deep-Sea Fishing",
+    "gold_count": "Gold Mining", "oyster_count": "Oyster Gathering", "whale_count": "Whaling",
+    "stone_count": "Stone Quarrying",
+}
+"""What a source that is more than one question is called, by the map count it gathers."""
+
 OPENED = 1
 """How deep a breakdown opens in place: the question being explained, with every question beneath
 it - "Can build a Mill", "Has reached the Feudal Age" - one line with its marker."""
@@ -503,12 +514,7 @@ class Explainer:
             return
         if isinstance(resolved, SufficientRawResources.Resolved):
             lines.add(depth, colored(f"Scenario expects {resolved.needed}", held), *_says(held))
-            for child, amount in zip(resolved.children, resolved.amounts):   # by map area, as counted
-                start = len(lines._lines)
-                self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
-                if len(lines._lines) > start:   # the source's first line carries what it is worth
-                    first_depth, first = lines._lines[start]
-                    lines._lines[start] = (first_depth, [text(f"{amount} from "), *first])
+            self._sources(lines, resolved, depth + 1, sl, state, opening)
             return
         if isinstance(resolved, AgeUpRequirement.Resolved):
             lines.add(depth, colored(f"Any {resolved.num_needed} of", held), *_says(held))
@@ -523,6 +529,54 @@ class Explainer:
             lines.add(depth, colored("Never", False), *_says(False))
             return
         lines.add(depth, colored(resolved.explain_str(state), held), *_says(held))
+
+    def _sources(self, lines: Lines, expects: SufficientRawResources.Resolved, depth: int,
+                 sl: ScenarioLogic, state: CollectionState, opening: int) -> None:
+        """Each gathering source once - its total, what of it counts now, and whether it can be
+        worked - with the map areas holding it beneath: "6760 food (0 in logic) Can hunt", then
+        "3900 food (in base)", and "2860 food (in the open) -> False" over what that area asks."""
+        resource = f" {expects.resource}" if expects.resource else ""
+        sources: dict[str, tuple[Rule.Resolved, list]] = {}
+        kinds: dict[str, str] = {}
+        for child, amount, area, kind in zip(expects.children, expects.amounts,
+                                             expects.areas or ("",) * len(expects.amounts),
+                                             expects.kinds or ("",) * len(expects.amounts)):
+            if isinstance(child, And.Resolved) and len(child.children) >= 2:
+                gathers, rest = child.children[0], child.children[1:]
+                gate = rest[0] if len(rest) == 1 else And.Resolved(tuple(rest), player=child.player)
+            else:
+                gathers, gate = child, None
+            entry = sources.setdefault(gathers.explain_str(), (gathers, []))
+            kinds.setdefault(gathers.explain_str(), kind)
+            entry[1].append((child, amount, area, gate))
+        for gathers, areas in sources.values():
+            total = sum(amount for _, amount, _, _ in areas)
+            counted = sum(amount for child, amount, _, _ in areas if child(state))
+            works = gathers(state)
+            label = (self._asks(gathers, sl) if isinstance(gathers, ScenarioQuestion.Resolved)
+                     else _SOURCE_NAMES.get(kinds[gathers.explain_str()], "Any of"))
+            lines.add(depth, text(f"{total}{resource} ("), colored(f"{counted} in logic", counted > 0), text(") "),
+                      colored(label, works), *_says(works))
+            for child, amount, area, gate in areas:
+                where = f" ({_AREAS.get(area, area)})" if area else ""
+                what = f"{amount}{resource}{where}"
+                counts = child(state)
+                lines.add(depth + 1, colored(what, counts), *_says(counts),
+                          self._entry(f"{sl.scenario.scenario_name}: {label}, {what}",
+                                      lambda st, child=child, label=label, what=what:
+                                          self._area_view(child, label, what, sl, st)))
+
+    def _area_view(self, child: Rule.Resolved, label: str, what: str, sl: ScenarioLogic,
+                   state: CollectionState) -> Lines:
+        """What one map area's share of a source asks: the source, and whatever holding that
+        area asks - each a line, its questions behind their markers."""
+        lines = Lines()
+        counts = child(state)
+        lines.add(0, colored(sl.scenario.scenario_name, self._holds(sl.is_unlocked(), state)), text(": "),
+                  colored(f"{label}, {what}", counts), *_says(counts))
+        self._opened = set()
+        self._breakdown(lines, child, 1, sl, state, 0)
+        return lines
 
     def _choices(self, rule: Or.Resolved, own: str, state: CollectionState) -> list[tuple]:
         """An "or"'s choices with every "any of" inside it folded in - an any of an any is one
