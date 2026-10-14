@@ -21,6 +21,7 @@ class Genghis2StartingState(ScenarioStartingState):
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.GEN1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Genghis Khan Scenario", 1)
         self.max_age = Age2AgeData.CASTLE
+        self.has_water_access = False_()
 
         # Temujin opens with eleven riders and a Wonder. The Tayichi'ud village is the only
         # Town Centre or villager he can ever reach, so it is the whole economy.
