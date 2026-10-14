@@ -91,7 +91,7 @@ class ScenarioLogic:
         self.budget = ScenarioBudgetLogic(self)
 
     def has_vils(self) -> Rule:
-        return self.starting_state.has_vils
+        return self.named("has villagers", self.starting_state.has_vils)
 
     def has_builders(self) -> Rule:
         """Villagers who can put a building up. With professions shuffled, only once the Builder
