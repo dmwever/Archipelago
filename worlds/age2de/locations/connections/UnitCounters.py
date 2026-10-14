@@ -1032,6 +1032,7 @@ for _line in Age2UnitLineData:
 
 assert not [line for line, counters in LINE_TO_COUNTERS.items() if line in counters], \
     "a line counters itself"
+# A unit on the shore can fight a ship, but a ship never answers an army on land.
 assert not [(line, counter) for line, counters in LINE_TO_COUNTERS.items() for counter in counters
-            if (line in SHIP_LINES) != (counter in SHIP_LINES)], \
-    "a ship countering a land unit, or a land unit countering a ship"
+            if line not in SHIP_LINES and counter in SHIP_LINES], \
+    "a ship countering a land unit"

@@ -124,6 +124,10 @@ class TestRoles(Age2RuleTestBase):
         self.assertNotIn(Age2UnitLineData.MANGONEL_LINE, ROLE_TO_LINES[UnitRole.siege])
         self.assertIn(Age2UnitLineData.MANGONEL_LINE, ROLE_TO_LINES[UnitRole.military])
 
+    def test_siege_is_not_an_army(self):
+        """Battering Rams alone once beat Attila 1's first opponent: they counted as military."""
+        self.assertFalse(set(ROLE_TO_LINES[UnitRole.siege]) & set(ROLE_TO_LINES[UnitRole.military]))
+
     def test_a_suicide_raft_is_not_a_navy(self):
         """A Demolition Ship blows itself up on contact: it can sink a fleet, never hold the
         water. Counting it let Demolition Rafts alone win the water in The Walls of
@@ -135,20 +139,19 @@ class TestRoles(Age2RuleTestBase):
 
 class TestCounters(Age2RuleTestBase):
 
-    def test_ships_and_land_units_never_counter_each_other(self):
-        """A Monk once answered a Turtle Ship and a Mangonel a Galley, so a land army could stand
-        in for a fleet."""
+    def test_a_ship_never_counters_a_land_unit(self):
+        """A fleet cannot answer an army on land. The other way round stands: a Bombard Cannon or
+        a Mangonel on the shore does sink ships."""
         ships = set(SHIP_LINES)
         crossed = [(line.name, counter.name) for line in Age2UnitLineData
                    for counter in line.countered_by
-                   if (line in ships) != (counter in ships)]
+                   if line not in ships and counter in ships]
         self.assertEqual([], crossed)
 
     def test_the_demolition_ship_falls_to_galleys_and_turtle_ships(self):
-        self.assertEqual(
-            [Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.TURTLE_SHIP_LINE],
-            Age2UnitLineData.DEMOLITION_RAFT_LINE.countered_by,
-        )
+        for counter in (Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.TURTLE_SHIP_LINE):
+            with self.subTest(counter.name):
+                self.assertIn(counter, Age2UnitLineData.DEMOLITION_RAFT_LINE.countered_by)
 
 
 class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):

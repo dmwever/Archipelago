@@ -89,8 +89,9 @@ SUICIDE_RAFT_LINES = (
 
 NAVY = tuple(line for line in SHIP_LINES
                    if line not in CIVILIAN_LINES + SUICIDE_RAFT_LINES)
+# Siege breaks buildings and cannot hold a field against an army: it is never one on its own.
 MILITARY = tuple(line for line in L if line not in CIVILIAN_LINES + SHIP_LINES
-                       + FAITH_LINES)
+                       + FAITH_LINES + SIEGE)
 
 BUILDING_COUNTER = tuple(line for line in L if line in ANTI_BUILDING
                                or line in SIEGE)
