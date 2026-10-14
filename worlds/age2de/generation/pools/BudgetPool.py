@@ -53,7 +53,7 @@ class BudgetPool:
             rng.sample(buildings, min(BUILDINGS_DRAWN, len(buildings)))
         )
         
-        self.ages: frozenset[Age2AgeData] = frozenset(pool.ages.locations)
+        self.ages: frozenset[Age2AgeData] = frozenset(pool.ages.shuffled)
 
         self.entries: frozenset[Drawn] = (
             self.ages | self.buildings | self.techs | self.units

@@ -60,12 +60,24 @@ class ScenarioUnitLogic:
     # -- fielding ----------------------------------------------------------------------------
 
     def can_field(self, line: Age2UnitLineData, age: Age2AgeData | None = None) -> Rule:
+        return self._field(line, age, paid=True)
+
+    def can_field_structurally(self, line: Age2UnitLineData,
+                               age: Age2AgeData | None = None) -> Rule:
+        return self._field(line, age, paid=False)
+
+    def _field(self, line: Age2UnitLineData, age: Age2AgeData | None, paid: bool) -> Rule:
         tiers = self.fieldable_tiers(line, age) if age is not None else self.starting_unit(line)
         if not tiers:
             return False_()
         sustained = {resource for unit in tiers
                      for resource, amount in unit.cost.items() if amount > 0}
-        return (Or(*[self.can_train_structurally(unit) for unit in tiers])
+        trained = [
+            self.can_train_structurally(unit) & self.scenario.ages.can_pay_for(unit.age)
+                if paid else self.can_train_structurally(unit)
+                for unit in tiers
+        ]
+        return (Or(*trained)
                 & self.scenario.has_base()
                 & self.scenario.economy.can_sustain(sustained))
 

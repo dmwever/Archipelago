@@ -177,7 +177,7 @@ class ScenarioCanResearch(ScenarioQuestion, game="Age Of Empires II: Definitive 
         if scenario.logic.world.pool.techs.locked_at_start(self.tech):
             age = scenario.ages.has_reached(self.tech.age)
         else:
-            age = scenario.ages.can_reach(self.tech.age)
+            age = scenario.ages.can_reach_structurally(self.tech.age)
         return scenario.techs.available(self.tech, age)
 
     @override
@@ -222,7 +222,7 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.ages.can_reach(self.age) | scenario.ages.start_past(self.age)
+        return scenario.ages.can_reach_structurally(self.age) | scenario.ages.start_past(self.age)
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:

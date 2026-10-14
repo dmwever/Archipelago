@@ -15,6 +15,7 @@ from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
+from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..logic.custom_logic.ResourceAmount import contributors
 from ..logic.budget.BudgetItem import BASE
@@ -115,6 +116,67 @@ class TestAgeUps(BudgetTestBase):
         self.assertIsNone(budget.get_priced_item(Age2AgeData.FEUDAL))
         cost = self.cost_of(budget, Age2TechData.TOWN_WATCH)
         self.assertEqual(cost.ages, [])
+
+
+class TestReachingAnAgePaysForIt(BudgetTestBase):
+    """A victory asked for the Imperial Age through can_reach, which only checked the age item and
+    the climb buildings: Attila 4 was won with no food to research it."""
+
+    def test_an_age_above_the_start_is_paid_for(self):
+        ages = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_4).ages
+        resolved = ages.can_pay_for(Age2AgeData.IMPERIAL).resolve(self.world)
+        self.assertFalse(resolved.always_true)
+        self.assertFalse(resolved.always_false)
+
+    def test_the_age_a_scenario_starts_in_is_free(self):
+        ages = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_4).ages
+        self.assertTrue(ages.can_pay_for(Age2AgeData.CASTLE).resolve(self.world).always_true)
+
+    def test_a_fixed_force_never_climbs(self):
+        """It had read as every age handed over for free."""
+        for scenario in (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5):
+            ages = self.world.rules.logic.for_scenario(scenario).ages
+            with self.subTest(scenario.scenario_name):
+                self.assertTrue(ages.can_pay_for(Age2AgeData.CASTLE).resolve(self.world).always_false)
+
+    @staticmethod
+    def ages_paid(resolved) -> set[Age2AgeData]:
+        """The ages whose budget totals the rule asks, not looking inside a total."""
+        found, stack = set(), [resolved]
+        while stack:
+            rule = stack.pop()
+            if isinstance(rule, BudgetTotal.Resolved):
+                if isinstance(rule.location, Age2AgeData):
+                    found.add(rule.location)
+                continue
+            stack += getattr(rule, "children", ())
+            if getattr(rule, "answer", None) is not None:
+                stack.append(rule.answer)
+        return found
+
+    def test_an_army_pays_for_its_own_age(self):
+        """Its unit's age, not the grade asked: Monks answering Knights at Imperial were charged
+        the Imperial age-up they never needed."""
+        units = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).units
+        paid = self.ages_paid(units.can_field(Age2UnitLineData.MONK_LINE, Age2AgeData.IMPERIAL)
+                              .resolve(self.world))
+        self.assertIn(Age2AgeData.CASTLE, paid)
+        self.assertNotIn(Age2AgeData.IMPERIAL, paid)
+
+    def test_boats_are_guarded_without_paying(self):
+        """The fishing tiers ask it, and the easy sources the budget reads ask those."""
+        military = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).military
+        self.assertEqual(set(), self.ages_paid(military.can_protect_boats().resolve(self.world)))
+
+    def test_reaching_it_structurally_never_pays(self):
+        """The budget is built from the structural rules: a paying one would ask for itself."""
+        ages = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_4).ages
+        structural = ages.can_reach_structurally(Age2AgeData.IMPERIAL).resolve(self.world)
+        self.assertEqual(set(), self.ages_paid(structural))
+        # The paid one asks more. Its total may be past every pile and resolve away, leaving the
+        # easy sources, so look for the difference rather than for the total.
+        paid = ages.can_reach(Age2AgeData.IMPERIAL).resolve(self.world)
+        self.assertIsNot(structural, paid)
 
 
 class TestPrerequisiteTechs(BudgetTestBase):

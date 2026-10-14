@@ -46,10 +46,23 @@ class ScenarioAgeLogic:
         self._climb: dict[Age2AgeData, Rule] = {}
 
     def can_reach(self, age: Age2AgeData) -> Rule:
-        """Advance to it here - an event that actually happens, which a tech location cares about."""
+        """Advance to it here and pay for it: what a victory or an army asks of an age."""
+        return self.can_reach_structurally(age) & self.can_pay_for(age)
+
+    def can_reach_structurally(self, age: Age2AgeData) -> Rule:
+        """Advance to it here, less paying for it."""
         if age not in self._reach:
             self._reach[age] = self._can_reach(age)
         return self._reach[age]
+
+    def can_pay_for(self, age: Age2AgeData) -> Rule:
+        """Can the scenario pay for the age. Returns True if starting after it."""
+        state = self.scenario.starting_state
+        if state.fixed_force:
+            return False_()
+        if age <= self.scenario.budget.start_age or age in state.age_playable:
+            return True_()
+        return self.scenario.economy.can_pay(age.cost, age)
 
     def climb(self, into: Age2AgeData) -> Rule:
         if into not in self._climb:
@@ -77,7 +90,7 @@ class ScenarioAgeLogic:
             return True_() & VANILLA_AGE_START
         return False_()
 
-    # -- what the scenario questions resolve to, and the memo behind can_reach -----------
+    # -- what the scenario questions resolve to, and the memo behind can_reach_structurally
 
     def can_research(self, age: Age2AgeData) -> Rule:
         state = self.scenario.starting_state

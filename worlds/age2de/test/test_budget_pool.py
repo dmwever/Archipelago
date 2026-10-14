@@ -129,6 +129,18 @@ class TestNoVillagerLocationsNoVillager(bases.Age2TestBase):
         self.assertNotIn(VILLAGER, self.world.pool.budget.entries)
 
 
+class TestUnshuffledAgesAreStillPaidFor(bases.Age2TestBase):
+    """With Shuffle Ages off the ages are no locations, but reaching one still costs food and gold:
+    the budget prices them all the same."""
+
+    options = {**HARD_OPTIONS, "shuffle_ages": False}
+
+    def test_every_climbable_age_is_in(self) -> None:
+        self.assertFalse(self.world.pool.ages.locations)
+        self.assertTrue(self.world.pool.budget.ages)
+        self.assertEqual(self.world.pool.budget.ages, set(self.world.pool.ages.shuffled))
+
+
 class TestTheSampleIsDeterministic(unittest.TestCase):
     """Two generations of one seed have to agree, or the spoiler describes some other seed."""
 

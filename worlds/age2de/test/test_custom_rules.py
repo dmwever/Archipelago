@@ -46,7 +46,7 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario.scenario.name, age=age.name):
                     asked = ScenarioHasReached(scenario=scenario.scenario, age=age).resolve(world)
-                    direct = (scenario.ages.can_reach(age)
+                    direct = (scenario.ages.can_reach_structurally(age)
                               | scenario.ages.start_past(age)).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 

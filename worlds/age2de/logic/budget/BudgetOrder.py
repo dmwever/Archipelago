@@ -108,7 +108,7 @@ class BudgetOrder:
         pool = self.world.pool
         found = [
             self.get_priced_item(location) for location in candidates
-                if location in pool.ages.locations
+                if location in pool.budget.ages
                     or location in pool.buildings.locations
                     or location in pool.techs.shuffled
         ]
@@ -289,10 +289,6 @@ class BudgetOrder:
         if location is BASE:
             return self._first_holding(scenario.has_base(), states, unlocked)
 
-        name = location.location_name
-        if name not in first:
-            return None
-        sphere = first[name]
         easily = tuple(sorted(
             (resource for resource, amount in location.cost.items() if amount > 0),
             key=lambda resource: resource.value,
@@ -300,6 +296,12 @@ class BudgetOrder:
         paid = (scenario.is_unlocked()
                 & entry.item.scenario_rule(scenario)
                 & BudgetTotal(scenario=scenario.scenario, location=location, easily=easily))
+        name = location.location_name
+        if location in self.world.pool.budget.ages and location not in self.world.pool.ages.locations:
+            return self._first_holding(paid, states, unlocked)
+        if name not in first:
+            return None
+        sphere = first[name]
         return sphere if self._holds(paid, states[sphere]) else None
 
     def _holds(self, rule: Rule | Rule.Resolved, state: CollectionState) -> bool:
