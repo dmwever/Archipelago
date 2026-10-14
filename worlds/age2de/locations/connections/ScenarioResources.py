@@ -321,7 +321,7 @@ Age2ScenarioData.AP_GENGHIS_2.demand = ScenarioResourceDemand(gold=4500, stone=2
 
 Age2ScenarioData.AP_GENGHIS_3.demand = ScenarioResourceDemand(gold=12000, stone=4000, food=40000)
 
-Age2ScenarioData.AP_GENGHIS_4.demand = ScenarioResourceDemand(gold=6000, stone=2000, food=20000)
+Age2ScenarioData.AP_GENGHIS_4.demand = ScenarioResourceDemand(gold=6000, stone=1500, food=20000)
 
 Age2ScenarioData.AP_GENGHIS_5.demand = ScenarioResourceDemand(gold=4500, stone=4000, food=15000)
 

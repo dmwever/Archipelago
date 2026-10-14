@@ -62,7 +62,6 @@ class Genghis3Rules(ScenarioRules):
             military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.CASTLE) &
             military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.CASTLE) &
             military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.CASTLE) &
-            military.counters_building() &
             has_siege &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
@@ -77,7 +76,6 @@ class Genghis3Rules(ScenarioRules):
             military.counters(Age2UnitLineData.ROCKET_CART_LINE, Age2AgeData.IMPERIAL) &
             military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.IMPERIAL) &
             military.counters(Age2UnitLineData.GALLEY_LINE, Age2AgeData.IMPERIAL) &
-            military.counters_building() &
             has_long_siege &
             self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
         )
