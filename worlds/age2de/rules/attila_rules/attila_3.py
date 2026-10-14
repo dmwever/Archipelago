@@ -13,15 +13,21 @@ class Attila3Rules(ScenarioRules):
     
     def set_rules(self):
         super().set_rules()
-        has_much_gold: Rule = self.scenario_logic.economy.has_easy_source(Resource.GOLD)
-        can_win_water: Rule = self.scenario_logic.military.has_navy()
-        can_beat_blue: Rule = self.scenario_logic.military.has_siege() & has_much_gold
-        
+        can_beat_blue: Rule = self.has_military & self.scenario_logic.military.has_siege()
+        can_beat_red_or_green: Rule = self.has_military & self.scenario_logic.military.counters_building()
+
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_GREEN_DOCK_NORTH], self.has_military | self.has_navy)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_GREEN_DOCK_SOUTH], self.has_military | self.has_navy)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_RED_DOCK], self.has_navy)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_GREEN_TC], can_beat_red_or_green)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_RED_TC], can_beat_red_or_green)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_RED_MARKET], self.has_military)
+
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BUILD_CASTLE], self.scenario_logic.buildings.can_build_building(Age2BuildingData.CASTLE))
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_COGS], can_win_water)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCK_NORTH], can_win_water)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCKS_SOUTH], can_win_water)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_COGS], self.has_navy)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCK_NORTH], self.has_navy)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCKS_SOUTH], self.has_navy)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_THREATEN_WONDER], can_beat_blue)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_DESTROY_WONDER], can_beat_blue)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_VICTORY], (has_much_gold & can_win_water) | can_beat_blue)
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT3_VICTORY.scenario.scenario_name), (has_much_gold & can_win_water) | can_beat_blue)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_VICTORY], (can_beat_red_or_green & self.has_navy) | can_beat_blue)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT3_VICTORY.scenario.scenario_name), (can_beat_red_or_green & self.has_navy) | can_beat_blue)

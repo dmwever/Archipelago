@@ -243,3 +243,24 @@ class TestDefeatingOnePlayer(Age2RuleTestBase):
         location = Age2ScenarioLocationData.ATT1_VICTORY.global_name()
         self.assertFalse(self.multiworld.get_location(location, self.world.player)
                          .access_rule(state))
+
+
+class TestAttila3HasRulesForGreenAndRed(Age2RuleTestBase):
+    """Green's and red's objectives had no rule of their own, so entering the scenario was the
+    whole requirement: a dock or a Town Center fell with no army and no base."""
+
+    OBJECTIVES = (
+        Age2ScenarioLocationData.ATT3_GREEN_DOCK_NORTH,
+        Age2ScenarioLocationData.ATT3_GREEN_DOCK_SOUTH,
+        Age2ScenarioLocationData.ATT3_RED_DOCK,
+        Age2ScenarioLocationData.ATT3_GREEN_TC,
+        Age2ScenarioLocationData.ATT3_RED_TC,
+        Age2ScenarioLocationData.ATT3_RED_MARKET,
+    )
+
+    def test_each_asks_for_an_army(self):
+        world = self.build(**EVERYTHING)
+        for objective in self.OBJECTIVES:
+            with self.subTest(objective.name):
+                location = self.multiworld.get_location(objective.global_name(), world.player)
+                self.assertIn("can train", location.access_rule.explain_str())
