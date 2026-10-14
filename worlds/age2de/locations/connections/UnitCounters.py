@@ -1,4 +1,5 @@
 from ..UnitLines import Age2UnitLineData
+from .UnitRoles import SHIP_LINES
 
 
 LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
@@ -312,7 +313,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.LONGBOAT_LINE: [
         Age2UnitLineData.BOMBARD_CANNON_LINE,
         Age2UnitLineData.MANGONEL_LINE,
-        Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.TURTLE_SHIP_LINE,
         Age2UnitLineData.FIRE_GALLEY_LINE,
     ],
@@ -575,9 +575,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.TURTLE_SHIP_LINE: [
         Age2UnitLineData.BOMBARD_CANNON_LINE,
         Age2UnitLineData.MONK_LINE,
-        Age2UnitLineData.TREBUCHET_LINE,
         Age2UnitLineData.MISSIONARY_LINE,
-        Age2UnitLineData.CONDOTTIERO_LINE,
     ],
     Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE: [
         Age2UnitLineData.ARCHER_LINE,
@@ -746,6 +744,8 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.DEMOLITION_RAFT_LINE: [
         Age2UnitLineData.ARCHER_LINE,
         Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.GALLEY_LINE,
+        Age2UnitLineData.TURTLE_SHIP_LINE,
     ],
     Age2UnitLineData.SIEGE_TOWER_LINE: [
         Age2UnitLineData.MANGUDAI_LINE,
@@ -1032,3 +1032,6 @@ for _line in Age2UnitLineData:
 
 assert not [line for line, counters in LINE_TO_COUNTERS.items() if line in counters], \
     "a line counters itself"
+assert not [(line, counter) for line, counters in LINE_TO_COUNTERS.items() for counter in counters
+            if (line in SHIP_LINES) != (counter in SHIP_LINES)], \
+    "a ship countering a land unit, or a land unit countering a ship"

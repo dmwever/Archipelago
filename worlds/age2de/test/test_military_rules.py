@@ -8,7 +8,7 @@ from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
-from ..locations.connections.UnitRoles import ROLE_TO_LINES, UnitRole
+from ..locations.connections.UnitRoles import ROLE_TO_LINES, SHIP_LINES, UnitRole
 from .bases import Age2RuleTestBase
 
 EVERYTHING = dict(unitsanity=Unitsanity.option_all,
@@ -123,6 +123,32 @@ class TestRoles(Age2RuleTestBase):
         onagers, and the roles record that judgement rather than the damage table."""
         self.assertNotIn(Age2UnitLineData.MANGONEL_LINE, ROLE_TO_LINES[UnitRole.siege])
         self.assertIn(Age2UnitLineData.MANGONEL_LINE, ROLE_TO_LINES[UnitRole.military])
+
+    def test_a_suicide_raft_is_not_a_navy(self):
+        """A Demolition Ship blows itself up on contact: it can sink a fleet, never hold the
+        water. Counting it let Demolition Rafts alone win the water in The Walls of
+        Constantinople and guard every fishing boat."""
+        for line in (Age2UnitLineData.DEMOLITION_RAFT_LINE, Age2UnitLineData.INCENDIARY_RAFT_LINE):
+            with self.subTest(line.name):
+                self.assertNotIn(line, ROLE_TO_LINES[UnitRole.navy])
+
+
+class TestCounters(Age2RuleTestBase):
+
+    def test_ships_and_land_units_never_counter_each_other(self):
+        """A Monk once answered a Turtle Ship and a Mangonel a Galley, so a land army could stand
+        in for a fleet."""
+        ships = set(SHIP_LINES)
+        crossed = [(line.name, counter.name) for line in Age2UnitLineData
+                   for counter in line.countered_by
+                   if (line in ships) != (counter in ships)]
+        self.assertEqual([], crossed)
+
+    def test_the_demolition_ship_falls_to_galleys_and_turtle_ships(self):
+        self.assertEqual(
+            [Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.TURTLE_SHIP_LINE],
+            Age2UnitLineData.DEMOLITION_RAFT_LINE.countered_by,
+        )
 
 
 class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):

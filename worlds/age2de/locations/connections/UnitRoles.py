@@ -82,7 +82,13 @@ NAVAL_BOMBARDMENT = (
     L.LOU_CHUAN_LINE,
 )
 
-NAVY = tuple(line for line in SHIP_LINES if line not in CIVILIAN_LINES)
+SUICIDE_RAFT_LINES = (
+    # Blow themselves up on contact: they sink a fleet, but can never hold the water.
+    L.DEMOLITION_RAFT_LINE, L.INCENDIARY_RAFT_LINE,
+)
+
+NAVY = tuple(line for line in SHIP_LINES
+                   if line not in CIVILIAN_LINES + SUICIDE_RAFT_LINES)
 MILITARY = tuple(line for line in L if line not in CIVILIAN_LINES + SHIP_LINES
                        + FAITH_LINES)
 
