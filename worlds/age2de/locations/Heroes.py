@@ -37,6 +37,7 @@ class Age2HeroData(enum.IntEnum):
     SUBOTAI             = 602, "Own Subotai", "Subotai", 698
     SABOTEUR            = 603, "Own Saboteur", "Saboteur", 706
     KHAN                = 604, "Own Khan", "Khan", 1275          # scenario-only unit, not a hero
+    HUNTING_WOLF        = 605, "Own Hunting Wolf", "Hunting Wolf", 700
 
 
 NAME_TO_HERO: dict[str, Age2HeroData] = {hero.hero_name: hero for hero in Age2HeroData}
