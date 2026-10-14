@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Collection, Iterable, Mapping, Sequence
 
+from rule_builder.rules import Rule
+
+from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
@@ -14,6 +17,7 @@ from .Requirement import Requirement
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
     from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
+    from BaseClasses import CollectionState
 
 @dataclasses.dataclass(frozen=True)
 class PricedBudgetItem:
@@ -186,39 +190,43 @@ class BudgetOrder:
 
     # -- the spoiler --------------------------------------------------------------------------
 
-    def spoiler_lines(self) -> list[str]:
-        """The order as the spoiler lists it: each entry, what it costs alone, and the running
-        total it asks - with no waiver holding, and with every one.
+    def spoiler_lines(self, states: Sequence[CollectionState], first: Mapping[str, int]) -> list[str]:
+        """The order as the spoiler lists it, against this seed's playthrough: each entry the
+        seed expects the starting pile to pay for, the sphere it comes into logic in, what it
+        costs alone, and the running total it asks then - with the waivers that hold by then.
 
-        A resource the total asks more of than every pile item in the seed adds up to can only
-        come from an easy source, so it shows starred. An entry whose own price is paid only in
-        easy resources, even with every waiver, gets nothing from the budget, and is left out -
-        and so is any entry that needs one left out."""
+        An entry shows in this scenario only if this scenario's budget pays for it in the sphere
+        it first comes into logic. A resource this scenario has an easy source of by then shows
+        starred. An entry whose own price is all starred is the easy sources' to pay, not the
+        pile's, and is left out - and so is any entry that needs one left out. With nothing left,
+        there is no budget to show."""
         from .CostTable import CostTable   # the table reads the order back
 
-        most_pile = self.world.pool.resources.totals
-        budget = self.scenario.budget
-        name = self.scenario.scenario.scenario_name
-        lines = [f"{name} (pays up from the {budget.start_age.name.title()} Age)"]
-        for label, waivers in (("always", budget.always_waived), ("waiver", budget.cost_waivers)):
-            for waiver in waivers:
-                let_off = self._what_it_lets_off(waiver)
-                if let_off:
-                    lines.append(f"    {label}: {let_off}: {waiver.answer.explain_str()}")
+        scenario = self.scenario
+        budget = scenario.budget
+        unlocked = self._first_holding(scenario.is_unlocked(), states)
+        if unlocked is None:
+            return []
 
         every_waived = frozenset(
             building for waiver in (*budget.always_waived, *budget.cost_waivers)
                 for building in waiver.buildings
         )
         hidden: set[PricedLocation] = set()
-        rows: list[tuple[int, str, str, str]] = []
+        rows: list[tuple[int, str, str, str, str]] = []
         for number, entry in enumerate(self.order, start=1):
-            table = CostTable.for_location(self, entry.location)
-            alone = self._own_price(entry)
-            least, most = table.totals_by_mask[-1].cost, table.totals_by_mask[0].cost
+            sphere = self._paid_in_sphere(entry, states, first, unlocked)
+            if sphere is None:
+                hidden.add(entry.location)
+                continue
             # The base asks no easy source: the pile alone pays for it.
-            pile_limit = None if entry.location is BASE else most_pile
-            if pile_limit is not None and self._is_paid_only_by_easy(entry, least, pile_limit):
+            easy = set() if entry.location is BASE else {
+                resource for resource in SAMPLED_RESOURCES
+                    if self._holds(scenario.economy.has_easy_source(resource), states[sphere])
+            }
+            alone = self._own_price(entry)
+            paid_in = [resource for resource, amount in alone if amount > 0]
+            if paid_in and all(resource in easy for resource in paid_in):
                 hidden.add(entry.location)
                 continue
             # Nor is one shown that needs a hidden one: it waits on the same easy source.
@@ -226,20 +234,89 @@ class BudgetOrder:
             if any(precursor.location in hidden for precursor in needs):
                 hidden.add(entry.location)
                 continue
-            total = f"total: {self._cost_text(most, pile_limit)}"
-            if least != most:
-                total += f" (with waivers: {self._cost_text(least, pile_limit)})"
-            rows.append((number, self._row_name(entry), self._cost_text(alone), total))
+            table = CostTable.for_location(self, entry.location)
+            total = table.total(states[sphere]).cost
+            rows.append((
+                number,
+                f"[s{sphere + 1}]",
+                self._row_name(entry),
+                self._cost_text(alone),
+                f"total: {self._cost_text(total, easy)}",
+            ))
+        if not rows:
+            return []
+
+        name = scenario.scenario.scenario_name
+        lines = [f"{name} (pays up from the {budget.start_age.name.title()} Age, "
+                 f"unlocked in sphere {unlocked + 1})"]
+        for waiver in budget.always_waived:
+            let_off = self._what_it_lets_off(waiver)
+            if let_off:
+                lines.append(f"    always: {let_off}: {waiver.answer.explain_str()}")
+        for waiver in budget.cost_waivers:
+            let_off = self._what_it_lets_off(waiver)
+            if not let_off:
+                continue
+            held = self._first_holding(waiver, states)
+            when = "never holds" if held is None else f"holds by sphere {held + 1}"
+            lines.append(f"    waiver ({when}): {let_off}: {waiver.answer.explain_str()}")
 
         # Columns as wide as their longest cell, so the total always starts past every cost.
-        name_width = max((len(location_name) for _, location_name, _, _ in rows), default=0)
-        alone_width = max((len(alone) for _, _, alone, _ in rows), default=0)
-        for number, location_name, alone, total in rows:
+        sphere_width = max(len(sphere) for _, sphere, _, _, _ in rows)
+        name_width = max(len(location_name) for _, _, location_name, _, _ in rows)
+        alone_width = max(len(alone) for _, _, _, alone, _ in rows)
+        for number, sphere, location_name, alone, total in rows:
             lines.append(
-                f"    {number:>3}. {location_name:<{name_width}}  "
+                f"    {number:>3}. {sphere:<{sphere_width}} {location_name:<{name_width}}  "
                 f"{alone:<{alone_width}}  {total}"
             )
         return lines
+
+    def _paid_in_sphere(
+        self,
+        entry: PricedBudgetItem,
+        states: Sequence[CollectionState],
+        first: Mapping[str, int],
+        unlocked: int,
+    ) -> int | None:
+        """The sphere the entry first comes into logic in, if this scenario's budget pays for it
+        then; None if it never does, or some other way gets there first. The base is no location:
+        its sphere is the first one this scenario can have a base paid for in."""
+        from .BudgetTotal import BudgetTotal   # the total reads the order back
+
+        scenario = self.scenario
+        location = entry.location
+        if location is BASE:
+            return self._first_holding(scenario.has_base(), states, unlocked)
+
+        name = location.location_name
+        if name not in first:
+            return None
+        sphere = first[name]
+        easily = tuple(sorted(
+            (resource for resource, amount in location.cost.items() if amount > 0),
+            key=lambda resource: resource.value,
+        ))
+        paid = (scenario.is_unlocked()
+                & entry.item.scenario_rule(scenario)
+                & BudgetTotal(scenario=scenario.scenario, location=location, easily=easily))
+        return sphere if self._holds(paid, states[sphere]) else None
+
+    def _holds(self, rule: Rule | Rule.Resolved, state: CollectionState) -> bool:
+        resolved = rule if isinstance(rule, Rule.Resolved) else rule.resolve(self.world)
+        return resolved(state)
+
+    def _first_holding(
+        self,
+        rule: Rule | Rule.Resolved,
+        states: Sequence[CollectionState],
+        since: int = 0,
+    ) -> int | None:
+        """The first sphere, from `since` on, whose items make the rule hold; None if none do."""
+        return next(
+            (sphere for sphere in range(since, len(states)) if self._holds(rule, states[sphere])),
+            None,
+        )
 
     def _what_it_lets_off(self, waiver: ScenarioCostWaived.Resolved) -> str:
         """The buildings and purchases of a waiver that take something off this order's total,
@@ -298,27 +375,11 @@ class BudgetOrder:
         return Need.as_cost(entry.location.cost)
 
     @staticmethod
-    def _is_paid_only_by_easy(
-        entry: BudgetItem,
-        total: Cost,
-        pile_limit: dict[Resource, int],
-    ) -> bool:
-        """Whether every resource the entry's own price asks is one the total has run past the
-        pile on. Stone left under its limit does not keep a food-and-gold tech in."""
-        asked = dict(total)
-        paid_in = [resource for resource, amount in entry.location.cost.items() if amount > 0]
-        return bool(paid_in) and all(
-            resource in asked and asked[resource] > pile_limit[resource]
-                for resource in paid_in
-        )
-
-    @staticmethod
-    def _cost_text(cost: Cost, pile_limit: dict[Resource, int] | None = None) -> str:
-        """A cost as text, each resource by its initial: 100w, 50g. With a pile limit, an amount
-        past it is starred, as only an easy source pays it: w*."""
+    def _cost_text(cost: Cost, easy: Collection[Resource] = ()) -> str:
+        """A cost as text, each resource by its initial: 100w, 50g. A resource with an easy
+        source is starred, as that source pays it: w*."""
         return ", ".join(
-            f"{resource.name[0].lower()}*"
-                if pile_limit is not None and amount > pile_limit[resource]
+            f"{resource.name[0].lower()}*" if resource in easy
                 else f"{amount}{resource.name[0].lower()}"
                 for resource, amount in cost
         ) or "free"

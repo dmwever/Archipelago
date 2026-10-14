@@ -359,15 +359,40 @@ class Age2World(CachedRuleBuilderWorld):
         included = set(self.pool.scenarios.included)
         orders = [
             scenario.budget.order for scenario in self.rules.logic.scenarios
-                if scenario.scenario in included
+                if scenario.scenario in included and scenario.budget.order.order
         ]
-        orders = [order for order in orders if order.order]
         if not orders:
             return
+        # Only what the playthrough expects the starting pile to pay for: a scenario whose
+        # every entry an easy source pays by then has no budget to show.
+        states, first = self._sphere_states()
+        blocks = [
+            lines for lines in (order.spoiler_lines(states, first) for order in orders)
+                if lines
+        ]
+        if not blocks:
+            return
         spoiler_handle.write(f"\nScenario budget orders ({self.player_name}):\n")
-        spoiler_handle.write("    w* = starting resources can't afford.\n")
-        for order in orders:
-            spoiler_handle.write("\n" + "\n".join(order.spoiler_lines()) + "\n")
+        spoiler_handle.write("    [sN] = comes into logic in sphere N\n")
+        spoiler_handle.write("    w* = an easy source in logic by then pays it\n")
+        for lines in blocks:
+            spoiler_handle.write("\n" + "\n".join(lines) + "\n")
+
+    def _sphere_states(self) -> tuple[list[CollectionState], dict[str, int]]:
+        """The items held at the start of each sphere of the filled multiworld, and the sphere
+        each of this world's locations is first reachable in, by name."""
+        state = CollectionState(self.multiworld)
+        states: list[CollectionState] = []
+        first: dict[str, int] = {}
+        for sphere in self.multiworld.get_spheres():
+            if not sphere:
+                break   # what follows is the unreachable leftovers
+            states.append(state.copy())
+            for location in sphere:
+                if location.player == self.player:
+                    first[location.name] = len(states) - 1
+                state.collect(location.item, True, location)
+        return states, first
 
     # -- Universal Tracker asks the world first, before its own /explain ---------------------
 
