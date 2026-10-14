@@ -826,6 +826,7 @@ class Age2ItemData(enum.IntEnum):
     AP_GENGHIS_3_ENGINEERS =            4016, "Genghis Khan, Into China: Chinese Engineers",                    Mercenary(Age2ScenarioData.AP_GENGHIS_3, [MercenaryUnit(Age2UnitData.VILLAGER_MALE, 1), MercenaryUnit(Age2UnitData.VILLAGER_FEMALE, 5), MercenaryUnit(Age2UnitData.BATTERING_RAM, 1), MercenaryUnit(Age2UnitData.ROCKET_CART, 1)], icon_id=329, name_string_id=990017)
     AP_GENGHIS_3_BOMBARDS =             4017, "Genghis Khan, Into China: Bombard Cannons",                      Mercenary(Age2ScenarioData.AP_GENGHIS_3, [MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 6)], icon_id=330, name_string_id=990018)
     AP_GENGHIS_5_HERMITS =              4018, "Genghis Khan, The Promise: Hermit Monks",                        Mercenary(Age2ScenarioData.AP_GENGHIS_5, [MercenaryUnit(Age2UnitData.MONK, 1), MercenaryUnit(Age2UnitData.ELITE_LEITIS, 10)], icon_id=331, name_string_id=990019)
+    AP_GENGHIS_6_SUBOTAIS_ARMY =        4019, "Genghis Khan, Pax Mongolica: Subotai's Army",                     Mercenary(Age2ScenarioData.AP_GENGHIS_6, [MercenaryUnit(Age2HeroData.SUBOTAI, 1), MercenaryUnit(Age2HeroData.KHAN, 5), MercenaryUnit(Age2HeroData.SABOTEUR, 5)], icon_id=332, name_string_id=990020)
 
     #5000 - 5099 = Traps
     TRAP_WOLOLO =                       5000, "Wololo Trap",                                  Trap()

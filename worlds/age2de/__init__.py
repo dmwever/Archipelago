@@ -304,8 +304,9 @@ class Age2World(CachedRuleBuilderWorld):
         if item.type.in_logic:
             return True
         return any(self.pool.units.mercenary_exclusive_location(soldier.unit)
-                   for soldier in item.type.units
-                   if isinstance(soldier.unit, Units.Age2UnitData))
+                   if isinstance(soldier.unit, Units.Age2UnitData)
+                   else soldier.unit in self.pool.units.special_units
+                   for soldier in item.type.units)
     
     def get_filler_item_name(self) -> str:
         filler = []

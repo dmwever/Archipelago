@@ -197,6 +197,7 @@ class Age2ScenarioLocationData(enum.IntEnum):
     GEN2_VICTORY =                  30200, "Victory",                                   Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.VICTORY
     GEN2_KUSHLUK_FLEES =            30201, "Make Kushluk Flee",                         Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.OBJECTIVE
     GEN2_TAYICHIUD_VILLAGE =        30202, "Take the Tayichi'ud Village",               Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.SIDE_QUEST
+    
     GEN3_VICTORY =                  30300, "Victory",                                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.VICTORY
     GEN3_DEFEAT_TANGUTS =           30301, "Defeat the Tanguts",                        Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
     GEN3_DEFEAT_XI_XIA =            30302, "Defeat the Xi Xia",                         Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
@@ -205,11 +206,13 @@ class Age2ScenarioLocationData(enum.IntEnum):
     GEN3_FIND_ENGINEERS =           30305, "Find the Engineers",                        Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
     GEN3_FIND_BOMBARDS =            30306, "Find the Bombard Cannons",                  Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
     GEN3_FIND_TRANSPORT =           30307, "Find the Transport Ship",                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
+    
     GEN4_VICTORY =                  30400, "Victory",                                   Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.VICTORY
     GEN4_DEFEAT_RUSSIANS =          30401, "Defeat the Russians",                       Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
     GEN4_DEFEAT_KHWARAZM =          30402, "Defeat the Khwarazm",                       Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
     GEN4_KIPCHAKS_SURRENDER =       30403, "Make the Kipchaks Surrender",               Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
     GEN4_ASSASSINATE_SHAH =         30404, "Assassinate the Shah",                      Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    
     GEN5_VICTORY =                  30500, "Victory",                                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.VICTORY
     GEN5_GERMAN_FLAG =              30501, "Capture the German Flag",                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
     GEN5_POLISH_FLAG =              30502, "Capture the Polish Flag",                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
@@ -218,7 +221,9 @@ class Age2ScenarioLocationData(enum.IntEnum):
     GEN5_BUILD_TWO_CASTLES =        30505, "Build Two Castles",                         Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
     GEN5_BUILD_THREE_CASTLES =      30506, "Build Three Castles",                       Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
     GEN5_RESCUE_HERMIT =            30507, "Rescue the Hermit",                         Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.SIDE_QUEST
+    
     GEN6_VICTORY =                  30600, "Victory",                                   Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.VICTORY
+    GEN6_SUBOTAI_ARRIVES =          30601, "Subotai Arrives",                           Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.OBJECTIVE
 
 location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2ScenarioLocationData}
