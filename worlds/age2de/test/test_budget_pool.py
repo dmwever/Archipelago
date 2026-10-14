@@ -13,7 +13,7 @@ from . import bases
 from .. import Age2World
 from ..generation.pools.BudgetPool import (BUILDINGS_DRAWN, SAMPLED_RESOURCES, TECHS_PER_RESOURCE,
                                            UNITS_PER_RESOURCE, VILLAGER,
-                                           BudgetPool, is_cheap_building)
+                                           BudgetPool)
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.UnitLocations import VILLAGER_LINES
@@ -74,16 +74,18 @@ class TestTheSampleIsTheSizeItClaims(bases.Age2TestBase):
         self.assertEqual([VILLAGER], villagers)
         self.assertFalse({unit for unit in self.budget.units if unit.line in VILLAGER_LINES})
 
-    def test_every_cheap_dark_age_building_is_in(self) -> None:
-        cheap = {building for building in self.world.pool.buildings.locations
-                 if is_cheap_building(building)}
-        self.assertTrue(cheap, "this seed should shuffle some cheap economy buildings")
-        self.assertLessEqual(cheap, self.budget.buildings)
-
-    def test_four_more_buildings_are_drawn_at_most(self) -> None:
-        extra = {building for building in self.budget.buildings if not is_cheap_building(building)}
-        self.assertLessEqual(len(extra), BUILDINGS_DRAWN)
+    def test_four_buildings_are_drawn(self) -> None:
+        self.assertEqual(BUILDINGS_DRAWN, len(self.budget.buildings))
         self.assertLessEqual(self.budget.buildings, set(self.world.pool.buildings.locations))
+
+    def test_the_town_center_is_never_drawn(self) -> None:
+        """The base charges the Town Center, so a standing one or a starting base lets it off. A
+        drawn one would be paid in full in every scenario, standing or not."""
+        self.assertIn(Age2BuildingData.TOWN_CENTER, self.world.pool.buildings.locations)
+        for seed in range(20):
+            with self.subTest(seed=seed):
+                budget = BudgetPool(self.world.pool, Random(seed))
+                self.assertNotIn(Age2BuildingData.TOWN_CENTER, budget.buildings)
 
     def test_every_age_location_is_in(self) -> None:
         self.assertEqual(self.budget.ages, set(self.world.pool.ages.locations))
@@ -125,25 +127,6 @@ class TestNoVillagerLocationsNoVillager(bases.Age2TestBase):
     def test_the_villager_is_out(self) -> None:
         self.assertFalse(self.world.pool.budget.villager)
         self.assertNotIn(VILLAGER, self.world.pool.budget.entries)
-
-
-class TestTheCheapRule(unittest.TestCase):
-    """The always-in buildings are every Dark Age building costing 100 or less in total."""
-
-    def test_the_rule_picks_the_economy_basics(self) -> None:
-        for building in (Age2BuildingData.HOUSE, Age2BuildingData.FARM, Age2BuildingData.MILL,
-                         Age2BuildingData.MINING_CAMP, Age2BuildingData.LUMBER_CAMP,
-                         Age2BuildingData.OUTPOST, Age2BuildingData.PALISADE_WALL,
-                         Age2BuildingData.PALISADE_GATE):
-            with self.subTest(building.name):
-                self.assertTrue(is_cheap_building(building))
-
-    def test_the_rule_leaves_out_the_dear_and_the_late(self) -> None:
-        for building in (Age2BuildingData.TOWN_CENTER, Age2BuildingData.DOCK,
-                         Age2BuildingData.FISH_TRAP, Age2BuildingData.DONJON,
-                         Age2BuildingData.BARRACKS):
-            with self.subTest(building.name):
-                self.assertFalse(is_cheap_building(building))
 
 
 class TestTheSampleIsDeterministic(unittest.TestCase):

@@ -350,10 +350,10 @@ class Age2World(CachedRuleBuilderWorld):
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
         """The budget: the pool this seed draws from, the starting pile it pays from, then each
         scenario's order over the pool - what is in logic off that pile, in what order."""
-        spoiler_handle.write(f"\nAge2 budget pool ({self.player_name}):\n")
+        spoiler_handle.write(f"\nBudget pool ({self.player_name}):\n")
         spoiler_handle.write("\n".join(self.pool.budget.spoiler_lines()) + "\n")
 
-        spoiler_handle.write(f"\nAge2 starting resources ({self.player_name}):\n")
+        spoiler_handle.write(f"\nStarting resources ({self.player_name}):\n")
         spoiler_handle.write("\n".join(self.pool.resources.spoiler_lines()) + "\n")
 
         included = set(self.pool.scenarios.included)
@@ -364,7 +364,8 @@ class Age2World(CachedRuleBuilderWorld):
         orders = [order for order in orders if order.order]
         if not orders:
             return
-        spoiler_handle.write(f"\nAge2 budget orders ({self.player_name}):\n")
+        spoiler_handle.write(f"\nScenario budget orders ({self.player_name}):\n")
+        spoiler_handle.write("    w* = starting resources can't afford.\n")
         for order in orders:
             spoiler_handle.write("\n" + "\n".join(order.spoiler_lines()) + "\n")
 

@@ -29,13 +29,6 @@ SAMPLED_RESOURCES: tuple[Resource, ...] = (Resource.FOOD, Resource.WOOD, Resourc
 TECHS_PER_RESOURCE = 3
 UNITS_PER_RESOURCE = 3
 BUILDINGS_DRAWN = 4
-CHEAP_BUILDING_COST_LIMIT = 100
-
-
-
-def is_cheap_building(building: Age2BuildingData) -> bool:
-    return (building.age == Age2AgeData.DARK
-            and sum(building.cost.values()) <= CHEAP_BUILDING_COST_LIMIT)
 
 
 class BudgetPool:
@@ -50,12 +43,15 @@ class BudgetPool:
         # Always in whenever Shuffle Villager made villager locations.
         self.villager: bool = bool(pool.units.villager_locations)
 
-        buildings = sorted(pool.buildings.locations, key=int)
-        drawn = rng.sample(buildings, min(BUILDINGS_DRAWN, len(buildings)))
-
-        # add cheap buildings too
+        # The Town Center is never drawn: the base charges it, so a standing one lets it off.
+        buildings = sorted(
+            (building for building in pool.buildings.locations
+                if building is not Age2BuildingData.TOWN_CENTER),
+            key=int,
+        )
         self.buildings: frozenset[Age2BuildingData] = frozenset(
-            drawn + [building for building in buildings if is_cheap_building(building) and building not in drawn])
+            rng.sample(buildings, min(BUILDINGS_DRAWN, len(buildings)))
+        )
         
         self.ages: frozenset[Age2AgeData] = frozenset(pool.ages.locations)
 
@@ -77,17 +73,13 @@ class BudgetPool:
 
     def spoiler_lines(self) -> list[str]:
         """The pool as the spoiler lists it: what every seed has, then what this seed drew, each
-        kind with every entry's own price. A cheap building is always in, even when drawn too. The
-        base - three villagers' food and a Town Center - is in every order that needs one, so a
-        drawn Town Center is listed there and not again."""
-        cheap = {building for building in self.buildings if is_cheap_building(building)}
-        drawn = self.buildings - cheap - {Age2BuildingData.TOWN_CENTER}
+        kind with every entry's own price. The base - three villagers' food and a Town Center - is
+        in every order that needs one."""
         sections: list[tuple[str, list[tuple[str, list[Drawn]]]]] = [
             (
                 "Always",
                 [
                     ("Ages", sorted(self.ages, key=int)),
-                    ("Buildings", sorted(cheap, key=lambda building: building.location_name)),
                 ],
             ),
             (
@@ -95,7 +87,7 @@ class BudgetPool:
                 [
                     (
                         "Buildings",
-                        sorted(drawn, key=lambda building: building.location_name),
+                        sorted(self.buildings, key=lambda building: building.location_name),
                     ),
                     ("Techs", sorted(self.techs, key=lambda tech: tech.location_name)),
                     ("Units", sorted(self.units, key=lambda unit: unit.location_name)),

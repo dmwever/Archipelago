@@ -296,6 +296,18 @@ class TestFixedForce(BudgetTestBase):
                 self.assertEqual([], budget.order)
 
 
+class TestNoWater(BudgetTestBase):
+    def test_a_scenario_without_water_pays_for_no_dock_or_ship(self):
+        """A Barbarian Betrothal has no water the logic counts on, but its order still had a
+        Dock, a Fishing Ship and a Transport Ship in it, all charged to the opening pile."""
+        budget = self.budget(Age2ScenarioData.AP_ATTILA_4)
+        water = {Age2BuildingData.DOCK, Age2BuildingData.HARBOR, Age2BuildingData.FISH_TRAP}
+        for entry in budget.order:
+            with self.subTest(entry.location.location_name):
+                self.assertNotIn(entry.location, water)
+                self.assertFalse(water & set(getattr(entry.location, "buildings", ())))
+
+
 class TestEasySources(BudgetTestBase):
     """A resource with an easy source is left out of the total; the pile pays for the rest."""
 

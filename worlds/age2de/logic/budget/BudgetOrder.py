@@ -13,6 +13,7 @@ from .Requirement import Requirement
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
+    from ..custom_logic.ScenarioQuestions import ScenarioCostWaived
 
 @dataclasses.dataclass(frozen=True)
 class PricedBudgetItem:
@@ -186,23 +187,30 @@ class BudgetOrder:
     # -- the spoiler --------------------------------------------------------------------------
 
     def spoiler_lines(self) -> list[str]:
-        """The order as the spoiler lists it: each entry, what it would cost alone, and the
-        running total it asks - with no waiver holding, and with every one.
+        """The order as the spoiler lists it: each entry, what it costs alone, and the running
+        total it asks - with no waiver holding, and with every one.
 
         A resource the total asks more of than every pile item in the seed adds up to can only
-        come from an easy source, so it shows as easy. An entry whose own price is paid only in
-        easy resources, even with every waiver, gets nothing from the budget, and is left out."""
+        come from an easy source, so it shows starred. An entry whose own price is paid only in
+        easy resources, even with every waiver, gets nothing from the budget, and is left out -
+        and so is any entry that needs one left out."""
         from .CostTable import CostTable   # the table reads the order back
 
         most_pile = self.world.pool.resources.totals
         budget = self.scenario.budget
         name = self.scenario.scenario.scenario_name
         lines = [f"{name} (pays up from the {budget.start_age.name.title()} Age)"]
-        for waiver in budget.always_waived:
-            lines.append(f"    always: {waiver.explain_str()}")
-        for waiver in budget.cost_waivers:
-            lines.append(f"    waiver: {waiver.explain_str()}")
+        for label, waivers in (("always", budget.always_waived), ("waiver", budget.cost_waivers)):
+            for waiver in waivers:
+                let_off = self._what_it_lets_off(waiver)
+                if let_off:
+                    lines.append(f"    {label}: {let_off}: {waiver.answer.explain_str()}")
 
+        every_waived = frozenset(
+            building for waiver in (*budget.always_waived, *budget.cost_waivers)
+                for building in waiver.buildings
+        )
+        hidden: set[PricedLocation] = set()
         rows: list[tuple[int, str, str, str]] = []
         for number, entry in enumerate(self.order, start=1):
             table = CostTable.for_location(self, entry.location)
@@ -211,11 +219,17 @@ class BudgetOrder:
             # The base asks no easy source: the pile alone pays for it.
             pile_limit = None if entry.location is BASE else most_pile
             if pile_limit is not None and self._is_paid_only_by_easy(entry, least, pile_limit):
+                hidden.add(entry.location)
                 continue
-            total = self._cost_text(most, pile_limit)
+            # Nor is one shown that needs a hidden one: it waits on the same easy source.
+            needs = self.precursors(entry, every_waived)
+            if any(precursor.location in hidden for precursor in needs):
+                hidden.add(entry.location)
+                continue
+            total = f"total: {self._cost_text(most, pile_limit)}"
             if least != most:
-                total += f" ({self._cost_text(least, pile_limit)} with every waiver)"
-            rows.append((number, entry.location.location_name, self._cost_text(alone), total))
+                total += f" (with waivers: {self._cost_text(least, pile_limit)})"
+            rows.append((number, self._row_name(entry), self._cost_text(alone), total))
 
         # Columns as wide as their longest cell, so the total always starts past every cost.
         name_width = max((len(location_name) for _, location_name, _, _ in rows), default=0)
@@ -223,9 +237,57 @@ class BudgetOrder:
         for number, location_name, alone, total in rows:
             lines.append(
                 f"    {number:>3}. {location_name:<{name_width}}  "
-                f"alone {alone:<{alone_width}}  total {total}"
+                f"{alone:<{alone_width}}  {total}"
             )
         return lines
+
+    def _what_it_lets_off(self, waiver: ScenarioCostWaived.Resolved) -> str:
+        """The buildings and purchases of a waiver that take something off this order's total,
+        as text. A building the order draws is paid for anyway, since its check needs a new one
+        built, and one nothing in the order needs saves nothing either: neither is named."""
+        budget = self.scenario.budget
+        always_waived = frozenset(
+            building for always in budget.always_waived for building in always.buildings
+        )
+        always_dropped = frozenset(
+            purchase for always in budget.always_waived for purchase in always.purchases
+        )
+
+        def full_cost(dropped: frozenset[PricedLocation],
+                      waived: frozenset[Age2BuildingData]) -> dict[Resource, int]:
+            """What the whole order costs with these let off."""
+            need = self.running_total_for(self.order[-1].location, dropped, waived)
+            return Requirement(need, waived, budget.terms).cost
+
+        # Every other waiver that always holds stays let off; this one's are tried one by one.
+        others_waived = always_waived - set(waiver.buildings)
+        others_dropped = always_dropped - set(waiver.purchases)
+        baseline = full_cost(others_dropped, others_waived)
+        standing = [
+            building for building in waiver.buildings
+                if full_cost(others_dropped, others_waived | {building}) != baseline
+        ]
+        spared = [
+            purchase for purchase in waiver.purchases
+                if full_cost(others_dropped | {purchase}, others_waived) != baseline
+        ]
+
+        let_off = []
+        if standing:
+            names = ", ".join(building.location_name.removeprefix("Build ") for building in standing)
+            let_off.append(f"{names} standing")
+        if spared:
+            names = ", ".join(purchase.location_name.removeprefix("Own ") for purchase in spared)
+            let_off.append(f"{names} spared")
+        return ", ".join(let_off)
+
+    @staticmethod
+    def _row_name(entry: PricedBudgetItem) -> str:
+        """The entry's name as a row reads it: a unit is trained, not owned."""
+        name = entry.location.location_name
+        if name.startswith("Own "):
+            return "Train " + name.removeprefix("Own ")
+        return name
 
     def _own_price(self, entry: PricedBudgetItem) -> Cost:
         """What the entry costs for itself, with nothing it needs first. The base is what it is
@@ -252,10 +314,11 @@ class BudgetOrder:
 
     @staticmethod
     def _cost_text(cost: Cost, pile_limit: dict[Resource, int] | None = None) -> str:
-        """A cost as text. With a pile limit, an amount past it shows as easy."""
+        """A cost as text, each resource by its initial: 100w, 50g. With a pile limit, an amount
+        past it is starred, as only an easy source pays it: w*."""
         return ", ".join(
-            f"easy {resource.name.lower()}"
+            f"{resource.name[0].lower()}*"
                 if pile_limit is not None and amount > pile_limit[resource]
-                else f"{amount} {resource.name.lower()}"
+                else f"{amount}{resource.name[0].lower()}"
                 for resource, amount in cost
         ) or "free"
