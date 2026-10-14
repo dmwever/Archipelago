@@ -12,11 +12,6 @@ class Genghis1Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        # No objectives are authored for this chapter yet, so winning it asks only that you reach it: a fixed force has no base to build.
-        # The base class sets the entrance rule and nothing else - the VICTORY location and its
-        # paired "Complete ..." event have to be ruled by hand, or the next chapter unlocks free.
-        can_beat_scenario = True_()
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN1_VICTORY],
 
         has_monk: Rule = Has(Age2ItemData.AP_GENGHIS_1_KEREYID_TRIBE.item_name)
 
