@@ -129,7 +129,7 @@ def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
     logic = world.rules.logic
     villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
     # Paid for out of the opening pile: what is placed here is what the player starts holding,
-    # and a scenario with no base yet has no gathering to count on. Logic itself asks the budget.
+    # and a scenario with no base yet has no gathering to count on.
     target = (logic.buildings.can_build_tc()
               & logic.resources.has_amounts(Age2ItemData.TOWN_CENTER.type.needed_resources)
               & logic.resources.has_amount(villager_food.type, villager_food.amount))

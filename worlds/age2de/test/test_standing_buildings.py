@@ -3,6 +3,7 @@
 import unittest
 
 from . import bases
+from ..items.Items import Age2ItemData
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
@@ -85,3 +86,31 @@ class TestABaseStandsATownCenter(bases.Age2RuleTestBase):
                 self.assertTrue(town_center(with_base),
                                 "the base is there but its Town Center is not declared standing")
 
+
+
+class TestTheBaseIsPaidByItsItems(bases.Age2RuleTestBase):
+    """A base is paid by the items that seed it - the villagers' food, and the Town Center's wood
+    and stone where none stands - never by the rest of the starting pile or an easy source."""
+
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+    starting_campaigns = ["Attila the Hun"]
+
+    FOOD = Age2ItemData.STARTING_VILLAGER_FOOD.item_name
+    WOOD = Age2ItemData.TOWN_CENTER_WOOD.item_name
+    STONE = Age2ItemData.TOWN_CENTER_STONE.item_name
+
+    def deps(self, scenario: Age2ScenarioData) -> set[str]:
+        logic = self.world.rules.logic.for_scenario(scenario)
+        return set(logic.has_base().resolve(self.world).item_dependencies())
+
+    def test_a_base_to_build_asks_for_all_three(self):
+        self.build()
+        self.assertLessEqual({self.FOOD, self.WOOD, self.STONE}, self.deps(Age2ScenarioData.AP_ATTILA_1))
+
+    def test_a_standing_town_center_needs_only_the_food(self):
+        """The Walls of Constantinople always has its Town Center."""
+        self.build()
+        wanted = self.deps(Age2ScenarioData.AP_ATTILA_3)
+        self.assertIn(self.FOOD, wanted)
+        self.assertNotIn(self.WOOD, wanted)
+        self.assertNotIn(self.STONE, wanted)

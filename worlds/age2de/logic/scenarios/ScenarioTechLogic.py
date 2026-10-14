@@ -18,7 +18,7 @@ class ScenarioTechLogic:
         self.world = scenario.logic.world
 
     def can_research(self, tech: Age2TechData) -> Rule:
-        return self.can_research_structurally(tech) & self.scenario.economy.can_pay(tech.cost, tech)
+        return self.can_research_structurally(tech) & self.scenario.economy.can_pay(tech.cost)
 
     def can_research_structurally(self, tech: Age2TechData) -> Rule:
         """Everything researching it asks for except paying for it."""

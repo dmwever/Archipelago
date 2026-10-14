@@ -10,15 +10,12 @@ from ..locations.VillagerJobs import Age2VillagerJobData
 from rule_builder.rules import False_, Has, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
-from .budget.BudgetItem import BASE
-from .budget.BudgetTotal import BudgetTotal
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
     from .. import Age2World
     from ..locations.Scenarios import Age2ScenarioData
     from .Logic import Logic
-    from .budget.BudgetItem import PricedLocation
 
 @dataclass
 class ScenarioStartingState:
@@ -48,9 +45,6 @@ class ScenarioStartingState:
     starting_whales: Rule = field(default_factory=lambda: False_())
     starting_relics: Rule = field(default_factory=lambda: True_())
     trading_ally: Rule = field(default_factory=lambda: False_())
-    required_purchases: 'dict[PricedLocation, Rule]' = field(default_factory=dict)
-    """What the scenario has to buy to be beaten, and the rule that makes buying it unnecessary
-    (False_ if nothing does). Each joins its budget order, drawn or not."""
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
 
@@ -76,7 +70,6 @@ class ScenarioLogic:
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
-        from .scenarios.ScenarioBudgetLogic import ScenarioBudgetLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioResourceLogic import ScenarioResourceLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
@@ -87,7 +80,6 @@ class ScenarioLogic:
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
-        self.budget = ScenarioBudgetLogic(self)
 
     def has_vils(self) -> Rule:
         return self.starting_state.has_vils
@@ -104,10 +96,16 @@ class ScenarioLogic:
                 & self.starting_state.meets_additional_base_requirements)
 
     def has_base(self) -> Rule:
-        """A base, paid for: the villagers' food, and the Town Center and House where none
-        stands. Through the budget only - the easy sources of wood and gold ask for a base
-        themselves."""
-        return self.can_have_base() & BudgetTotal(scenario=self.scenario, location=BASE)
+        """A base, paid for: the villagers' food, and the Town Center's wood and stone where none
+        stands. Paid by the items that seed it, never by an easy source - the easy sources ask
+        for a base themselves."""
+        standing = (self.starting_state.has_base
+                    | self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER])
+        town_center = (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
+                       & Has(Age2ItemData.TOWN_CENTER_STONE.item_name))
+        return (self.can_have_base()
+                & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
+                & (standing | town_center))
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access

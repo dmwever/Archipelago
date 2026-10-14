@@ -101,41 +101,6 @@ class TestCantMeansNever(ExplainTestBase):
                         self.assertIsNot(Status.SHORT, explainer._status(route, scenario, everything))
 
 
-class TestTheCampaignBudget(ExplainTestBase):
-    def test_it_opens_on_the_full_total(self):
-        """No title line: it opens on the first scenario's full total, no waiver holding - each
-        amount as itself, or as an easy source where no pile this seed could ever hold it."""
-        from ..explain.Costs import Costs
-        from ..explain.Lookup import _BY_NAME
-        state = CollectionState(self.multiworld)
-        most = self.world.rules.logic.most_pile
-        offering = [self.world.rules.logic.for_scenario(scenario)
-                    for scenario in self.world.pool.scenarios.included]
-        checked = 0
-        for location in self.world.pool.budget.entries:
-            route = next((route for route in routes_for(self.world, _BY_NAME[location.location_name])
-                          if route.price is not None), None)
-            if route is None:
-                continue
-            costs = Costs(self.world, route, offering)
-            for campaign in self.world.pool.campaigns.enabled:
-                budgeted = [sl for sl in offering if sl.scenario.campaign is campaign
-                            and costs._budget(sl) is not None]
-                if not budgeted or not costs.cost:
-                    continue
-                first = costs.campaign_budget(location.location_name, campaign.campaign_name,
-                                              state).plain().split("\n")[0]
-                fulls = {", ".join(f"Easy {resource.name.title()} Source" if amount > most[resource]
-                                   else f"{amount} {resource.name.title()}"
-                                   for resource, amount in costs._budget(sl).table.totals_by_mask[0].cost)
-                         for sl in budgeted}
-                with self.subTest(f"{location.name} / {campaign.campaign_name}"):
-                    self.assertNotIn("grouped by", first)
-                    self.assertTrue(any(first.endswith(": " + full) for full in fulls), first)
-                checked += 1
-        self.assertGreater(checked, 0)
-
-
 class TestTheCampaignDrill(ExplainTestBase):
     """A campaign line opens on each chapter offering the route, with the status the line gave -
     chapters showing the same thing share a block, each still named."""
@@ -218,58 +183,6 @@ class TestRuns(Age2RuleTestBase):
         self.assertTrue(all(len(line) <= WIDTH for line in rendered))
 
 
-class TestChargeNames(Age2RuleTestBase):
-    """A unit price reads as what is trained, not as the line or the food it is kept under."""
-
-    def test_the_villagers_food_is_three_villagers(self):
-        from ..explain.Costs import _trained_name
-        self.assertEqual("Train Villager x3", _trained_name(("own", "villager"), {}))
-
-    def test_a_line_is_named_by_the_tier_the_order_trains(self):
-        from ..explain.Costs import _trained_name
-        from ..locations.Units import Age2UnitData
-        line = Age2UnitData.MAN_AT_ARMS.line
-        self.assertEqual("Train Man-at-Arms",
-                         _trained_name(("own", line), {line: Age2UnitData.MAN_AT_ARMS}))
-
-
-class TestBudgetedItems(ExplainTestBase):
-    """/explain Budgeted Items: the seed's sample in its one order, less what no scenario's
-    starting resources could ever pay for."""
-
-    def test_it_lists_what_some_scenario_buys_in_the_seeded_order(self):
-        from ..explain.Explainer import BUDGETED_ITEMS
-        from ..logic.budget.BudgetItem import for_location
-        budget = self.world.pool.budget
-        from ..explain.Costs import budget_label
-        from ..explain.Lookup import _BY_NAME
-        from ..logic.budget.BudgetTotal import BudgetTotal
-        most = self.world.rules.logic.most_pile
-
-        def budgeted(location) -> bool:
-            """In some scenario's order, with its pile able to pay some of what it costs."""
-            route = next(route for route in routes_for(self.world, _BY_NAME[location.location_name])
-                         if route.price is not None)
-            own = [resource for resource, amount in route.price[1].items() if amount > 0]
-            for scenario in self.world.pool.scenarios.included:
-                total = BudgetTotal(scenario=scenario, location=location).resolve(self.world)
-                if isinstance(total, BudgetTotal.Resolved) and any(
-                        total.lowest(resource) <= most[resource] for resource in own):
-                    return True
-            return False
-
-        expected = [budget_label(location) for location in sorted(
-            (location for location in budget.entries if budgeted(location)),
-            key=lambda location: (for_location(location).age, location is not for_location(location).age,
-                                   budget.rank[location]))]
-        listed = [line.strip().split(". ", 1)[1].split("  [")[0].rsplit(" (", 1)[0] for line in
-                  "".join(part["text"] for part in self.world.explain_rule(
-                      BUDGETED_ITEMS.lower(), CollectionState(self.multiworld))).split("\n")
-                  if line.startswith("        ")]
-        self.assertTrue(expected)
-        self.assertEqual(expected, listed)
-
-
 class TestDirectCommands(ExplainTestBase):
     """/explain [campaign or scenario] [Costs] <location> goes straight to that branch."""
 
@@ -277,13 +190,14 @@ class TestDirectCommands(ExplainTestBase):
         parts = self.world.explain_rule(typed, CollectionState(self.multiworld))
         return None if parts is None else "".join(part["text"] for part in parts)
 
-    def a_budgeted_location(self) -> str:
-        explainer = Explainer(self.world)
-        return next(location.location_name for location in self.world.pool.budget.entries
-                    if explainer._budgeted_anywhere(location))
+    def a_priced_location(self) -> str:
+        from ..explain.Lookup import _BY_NAME
+        names = {location.name for location in self.multiworld.get_locations(self.world.player)}
+        return next(name for name, data in _BY_NAME.items() if name in names
+                    and any(route.price for route in routes_for(self.world, data)))
 
     def test_each_form_answers(self):
-        name = self.a_budgeted_location()
+        name = self.a_priced_location()
         campaign = self.world.pool.campaigns.enabled[0]
         scenario = self.world.pool.scenarios.in_campaign(campaign)[0]
         word = campaign.campaign_name.split()[0]
@@ -296,7 +210,7 @@ class TestDirectCommands(ExplainTestBase):
                 self.assertNotIn("No location here matches", answer)
 
     def test_a_scenario_view_names_the_scenario(self):
-        name = self.a_budgeted_location()
+        name = self.a_priced_location()
         scenario = self.world.pool.scenarios.included[0]
         self.assertTrue(self.plain_of(f"{scenario.scenario_name} {name}").startswith(
             f"{name} in {scenario.scenario_name}"))
@@ -312,7 +226,7 @@ class TestDirectCommands(ExplainTestBase):
         if missing is None:
             self.skipTest("every campaign is in this seed")
         self.assertEqual(f"{missing.campaign_name} isn't in this seed.",
-                         self.plain_of(f"{missing.campaign_name} {self.a_budgeted_location()}"))
+                         self.plain_of(f"{missing.campaign_name} {self.a_priced_location()}"))
 
 
 class TestEasySourceCommands(ExplainTestBase):

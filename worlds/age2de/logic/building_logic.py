@@ -38,5 +38,5 @@ class BuildingLogic:
 
     def can_build_tc(self) -> Rule:
         """Putting one up, less paying for it: ages, dropsites and second Town Centers ask this
-        structurally, and the budget charges a Town Center wherever one is needed."""
+        structurally, and the base pays for its own."""
         return self.has_building(Age2BuildingData.TOWN_CENTER)

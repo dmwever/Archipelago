@@ -7,7 +7,6 @@ from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
 from ..Options import (Caveman, ShuffleVillager, Unitsanity, UnitsanityItems,
                        upgrade_techs_shuffled)
-from ..generation.pools.BudgetPool import VILLAGER
 from ..items.Items import Age2ItemData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
@@ -78,7 +77,7 @@ class UnitLogic:
             if isinstance(answer, False_):
                 continue
             ways.append(scenario.is_unlocked() & answer
-                        & scenario.economy.can_pay(unit.cost, unit))
+                        & scenario.economy.can_pay(unit.cost))
         return Or(*ways)
 
     def can_get_villager_anywhere(self) -> Rule:
@@ -90,7 +89,7 @@ class UnitLogic:
             if isinstance(answer, False_):
                 continue
             ways.append(scenario.is_unlocked() & answer
-                        & scenario.economy.can_pay({food.type: food.amount}, VILLAGER))
+                        & scenario.economy.can_pay({food.type: food.amount}))
         return Or(*ways)
 
 

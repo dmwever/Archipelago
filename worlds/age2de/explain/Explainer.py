@@ -10,18 +10,15 @@ from BaseClasses import CollectionState
 from NetUtils import JSONMessagePart
 from rule_builder.rules import And, Has, HasAll, HasAllCounts, HasAny, Or, Rule
 
-from ..generation.pools.BudgetPool import SAMPLED_RESOURCES
 from ..items.Items import Age2ItemData, Campaign, Resource
-from ..logic.budget.BudgetItem import for_location
-from ..logic.budget.BudgetTotal import BudgetTotal
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
-from .Costs import Costs, budget_label
-from .Layout import BUDGETED_ITEMS, INDENT, WIDTH, Lines, _ranges, colored, text, truth
-from .Lookup import _BY_NAME, find
+from .Costs import Costs
+from .Layout import INDENT, WIDTH, Lines, _ranges, colored, text, truth
+from .Lookup import find
 from .Routes import Route, age_name, any_building_item, building_names, routes_for
 
 if TYPE_CHECKING:
@@ -107,9 +104,6 @@ class Explainer:
         """While set, markers are drawn but nothing is kept: a block rendered only to compare it."""
 
     def explain_rule(self, typed: str, state: CollectionState) -> list[JSONMessagePart] | None:
-        if typed.strip().lower() == BUDGETED_ITEMS.lower():
-            self._entries = []
-            return self._budgeted_items(state).parts()
         scoped = self._scoped(typed)
         if scoped is not None:
             return scoped(state)
@@ -189,9 +183,9 @@ class Explainer:
                 return self._costs_view(name, route, state)
             offering = [self.world.rules.logic.for_scenario(each)
                         for each in self.world.pool.scenarios.in_campaign(campaign)
-                        if self._status(route, each, state) is not None]
-            chapters = (scenario.chapter,) if scenario is not None else None
-            return Costs(self.world, route, offering).campaign_budget(name, campaign.campaign_name, state, chapters)
+                        if self._status(route, each, state) is not None
+                            and (scenario is None or each is scenario)]
+            return Costs(self.world, route, offering).drill(name, state, self._entry)
         lines = Lines()
         if scenario is None:
             for route in routes:
@@ -247,51 +241,6 @@ class Explainer:
         # The question itself is the level that opens: its answer is drawn, questions in it are not.
         self._breakdown(lines, question.answer, depth, sl, state, OPENED - 1)
         return lines
-
-    def _budgeted_items(self, state: CollectionState) -> Lines:
-        """The seed's sample in its one drawn order. Every scenario buys what it has of it age by
-        age, in this order within an age, after its own purchases and its base. An age leads its
-        own: every item of it asks the scenario to reach it, so its order puts the age-up first. An item no
-        included scenario budgets is left out. Each reads as the budget words it, green where it
-        is in logic, with its own price and its costs view to open."""
-        budget = self.world.pool.budget
-        ordered = sorted((location for location in budget.entries if self._budgeted_anywhere(location)),
-                         key=lambda location: (for_location(location).age, location is not for_location(location).age,
-                                                budget.rank[location]))
-        lines = Lines()
-        lines.add(0, text(f"{BUDGETED_ITEMS}: {len(ordered)}, bought age by age in this order"))
-        age = None
-        for number, location in enumerate(ordered, start=1):
-            entry_age = for_location(location).age
-            if entry_age is not age:
-                age = entry_age
-                lines.add(1, text(age_name(age)))
-            name = location.location_name
-            reached = self.world.multiworld.get_location(name, self.world.player).can_reach(state)
-            route = self._priced_route(location)
-            parts = [text(f"{number}. "), colored(budget_label(location), reached)]
-            if route is not None:
-                price = ", ".join(f"{route.price[1][resource]} {resource.name.lower()}"
-                                  for resource in SAMPLED_RESOURCES if route.price[1].get(resource, 0) > 0)
-                parts += [text(f" ({price})" if price else " (free)"),
-                          self._entry(f"what {name} costs",
-                                      lambda st, name=name, route=route: self._costs_view(name, route, st))]
-            lines.add(2, *parts)
-        return lines
-
-    def _budgeted_anywhere(self, location) -> bool:
-        route = self._priced_route(location)
-        if route is None:
-            return False
-        easily = tuple(sorted((resource for resource, amount in route.price[1].items() if amount > 0),
-                              key=lambda resource: resource.value))
-        return any(isinstance(BudgetTotal(scenario=scenario, location=location, easily=easily).resolve(self.world),
-                              BudgetTotal.Resolved)
-                   for scenario in self.world.pool.scenarios.included)
-
-    def _priced_route(self, location) -> Route | None:
-        return next((route for route in routes_for(self.world, _BY_NAME[location.location_name])
-                     if route.price is not None), None)
 
     def _costs_view(self, name: str, route: Route, state: CollectionState) -> Lines:
         """The same costs view as under the location's own /explain."""
@@ -403,7 +352,7 @@ class Explainer:
             sl = self.world.rules.logic.for_scenario(scenario)
             self._dry = True
             try:
-                body = self._body(name, route, sl, [sl], state)
+                body = self._body(route, sl, state)
             finally:
                 self._dry = False
             groups.setdefault((status, _signature(body)), []).append(sl)
@@ -418,19 +367,18 @@ class Explainer:
                     if len(together) > 1 and len(lines._lines) > start:
                         depth, first = lines._lines[start]
                         lines._lines[start] = (depth, [text(f"{sl.scenario.chapter}: "), *first])
-            lines.extend(self._body(name, route, together[0], together, state))
+            lines.extend(self._body(route, together[0], state))
         return lines
 
-    def _body(self, name: str, route: Route, sl: ScenarioLogic, together: list[ScenarioLogic],
-              state: CollectionState) -> Lines:
-        """What a chapter asks on the route, past its unlock: the route's items, then what pays each
-        resource, with the budget of every chapter in `together`."""
+    def _body(self, route: Route, sl: ScenarioLogic, state: CollectionState) -> Lines:
+        """What a chapter asks on the route, past its unlock: the route's items, then whether an
+        easy source pays each resource."""
         lines = Lines()
         self._opened = set()
         ways = [way.structural for way in route.ways(sl) if way.structural is not None]
         for rule in (*route.gates, *(ways[:1] if len(ways) == 1 else [Or(*ways)] if ways else [])):
             self._breakdown(lines, rule, 2, sl, state, OPENED)
-        self._short_of(lines, name, route, sl, state, together)
+        self._short_of(lines, route, sl, state)
         return lines
 
     def _chapter(self, lines: Lines, name: str, route: Route, scenario, head: list[JSONMessagePart],
@@ -445,7 +393,7 @@ class Explainer:
         lines.add(1, *head, *_says(status is Status.AVAILABLE))
         if status is Status.LOCKED:
             self._breakdown(lines, sl.is_unlocked(), 2, sl, state, OPENED)
-        lines.extend(self._body(name, route, sl, [sl], state))
+        lines.extend(self._body(route, sl, state))
 
     def _breakdown(self, lines: Lines, rule: Rule | Rule.Resolved, depth: int, sl: ScenarioLogic,
                    state: CollectionState, opening: int, choice: bool = False) -> None:
@@ -497,9 +445,6 @@ class Explainer:
                     lines.add(depth + 1, text("Has "), *item[0], *_says(item[1]))
                 else:
                     self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
-            return
-        if isinstance(resolved, BudgetTotal.Resolved):
-            lines.add(depth, colored(f"Budget for {budget_label(resolved.location)}", held), *_says(held))
             return
         if isinstance(resolved, SufficientRawResources.Resolved):
             lines.add(depth, colored(f"Scenario expects {resolved.needed}", held), *_says(held))
@@ -557,7 +502,7 @@ class Explainer:
         return sorted(children, key=self._depth)
 
     def _depth(self, rule: Rule.Resolved) -> int:
-        """How deep a part's breakdown goes: an item or a budget 0, a group of items 1, a question
+        """How deep a part's breakdown goes: an item 0, a group of items 1, a question
         one more than its answer, any other group one more than its deepest part."""
         return self._measure(rule, frozenset())[0]
 
@@ -633,56 +578,17 @@ class Explainer:
         asks = question.description.removeprefix(f"{sl.scenario.scenario_name} ")
         return asks[:1].upper() + asks[1:]
 
-    def _short_of(self, lines: Lines, name: str, route: Route, sl: ScenarioLogic,
-                  state: CollectionState, together: list[ScenarioLogic] | None = None) -> None:
-        """Each resource the price asks: paid by an easy source, by the budget, or by neither yet."""
+    def _short_of(self, lines: Lines, route: Route, sl: ScenarioLogic, state: CollectionState) -> None:
+        """Each resource the price asks, and whether the scenario has an easy source of it."""
         if route.price is None:
             return
-        costs = Costs(self.world, route, [sl])
-        pile, most = costs._pile(state), self.world.rules.logic.most_pile
-        total = costs._budget(sl)
-        for resource, amount in costs.cost:
-            noun = resource.name.lower()
+        for resource, amount in Costs(self.world, route, [sl]).cost:
             easy = self._resolved(sl.economy.has_easy_source(resource))
             why = (self._question_entry(easy, sl),) if isinstance(easy, ScenarioQuestion.Resolved) else ()
-            if easy(state):
-                lines.add(2, colored(f"{amount} {noun}", True), text(": an easy source"), *_says(True), *why)
-                continue
-            asked = dict(total.table.total(state).cost).get(resource, 0) if total is not None else None
-            if asked is None or total.lowest(resource) > most[resource]:
-                lines.add(2, colored(f"{amount} {noun}", False), text(": not in budget, and no easy source yet"),
-                          *_says(False), *why)
-                continue
-            lines.add(2, colored(f"{amount} {noun}", pile[resource] >= asked),
-                      text(f": budget {asked}, starting pile {pile[resource]}, no easy source yet"),
-                      *_says(pile[resource] >= asked), *why)
-        if total is not None:
-            # The budget pays for what comes before it too, so it can fail on what it doesn't cost.
-            own = {resource for resource, _ in costs.cost}
-            for resource, asked in total.table.total(state).cost:
-                if resource in own:
-                    continue
-                noun = resource.name.lower()
-                easy = self._resolved(sl.economy.has_easy_source(resource))
-                why = (self._question_entry(easy, sl),) if isinstance(easy, ScenarioQuestion.Resolved) else ()
-                if easy(state):
-                    lines.add(2, colored(f"{asked} {noun}", True), text(" in its budget: an easy source"),
-                              *_says(True), *why)
-                elif total.lowest(resource) > most[resource]:
-                    lines.add(2, colored(f"{asked} {noun}", False),
-                              text(" in its budget: more than any starting pile, no easy source yet"),
-                              *_says(False), *why)
-                else:
-                    lines.add(2, colored(f"{asked} {noun}", pile[resource] >= asked),
-                              text(f" in its budget: starting pile {pile[resource]}, no easy source yet"),
-                              *_says(pile[resource] >= asked), *why)
-            together = together or [sl]
-            campaign = sl.scenario.campaign.campaign_name
-            chapters = tuple(each.scenario.chapter for each in together)
-            budgets = Costs(self.world, route, together)
-            lines.add(2, colored("Its budget", total(state)), *_says(total(state)),
-                      self._entry(f"{name}'s budget in {campaign} {_ranges(list(chapters))}",
-                                  lambda st: budgets.campaign_budget(name, campaign, st, chapters)))
+            held = easy(state)
+            lines.add(2, colored(f"{amount} {resource.name.lower()}", held),
+                      text(": an easy source" if held else ": no easy source yet"), *_says(held), *why)
+
 
     def _started_researched(self, lines: Lines, route: Route, campaigns: list) -> None:
         """The chapters that research the upgrade for themselves, so never ask for its item:

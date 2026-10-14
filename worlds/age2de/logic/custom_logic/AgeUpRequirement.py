@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, override
 
@@ -22,8 +21,8 @@ class AgeUpRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definit
     """A rule that checks that a player has at least two of the needed buildings to age up, or the
     single building that counts for both.
 
-    It also carries which buildings those are, so the budget can price leaving an age from the
-    same place the rule is built."""
+    It also carries which buildings those are, so an explanation can name them from the same
+    place the rule is built."""
 
     buildings: tuple[Age2BuildingData, ...] = ()
     """The buildings, two of which leave the age: the children, in order. A tuple, as a rule's
@@ -50,35 +49,6 @@ class AgeUpRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definit
             buildings=tuple(buildings),
             single_building=single_building,
             into_age=into_age,
-        )
-
-    def narrowed_by_scenario(
-        self,
-        could_have: Callable[[Age2BuildingData], bool],
-        choice_order: Callable[[Age2BuildingData], int],
-    ) -> AgeUpRequirement:
-        """The same rule, less the buildings that could never stand, the rest in choice order.
-        Those children are always false, so two of the rest is the same answer."""
-        kept = sorted(
-            (
-                (building, child) for building, child in zip(self.buildings, self.children)
-                    if could_have(building)
-            ),
-            key=lambda pair: choice_order(pair[0]),
-        )
-        children = [child for _, child in kept]
-
-        single_building = self.single_building
-        if single_building is not None and could_have(single_building):
-            children.append(self.children[-1])
-        else:
-            single_building = None
-
-        return dataclasses.replace(
-            self,
-            children=children,
-            buildings=tuple(building for building, _ in kept),
-            single_building=single_building,
         )
 
     @override

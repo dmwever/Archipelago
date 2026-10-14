@@ -6,7 +6,7 @@ import logging
 from Options import OptionError
 from rule_builder.cached_world import CachedRuleBuilderWorld
 import settings
-from typing import Any, ClassVar, Mapping, TextIO
+from typing import Any, ClassVar, Mapping
 from BaseClasses import CollectionState, Entrance, Item, ItemClassification, Location, MultiWorld, Region
 from NetUtils import JSONMessagePart
 from worlds.AutoWorld import World
@@ -17,7 +17,6 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
-from .generation.pools.BudgetPool import BudgetPool
 from .regions.UnitRegions import UnitRegions
 from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching, ShuffleVillager
 from .items import Items
@@ -108,7 +107,6 @@ class Age2World(CachedRuleBuilderWorld):
         self.inspect_options(self.options, self.player_name)
         self.check_installable_name()
         self.pool = Age2Pool(self)
-        self.pool.budget = BudgetPool(self.pool, self.random)
 
     def seed_for_tracker(self) -> None:
         regen = getattr(self.multiworld, "re_gen_passthrough", {}).get(self.game, {})
@@ -346,53 +344,6 @@ class Age2World(CachedRuleBuilderWorld):
 
     def pre_fill(self) -> None:
         LocalStart.apply(self)
-
-    def write_spoiler(self, spoiler_handle: TextIO) -> None:
-        """The budget: the pool this seed draws from, the starting pile it pays from, then each
-        scenario's order over the pool - what is in logic off that pile, in what order."""
-        spoiler_handle.write(f"\nBudget pool ({self.player_name}):\n")
-        spoiler_handle.write("\n".join(self.pool.budget.spoiler_lines()) + "\n")
-
-        spoiler_handle.write(f"\nStarting resources ({self.player_name}):\n")
-        spoiler_handle.write("\n".join(self.pool.resources.spoiler_lines()) + "\n")
-
-        included = set(self.pool.scenarios.included)
-        orders = [
-            scenario.budget.order for scenario in self.rules.logic.scenarios
-                if scenario.scenario in included and scenario.budget.order.order
-        ]
-        if not orders:
-            return
-        # Only what the playthrough expects the starting pile to pay for: a scenario whose
-        # every entry an easy source pays by then has no budget to show.
-        states, first = self._sphere_states()
-        blocks = [
-            lines for lines in (order.spoiler_lines(states, first) for order in orders)
-                if lines
-        ]
-        if not blocks:
-            return
-        spoiler_handle.write(f"\nScenario budget orders ({self.player_name}):\n")
-        spoiler_handle.write("    [sN] = comes into logic in sphere N\n")
-        spoiler_handle.write("    w* = an easy source in logic by then pays it\n")
-        for lines in blocks:
-            spoiler_handle.write("\n" + "\n".join(lines) + "\n")
-
-    def _sphere_states(self) -> tuple[list[CollectionState], dict[str, int]]:
-        """The items held at the start of each sphere of the filled multiworld, and the sphere
-        each of this world's locations is first reachable in, by name."""
-        state = CollectionState(self.multiworld)
-        states: list[CollectionState] = []
-        first: dict[str, int] = {}
-        for sphere in self.multiworld.get_spheres():
-            if not sphere:
-                break   # what follows is the unreachable leftovers
-            states.append(state.copy())
-            for location in sphere:
-                if location.player == self.player:
-                    first[location.name] = len(states) - 1
-                state.collect(location.item, True, location)
-        return states, first
 
     # -- Universal Tracker asks the world first, before its own /explain ---------------------
 
