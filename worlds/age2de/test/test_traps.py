@@ -67,8 +67,8 @@ class TestTrapsAreOptIn(bases.Age2TestBase):
 
 class TestTrapsReachThePool(bases.Age2TestBase):
     """Presence is asserted through TrapPool.roll rather than the generated pool. age2de seeds are
-    item-dense -- the filler budget is roughly 15 to 40 slots -- so whether any surplus survives
-    the resource targets is genuinely seed-dependent, and a pool-level presence assertion would
+    item-dense -- the filler budget is roughly 15 to 40 slots -- so whether the resource targets
+    leave any locations over is genuinely seed-dependent, and a pool-level presence assertion would
     flake. What the pool must hold on every seed are the invariants below."""
 
     options = {**BIG_SEED, "trap_difficulty": 5, "trap_percentage": 100}
@@ -90,8 +90,9 @@ class TestTrapsReachThePool(bases.Age2TestBase):
     def test_the_starting_resource_targets_survive(self) -> None:
         """The priority rule, stated as the invariant that actually holds on every seed.
 
-        A trap can only exist where there was surplus, and surplus is only counted once every
-        target has been met without halving. So traps in the pool prove the targets were funded.
+        A trap can only exist where there were locations left over, and the resources only leave
+        any once every target has been met without halving. So traps in the pool prove the targets
+        were funded.
         The converse is not a defect: a seed whose filler budget cannot fund the targets halves
         them and produces no traps, which is the rule working rather than failing."""
         pool = self.multiworld.itempool
@@ -153,25 +154,40 @@ class TestEveryWeightZeroSuppressesTraps(bases.Age2TestBase):
         self.assertEqual(len(unfilled), len(self.multiworld.itempool))
 
 
-class TestSurplusAccounting(bases.Age2TestBase):
+class TestResourcesStopAtTheTargets(bases.Age2TestBase):
+    """The resources used to keep drawing after every target was met, until they had their whole
+    half of the open locations: seeds pooled three times the wood a target asks for, and the
+    budget took every one of those items as a pile a player could open with."""
+
     options = dict(BIG_SEED)
 
-    def test_a_budget_too_small_for_the_targets_reports_no_surplus(self) -> None:
-        """Halving means the targets were abandoned, not met. A seed too tight to fund them is
-        too tight to fund traps, so the surplus is forfeited rather than shared."""
-        for wanted in range(0, 16):
-            _items, surplus = self.world.pool.resources.build(wanted)
-            self.assertEqual(0, surplus, f"{wanted} slots reported {surplus} surplus")
+    def totals(self, items: list[Items.Age2ItemData]) -> Counter:
+        totals = Counter()
+        for item in items:
+            totals[item.type.type] += item.type.amount
+        return totals
 
-    def test_a_generous_budget_reports_surplus(self) -> None:
-        _items, surplus = self.world.pool.resources.build(80)
-        self.assertGreater(surplus, 0, "80 slots funded the targets but reported no surplus")
+    def test_a_generous_budget_stops_short_of_it(self) -> None:
+        items = self.world.pool.resources.build(80)
+        self.assertLess(len(items), 80, "80 slots funded the targets and spent every one")
 
-    def test_the_surplus_is_never_more_than_the_budget(self) -> None:
+    def test_every_target_is_met(self) -> None:
         for wanted in (20, 40, 80, 160):
-            items, surplus = self.world.pool.resources.build(wanted)
-            self.assertEqual(wanted, len(items))
-            self.assertLessEqual(surplus, wanted)
+            totals = self.totals(self.world.pool.resources.build(wanted))
+            for resource, target in TARGETS.items():
+                self.assertGreaterEqual(totals[resource], target,
+                                        f"{wanted} slots: {resource.name} stopped at "
+                                        f"{totals[resource]}, below its {target} target")
+
+    def test_the_last_item_meets_the_last_target(self) -> None:
+        """Drawing stops the moment every target is met, so without the last item one is short."""
+        for wanted in (20, 40, 80, 160):
+            items = self.world.pool.resources.build(wanted)
+            if len(items) == wanted:
+                continue   # it ran out of room before it could stop
+            totals = self.totals(items[:-1])
+            self.assertTrue(any(totals[resource] < target for resource, target in TARGETS.items()),
+                            f"{wanted} slots: every target was met before the last item")
 
     def test_traps_cannot_touch_the_resources_at_all(self) -> None:
         """Starting resources are progression, and the economy counts what they add up to, so a
@@ -179,17 +195,21 @@ class TestSurplusAccounting(bases.Age2TestBase):
 
         It cannot, and the reason is now structural rather than careful: the resources take
         their share first and the traps only ever see what was left. There is no trimming to
-        get wrong. The same plan is asked for at every trap setting and must come out identical.
+        get wrong. The same plan is asked for at every trap setting, off the same random state,
+        and must come out identical: how many items it takes depends on the draw.
         """
         self.world.options.trap_difficulty.value = 5
         for wanted in (20, 40, 80, 160):
             plans = []
+            drawn_from = self.world.random.getstate()
             for percentage in (0, 50, 100):
                 self.world.options.trap_percentage.value = percentage
-                plan = self.world.pool.resources.plan(wanted)
-                traps = self.world.pool.traps.roll(plan.spare)
-                plans.append((len(plan.items), plan.spare, len(traps)))
-                self.assertLessEqual(len(traps), plan.spare,
+                self.world.random.setstate(drawn_from)
+                planned = self.world.pool.resources.plan(wanted)
+                spare = wanted - len(planned)
+                traps = self.world.pool.traps.roll(spare)
+                plans.append((len(planned), spare, len(traps)))
+                self.assertLessEqual(len(traps), spare,
                                      f"{wanted} slots at {percentage}%: traps outran the padding")
             counts = {(items, spare) for items, spare, _ in plans}
             self.assertEqual(1, len(counts),

@@ -2,6 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from BaseClasses import Entrance, Location
+from rule_builder.rules import Rule
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Locations import SCENARIO_TO_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..logic.ScenarioLogic import ScenarioLogic
@@ -43,3 +44,5 @@ class ScenarioRules:
     
     def set_rules(self):
         self.world.set_rule(self.entrance, self.scenario_logic.is_unlocked())
+        self.has_navy: Rule = self.scenario_logic.military.has_navy()
+        self.has_military: Rule = self.scenario_logic.military.has_military()

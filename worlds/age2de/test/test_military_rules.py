@@ -8,7 +8,7 @@ from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
-from ..locations.connections.UnitRoles import ROLE_TO_LINES, UnitRole
+from ..locations.connections.UnitRoles import ROLE_TO_LINES, SHIP_LINES, UnitRole
 from .bases import Age2RuleTestBase
 
 EVERYTHING = dict(unitsanity=Unitsanity.option_all,
@@ -124,6 +124,54 @@ class TestRoles(Age2RuleTestBase):
         self.assertNotIn(Age2UnitLineData.MANGONEL_LINE, ROLE_TO_LINES[UnitRole.siege])
         self.assertIn(Age2UnitLineData.MANGONEL_LINE, ROLE_TO_LINES[UnitRole.military])
 
+    def test_siege_is_not_an_army(self):
+        """Battering Rams alone once beat Attila 1's first opponent: they counted as military."""
+        self.assertFalse(set(ROLE_TO_LINES[UnitRole.siege]) & set(ROLE_TO_LINES[UnitRole.military]))
+
+    def test_a_suicide_raft_is_not_a_navy(self):
+        """A Demolition Ship blows itself up on contact: it can sink a fleet, never hold the
+        water. Counting it let Demolition Rafts alone win the water in The Walls of
+        Constantinople and guard every fishing boat."""
+        for line in (Age2UnitLineData.DEMOLITION_RAFT_LINE, Age2UnitLineData.INCENDIARY_RAFT_LINE):
+            with self.subTest(line.name):
+                self.assertNotIn(line, ROLE_TO_LINES[UnitRole.navy])
+
+
+class TestCounters(Age2RuleTestBase):
+
+    def test_a_ship_never_counters_a_land_unit(self):
+        """A fleet cannot answer an army on land. The other way round stands: a Bombard Cannon or
+        a Mangonel on the shore does sink ships."""
+        ships = set(SHIP_LINES)
+        crossed = [(line.name, counter.name) for line in Age2UnitLineData
+                   for counter in line.countered_by
+                   if line not in ships and counter in ships]
+        self.assertEqual([], crossed)
+
+    def test_a_monk_converts_siege_only_with_redemption(self):
+        """Monks answered Mangonels with nothing researched, and a monk cannot convert a siege
+        weapon without Redemption. Ships and cavalry need nothing."""
+        from ..locations.Techs import Age2TechData
+        monk, redemption = Age2UnitLineData.MONK_LINE, Age2TechData.REDEMPTION
+        self.assertIs(redemption, Age2UnitLineData.MANGONEL_LINE.counter_techs[monk])
+        self.assertIs(redemption, Age2UnitLineData.BATTERING_RAM_LINE.counter_techs[monk])
+        self.assertNotIn(monk, Age2UnitLineData.CANNON_GALLEON_LINE.counter_techs)
+        self.assertNotIn(monk, Age2UnitLineData.KNIGHT_LINE.counter_techs)
+        # Only the counter it names needs the tech: a Knight answers a Mangonel as it is.
+        self.assertNotIn(Age2UnitLineData.KNIGHT_LINE, Age2UnitLineData.MANGONEL_LINE.counter_techs)
+        world = self.build(**EVERYTHING)
+        attila_1 = world.rules.logic.for_scenario(Age2ScenarioLocationData.ATT1_VICTORY.scenario)
+        siege = attila_1.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
+        knight = attila_1.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
+        # The Huns never research Redemption, so their monks answer Knights but never Mangonels.
+        self.assertNotIn("can train a Monk", siege.resolve(world).explain_str())
+        self.assertIn("can train a Monk", knight.resolve(world).explain_str())
+
+    def test_the_demolition_ship_falls_to_galleys_and_turtle_ships(self):
+        for counter in (Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.TURTLE_SHIP_LINE):
+            with self.subTest(counter.name):
+                self.assertIn(counter, Age2UnitLineData.DEMOLITION_RAFT_LINE.countered_by)
+
 
 class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):
 
@@ -195,3 +243,24 @@ class TestDefeatingOnePlayer(Age2RuleTestBase):
         location = Age2ScenarioLocationData.ATT1_VICTORY.global_name()
         self.assertFalse(self.multiworld.get_location(location, self.world.player)
                          .access_rule(state))
+
+
+class TestAttila3HasRulesForGreenAndRed(Age2RuleTestBase):
+    """Green's and red's objectives had no rule of their own, so entering the scenario was the
+    whole requirement: a dock or a Town Center fell with no army and no base."""
+
+    OBJECTIVES = (
+        Age2ScenarioLocationData.ATT3_GREEN_DOCK_NORTH,
+        Age2ScenarioLocationData.ATT3_GREEN_DOCK_SOUTH,
+        Age2ScenarioLocationData.ATT3_RED_DOCK,
+        Age2ScenarioLocationData.ATT3_GREEN_TC,
+        Age2ScenarioLocationData.ATT3_RED_TC,
+        Age2ScenarioLocationData.ATT3_RED_MARKET,
+    )
+
+    def test_each_asks_for_an_army(self):
+        world = self.build(**EVERYTHING)
+        for objective in self.OBJECTIVES:
+            with self.subTest(objective.name):
+                location = self.multiworld.get_location(objective.global_name(), world.player)
+                self.assertIn("can train", location.access_rule.explain_str())

@@ -11,8 +11,6 @@ from ...locations.connections.ScenarioResources import Tier
 from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
-from ..budget.BudgetItem import PricedLocation
-from ..budget.BudgetTotal import BudgetTotal
 from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 if TYPE_CHECKING:
@@ -224,11 +222,15 @@ class ScenarioResourceLogic:
         if not self.counts.relic_count:
             return False_()
         monk = Age2UnitData.MONK
-        rule = (self.scenario.has_building(Age2BuildingData.MONASTERY)
-                & self.logic.units.has_unit_items(monk)
-                & self.scenario.ages.has_reached(monk.age)
-                & self.scenario.starting_state.starting_relics)
-        return rule & self.logic.resources.has_amount(Resource.GOLD, monk.cost.get(Resource.GOLD, 0))
+        return (
+            self.scenario.has_building(Age2BuildingData.MONASTERY)
+            & (
+                self.logic.units.has_unit_items(Age2UnitData.MONK)
+                | self.scenario.obtains_unit(monk)
+            )
+            & self.scenario.ages.has_reached(Age2UnitData.MONK.age)
+            & self.can_mine_some()
+        ) & self.scenario.starting_state.starting_relics
 
     def can_gather_gold(self) -> Rule:
         return (self.can_mine_some() | self.can_gather_oysters() | self.can_hunt_whales()
@@ -336,15 +338,10 @@ class ScenarioResourceLogic:
             return True_()
         return And(*[self.has_easy_source(resource) for resource in resources])
 
-    def can_pay(self, costs: Mapping[Resource, float], location: PricedLocation) -> Rule:
-        """What a location asks of its price: an easy source of everything it costs, or its place
-        in this scenario's budget order. Nothing at all if it is free."""
-        priced = [resource for resource, amount in costs.items() if amount > 0]
-        if not priced:
-            return True_()
-        return self.can_sustain(priced) | BudgetTotal(scenario=self.scenario.scenario,
-                                                      location=location,
-                                                      easily=tuple(sorted(priced, key=lambda resource: resource.value)))
+    def can_pay(self, costs: Mapping[Resource, float]) -> Rule:
+        """What a location asks of its price: an easy source of everything it costs. Nothing at
+        all if it is free."""
+        return self.can_sustain([resource for resource, amount in costs.items() if amount > 0])
 
     # -- private methods -------------------------------------------------------------
 

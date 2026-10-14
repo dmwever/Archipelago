@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import Has, Rule, True_
 from ...locations.Locations import Age2ScenarioLocationData
-from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
@@ -22,7 +21,6 @@ class Attila2StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario")
         self.max_age = Age2AgeData.CASTLE
         self.has_vils = self.purple_vils
-        self.required_purchases = {Age2BuildingData.TOWN_CENTER: False_()}   # Build TC, to win
 
         self.obtains_unit[U.VILLAGER_MALE] = self.purple_vils
         self.obtains_unit[U.VILLAGER_FEMALE] = self.purple_vils

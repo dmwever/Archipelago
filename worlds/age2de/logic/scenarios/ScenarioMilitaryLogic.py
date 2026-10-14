@@ -31,11 +31,13 @@ class ScenarioMilitaryLogic:
         return self.can_field_role(UnitRole.navy, age) & self.scenario.has_water_access()
 
     def can_protect_boats(self) -> Rule:
-        """A navy to guard boats: one shared question, as every source in open water asks it."""
+        """A navy to guard boats, named, as every source in open water asks it."""
         return self.scenario.named("can protect its boats", self._protecting_boats())
 
     def _protecting_boats(self) -> Rule:
-        ways = [self.scenario.units.can_field(line) for line in ROLE_TO_LINES[UnitRole.navy]]
+        # Structural: the fishing tiers ask this, and the easy sources read them.
+        ways = [self.scenario.units.can_field_structurally(line)
+                for line in ROLE_TO_LINES[UnitRole.navy]]
         return (Or(*[way for way in ways if not isinstance(way, False_)])
                 & self.scenario.has_water_access())
 

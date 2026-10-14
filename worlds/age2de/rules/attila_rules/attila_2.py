@@ -29,7 +29,7 @@ class Attila2Rules(ScenarioRules):
         town_center = Age2BuildingData.TOWN_CENTER
         can_build_tc = (self.scenario_logic.buildings.can_build_tc()
                         & self.scenario_logic.has_vils()
-                        & self.scenario_logic.economy.can_pay(town_center.cost, town_center))
+                        & self.scenario_logic.economy.can_pay(town_center.cost))
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_beat_blue & can_build_tc)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_beat_blue & can_build_tc)

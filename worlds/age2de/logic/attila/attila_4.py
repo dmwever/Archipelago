@@ -18,3 +18,5 @@ class Attila4StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT3_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 3)
+        # No water the logic counts on: no Dock, so no ships and no deep fish.
+        self.has_water_access = False_()

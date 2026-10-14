@@ -13,7 +13,6 @@ from ..locations.Buildings import Age2BuildingData
 from ..locations.connections.ScenarioResources import Tier, total
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
-from ..locations.Units import Age2UnitData
 from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 
@@ -243,7 +242,7 @@ class TestAffordability(EconomyTestBase):
         for costs in ({}, {Resource.GOLD: 0}, {Resource.GOLD: 0, Resource.FOOD: 0}):
             with self.subTest(str(costs)):
                 self.assertTrue(self.resolved(
-                    economy.can_pay(costs, Age2UnitData.KNIGHT))(state))
+                    economy.can_pay(costs))(state))
                 self.assertTrue(self.resolved(
                     self.world.rules.logic.resources.has_amounts(costs))(state))
         # can_sustain is asked which resources to keep coming, not what they cost, so the

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .pools.AgePool import AgePool
-from .pools.BudgetPool import BudgetPool
 from .pools.BuildingPool import BuildingPool
 from .pools.CampaignPool import CampaignPool
 from .pools.CivilizationPool import CivilizationPool
@@ -18,8 +17,6 @@ if TYPE_CHECKING:
 
 
 class Age2Pool:
-    budget: BudgetPool
-
     def __init__(self, world: 'Age2World') -> None:
         self.world = world
         self.campaigns = CampaignPool(world.options)

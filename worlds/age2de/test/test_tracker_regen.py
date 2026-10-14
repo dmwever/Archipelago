@@ -1,7 +1,6 @@
-"""Universal Tracker rebuilt this world from the YAML with a seed of its own, so its budget sample
-and every scenario's order differed from the server's - and with them everything the tracker said
-about logic. One seed gave a different budget for the same location on every reconnect. These pin
-that a rebuild handed the server's slot data draws the same world."""
+"""Universal Tracker rebuilt this world from the YAML with a seed of its own, so everything the
+world drew at random differed from the server's - and with it everything the tracker said about
+logic. These pin that a rebuild handed the server's slot data draws the same world."""
 import unittest
 
 from worlds.AutoWorld import call_all
@@ -22,14 +21,8 @@ def build(seed: int, passthrough: dict | None = None):
 
 
 def drawn(world) -> tuple:
-    """Everything the budget drew: the sample, its ranks, and each scenario's order."""
-    budget = world.pool.budget
-    orders = tuple(
-        (scenario.scenario.name, tuple(entry.location.name for entry in scenario.budget.order.order))
-        for scenario in world.rules.logic.scenarios
-    )
-    return tuple(sorted(location.name for location in budget.entries)), tuple(sorted(
-        (location.name, rank) for location, rank in budget.rank.items())), orders
+    """Everything the world drew at random into its item pool."""
+    return tuple(sorted(item.name for item in world.multiworld.itempool if item.player == world.player))
 
 
 class TestTheTrackerRebuildsTheSameWorld(unittest.TestCase):
@@ -37,7 +30,7 @@ class TestTheTrackerRebuildsTheSameWorld(unittest.TestCase):
         world = build(seed=1)
         self.assertIn(UT_SEED, world.fill_slot_data())
 
-    def test_a_rebuild_with_the_slot_data_draws_the_same_budget(self):
+    def test_a_rebuild_with_the_slot_data_draws_the_same_pool(self):
         server = build(seed=1)
         tracker = build(seed=2, passthrough=server.fill_slot_data())
         self.assertEqual(drawn(server), drawn(tracker))

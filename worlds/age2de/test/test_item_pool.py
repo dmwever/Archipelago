@@ -26,22 +26,29 @@ class TestSmartStartingResources(bases.Age2TestBase):
         "starting_campaigns": {ATTILA},
     }
 
-    def test_returns_exactly_the_number_asked_for(self) -> None:
-        # 1 to 3 is the range that used to hang; 15 and 20 returned 0 and 8.
-        for wanted in range(0, 40):
-            got = self.world.pool.resources.build_items(wanted)
+    def test_a_budget_too_small_for_the_targets_is_spent_whole(self) -> None:
+        # 1 to 3 is the range that used to hang. Up to 14 the targets cannot all be met, so every
+        # location asked for is a starting resource.
+        for wanted in range(0, 15):
+            got = self.world.pool.resources.build(wanted)
             self.assertEqual(wanted, len(got), f"asked for {wanted} items, got {len(got)}")
 
+    def test_never_more_than_asked_for(self) -> None:
+        # 15 and 20 used to return 0 and 8.
+        for wanted in range(0, 80):
+            got = self.world.pool.resources.build(wanted)
+            self.assertLessEqual(len(got), wanted, f"asked for {wanted} items, got {len(got)}")
+
     def test_zero_locations_returns_nothing(self) -> None:
-        self.assertEqual([], self.world.pool.resources.build_items(0))
+        self.assertEqual([], self.world.pool.resources.build(0))
 
     def test_a_negative_count_returns_nothing(self) -> None:
-        self.assertEqual([], self.world.pool.resources.build_items(-5))
+        self.assertEqual([], self.world.pool.resources.build(-5))
 
     def test_the_exact_fit_hands_back_the_large_items(self) -> None:
         # 725/250 + 850/250 + 750/250 + 400/125 = 3 + 4 + 3 + 4 = 14. The targets came down by
         # what the three town-centre items now contribute to the same totals.
-        got = self.world.pool.resources.build_items(14)
+        got = self.world.pool.resources.build(14)
         self.assertEqual(
             Counter({
                 Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 3,
@@ -55,7 +62,7 @@ class TestSmartStartingResources(bases.Age2TestBase):
 
     def test_everything_returned_is_a_starting_resource(self) -> None:
         for wanted in (5, 15, 30):
-            for item in self.world.pool.resources.build_items(wanted):
+            for item in self.world.pool.resources.build(wanted):
                 self.assertIsInstance(item.type, Items.StartingResources)
 
 

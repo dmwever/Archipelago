@@ -46,7 +46,7 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario.scenario.name, age=age.name):
                     asked = ScenarioHasReached(scenario=scenario.scenario, age=age).resolve(world)
-                    direct = (scenario.ages.can_reach(age)
+                    direct = (scenario.ages.can_reach_structurally(age)
                               | scenario.ages.start_past(age)).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 
@@ -104,8 +104,6 @@ class TestTheAnswersAreActuallyShared(Age2RuleTestBase):
         for answer in logic.scenario_answers.values():
             self.assertIsInstance(answer, Rule.Resolved)
         self.assertFalse(logic.scenario_answers_open, "a question was left part-way answered")
-        self.assertFalse(logic.budget_totals_open, "a budget total was left part-way resolved")
-        self.assertTrue(logic.budget_totals, "no budget total was resolved, so nothing above was tried")
 
 
 class TestOneScenarioLogicPerScenario(Age2RuleTestBase):

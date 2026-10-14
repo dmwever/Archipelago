@@ -34,9 +34,9 @@ Huns' Marauders and the Goths' Anarchy, both at the Castle that trains the unit 
 cheaper way in, so logic counts only the Castle. The game still gets every building."""
 
 
-def logic_buildings(unit: Age2UnitData) -> list[Age2BuildingData]:
-    """Where logic lets a unit be trained: its buildings, less what LOGIC_SKIPS."""
-    return [building for building in unit.buildings if (unit, building) not in LOGIC_SKIPS]
+for unit in Age2UnitData:
+    unit.logic_buildings = [building for building in unit.buildings
+                            if (unit, building) not in LOGIC_SKIPS]
 
 
 # The item that unlocks everything a building trains, for unitsanity_items: buildings. Spelled

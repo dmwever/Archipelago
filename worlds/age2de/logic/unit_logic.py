@@ -7,7 +7,6 @@ from rule_builder.rules import False_, Has, HasAll, HasAny, Or, Rule, True_
 
 from ..Options import (Caveman, ShuffleVillager, Unitsanity, UnitsanityItems,
                        upgrade_techs_shuffled)
-from ..generation.pools.BudgetPool import VILLAGER
 from ..items.Items import Age2ItemData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
@@ -15,7 +14,7 @@ from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.UnitLocations import VILLAGER_LINES
-from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM, logic_buildings
+from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
 NOT_CAVEMAN = OptionFilter(Caveman, Caveman.option_false)
 
@@ -70,7 +69,7 @@ class UnitLogic:
     # -- training ----------------------------------------------------------------------------
 
     def can_train_anywhere(self, unit: Age2UnitData) -> Rule:
-        if not self.world.pool.units.is_trainable_unit(unit) or not logic_buildings(unit):
+        if not self.world.pool.units.is_trainable_unit(unit) or not unit.logic_buildings:
             return False_()
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
@@ -78,7 +77,7 @@ class UnitLogic:
             if isinstance(answer, False_):
                 continue
             ways.append(scenario.is_unlocked() & answer
-                        & scenario.economy.can_pay(unit.cost, unit))
+                        & scenario.economy.can_pay(unit.cost))
         return Or(*ways)
 
     def can_get_villager_anywhere(self) -> Rule:
@@ -90,7 +89,7 @@ class UnitLogic:
             if isinstance(answer, False_):
                 continue
             ways.append(scenario.is_unlocked() & answer
-                        & scenario.economy.can_pay({food.type: food.amount}, VILLAGER))
+                        & scenario.economy.can_pay({food.type: food.amount}))
         return Or(*ways)
 
 
@@ -151,7 +150,7 @@ class UnitLogic:
         return any(self.world.pool.civs.any_trains(unit) for unit in HORSE_LINE.units)
 
     def has_building_item(self, unit: Age2UnitData) -> Rule:
-        wanted = [BUILDING_TO_UNITS_ITEM[building].item_name for building in logic_buildings(unit)
+        wanted = [BUILDING_TO_UNITS_ITEM[building].item_name for building in unit.logic_buildings
                   if building in self.world.unit_regions.shuffled_unit_building_items]
         if not wanted:
             return True_()

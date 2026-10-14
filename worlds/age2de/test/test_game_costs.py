@@ -12,7 +12,6 @@ from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.GameCosts import (GAME_DATA_SOURCE, TECHS_WITHOUT_COST,
                                                UNITS_WITHOUT_COST)
-from ..logic.budget.BudgetTotal import BudgetTotal
 from ..Options import ShuffleVillager
 
 
@@ -108,58 +107,24 @@ class TestCostsReachTheRules(bases.Age2RuleTestBase):
     def deps(self, rule):
         return set(rule.resolve(self.world).item_dependencies())
 
-    def budget_terms(self, rule, location) -> list:
-        """The budget totals for this location a resolved rule can be satisfied through. Others
-        turn up too - an easy source of wood asks for a base, and the base is paid that way."""
-        found, stack = [], [rule.resolve(self.world)]
-        while stack:
-            node = stack.pop()
-            if isinstance(node, BudgetTotal.Resolved) and node.location is location:
-                found.append(node)
-            stack.extend(getattr(node, "children", ()))
-            stack.extend(child for child in (getattr(node, "child", None),
-                                             getattr(node, "answer", None)) if child is not None)
-        return found
-
-    def test_a_tech_in_the_budget_order_can_be_paid_from_the_pile(self):
-        """A tech its scenario's budget order holds may be paid out of the opening pile as well
-        as from an easy source, so its rule carries the running total - unless no pile this seed
-        could hold ever pays any of its cost, when the total adds nothing and is left out."""
+    def test_a_tech_is_paid_by_easy_sources_only(self):
+        """Loom used to be researchable on the opening pile in every scenario, which is how dozens
+        of techs came into logic at once. A tech's price asks an easy source of each resource it
+        costs, and nothing else."""
         self.build(techsanity=3)
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        held = [entry.location for entry in scenario.budget.order.order
-                if isinstance(entry.location, Age2TechData)]
-        if not held:
-            self.skipTest("this seed's order holds no tech in Attila 1")
-        most = self.world.rules.logic.most_pile
-        for tech in held:
-            total = BudgetTotal(scenario=Age2ScenarioData.AP_ATTILA_1, location=tech).resolve(self.world)
-            payable = any(total.lowest(resource) <= most[resource]
-                          for resource, amount in tech.cost.items() if amount > 0)
+        economy = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).economy
+        for tech in self.world.pool.techs.shuffled:
+            priced = [resource for resource, amount in tech.cost.items() if amount > 0]
             with self.subTest(tech.name):
-                self.assertEqual(payable, bool(self.budget_terms(scenario.techs.can_research(tech), tech)))
-
-    def test_a_tech_outside_the_budget_order_needs_an_easy_source(self):
-        """Loom used to be researchable on the opening pile in every scenario, which is how
-        dozens of techs came into logic at once. Outside the budget order a tech's rule offers
-        only an easy source of what it costs."""
-        self.build(techsanity=3)
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        order = scenario.budget.order
-        held = {entry.location for entry in order.order if isinstance(entry.location, Age2TechData)}
-        outside = [tech for tech in self.world.pool.techs.shuffled if tech not in held
-                   and order.get_priced_item(tech) is not None]
-        self.assertTrue(outside)
-        for tech in outside:
-            with self.subTest(tech.name):
-                self.assertEqual([], self.budget_terms(scenario.techs.can_research(tech), tech))
+                self.assertIs(economy.can_sustain(priced).resolve(self.world),
+                              economy.can_pay(tech.cost).resolve(self.world))
 
     def test_a_free_unit_is_free_rather_than_untrainable(self):
         """An empty And resolves to False_, so a unit with no cost on file has to be handled
         explicitly or it becomes untrainable."""
         self.build()
         economy = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).economy
-        self.assertTrue(economy.can_pay({}, Age2UnitData.KNIGHT).resolve(self.world)
+        self.assertTrue(economy.can_pay({}).resolve(self.world)
                         .always_true)
 
 

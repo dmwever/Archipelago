@@ -17,7 +17,6 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
-from .generation.pools.BudgetPool import BudgetPool
 from .regions.UnitRegions import UnitRegions
 from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching, ShuffleVillager
 from .items import Items
@@ -28,7 +27,7 @@ from .locations.VillagerJobs import Age2VillagerJobData
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, GameCosts, ScenarioResources,
                                     ScenarioStartupUnits,
-                                    ScenarioTriggerUnits, UnitBuildings,
+                                    ScenarioTriggerUnits, TechCounters, UnitBuildings,
                                     UnitCounters,
                                     UnitLineUnits, UnitRoles, UnitTechs,
                                     UnitUpgradeTokens, UnitVariants,
@@ -108,7 +107,6 @@ class Age2World(CachedRuleBuilderWorld):
         self.inspect_options(self.options, self.player_name)
         self.check_installable_name()
         self.pool = Age2Pool(self)
-        self.pool.budget = BudgetPool(self.pool, self.random)
 
     def seed_for_tracker(self) -> None:
         regen = getattr(self.multiworld, "re_gen_passthrough", {}).get(self.game, {})
@@ -295,11 +293,13 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        # Starting resources come first. Traps only ever spend the padding appended once
-        # every resource target is already met, so they never cost the player economy.
-        plan = self.pool.resources.plan(needed_number_of_filler_items)
-        starting_items = [self.create_item(data.item_name) for data in plan.items]
-        traps = [self.create_item(data.item_name) for data in self.pool.traps.roll(plan.spare)]
+        # Starting resources come first, up to half the open locations, and stop once every
+        # target is met. Traps only roll over the locations left after that, so they never cost
+        # the player economy.
+        planned = self.pool.resources.plan(needed_number_of_filler_items)
+        spare = needed_number_of_filler_items - len(planned)
+        starting_items = [self.create_item(data.item_name) for data in planned]
+        traps = [self.create_item(data.item_name) for data in self.pool.traps.roll(spare)]
 
         self.multiworld.itempool += starting_items
         self.multiworld.itempool += traps

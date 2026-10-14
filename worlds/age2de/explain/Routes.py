@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Callable
 
 from rule_builder.rules import Has, Or, Rule, True_
 
-from ..generation.pools.BudgetPool import VILLAGER
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
@@ -16,8 +15,6 @@ from ..locations.Techs import Age2TechData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
-from ..locations.connections.UnitBuildings import logic_buildings
-from ..logic.budget.BudgetItem import PricedLocation
 from .Lookup import Explained
 
 if TYPE_CHECKING:
@@ -48,8 +45,8 @@ class Route:
     gates: tuple[Rule, ...] = ()
     """Item rules outside the per-scenario check that still decide every chapter: a villager
     job's profession."""
-    price: tuple[PricedLocation, dict[Resource, int]] | None = None
-    """What paying asks, and under which location the budget prices it; None costs nothing."""
+    price: dict[Resource, int] | None = None
+    """What paying asks; None costs nothing."""
     at: tuple[Age2BuildingData, ...] = ()
     """The buildings it is made or researched at."""
     age: Age2AgeData | None = None
@@ -91,14 +88,14 @@ def _building(world: Age2World, building: Age2BuildingData) -> Route:
     return Route(
         "Builds it", "can't build",
         lambda sl: [Way(sl.buildings.can_build_building(building),
-                        sl.economy.can_pay(building.cost, building))],
+                        sl.economy.can_pay(building.cost))],
         requires=(
             logic.buildings.has_building_item(building),
             logic.buildings.has_building_item(prerequisite) if prerequisite else True_(),
             logic.ages.has_age(building.age),
             logic.units.has_profession_item(Age2VillagerJobData.BUILDER_MALE),
         ),
-        price=(building, building.cost),
+        price=building.cost,
         age=building.age,
     )
 
@@ -109,9 +106,9 @@ def _tech(world: Age2World, tech: Age2TechData) -> Route:
     return Route(
         "Researches it", "can't research",
         lambda sl: [Way(sl.techs.can_research_structurally(tech),
-                        sl.economy.can_pay(tech.cost, tech))],
+                        sl.economy.can_pay(tech.cost))],
         requires=(any_building_item(world, tech.buildings), logic.ages.has_age(tech.age)),
-        price=(tech, tech.cost),
+        price=tech.cost,
         at=tuple(tech.buildings),
         age=tech.age,
     )
@@ -121,10 +118,10 @@ def _age(world: Age2World, age: Age2AgeData) -> Route:
     logic = world.rules.logic
     return Route(
         "Reaches it", "can't reach",
-        lambda sl: [Way(sl.ages.can_research(age), sl.economy.can_pay(age.cost, age))],
+        lambda sl: [Way(sl.ages.can_research(age), sl.economy.can_pay(age.cost))],
         requires=(logic.ages.has_age(age),
                   logic.buildings.has_building_item(Age2BuildingData.TOWN_CENTER)),
-        price=(age, age.cost),
+        price=age.cost,
     )
 
 
@@ -146,13 +143,13 @@ def _villager(world: Age2World) -> Route:
     """Any villager location: one villager, priced at the food that staffs a base."""
     food = Age2ItemData.STARTING_VILLAGER_FOOD.type
     villager = Age2UnitData.VILLAGER_MALE
-    buildings = logic_buildings(villager)
+    buildings = villager.logic_buildings
     return Route(
         "Trains it", "can't train",
         lambda sl: [Way(sl.units.can_train_structurally(villager),
-                        sl.economy.can_pay({food.type: food.amount}, VILLAGER))],
+                        sl.economy.can_pay({food.type: food.amount}))],
         requires=(world.rules.logic.units.has_villager_item(), any_building_item(world, buildings)),
-        price=(VILLAGER, {food.type: food.amount}),
+        price={food.type: food.amount},
         at=tuple(buildings),
         age=villager.age,
     )
@@ -160,16 +157,16 @@ def _villager(world: Age2World) -> Route:
 
 def _trained(world: Age2World, tiers: list[Age2UnitData]) -> list[Route]:
     trainable = [unit for unit in tiers
-                 if world.pool.units.is_trainable_unit(unit) and logic_buildings(unit)]
+                 if world.pool.units.is_trainable_unit(unit) and unit.logic_buildings]
     if not trainable:
         return []
     first = min(trainable, key=lambda unit: unit.tier)
-    buildings = list(dict.fromkeys(building for unit in trainable for building in logic_buildings(unit)))
+    buildings = list(dict.fromkeys(building for unit in trainable for building in unit.logic_buildings))
     logic = world.rules.logic
     tech = first.upgrade_tech
     return [Route(
         "Trains it", "can't train",
-        lambda sl: [Way(sl.units.can_train_structurally(unit), sl.economy.can_pay(unit.cost, unit))
+        lambda sl: [Way(sl.units.can_train_structurally(unit), sl.economy.can_pay(unit.cost))
                     for unit in trainable],
         requires=(
             logic.units.has_unit_items(first),
@@ -177,7 +174,7 @@ def _trained(world: Age2World, tiers: list[Age2UnitData]) -> list[Route]:
             Has(tech.item.item_name) if tech is not None and world.pool.techs.includes(tech) else True_(),
             logic.ages.has_age(first.age),
         ),
-        price=(first, first.cost),
+        price=first.cost,
         at=tuple(buildings),
         age=first.age,
         upgrade=tech if tech is not None and world.pool.techs.includes(tech) else None,

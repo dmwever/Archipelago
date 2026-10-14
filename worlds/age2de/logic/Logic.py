@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import functools
-from collections import Counter
 from typing import TYPE_CHECKING
 
 from ..Options import Goal
@@ -19,13 +17,10 @@ from rule_builder.rules import False_, Or, Rule
 
 from ..locations.Ages import Age2AgeData
 from ..locations.Techs import Age2TechData
-from ..items.Items import Resource
 
 
 if TYPE_CHECKING:
     from .. import Age2World
-    from ..locations.Scenarios import Age2ScenarioData
-    from .budget.BudgetItem import PricedLocation
 
 
 class Logic:
@@ -36,17 +31,6 @@ class Logic:
     units: UnitLogic
     scenarios: list[ScenarioLogic]
 
-    @functools.cached_property
-    def most_pile(self) -> dict[Resource, int]:
-        from ..generation.pools.BudgetPool import SAMPLED_RESOURCES
-        from .custom_logic.ResourceAmount import contributors
-        player = self.world.player
-        made = Counter(item.name for item in self.world.multiworld.itempool if item.player == player)
-        made.update(item.name for item in self.world.multiworld.precollected_items[player])
-        assert made, "most_pile asked before create_items made anything"
-        return {resource: sum(made[name] * each for name, each in contributors(resource))
-                for resource in SAMPLED_RESOURCES}
-
     def __init__(self, world: Age2World):
         self.world = world
         self.scenarios = []
@@ -55,11 +39,6 @@ class Logic:
         """Resolved answers to the scenario questions, one per seed. See logic/custom_logic."""
         self.scenario_answers_open: set[tuple] = set()
         """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
-
-        self.budget_totals: dict[tuple[Age2ScenarioData, PricedLocation], Rule.Resolved] = {}
-        """Each budget total, resolved once per seed and shared by every rule that asks it."""
-        self.budget_totals_open: set[tuple[Age2ScenarioData, PricedLocation]] = set()
-        """Budget totals part-way through resolving, so one that asks for itself fails loudly."""
 
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
@@ -115,5 +94,5 @@ class Logic:
     def can_build_location_anywhere(self, building: Age2BuildingData) -> Rule:
         """The Build location: putting it up, paid for."""
         return Or(*[scenario.is_unlocked() & scenario.buildings.can_build_building(building)
-                    & scenario.economy.can_pay(building.cost, building)
+                    & scenario.economy.can_pay(building.cost)
                     for scenario in self.scenarios])
