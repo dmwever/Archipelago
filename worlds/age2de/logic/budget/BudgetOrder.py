@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Collection, Iterable, Mapping, Sequence
 
 from rule_builder.rules import Rule
 
-from ...generation.pools.BudgetPool import SAMPLED_RESOURCES
+from ...generation.pools.BudgetPool import SAMPLED_RESOURCES, VILLAGER
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
-from .BudgetItem import BASE, BudgetItem, PricedLocation, for_location
+from .BudgetItem import BASE, BudgetItem, PricedLocation, for_location, villager_food
 from .Need import Cost, Need
 from .Requirement import Requirement
 
@@ -371,9 +371,12 @@ class BudgetOrder:
     def _own_price(self, entry: PricedBudgetItem) -> Cost:
         """What the entry costs for itself, with nothing it needs first. The base is what it is
         made of: its villagers' food, a Town Center and, where the civilisation needs one, a
-        House."""
+        House. The villager is priced as the budget charges it, at the food that staffs a base,
+        not at one villager's 50."""
         if entry.location is BASE:
             return Need.as_cost(self.requirement([entry]).cost)
+        if entry.location is VILLAGER:
+            return Need.as_cost(villager_food().own_cost())
         return Need.as_cost(entry.location.cost)
 
     @staticmethod

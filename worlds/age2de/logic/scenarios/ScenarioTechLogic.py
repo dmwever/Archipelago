@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Or, Rule
+from rule_builder.rules import False_, Has, Or, Rule, True_
 
 from ...locations.Techs import Age2TechData
 from ..custom_logic.ScenarioQuestions import ScenarioCanResearch
@@ -31,6 +31,16 @@ class ScenarioTechLogic:
         and it is not withheld."""
         return (tech.age < self.scenario.scenario.vanilla_age
                 and not self.world.pool.techs.locked_at_start(tech))
+
+    def has_researched(self, tech: Age2TechData) -> Rule:
+        if not self.scenario.civilization.researches(tech):
+            return False_()
+        if self.researched_at_start(tech):
+            return True_()
+        rule = self.can_research(tech)
+        if self.world.pool.techs.includes(tech):
+            rule = rule & Has(tech.item.item_name)
+        return rule
 
     def has_tech(self, tech: Age2TechData) -> Rule:
         return self.available(tech, self.scenario.ages.has_reached(tech.age))

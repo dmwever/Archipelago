@@ -34,6 +34,8 @@ class Age2UnitData(enum.IntEnum):
         self.tier = tier
         self.line: 'Age2UnitLineData' = None
         self.buildings: list['Age2BuildingData'] = []
+        # Bound by connections/UnitBuildings: its buildings, less those logic skips.
+        self.logic_buildings: list['Age2BuildingData'] = []
         self.upgrade_tech: 'Age2TechData' = None
         self.variant_game_ids: list[int] = []
         self.upgrade_tokens: list['Age2ItemData'] = []

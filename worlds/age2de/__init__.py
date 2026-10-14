@@ -28,7 +28,7 @@ from .locations.VillagerJobs import Age2VillagerJobData
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, GameCosts, ScenarioResources,
                                     ScenarioStartupUnits,
-                                    ScenarioTriggerUnits, UnitBuildings,
+                                    ScenarioTriggerUnits, TechCounters, UnitBuildings,
                                     UnitCounters,
                                     UnitLineUnits, UnitRoles, UnitTechs,
                                     UnitUpgradeTokens, UnitVariants,

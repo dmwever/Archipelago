@@ -148,6 +148,25 @@ class TestCounters(Age2RuleTestBase):
                    if line not in ships and counter in ships]
         self.assertEqual([], crossed)
 
+    def test_a_monk_converts_siege_only_with_redemption(self):
+        """Monks answered Mangonels with nothing researched, and a monk cannot convert a siege
+        weapon without Redemption. Ships and cavalry need nothing."""
+        from ..locations.Techs import Age2TechData
+        monk, redemption = Age2UnitLineData.MONK_LINE, Age2TechData.REDEMPTION
+        self.assertIs(redemption, Age2UnitLineData.MANGONEL_LINE.counter_techs[monk])
+        self.assertIs(redemption, Age2UnitLineData.BATTERING_RAM_LINE.counter_techs[monk])
+        self.assertNotIn(monk, Age2UnitLineData.CANNON_GALLEON_LINE.counter_techs)
+        self.assertNotIn(monk, Age2UnitLineData.KNIGHT_LINE.counter_techs)
+        # Only the counter it names needs the tech: a Knight answers a Mangonel as it is.
+        self.assertNotIn(Age2UnitLineData.KNIGHT_LINE, Age2UnitLineData.MANGONEL_LINE.counter_techs)
+        world = self.build(**EVERYTHING)
+        attila_1 = world.rules.logic.for_scenario(Age2ScenarioLocationData.ATT1_VICTORY.scenario)
+        siege = attila_1.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
+        knight = attila_1.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
+        # The Huns never research Redemption, so their monks answer Knights but never Mangonels.
+        self.assertNotIn("can train a Monk", siege.resolve(world).explain_str())
+        self.assertIn("can train a Monk", knight.resolve(world).explain_str())
+
     def test_the_demolition_ship_falls_to_galleys_and_turtle_ships(self):
         for counter in (Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.TURTLE_SHIP_LINE):
             with self.subTest(counter.name):

@@ -14,7 +14,6 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
-from ...locations.connections.UnitBuildings import logic_buildings
 from .Need import Need
 
 if TYPE_CHECKING:
@@ -118,7 +117,7 @@ def for_location(location: PricedLocation) -> BudgetItem:
                 location, location.age, 3,
                 Need.pay(location.line, location.cost)
                 + Need.reach(location.age)
-                + Need.one_of(*logic_buildings(location)),
+                + Need.one_of(*location.logic_buildings),
                 lambda scenario: scenario.units.can_train_structurally(location),
                 tuple(_chain(location.upgrade_tech)),
             )

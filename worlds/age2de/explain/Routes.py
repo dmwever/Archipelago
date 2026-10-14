@@ -16,7 +16,6 @@ from ..locations.Techs import Age2TechData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
-from ..locations.connections.UnitBuildings import logic_buildings
 from ..logic.budget.BudgetItem import PricedLocation
 from .Lookup import Explained
 
@@ -146,7 +145,7 @@ def _villager(world: Age2World) -> Route:
     """Any villager location: one villager, priced at the food that staffs a base."""
     food = Age2ItemData.STARTING_VILLAGER_FOOD.type
     villager = Age2UnitData.VILLAGER_MALE
-    buildings = logic_buildings(villager)
+    buildings = villager.logic_buildings
     return Route(
         "Trains it", "can't train",
         lambda sl: [Way(sl.units.can_train_structurally(villager),
@@ -160,11 +159,11 @@ def _villager(world: Age2World) -> Route:
 
 def _trained(world: Age2World, tiers: list[Age2UnitData]) -> list[Route]:
     trainable = [unit for unit in tiers
-                 if world.pool.units.is_trainable_unit(unit) and logic_buildings(unit)]
+                 if world.pool.units.is_trainable_unit(unit) and unit.logic_buildings]
     if not trainable:
         return []
     first = min(trainable, key=lambda unit: unit.tier)
-    buildings = list(dict.fromkeys(building for unit in trainable for building in logic_buildings(unit)))
+    buildings = list(dict.fromkeys(building for unit in trainable for building in unit.logic_buildings))
     logic = world.rules.logic
     tech = first.upgrade_tech
     return [Route(

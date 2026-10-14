@@ -23,6 +23,9 @@ class Age2UnitLineData(enum.IntEnum):
         self.item = item
         # Bound by connections/UnitCounters, imported for its side effect.
         self.countered_by: list['Age2UnitLineData'] = []
+        # Bound by connections/TechCounters: a counter that answers this line only once the
+        # tech is researched.
+        self.counter_techs: dict['Age2UnitLineData', 'Age2TechData'] = {}
 
     @property
     def units(self) -> list[Age2UnitData]:

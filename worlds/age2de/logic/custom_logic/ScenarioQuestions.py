@@ -16,7 +16,6 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
-from ...locations.connections.UnitBuildings import logic_buildings
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -199,7 +198,7 @@ class ScenarioCanTrain(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
         somewhere = Or(*[scenario.has_building(building)
-                         for building in logic_buildings(self.unit)
+                         for building in self.unit.logic_buildings
                          if scenario.civilization.can_build(building)])
         return (scenario.logic.units.has_unit_items(self.unit)
                 & scenario.units.has_upgrade_tech(self.unit)

@@ -10,7 +10,6 @@ from ...locations.Heroes import Age2HeroData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData
-from ...locations.connections.UnitBuildings import logic_buildings
 from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
 
 if TYPE_CHECKING:
@@ -18,6 +17,8 @@ if TYPE_CHECKING:
 
 
 VILLAGER_LINES = (Age2UnitLineData.VILLAGER_MALE_LINE, Age2UnitLineData.VILLAGER_FEMALE_LINE)
+
+
 
 class ScenarioUnitLogic:
     def __init__(self, scenario: 'ScenarioLogic'):
@@ -29,7 +30,7 @@ class ScenarioUnitLogic:
 
     def can_train_structurally(self, unit: Age2UnitData) -> Rule:
         """Everything training it asks for except paying for it."""
-        if not logic_buildings(unit) or not self.scenario.civilization.trains(unit):
+        if not unit.logic_buildings or not self.scenario.civilization.trains(unit):
             return False_()   # this scenario's civilisation does not have it
         if self.upgraded_away(unit):
             return False_()
@@ -82,7 +83,13 @@ class ScenarioUnitLogic:
                 & self.scenario.economy.can_sustain(sustained))
 
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
-        return Or(*[self.can_field(line, age) for line in target.countered_by])
+        ways: list[Rule] = []
+        for line in target.countered_by:
+            way = self.can_field(line, age)
+            if line in target.counter_techs:
+                way = way & self.scenario.techs.has_researched(target.counter_techs[line])
+            ways.append(way)
+        return Or(*ways)
 
     def starting_unit(self, line: Age2UnitLineData) -> list[Age2UnitData]:
         for unit in sorted(line.units, key=lambda unit: unit.tier):
