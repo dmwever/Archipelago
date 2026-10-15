@@ -25,7 +25,8 @@ from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
 from .locations.Techs import Age2TechData
 from .locations.VillagerJobs import Age2VillagerJobData
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
-                                    CivilizationUnits, GameCosts, ScenarioResources,
+                                    CivilizationUnits, GameCosts,
+                                    ScenarioExclusions, ScenarioResources,
                                     ScenarioStartupUnits,
                                     ScenarioTriggerUnits, TechCounters, UnitBuildings,
                                     UnitCounters,

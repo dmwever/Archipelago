@@ -9,7 +9,6 @@ from ...items.Items import Age2ItemData
 
 from ..ScenarioLogic import ScenarioStartingState
 
-
 if TYPE_CHECKING:
     from ..Logic import Logic
 

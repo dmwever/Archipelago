@@ -8,7 +8,6 @@ from ...items.Items import Age2ItemData
 
 from ..ScenarioLogic import ScenarioStartingState
 
-
 if TYPE_CHECKING:
     from ..Logic import Logic
 
@@ -21,7 +20,6 @@ class Genghis5StartingState(ScenarioStartingState):
 
         # One town centre, four villagers, three Mangudai and a Mangonel.
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = True_()
-
 
         # A scout rides in unasked early on.
         self.obtains_unit[Age2UnitData.SCOUT_CAVALRY] = True_()

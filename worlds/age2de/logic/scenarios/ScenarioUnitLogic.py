@@ -32,6 +32,8 @@ class ScenarioUnitLogic:
         """Everything training it asks for except paying for it."""
         if not unit.logic_buildings or not self.scenario.civilization.trains(unit):
             return False_()   # this scenario's civilisation does not have it
+        if unit in self.scenario.scenario.excluded_units:
+            return False_()   # the scenario forbids it
         if self.upgraded_away(unit):
             return False_()
         return ScenarioCanTrain(scenario=self.scenario.scenario, unit=unit)
@@ -41,8 +43,9 @@ class ScenarioUnitLogic:
             if successor.tier != unit.tier + 1:
                 continue
             tech = successor.upgrade_tech
-            if tech is None or not self.scenario.civilization.researches(tech):
-                continue  # none, or not this civilisation's, so it never fires
+            if (tech is None or not self.scenario.civilization.researches(tech)
+                    or tech in self.scenario.scenario.excluded_techs):
+                continue  # none, not this civilisation's, or forbidden - it never fires
             if self.scenario.techs.researched_at_start(tech):
                 return True   # strictly below the opening age, and not withheld
         return False
@@ -93,14 +96,15 @@ class ScenarioUnitLogic:
 
     def starting_unit(self, line: Age2UnitLineData) -> list[Age2UnitData]:
         for unit in sorted(line.units, key=lambda unit: unit.tier):
-            if self.scenario.civilization.trains(unit) and not self.upgraded_away(unit):
+            if (self.scenario.civilization.trains(unit) and unit not in self.scenario.scenario.excluded_units
+                    and not self.upgraded_away(unit)):
                 return [unit]
         return []
 
     def fieldable_tiers(self, line: Age2UnitLineData,
                         age: Age2AgeData) -> list[Age2UnitData]:
         theirs = [unit for unit in line.units
-                  if self.scenario.civilization.trains(unit)]
+                  if self.scenario.civilization.trains(unit) and unit not in self.scenario.scenario.excluded_units]
         good_enough = [unit for unit in theirs if unit.age >= age]
         if good_enough:
             return good_enough
