@@ -118,7 +118,7 @@ class EnabledCampaigns(OptionSet):
     """
     display_name = "Enabled Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
-    default = set((Age2CampaignData.ATTILA.campaign_name,))
+    default = set((Age2CampaignData.GENGHIS.campaign_name,))
 
 class ShuffleAges(DefaultOnToggle):
     """

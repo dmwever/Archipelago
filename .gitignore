@@ -201,3 +201,7 @@ Thumbs.db
 [Dd]esktop.ini
 /fuzz_output
 /worlds/age2de/fuzz/bench
+/.scratch
+worlds/age2de/CONTEXT.md
+worlds/age2de/docs/adr/0001-defeat-rules-live-in-per-player-logic.md
+worlds/age2de/docs/spec-trade-and-counter-options.md
