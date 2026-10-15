@@ -15,6 +15,37 @@ from ..Scenarios import Age2ScenarioData
 from ..Techs import Age2TechData
 from ..Units import Age2UnitData
 
+# Attila 1 and 2 withhold nothing of their own: what they gate is the base itself, and
+# has_vils carries that. The houses the Huns cannot build, and the fast fire ships they
+# cannot launch, belong to the civilisation and are already in CivilizationUnits.
+
+Age2ScenarioData.AP_ATTILA_3.excluded_buildings = [
+    Age2BuildingData.MARKET,
+]
+Age2ScenarioData.AP_ATTILA_3.excluded_units = [
+    Age2UnitData.TRADE_CART,
+]
+Age2ScenarioData.AP_ATTILA_3.excluded_techs = [
+    Age2TechData.CARAVAN,
+    Age2TechData.COINAGE,
+]
+
+# Joan 1 and 5 are fixed forces. Joan 2 and 3 withhold nothing; the mill technologies their
+# sheets mention are handed to the Franks, not kept from them.
+
+Age2ScenarioData.AP_JOAN_4.excluded_units = [
+    Age2UnitData.HAND_CANNONEER,
+    Age2UnitData.BOMBARD_CANNON,
+    Age2UnitData.CANNON_GALLEON,
+]
+Age2ScenarioData.AP_JOAN_4.excluded_techs = [
+    Age2TechData.SAPPERS,
+]
+
+Age2ScenarioData.AP_JOAN_6.excluded_techs = [
+    Age2TechData.SAPPERS,
+]
+
 # Genghis 1 is a fixed force: no economy at all, which fixed_force already says.
 
 Age2ScenarioData.AP_GENGHIS_2.excluded_buildings = [
