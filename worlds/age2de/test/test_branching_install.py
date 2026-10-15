@@ -21,14 +21,14 @@ from ..locations.Locations import (TYPE_TO_LOCATIONS, Age2LocationType,
 from ..locations.Scenarios import Age2ScenarioData
 from ..Options import ScenarioBranching
 
-BRANCHING_SCENARIOS = (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_ATTILA_4,
-                       Age2ScenarioData.AP_JOAN_2, Age2ScenarioData.AP_JOAN_3)
 NULL = chr(0)
 
 BRANCHING_TYPES = (Age2LocationType.OBJECTIVE_BRANCHING_ALL,
                    Age2LocationType.OBJECTIVE_BRANCHING_ANY)
 BRANCHING_LOCATIONS = [location for type in BRANCHING_TYPES
                        for location in TYPE_TO_LOCATIONS[type]]
+BRANCHING_SCENARIOS = tuple(dict.fromkeys(location.scenario
+                                          for location in BRANCHING_LOCATIONS))
 
 
 class FakeEffect:
