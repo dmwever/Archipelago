@@ -32,6 +32,28 @@ class TechPoolTestBase(unittest.TestCase):
         return world.pool.techs.shuffled
 
 
+class TestOnlyWhatAScenarioCanResearch(TechPoolTestBase):
+    """Sappers was a location in a Joan-only seed that nothing could reach: The Rising and A Perfect
+    Martyr withhold it, Joan 2 and 3 never climb past the Castle Age, and Joan 1 and 5 are fixed
+    forces."""
+
+    def test_joan_alone_has_no_sappers(self):
+        self.assertNotIn(Age2TechData.SAPPERS,
+                         self.pool(techsanity=Techsanity.option_all, enabled_campaigns={"Joan of Arc"}))
+
+    def test_every_location_is_researchable_somewhere(self):
+        for campaign in ("Attila the Hun", "Joan of Arc", "Genghis Khan"):
+            shuffled = self.pool(techsanity=Techsanity.option_all, enabled_campaigns={campaign})
+            scenarios = [scenario for scenario in self.world.pool.scenarios.included
+                         if not scenario.fixed_force]
+            for tech in shuffled:
+                with self.subTest(campaign=campaign, tech=tech.name):
+                    self.assertTrue(any(tech in CIV_TO_TECHS[scenario.civ]
+                                        and tech not in scenario.excluded_techs
+                                        and tech.age <= scenario.max_age
+                                        for scenario in scenarios))
+
+
 class TestTechPool(TechPoolTestBase):
     def test_techsanity_off_makes_no_locations(self):
         self.assertEqual(self.pool(techsanity=Techsanity.option_none), [])
@@ -241,6 +263,7 @@ class TestScenarioReachability(TechPoolTestBase):
         self.pool(techsanity=Techsanity.option_all,
                   existing_techs=ExistingTechs.option_only_find_units,
                   enabled_campaigns={"Joan of Arc"})
-        pool = TechPool(self.world.options, above, self.world.pool.civs)
+        pool = TechPool(self.world.options, above, self.world.pool.civs,
+                        self.world.pool.scenarios.included)
         self.assertTrue(pool.reachable(upgrade), upgrade.name)
         self.assertFalse(pool.reachable(generic), generic.name)

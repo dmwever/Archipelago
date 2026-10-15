@@ -93,7 +93,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
     def test_a_scenario_is_in_the_age_it_opens_in_and_no_lower_one(self):
         world = self.build(shuffle_ages=True)
         for scenario_logic in world.rules.logic.scenarios:
-            if scenario_logic.starting_state.fixed_force:
+            if scenario_logic.scenario.fixed_force:
                 continue
             opens_in = scenario_logic.scenario.vanilla_age
             for age, rule in self.rows(world, scenario_logic).items():
@@ -106,7 +106,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
     def test_a_scenario_has_started_past_every_age_below_the_one_it_opens_in(self):
         world = self.build(shuffle_ages=True)
         for scenario_logic in world.rules.logic.scenarios:
-            if scenario_logic.starting_state.fixed_force:
+            if scenario_logic.scenario.fixed_force:
                 continue
             opens_in = scenario_logic.scenario.vanilla_age
             for age in Age2AgeData:
@@ -118,7 +118,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
         # Joan 1 and Joan 5 are set pieces fought with what they hand you. No
         # base means no age, not even the one they open in.
         world = self.build(shuffle_ages=True)
-        fixed = [s for s in world.rules.logic.scenarios if s.starting_state.fixed_force]
+        fixed = [s for s in world.rules.logic.scenarios if s.scenario.fixed_force]
         self.assertEqual(sorted(s.scenario.name for s in fixed),
                          ["AP_JOAN_1", "AP_JOAN_5"])
         for scenario_logic in fixed:
@@ -131,7 +131,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
         world = self.build(shuffle_ages=True, techsanity=Techsanity.option_all,
                            existing_techs=ExistingTechs.option_start_in_dark_age)
         for scenario_logic in world.rules.logic.scenarios:
-            if scenario_logic.starting_state.fixed_force:
+            if scenario_logic.scenario.fixed_force:
                 continue
             with self.subTest(scenario=scenario_logic.scenario.name):
                 dark = scenario_logic.ages.can_reach(Age2AgeData.DARK).resolve(world)

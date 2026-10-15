@@ -28,7 +28,6 @@ class ScenarioStartingState:
     # A base is no use where you cannot stand: some scenarios must first reach the ground
     # they are meant to settle. Kept free of the economy, since has_base feeds it.
     meets_additional_base_requirements: Rule = field(default_factory=lambda: True_())
-    max_age: Age2AgeData = Age2AgeData.IMPERIAL
     age_playable: dict[Age2AgeData, Rule] = field(default_factory=dict)
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
@@ -37,7 +36,6 @@ class ScenarioStartingState:
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
     must_steal_base: Rule = field(default_factory=lambda: False_())
-    fixed_force: bool = False
     starting_gold_mine: Rule = field(default_factory=lambda: True_())
     starting_stone_mine: Rule = field(default_factory=lambda: True_())
     starting_trees: Rule = field(default_factory=lambda: True_())

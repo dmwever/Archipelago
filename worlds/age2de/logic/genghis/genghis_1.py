@@ -20,7 +20,6 @@ class Genghis1StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ItemData.GENGHIS_KHAN.item_name)
         # No villagers: the map holds no gold or stone either, so there is nothing to gather.
         self.has_vils = False_()
-        self.fixed_force = True
 
         self.obtains_unit[Age2UnitData.CAVALRY_ARCHER] = True_()
         self.obtains_unit[Age2UnitData.LIGHT_CAVALRY] = True_()

@@ -120,7 +120,7 @@ class TestFixedForceNeedsNoSpecialCase(EconomyTestBase):
     def test_a_fixed_force_scenario_gathers_nothing(self):
         self.build()
         for scenario in (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5):
-            self.assertTrue(scenario.logic(self.world.rules.logic).fixed_force)
+            self.assertTrue(scenario.fixed_force)
             for resource in Resource:
                 with self.subTest(f"{scenario.name}.{resource.name}"):
                     self.assertTrue(self.is_false(self.economy(scenario).has_easy_source(resource)))
@@ -320,7 +320,7 @@ class TestEveryScenarioCanLive(EconomyTestBase):
 
     def playable(self):
         return [scenario for scenario in Age2ScenarioData
-                if not self.world.rules.logic.for_scenario(scenario).starting_state.fixed_force]
+                if not scenario.fixed_force]
 
     def easy_answer(self, scenario: Age2ScenarioData, resource: Resource):
         """The whole easy question - gathering, the scenario's declared sources, and trade."""

@@ -24,7 +24,7 @@ class Age2Pool:
         self.civs = CivilizationPool(self.scenarios.included)
         self.ages = AgePool(world.options, self.scenarios.included)
         self.buildings = BuildingPool(world.options, self.civs)
-        self.techs = TechPool(world.options, self.ages.earliest, self.civs)
+        self.techs = TechPool(world.options, self.ages.earliest, self.civs, self.scenarios.included)
         self.units = UnitPool(world.options, self.civs, self.scenarios.included)
         self.resources = ResourcePool(world.options, world)
         self.traps = TrapPool(world.options, world)

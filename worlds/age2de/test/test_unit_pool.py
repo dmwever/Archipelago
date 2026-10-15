@@ -342,8 +342,31 @@ class TestHeroes(UnitPoolTestBase):
         self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).pool.units.heroes)
         self.assertFalse(self.build(shuffle_villager=ShuffleVillager.option_yes)
                          .pool.units.heroes)
-        world = self.build(unitsanity=Unitsanity.option_all)
-        self.assertEqual(len(world.pool.units.heroes), len(list(Age2HeroData)))
+
+    def assert_every_granted_hero_is_a_check(self, *campaigns: str) -> None:
+        """Under unitsanity all, the heroes are exactly those some included scenario hands over -
+        at the start or by a trigger. It once counted every hero in the game, so a campaign that
+        was not in the seed still owed its heroes."""
+        world = self.build(unitsanity=Unitsanity.option_all, enabled_campaigns=set(campaigns),
+                           starting_campaigns={campaigns[0]})
+        granted = {grant for scenario in world.pool.scenarios.included
+                   for grant in scenario.startup_units + scenario.trigger_units
+                   if isinstance(grant, Age2HeroData)}
+        self.assertTrue(granted, f"{campaigns} hands over no hero")
+        self.assertEqual(granted, set(world.pool.units.heroes))
+
+    def test_attila_alone_has_its_own_heroes(self):
+        self.assert_every_granted_hero_is_a_check("Attila the Hun")
+
+    def test_joan_alone_has_her_own_heroes(self):
+        self.assert_every_granted_hero_is_a_check("Joan of Arc")
+
+    def test_genghis_alone_has_his_own_heroes(self):
+        self.assert_every_granted_hero_is_a_check("Genghis Khan")
+
+    def test_every_campaign_together_has_every_hero(self):
+        self.assert_every_granted_hero_is_a_check("Attila the Hun", "Joan of Arc", "Genghis Khan")
+        self.assertEqual(set(Age2HeroData), set(self.world.pool.units.heroes))
 
     def test_a_hero_has_one_region_and_an_entrance_per_granting_scenario(self):
         world = self.build(unitsanity=Unitsanity.option_all)

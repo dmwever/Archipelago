@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from rule_builder.rules import False_, Has, HasAny, Rule, True_
 from ...locations.Buildings import Age2BuildingData
-from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
 from ...locations.Units import Age2UnitData as U
@@ -22,7 +21,6 @@ class Attila1StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has("Attila the Hun Campaign")
-        self.max_age = Age2AgeData.CASTLE
         self.has_vils = self.has_bledas_camp | self.alternate_vils
         self.has_base = self.has_bledas_camp   # the camp is a base; Attila's is only villagers
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = self.has_bledas_camp

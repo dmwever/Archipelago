@@ -1,8 +1,10 @@
 from functools import cached_property
+from typing import Iterable
 
 from ...Options import Age2Options, ExistingTechs, ShuffleUniqueTechs, Techsanity
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
+from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData, TechOption, BUILDING_TO_TECHS
 from ...locations.connections.CivilizationTechs import CIV_TO_TECHS
 from .CivilizationPool import CivilizationPool
@@ -17,13 +19,19 @@ MODE_TO_OPTION = {
 class TechPool:
 
     def __init__(self, options: Age2Options, earliest_age: Age2AgeData,
-                 civs: CivilizationPool):
+                 civs: CivilizationPool, scenarios: Iterable[Age2ScenarioData]):
         self._techsanity = options.techsanity
         self._shuffle_uniques = options.shuffle_unique_techs
         self._existing_techs_mode = options.existing_techs
         self._earliest_age = earliest_age
         self._civs = civs
-        self._researchable = {tech for civ in civs.included for tech in CIV_TO_TECHS[civ]}
+        # A technology some included scenario can research: its civilisation has it, the scenario
+        # does not withhold it, and the scenario reaches its age. A fixed force researches nothing.
+        self._researchable = {
+            tech for scenario in scenarios if not scenario.fixed_force
+                for tech in CIV_TO_TECHS[scenario.civ]
+                    if tech not in scenario.excluded_techs and tech.age <= scenario.max_age
+        }
     
     def in_mode(self, tech: Age2TechData) -> bool:
         """Techsanity. Units and Generic are disjoint halves of All."""

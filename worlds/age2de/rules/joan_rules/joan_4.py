@@ -17,33 +17,21 @@ class Joan4Rules(ScenarioRules):
     
     def set_rules(self):
         super().set_rules()
+        # The Rising withholds the Cannon Galleon, and the Franks have no other ship that shoots
+        # buildings: green and orange fall to a land army only.
         can_beat_green: Rule = (
-            (
-                self.scenario_logic.has_base() &
-                self.scenario_logic.military.counters_building() &
-                self.scenario_logic.military.has_navy(Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
-                self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL)
-            ) |
-            (
-                self.scenario_logic.has_base() &
-                self.scenario_logic.military.has_navy(Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.has_naval_bombardment()
-            )
+            self.scenario_logic.has_base() &
+            self.scenario_logic.military.counters_building() &
+            self.scenario_logic.military.has_navy(Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL)
         )
         can_beat_orange: Rule = (
-            (
-                self.scenario_logic.has_base() &
-                self.scenario_logic.military.has_siege() &
-                self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
-                self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
-            )|
-            (
-                self.scenario_logic.has_base() &
-                self.scenario_logic.military.has_navy(Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.has_naval_bombardment()
-            )
+            self.scenario_logic.has_base() &
+            self.scenario_logic.military.has_siege() &
+            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
+            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
         )
         can_beat_yellow: Rule = (
             self.scenario_logic.has_base() &

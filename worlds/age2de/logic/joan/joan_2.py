@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import False_, Has, HasAny, Rule, True_
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
-from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
 
 from ...locations.Units import Age2UnitData as U
@@ -22,7 +21,6 @@ class Joan2StartingState(ScenarioStartingState):
         has_carts = Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
         has_orleans = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
 
-        self.max_age = Age2AgeData.CASTLE
         self.has_base = has_orleans
         self.has_vils = has_orleans
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = has_orleans

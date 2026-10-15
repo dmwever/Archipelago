@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from rule_builder.rules import False_, Has, HasAny, Rule, True_
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
-from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData, Resource
 
 from ..ScenarioLogic import ScenarioStartingState
@@ -18,7 +17,6 @@ class Attila3StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 2)
-        self.max_age = Age2AgeData.CASTLE
         self.has_base = True_()   # a Town Centre stands on the map at player one
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = True_()
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = True_()

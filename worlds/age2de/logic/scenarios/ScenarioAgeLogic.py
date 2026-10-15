@@ -66,7 +66,7 @@ class ScenarioAgeLogic:
     def can_pay_for(self, age: Age2AgeData) -> Rule:
         """Can the scenario pay for the age. Returns True if starting after it."""
         state = self.scenario.starting_state
-        if state.fixed_force:
+        if self.scenario.scenario.fixed_force:
             return False_()
         if age <= self.start_age or age in state.age_playable:
             return True_()
@@ -92,7 +92,7 @@ class ScenarioAgeLogic:
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)
 
     def start_past(self, age: Age2AgeData) -> Rule:
-        if self.scenario.starting_state.fixed_force:
+        if self.scenario.scenario.fixed_force:
             return False_()
         if self.world.pool.ages.starts_in(self.scenario.scenario) > age:
             return True_() & VANILLA_AGE_START
@@ -101,8 +101,7 @@ class ScenarioAgeLogic:
     # -- what the scenario questions resolve to, and the memo behind can_reach_structurally
 
     def can_research(self, age: Age2AgeData) -> Rule:
-        state = self.scenario.starting_state
-        if state.fixed_force or age > state.max_age:
+        if self.scenario.scenario.fixed_force or age > self.scenario.scenario.max_age:
             return False_()
         rule = self.climb(age)
         if age <= self.world.pool.ages.starts_in(self.scenario.scenario):
@@ -111,7 +110,7 @@ class ScenarioAgeLogic:
 
     def _can_reach(self, age: Age2AgeData) -> Rule:
         state = self.scenario.starting_state
-        if state.fixed_force or age > state.max_age:
+        if self.scenario.scenario.fixed_force or age > self.scenario.scenario.max_age:
             return False_()
         override = state.age_playable.get(age)
         if override is not None:
