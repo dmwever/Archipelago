@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from rule_builder.rules import False_, Has, Rule, True_
 from ...locations.Locations import Age2ScenarioLocationData
+from ...locations.Techs import Age2TechData
+from ...locations.Units import Age2UnitData
 from ...items.Items import Age2ItemData
 
 from ..ScenarioLogic import ScenarioStartingState
@@ -19,3 +21,8 @@ class Genghis1StartingState(ScenarioStartingState):
         # No villagers: the map holds no gold or stone either, so there is nothing to gather.
         self.has_vils = False_()
         self.fixed_force = True
+
+        self.obtains_unit[Age2UnitData.CAVALRY_ARCHER] = True_()
+        self.obtains_unit[Age2UnitData.LIGHT_CAVALRY] = True_()
+
+        self.obtains_tech[Age2TechData.CHEMISTRY] = True_()

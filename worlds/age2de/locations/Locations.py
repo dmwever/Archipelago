@@ -170,16 +170,60 @@ class Age2ScenarioLocationData(enum.IntEnum):
     JOAN6_FRENCH_ARTILLERY =        20603, "Locate the French Artillery",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.OBJECTIVE
     JOAN6_BURGUNDIAN_TOWN =         20604, "Capture the Burgundian Town",               Age2ScenarioData.AP_JOAN_6, Age2LocationType.SIDE_QUEST
 
-    # Genghis Khan. Victory only for now - the objectives are not authored yet. A VICTORY
-    # location is not optional: add_scenario_region only creates the "Complete <scenario>"
-    # event and its "Unlock Next Scenario" item for scenarios that have one, and without that
-    # the campaign does not chain.
     GEN1_VICTORY =                  30100, "Victory",                                   Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.VICTORY
+    GEN1_RECRUIT_ONE_TRIBE =        30101, "Recruit One Tribe",                         Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'RecruitOneTribe'
+    GEN1_RECRUIT_TWO_TRIBES =       30102, "Recruit Two Tribes",                        Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'RecruitTwoTribes'
+    GEN1_RECRUIT_THREE_TRIBES =     30103, "Recruit Three Tribes",                      Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'RecruitThreeTribes'
+    GEN1_ANY_RELIC =                30104, "Pick Up Any Relic",                         Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ANY, 'AnyRelic'
+    GEN1_RECRUIT_KEREYIDS =         30105, "Recruit the Kereyids",                      Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'RecruitBlue'
+    GEN1_RECRUIT_TAYICHIUDS =       30106, "Recruit the Tayichi'uds",                   Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'RecruitPurple'
+    GEN1_RECRUIT_UNGIRRADS =        30107, "Recruit the Ungirrads",                     Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'RecruitGrey'
+    GEN1_RECRUIT_NAIMAN =           30108, "Recruit the Naiman",                        Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'RecruitGreen'
+    GEN1_RECRUIT_UIGHURS =          30109, "Recruit the Uighurs",                       Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'RecruitCyan'
+    GEN1_RELIC_RED_MONASTERY =      30110, "Pick Up the Relic at the Red Monastery",    Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'RedMonasteryRelic'
+    GEN1_RELIC_WOLF =               30111, "Pick Up the Relic Surrounded by Wolves",    Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'WolfRelic'
+    GEN1_RELIC_PALISADED =          30112, "Pick Up the Heavily Defended Relic",        Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.OBJECTIVE_BRANCHING_ALL, 'PalisadedRelic'
+    GEN1_FLOCK_BY_BLUE_1 =          30113, "Find the Flock Near Blue 1",                Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_BY_BLUE_2 =          30114, "Find the Flock Near Blue 2",                Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_BY_BLUE_3 =          30115, "Find the Flock Near Blue 3",                Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_KARA_KHITAI_HERD =         30116, "Steal the Kara-Khitai Herd",                Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_BY_GREY =            30117, "Find the Flock by Grey",                    Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_OPEN_STEPPE =        30118, "Find the Flock in the Open Steppe",         Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_RED_MONASTERY =      30119, "Find the Flock by the Red Monastery",       Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_BY_GREEN =           30120, "Find the Flock by Green",                   Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_SOUTHEAST =          30121, "Find the Southeast Flock",                  Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    GEN1_FLOCK_BY_PURPLE =          30122, "Find the Flock by Purple",                  Age2ScenarioData.AP_GENGHIS_1, Age2LocationType.SIDE_QUEST
+    
     GEN2_VICTORY =                  30200, "Victory",                                   Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.VICTORY
+    GEN2_KUSHLUK_FLEES =            30201, "Make Kushluk Flee",                         Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.OBJECTIVE
+    GEN2_TAYICHIUD_VILLAGE =        30202, "Take the Tayichi'ud Village",               Age2ScenarioData.AP_GENGHIS_2, Age2LocationType.SIDE_QUEST
+    
     GEN3_VICTORY =                  30300, "Victory",                                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.VICTORY
+    GEN3_DEFEAT_TANGUTS =           30301, "Defeat the Tanguts",                        Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_DEFEAT_XI_XIA =            30302, "Defeat the Xi Xia",                         Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_DEFEAT_JIN =               30303, "Defeat the Jin",                            Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_DEFEAT_SONG =              30304, "Defeat the Song",                           Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.OBJECTIVE
+    GEN3_FIND_ENGINEERS =           30305, "Find the Engineers",                        Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
+    GEN3_FIND_BOMBARDS =            30306, "Find the Bombard Cannons",                  Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
+    GEN3_FIND_TRANSPORT =           30307, "Find the Transport Ship",                   Age2ScenarioData.AP_GENGHIS_3, Age2LocationType.SIDE_QUEST
+    
     GEN4_VICTORY =                  30400, "Victory",                                   Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.VICTORY
+    GEN4_DEFEAT_RUSSIANS =          30401, "Defeat the Russians",                       Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    GEN4_DEFEAT_KHWARAZM =          30402, "Defeat the Khwarazm",                       Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    GEN4_KIPCHAKS_SURRENDER =       30403, "Make the Kipchaks Surrender",               Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    GEN4_ASSASSINATE_SHAH =         30404, "Assassinate the Shah",                      Age2ScenarioData.AP_GENGHIS_4, Age2LocationType.OBJECTIVE
+    
     GEN5_VICTORY =                  30500, "Victory",                                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.VICTORY
+    GEN5_GERMAN_FLAG =              30501, "Capture the German Flag",                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_POLISH_FLAG =              30502, "Capture the Polish Flag",                   Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BOHEMIAN_FLAG =            30503, "Capture the Bohemian Flag",                 Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BUILD_ONE_CASTLE =         30504, "Build One Castle",                          Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BUILD_TWO_CASTLES =        30505, "Build Two Castles",                         Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_BUILD_THREE_CASTLES =      30506, "Build Three Castles",                       Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.OBJECTIVE
+    GEN5_RESCUE_HERMIT =            30507, "Rescue the Hermit",                         Age2ScenarioData.AP_GENGHIS_5, Age2LocationType.SIDE_QUEST
+    
     GEN6_VICTORY =                  30600, "Victory",                                   Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.VICTORY
+    GEN6_SUBOTAI_ARRIVES =          30601, "Subotai Arrives",                           Age2ScenarioData.AP_GENGHIS_6, Age2LocationType.OBJECTIVE
 
 location_from_id = {_location.id: _location for _location in Age2ScenarioLocationData}
 location_name_to_id = {_location.global_name(): _location.id for _location in Age2ScenarioLocationData}

@@ -81,14 +81,38 @@ SCENARIO_TO_STARTUP_UNITS: dict[Age2ScenarioData, list[ScenarioUnit]] = {
         Age2EscortUnitData.CART,
         Age2HeroData.GUY_JOSSELYNE,
     ],
-    # Genghis Khan: no startup units authored yet. The assert below wants an entry for every
-    # scenario, empty or not.
+    # Temujin owns nothing but his yurts when the map opens - the eight Kereyid riders are
+    # Ong Khan's until trigger [20] hands them over, so they are trigger units, as Attila is.
     Age2ScenarioData.AP_GENGHIS_1: [],
-    Age2ScenarioData.AP_GENGHIS_2: [],
-    Age2ScenarioData.AP_GENGHIS_3: [],
-    Age2ScenarioData.AP_GENGHIS_4: [],
-    Age2ScenarioData.AP_GENGHIS_5: [],
-    Age2ScenarioData.AP_GENGHIS_6: [],
+    Age2ScenarioData.AP_GENGHIS_2: [
+        Age2UnitData.LIGHT_CAVALRY,
+        Age2UnitData.CAVALRY_ARCHER,
+        Age2UnitData.CAMEL_RIDER,
+    ],
+    Age2ScenarioData.AP_GENGHIS_3: [
+        Age2UnitData.CAVALRY_ARCHER,
+        Age2UnitData.LIGHT_CAVALRY,
+    ],
+    Age2ScenarioData.AP_GENGHIS_4: [
+        Age2UnitData.VILLAGER_MALE,
+        Age2UnitData.VILLAGER_FEMALE,
+        Age2UnitData.CAVALRY_ARCHER,
+        Age2UnitData.TRADE_CART,
+        Age2HeroData.SUBOTAI,
+        Age2HeroData.HUNTING_WOLF,
+    ],
+    Age2ScenarioData.AP_GENGHIS_5: [
+        Age2UnitData.VILLAGER_MALE,
+        Age2UnitData.MANGUDAI,
+        Age2UnitData.MANGONEL,
+    ],
+    Age2ScenarioData.AP_GENGHIS_6: [
+        Age2UnitData.VILLAGER_MALE,
+        Age2UnitData.VILLAGER_FEMALE,
+        Age2UnitData.LIGHT_CAVALRY,
+        Age2UnitData.MANGUDAI,
+        Age2HeroData.SABOTEUR,
+    ],
 }
 
 
