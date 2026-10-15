@@ -49,12 +49,13 @@ class UnitData:
     def __init__(self, locations: Iterable[UnitLocation] = (),
                  civs: Iterable[Age2CivData] = (), mode: int = Unitsanity.option_none,
                  items_mode: int = UnitsanityItems.option_unit_line, tag: str = None,
-                 techsanity: int = Techsanity.option_none):
+                 techsanity: int = Techsanity.option_none, caveman: bool = False):
         self._locations = set(locations)
         self._civs = tuple(civs)
         self._mode = mode
         self._items_mode = items_mode
         self._techsanity = techsanity
+        self._caveman = caveman
         self._tag = tag
         self._trainable = {unit for civ in self._civs for unit in CIV_TO_UNITS[civ]}
         if Age2UnitData.VILLAGER_MALE in self._trainable:
@@ -102,7 +103,16 @@ class UnitData:
         return tuple(BUILDING_TO_UNITS_ITEM[building].id for building in unit.buildings or ()
                      if building in BUILDING_TO_UNITS_ITEM and self.civs_build(building))
 
+    def is_granted_only(self, unit: Age2UnitData) -> bool:
+        """No civilisation in the seed trains it, so only a scenario hands one over. The pool
+        holds its line item only under caveman, which takes a granted unit away until its
+        items arrive; otherwise it is owned when granted, the way a hero is."""
+        return unit not in self._trainable and not self._caveman
+
     def unit_row(self, unit: Age2UnitData, location_id: int) -> Row:
+        if self.is_granted_only(unit):
+            return Row(unit, location_id, self.NO_LINE, Age2AgeData.DARK.value, 0,
+                       self.NO_UPGRADE_ITEM, True, (), (), tuple(unit.variant_game_ids or ()))
         items = self.items_for(unit)
         if len(items) > self.MAX_ITEMS:
             raise ValueError(

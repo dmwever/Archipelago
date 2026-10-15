@@ -13,8 +13,8 @@ FRANKS = (Age2CivData.FRANKS,)
 
 def table(places, mode=Unitsanity.option_all,
           items=UnitsanityItems.option_unit_line, civs=FRANKS, tag=TAG,
-          techsanity=Techsanity.option_none):
-    return UnitData(places, civs, mode, items, tag, techsanity)
+          techsanity=Techsanity.option_none, caveman=False):
+    return UnitData(places, civs, mode, items, tag, techsanity, caveman)
 
 
 class TestWhichUnitsGetARow(unittest.TestCase):
@@ -130,9 +130,27 @@ class TestRender(unittest.TestCase):
                           rendered)
 
     def test_a_unit_the_civilisation_cannot_train_is_marked_per_civ(self):
-        rendered = table([Age2UnitData.MANGUDAI]).render()
+        rendered = table([Age2UnitData.MANGUDAI], caveman=True).render()
         self.assertIn(f"addUnitUntrainable({Age2UnitData.MANGUDAI.game_id}, "
                       f"{Age2CivData.FRANKS.game_id});", rendered)
+
+    def test_a_unit_no_civilisation_trains_is_held_like_a_hero(self):
+        """Only a scenario can hand the Franks a Mangudai, so the pool holds no Mangudai Line
+        item. Gating the row on it would have the game wait for an item the seed never
+        contains; like a hero, it is owned when granted."""
+        [row] = table([Age2UnitData.MANGUDAI]).rows()
+        self.assertEqual(row.items, ())
+        self.assertEqual(row.line_id, UnitData.NO_LINE)
+        self.assertEqual(row.untrainable_civs, ())
+        self.assertTrue(row.caveman_exempt)
+        self.assertEqual(row.location_id, Age2UnitData.MANGUDAI.id)
+
+    def test_under_caveman_a_unit_no_civilisation_trains_keeps_its_gate(self):
+        """Caveman takes a granted unit away until its items arrive, so the pool carries the
+        line item for it and the row has to wait for that item."""
+        [row] = table([Age2UnitData.MANGUDAI], caveman=True).rows()
+        self.assertEqual(row.items, (Age2UnitLineData.MANGUDAI_LINE.item.id,))
+        self.assertFalse(row.caveman_exempt)
 
     def test_a_unit_the_civilisation_trains_is_not_marked(self):
         rendered = table([Age2UnitData.THROWING_AXEMAN]).render()

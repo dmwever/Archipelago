@@ -51,7 +51,7 @@ class UnitPoolTestBase(unittest.TestCase):
 
 class TestUnitPool(UnitPoolTestBase):
     def test_unitsanity_off_makes_no_unit_locations(self):
-        world = self.build()
+        world = self.build(unitsanity=Unitsanity.option_none)
         self.assertEqual(self.own_locations(world), [])
         self.assertEqual(self.unit_items(world), [])
 
@@ -80,12 +80,14 @@ class TestUnitPool(UnitPoolTestBase):
         self.assertFalse(world.unit_regions.shuffled_villager)
 
     def test_yes_checks_the_line_and_professions_split_it_by_sex(self):
-        plain = self.build(shuffle_villager=ShuffleVillager.option_yes)
+        plain = self.build(shuffle_villager=ShuffleVillager.option_yes,
+                           unitsanity=Unitsanity.option_none)
         self.assertEqual(sorted(self.own_locations(plain)),
                          sorted([Age2UnitLineData.VILLAGER_MALE_LINE.location_name,
                                  Age2UnitLineData.VILLAGER_FEMALE_LINE.location_name]))
 
-        jobs = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        jobs = self.build(shuffle_villager=ShuffleVillager.option_include_professions,
+                          unitsanity=Unitsanity.option_none)
         placed = set(self.own_locations(jobs))
         # Two idle villagers and ten of the twelve jobs, twice. The Herder works a Pasture,
         # the Gurjaras' building and nobody else's; the Oyster Gatherer wants an oyster, and
@@ -186,7 +188,8 @@ class TestUnitItems(UnitPoolTestBase):
                      UnitsanityItems.option_buildings):
             for villager in (ShuffleVillager.option_yes,
                              ShuffleVillager.option_include_professions):
-                world = self.build(shuffle_villager=villager, unitsanity_items=mode)
+                world = self.build(shuffle_villager=villager, unitsanity_items=mode,
+                                   unitsanity=Unitsanity.option_none)
                 expected = ([town_centre, villager_item]
                             if mode == UnitsanityItems.option_buildings else [villager_item])
                 self.assertEqual([item.item_name for item in self.unit_items(world)],

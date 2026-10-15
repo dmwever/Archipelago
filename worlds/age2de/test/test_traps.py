@@ -16,6 +16,7 @@ from BaseClasses import ItemClassification
 
 from . import bases
 from .. import Age2World
+from ..Options import TrapDifficulty
 from ..items import Items
 from ..locations.Campaigns import Age2CampaignData
 
@@ -57,12 +58,12 @@ def resource_totals(itempool) -> Counter:
     return totals
 
 
-class TestTrapsAreOptIn(bases.Age2TestBase):
-    options = dict(BIG_SEED)
+class TestTrapsCanBeTurnedOff(bases.Age2TestBase):
+    options = {**BIG_SEED, "trap_difficulty": TrapDifficulty.option_no_traps}
 
-    def test_no_traps_without_the_option(self) -> None:
+    def test_no_traps_with_the_option_off(self) -> None:
         self.assertEqual(Counter(), trap_counts(self.multiworld.itempool),
-                         "traps reached the pool with trap_difficulty left at its default")
+                         "traps reached the pool with trap_difficulty set to no traps")
 
 
 class TestTrapsReachThePool(bases.Age2TestBase):

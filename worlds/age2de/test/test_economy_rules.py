@@ -8,6 +8,7 @@ from BaseClasses import CollectionState
 from rule_builder.rules import False_, True_
 
 from . import bases
+from ..Options import Techsanity, Unitsanity
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections.ScenarioResources import Tier, total
@@ -269,10 +270,13 @@ class TestTheQuestionIsShared(EconomyTestBase):
 
     def test_the_answers_stay_within_budget(self):
         """The cache is meant to grow with the campaigns enabled and no faster. Each one costs
-        about three hundred and forty answers - 331 for Attila alone, 643 with Joan, 1002 with
-        Genghis - so a per-campaign ceiling catches the shape going wrong rather than the world
-        getting bigger."""
-        self.build()
+        about three hundred answers - 317 for Attila alone, 594 with Joan, 918 with Genghis - so
+        a per-campaign ceiling catches the shape going wrong rather than the world getting bigger.
+
+        Techsanity and unitsanity are off because each sanity asks its own questions of every
+        scenario: with their defaults a campaign costs about nine hundred and thirty, still
+        linear, but the ceiling is calibrated without them."""
+        self.build(techsanity=Techsanity.option_none, unitsanity=Unitsanity.option_none)
         self.assertLess(len(self.world.rules.logic.scenario_answers), 400 * len(self.campaigns))
 
 

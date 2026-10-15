@@ -8,6 +8,7 @@ from ..locations.UnitLocations import unit_location
 from ..items.Items import Age2ItemData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
+from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
 from ..locations.connections.LocationMapping import location_name_to_id
 from .test_unit_pool import UnitPoolTestBase
 
@@ -33,7 +34,8 @@ class UnitTableAgreementBase(UnitPoolTestBase):
     def table_for(self, world) -> UnitData:
         installed = self.installed(world)
         return UnitData(self.places(world), world.pool.civs.included,
-                        installed[SlotData.US_MODE], installed[SlotData.US_ITEMS], "a1b2c3d4")
+                        installed[SlotData.US_MODE], installed[SlotData.US_ITEMS], "a1b2c3d4",
+                        caveman=bool(installed[SlotData.US_CAVEMAN]))
 
     def place_name(self, place) -> str:
         for attribute in ("unit_name", "job_name", "hero_name", "escort_name", "line_name"):
@@ -71,10 +73,14 @@ class TestTheGameWaitsForItemsTheSeedContains(UnitTableAgreementBase):
                         f"{self.place_name(row.unit)} waits for an item the seed "
                         "never contains")
 
-    def test_no_unit_is_gated_by_nothing(self):
+    def test_no_trainable_unit_is_gated_by_nothing(self):
+        """A unit no civilisation in the seed trains is the exception: only a scenario hands
+        one over, and like a hero it is owned when granted."""
         for world in self.every_combination():
+            trainable = {unit for civ in world.pool.civs.included for unit in CIV_TO_UNITS[civ]}
             ungated = [row.unit.unit_name for row in self.table_for(world).rows()
-                       if not row.items and isinstance(row.unit, Age2UnitData)]
+                       if not row.items and isinstance(row.unit, Age2UnitData)
+                       and row.unit in trainable]
             self.assertEqual(ungated, [])
 
     def test_every_option_combination_installs(self):

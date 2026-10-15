@@ -164,8 +164,9 @@ class TestCounters(Age2RuleTestBase):
         siege = attila_1.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
         knight = attila_1.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
         # The Huns never research Redemption, so their monks answer Knights but never Mangonels.
-        self.assertNotIn("can train a Monk", siege.resolve(world).explain_str())
-        self.assertIn("can train a Monk", knight.resolve(world).explain_str())
+        # counters() is named, and a name explains as its label alone: read the rule behind it.
+        self.assertNotIn("can field the Monk Line", siege.resolve(world).answer.explain_str())
+        self.assertIn("can field the Monk Line", knight.resolve(world).answer.explain_str())
 
     def test_the_demolition_ship_falls_to_galleys_and_turtle_ships(self):
         for counter in (Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.TURTLE_SHIP_LINE):

@@ -225,7 +225,8 @@ class InstallHandler(FolderHandler):
             target.write_text(UnitData().render(), encoding="utf-8")
             return target
         data = UnitData(self._unit_places, self._civs, options[SlotData.US_MODE],
-                        options[SlotData.US_ITEMS], self._tag, options[SlotData.TS_MODE])
+                        options[SlotData.US_ITEMS], self._tag, options[SlotData.TS_MODE],
+                        bool(options[SlotData.US_CAVEMAN]))
         target.write_text(data.render(), encoding="utf-8")
         return target
 
