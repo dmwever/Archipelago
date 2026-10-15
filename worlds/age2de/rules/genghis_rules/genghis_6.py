@@ -1,5 +1,9 @@
+from rule_builder.rules import Rule
+
+from ...locations.Ages import Age2AgeData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
+from ...locations.UnitLines import Age2UnitLineData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -9,13 +13,22 @@ class Genghis6Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        # No objectives are authored for this chapter yet, so winning it asks only for a base.
-        # The base class sets the entrance rule and nothing else - the VICTORY location and its
-        # paired "Complete ..." event have to be ruled by hand, or the next chapter unlocks free.
-        can_beat_scenario = self.scenario_logic.has_base()
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN6_VICTORY],
-                            can_beat_scenario)
-        self.world.set_rule(
-            self.world.get_location(
-                "Complete " + Age2ScenarioData.AP_GENGHIS_6.scenario_name),
-            can_beat_scenario)
+        military = self.scenario_logic.military
+
+        can_kill_purple: Rule = (
+            self.scenario_logic.has_base() &
+            military.has_military(Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.MAGYAR_HUSZAR_LINE, Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
+            military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.IMPERIAL) &
+            military.has_siege() &
+            self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
+        )
+
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN6_VICTORY], can_kill_purple)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.GEN6_VICTORY.scenario.scenario_name), can_kill_purple)

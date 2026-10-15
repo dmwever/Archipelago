@@ -18,12 +18,16 @@ class ScenarioTechLogic:
         self.world = scenario.logic.world
 
     def can_research(self, tech: Age2TechData) -> Rule:
-        return self.can_research_structurally(tech) & self.scenario.economy.can_pay(tech.cost)
+        return (self.scenario.obtains_tech(tech)
+                | (self.can_research_structurally(tech)
+                   & self.scenario.economy.can_pay(tech.cost)))
 
     def can_research_structurally(self, tech: Age2TechData) -> Rule:
         """Everything researching it asks for except paying for it."""
         if not self.scenario.civilization.researches(tech):
             return False_()
+        if tech in self.scenario.scenario.excluded_techs:
+            return False_()   # the scenario forbids it
         return ScenarioCanResearch(scenario=self.scenario.scenario, tech=tech)
 
     def researched_at_start(self, tech: Age2TechData) -> bool:
@@ -35,6 +39,8 @@ class ScenarioTechLogic:
     def has_researched(self, tech: Age2TechData) -> Rule:
         if not self.scenario.civilization.researches(tech):
             return False_()
+        if tech in self.scenario.scenario.excluded_techs:
+            return False_()   # the scenario forbids it
         if self.researched_at_start(tech):
             return True_()
         rule = self.can_research(tech)
@@ -48,6 +54,8 @@ class ScenarioTechLogic:
     def available(self, tech: Age2TechData, age: Rule) -> Rule:
         if not self.scenario.civilization.researches(tech):
             return False_()   # not this civilisation's to research
+        if tech in self.scenario.scenario.excluded_techs:
+            return False_()   # the scenario forbids it
         rule = age
         if tech.buildings:
             rule = rule & Or(*[self.scenario.has_building(building)

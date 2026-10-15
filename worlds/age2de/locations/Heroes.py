@@ -3,20 +3,7 @@ import enum
 
 @enum.unique
 class Age2HeroData(enum.IntEnum):
-    """The named characters a scenario hands the player, for unitsanity: all.
-
-    Scoped to heroes a scenario actually grants rather than to everything the game flags as one -
-    the unit data marks 244 heroes across every campaign, and all but these twelve belong to
-    campaigns this world does not carry. A campaign added later brings its own.
-
-    Locations only. A hero is never trainable, never an item, never caveman'd, belongs to no line
-    and needs no upgrade token, so none of the invariants that hold over Age2UnitData apply. That
-    is why these sit in their own enum rather than as units with a hero exemption bolted onto
-    every one of those rules - the same reasoning as Age2VillagerJobData.
-
-    Which scenario hands over which hero, and whether at the start or by a trigger, lives in
-    connections/ScenarioStartupUnits.py and ScenarioTriggerUnits.py.
-    """
+    """The named characters a scenario hands the player"""
 
     def __new__(cls, id: int, *args, **kwargs):
         value = id
@@ -42,7 +29,15 @@ class Age2HeroData(enum.IntEnum):
     CONSTABLE_RICHEMONT = 592, "Own Constable Richemont", "Constable Richemont", 646
     GUY_JOSSELYNE       = 593, "Own Guy Josselyne", "Guy Josselyne", 648
     JEAN_BUREAU         = 594, "Own Jean Bureau", "Jean Bureau", 650
+    
+    # Attila the Hun
     ATTILA_THE_HUN      = 595, "Own Attila the Hun", "Attila the Hun", 777
+    
+    # Genghis Khan.
+    SUBOTAI             = 602, "Own Subotai", "Subotai", 698
+    SABOTEUR            = 603, "Own Saboteur", "Saboteur", 706
+    KHAN                = 604, "Own Khan", "Khan", 1275          # scenario-only unit, not a hero
+    HUNTING_WOLF        = 605, "Own Hunting Wolf", "Hunting Wolf", 700
 
 
 NAME_TO_HERO: dict[str, Age2HeroData] = {hero.hero_name: hero for hero in Age2HeroData}

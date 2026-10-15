@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
+from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 
@@ -31,6 +32,7 @@ class ScenarioStartingState:
     age_playable: dict[Age2AgeData, Rule] = field(default_factory=dict)
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
+    obtains_tech: dict[Age2TechData, Rule] = field(default_factory=dict)
     job_available: dict[Age2VillagerJobData, Rule] = field(
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
@@ -128,6 +130,12 @@ class ScenarioLogic:
         """A rule of this scenario under a name - `asks` is how it reads after the scenario's name,
         "can hunt". It holds exactly when `rule` does; /explain shows it as one line."""
         return Named(rule, label=f"{self.scenario.scenario_name} {asks}")
+
+    def obtains_tech(self, tech: Age2TechData) -> Rule:
+        authored = self.starting_state.obtains_tech.get(tech)
+        if authored is not None:
+            return authored
+        return False_()
 
     def has_building(self, building: Age2BuildingData) -> Rule:
         name = building.location_name.removeprefix("Build ")

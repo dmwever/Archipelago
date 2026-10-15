@@ -40,6 +40,9 @@ class Age2ScenarioData(enum.IntEnum):
         self.logic: 'ScenarioStartingState' = None
         self.startup_units: list[ScenarioUnit] = []
         self.trigger_units: list[ScenarioUnit] = []
+        self.excluded_buildings: list['Age2BuildingData'] = []
+        self.excluded_units: list['Age2UnitData'] = []
+        self.excluded_techs: list['Age2TechData'] = []
         self.resources: dict['Tier', 'ScenarioResourceCount'] = {}
         self.demand: 'ScenarioResourceDemand' = None
     

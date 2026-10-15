@@ -35,6 +35,8 @@ class ScenarioBuildingLogic:
     def can_build_building(self, building: Age2BuildingData) -> Rule:
         if not self.scenario.civilization.can_build(building):
             return False_()   # not this civilisation's to put up, and that is free to answer
+        if building in self.scenario.scenario.excluded_buildings:
+            return False_()   # the scenario forbids it, whatever the civilisation allows
         return ScenarioCanBuild(scenario=self.scenario.scenario, building=building)
 
     def can_build_anything(self) -> Rule:

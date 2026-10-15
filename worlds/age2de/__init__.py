@@ -25,7 +25,8 @@ from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
 from .locations.Techs import Age2TechData
 from .locations.VillagerJobs import Age2VillagerJobData
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
-                                    CivilizationUnits, GameCosts, ScenarioResources,
+                                    CivilizationUnits, GameCosts,
+                                    ScenarioExclusions, ScenarioResources,
                                     ScenarioStartupUnits,
                                     ScenarioTriggerUnits, TechCounters, UnitBuildings,
                                     UnitCounters,
@@ -327,9 +328,14 @@ class Age2World(CachedRuleBuilderWorld):
     def needs_mercenary(self, item: Items.Age2ItemData) -> bool:
         if item.type.in_logic:
             return True
+        scenario = item.type.vanilla_scenario
+        granted_anyway = (set(ScenarioStartupUnits.SCENARIO_TO_STARTUP_UNITS[scenario])
+                          | set(ScenarioTriggerUnits.AUTHORED_TRIGGER_UNITS[scenario]))
         return any(self.pool.units.mercenary_exclusive_location(soldier.unit)
+                   if isinstance(soldier.unit, Units.Age2UnitData)
+                   else soldier.unit in self.pool.units.special_units
                    for soldier in item.type.units
-                   if isinstance(soldier.unit, Units.Age2UnitData))
+                   if soldier.unit not in granted_anyway)
     
     def get_filler_item_name(self) -> str:
         filler = []
