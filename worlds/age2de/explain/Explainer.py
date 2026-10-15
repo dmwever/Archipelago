@@ -17,7 +17,6 @@ from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..logic.custom_logic.Named import Named
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
-from .Costs import Costs
 from .Layout import INDENT, WIDTH, Lines, _ranges, colored, text, truth
 from .Lookup import find
 from .Routes import Route, age_name, any_building_item, building_names, routes_for
@@ -67,13 +66,6 @@ def _distinct(children: tuple[Rule.Resolved, ...]) -> list[Rule.Resolved]:
     return kept
 
 
-def _signature(lines: Lines) -> tuple:
-    """What a block shows, markers aside: two chapters showing the same are one."""
-    return tuple((depth, tuple((part["text"], part.get("color")) for part in parts
-                               if not part["text"].startswith("  [/explain_more")))
-                 for depth, parts in lines._lines)
-
-
 def _says(held: bool) -> list[JSONMessagePart]:
     """How every line that states something ends: "-> True" or "-> False"."""
     return [text(" -> "), truth(held)]
@@ -115,8 +107,6 @@ class Explainer:
         """The questions already opened in the block being drawn: a later mention is one line."""
         self._depths: dict[int, int] = {}
         """Each resolved part's depth, by identity: resolved rules live as long as the world."""
-        self._dry = False
-        """While set, markers are drawn but nothing is kept: a block rendered only to compare it."""
 
     def explain_rule(self, typed: str, state: CollectionState) -> list[JSONMessagePart] | None:
         scoped = self._scoped(typed)
@@ -151,7 +141,7 @@ class Explainer:
         return sorted(scopes, key=lambda scope: -len(scope[0]))
 
     def _scoped(self, typed: str) -> Callable[[CollectionState], list[JSONMessagePart]] | None:
-        """"[campaign or scenario] [Costs] <location>": None when it leads with neither, so the
+        """"[campaign or scenario] <location>": None when it leads with neither, so the
         plain explanation - or UT's own - takes it. "The Scourge of God: Victory" is a scenario's
         own location, not a scope."""
         rest, campaign, scenario = typed.strip(), None, None
@@ -159,11 +149,8 @@ class Explainer:
             if rest.lower().startswith(words + " "):
                 rest, campaign, scenario = rest[len(words):].strip(), each_campaign, each_scenario
                 break
-        costs = rest.lower().startswith("costs ")
-        if costs:
-            rest = rest[len("costs "):].strip()
         easy = _EASY_SOURCE.fullmatch(rest.lower())
-        if campaign is None and not costs and easy is None:
+        if campaign is None and easy is None:
             return None
         if campaign is not None and campaign not in self.world.pool.campaigns.enabled:
             return lambda state: [text(f"{campaign.campaign_name} isn't in this seed.")]
@@ -183,30 +170,17 @@ class Explainer:
 
         def explained(state: CollectionState) -> list[JSONMessagePart]:
             self._entries = []
-            return self._branch(name, data, campaign, scenario, costs, state).parts()
+            return self._branch(name, data, campaign, scenario, state).parts()
         return explained
 
-    def _branch(self, name: str, data, campaign, scenario, costs: bool, state: CollectionState) -> Lines:
+    def _branch(self, name: str, data, campaign, scenario, state: CollectionState) -> Lines:
         routes = routes_for(self.world, data)
-        if costs:
-            route = next((route for route in routes if route.price is not None), None)
-            if route is None:
-                lines = Lines()
-                lines.add(0, text(f"{name} costs nothing."))
-                return lines
-            if campaign is None:
-                return self._costs_view(name, route, state)
-            offering = [self.world.rules.logic.for_scenario(each)
-                        for each in self.world.pool.scenarios.in_campaign(campaign)
-                        if self._status(route, each, state) is not None
-                            and (scenario is None or each is scenario)]
-            return Costs(self.world, route, offering).drill(name, state, self._entry)
         lines = Lines()
         if scenario is None:
             for route in routes:
-                if any(self._status(route, each, state) is not None
-                       for each in self.world.pool.scenarios.in_campaign(campaign)):
-                    lines.extend(self._campaign_drill(name, route, campaign, state))
+                lines.extend(self._campaign_drill(name, route, campaign, state))
+            if lines._lines:
+                lines._lines.insert(0, (0, [text(f"{name} in {campaign.campaign_name}")]))
         else:
             lines.add(0, text(f"{name} in "), colored(f"{scenario.scenario_name} ({campaign.campaign_name} "
                                                       f"{scenario.chapter})",
@@ -244,9 +218,8 @@ class Explainer:
                 sl = self.world.rules.logic.for_scenario(one)
                 question = self._resolved(sl.economy.has_easy_source(resource))
                 has = question(state)
-                lines.add(2, colored(f"{one.chapter}. {one.scenario_name}", has), *_says(has),
-                          self._entry(f"{noun} in {one.scenario_name}",
-                                      lambda st, question=question, sl=sl: self._question_drill(question, sl, st)))
+                marker, _ = self._opening(question, sl)
+                lines.add(2, colored(f"{one.chapter}. {one.scenario_name}", has), *_says(has), *marker)
         return lines
 
     def _question_body(self, question: ScenarioQuestion.Resolved, sl: ScenarioLogic,
@@ -256,14 +229,6 @@ class Explainer:
         # The question itself is the level that opens: its answer is drawn, questions in it are not.
         self._breakdown(lines, question.answer, depth, sl, state, OPENED - 1)
         return lines
-
-    def _costs_view(self, name: str, route: Route, state: CollectionState) -> Lines:
-        """The same costs view as under the location's own /explain."""
-        offering = [self.world.rules.logic.for_scenario(scenario)
-                    for campaign in self.world.pool.campaigns.enabled
-                    for scenario in self.world.pool.scenarios.in_campaign(campaign)
-                    if self._status(route, scenario, state) is not None]
-        return Costs(self.world, route, offering).drill(name, state, self._entry)
 
     def explain_more(self, argument: str, state: CollectionState) -> list[JSONMessagePart]:
         """The entry behind a [/explain_more N] marker of the last explanation."""
@@ -281,8 +246,6 @@ class Explainer:
     def _entry(self, title: str, build: Callable[[CollectionState], Lines]) -> JSONMessagePart:
         """Keep a drill-down for the last explanation, and the marker that opens it. A drill-down
         opened twice keeps the numbers it gave its own drill-downs the first time."""
-        if self._dry:
-            return text("  [/explain_more]")
         for index, (kept, _) in enumerate(self._entries, start=1):
             if kept == title:
                 return text(f"  [/explain_more {index}]")
@@ -293,8 +256,6 @@ class Explainer:
 
     def _route(self, lines: Lines, name: str, route: Route, state: CollectionState) -> None:
         campaigns = []
-        offering: list[ScenarioLogic] = []
-        unlocked: list[ScenarioLogic] = []
         for campaign in self.world.pool.campaigns.enabled:
             chapters = []
             for scenario in self.world.pool.scenarios.in_campaign(campaign):
@@ -302,10 +263,6 @@ class Explainer:
                 if status is None:
                     continue
                 chapters.append((scenario.chapter, status))
-                sl = self.world.rules.logic.for_scenario(scenario)
-                offering.append(sl)
-                if status is not Status.LOCKED:
-                    unlocked.append(sl)
             if chapters:
                 campaigns.append((campaign, chapters))
         if not campaigns:
@@ -314,31 +271,38 @@ class Explainer:
         self._add_wrapped(lines, 1, [*self._label(route, state), *_says(
             any(status is Status.AVAILABLE for _, chapters in campaigns for _, status in chapters))])
         required = self._requirements(route.requires, state)
-        costs = Costs(self.world, route, offering) if route.price is not None else None
-        if costs is not None and not costs.cost:
-            costs = None   # free
-        if required or costs is not None:
+        if required:
             lines.add(2, text("Requires"))
             for nested, line in required:
                 lines.add(3 + nested, *line)
                 if route.upgrade is not None and line[0]["text"] == f"Has {route.upgrade.item.item_name}":
                     self._started_researched(lines, route, campaigns)
-            if costs is not None:
-                priced = costs.line(state, unlocked)
-                lines.add(3, *priced, *_says(all(part.get("color") == "green" for part in priced
-                                                  if part["type"] == "color")),
-                          self._entry(f"what {name} costs",
-                                      lambda st: costs.drill(name, st, self._entry)))
         for campaign, chapters in campaigns:
-            item = _campaign_item(campaign)
-            held = state.has(item, self.world.player)
-            lines.add(2, colored(f"Has {item}", held), *_says(held))
-            for chapter, status in chapters:
-                sl = self.world.rules.logic.for_scenario(self._scenario(campaign, chapter))
-                available = status is Status.AVAILABLE
-                lines.add(3, colored(f"{chapter}. {sl.scenario.scenario_name}", available), *_says(available),
-                          self._entry(f"{name}: {route.label} in {sl.scenario.scenario_name}",
-                                      lambda st, route=route, sl=sl: self._scenario_route(name, route, sl, st)))
+            self._campaign_block(lines, 2, name, route, campaign, chapters, state)
+
+    def _campaign_block(self, lines: Lines, depth: int, name: str, route: Route, campaign,
+                        chapters: list[tuple[int, Status]], state: CollectionState) -> None:
+        """A campaign on a route: its item, then each chapter offering the route, True where it
+        has the location on it, each opening that chapter - the scenario level."""
+        item = _campaign_item(campaign)
+        held = state.has(item, self.world.player)
+        lines.add(depth, colored(f"Has {item}", held), *_says(held))
+        for chapter, status in chapters:
+            sl = self.world.rules.logic.for_scenario(self._scenario(campaign, chapter))
+            available = status is Status.AVAILABLE
+            marker = ([self._entry(f"{name}: {route.label} in {sl.scenario.scenario_name}",
+                                   lambda st, route=route, sl=sl: self._scenario_route(name, route, sl, st))]
+                      if status is Status.LOCKED or self._asks_something(route, sl) else [])
+            lines.add(depth + 1, colored(f"{chapter}. {sl.scenario.scenario_name}", available), *_says(available),
+                      *marker)
+
+    def _asks_something(self, route: Route, sl: ScenarioLogic) -> bool:
+        """Whether the chapter's view of the route has anything beneath its title: a rule, or a
+        payment, that does not always hold. Handed over no matter what, it has nothing to open."""
+        if route.gates:
+            return True
+        return any(rule is not None and not self._resolved(rule).always_true
+                   for way in route.ways(sl) for rule in (way.structural, way.payment))
 
     # -- one campaign on one route -----------------------------------------------------------------
 
@@ -351,49 +315,41 @@ class Explainer:
         self._chapter(lines, name, route, scenario, self._label(route, state), state)
         return lines
 
-    def _campaign_drill(self, name: str, route: Route, campaign, state: CollectionState,
-                        chapters: tuple[int, ...] | None = None) -> Lines:
-        """Each chapter offering the route - of `chapters`, where given - with its status and why."""
+    def _campaign_drill(self, name: str, route: Route, campaign, state: CollectionState) -> Lines:
+        """One route at the campaign level, laid out as the top level lays it out: the route, then
+        the campaign's block - its item and each chapter offering the route, each opening that
+        chapter. The rules themselves are the scenario's. Nothing where no chapter offers it."""
+        chapters = [(scenario.chapter, status) for scenario in self.world.pool.scenarios.in_campaign(campaign)
+                    if (status := self._status(route, scenario, state)) is not None]
         lines = Lines()
-        which = f" {_ranges(list(chapters))}" if chapters is not None else ""
-        lines.add(0, text(f"{name}: "), *self._label(route, state), text(f" in {campaign.campaign_name}{which}"))
-        groups: dict[tuple, list[ScenarioLogic]] = {}
-        for scenario in self.world.pool.scenarios.in_campaign(campaign):
-            if chapters is not None and scenario.chapter not in chapters:
-                continue
-            status = self._status(route, scenario, state)
-            if status is None:
-                continue
-            sl = self.world.rules.logic.for_scenario(scenario)
-            self._dry = True
-            try:
-                body = self._body(route, sl, state)
-            finally:
-                self._dry = False
-            groups.setdefault((status, _signature(body)), []).append(sl)
-        for (status, _), together in groups.items():
-            head = _joined([[colored(f"{sl.scenario.chapter}. {sl.scenario.scenario_name}",
-                                     self._holds(sl.is_unlocked(), state))] for sl in together], ", ")
-            lines.add(1, *head, *_says(status is Status.AVAILABLE))
-            if status is Status.LOCKED:
-                for sl in together:   # each chapter is unlocked by its own items
-                    start = len(lines._lines)
-                    self._breakdown(lines, sl.is_unlocked(), 2, sl, state, OPENED)
-                    if len(together) > 1 and len(lines._lines) > start:
-                        depth, first = lines._lines[start]
-                        lines._lines[start] = (depth, [text(f"{sl.scenario.chapter}: "), *first])
-            lines.extend(self._body(route, together[0], state))
+        if chapters:
+            self._add_wrapped(lines, 1, [*self._label(route, state),
+                                         *_says(any(status is Status.AVAILABLE for _, status in chapters))])
+            self._campaign_block(lines, 2, name, route, campaign, chapters, state)
         return lines
 
     def _body(self, route: Route, sl: ScenarioLogic, state: CollectionState) -> Lines:
-        """What a chapter asks on the route, past its unlock: the route's items, then whether an
-        easy source pays each resource."""
+        """What a chapter asks on the route, past its unlock: the route's rule, then paying for it -
+        an easy source of each resource - drawn like any other rule. With several ways, the ways
+        side by side, each its rule and its payment."""
         lines = Lines()
         self._opened = set()
-        ways = [way.structural for way in route.ways(sl) if way.structural is not None]
-        for rule in (*route.gates, *(ways[:1] if len(ways) == 1 else [Or(*ways)] if ways else [])):
-            self._breakdown(lines, rule, 2, sl, state, OPENED)
-        self._short_of(lines, route, sl, state)
+        ways = route.ways(sl)
+        for gate in route.gates:
+            self._breakdown(lines, gate, 2, sl, state, OPENED - 1)
+        if len(ways) == 1:
+            parts = [ways[0].structural, ways[0].payment]
+        else:
+            parts = [Or(*[rule for rule in (And(*[part for part in (way.structural, way.payment) if part is not None])
+                                            for way in ways)])] if ways else []
+        for rule in parts:
+            if rule is None:
+                continue
+            # The route's rule is the level that opens. A question or named rule opens into its
+            # parts; anything else - "any building", a grant, paying - is those parts already, so
+            # the questions inside it stay one line each behind their markers.
+            resolved = self._resolved(rule) if not isinstance(rule, Rule.Resolved) else rule
+            self._breakdown(lines, resolved, 2, sl, state, OPENED if isinstance(resolved, _NAMED) else OPENED - 1)
         return lines
 
     def _chapter(self, lines: Lines, name: str, route: Route, scenario, head: list[JSONMessagePart],
@@ -424,7 +380,10 @@ class Explainer:
         held = resolved(state)
         own = f"{sl.scenario.scenario_name}: "
         if isinstance(resolved, _NAMED):
-            if opening and resolved.description not in self._opened:
+            links, end, leaf = self._chain(resolved)
+            if len(links) > 1 or end != "content":   # one child at a time: drawn as a chain
+                self._draw_chain(lines, links, end, leaf, depth, sl, state)
+            elif opening and resolved.description not in self._opened:
                 self._opened.add(resolved.description)
                 lines.add(depth, colored(self._asks(resolved, sl), held), *_says(held))
                 self._breakdown(lines, resolved.answer, depth + 1, sl, state, opening - 1)
@@ -504,8 +463,15 @@ class Explainer:
             works = gathers(state)
             label = (self._asks(gathers, sl) if isinstance(gathers, _NAMED)
                      else _SOURCE_NAMES.get(kinds[gathers.explain_str()], "Any of"))
-            lines.add(depth, text(f"{total}{resource} ("), colored(f"{counted} in logic", counted > 0), text(") "),
-                      colored(label, works), *_says(works))
+            head = [text(f"{total}{resource} ("), colored(f"{counted} in logic", counted > 0), text(") "),
+                    colored(label, works)]
+            chained = self._chain(gathers) if isinstance(gathers, _NAMED) else None
+            if chained and len(chained[0]) == 1 and chained[1] == "leaf":   # "Can mine gold: Has Gold Miner"
+                item = Lines()
+                self._breakdown(item, chained[2], 0, sl, state, 0)
+                lines.add(depth, *head, text(": "), *item._lines[0][1])
+            else:
+                lines.add(depth, *head, *_says(works))
             for child, amount, area, gate in areas:
                 where = f" ({_AREAS.get(area, area)})" if area else ""
                 what = f"{amount}{resource}{where}"
@@ -526,6 +492,71 @@ class Explainer:
         self._opened = set()
         self._breakdown(lines, child, 1, sl, state, 0)
         return lines
+
+    # -- chains: a name whose rule is a single child ---------------------------------------------
+
+    def _chain(self, named: Rule.Resolved) -> tuple[list[Rule.Resolved], str, Rule.Resolved | None]:
+        """The names a single child at a time from this one - "Has a Mill, standing or buildable",
+        then "Can build a Mill" - and how the chain ends: "content" where the last name opens to
+        several lines (it keeps its marker), "leaf" where it is one item or "Never", "nothing"
+        where it always holds. A marker never opens to a single line or to nothing."""
+        links = [named]
+        while True:
+            answer = links[-1].answer
+            if answer.always_true:
+                return links, "nothing", None
+            only = self._only_child(answer)
+            if only is None:
+                return links, "content", None
+            if isinstance(only, _NAMED) and only not in links:
+                links.append(only)
+                continue
+            return links, ("content" if isinstance(only, _NAMED) else "leaf"), (None if isinstance(only, _NAMED) else only)
+
+    def _only_child(self, rule: Rule.Resolved) -> Rule.Resolved | None:
+        """The one part a rule is, where it is one: through "and"s of a single part, a name, one
+        item, or anything drawn as a single line. None where it opens to several lines."""
+        while isinstance(rule, And.Resolved):
+            parts = [part for part in _distinct(rule.children) if not part.always_true]
+            if len(parts) != 1:
+                return None
+            rule = parts[0]
+        if isinstance(rule, _NAMED):
+            return rule
+        items = self._items(rule, "", None)
+        if items is not None:
+            return rule if len(items[1]) == 1 else None
+        if isinstance(rule, _GROUPS):
+            return None
+        return rule
+
+    def _opening(self, named: Rule.Resolved, sl: ScenarioLogic) -> tuple[list[JSONMessagePart], Rule.Resolved | None]:
+        """The marker that explains a name from elsewhere - a resource line, a chapter line - and,
+        where its chain ends in one item, that item instead. A name that is only a chain opens
+        where the chain ends, so no marker opens to a single line; one that always holds has none."""
+        if not isinstance(named, _NAMED):
+            return [], None
+        links, end, leaf = self._chain(named)
+        if end == "content":
+            return [self._question_entry(links[-1], sl)], None
+        return [], leaf
+
+    def _draw_chain(self, lines: Lines, links: list[Rule.Resolved], end: str, leaf: Rule.Resolved | None,
+                    depth: int, sl: ScenarioLogic, state: CollectionState) -> None:
+        """Each name on its own line, one level deeper than the one before and ending in a colon;
+        the last carries the truth, and its marker where it opens to several lines - or, over an
+        item, the item takes the last line."""
+        for index, link in enumerate(links):
+            held = link(state)
+            asks = colored(self._asks(link, sl), held)
+            if index < len(links) - 1 or end == "leaf":
+                lines.add(depth + index, asks, text(":"))
+            elif end == "content":
+                lines.add(depth + index, asks, *_says(held), self._question_entry(link, sl))
+            else:
+                lines.add(depth + index, asks, *_says(held))
+        if end == "leaf":
+            self._breakdown(lines, leaf, depth + len(links), sl, state, 0)
 
     def _choices(self, rule: Or.Resolved, own: str, state: CollectionState) -> list[tuple]:
         """An "or"'s choices with every "any of" inside it folded in - an any of an any is one
@@ -625,9 +656,20 @@ class Explainer:
                         state: CollectionState) -> Lines:
         """One scenario question broken down, as it is in place."""
         lines = Lines()
-        lines.add(0, colored(sl.scenario.scenario_name, self._holds(sl.is_unlocked(), state)), text(": "),
-                  colored(self._asks(question, sl), question(state)), *_says(question(state)))
-        lines.extend(self._question_body(question, sl, state))
+        scenario = [colored(sl.scenario.scenario_name, self._holds(sl.is_unlocked(), state)), text(": ")]
+        held = question(state)
+        links, end, leaf = self._chain(question)
+        if len(links) == 1 and end == "content":
+            lines.add(0, *scenario, colored(self._asks(question, sl), held), *_says(held))
+            lines.extend(self._question_body(question, sl, state))
+        elif len(links) == 1 and end == "nothing":
+            lines.add(0, *scenario, colored(self._asks(question, sl), held), *_says(held))
+        else:   # a single child at a time: the rest of the chain beneath the title
+            lines.add(0, *scenario, colored(self._asks(question, sl), held), text(":"))
+            if len(links) > 1:
+                self._draw_chain(lines, links[1:], end, leaf, 1, sl, state)
+            else:
+                self._breakdown(lines, leaf, 1, sl, state, 0)
         return lines
 
     @staticmethod
@@ -635,17 +677,6 @@ class Explainer:
         """"Can build a Castle": the question without its scenario, which the chapter line names."""
         asks = question.description.removeprefix(f"{sl.scenario.scenario_name} ")
         return asks[:1].upper() + asks[1:]
-
-    def _short_of(self, lines: Lines, route: Route, sl: ScenarioLogic, state: CollectionState) -> None:
-        """Each resource the price asks, and whether the scenario has an easy source of it."""
-        if route.price is None:
-            return
-        for resource, amount in Costs(self.world, route, [sl]).cost:
-            easy = self._resolved(sl.economy.has_easy_source(resource))
-            why = (self._question_entry(easy, sl),) if isinstance(easy, _NAMED) else ()
-            held = easy(state)
-            lines.add(2, colored(f"{amount} {resource.name.lower()}", held),
-                      text(": an easy source" if held else ": no easy source yet"), *_says(held), *why)
 
     def _started_researched(self, lines: Lines, route: Route, campaigns: list) -> None:
         """The chapters that research the upgrade for themselves, so never ask for its item:
@@ -709,15 +740,6 @@ class Explainer:
                 continue
             return Status.AVAILABLE
         return best
-
-    @staticmethod
-    def _runs(chapters: list[tuple[int, Status]]) -> list[tuple[list[int], list[JSONMessagePart]]]:
-        """The chapters where the route is open and where it isn't, a row each: "1, 3–5 -> True"."""
-        by_held: dict[bool, list[int]] = {}
-        for chapter, status in chapters:
-            by_held.setdefault(status is Status.AVAILABLE, []).append(chapter)
-        ordered = sorted(by_held.items(), key=lambda item: item[1][0])
-        return [(numbers, [colored(_ranges(numbers), held), *_says(held)]) for held, numbers in ordered]
 
     # -- general requirements --------------------------------------------------------------------
 

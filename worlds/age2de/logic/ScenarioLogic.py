@@ -100,6 +100,9 @@ class ScenarioLogic:
         """A base, paid for: the villagers' food, and the Town Center's wood and stone where none
         stands. Paid by the items that seed it, never by an easy source - the easy sources ask
         for a base themselves."""
+        return self.named("has a base", self._has_base())
+
+    def _has_base(self) -> Rule:
         standing = (self.starting_state.has_base
                     | self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER])
         town_center = (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
