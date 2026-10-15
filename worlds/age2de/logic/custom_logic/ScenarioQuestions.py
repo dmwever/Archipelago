@@ -17,6 +17,15 @@ from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
 
+_SOUNDS_LIKE_YOU = ("Uni", "Use", "Usu", "Eu")
+
+
+def a_or_an(name: str) -> str:
+    """"an Archery Range", "a University": by the sound, not just the letter."""
+    vowel = name[:1] in "AEIOU" and not name.startswith(_SOUNDS_LIKE_YOU)
+    return "an" if vowel else "a"
+
+
 if TYPE_CHECKING:
     from ... import Age2World
     from ...logic.ScenarioLogic import ScenarioLogic
@@ -156,8 +165,7 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
         building = self.building.location_name.removeprefix("Build ")
-        article = "an" if building[0] in "AEIOU" else "a"
-        return f"{scenario.scenario_name} can build {article} {building}"
+        return f"{scenario.scenario_name} can build {a_or_an(building)} {building}"
 
 
 @dataclass
@@ -205,7 +213,7 @@ class ScenarioCanTrain(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
-        return f"{scenario.scenario_name} can train a {self.unit.unit_name}"
+        return f"{scenario.scenario_name} can train {a_or_an(self.unit.unit_name)} {self.unit.unit_name}"
 
 
 @dataclass
@@ -258,7 +266,7 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
         )
 
         return economy.endless_food() | SufficientRawResources(
-            sources=raw_food, needed=scenario.scenario.demand.food)
+            sources=raw_food, needed=scenario.scenario.demand.food, resource="food")
 
     def _gold_easily(self, scenario: 'ScenarioLogic') -> Rule:
         economy = scenario.economy
@@ -271,7 +279,7 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
         )
 
         return economy.ally_trade_gold() | (
-            SufficientRawResources(sources=raw_gold, needed=scenario.scenario.demand.gold)
+            SufficientRawResources(sources=raw_gold, needed=scenario.scenario.demand.gold, resource="gold")
             & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
 
     def _stone_easily(self, scenario: 'ScenarioLogic') -> Rule:
@@ -280,7 +288,7 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
                                    economy.tier_gates())
 
         return (SufficientRawResources(sources=raw_stone,
-                                       needed=scenario.scenario.demand.stone)
+                                       needed=scenario.scenario.demand.stone, resource="stone")
                 & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
 
     def _wood_easily(self, scenario: 'ScenarioLogic') -> Rule:

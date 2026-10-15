@@ -11,6 +11,8 @@ from ..locations.VillagerJobs import Age2VillagerJobData
 from rule_builder.rules import False_, Has, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
+from .custom_logic.Named import Named
+from .custom_logic.ScenarioQuestions import a_or_an
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -84,7 +86,7 @@ class ScenarioLogic:
         self.economy = ScenarioResourceLogic(self)
 
     def has_vils(self) -> Rule:
-        return self.starting_state.has_vils
+        return self.named("has villagers", self.starting_state.has_vils)
 
     def has_builders(self) -> Rule:
         """Villagers who can put a building up. With professions shuffled, only once the Builder
@@ -101,6 +103,9 @@ class ScenarioLogic:
         """A base, paid for: the villagers' food, and the Town Center's wood and stone where none
         stands. Paid by the items that seed it, never by an easy source - the easy sources ask
         for a base themselves."""
+        return self.named("has a base", self._has_base())
+
+    def _has_base(self) -> Rule:
         standing = (self.starting_state.has_base
                     | self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER])
         town_center = (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
@@ -121,6 +126,11 @@ class ScenarioLogic:
             return authored
         return False_()
 
+    def named(self, asks: str, rule: Rule) -> Rule:
+        """A rule of this scenario under a name - `asks` is how it reads after the scenario's name,
+        "can hunt". It holds exactly when `rule` does; /explain shows it as one line."""
+        return Named(rule, label=f"{self.scenario.scenario_name} {asks}")
+
     def obtains_tech(self, tech: Age2TechData) -> Rule:
         authored = self.starting_state.obtains_tech.get(tech)
         if authored is not None:
@@ -128,6 +138,10 @@ class ScenarioLogic:
         return False_()
 
     def has_building(self, building: Age2BuildingData) -> Rule:
+        name = building.location_name.removeprefix("Build ")
+        return self.named(f"has {a_or_an(name)} {name}, standing or buildable", self._has_building(building))
+
+    def _has_building(self, building: Age2BuildingData) -> Rule:
         return (self.starting_state.starts_with_building[building]
                 | self.buildings.can_build_building(building))
 

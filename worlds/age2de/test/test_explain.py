@@ -102,8 +102,8 @@ class TestCantMeansNever(ExplainTestBase):
 
 
 class TestTheCampaignDrill(ExplainTestBase):
-    """A campaign line opens on each chapter offering the route, with the status the line gave -
-    chapters showing the same thing share a block, each still named."""
+    """The campaign level lists each chapter offering the route once, in order, True where it has
+    the location on that route - the same lines as the top level's campaign block."""
 
     def test_each_chapter_once_with_its_status(self):
         explainer = Explainer(self.world)
@@ -121,13 +121,11 @@ class TestTheCampaignDrill(ExplainTestBase):
                                             + str(status is Status.AVAILABLE))
                     if not expected:
                         continue
-                    shown = []
-                    for line in explainer._campaign_drill(name, route, campaign, state).plain().split("\n"):
-                        if line.startswith("    ") and not line.startswith("        "):
-                            heads, word = line.strip().rsplit(" -> ", 1)
-                            shown += [f"{head} -> {word}" for head in re.split(r", (?=\d+\. )", heads)]
+                    shown = [line.strip().split("  [")[0]
+                             for line in explainer._campaign_drill(name, route, campaign, state).plain().split("\n")
+                             if re.match(r"^ {12}\d+\. ", line)]
                     with self.subTest(f"{name} / {route.label} / {campaign.campaign_name}"):
-                        self.assertEqual(sorted(expected), sorted(shown))
+                        self.assertEqual(expected, shown)
                     checked += 1
         self.assertGreater(checked, 0)
 
@@ -184,33 +182,32 @@ class TestRuns(Age2RuleTestBase):
 
 
 class TestDirectCommands(ExplainTestBase):
-    """/explain [campaign or scenario] [Costs] <location> goes straight to that branch."""
+    """/explain [campaign or scenario] <location> goes straight to that branch."""
 
     def plain_of(self, typed: str) -> str | None:
         parts = self.world.explain_rule(typed, CollectionState(self.multiworld))
         return None if parts is None else "".join(part["text"] for part in parts)
 
-    def a_priced_location(self) -> str:
+    def a_location(self) -> str:
         from ..explain.Lookup import _BY_NAME
         names = {location.name for location in self.multiworld.get_locations(self.world.player)}
-        return next(name for name, data in _BY_NAME.items() if name in names
-                    and any(route.price for route in routes_for(self.world, data)))
+        return next(name for name, data in _BY_NAME.items() if name in names and routes_for(self.world, data))
 
     def test_each_form_answers(self):
-        name = self.a_priced_location()
+        name = self.a_location()
         campaign = self.world.pool.campaigns.enabled[0]
         scenario = self.world.pool.scenarios.in_campaign(campaign)[0]
         word = campaign.campaign_name.split()[0]
-        for typed in (f"Costs {name}", f"{campaign.campaign_name} {name}", f"{word} {name}",
+        for typed in (f"{campaign.campaign_name} {name}", f"{word} {name}",
                       f"{word} {scenario.chapter} {name}", f"{scenario.scenario_name} {name}",
-                      f"{word} Costs {name}", f"{word} {scenario.chapter} costs {name.lower()}"):
+                      f"{word} {scenario.chapter} {name.lower()}"):
             with self.subTest(typed):
                 answer = self.plain_of(typed)
                 self.assertIsNotNone(answer)
                 self.assertNotIn("No location here matches", answer)
 
     def test_a_scenario_view_names_the_scenario(self):
-        name = self.a_priced_location()
+        name = self.a_location()
         scenario = self.world.pool.scenarios.included[0]
         self.assertTrue(self.plain_of(f"{scenario.scenario_name} {name}").startswith(
             f"{name} in {scenario.scenario_name}"))
@@ -226,7 +223,7 @@ class TestDirectCommands(ExplainTestBase):
         if missing is None:
             self.skipTest("every campaign is in this seed")
         self.assertEqual(f"{missing.campaign_name} isn't in this seed.",
-                         self.plain_of(f"{missing.campaign_name} {self.a_priced_location()}"))
+                         self.plain_of(f"{missing.campaign_name} {self.a_location()}"))
 
 
 class TestEasySourceCommands(ExplainTestBase):
@@ -242,7 +239,8 @@ class TestEasySourceCommands(ExplainTestBase):
             noun = resource.name.lower()
             for typed, opens in ((f"Easy {noun} Source", f"Easy {noun.title()} Source"),
                                  (f"easy {noun}", f"Easy {noun.title()} Source"),
-                                 (f"{word} Easy {noun} Source", f"Easy {noun.title()} Source in {campaign.campaign_name}"),
+                                 (f"{word} Easy {noun} Source",
+                                  f"Easy {noun.title()} Source\n    Has {campaign.campaign_name} Campaign"),
                                  (f"{word} {scenario.chapter} Easy {noun}", f"{scenario.scenario_name}: ")):
                 with self.subTest(typed):
                     parts = self.world.explain_rule(typed, state)
@@ -259,3 +257,30 @@ class TestEasySourceCommands(ExplainTestBase):
                 question = next(part for part in parts if part["text"] == "Can easily gather wood")
                 with self.subTest(scenario.name):
                     self.assertEqual("green" if held else "salmon", question["color"])
+
+
+class TestNoMarkerOpensToOneLine(ExplainTestBase):
+    """A name or question that would open to a single line, or to nothing, is drawn as a chain or
+    with no marker: every question view behind a marker has a title and at least two lines."""
+
+    ROUTE_WORDS = ("Builds it", "Trains it", "Researches it", "Reaches it", "Does the job",
+                   "Starts with it", "Handed over")
+
+    def test_every_question_marker_opens_to_several_lines(self):
+        explainer = Explainer(self.world)
+        state = self.states()[-1]
+        checked = 0
+        word = self.world.pool.campaigns.enabled[0].campaign_name.split()[0]
+        for name in self.explained()[::5]:
+            for scenario in self.world.pool.scenarios.included[:3]:
+                if not explainer.explain_rule(f"{word} {scenario.chapter} {name}", state):
+                    continue
+                for title, build in list(explainer._entries):
+                    if (title.startswith("what ") or "(in " in title
+                            or any(f": {words}" in title for words in self.ROUTE_WORDS)):
+                        continue
+                    shown = build(state).plain().split("\n")
+                    with self.subTest(title):
+                        self.assertGreaterEqual(len(shown), 3, "\n".join(shown))
+                    checked += 1
+        self.assertGreater(checked, 0)
