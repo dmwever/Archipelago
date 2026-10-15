@@ -26,10 +26,12 @@ class Attila2Rules(ScenarioRules):
                 self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
             )
         )
+        can_beat_blue = self.scenario_logic.named("can beat Blue", can_beat_blue)
         town_center = Age2BuildingData.TOWN_CENTER
         can_build_tc = (self.scenario_logic.buildings.can_build_tc()
                         & self.scenario_logic.has_vils()
                         & self.scenario_logic.economy.can_pay(town_center.cost))
+        can_build_tc = self.scenario_logic.named("can raise a Town Center", can_build_tc)
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_beat_blue & can_build_tc)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_beat_blue & can_build_tc)

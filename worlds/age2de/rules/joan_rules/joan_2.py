@@ -17,19 +17,23 @@ class Joan2Rules(ScenarioRules):
         can_cross: Rule = HasAny(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name, Age2ItemData.AP_JOAN_2_DOCK.item_name)
         can_conquer_bridge: Rule = (Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
                                     | self.scenario_logic.military.has_military())
+        can_conquer_bridge = self.scenario_logic.named("can take the bridge", can_conquer_bridge)
         can_beat_purple: Rule = self.scenario_logic.has_base() & self.scenario_logic.military.counters_building()
+        can_beat_purple = self.scenario_logic.named("can beat Purple", can_beat_purple)
         can_beat_red: Rule = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_siege() &
             self.scenario_logic.military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE)
         )
+        can_beat_red = self.scenario_logic.named("can beat Red", can_beat_red)
         can_beat_orange: Rule = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_siege() &
             self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE)
         )
+        can_beat_orange = self.scenario_logic.named("can beat Orange", can_beat_orange)
         victory: Rule = can_beat_red & can_beat_orange
 
         if self.world.pool.scenarios.all_scenario_branches:

@@ -22,6 +22,7 @@ class Joan3Rules(ScenarioRules):
         can_cross_ocean = (Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
                            | (self.scenario_logic.units.can_train_structurally(transport)
                               & self.scenario_logic.economy.can_pay(transport.cost)))
+        can_cross_ocean = self.scenario_logic.named("can cross the sea", can_cross_ocean)
         can_destroy_castle: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean & 
@@ -30,6 +31,7 @@ class Joan3Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
         )
+        can_destroy_castle = self.scenario_logic.named("can destroy a castle", can_destroy_castle)
         can_beat_purple: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean &
@@ -38,6 +40,7 @@ class Joan3Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
         )
+        can_beat_purple = self.scenario_logic.named("can beat Purple", can_beat_purple)
         can_beat_fastolf: Rule = (
             self.scenario_logic.has_base() &
             can_cross_ocean &
@@ -46,6 +49,7 @@ class Joan3Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.FEUDAL) &
             self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
         )
+        can_beat_fastolf = self.scenario_logic.named("can beat Fastolf", can_beat_fastolf)
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_SLAY_FASTOLF], can_beat_fastolf)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_VICTORY], can_destroy_castle & can_beat_fastolf)

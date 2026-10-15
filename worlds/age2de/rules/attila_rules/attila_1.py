@@ -19,12 +19,14 @@ class Attila1Rules(ScenarioRules):
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_military()
         )
+        can_beat_purple = self.scenario_logic.named("can beat Purple", can_beat_purple)
         
         can_beat_blue: Rule = (
             self.scenario_logic.ages.can_reach(Age2AgeData.FEUDAL) &
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_military()
         )
+        can_beat_blue = self.scenario_logic.named("can beat Blue", can_beat_blue)
         
         can_beat_red: Rule = (
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
@@ -34,6 +36,7 @@ class Attila1Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.WAR_ELEPHANT_LINE, Age2AgeData.CASTLE)
         )
+        can_beat_red = self.scenario_logic.named("can beat Red", can_beat_red)
         
         can_beat_green: Rule = (
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
@@ -42,6 +45,7 @@ class Attila1Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.MANGUDAI_LINE, Age2AgeData.CASTLE)
         )
+        can_beat_green = self.scenario_logic.named("can beat Green", can_beat_green)
         
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.ATT1_VICTORY],

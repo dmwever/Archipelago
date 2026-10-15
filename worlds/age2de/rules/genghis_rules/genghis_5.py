@@ -33,6 +33,7 @@ class Genghis5Rules(ScenarioRules):
             military.has_siege() &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
+        can_kill_red = self.scenario_logic.named("can beat Red", can_kill_red)
 
         can_kill_green: Rule = (
             self.scenario_logic.has_base() &
@@ -46,6 +47,7 @@ class Genghis5Rules(ScenarioRules):
             military.has_long_range_siege() &
             self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
         )
+        can_kill_green = self.scenario_logic.named("can beat Green", can_kill_green)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN5_GERMAN_FLAG], can_kill_red)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN5_BOHEMIAN_FLAG], can_kill_green)
@@ -55,6 +57,7 @@ class Genghis5Rules(ScenarioRules):
             self.scenario_logic.economy.has_easy_source(Resource.STONE) &
             can_kill_red
         )
+        can_raise_castles = self.scenario_logic.named("can raise castles", can_raise_castles)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN5_BUILD_ONE_CASTLE], can_raise_castles)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN5_BUILD_TWO_CASTLES], can_raise_castles)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN5_BUILD_THREE_CASTLES], can_raise_castles)

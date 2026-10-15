@@ -31,6 +31,7 @@ class Genghis4Rules(ScenarioRules):
             military.has_siege() &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
+        can_kill_red = self.scenario_logic.named("can beat Red", can_kill_red)
 
         can_kill_yellow: Rule = (
             self.scenario_logic.has_base() &
@@ -44,6 +45,7 @@ class Genghis4Rules(ScenarioRules):
             military.has_long_range_siege() &
             self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
         )
+        can_kill_yellow = self.scenario_logic.named("can beat Yellow", can_kill_yellow)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_RUSSIANS], can_kill_red)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_KHWARAZM], can_kill_yellow)

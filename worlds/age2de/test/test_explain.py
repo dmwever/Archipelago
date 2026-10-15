@@ -13,6 +13,7 @@ from ..explain.Layout import _ranges
 from ..explain.Layout import WIDTH, Lines, text
 from ..explain.Lookup import find
 from ..explain.Routes import routes_for
+from ..locations.Locations import Age2ScenarioLocationData
 
 EVERYTHING = dict(techsanity=Techsanity.option_all, unitsanity=Unitsanity.option_all,
                   shuffle_villager=ShuffleVillager.option_include_professions, shuffle_ages=1)
@@ -48,7 +49,8 @@ class TestFindingTheLocation(ExplainTestBase):
         self.assertIsNone(self.world.explain_rule("nowhere at all", CollectionState(self.multiworld)))
 
     def test_a_loose_name_finds_the_location(self):
-        name = self.explained()[0]
+        name = next(name for name in self.explained()
+                    if not isinstance(find(self.world, name)[1], Age2ScenarioLocationData))
         self.assertTrue(self.plain(name.lower(), CollectionState(self.multiworld)).startswith(name))
 
 
@@ -68,9 +70,12 @@ class TestTheAnswerAgreesWithTheRule(ExplainTestBase):
                         for route in routes_for(self.world, data)
                             for scenario in self.world.pool.scenarios.included
                 )
-                rule = self.multiworld.get_location(name, self.world.player).access_rule
+                location = self.multiworld.get_location(name, self.world.player)
+                # A scenario's own location leaves its unlock to the region it sits in.
+                holds = (location.can_reach(state) if isinstance(data, Age2ScenarioLocationData)
+                         else location.access_rule(state))
                 with self.subTest(name):
-                    self.assertEqual(rule(state), available)
+                    self.assertEqual(holds, available)
 
 
 
@@ -147,6 +152,8 @@ class TestTheLayout(ExplainTestBase):
         checked = 0
         for name in self.explained()[::3]:
             _, data = find(self.world, name)
+            if isinstance(data, Age2ScenarioLocationData):
+                continue   # one scenario's own: no campaign rows, straight to the scenario
             expected = []
             for route in routes_for(self.world, data):
                 for campaign in self.world.pool.campaigns.enabled:
@@ -212,9 +219,21 @@ class TestDirectCommands(ExplainTestBase):
         self.assertTrue(self.plain_of(f"{scenario.scenario_name} {name}").startswith(
             f"{name} in {scenario.scenario_name}"))
 
-    def test_a_scenario_location_is_left_to_ut(self):
+    def test_a_scenario_location_goes_straight_to_its_scenario(self):
         scenario = self.world.pool.scenarios.included[0]
-        self.assertIsNone(self.plain_of(f"{scenario.scenario_name}: Victory"))
+        word = scenario.campaign.campaign_name.split()[0]
+        expected = f"Victory in {scenario.scenario_name}"
+        for typed in (f"{scenario.scenario_name}: Victory", f"{word} {scenario.chapter} Victory"):
+            with self.subTest(typed):
+                answer = self.plain_of(typed)
+                self.assertTrue(answer.startswith(expected), answer)
+                self.assertIn("Completes it", answer)
+
+    def test_a_scenario_location_elsewhere_is_not_offered(self):
+        first, second = self.world.pool.scenarios.included[:2]
+        word = second.campaign.campaign_name.split()[0]
+        self.assertEqual("Victory -> Not Offered",
+                         self.plain_of(f"{word} {second.chapter} {first.scenario_name}: Victory"))
 
     def test_a_campaign_outside_the_seed_says_so(self):
         from ..locations.Campaigns import Age2CampaignData

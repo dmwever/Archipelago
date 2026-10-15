@@ -64,7 +64,11 @@ class ScenarioUnitLogic:
     # -- fielding ----------------------------------------------------------------------------
 
     def can_field(self, line: Age2UnitLineData, age: Age2AgeData | None = None) -> Rule:
-        return self._field(line, age, paid=True)
+        rule = self._field(line, age, paid=True)
+        if isinstance(rule, False_):
+            return rule   # kept bare: the roles drop a line no tier of which is trained here
+        when = f" in the {age.location_name.removeprefix('Reach ')}" if age not in (None, Age2AgeData.DARK) else ""
+        return self.scenario.named(f"can field the {line.line_name}{when}", rule)
 
     def can_field_structurally(self, line: Age2UnitLineData,
                                age: Age2AgeData | None = None) -> Rule:

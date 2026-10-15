@@ -14,7 +14,9 @@ class Attila3Rules(ScenarioRules):
     def set_rules(self):
         super().set_rules()
         can_beat_blue: Rule = self.has_military & self.scenario_logic.military.has_siege()
+        can_beat_blue = self.scenario_logic.named("can beat Blue", can_beat_blue)
         can_beat_red_or_green: Rule = self.has_military & self.scenario_logic.military.counters_building()
+        can_beat_red_or_green = self.scenario_logic.named("can beat Red or Green", can_beat_red_or_green)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_GREEN_DOCK_NORTH], self.has_military | self.has_navy)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_GREEN_DOCK_SOUTH], self.has_military | self.has_navy)

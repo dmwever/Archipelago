@@ -25,6 +25,7 @@ class Genghis2Rules(ScenarioRules):
             self.scenario_logic.military.counters_building() &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
+        can_kill_red = self.scenario_logic.named("can beat Red", can_kill_red)
 
         can_kill_green: Rule = (
             self.scenario_logic.has_base() &
@@ -37,6 +38,7 @@ class Genghis2Rules(ScenarioRules):
             self.scenario_logic.military.counters_building() &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
+        can_kill_green = self.scenario_logic.named("can beat Green", can_kill_green)
 
         # Kushluk hides behind both camps, so reaching him asks for both.
         can_beat_scenario: Rule = can_kill_green & can_kill_red

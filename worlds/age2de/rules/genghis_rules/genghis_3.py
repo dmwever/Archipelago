@@ -25,7 +25,9 @@ class Genghis3Rules(ScenarioRules):
         transport: Rule = Has(Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name)
         bombards: Rule = Has(Age2ItemData.AP_GENGHIS_3_BOMBARDS.item_name)
         has_siege: Rule = military.has_siege() | bombards
+        has_siege = self.scenario_logic.named("has siege or the bombards", has_siege)
         has_long_siege: Rule = military.has_long_range_siege() | bombards
+        has_long_siege = self.scenario_logic.named("has long-range siege or the bombards", has_long_siege)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN3_FIND_ENGINEERS], transport)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN3_FIND_BOMBARDS], transport)
@@ -34,11 +36,13 @@ class Genghis3Rules(ScenarioRules):
             units.can_field(Age2UnitLineData.TRANSPORT_SHIP_LINE, Age2AgeData.FEUDAL) |
             has_siege
         )
+        can_invade_china = self.scenario_logic.named("can invade China", can_invade_china)
 
         can_force_landing: Rule = (
             units.can_field(Age2UnitLineData.TRANSPORT_SHIP_LINE, Age2AgeData.FEUDAL) &
             military.has_navy(Age2AgeData.FEUDAL)
         )
+        can_force_landing = self.scenario_logic.named("can force a landing", can_force_landing)
 
         can_kill_tanguts: Rule = (
             self.scenario_logic.has_base() &
@@ -53,6 +57,7 @@ class Genghis3Rules(ScenarioRules):
             military.counters_building() &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
+        can_kill_tanguts = self.scenario_logic.named("can beat the Tanguts", can_kill_tanguts)
 
         can_kill_xi_xia: Rule = (
             self.scenario_logic.has_base() &
@@ -65,6 +70,7 @@ class Genghis3Rules(ScenarioRules):
             has_siege &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
+        can_kill_xi_xia = self.scenario_logic.named("can beat Xi Xia", can_kill_xi_xia)
 
         can_kill_jin: Rule = (
             self.scenario_logic.has_base() &
@@ -79,6 +85,7 @@ class Genghis3Rules(ScenarioRules):
             has_long_siege &
             self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
         )
+        can_kill_jin = self.scenario_logic.named("can beat the Jin", can_kill_jin)
 
         can_kill_song: Rule = (
             self.scenario_logic.has_base() &
@@ -93,6 +100,7 @@ class Genghis3Rules(ScenarioRules):
             military.counters_building() &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
+        can_kill_song = self.scenario_logic.named("can beat the Song", can_kill_song)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN3_DEFEAT_TANGUTS], can_kill_tanguts)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN3_DEFEAT_XI_XIA], can_kill_xi_xia)

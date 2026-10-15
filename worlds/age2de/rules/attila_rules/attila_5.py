@@ -21,6 +21,7 @@ class Attila5Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
             self.scenario_logic.military.has_long_range_siege()
         )
+        can_beat_cyan = self.scenario_logic.named("can beat Cyan", can_beat_cyan)
         can_beat_green: Rule = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
@@ -30,6 +31,7 @@ class Attila5Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
             self.scenario_logic.military.has_long_range_siege()
         )
+        can_beat_green = self.scenario_logic.named("can beat Green", can_beat_green)
         can_beat_blue: Rule = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.counters(Age2UnitLineData.CENTURION_LINE, Age2AgeData.IMPERIAL) &
@@ -38,6 +40,7 @@ class Attila5Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
             self.scenario_logic.military.has_long_range_siege()
         )
+        can_beat_blue = self.scenario_logic.named("can beat Blue", can_beat_blue)
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT5_DEFEAT_ALANS], can_beat_cyan)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT5_DEFEAT_VISIGOTHS], can_beat_green)

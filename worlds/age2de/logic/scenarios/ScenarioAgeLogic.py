@@ -48,7 +48,8 @@ class ScenarioAgeLogic:
 
     def can_reach(self, age: Age2AgeData) -> Rule:
         """Advance to it here and pay for it: what a victory or an army asks of an age."""
-        return self.can_reach_structurally(age) & self.can_pay_for(age)
+        return self.scenario.named(f"can reach the {age.location_name.removeprefix('Reach ')}",
+                                   self.can_reach_structurally(age) & self.can_pay_for(age))
 
     def can_reach_structurally(self, age: Age2AgeData) -> Rule:
         """Advance to it here, less paying for it."""

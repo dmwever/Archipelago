@@ -11,6 +11,7 @@ from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
+from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.Techs import Age2TechData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
@@ -61,6 +62,8 @@ class Route:
 
 
 def routes_for(world: Age2World, data: Explained) -> list[Route]:
+    if isinstance(data, Age2ScenarioLocationData):
+        return [_objective(world, data)]
     if isinstance(data, Age2BuildingData):
         return [_building(world, data)]
     if isinstance(data, Age2TechData):
@@ -76,6 +79,19 @@ def routes_for(world: Age2World, data: Explained) -> list[Route]:
     tiers = ([unit for unit in data.units if world.pool.units.includes(unit)]
              if isinstance(data, Age2UnitLineData) else [data])
     return [*_trained(world, tiers), *_granted(world, data, tiers)]
+
+
+# -- a scenario's own locations: its objectives and its victory ---------------------------------
+
+def _objective(world: Age2World, objective: Age2ScenarioLocationData) -> Route:
+    """Done in its own scenario only, by whatever its rule asks - nothing past the unlock where
+    it has none."""
+    rule = world.get_location(objective.global_name()).access_rule
+    asks = rule if isinstance(rule, Rule.Resolved) else None
+    return Route(
+        "Completes it", "can't complete",
+        lambda sl: [Way(asks)] if sl.scenario is objective.scenario else [],
+    )
 
 
 # -- buildings, techs, ages, jobs: one route each ------------------------------------------------

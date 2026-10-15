@@ -27,12 +27,14 @@ class Joan4Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
             self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL)
         )
+        can_beat_green = self.scenario_logic.named("can beat Green", can_beat_green)
         can_beat_orange: Rule = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_siege() &
             self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
         )
+        can_beat_orange = self.scenario_logic.named("can beat Orange", can_beat_orange)
         can_beat_yellow: Rule = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_siege() &
@@ -41,6 +43,7 @@ class Joan4Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
             self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
         )
+        can_beat_yellow = self.scenario_logic.named("can beat Yellow", can_beat_yellow)
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_CHALONS_TC], can_beat_green)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_TROYES_TC], can_beat_orange)

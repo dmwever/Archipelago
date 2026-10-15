@@ -27,6 +27,7 @@ class Joan6Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
             self.scenario_logic.military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE)
         )
+        can_defeat_purple = self.scenario_logic.named("can beat Purple", can_defeat_purple)
         
         can_siege_town = (
             HasAll(
@@ -35,6 +36,7 @@ class Joan6Rules(ScenarioRules):
             ) |
             can_defeat_purple
         )
+        can_siege_town = self.scenario_logic.named("can besiege the town", can_siege_town)
         can_defeat_orange = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_siege() &
@@ -43,6 +45,7 @@ class Joan6Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
             self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
         )
+        can_defeat_orange = self.scenario_logic.named("can beat Orange", can_defeat_orange)
         can_defeat_red = (
             self.scenario_logic.has_base() &
             self.scenario_logic.military.has_siege() &
@@ -51,6 +54,7 @@ class Joan6Rules(ScenarioRules):
             self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
             self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
         )
+        can_defeat_red = self.scenario_logic.named("can beat Red", can_defeat_red)
         
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN6_BURGUNDIAN_TOWN], can_siege_town)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN6_VICTORY], can_siege_town & can_defeat_red)

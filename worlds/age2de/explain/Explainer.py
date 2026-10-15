@@ -18,7 +18,8 @@ from ..logic.custom_logic.Named import Named
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
 from .Layout import INDENT, WIDTH, Lines, _ranges, colored, text, truth
-from .Lookup import find
+from .Lookup import find, find_objective
+from ..locations.Locations import Age2ScenarioLocationData
 from .Routes import Route, age_name, any_building_item, building_names, routes_for
 
 if TYPE_CHECKING:
@@ -118,6 +119,9 @@ class Explainer:
         name, data = found
         location = self.world.multiworld.get_location(name, self.world.player)
         self._entries = []
+        if isinstance(data, Age2ScenarioLocationData):   # one scenario's own: straight to it
+            scenario = data.scenario
+            return self._branch(data.location_name, data, scenario.campaign, scenario, state).parts()
 
         lines = Lines()
         lines.add(0, text(f"{name} -> "), truth(location.can_reach(state)))
@@ -163,10 +167,12 @@ class Explainer:
                 self._entries = []
                 return self._easy_view(resource, campaign, scenario, state).parts()
             return eased
-        found = find(self.world, rest)
+        found = (find_objective(self.world, scenario, rest) if scenario is not None else None) or find(self.world, rest)
         if found is None:
             return lambda state: [text(f"No location here matches \"{rest}\".")]
         name, data = found
+        if isinstance(data, Age2ScenarioLocationData):
+            name = data.location_name
 
         def explained(state: CollectionState) -> list[JSONMessagePart]:
             self._entries = []
@@ -783,8 +789,8 @@ class Explainer:
                 and any(way.structural is None or self._holds(way.structural, everything)
                         for way in ways))
 
-    def _resolved(self, rule: Rule) -> Rule.Resolved:
-        return rule.resolve(self.world)
+    def _resolved(self, rule: Rule | Rule.Resolved) -> Rule.Resolved:
+        return rule if isinstance(rule, Rule.Resolved) else rule.resolve(self.world)
 
     def _holds(self, rule: Rule, state: CollectionState) -> bool:
         return self._resolved(rule)(state)

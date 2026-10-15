@@ -29,6 +29,7 @@ class Genghis6Rules(ScenarioRules):
             military.has_siege() &
             self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
         )
+        can_kill_purple = self.scenario_logic.named("can beat Purple", can_kill_purple)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN6_VICTORY], can_kill_purple)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.GEN6_VICTORY.scenario.scenario_name), can_kill_purple)
