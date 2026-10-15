@@ -5,10 +5,12 @@ from .Ages import Age2AgeData
 from ..items.Items import Age2ItemData
 
 class BuildingOption:
+    base = "Base"
     economy = "Economy"
     tech = "Tech"
     military = "Military"
     defense = "Defense"
+    castle = "Castle"
     unique = "Unique"
     wonder = "Wonder"
 
@@ -33,8 +35,8 @@ class Age2BuildingData(enum.IntEnum):
         
     WONDER =                200, "Build Wonder", Age2ItemData.WONDER, Age2AgeData.IMPERIAL, [BuildingOption.wonder]
     OUTPOST =               201, "Build Outpost", Age2ItemData.OUTPOST, Age2AgeData.DARK, [BuildingOption.defense]
-    TOWN_CENTER =           202, "Build Town Center", Age2ItemData.TOWN_CENTER, Age2AgeData.DARK, [BuildingOption.economy]
-    HOUSE =                 203, "Build House", Age2ItemData.HOUSE, Age2AgeData.DARK, [BuildingOption.economy]
+    TOWN_CENTER =           202, "Build Town Center", Age2ItemData.TOWN_CENTER, Age2AgeData.DARK, [BuildingOption.base]
+    HOUSE =                 203, "Build House", Age2ItemData.HOUSE, Age2AgeData.DARK, [BuildingOption.base]
     MILL =                  204, "Build Mill", Age2ItemData.MILL, Age2AgeData.DARK, [BuildingOption.economy]
     MINING_CAMP =           205, "Build Mining Camp", Age2ItemData.MINING_CAMP, Age2AgeData.DARK, [BuildingOption.economy]
     LUMBER_CAMP =           206, "Build Lumber Camp", Age2ItemData.LUMBER_CAMP, Age2AgeData.DARK, [BuildingOption.economy]
@@ -51,7 +53,7 @@ class Age2BuildingData(enum.IntEnum):
     ARCHERY_RANGE =         215, "Build Archery Range", Age2ItemData.ARCHERY_RANGE, Age2AgeData.FEUDAL, [BuildingOption.military]
     STABLE =                216, "Build Stable", Age2ItemData.STABLE, Age2AgeData.FEUDAL, [BuildingOption.military]
     SIEGE_WORKSHOP =        217, "Build Siege Workshop", Age2ItemData.SIEGE_WORKSHOP, Age2AgeData.CASTLE, [BuildingOption.military]
-    CASTLE =                218, "Build Castle", Age2ItemData.CASTLE, Age2AgeData.CASTLE, [BuildingOption.military, BuildingOption.defense]
+    CASTLE =                218, "Build Castle", Age2ItemData.CASTLE, Age2AgeData.CASTLE, [BuildingOption.castle]
 
     PALISADE_GATE =         219, "Build Palisade Gate", Age2ItemData.PALISADE_GATE, Age2AgeData.DARK, [BuildingOption.defense]
     GATE =                  220, "Build Stone Gate", Age2ItemData.GATE, Age2AgeData.FEUDAL, [BuildingOption.defense]
@@ -68,9 +70,9 @@ class Age2BuildingData(enum.IntEnum):
     FEITORIA =              230, "Build Feitoria", Age2ItemData.FEITORIA, Age2AgeData.IMPERIAL, [BuildingOption.unique, BuildingOption.economy]
     SETTLEMENT =            231, "Build Settlement", Age2ItemData.SETTLEMENT, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.economy]
 
-    FORTIFIED_CHURCH =      232, "Build Fortified Church", Age2ItemData.FORTIFIED_CHURCH, Age2AgeData.CASTLE, [BuildingOption.unique, BuildingOption.defense, BuildingOption.military]
-    KREPOST =               233, "Build Krepost", Age2ItemData.KREPOST, Age2AgeData.CASTLE, [BuildingOption.unique, BuildingOption.defense, BuildingOption.military]
-    DONJON =                234, "Build Donjon", Age2ItemData.DONJON, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.defense, BuildingOption.military]
+    FORTIFIED_CHURCH =      232, "Build Fortified Church", Age2ItemData.FORTIFIED_CHURCH, Age2AgeData.CASTLE, [BuildingOption.unique, BuildingOption.castle]
+    KREPOST =               233, "Build Krepost", Age2ItemData.KREPOST, Age2AgeData.CASTLE, [BuildingOption.unique, BuildingOption.castle]
+    DONJON =                234, "Build Donjon", Age2ItemData.DONJON, Age2AgeData.DARK, [BuildingOption.unique, BuildingOption.castle]
     
 
 NAME_TO_BUILDING: dict[str, Age2BuildingData] = {building.item.item_name: building

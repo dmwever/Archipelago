@@ -111,7 +111,7 @@ class TestBuildingSelection(bases.Age2TestBase):
     options = {
         "enabled_campaigns": {ATTILA},
         "starting_campaigns": {ATTILA},
-        "shuffle_buildings": {"Economy", "Tech", "Military", "Defense", "Wonder"},
+        "shuffle_buildings": {"Base", "Economy", "Tech", "Military", "Castle", "Defense", "Wonder"},
     }
 
     def test_unique_buildings_are_never_shuffled_without_the_option(self) -> None:

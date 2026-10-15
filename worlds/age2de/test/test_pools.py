@@ -8,6 +8,7 @@ from . import bases
 from ..Options import Age2Options
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Campaigns import Age2CampaignData
+from ..locations.Civilizations import Age2CivData
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
@@ -121,6 +122,53 @@ class TestBuildingPool(bases.Age2RuleTestBase):
         for building in world.pool.buildings.shuffled:
             with self.subTest(building.name):
                 self.assertTrue(world.pool.civs.builds(building))
+
+    def test_base_is_the_town_center_and_the_house(self):
+        self.assertEqual(
+            [Age2BuildingData.TOWN_CENTER, Age2BuildingData.HOUSE],
+            self.shuffled(shuffle_buildings={BuildingOption.base}),
+        )
+
+    def test_castle_is_its_own_category(self):
+        self.assertEqual(
+            [Age2BuildingData.CASTLE],
+            self.shuffled(shuffle_buildings={BuildingOption.castle}),
+        )
+        self.assertNotIn(
+            Age2BuildingData.CASTLE,
+            self.shuffled(shuffle_buildings={BuildingOption.military, BuildingOption.defense}),
+        )
+
+    def test_a_building_can_be_named_on_its_own(self):
+        self.assertEqual(
+            [Age2BuildingData.MARKET, Age2BuildingData.BLACKSMITH],
+            self.shuffled(shuffle_buildings={"Market", "Blacksmith"}),
+        )
+
+    def test_naming_a_unique_building_gets_past_the_unique_gate(self):
+        """No shipped civ builds a unique building, so the Franks borrow a Settlement here."""
+        original_franks_buildings = Age2CivData.FRANKS.included_buildings
+        Age2CivData.FRANKS.included_buildings = (
+            original_franks_buildings + [Age2BuildingData.SETTLEMENT]
+        )
+        self.addCleanup(
+            setattr,
+            Age2CivData.FRANKS,
+            "included_buildings",
+            original_franks_buildings,
+        )
+
+        self.assertNotIn(
+            Age2BuildingData.SETTLEMENT,
+            self.shuffled(shuffle_buildings={BuildingOption.economy}),
+        )
+        self.assertIn(
+            Age2BuildingData.SETTLEMENT,
+            self.shuffled(shuffle_buildings={BuildingOption.economy, "Settlement"}),
+        )
+
+    def test_naming_a_building_nobody_builds_shuffles_nothing(self):
+        self.assertEqual([], self.shuffled(shuffle_buildings={"Folwark"}))
 
     def test_locations_and_shuffled_agree(self):
         """Buildings have no separate on/off toggle, so the two are the same list."""

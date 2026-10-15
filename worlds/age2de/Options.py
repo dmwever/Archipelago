@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 import typing
 
-from Options import (Choice, OptionCounter, OptionList, OptionSet, PerGameCommonOptions, Range,
-                     StartInventoryPool, Toggle)
+from Options import (Choice, OptionCounter, OptionError, OptionList, OptionSet, PerGameCommonOptions,
+                     Range, StartInventoryPool, Toggle)
 from worlds.age2de.locations.Campaigns import Age2CampaignData
-from .locations.Buildings import BuildingOption
+from .locations.Buildings import NAME_TO_BUILDING, BuildingOption
 from .items.Items import TRAP_NAMES
 
 class Goal(Choice):
@@ -48,24 +48,47 @@ class LocalStart(Choice):
 class ShuffleBuildings(OptionSet):
     """
     Determines which buildings to shuffle.
-        Economy: Shuffle houses, TC, market, resource buildings, farms. Includes dock.
-        Tech: Shuffle blacksmith, university, monastery.
-        Military: Shuffle military buildings. Includes dock and castle.
-        Defense: Shuffle defensive buildings. Includes castle.
+        Base: Shuffle the town center and houses. Local Start's Base places these in your own world.
+        Economy: Shuffle the market, resource buildings and farms. Includes dock.
+        Tech: Shuffle the blacksmith and university.
+        Military: Shuffle the barracks, archery range, stable, siege workshop and monastery. Includes dock.
+        Castle: Shuffle the castle, and with Unique the krepost, fortified church and donjon.
+        Defense: Shuffle walls, gates and towers.
         Unique: Shuffle unique buildings, if applicable civilizations are in the pool. Other options apply to these buildings, e.g. if economy isn't shuffled, neither is folwark.
         Wonder: The wonder, the wonder, the... NO!
+    A building's own name also works and shuffles it whatever its category, e.g. [Military, Market].
+    Keys ignore case.
     """
     display_name = "Shuffle Buildings"
     valid_keys = frozenset({
+        BuildingOption.base,
         BuildingOption.economy,
         BuildingOption.tech,
         BuildingOption.military,
+        BuildingOption.castle,
         BuildingOption.defense,
         BuildingOption.unique,
         BuildingOption.wonder,
     })
+    canonical_keys_by_casefold = {
+        key.casefold(): key for key in [*valid_keys, *NAME_TO_BUILDING]
+    }
     default = set({BuildingOption.economy, BuildingOption.tech, BuildingOption.military})
     
+    def verify_keys(self) -> None:
+        """Matches each key without case, then stores its canonical spelling. The yaml is input
+        only, so the player's casing carries no meaning and nothing downstream folds case again."""
+        unknown = [
+            key for key in self.value
+                if key.casefold() not in self.canonical_keys_by_casefold
+        ]
+        if unknown:
+            raise OptionError(
+                f"Found unexpected key {', '.join(unknown)} in {self.display_name}. "
+                f"Allowed keys: {sorted(self.valid_keys)} or any building's name."
+            )
+        self.value = {self.canonical_keys_by_casefold[key.casefold()] for key in self.value}
+
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, OptionSet):
             return set(self.value) == other.value

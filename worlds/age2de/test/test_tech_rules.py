@@ -42,7 +42,9 @@ class TestTechItemsDoNotGate(Age2RuleTestBase):
 
     def test_the_age_is_still_asked_for(self):
         # The item unlocks the effect, not the age. Crop Rotation is Imperial either way.
-        self.build(techsanity=Techsanity.option_generic)
+        # Castle is shuffled so that withholding it can hold the Imperial Age back.
+        self.build(techsanity=Techsanity.option_generic,
+                   shuffle_buildings={"Economy", "Tech", "Military", "Castle"})
         starved = self.state_without(*self.imperial_blockers())
         self.assertFalse(starved.can_reach_location(
             Age2TechData.CROP_ROTATION.location_name, self.world.player))
@@ -215,7 +217,8 @@ class TestAgeGate(Age2RuleTestBase):
     def test_two_technologies_in_one_region_can_disagree(self):
         # Both live in the Mill. If the age ever migrates from the location to
         # the region entrance, these two stop being separable and this fails.
-        self.build(techsanity=Techsanity.option_generic)
+        self.build(techsanity=Techsanity.option_generic,
+                   shuffle_buildings={"Economy", "Tech", "Military", "Castle"})
         starved = self.state_without(
             *[building.item.item_name for building in
               (Age2BuildingData.MONASTERY, Age2BuildingData.UNIVERSITY,

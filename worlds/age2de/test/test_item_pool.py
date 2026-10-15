@@ -196,7 +196,7 @@ class TestTheHouseComesEarly(bases.Age2TestBase):
     options = {
         "enabled_campaigns": {ATTILA, JOAN},
         "starting_campaigns": {ATTILA},
-        "shuffle_buildings": {"Economy"},
+        "shuffle_buildings": {"Base"},
     }
 
     def test_the_house_is_asked_for_early(self) -> None:
@@ -213,8 +213,22 @@ class TestTheHouseComesEarly(bases.Age2TestBase):
         self.assertEqual(1, len(holders), "the House was not placed in the first sphere")
 
 
+class TestANamedHouseComesEarly(bases.Age2TestBase):
+    """Naming the House shuffles it as surely as the Base category does."""
+
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"House"},
+    }
+
+    def test_the_house_is_asked_for_early(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertEqual(1, self.multiworld.early_items[self.player].get(house))
+
+
 class TestAnUnshuffledHouseIsLeftAlone(bases.Age2TestBase):
-    """With economy buildings unshuffled the House is precollected, so there is nothing to place."""
+    """With base buildings unshuffled the House is precollected, so there is nothing to place."""
 
     options = {
         "enabled_campaigns": {ATTILA, JOAN},
@@ -233,7 +247,7 @@ class TestHunsNeverAskForAHouse(bases.Age2TestBase):
     options = {
         "enabled_campaigns": {ATTILA},
         "starting_campaigns": {ATTILA},
-        "shuffle_buildings": {"Economy"},
+        "shuffle_buildings": {"Base"},
     }
 
     def test_the_house_is_not_an_early_item(self) -> None:

@@ -31,6 +31,8 @@ class BuildingPool:
     def _is_shuffled(self, building: Age2BuildingData) -> bool:
         if not self._civs.builds(building):
             return False   # nobody in this seed puts it up
+        if building.item.item_name in self._shuffle_buildings:
+            return True    # named outright, which outranks the Unique gate
         if (BuildingOption.unique in building.building_options
                 and BuildingOption.unique not in self._shuffle_buildings):
             return False   # uniques are out altogether, whatever their other category says

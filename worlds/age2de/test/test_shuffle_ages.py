@@ -187,8 +187,8 @@ class TestAttila1(Age2RuleTestBase):
         # The alternate start -- Attila's Camp or the Roman villagers, then
         # build -- was dead for a while: it was asked for while the scenario
         # list was still being filled, so it resolved to nothing and was
-        # dropped from the disjunction.
-        world = self.build()
+        # dropped from the disjunction. Base is shuffled, or the Town Center is never asked for.
+        world = self.build(shuffle_buildings={"Base", "Economy", "Tech", "Military"})
         attila_1 = [s for s in world.rules.logic.scenarios
                     if s.scenario.name == "AP_ATTILA_1"][0]
         wanted = set(attila_1.has_base().resolve(world).item_dependencies())
