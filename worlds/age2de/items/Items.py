@@ -476,7 +476,6 @@ class Age2ItemData(enum.IntEnum):
     STARTING_VILLAGER_FOOD =    1024, "Starting Villager Food",                                     TCResources(Resource.FOOD, 150)
 
     # Genghis Khan
-    AP_GENGHIS_1_KEREYID_TRIBE = 1025, "Genghis Khan, Crucible: Kereyid Tribe",                      ScenarioItem(Age2ScenarioData.AP_GENGHIS_1)
     AP_GENGHIS_2_TAYICHIUD_BASE = 1026, "Genghis Khan, A Life of Revenge: Tayichi'ud Base",     ScenarioItem(Age2ScenarioData.AP_GENGHIS_2)
     AP_ATTILA_5_DEATHMATCH = 1027, "Attila, The Catalunian Fields: Deathmatch Resources",    ScenarioItem(Age2ScenarioData.AP_ATTILA_5)
     AP_GENGHIS_3_TRANSPORT = 1028, "Genghis Khan, Into China: Transport Ship",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
@@ -827,6 +826,7 @@ class Age2ItemData(enum.IntEnum):
     AP_GENGHIS_3_BOMBARDS =             4017, "Genghis Khan, Into China: Bombard Cannons",                      Mercenary(Age2ScenarioData.AP_GENGHIS_3, [MercenaryUnit(Age2UnitData.BOMBARD_CANNON, 6)], icon_id=330, name_string_id=990018, in_logic=True)
     AP_GENGHIS_5_HERMITS =              4018, "Genghis Khan, The Promise: Hermit Monks",                        Mercenary(Age2ScenarioData.AP_GENGHIS_5, [MercenaryUnit(Age2UnitData.MONK, 1), MercenaryUnit(Age2UnitData.ELITE_LEITIS, 10)], icon_id=331, name_string_id=990019)
     AP_GENGHIS_6_SUBOTAIS_ARMY =        4019, "Genghis Khan, Pax Mongolica: Subotai's Army",                     Mercenary(Age2ScenarioData.AP_GENGHIS_6, [MercenaryUnit(Age2HeroData.SUBOTAI, 1), MercenaryUnit(Age2HeroData.KHAN, 5), MercenaryUnit(Age2HeroData.SABOTEUR, 5)], icon_id=332, name_string_id=990020)
+    AP_GENGHIS_1_KEREYID_TRIBE =        4020, "Genghis Khan, Crucible: Kereyid Tribe",                       Mercenary(Age2ScenarioData.AP_GENGHIS_1, [MercenaryUnit(Age2UnitData.CAVALRY_ARCHER, 8), MercenaryUnit(Age2UnitData.MONK, 2)], icon_id=333, name_string_id=990021, in_logic=True)
 
     #5000 - 5099 = Traps
     TRAP_WOLOLO =                       5000, "Wololo Trap",                                  Trap()

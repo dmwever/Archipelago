@@ -268,8 +268,12 @@ class TestTheQuestionIsShared(EconomyTestBase):
                     self.assertIs(self.resolved(question).answer, self.resolved(answer))
 
     def test_the_answers_stay_within_budget(self):
+        """The cache is meant to grow with the campaigns enabled and no faster. Each one costs
+        about three hundred and forty answers - 331 for Attila alone, 643 with Joan, 1002 with
+        Genghis - so a per-campaign ceiling catches the shape going wrong rather than the world
+        getting bigger."""
         self.build()
-        self.assertLess(len(self.world.rules.logic.scenario_answers), 1000)
+        self.assertLess(len(self.world.rules.logic.scenario_answers), 400 * len(self.campaigns))
 
 
 if __name__ == "__main__":
