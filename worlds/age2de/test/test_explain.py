@@ -10,7 +10,7 @@ from .bases import Age2RuleTestBase
 from ..Options import ShuffleVillager, Techsanity, Unitsanity
 from ..explain.Explainer import Explainer, Status
 from ..explain.Layout import _ranges
-from ..explain.Layout import WIDTH, Lines, text
+from ..explain.Layout import LOG_WIDTH, SAYS, WIDTH, Lines, text, truth
 from ..explain.Lookup import find
 from ..explain.Routes import routes_for
 from ..locations.Locations import Age2ScenarioLocationData
@@ -142,7 +142,7 @@ class TestTheLayout(ExplainTestBase):
         for name in self.explained():
             for line in self.plain(name, state).split("\n"):
                 with self.subTest(name):
-                    self.assertLessEqual(len(line), WIDTH + 20, line)
+                    self.assertLessEqual(len(line), LOG_WIDTH, line)
 
     def test_each_chapter_says_whether_it_has_it_on_the_route(self):
         """Under each route, the campaign item, then every chapter offering the route, True where
@@ -186,6 +186,21 @@ class TestRuns(Age2RuleTestBase):
         self.assertGreater(len(rendered), 1)
         self.assertTrue(rendered[1].startswith(" " * 12))
         self.assertTrue(all(len(line) <= WIDTH for line in rendered))
+
+    def test_a_long_statement_continues_after_its_rule(self):
+        lines = Lines()
+        lines.add(3, text("Counters the Cavalry Archer Line in the Imperial Age"),
+                  text(SAYS), truth(False), text("  [/explain_more 4]"))
+        self.assertEqual(
+            [" " * 12 + "Counters the Cavalry Archer Line in the Imperial Age",
+             " " * 16 + "-> False  [/explain_more 4]"],
+            lines.plain().split("\n"),
+        )
+
+    def test_a_statement_within_the_width_stays_on_one_line(self):
+        lines = Lines()
+        lines.add(1, text("Has a base"), text(SAYS), truth(True))
+        self.assertEqual(["    Has a base -> True"], lines.plain().split("\n"))
 
 
 class TestDirectCommands(ExplainTestBase):

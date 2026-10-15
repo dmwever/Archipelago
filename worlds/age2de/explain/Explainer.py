@@ -17,7 +17,7 @@ from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..logic.custom_logic.Named import Named
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
-from .Layout import INDENT, WIDTH, Lines, _ranges, colored, text, truth
+from .Layout import INDENT, SAYS, WIDTH, Lines, _ranges, colored, text, truth
 from .Lookup import find, find_objective
 from ..locations.Locations import Age2ScenarioLocationData
 from .Routes import Route, age_name, any_building_item, building_names, routes_for
@@ -69,7 +69,7 @@ def _distinct(children: tuple[Rule.Resolved, ...]) -> list[Rule.Resolved]:
 
 def _says(held: bool) -> list[JSONMessagePart]:
     """How every line that states something ends: "-> True" or "-> False"."""
-    return [text(" -> "), truth(held)]
+    return [text(SAYS), truth(held)]
 
 
 def _campaign_item(campaign: Age2CampaignData) -> str:

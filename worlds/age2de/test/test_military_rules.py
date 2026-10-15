@@ -264,4 +264,22 @@ class TestAttila3HasRulesForGreenAndRed(Age2RuleTestBase):
         for objective in self.OBJECTIVES:
             with self.subTest(objective.name):
                 location = self.multiworld.get_location(objective.global_name(), world.player)
-                self.assertIn("can train", location.access_rule.explain_str())
+                self.assertIn("can train", self.explained_through_names(location.access_rule))
+
+    def explained_through_names(self, rule) -> str:
+        """Every line of the rule's tree. A named rule or scenario question explains as its
+        label alone, so the army it asks for sits below it."""
+        lines = []
+        seen = set()
+        pending = [rule]
+        while pending:
+            node = pending.pop()
+            if id(node) in seen:
+                continue
+            seen.add(id(node))
+            lines.append(node.explain_str())
+            for attribute in ("child", "answer"):
+                if hasattr(node, attribute):
+                    pending.append(getattr(node, attribute))
+            pending.extend(getattr(node, "children", ()))
+        return "\n".join(lines)

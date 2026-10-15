@@ -7,6 +7,11 @@ from NetUtils import JSONMessagePart
 INDENT = "    "
 WIDTH = 70
 """Characters a line may run to before it continues on the next, one level deeper."""
+LOG_WIDTH = WIDTH + 20
+"""Past this the log wraps a line itself. A statement's truth and marker may run past WIDTH, so
+it is cut only here."""
+SAYS = " -> "
+"""Between what a line states and whether it holds: "Has a base -> True"."""
 
 
 def text(value: str) -> JSONMessagePart:
@@ -28,7 +33,18 @@ class Lines:
         self._lines: list[tuple[int, list[JSONMessagePart]]] = []
 
     def add(self, depth: int, *parts: JSONMessagePart) -> None:
-        self._lines.append((depth, list(parts)))
+        """A statement that would run past LOG_WIDTH continues after its rule, one level deeper:
+        "-> False" and its marker go on the next line."""
+        says_at = next(
+            (index for index, part in enumerate(parts) if part["text"] == SAYS),
+            None,
+        )
+        length = len(INDENT * depth) + sum(len(part["text"]) for part in parts)
+        if says_at is None or says_at == 0 or length <= LOG_WIDTH:
+            self._lines.append((depth, list(parts)))
+            return
+        self._lines.append((depth, list(parts[:says_at])))
+        self._lines.append((depth + 1, [text(SAYS.lstrip()), *parts[says_at + 1:]]))
 
     def extend(self, other: Lines) -> None:
         self._lines += other._lines
