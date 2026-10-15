@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import typing
 
-from Options import (Choice, OptionCounter, OptionError, OptionList, OptionSet, PerGameCommonOptions,
+from Options import (Choice, DefaultOnToggle, OptionCounter, OptionError, OptionList, OptionSet, PerGameCommonOptions,
                      Range, StartInventoryPool, Toggle)
 from worlds.age2de.locations.Campaigns import Age2CampaignData
 from .locations.Buildings import NAME_TO_BUILDING, BuildingOption
@@ -107,7 +107,7 @@ class StartingCampaigns(OptionSet):
     """
     display_name = "Starting Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
-    default = set((Age2CampaignData.ATTILA.campaign_name,))
+    default = set((Age2CampaignData.GENGHIS.campaign_name,))
 
 class EnabledCampaigns(OptionSet):
     """
@@ -120,7 +120,7 @@ class EnabledCampaigns(OptionSet):
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
     default = set((Age2CampaignData.ATTILA.campaign_name,))
 
-class ShuffleAges(Toggle):
+class ShuffleAges(DefaultOnToggle):
     """
     Shuffles the ability to advance to the Feudal, Castle and Imperial Ages into the item pool.
     """
@@ -143,7 +143,7 @@ class Techsanity(Choice):
     option_units = 1
     option_generic = 2
     option_all = 3
-    default = option_none
+    default = option_all
 
 
 def upgrade_techs_shuffled(techsanity: int) -> bool:
@@ -180,7 +180,7 @@ class ShuffleUniqueTechs(Choice):
     option_unshuffled = 0
     option_shuffled = 1
     option_shuffled_everywhere = 2
-    default = option_unshuffled
+    default = option_shuffled
 
 
 class ExistingTechs(Choice):
@@ -213,7 +213,7 @@ class Unitsanity(Choice):
     option_none = 0
     option_unit_line = 1
     option_all = 2
-    default = option_none
+    default = option_unit_line
 
 
 class UnitsanityItems(Choice):
@@ -264,7 +264,7 @@ class IncludeUniqueUnits(Choice):
     option_unique = 1
     option_regional = 2
     option_both = 3
-    default = option_none
+    default = option_both
 
 
 class Caveman(Toggle):
@@ -288,7 +288,7 @@ class TrapDifficulty(Choice):
     option_medium = 3
     option_hard = 4
     option_legendary = 5
-    default = option_no_traps
+    default = option_standard
 
     def include_traps(self) -> bool:
         return self.value > 0
