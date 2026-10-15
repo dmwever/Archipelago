@@ -8,10 +8,10 @@ Spec: Implementation Decisions, "Unconnected campaigns".
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] One file per campaign, in the same form as the other scenario resource data, with valid Python syntax (PR 19's missing commas, lowercase booleans and `boolean` annotation fixed)
-- [ ] The duplicate Montezuma file is removed; only one copy remains
-- [ ] The Saladin docstring no longer says "Khan" or "Mongols"
-- [ ] Each docstring says the file is not imported, and that its flags must be rescanned per player when the campaign is connected
-- [ ] Nothing imports them; the existing suite is green; no new tests
+- [x] One file per campaign, in the same form as the other scenario resource data, with valid Python syntax (PR 19's missing commas, lowercase booleans and `boolean` annotation fixed)
+- [x] The duplicate Montezuma file is removed; only one copy remains
+- [x] The Saladin docstring no longer says "Khan" or "Mongols"
+- [x] Each docstring says the file is not imported, and that its flags must be rescanned per player when the campaign is connected
+- [ ] Nothing imports them; the existing suite is green; no new tests (nothing imports them and no tests were added; the suite was not run, by request)
