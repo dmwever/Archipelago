@@ -1,0 +1,442 @@
+##### b:AP_Attila_1
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Attila-scn1 player 2.ai' ai_type=0 embedded_len=2101 disabled_target_bldgs=[]
+P3 ai_name='Attila-scn1 player 3.ai' ai_type=0 embedded_len=9148 disabled_target_bldgs=[]
+P4 ai_name='Attila-scn1 player 4.ai' ai_type=0 embedded_len=8832 disabled_target_bldgs=[]
+P5 ai_name='Attila-scn1 player 5.ai' ai_type=0 embedded_len=3290 disabled_target_bldgs=[]
+T[8] 'Control Attila' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P1->P2 area=(121,32)-(143,55) targets_in_area=[]
+T[12] 'Bleda dies' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=10
+    AI_GOAL P-1 goal=11
+    AI_GOAL P-1 goal=12
+T[15] "[D12] P3_Attila's Tarkans" enabled=0 looping=0 activated_by=['+[14][D11] P3_Attila Blows Bleda Off']
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(138,34)-(143,40) targets_in_area=[]
+T[35] 'P2_Unknowing Tarkans' enabled=0 looping=0 activated_by=['-[45]P1_Path Toggling', '+[46]P2_Path Toggling']
+    DIPLO P1->P2=ally
+    DIPLO P2->P1=ally
+T[39] 'P1_Archers Attack' enabled=0 looping=0 activated_by=['+[38]P1_Archers Appear']
+    DIPLO P2->P1=enemy
+    DIPLO P1->P2=enemy
+T[41] 'P1_Tarkans Turn' enabled=0 looping=0 activated_by=['+[40][D6] P1_Attila Returns']
+    CHANGE_OWNERSHIP(generic) unit=755 P2->P1 area=(133,30)-(143,43) targets_in_area=[]
+    DIPLO P2->P1=enemy
+    DIPLO P1->P2=enemy
+T[53] 'P2_Tarkans Side with Attila' enabled=0 looping=0 activated_by=['+[52][D10] P2_Tarkan Retort']
+    CHANGE_OWNERSHIP(generic) unit=755 P2->P1 area=(138,31)-(143,43) targets_in_area=[]
+T[54] "P2_Bleda's Force Charges" enabled=0 looping=0 activated_by=['+[53]P2_Tarkans Side with Attila']
+    DIPLO P1->P2=enemy
+    AI_GOAL P-1 goal=38
+T[60] '[D25] Scythian Scout Goes Home' enabled=0 looping=0 activated_by=['+[61][D24] Scythian begs for help']
+    DIPLO P3->P1=neutral
+    DIPLO P1->P3=neutral
+T[64] "P1_Tarkans don't Rush Attila" enabled=0 looping=0 activated_by=['+[38]P1_Archers Appear', '-[41]P1_Tarkans Turn']
+    DIPLO P2->P1=ally
+    DIPLO P1->P2=ally
+T[66] '[D26] Alliance with Scythians' enabled=0 looping=0 activated_by=['+[60][D25] Scythian Scout Goes Home', '-[67]Scythian Offer', '-[71][D28] Huns Kill Scout']
+    DIPLO P1->P3=ally
+    DIPLO P3->P1=ally
+    DIPLO P3->P4=enemy
+    DIPLO P3->P5=enemy
+    AI_GOAL P-1 goal=97
+    DIPLO P4->P3=enemy
+    DIPLO P5->P3=enemy
+T[70] '[D27] Alliance Broken' enabled=0 looping=0 activated_by=['+[67]Scythian Offer', '-[71][D28] Huns Kill Scout']
+    CHANGE_OWNERSHIP(generic) unit=474 P1->P3 area=(-1,-1)-(-1,-1) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=837 P1->P3 area=(-1,-1)-(-1,-1) targets_in_area=[]
+    DIPLO P1->P3=enemy
+T[71] '[D28] Huns Kill Scout' enabled=1 looping=0 activated_by=['-[66][D26] Alliance with Scythians', '-[95]Remove Scout']
+    DIPLO P3->P1=enemy
+T[73] '[D30] Persian attack' enabled=0 looping=0 activated_by=['+[72][D29] Persian Threat']
+    AI_GOAL P-1 goal=13
+T[75] 'Villager Violence' enabled=0 looping=0 activated_by=['+[74][D31] Persian Preventive Violence']
+    AI_GOAL P-1 goal=13
+T[93] 'Bleda Enemy' enabled=0 looping=0 activated_by=['+[32][D14] P3_Bleda Runs Attila Out', '+[33]P3_Bleda Goes Home']
+    DIPLO P1->P2=enemy
+    DIPLO P2->P1=enemy
+T[149] "AP Give Attila's Camp" enabled=0 looping=0 activated_by=["+[148]AP Spawn Attila's Camp Villagers"]
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(109,12)-(120,20) targets_in_area=[]
+T[150] 'AP Startup' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P0 area=(0,127)-(3,131) targets_in_area=[]
+T[151] 'AP Give Roman Camp Vils' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(1,127)-(3,131) targets_in_area=[]
+T[153] "AP Give Bleda's Camp" enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(0,27)-(143,143) targets_in_area=['P2:Market']
+      COND OWN_FEWER_OBJECTS var=-1 q=0 cmp=-1 unit=4 p=2 inv=-1
+      COND DESTROY_OBJECT var=-1 q=-1 cmp=-1 unit=-1 p=-1 inv=0
+      COND CAPTURE_OBJECT var=-1 q=-1 cmp=-1 unit=-1 p=1 inv=1
+      COND OWN_FEWER_OBJECTS var=-1 q=5 cmp=-1 unit=755 p=2 inv=-1
+      COND PLAYER_DEFEATED var=-1 q=-1 cmp=-1 unit=-1 p=2 inv=1
+      COND SCRIPT_CALL var=-1 q=-1 cmp=-1 unit=-1 p=-1 inv=-1
+##### b:AP_Attila_2
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Attila-scn2 player 2.ai' ai_type=0 embedded_len=1570 disabled_target_bldgs=[]
+P3 ai_name='Attila-scn2 player 3.ai' ai_type=0 embedded_len=1069 disabled_target_bldgs=[]
+P4 ai_name='Attila-scn2 player 4.ai' ai_type=0 embedded_len=1071 disabled_target_bldgs=[]
+P5 ai_name='Attila-scn2 player 5.ai' ai_type=0 embedded_len=1403 disabled_target_bldgs=[]
+P6 ai_name='Attila-scn2 player 6.ai' ai_type=0 embedded_len=1075 disabled_target_bldgs=[]
+P7 ai_name='Attila-scn2 player 7.ai' ai_type=0 embedded_len=5282 disabled_target_bldgs=[]
+P8 ai_name='Attila-scn2 player 8.ai' ai_type=0 embedded_len=871 disabled_target_bldgs=[]
+T[7] '[D4][S1] Get food' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[9] '[D7] Trade with Scythians' enabled=0 looping=0 activated_by=['+[8][D6] Scythians Speak', '-[45]Betray Scythians']
+    CHANGE_OWNERSHIP(generic) unit=-1 P1->P8 area=(94,88)-(109,104) targets_in_area=[]
+T[19] '[D9][S9] Cyan Lose Town Center' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=9
+T[24] '[S9] Cyan Resigns w/out Prisoners' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=9
+T[45] 'Betray Scythians' enabled=1 looping=0 activated_by=[]
+    DIPLO P8->P1=enemy
+T[57] 'AP Set Scene' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P0 area=(18,30)-(20,35) targets_in_area=[]
+T[59] 'AP Give Dyrrhachium Prisoners' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(18,30)-(20,35) targets_in_area=[]
+##### b:AP_Attila_3
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[84]
+P2 ai_name='scenario noncombat.ai' ai_type=0 embedded_len=907 disabled_target_bldgs=[]
+P3 ai_name='Attila-scn3 player 3.ai' ai_type=0 embedded_len=4721 disabled_target_bldgs=[]
+P4 ai_name='Attila-scn3 player 4.ai' ai_type=0 embedded_len=5364 disabled_target_bldgs=[]
+T[32] 'AP Green Dock 1' enabled=1 looping=0 activated_by=[]
+    XS GreenDock1();
+T[33] 'AP Green Dock 2' enabled=1 looping=0 activated_by=[]
+    XS GreenDock2();
+T[36] 'AP Blue Dock North' enabled=1 looping=0 activated_by=[]
+    XS BlueDockNorth();
+T[37] 'AP Blue Docks South' enabled=1 looping=0 activated_by=[]
+    XS BlueDocksSouth();
+T[42] 'AP Red Dock' enabled=1 looping=0 activated_by=[]
+    XS RedDock();
+T[43] 'AP Red Market' enabled=1 looping=0 activated_by=[]
+    XS RedMarket();
+##### b:AP_Attila_4
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Attila-scn4 player 2.ai' ai_type=0 embedded_len=7298 disabled_target_bldgs=[]
+P3 ai_name='Attila-scn4 player 3.ai' ai_type=0 embedded_len=7415 disabled_target_bldgs=[]
+P4 ai_name='Attila-scn4 player 4.ai' ai_type=0 embedded_len=7032 disabled_target_bldgs=[]
+P5 ai_name='Attila-scn4 player 5.ai' ai_type=0 embedded_len=1099 disabled_target_bldgs=[]
+T[3] '[D1] Romans Come!' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=37
+T[11] '[D2] Burgundy Wants to Change Sides' enabled=1 looping=0 activated_by=['-[30]Burgundy Defeated']
+    AI_GOAL P-1 goal=2
+T[12] '[D4][T] Burgundy Castle' enabled=0 looping=0 activated_by=['+[14][D3] Burgundy Tribute', "-[15][D5] Burgundy Doesn't Get Castle", '-[30]Burgundy Defeated']
+    DIPLO P2->P3=enemy
+    DIPLO P2->P4=enemy
+    DIPLO P3->P2=enemy
+    DIPLO P4->P2=enemy
+    AI_GOAL P-1 goal=18
+    DIPLO P2->P5=enemy
+    DIPLO P5->P2=enemy
+T[14] '[D3] Burgundy Tribute' enabled=0 looping=0 activated_by=['+[11][D2] Burgundy Wants to Change Sides', '-[30]Burgundy Defeated']
+    DIPLO P1->P2=ally
+    DIPLO P2->P1=ally
+T[15] "[D5] Burgundy Doesn't Get Castle" enabled=0 looping=0 activated_by=['-[12][D4][T] Burgundy Castle', '+[14][D3] Burgundy Tribute', '-[30]Burgundy Defeated']
+    DIPLO P1->P2=enemy
+    DIPLO P2->P1=enemy
+T[32] 'No Team Bonus for Orleans' enabled=1 looping=0 activated_by=[]
+    DIPLO P4->P5=ally
+    DIPLO P5->P4=ally
+##### b:AP_Attila_5
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Attila-scn5 player 2.ai' ai_type=0 embedded_len=9086 disabled_target_bldgs=[]
+P3 ai_name='Attila-scn5 player 3.ai' ai_type=0 embedded_len=8839 disabled_target_bldgs=[]
+P4 ai_name='Attila-scn5 player 4.ai' ai_type=0 embedded_len=9672 disabled_target_bldgs=[]
+P5 ai_name='Attila-scn5 player 5.ai' ai_type=0 embedded_len=8985 disabled_target_bldgs=[]
+P6 ai_name='Fe Immobile AI.ai' ai_type=0 embedded_len=1468 disabled_target_bldgs=[]
+##### b:AP_Attila_6
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Attila-scn6 player 2.ai' ai_type=0 embedded_len=5162 disabled_target_bldgs=[]
+P3 ai_name='Attila-scn6 player 3.ai' ai_type=0 embedded_len=4912 disabled_target_bldgs=[]
+P4 ai_name='Attila-scn6 player 4.ai' ai_type=0 embedded_len=5117 disabled_target_bldgs=[]
+P5 ai_name='Attila-scn6 player 5.ai' ai_type=0 embedded_len=5283 disabled_target_bldgs=[]
+P6 ai_name='Attila-scn6 player 6.ai' ai_type=0 embedded_len=1057 disabled_target_bldgs=[]
+T[1] 'Purple Constructs Wonder (time)' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=8
+T[2] 'Red Constructs Wonder' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=6
+T[3] 'Green Constructs Wonder (time)' enabled=0 looping=0 activated_by=['+[9]Easy Difficulty']
+    AI_GOAL P-1 goal=3
+T[4] 'Orange Constructs Wonder' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=7
+T[5] 'Purple Constructs Wonder 2' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=9
+T[20] 'Green Constructs Wonder (time)' enabled=0 looping=0 activated_by=['+[22]Moderate Difficulty']
+    AI_GOAL P-1 goal=3
+T[21] 'Green Constructs Wonder (time)' enabled=0 looping=0 activated_by=['+[23]Hard Difficulty']
+    AI_GOAL P-1 goal=3
+##### b:AP_Joan_1
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Joan-noncombat.ai' ai_type=0 embedded_len=911 disabled_target_bldgs=[]
+P3 ai_name='Joan-noncombat.ai' ai_type=0 embedded_len=911 disabled_target_bldgs=[]
+P4 ai_name='Joan-noncombat.ai' ai_type=0 embedded_len=911 disabled_target_bldgs=[]
+P5 ai_name='Joan-scn1 player 5.ai' ai_type=0 embedded_len=1910 disabled_target_bldgs=[]
+P6 ai_name='Joan-noncombat.ai' ai_type=0 embedded_len=911 disabled_target_bldgs=[]
+T[4] '[D8] Ambuscade' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=837 P5->P1 area=(59,2)-(88,34) targets_in_area=[]
+T[15] 'Brits Leave' enabled=0 looping=0 activated_by=['+[14][D17] Fight Over', '+[27]Brits Leave Again']
+    DIPLO P6->P5=ally
+T[17] '[D16] Battle Scene' enabled=1 looping=0 activated_by=[]
+    DIPLO P5->P6=enemy
+    DIPLO P6->P5=enemy
+T[42] 'Take away outposts' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=598 P1->P0 area=(79,99)-(111,131) targets_in_area=[]
+T[51] 'AP Find Dock' enabled=1 looping=0 activated_by=[]
+    XS FindDock();
+T[57] 'AP Give Swordsmen' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P1 area=(140,86)-(141,88) targets_in_area=[]
+T[62] 'AP Give Crossbows' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P1 area=(135,97)-(138,100) targets_in_area=[]
+T[63] 'AP Give Ram Army' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P1 area=(112,13)-(114,27) targets_in_area=[]
+T[65] 'AP Give Recruits' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P1 area=(33,104)-(36,106) targets_in_area=[]
+##### b:AP_Joan_2
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Joan-scn2 player 2.ai' ai_type=0 embedded_len=9831 disabled_target_bldgs=[]
+P3 ai_name='Joan-scn2 player 3.ai' ai_type=0 embedded_len=6617 disabled_target_bldgs=[]
+P4 ai_name='Joan-scn2 player 4.ai' ai_type=0 embedded_len=835 disabled_target_bldgs=[]
+P5 ai_name='Joan-noncombat.ai' ai_type=0 embedded_len=911 disabled_target_bldgs=[]
+P6 ai_name='Joan-noncombat.ai' ai_type=0 embedded_len=911 disabled_target_bldgs=[]
+P7 ai_name='Joan-scn2 player 7.ai' ai_type=0 embedded_len=6399 disabled_target_bldgs=[]
+T[0] '[D7] Trade Carts to Orleans' enabled=0 looping=0 activated_by=['+[15][D4] Welcome to Blois']
+    REMOVE_OBJECT ids=['TradeCart'] sel=[] P1->P-1
+T[20] '[S31] P3 Targets Cathedral' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=31
+T[21] '[S71] P7 Targets Cathedral' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=71
+T[37] 'Capture Orleans' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(85,34)-(148,96) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P4->P1 area=(78,34)-(148,110) targets_in_area=[]
+T[55] 'AP Setup' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P0 area=(16,89)-(23,96) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P0 area=(92,43)-(146,91) targets_in_area=['P2:Market']
+    CHANGE_OWNERSHIP ids=[] sel=['P2:Dock'] P2->P0
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P0 area=(10,91)-(15,92) targets_in_area=['P5:TradeCart', 'P5:TradeCart', 'P5:TradeCart', 'P5:TradeCart', 'P5:TradeCart', 'P5:TradeCart']
+T[60] 'AP Find Dock' enabled=1 looping=0 activated_by=[]
+    XS FindDock();
+T[68] 'AP Give Trade Carts' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(9,89)-(23,96) targets_in_area=[]
+T[70] 'AP Give Dock' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP ids=[] sel=['P2:Dock'] P0->P1
+      COND OBJECT_VISIBLE var=-1 q=-1 cmp=-1 unit=-1 p=-1 inv=-1
+      COND SCRIPT_CALL var=-1 q=-1 cmp=-1 unit=-1 p=-1 inv=-1
+##### b:AP_Joan_3
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Joan-scn3 player 2.ai' ai_type=0 embedded_len=10286 disabled_target_bldgs=[]
+P3 ai_name='Joan-scn3 player 3.ai' ai_type=0 embedded_len=6628 disabled_target_bldgs=[]
+P4 ai_name='Joan-scn3 player 4.ai' ai_type=0 embedded_len=8054 disabled_target_bldgs=[]
+T[1] '[D9] Fastolf Attacks' enabled=0 looping=0 activated_by=['+[11][D1] Destroy 1st Castle']
+    AI_GOAL P-1 goal=40
+T[11] '[D1] Destroy 1st Castle' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[48] 'AP Set Stage' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P4->P0 area=(13,87)-(17,89) targets_in_area=[]
+T[50] 'AP Give Boats' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(14,87)-(17,89) targets_in_area=[]
+##### b:AP_Joan_4
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Joan-scn4 player 2.ai' ai_type=0 embedded_len=9799 disabled_target_bldgs=[]
+P3 ai_name='Joan-scn4 player 3.ai' ai_type=0 embedded_len=12394 disabled_target_bldgs=[]
+P4 ai_name='Joan-scn4 player 4.ai' ai_type=0 embedded_len=11207 disabled_target_bldgs=[]
+P5 ai_name='Fe Immobile AI.ai' ai_type=0 embedded_len=1468 disabled_target_bldgs=[]
+T[0] '[D0][S25] Troyes loses' enabled=0 looping=0 activated_by=['+[15][S15] Joan gets TC']
+    AI_GOAL P-1 goal=25
+    DIPLO P1->P2=ally
+    DIPLO P2->P1=ally
+T[1] '[D1][S26] Chalons loses' enabled=0 looping=0 activated_by=['+[15][S15] Joan gets TC']
+    AI_GOAL P-1 goal=26
+    DIPLO P1->P3=ally
+    DIPLO P3->P1=ally
+T[2] '[D2][S27] Rheims loses' enabled=0 looping=0 activated_by=['+[15][S15] Joan gets TC']
+    AI_GOAL P-1 goal=27
+    DIPLO P1->P4=ally
+    DIPLO P4->P1=ally
+T[5] '[D3][S2] Joan tries to cross left' enabled=1 looping=0 activated_by=['-[7][D5][S2] Joan build boats', '-[14][D4][S2] Joan tries to cross right']
+    AI_GOAL P-1 goal=2
+T[7] '[D5][S2] Joan build boats' enabled=1 looping=0 activated_by=['-[5][D3][S2] Joan tries to cross left', '-[14][D4][S2] Joan tries to cross right']
+    AI_GOAL P-1 goal=2
+T[14] '[D4][S2] Joan tries to cross right' enabled=1 looping=0 activated_by=['-[5][D3][S2] Joan tries to cross left', '-[7][D5][S2] Joan build boats']
+    AI_GOAL P-1 goal=2
+T[15] '[S15] Joan gets TC' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=15
+    CHANGE_OWNERSHIP(generic) unit=603 P0->P1 area=(23,53)-(27,60) targets_in_area=[]
+T[34] 'AP Set Scene' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P0 area=(9,48)-(30,77) targets_in_area=[]
+T[42] 'AP Give Base' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(9,48)-(30,77) targets_in_area=[]
+##### b:AP_Joan_5
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[45, 84]
+P2 ai_name='Joan-scn5 player 2.ai' ai_type=0 embedded_len=584 disabled_target_bldgs=[]
+P3 ai_name='Joan-scn5 player 3.ai' ai_type=0 embedded_len=1401 disabled_target_bldgs=[]
+P4 ai_name='Joan-scn5 player 4.ai' ai_type=0 embedded_len=170 disabled_target_bldgs=[]
+P5 ai_name='Fe Immobile AI.ai' ai_type=0 embedded_len=1468 disabled_target_bldgs=[]
+T[4] '[D5] Villagers rescued' enabled=1 looping=0 activated_by=[]
+    DIPLO P3->P1=enemy
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(74,74)-(74,78) targets_in_area=[]
+T[5] '[D7] Burgundy attacks!' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[9] '[D3] Reinforcement arrive' enabled=0 looping=0 activated_by=['+[2][D2] Keep waiting']
+    CHANGE_OWNERSHIP(generic) unit=-1 P1->P2 area=(74,74)-(74,78) targets_in_area=[]
+T[14] 'Standard' enabled=1 looping=0 activated_by=[]
+    DIPLO P3->P1=neutral
+T[66] 'AP Set Scene' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P0 area=(53,46)-(129,121) targets_in_area=[]
+T[78] 'AP Give Loyalists' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(114,94)-(120,99) targets_in_area=[]
+T[79] "AP Give King's Troop" enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=448 P5->P1 area=(64,63)-(75,78) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=74 P5->P1 area=(58,63)-(77,78) targets_in_area=[]
+##### b:AP_Joan_6
+P1 ai_name='PromiDE' ai_type=1 embedded_len=936 disabled_target_bldgs=[]
+P2 ai_name='Joan-scn6 player 2.ai' ai_type=0 embedded_len=5707 disabled_target_bldgs=[]
+P3 ai_name='Joan-scn6 player 3.ai' ai_type=0 embedded_len=7407 disabled_target_bldgs=[]
+P4 ai_name='Joan-scn6 player 4.ai' ai_type=0 embedded_len=6205 disabled_target_bldgs=[]
+T[3] '[D3][S1] Burgundy first town' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[4] '[D14] Flag on hill' enabled=1 looping=0 activated_by=[]
+    REMOVE_OBJECT ids=['TradeCart'] sel=[] P1->P-1 area=(15,24)-(19,29)
+T[13] '[D11] Burgundy resigns' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=3
+T[30] 'Take Burgundy Town' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(87,61)-(127,103) targets_in_area=[]
+T[35] '[S1] Player Avoids Burgundy' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[37] 'AP Set Scene' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P0 area=(100,115)-(143,129) targets_in_area=[]
+T[45] 'AP Give Army' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(126,114)-(143,129) targets_in_area=[]
+T[46] 'AP Give Artillery' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(99,114)-(113,123) targets_in_area=[]
+##### l:AP_Genghis_1
+P1 ai_name='PromiDE' ai_type=1 embedded_len=969 disabled_target_bldgs=[]
+P2 ai_name='Mongols-scn1 player 2.ai' ai_type=0 embedded_len=2196 disabled_target_bldgs=[]
+P3 ai_name='Mongols-scn1.ai' ai_type=0 embedded_len=4623 disabled_target_bldgs=[]
+P4 ai_name='Mongols-scn1.ai' ai_type=0 embedded_len=4623 disabled_target_bldgs=[]
+P5 ai_name='Mongols-scn1 player 5.ai' ai_type=0 embedded_len=2170 disabled_target_bldgs=[]
+P6 ai_name='Mongols-scn1.ai' ai_type=0 embedded_len=4623 disabled_target_bldgs=[]
+P7 ai_name='Mongols-scn1 player 7.ai' ai_type=0 embedded_len=2203 disabled_target_bldgs=[]
+P8 ai_name='Mongols-scn1.ai' ai_type=0 embedded_len=4623 disabled_target_bldgs=[]
+T[3] 'Player 5 dies' enabled=0 looping=0 activated_by=['-[5]Player 7 dies', '+[8][D1] Player 7 request']
+    AI_GOAL P-1 goal=1
+T[5] 'Player 7 dies' enabled=0 looping=0 activated_by=['-[3]Player 5 dies', '+[7][D1] Player 5 request']
+    AI_GOAL P-1 goal=2
+T[20] 'Pause after Khan speaks' enabled=0 looping=0 activated_by=['+[16][D1] Khan speaks']
+    CHANGE_OWNERSHIP(generic) unit=-1 P3->P1 area=(35,141)-(41,147) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=598 P1->P3 area=(15,115)-(60,154) targets_in_area=[]
+T[86] 'AP Give Blue Tribe' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P4->P1 area=(62,28)-(85,43) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=125 P4->P1 area=(38,1)-(131,81) targets_in_area=[]
+T[87] 'AP Give Purple Tribe' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P5->P1 area=(5,63)-(14,72) targets_in_area=[]
+T[88] 'AP Give Grey Tribe' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P8->P1 area=(54,91)-(62,98) targets_in_area=[]
+T[89] 'AP Give Green Tribe' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P7->P1 area=(137,51)-(145,60) targets_in_area=[]
+T[90] 'AP Give Cyan Tribe' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P6->P1 area=(138,114)-(149,124) targets_in_area=[]
+##### l:AP_Genghis_2
+P1 ai_name='PromiDE' ai_type=1 embedded_len=969 disabled_target_bldgs=[]
+P2 ai_name='Mongols-scn2 player 2.ai' ai_type=0 embedded_len=8468 disabled_target_bldgs=[]
+P3 ai_name='Mongols-scn2 player 3.ai' ai_type=0 embedded_len=7663 disabled_target_bldgs=[]
+P4 ai_name='Mongols-scn2 player 4.ai' ai_type=0 embedded_len=1695 disabled_target_bldgs=[]
+T[3] 'P3 starts fighting' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[16] 'Mills Ownership' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P4->P2 area=(83,68)-(86,74) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P4->P3 area=(9,10)-(15,14) targets_in_area=[]
+T[20] 'Kushluk Resign' enabled=0 looping=0 activated_by=['+[6][Obj] [D1] Kushluk']
+    AI_GOAL P-1 goal=251
+T[29] 'AP Give Tayichiud Base' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P4->P1 area=(0,0)-(143,143) targets_in_area=[]
+##### l:AP_Genghis_3
+P1 ai_name='PromiDE' ai_type=1 embedded_len=969 disabled_target_bldgs=[]
+P2 ai_name='Mongols-scn3 player 2.ai' ai_type=0 embedded_len=9583 disabled_target_bldgs=[]
+P3 ai_name='Mongols-scn3 player 3.ai' ai_type=0 embedded_len=6958 disabled_target_bldgs=[]
+P4 ai_name='Mongols-scn3 player 4.ai' ai_type=0 embedded_len=11584 disabled_target_bldgs=[]
+P5 ai_name='Mongols-scn3 player 5.ai' ai_type=0 embedded_len=7913 disabled_target_bldgs=[]
+P6 ai_name='Mongols-scn3 player 6.ai' ai_type=0 embedded_len=2073 disabled_target_bldgs=[]
+T[2] '[D1] Get Villagers' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[11] 'Bombards Captured' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=256
+T[31] 'AP Give Engineers' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=83 P0->P1 area=(181,97)-(187,109) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=293 P0->P1 area=(181,97)-(187,109) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P0->P1 area=(181,97)-(187,109) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=1904 P0->P1 area=(181,97)-(187,109) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=49 P6->P1 area=(178,95)-(191,110) targets_in_area=[]
+T[32] 'AP Give Bombards' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=36 P0->P1 area=(97,7)-(102,12) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=49 P6->P1 area=(91,3)-(108,15) targets_in_area=[]
+T[33] 'AP Give Transport' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=545 P0->P1 area=(180,60)-(183,63) targets_in_area=[]
+##### l:AP_Genghis_4
+P1 ai_name='PromiDE' ai_type=1 embedded_len=969 disabled_target_bldgs=[]
+P2 ai_name='Mongols-scn4 player 2.ai' ai_type=0 embedded_len=2012 disabled_target_bldgs=[]
+P3 ai_name='Mongols-scn4 player 3.ai' ai_type=0 embedded_len=5615 disabled_target_bldgs=[]
+P4 ai_name='Mongols-scn4 player 4.ai' ai_type=0 embedded_len=10416 disabled_target_bldgs=[]
+T[0] '[D1] At Persian gate' enabled=1 looping=0 activated_by=['-[4][D1] Change of plans !!!']
+    DISPLAY_INSTRUCTIONS ids=['TradeCart'] sel=[] P1->P-1
+T[2] '[D1] Shah talks' enabled=1 looping=0 activated_by=['-[4][D1] Change of plans !!!']
+    AI_GOAL P-1 goal=16
+T[3] '[D1] Shah dead' enabled=0 looping=0 activated_by=['+[6][Obj] [D4] The Assassination', '-[18]Shah not killed in time']
+    AI_GOAL P-1 goal=1
+    DIPLO P4->P1=enemy
+T[4] '[D1] Change of plans !!!' enabled=0 looping=0 activated_by=['+[12]Too long for gift', '+[13]Mongol military in Samarkand', '+[18]Shah not killed in time']
+    AI_GOAL P-1 goal=4
+    DIPLO P4->P1=enemy
+    DIPLO P1->P4=enemy
+    AI_GOAL P-1 goal=1
+    ENABLE_DISABLE_OBJECT ids=['TradeCart'] sel=[] P1->P-1
+T[6] '[Obj] [D4] The Assassination' enabled=1 looping=0 activated_by=['-[3][D1] Shah dead', '-[4][D1] Change of plans !!!']
+    KILL_OBJECT ids=['TradeCart'] sel=[] P1->P-1 area=(3,122)-(21,133)
+    DIPLO P1->P4=enemy
+    ENABLE_DISABLE_OBJECT ids=['TradeCart'] sel=[] P1->P-1
+T[17] 'Sec. 1' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=117 P4->P4 area=(102,187)-(108,199) targets_in_area=[]
+T[18] 'Shah not killed in time' enabled=0 looping=0 activated_by=['-[3][D1] Shah dead', '+[6][Obj] [D4] The Assassination']
+    DIPLO P4->P1=enemy
+T[20] 'Cheats active' enabled=0 looping=0 activated_by=['+[4][D1] Change of plans !!!']
+    AI_GOAL P-1 goal=99
+T[21] 'Cheats active 2' enabled=0 looping=0 activated_by=['+[3][D1] Shah dead']
+    AI_GOAL P-1 goal=99
+T[25] 'Resign Kipchaks' enabled=0 looping=0 activated_by=['+[7][D1] P2 is a real weenie']
+    AI_GOAL P-1 goal=4
+T[33] 'AP Give Kipchak Camp' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(154,11)-(186,45) targets_in_area=['P2:Market']
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(154,10)-(192,55) targets_in_area=['P2:Market']
+    CHANGE_OWNERSHIP(generic) unit=-1 P2->P1 area=(154,10)-(183,54) targets_in_area=['P2:Market']
+      COND SCRIPT_CALL var=-1 q=-1 cmp=-1 unit=-1 p=-1 inv=-1
+      COND OWN_FEWER_OBJECTS var=-1 q=1 cmp=-1 unit=-1 p=2 inv=-1
+##### l:AP_Genghis_5
+P1 ai_name='PromiDE' ai_type=1 embedded_len=969 disabled_target_bldgs=[]
+P2 ai_name='Mongols-scn5 player 2.ai' ai_type=0 embedded_len=8985 disabled_target_bldgs=[]
+P3 ai_name='Mongols-scn5 player 3.ai' ai_type=0 embedded_len=1900 disabled_target_bldgs=[]
+P4 ai_name='Mongols-scn5 player 4.ai' ai_type=0 embedded_len=8866 disabled_target_bldgs=[]
+T[0] '[D1] Bohemia coming' enabled=0 looping=0 activated_by=['+[13]Scout rides in']
+    CHANGE_OWNERSHIP(generic) unit=601 P3->P1 area=(49,66)-(90,105) targets_in_area=[]
+T[5] '[Obj] [D2] German flag captured' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=600 P4->P1 area=(7,107)-(11,112) targets_in_area=[]
+    AI_GOAL P-1 goal=250
+T[7] '[Obj] [D2] Polish flag captured' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=600 P2->P1 area=(109,128)-(112,131) targets_in_area=[]
+    AI_GOAL P-1 goal=251
+T[8] '[Obj] [D2] Bohemian flag captured' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=600 P3->P1 area=(90,4)-(94,9) targets_in_area=[]
+    AI_GOAL P-1 goal=252
+T[14] 'increases p3 response radius' enabled=1 looping=0 activated_by=[]
+    AI_GOAL P-1 goal=1
+T[18] 'Makes sure Bohemia attacks well' enabled=0 looping=0 activated_by=['+[3]The charge of Bohemia']
+    AI_GOAL P-1 goal=2
+T[22] 'Remove Palisades' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=-1 P4->P4 area=(77,91)-(86,103) targets_in_area=[]
+T[52] 'AP Give Hermits' enabled=1 looping=0 activated_by=[]
+    CHANGE_OWNERSHIP(generic) unit=125 P0->P1 area=(22,32)-(32,42) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=1236 P0->P1 area=(22,32)-(32,42) targets_in_area=[]
+    CHANGE_OWNERSHIP(generic) unit=104 P0->P1 area=(22,32)-(32,42) targets_in_area=[]
+##### l:AP_Genghis_6
+P1 ai_name='PromiDE' ai_type=1 embedded_len=969 disabled_target_bldgs=[45]
+P2 ai_name='Mongols-scn6 player 2.ai' ai_type=0 embedded_len=11492 disabled_target_bldgs=[45]
+T[7] '[D2] Blow up bridge!' enabled=0 looping=0 activated_by=['+[4][Obj] [D4] Subotati comes!']
+    AI_GOAL P-1 goal=5
+T[11] 'VC2' enabled=0 looping=0 activated_by=['+[10][Obj] [D1] VC']
+    AI_GOAL P-1 goal=99

@@ -1,0 +1,138 @@
+;Mongols scn4 p2
+;Surrenders right away
+
+;resigning
+(defrule
+	(not (player-in-game 3))
+	(not (player-in-game 4))	
+=>
+	(resign)
+	(disable-self)
+)
+
+(defrule
+   (true)
+=>
+	(set-strategic-number sn-task-ungrouped-soldiers 0)
+   	(disable-self)
+)
+
+(defrule
+	(event-detected trigger 3)	
+=>
+	(tribute-to-player 1 food 500)
+	(tribute-to-player 1 wood 500)	
+	(tribute-to-player 1 gold 200)	
+	(tribute-to-player 1 stone 300)
+	(disable-self)
+)
+
+(defrule
+	(event-detected trigger 4)	
+=>
+	(resign)
+	(disable-self)
+)
+
+;soldiers moving around
+(defrule
+   (true)
+=>
+(enable-timer 5 100)
+(disable-self)
+)
+
+(defrule
+(timer-triggered 5)
+=>
+(set-strategic-number sn-task-ungrouped-soldiers 1)
+(enable-timer 6 5)
+(disable-timer 5)
+)
+
+(defrule
+(timer-triggered 6)
+=>
+(set-strategic-number sn-task-ungrouped-soldiers 0)
+(enable-timer 5 400)
+(disable-timer 6)
+)
+
+
+;Units
+
+;Skirmisher Easy
+(defrule
+	(difficulty == easy)
+	(unit-type-count-total skirmisher-line < 2)
+	(can-train skirmisher-line)
+=>
+	(train skirmisher-line)
+	(chat-local-to-self "Skirmisher")
+)
+
+;Skirmisher Moderate
+(defrule
+	(difficulty == moderate)
+	(unit-type-count-total skirmisher-line < 3)
+	(can-train skirmisher-line)
+=>
+	(train skirmisher-line)
+	(chat-local-to-self "Skirmisher")
+)
+
+;Skirmisher Hard
+(defrule
+	(difficulty == hard)
+	(unit-type-count-total skirmisher-line < 4)
+	(can-train skirmisher-line)
+=>
+	(train skirmisher-line)
+	(chat-local-to-self "Skirmisher")
+)
+
+;Back Up Cheats
+
+(defrule
+(gold-amount < 500)
+=>
+(cc-add-resource gold 1000)
+)
+
+(defrule
+(stone-amount < 500)
+=>
+(cc-add-resource stone 1000)
+)
+
+(defrule
+(food-amount < 500)
+=>
+(cc-add-resource food 1000)
+)
+
+(defrule
+(wood-amount < 500)
+=>
+(cc-add-resource wood 1000)
+)
+
+
+; === EASY MODE ===
+
+(defrule
+	(difficulty == normal)
+=>
+(set-signal 202)
+(disable-self)
+)
+
+; === HARD MODE ===
+
+(defrule
+	(difficulty == hard)
+=>
+(set-signal 203)
+(disable-self)
+)
+

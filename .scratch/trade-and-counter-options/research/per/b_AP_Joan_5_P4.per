@@ -1,0 +1,14 @@
+;Joan scn5 p4
+;Compiegne
+
+ (load "scenario difficulty DE")
+
+(defrule
+	(players-stance 2 enemy)
+=>
+	(set-signal 1)
+	(set-stance 2 enemy)
+	(disable-self)
+)
+
+

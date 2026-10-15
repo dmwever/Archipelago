@@ -1,0 +1,49 @@
+;Joan of Arc scenario 5 p3
+; English in Paris
+
+(load "scenario difficulty DE")
+
+(defrule
+	(true)
+=>
+        (set-strategic-number sn-minimum-boar-hunt-group-size 4)
+	(set-strategic-number sn-maximum-town-size 10)
+        (set-strategic-number sn-camp-max-distance 30)
+        (set-strategic-number sn-mill-max-distance 30)
+	(set-strategic-number sn-blot-exploration-map 1)
+	(disable-self)
+)
+
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-cap-civilian-explorers 1)
+	(set-strategic-number sn-minimum-civilian-explorers 1)
+	(set-strategic-number sn-food-gatherer-percentage 90)
+	(set-strategic-number sn-gold-gatherer-percentage 0)
+	(set-strategic-number sn-wood-gatherer-percentage 10)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+	(set-strategic-number sn-percent-civilian-gatherers 90)
+	(set-strategic-number sn-percent-civilian-builders 5)
+	(set-strategic-number sn-percent-civilian-explorers 5)
+	(disable-self)
+)
+
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-enemy-sighted-response-distance 20)
+	(set-strategic-number sn-task-ungrouped-soldiers 0)
+	(set-strategic-number sn-number-explore-groups 0)
+	(set-difficulty-parameter ability-to-maintain-distance 100)
+	(set-difficulty-parameter ability-to-dodge-missiles 100)
+)
+
+(defrule
+	(idle-farm-count <= 1)
+	(building-type-count-total farm less-than 30)
+	(can-build farm)
+=>
+	(build farm)
+)
+

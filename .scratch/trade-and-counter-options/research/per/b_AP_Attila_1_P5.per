@@ -1,0 +1,172 @@
+;Attila scenario 1 Player 5
+;Romans
+
+(load "scenario difficulty DE")
+(load "scenario resign")
+
+(defrule
+	(building-type-count market less-than 1)
+	(building-type-count monastery less-than 1)	
+=>
+	(set-goal 1 19)
+	(disable-self)
+)
+
+(defrule
+	(not (player-in-game 3))
+	(not (player-in-game 4))
+=>
+	(chat-local-to-self "I'm LONELY!")
+	;(resign)
+	(disable-self)
+)
+
+; GROUPS
+
+(defrule
+	(true)
+=>
+    (set-strategic-number sn-task-ungrouped-soldiers 0)
+	(set-strategic-number sn-number-explore-groups 0)
+	(disable-self)
+	(enable-timer 1 1)
+)
+
+(defrule
+	(or
+		(game-time > 920)
+		(event-detected trigger 12)
+	)
+=>
+	(set-strategic-number sn-number-explore-groups 1)
+	(disable-self)
+)
+
+(defrule
+	(difficulty == easy)
+	(event-detected trigger 12) ;Bleda dies
+	(timer-triggered 1)
+=>
+	(chat-local-to-self "I think I need some resources")
+	(cc-add-resource food 300)
+	(cc-add-resource wood 300)
+	(cc-add-resource gold 300)
+	(disable-timer 1)
+	(enable-timer 1 600)
+)
+
+(defrule
+	(difficulty <= moderate)
+	(event-detected trigger 12) ;Bleda dies
+	(timer-triggered 1)
+=>
+	(chat-local-to-self "I think I need some resources")
+	(cc-add-resource food 600)
+	(cc-add-resource wood 600)
+	(cc-add-resource gold 600)
+	(disable-timer 1)
+	(enable-timer 1 600)
+)
+
+(defrule
+	(defend-soldier-count >= 10)
+	(event-detected trigger 12)
+	(game-time > 800)
+=>
+	(set-strategic-number sn-percent-attack-soldiers 70)
+	(attack-now)
+	(enable-timer 2 600)
+	(chat-local-to-self "Bleda dies so time to attack")
+	(disable-self)
+)
+
+(defrule
+	(defend-soldier-count >= 10)
+	(timer-triggered 2)
+=>
+	(set-strategic-number sn-percent-attack-soldiers 70)
+	(attack-now)
+	(disable-timer 2)
+	(chat-local-to-self "Attack every 400!!!")
+	(enable-timer 2 400)
+)
+
+; MILITARY UNITS
+
+(defrule
+	(difficulty == easy)
+	(unit-type-count-total militiaman-line < 12)
+	(can-train militiaman-line)
+=>
+	(train militiaman-line)
+	(chat-local-to-self "sword dude")
+)
+
+(defrule
+	(difficulty <= moderate)
+	(unit-type-count-total militiaman-line < 22)
+	(can-train militiaman-line)
+=>
+	(train militiaman-line)
+	(chat-local-to-self "sword dude")
+)
+
+(defrule
+	(difficulty == easy)
+	(unit-type-count-total archer-line < 6)
+	(can-train archer-line)
+=>
+	(train archer-line)
+	(chat-local-to-self "bow dude")
+)
+
+(defrule
+	(difficulty <= moderate)
+	(unit-type-count-total archer-line < 15)
+	(can-train archer-line)
+=>
+	(train archer-line)
+	(chat-local-to-self "bow dude")
+)
+
+(defrule
+	(or
+		(game-time > 900)
+		(difficulty <= moderate)
+	)
+	(can-research ri-man-at-arms)
+=>
+	(research ri-man-at-arms)
+	(chat-local-to-self "research man-at-arms")
+)
+
+(defrule
+	(can-research ri-forging)
+=>
+	(research ri-forging)
+	(chat-local-to-self "research forging")
+)
+
+(defrule
+	(difficulty <= moderate)
+	(can-research ri-fletching)
+=>
+	(research ri-fletching)
+	(chat-local-to-self "research fletching")
+)
+
+(defrule
+	(difficulty <= moderate)
+	(can-research ri-padded-archer-armor)
+=>
+	(research ri-padded-archer-armor)
+	(chat-local-to-self "research padded archer armor")
+)
+
+(defrule
+	(difficulty <= moderate)
+	(can-research ri-scale-mail)
+=>
+	(research ri-scale-mail)
+	(chat-local-to-self "research scale mail")
+)

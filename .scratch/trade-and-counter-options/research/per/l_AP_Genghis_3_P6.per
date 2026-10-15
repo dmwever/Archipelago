@@ -1,0 +1,89 @@
+;Mongols scenario 3 Player 6
+;Engineers
+
+(load "scenario difficulty DE")
+
+ (defrule
+	(unit-type-count-total villager < 2)
+	(event-detected trigger 256)
+	(not (can-train villager) )
+	(military-population < 2)
+=>
+	(resign)
+	(disable-self)
+)
+
+;resigning
+(defrule
+	(not (player-in-game 2))
+	(not (player-in-game 3))
+	(not (player-in-game 4))
+	(not (player-in-game 5))	
+=>
+	(resign)
+	(disable-self)
+)
+
+
+; GROUPS
+
+(defrule
+	(true)
+=>
+        (set-strategic-number sn-minimum-boar-hunt-group-size 4)
+	(set-strategic-number sn-maximum-town-size 10)
+	(set-strategic-number sn-task-ungrouped-soldiers 0)
+	(set-strategic-number sn-percent-enemy-sighted-response 100)
+	(set-strategic-number sn-enemy-sighted-response-distance 25)
+	(set-strategic-number sn-blot-exploration-map 1)
+	(disable-self)
+)
+
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-percent-civilian-explorers 0)
+	(set-strategic-number sn-percent-civilian-builders  0)
+	(set-strategic-number sn-percent-civilian-gatherers 100)
+	(set-strategic-number sn-cap-civilian-explorers 0)
+	(set-strategic-number sn-minimum-civilian-explorers 0)
+	(set-strategic-number sn-cap-civilian-gatherers 100)
+	(set-strategic-number sn-food-gatherer-percentage  75)
+	(set-strategic-number sn-gold-gatherer-percentage  0)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+	(set-strategic-number sn-wood-gatherer-percentage  25)
+	(set-strategic-number sn-attack-intelligence 1)
+	(set-strategic-number sn-wall-targeting-mode 1)
+	(disable-self)
+)
+
+;========================CASTLE AGE RULES
+
+(defrule
+	(unit-type-count-total villager less-than 4)
+	(can-train villager)
+=>
+	(train villager)
+	(chat-local-to-self "villager")
+)
+
+;maintain housing
+(defrule
+	(housing-headroom less-than 4)
+	(population-headroom greater-than 0)
+	(can-build house)
+=>
+	(build house)
+	(chat-local-to-self "house")
+)
+
+;maintain a town center
+(defrule
+	(game-time greater-than 45)
+	(building-type-count town-center less-than 1)
+	(can-build town-center)
+=>
+	(build town-center)
+)
+
+

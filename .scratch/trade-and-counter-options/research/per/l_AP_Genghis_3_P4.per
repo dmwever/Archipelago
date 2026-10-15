@@ -1,0 +1,511 @@
+; Mongols Scenario 3 Player 4
+; Chin try and Wonder
+
+(load "scenario market")
+(load "scenario upgrades DE")
+(load "scenario upgrades PDLC 9")
+(load "scenario difficulty DE")
+(load "scenario resign FE")
+(load "scenario resign PDLC 9")
+
+(defconst grenadier 1911)
+
+(defrule
+	(building-type-count wonder < 1)
+	(building-type-count town-center < 1)
+	(unit-type-count-total villager < 4)
+	(game-time greater-than 1200)
+=>
+	(set-goal 1 19)
+	(disable-self)
+)
+
+(defrule
+	(true)
+=>
+        (set-strategic-number sn-minimum-boar-hunt-group-size 4)
+	(set-strategic-number sn-maximum-town-size 25)
+        (set-strategic-number sn-camp-max-distance 30)
+        (set-strategic-number sn-mill-max-distance 30)
+	(set-strategic-number sn-percent-enemy-sighted-response 100)
+	(set-strategic-number sn-enemy-sighted-response-distance 25)
+	(set-strategic-number sn-blot-exploration-map 1)
+	(set-strategic-number sn-task-ungrouped-soldiers 1)
+	(disable-self)
+)
+
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-percent-civilian-explorers 15)
+	(set-strategic-number sn-percent-civilian-builders  10)
+	(set-strategic-number sn-percent-civilian-gatherers 75)
+	(set-strategic-number sn-cap-civilian-explorers 2)
+	(set-strategic-number sn-minimum-civilian-explorers 2)
+	(set-strategic-number sn-cap-civilian-gatherers 100)
+	(set-strategic-number sn-food-gatherer-percentage  25)
+	(set-strategic-number sn-gold-gatherer-percentage  25)
+	(set-strategic-number sn-stone-gatherer-percentage 25)
+	(set-strategic-number sn-wood-gatherer-percentage  25)
+	(set-strategic-number sn-maximum-gold-drop-distance 20)
+	(set-strategic-number sn-maximum-stone-drop-distance 20)
+	(set-strategic-number sn-maximum-food-drop-distance 20)
+	(set-strategic-number sn-attack-intelligence 1)
+	(set-strategic-number sn-wall-targeting-mode 1)
+	(disable-self)
+)
+
+;========================CASTLE AGE RULES
+
+(defrule
+	(unit-type-count-total villager less-than 30)
+	(can-train villager)
+=>
+	(train villager)
+	(chat-local-to-self "villager")
+)
+
+;maintain housing
+(defrule
+	(housing-headroom less-than 4)
+	(population-headroom greater-than 0)
+	(can-build house)
+=>
+	(build house)
+	(chat-local-to-self "house")
+)
+
+;maintain a town center
+(defrule
+	(game-time greater-than 45)
+	(not (doctrine 77) )
+	(building-type-count town-center less-than 1)
+	(can-build town-center)
+=>
+	(build town-center)
+)
+
+;keep two docks
+(defrule
+	(building-type-count-total dock less-than 2)
+	(can-build dock)
+=>
+	(build dock)
+	(chat-local-to-self "dock")
+)
+
+(defrule
+	(building-type-count-total archery-range less-than 1)
+	(can-build archery-range)
+=>
+	(build archery-range)
+	(chat-local-to-self "archery range")
+)
+
+(defrule
+	(building-type-count-total stable less-than 1)
+	(can-build stable)
+=>
+	(build stable)
+	(chat-local-to-self "stable")
+)
+
+(defrule
+	(building-type-count-total market less-than 1)
+	(can-build market)
+=>
+	(build market)
+	(chat-local-to-self "market")
+)
+
+ (defrule
+	(building-type-count-total university less-than 1)
+	(can-build university)
+=>
+	(build university)
+	(chat-local-to-self "university")
+)
+
+ (defrule
+	(building-type-count-total siege-workshop less-than 1)
+	(can-build siege-workshop)
+=>
+	(build siege-workshop)
+	(chat-local-to-self "siege workshop")
+)
+
+(defrule
+	(not (doctrine 77) )
+	(game-time > 300)
+	(building-type-count-total farm less-than 12)
+	(idle-farm-count <= 1)
+	(can-build farm)
+=>
+	(build farm)
+)
+
+(defrule
+	(resource-found wood)
+	(building-type-count-total lumber-camp < 5)
+	(dropsite-min-distance wood > 5)
+	(can-build lumber-camp)
+=>
+	(build lumber-camp)
+	(chat-local-to-self "wood place")
+)
+
+(defrule
+	(resource-found gold)
+	(building-type-count-total mining-camp < 5)
+	(dropsite-min-distance gold > 7)
+	(can-build mining-camp)
+=>
+	(build mining-camp)
+	(chat-local-to-self "gold place")
+)
+
+(defrule
+	(resource-found stone)
+	(building-type-count-total mining-camp < 5)
+	(dropsite-min-distance stone > 7)
+	(can-build mining-camp)
+=>
+	(build mining-camp)
+	(chat-local-to-self "rock place")
+)
+
+(defrule
+	(dropsite-min-distance food greater-than 4)
+	(building-type-count-total mill less-than 4)
+	(can-build mill)
+=>
+	(build mill)
+	(chat-local-to-self "mill")
+)
+
+;use market to advance to imperial if need be
+(defrule
+	(unit-type-count-total villager > 20)
+	(current-age == castle-age)
+=>
+	(set-goal 16 99)
+	(disable-self)
+)
+
+(defrule
+(goal 16 99)
+	(wood-amount greater-than 600)
+	(can-sell-commodity wood)
+=>
+	(chat-local-to-self "selling wood for imperial gold")
+	(sell-commodity wood)
+)
+
+(defrule
+(goal 16 99)
+	(stone-amount greater-than 500)
+	(commodity-selling-price stone greater-than 50)
+	(can-sell-commodity stone)
+=>
+	(chat-local-to-self "selling stone for imperial gold")
+	(sell-commodity stone)
+)
+
+(defrule
+(goal 16 99)
+	(food-amount greater-or-equal 1100)
+	(can-sell-commodity food)
+=>
+	(chat-local-to-self "selling food for imperial gold")
+	(sell-commodity food)
+)
+
+;getting needed food
+(defrule
+(goal 16 99)
+	(gold-amount greater-or-equal 1000)
+	(commodity-buying-price food less-than 200)
+	(can-buy-commodity food)
+=>
+	(chat-local-to-self "buying imperial food")
+	(buy-commodity food)
+)
+
+; advance to imperial age if possible.
+(defrule
+	(goal 16 99)
+	(can-research-with-escrow imperial-age)
+=>
+	(release-escrow wood)
+	(release-escrow food)
+	(release-escrow gold)
+	(release-escrow stone)
+	(research imperial-age)
+	(chat-local-to-self "rising to imperial")
+	(set-goal 16 0)
+)
+
+;=============================IMPERIAL AGE RULES
+
+;======================NON BOAT UNITS
+
+
+(defrule
+	(current-age equal imperial-age)
+	(unit-type-count-total my-unique-unit-line less-than 12)
+	(can-train my-unique-unit-line)
+=>
+	(train my-unique-unit-line)
+	(chat-local-to-self "iron pagoda")
+)
+
+(defrule
+	(not (current-age equal imperial-age))
+	(unit-type-count-total steppe-lancer-line less-than 6)
+	(can-train steppe-lancer-line)
+=>
+	(train steppe-lancer-line)
+	(chat-local-to-self "steppe lancer")
+)
+
+(defrule
+	(current-age equal imperial-age)
+	(unit-type-count-total steppe-lancer-line less-than 3)
+	(can-train steppe-lancer-line)
+=>
+	(train steppe-lancer-line)
+	(chat-local-to-self "steppe lancer")
+)
+
+(defrule
+	(current-age equal imperial-age)
+	(unit-type-count-total rocket-cart-line less-than 3)
+	(can-train rocket-cart-line)
+=>
+	(train rocket-cart-line)
+	(chat-local-to-self "rocket-cart")
+)
+
+(defrule
+	(not (difficulty equal hard))
+	(current-age equal imperial-age)
+	(unit-type-count-total rocket-cart-line less-than 2)
+	(can-train rocket-cart-line)
+=>
+	(train rocket-cart-line)
+	(chat-local-to-self "rocket-cart")
+)
+
+(defrule
+	(difficulty equal hard)
+	(current-age equal imperial-age)
+	(unit-type-count-total rocket-cart-line less-than 5)
+	(can-train rocket-cart-line)
+=>
+	(train rocket-cart-line)
+	(chat-local-to-self "rocket-cart")
+)
+
+(defrule
+	(unit-type-count-total monk less-than 1)
+	(can-train monk)
+=>
+	(train monk)
+	(chat-local-to-self "monk")
+)
+
+(defrule
+	(unit-type-count-total grenadier less-than 10)
+	(can-train grenadier)
+=>
+	(train grenadier)
+	(chat-local-to-self "grenadier")
+)
+
+
+;======================LET'S DO THAT WONDER
+
+; Wonder
+(defrule
+	(current-age equal imperial-age)
+	(game-time > 2400)
+	(building-type-count-total wonder less-than 1)
+=>
+	(set-goal 16 98)
+	(disable-self)
+)
+
+(defrule
+	(goal 16 98)
+	(food-amount greater-than 500)
+	(commodity-selling-price food greater-than 40)
+	(can-sell-commodity food)
+=>
+	(chat-local-to-self "selling food for a wonder")
+	(sell-commodity food)
+)
+
+;wood
+(defrule
+	(goal 16 98)
+	(current-age equal imperial-age)
+	(building-type-count-total wonder less-than 1)
+	(wood-amount less-than 1000)
+	(gold-amount greater-than 2200)
+	(commodity-buying-price wood less-than 200)
+	(can-buy-commodity wood)
+=>
+	(chat-local-to-self "buying wonder wood")
+	(buy-commodity wood)
+)
+
+(defrule
+	(goal 16 98)
+	(current-age equal imperial-age)
+	(building-type-count-total wonder less-than 1)
+	(wood-amount greater-than 1100)
+	(can-sell-commodity wood)
+=>
+	(chat-local-to-self "selling wonder wood")
+	(sell-commodity wood)
+)
+
+;stone
+(defrule
+	(goal 16 98)
+	(current-age equal imperial-age)
+	(building-type-count-total wonder less-than 1)
+	(stone-amount less-than 1000)
+	(gold-amount greater-than 2200)
+	(commodity-buying-price stone less-than 200)
+	(can-buy-commodity stone)
+=>
+	(chat-local-to-self "buying wonder stone")
+	(buy-commodity stone)
+)
+
+(defrule
+	(goal 16 98)
+	(building-type-count-total wonder less-than 1)
+	(can-build-with-escrow wonder)
+	(not (difficulty == normal))
+=>
+	(set-strategic-number sn-percent-civilian-explorers 5)
+	(set-strategic-number sn-cap-civilian-explorers 1)
+	(set-strategic-number sn-minimum-civilian-explorers 1)
+	(set-strategic-number sn-percent-civilian-builders 80)
+	(set-strategic-number sn-cap-civilian-builders 100)
+	(set-strategic-number sn-percent-civilian-gatherers 15)
+	(set-doctrine 77)
+	(chat-local-to-self "Time to Wonder")
+	(disable-self)
+)
+
+(defrule
+	(goal 16 98)
+	(building-type-count-total wonder less-than 1)
+	(can-build-with-escrow wonder)
+	(difficulty == normal)
+=>
+	(set-strategic-number sn-percent-civilian-explorers 5)
+	(set-strategic-number sn-cap-civilian-explorers 1)
+	(set-strategic-number sn-minimum-civilian-explorers 1)
+	(set-strategic-number sn-percent-civilian-builders 80)
+	(set-strategic-number sn-cap-civilian-builders 4)
+	(set-strategic-number sn-percent-civilian-gatherers 15)
+	(set-doctrine 77)
+	(chat-local-to-self "Time to Wonder")
+	(disable-self)
+)
+
+(defrule
+	(doctrine 77)
+	(building-type-count blacksmith greater-than 1)
+=>
+	(set-doctrine 78)
+)
+
+(defrule
+	(doctrine 78)
+	(building-type-count blacksmith greater-than 0)
+=>
+	(chat-local-to-self "Clear some space")
+	(delete-building blacksmith)
+)
+
+(defrule
+	(doctrine 78)
+	(building-type-count blacksmith equal 0)
+=>
+	(set-doctrine 77)
+)
+
+(defrule
+	(doctrine 77)
+	(can-build-with-escrow wonder)
+=>
+	(chat-local-to-self "And heeeeeeere we go!")
+	(release-escrow wood)
+	(release-escrow food)
+	(release-escrow gold)
+	(release-escrow stone)
+      (build wonder)
+	(set-doctrine 0)
+	(set-goal 16 0)
+)
+
+(defrule
+	(building-type-count wonder greater-than 0)
+=>
+	(set-strategic-number sn-maximum-town-size 40)
+	(set-strategic-number sn-percent-civilian-explorers 5)
+	(set-strategic-number sn-cap-civilian-explorers 1)
+	(set-strategic-number sn-minimum-civilian-explorers 1)
+	(set-strategic-number sn-percent-civilian-builders 15)
+	(set-strategic-number sn-percent-civilian-gatherers 80)
+	(disable-self)
+)
+
+(defrule
+	(building-type-count wonder greater-than 0)
+	(unit-type-count villager greater-than 20)
+=>
+	(delete-unit villager)
+)
+
+;========================ALL BOAT STUFF
+
+(defrule
+	(unit-type-count-total fishing-ship < 6)
+	(can-train fishing-ship)
+=>
+	(train fishing-ship)
+	(chat-local-to-self "fishing ship")
+)
+
+(defrule
+	(current-age equal castle-age)
+	(unit-type-count-total galley-line < 4)
+	(can-train galley-line)
+=>
+	(train galley-line)
+	(chat-local-to-self "war-galley")
+)
+
+(defrule
+	(current-age equal imperial-age)
+	(unit-type-count-total galley-line < 8)
+	(can-train galley-line)
+=>
+	(train galley-line)
+	(chat-local-to-self "war-galley")
+)
+
+
+;Achievement
+(defrule
+	(building-type-count-total wonder > 0)
+=>
+	(set-signal 90)
+	(disable-self)
+)
