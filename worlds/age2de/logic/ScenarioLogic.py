@@ -11,6 +11,7 @@ from rule_builder.rules import False_, Has, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
+from .custom_logic.ScenarioQuestions import a_or_an
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -130,8 +131,7 @@ class ScenarioLogic:
 
     def has_building(self, building: Age2BuildingData) -> Rule:
         name = building.location_name.removeprefix("Build ")
-        article = "an" if name[0] in "AEIOU" else "a"
-        return self.named(f"has {article} {name}, standing or buildable", self._has_building(building))
+        return self.named(f"has {a_or_an(name)} {name}, standing or buildable", self._has_building(building))
 
     def _has_building(self, building: Age2BuildingData) -> Rule:
         return (self.starting_state.starts_with_building[building]

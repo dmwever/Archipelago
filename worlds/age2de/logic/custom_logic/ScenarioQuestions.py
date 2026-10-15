@@ -17,6 +17,15 @@ from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData
 from ...locations.Units import Age2UnitData
 
+_SOUNDS_LIKE_YOU = ("Uni", "Use", "Usu", "Eu")
+
+
+def a_or_an(name: str) -> str:
+    """"an Archery Range", "a University": by the sound, not just the letter."""
+    vowel = name[:1] in "AEIOU" and not name.startswith(_SOUNDS_LIKE_YOU)
+    return "an" if vowel else "a"
+
+
 if TYPE_CHECKING:
     from ... import Age2World
     from ...logic.ScenarioLogic import ScenarioLogic
@@ -156,8 +165,7 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
         building = self.building.location_name.removeprefix("Build ")
-        article = "an" if building[0] in "AEIOU" else "a"
-        return f"{scenario.scenario_name} can build {article} {building}"
+        return f"{scenario.scenario_name} can build {a_or_an(building)} {building}"
 
 
 @dataclass
@@ -205,7 +213,7 @@ class ScenarioCanTrain(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
-        return f"{scenario.scenario_name} can train a {self.unit.unit_name}"
+        return f"{scenario.scenario_name} can train {a_or_an(self.unit.unit_name)} {self.unit.unit_name}"
 
 
 @dataclass

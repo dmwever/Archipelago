@@ -33,10 +33,10 @@ _AREAS = {"base": "in base", "open": "in the open", "ally": "with an ally", "ene
 """How each map area reads after an amount: "3900 food (in base) from"."""
 
 _SOURCE_NAMES = {
-    "hunt_count": "Hunting", "herd_count": "Herding", "bush_count": "Foraging",
-    "shore_fish_count": "Shore Fishing", "deep_fish_count": "Deep-Sea Fishing",
-    "gold_count": "Gold Mining", "oyster_count": "Oyster Gathering", "whale_count": "Whaling",
-    "stone_count": "Stone Quarrying",
+    "hunt_count": "Can hunt", "herd_count": "Can herd sheep", "bush_count": "Can forage berries",
+    "shore_fish_count": "Can fish from the shore", "deep_fish_count": "Can fish by boat",
+    "gold_count": "Can mine gold", "oyster_count": "Can gather oysters", "whale_count": "Can hunt whales",
+    "stone_count": "Can quarry stone",
 }
 """What a source that is more than one question is called, by the map count it gathers."""
 
@@ -181,6 +181,8 @@ class Explainer:
                 lines.extend(self._campaign_drill(name, route, campaign, state))
             if lines._lines:
                 lines._lines.insert(0, (0, [text(f"{name} in {campaign.campaign_name}")]))
+        elif all(self._status(route, scenario, state) is None for route in routes):
+            lines.add(0, colored(name, False), text(" -> "), colored("Not Offered", False))
         else:
             lines.add(0, text(f"{name} in "), colored(f"{scenario.scenario_name} ({campaign.campaign_name} "
                                                       f"{scenario.chapter})",
@@ -270,13 +272,7 @@ class Explainer:
 
         self._add_wrapped(lines, 1, [*self._label(route, state), *_says(
             any(status is Status.AVAILABLE for _, chapters in campaigns for _, status in chapters))])
-        required = self._requirements(route.requires, state)
-        if required:
-            lines.add(2, text("Requires"))
-            for nested, line in required:
-                lines.add(3 + nested, *line)
-                if route.upgrade is not None and line[0]["text"] == f"Has {route.upgrade.item.item_name}":
-                    self._started_researched(lines, route, campaigns)
+        self._requires(lines, route, campaigns, state)
         for campaign, chapters in campaigns:
             self._campaign_block(lines, 2, name, route, campaign, chapters, state)
 
@@ -366,7 +362,7 @@ class Explainer:
             self._breakdown(lines, sl.is_unlocked(), 2, sl, state, OPENED)
         lines.extend(self._body(route, sl, state))
 
-    def _breakdown(self, lines: Lines, rule: Rule | Rule.Resolved, depth: int, sl: ScenarioLogic,
+    def _breakdown(self, lines: Lines, rule: Rule | Rule.Resolved, depth: int, sl: ScenarioLogic | None,
                    state: CollectionState, opening: int, choice: bool = False) -> None:
         """The rule a part a line, each ending in whether it holds, shallowest parts first. Every
         "or" is an "Any of" and every "and" an "All of", a part a line beneath it - except the
@@ -378,7 +374,7 @@ class Explainer:
         if resolved.always_true:
             return
         held = resolved(state)
-        own = f"{sl.scenario.scenario_name}: "
+        own = f"{sl.scenario.scenario_name}: " if sl is not None else ""   # None: no scenario's items
         if isinstance(resolved, _NAMED):
             links, end, leaf = self._chain(resolved)
             if len(links) > 1 or end != "content":   # one child at a time: drawn as a chain
@@ -421,7 +417,8 @@ class Explainer:
                     self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
             return
         if isinstance(resolved, SufficientRawResources.Resolved):
-            lines.add(depth, colored(f"Scenario expects {resolved.needed}", held), *_says(held))
+            resource = f" {resolved.resource}" if resolved.resource else ""
+            lines.add(depth, colored(f"Scenario expects {resolved.needed}{resource}", held), *_says(held))
             self._sources(lines, resolved, depth + 1, sl, state, opening)
             return
         if isinstance(resolved, AgeUpRequirement.Resolved):
@@ -476,6 +473,9 @@ class Explainer:
                 where = f" ({_AREAS.get(area, area)})" if area else ""
                 what = f"{amount}{resource}{where}"
                 counts = child(state)
+                if gate is None:   # the source itself, which the line above already shows
+                    lines.add(depth + 1, colored(what, counts), *_says(counts))
+                    continue
                 lines.add(depth + 1, colored(what, counts), *_says(counts),
                           self._entry(f"{sl.scenario.scenario_name}: {label}, {what}",
                                       lambda st, child=child, label=label, what=what:
@@ -635,7 +635,7 @@ class Explainer:
             shown = (name.split(own, 1)[-1] if own else name) + (f" x{count}" if count > 1 else "")
             parts = [colored(shown, have >= count)]
             if count > 1:
-                parts += [text(" "), colored(f"Has x{have}", have > 0)]
+                parts += [text(" ("), colored(f"x{have}", have > 0), text(")")]
             return parts, have >= count
         if isinstance(rule, Has.Resolved):
             return True, [item(rule.item_name, rule.count)]
@@ -678,15 +678,41 @@ class Explainer:
         asks = question.description.removeprefix(f"{sl.scenario.scenario_name} ")
         return asks[:1].upper() + asks[1:]
 
-    def _started_researched(self, lines: Lines, route: Route, campaigns: list) -> None:
-        """The chapters that research the upgrade for themselves, so never ask for its item:
-        "Attila the Hun 2–6: Starts Researched"."""
-        for campaign, chapters in campaigns:
-            started = [chapter for chapter, _ in chapters
-                       if self.world.rules.logic.for_scenario(self._scenario(campaign, chapter))
-                       .techs.researched_at_start(route.upgrade)]
-            if started:
-                lines.add(4, colored(f"{campaign.campaign_name} {_ranges(started)}: Starts Researched", False))
+    def _requires(self, lines: Lines, route: Route, campaigns: list, state: CollectionState) -> None:
+        """The route's items, drawn like any other rule under "All of". The upgrade is an "Any of":
+        its item, or the chapters that start with it researched - "Attila the Hun 2–5: Starts
+        Researched" - which never ask for the item."""
+        parts = [part for part in _distinct(tuple(self._resolved(rule) for rule in route.requires))
+                 if not part.always_true]
+        if not parts:
+            return
+        upgrade = route.upgrade.item.item_name if route.upgrade is not None else None
+        started = []
+        if upgrade is not None:
+            for campaign, chapters in campaigns:
+                chapters = [chapter for chapter, _ in chapters
+                            if self.world.rules.logic.for_scenario(self._scenario(campaign, chapter))
+                            .techs.researched_at_start(route.upgrade)]
+                if chapters:
+                    started.append(f"{campaign.campaign_name} {_ranges(chapters)}: Starts Researched")
+
+        def is_upgrade(part: Rule.Resolved) -> bool:
+            return bool(started) and isinstance(part, Has.Resolved) and part.item_name == upgrade
+
+        def holds(part: Rule.Resolved) -> bool:
+            return True if is_upgrade(part) else part(state)
+
+        held = all(holds(part) for part in parts)
+        lines.add(2, colored("All of", held), *_says(held))
+        self._opened = set()
+        for part in self._shallowest_first(parts):
+            if not is_upgrade(part):
+                self._breakdown(lines, part, 3, None, state, 0)
+                continue
+            lines.add(3, colored("Any of", True), *_says(True))
+            self._breakdown(lines, part, 4, None, state, 0)
+            for line in started:
+                lines.add(4, colored(line, True), *_says(True))
 
     def _scenario(self, campaign, chapter: int):
         return next(scenario for scenario in self.world.pool.scenarios.in_campaign(campaign)
@@ -742,30 +768,6 @@ class Explainer:
         return best
 
     # -- general requirements --------------------------------------------------------------------
-
-    def _requirements(self, rules: tuple[Rule, ...],
-                      state: CollectionState) -> list[tuple[int, list[JSONMessagePart]]]:
-        """One line an item, "Has Militia Line -> True"; an "any of" as "Any of" with an item a
-        line beneath it, each with how much deeper it sits. An item asked twice is listed once."""
-        lines: list[tuple[int, list[JSONMessagePart]]] = []
-        seen: set[str] = set()
-        for rule in rules:
-            resolved = self._resolved(rule)
-            if resolved.always_true:
-                continue
-            names = sorted(set(resolved.item_dependencies()) - seen)
-            if not names:
-                continue
-            seen.update(names)
-            nested = 0
-            if len(names) > 1 and type(resolved).__qualname__.startswith(("HasAny", "Or")):
-                held = resolved(state)
-                lines.append((0, [colored("Any of", held), text(" -> "), truth(held)]))
-                nested = 1
-            for name in names:
-                held = state.has(name, self.world.player)
-                lines.append((nested, [colored(f"Has {name}", held), text(" -> "), truth(held)]))
-        return lines
 
     # -- evaluating -----------------------------------------------------------------------------
 
