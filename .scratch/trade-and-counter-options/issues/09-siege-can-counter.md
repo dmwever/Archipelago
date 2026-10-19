@@ -28,8 +28,13 @@ Spec: Implementation Decisions, "Counter groups", "Counter filtering". Glossary:
   roles. The Organ Gun is in neither.
 - `TestSiegeCanCounter` mocks `can_field` like `TestMonksCanCounter`: Mangonel vs Archer (army),
   Bombard Cannon vs Cannon Galleon (ship), and Mangonel/Bombard vs Trebuchet, Mangonel, Scorpion
-  (siege). Rocket cart lines counter nothing in the table, so no test can field them as an answer.
+  (siege). Rocket cart lines counter nothing in the table, so no test can field them as a direct counter.
   Fire Archer and Petard have no anti-unit-siege counters either, so "treated as armies" is checked
   as group membership; the Organ Gun is also checked through Mangonel resolving false.
 - `siege_can_counter` added to `LOGIC_ONLY` (test_slot_data_wire) and the pools exemption list.
 - Ageipelago: `siege-can-counter.md` and its index row, on the `0.3.0` branch.
+- Review follow-up: the ram sponge's military escort included the Mangonel and rocket cart lines, so
+  rams plus Mangonels still countered archers with the option off. Decided: anti-unit siege is no
+  escort when off. `can_sponge_for_military` now filters the military lines through
+  `_is_expected_escort`; covered by `test_off_anti_unit_siege_is_no_escort_for_rams` and
+  `test_on_anti_unit_siege_escorts_rams`.

@@ -16,6 +16,7 @@ from ...locations.connections.UnitRoles import (
     FAITH_EXCEPTION_TARGETS,
     FAITH_LINES,
     RAM_LINES,
+    ROLE_TO_LINES,
     SIEGE_TARGETS,
     UnitRole,
 )
@@ -101,7 +102,7 @@ class ScenarioUnitLogic:
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
         ways: list[Rule] = []
         for line in target.countered_by:
-            if not self._is_expected_counter(line, target):
+            if not self.counter_in_logic(line, target):
                 continue
             way = self.can_field(line, age)
             if line in target.counter_techs:
@@ -111,8 +112,7 @@ class ScenarioUnitLogic:
             ways.append(self.can_sponge_for_military(age))
         return Or(*ways)
 
-    def _is_expected_counter(self, line: Age2UnitLineData, target: Age2UnitLineData) -> bool:
-        """Whether the options let the logic expect `line` to counter `target`."""
+    def counter_in_logic(self, line: Age2UnitLineData, target: Age2UnitLineData) -> bool:
         if line in FAITH_LINES and target not in FAITH_EXCEPTION_TARGETS:
             return bool(self.world.options.monks_can_counter)
         if line in ANTI_UNIT_SIEGE and target not in SIEGE_TARGETS:
@@ -120,9 +120,15 @@ class ScenarioUnitLogic:
         return True
 
     def can_sponge_for_military(self, age: Age2AgeData) -> Rule:
-        """A ram soaking fire while a military line does the killing."""
         rams = [self.can_field(line, age) for line in RAM_LINES]
-        return Or(*rams) & self.scenario.military.can_field_role(UnitRole.military, age)
+        escorts = [self.can_field(line, age) for line in ROLE_TO_LINES[UnitRole.military]
+                   if self.escort_in_logic(line)]
+        return Or(*rams) & Or(*[escort for escort in escorts if not isinstance(escort, False_)])
+
+    def escort_in_logic(self, line: Age2UnitLineData) -> bool:
+        if line in ANTI_UNIT_SIEGE:
+            return bool(self.world.options.siege_can_counter)
+        return True
 
     def starting_unit(self, line: Age2UnitLineData) -> list[Age2UnitData]:
         for unit in sorted(line.units, key=lambda unit: unit.tier):

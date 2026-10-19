@@ -302,6 +302,9 @@ class TestSiegeCanCounter(Age2RuleTestBase):
     it. Against other siege they need none and always count."""
 
     MANGONEL = Age2UnitLineData.MANGONEL_LINE
+    # Counters nothing in the table itself, so it can only ever answer anything as a ram's escort.
+    ROCKET_CART = Age2UnitLineData.ROCKET_CART_LINE
+    RAM = Age2UnitLineData.BATTERING_RAM_LINE
     BOMBARD = Age2UnitLineData.BOMBARD_CANNON_LINE
     # Each pair is an anti-unit siege line and a target the table has it countering.
     AGAINST_AN_ARMY = (MANGONEL, Age2UnitLineData.ARCHER_LINE)
@@ -313,14 +316,14 @@ class TestSiegeCanCounter(Age2RuleTestBase):
         (MANGONEL, Age2UnitLineData.SCORPION_LINE),
     )
 
-    def can_counter_fielding(self, fielded: Age2UnitLineData, target: Age2UnitLineData,
+    def can_counter_fielding(self, fielded: set[Age2UnitLineData], target: Age2UnitLineData,
                              **options) -> bool:
         """Whether Attila 1 counters `target` in the Castle Age when `fielded` is all it fields."""
         world = self.build(**EVERYTHING, **options)
         attila_1 = world.rules.logic.for_scenario(Age2ScenarioLocationData.ATT1_VICTORY.scenario)
 
         def can_field(_unit_logic, line, age=None):
-            return True_() if line is fielded else False_()
+            return True_() if line in fielded else False_()
 
         with mock.patch.object(ScenarioUnitLogic, "can_field", autospec=True,
                                side_effect=can_field):
@@ -334,7 +337,7 @@ class TestSiegeCanCounter(Age2RuleTestBase):
         for siege, target in (self.AGAINST_AN_ARMY, self.AGAINST_A_SHIP):
             with self.subTest(siege=siege.name, target=target.name):
                 self.assertFalse(self.can_counter_fielding(
-                    siege,
+                    {siege},
                     target,
                     siege_can_counter=False,
                 ))
@@ -343,7 +346,7 @@ class TestSiegeCanCounter(Age2RuleTestBase):
         for siege, target in self.AGAINST_SIEGE:
             with self.subTest(siege=siege.name, target=target.name):
                 self.assertTrue(self.can_counter_fielding(
-                    siege,
+                    {siege},
                     target,
                     siege_can_counter=False,
                 ))
@@ -352,7 +355,7 @@ class TestSiegeCanCounter(Age2RuleTestBase):
         for siege, target in (self.AGAINST_AN_ARMY, self.AGAINST_A_SHIP, *self.AGAINST_SIEGE):
             with self.subTest(siege=siege.name, target=target.name):
                 self.assertTrue(self.can_counter_fielding(
-                    siege,
+                    {siege},
                     target,
                     siege_can_counter=True,
                 ))
@@ -361,14 +364,30 @@ class TestSiegeCanCounter(Age2RuleTestBase):
         for siege_can_counter in (False, True):
             with self.subTest(siege_can_counter=siege_can_counter):
                 self.assertTrue(self.can_counter_fielding(
-                    Age2UnitLineData.SCORPION_LINE,
+                    {Age2UnitLineData.SCORPION_LINE},
                     Age2UnitLineData.ARCHER_LINE,
                     siege_can_counter=siege_can_counter,
                 ))
 
+    def test_off_anti_unit_siege_is_no_escort_for_rams(self):
+        for siege in (self.MANGONEL, self.ROCKET_CART):
+            with self.subTest(siege.name):
+                self.assertFalse(self.can_counter_fielding(
+                    {self.RAM, siege},
+                    Age2UnitLineData.ARCHER_LINE,
+                    siege_can_counter=False,
+                ))
+
+    def test_on_anti_unit_siege_escorts_rams(self):
+        self.assertTrue(self.can_counter_fielding(
+            {self.RAM, self.ROCKET_CART},
+            Age2UnitLineData.ARCHER_LINE,
+            siege_can_counter=True,
+        ))
+
     def test_off_the_organ_gun_is_an_army_to_a_mangonel(self):
         self.assertFalse(self.can_counter_fielding(
-            self.MANGONEL,
+            {self.MANGONEL},
             Age2UnitLineData.ORGAN_GUN_LINE,
             siege_can_counter=False,
         ))
