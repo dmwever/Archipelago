@@ -11,7 +11,7 @@ from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
-from ..locations.connections.UnitRoles import ROLE_TO_LINES, SHIP_LINES, UnitRole
+from ..locations.connections.UnitRoles import ROLE_TO_LINES, SHIP_LINES, SIEGE_TARGETS, UnitRole
 from ..logic.scenarios.ScenarioUnitLogic import ScenarioUnitLogic
 from .bases import Age2RuleTestBase
 
@@ -295,6 +295,92 @@ class TestMonksCanCounter(Age2RuleTestBase):
                         target,
                         monks_can_counter=True,
                     ))
+
+
+class TestSiegeCanCounter(Age2RuleTestBase):
+    """Mangonels, bombards and rocket carts need micro to land on an army, so a yaml must ask for
+    it. Against other siege they need none and always count."""
+
+    MANGONEL = Age2UnitLineData.MANGONEL_LINE
+    BOMBARD = Age2UnitLineData.BOMBARD_CANNON_LINE
+    # Each pair is an anti-unit siege line and a target the table has it countering.
+    AGAINST_AN_ARMY = (MANGONEL, Age2UnitLineData.ARCHER_LINE)
+    AGAINST_A_SHIP = (BOMBARD, Age2UnitLineData.CANNON_GALLEON_LINE)
+    AGAINST_SIEGE = (
+        (MANGONEL, Age2UnitLineData.TREBUCHET_LINE),
+        (BOMBARD, Age2UnitLineData.TREBUCHET_LINE),
+        (BOMBARD, Age2UnitLineData.MANGONEL_LINE),
+        (MANGONEL, Age2UnitLineData.SCORPION_LINE),
+    )
+
+    def can_counter_fielding(self, fielded: Age2UnitLineData, target: Age2UnitLineData,
+                             **options) -> bool:
+        """Whether Attila 1 counters `target` in the Castle Age when `fielded` is all it fields."""
+        world = self.build(**EVERYTHING, **options)
+        attila_1 = world.rules.logic.for_scenario(Age2ScenarioLocationData.ATT1_VICTORY.scenario)
+
+        def can_field(_unit_logic, line, age=None):
+            return True_() if line is fielded else False_()
+
+        with mock.patch.object(ScenarioUnitLogic, "can_field", autospec=True,
+                               side_effect=can_field):
+            rule = attila_1.military.counters(target, Age2AgeData.CASTLE)
+            return not rule.resolve(world).always_false
+
+    def test_siege_does_not_counter_by_default(self):
+        self.assertFalse(self.build().options.siege_can_counter)
+
+    def test_off_anti_unit_siege_does_not_counter_an_army_or_a_ship(self):
+        for siege, target in (self.AGAINST_AN_ARMY, self.AGAINST_A_SHIP):
+            with self.subTest(siege=siege.name, target=target.name):
+                self.assertFalse(self.can_counter_fielding(
+                    siege,
+                    target,
+                    siege_can_counter=False,
+                ))
+
+    def test_off_anti_unit_siege_still_counters_siege(self):
+        for siege, target in self.AGAINST_SIEGE:
+            with self.subTest(siege=siege.name, target=target.name):
+                self.assertTrue(self.can_counter_fielding(
+                    siege,
+                    target,
+                    siege_can_counter=False,
+                ))
+
+    def test_on_anti_unit_siege_counters_armies_ships_and_siege(self):
+        for siege, target in (self.AGAINST_AN_ARMY, self.AGAINST_A_SHIP, *self.AGAINST_SIEGE):
+            with self.subTest(siege=siege.name, target=target.name):
+                self.assertTrue(self.can_counter_fielding(
+                    siege,
+                    target,
+                    siege_can_counter=True,
+                ))
+
+    def test_the_scorpion_counters_an_army_whatever_the_option(self):
+        for siege_can_counter in (False, True):
+            with self.subTest(siege_can_counter=siege_can_counter):
+                self.assertTrue(self.can_counter_fielding(
+                    Age2UnitLineData.SCORPION_LINE,
+                    Age2UnitLineData.ARCHER_LINE,
+                    siege_can_counter=siege_can_counter,
+                ))
+
+    def test_off_the_organ_gun_is_an_army_to_a_mangonel(self):
+        self.assertFalse(self.can_counter_fielding(
+            self.MANGONEL,
+            Age2UnitLineData.ORGAN_GUN_LINE,
+            siege_can_counter=False,
+        ))
+
+    def test_the_lines_that_count_as_armies_are_not_siege_targets(self):
+        for line in (
+            Age2UnitLineData.FIRE_ARCHER_LINE,
+            Age2UnitLineData.PETARD_LINE,
+            Age2UnitLineData.ORGAN_GUN_LINE,
+        ):
+            with self.subTest(line.name):
+                self.assertNotIn(line, SIEGE_TARGETS)
 
 
 class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):

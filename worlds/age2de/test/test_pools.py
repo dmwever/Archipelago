@@ -210,6 +210,7 @@ class TestWhereTheOptionsLive(unittest.TestCase):
         "local_start",     # a placement policy, applied in pre_fill
         "tech_behavior",   # the game mod's business; slot data only
         "monks_can_counter",   # which counters count, read where counters resolve
+        "siege_can_counter",   # which counters count, read where counters resolve
     }
 
     POOLS = pathlib.Path(__file__).parent.parent / "generation" / "pools"

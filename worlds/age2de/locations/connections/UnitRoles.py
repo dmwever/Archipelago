@@ -34,6 +34,20 @@ FAITH_LINES = (L.MONK_LINE, L.MISSIONARY_LINE)
 # monks option says.
 FAITH_EXCEPTION_TARGETS = (L.BATTLE_ELEPHANT_LINE, L.WAR_ELEPHANT_LINE, L.ELEPHANT_ARCHER_LINE)
 
+# The clumsy siege that fights armies. The Scorpion is easy enough to count as an ordinary counter.
+ANTI_UNIT_SIEGE = (
+    L.MANGONEL_LINE, L.BOMBARD_CANNON_LINE, L.ROCKET_CART_LINE, L.HEAVY_ROCKET_CART_LINE,
+)
+
+# Siege duels need no micro, so anti-unit siege counters these whatever the siege option says.
+# Not SIEGE: the Fire Archer and Petard count as armies here, as does the Organ Gun.
+SIEGE_TARGETS = (
+    L.BATTERING_RAM_LINE, L.ARMORED_ELEPHANT_LINE,
+    L.TREBUCHET_LINE, L.TRACTION_TREBUCHET_LINE, L.MOUNTED_TREBUCHET_LINE,
+    L.BOMBARD_CANNON_LINE, L.MANGONEL_LINE, L.SCORPION_LINE,
+    L.ROCKET_CART_LINE, L.HEAVY_ROCKET_CART_LINE,
+)
+
 ANTI_BUILDING = (
     # Barracks
     L.MILITIA_LINE, L.SPEARMAN_LINE, L.EAGLE_SCOUT_LINE, L.CONDOTTIERO_LINE,

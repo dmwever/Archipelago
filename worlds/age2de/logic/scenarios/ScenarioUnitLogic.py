@@ -12,9 +12,11 @@ from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData
 from ...locations.connections.UnitCounters import RAM_COUNTER_TARGETS
 from ...locations.connections.UnitRoles import (
+    ANTI_UNIT_SIEGE,
     FAITH_EXCEPTION_TARGETS,
     FAITH_LINES,
     RAM_LINES,
+    SIEGE_TARGETS,
     UnitRole,
 )
 from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
@@ -113,6 +115,8 @@ class ScenarioUnitLogic:
         """Whether the options let the logic expect `line` to counter `target`."""
         if line in FAITH_LINES and target not in FAITH_EXCEPTION_TARGETS:
             return bool(self.world.options.monks_can_counter)
+        if line in ANTI_UNIT_SIEGE and target not in SIEGE_TARGETS:
+            return bool(self.world.options.siege_can_counter)
         return True
 
     def can_sponge_for_military(self, age: Age2AgeData) -> Rule:

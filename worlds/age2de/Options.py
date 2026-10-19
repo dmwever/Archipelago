@@ -278,12 +278,23 @@ class Caveman(Toggle):
 
 class MonksCanCounter(Toggle):
     """
-    Whether the logic may expect monks and missionaries to counter a unit by converting it.
+    Whether the logic may expect monks and missionaries to counter a unit.
     Off: Monks are only considered a counter to elephants.
     On: They can counter valuable unit-lines such as heavy cavalry and siege (with redemption).
     """
     internal_name = "monks_can_counter"
     display_name = "Monks Can Counter"
+
+
+class SiegeCanCounter(Toggle):
+    """
+    Whether the logic may expect mangonels, bombard cannons and rocket carts to counter a unit.
+    Does not affect scorpions. 
+    Off: Mangonels, bombard cannons and rocket carts can only counter siege.
+    On: Mangonels, bombard cannons and rocket carts can counter all units they are typically strong against.
+    """
+    internal_name = "siege_can_counter"
+    display_name = "Siege Can Counter"
 
     
 class TrapDifficulty(Choice):
@@ -356,6 +367,7 @@ class Age2Options(PerGameCommonOptions):
     include_unique_units: IncludeUniqueUnits
     caveman: Caveman
     monks_can_counter: MonksCanCounter
+    siege_can_counter: SiegeCanCounter
     goal: Goal
     local_start: LocalStart
     trap_difficulty: TrapDifficulty
