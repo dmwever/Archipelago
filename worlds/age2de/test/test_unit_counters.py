@@ -35,20 +35,6 @@ class TestCounterTable(unittest.TestCase):
             LINE_TO_COUNTERS[Age2UnitLineData.MOUNTED_TREBUCHET_LINE],
         )
 
-    def test_the_ram_counters_archers_and_trebuchets(self):
-        rammed_lines = (
-            Age2UnitLineData.ARCHER_LINE,
-            Age2UnitLineData.CAVALRY_ARCHER_LINE,
-            Age2UnitLineData.LONGBOWMAN_LINE,
-            Age2UnitLineData.PLUMED_ARCHER_LINE,
-            Age2UnitLineData.RATTAN_ARCHER_LINE,
-            Age2UnitLineData.BALLISTA_ELEPHANT_LINE,
-            Age2UnitLineData.TREBUCHET_LINE,
-        )
-        for line in rammed_lines:
-            with self.subTest(line.name):
-                self.assertIn(Age2UnitLineData.BATTERING_RAM_LINE, LINE_TO_COUNTERS[line])
-
     def test_lines_that_do_not_counter(self):
         not_countered_by = (
             (Age2UnitLineData.KNIGHT_LINE, Age2UnitLineData.THROWING_AXEMAN_LINE),

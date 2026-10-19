@@ -70,6 +70,11 @@ SIEGE = (
     L.FIRE_ARCHER_LINE,        # shoots buildings alight, so it counts as siege
 )
 
+RAM_LINES = (
+    L.BATTERING_RAM_LINE,
+    L.ARMORED_ELEPHANT_LINE,   # the ram of the civilisations that have elephants
+)
+
 LONG_RANGE_SIEGE = (
     L.TREBUCHET_LINE, L.TRACTION_TREBUCHET_LINE, L.MOUNTED_TREBUCHET_LINE,
     L.BOMBARD_CANNON_LINE,
@@ -109,6 +114,8 @@ ROLE_TO_LINES: dict[str, tuple[Age2UnitLineData, ...]] = {
 
 assert not set(LONG_RANGE_SIEGE) - set(SIEGE), \
     "a long range siege line that is not siege"
+assert not set(RAM_LINES) - set(SIEGE), \
+    "a ram that is not siege"
 assert not set(NAVAL_BOMBARDMENT) - set(NAVY), \
     "a naval bombardment line that is not a warship"
 assert not set(BUILDING_COUNTER) & set(SHIP_LINES),     "a ship counting as a building counter - it is a land role, and naval bombardment is its own"

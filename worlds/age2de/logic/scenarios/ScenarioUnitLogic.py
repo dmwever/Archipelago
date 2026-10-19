@@ -10,6 +10,8 @@ from ...locations.Heroes import Age2HeroData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData
+from ...locations.connections.UnitCounters import RAM_COUNTER_TARGETS
+from ...locations.connections.UnitRoles import RAM_LINES, UnitRole
 from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
 
 if TYPE_CHECKING:
@@ -96,7 +98,14 @@ class ScenarioUnitLogic:
             if line in target.counter_techs:
                 way = way & self.scenario.techs.has_researched(target.counter_techs[line])
             ways.append(way)
+        if target in RAM_COUNTER_TARGETS:
+            ways.append(self.can_sponge_for_military(age))
         return Or(*ways)
+
+    def can_sponge_for_military(self, age: Age2AgeData) -> Rule:
+        """A ram soaking fire while a military line does the killing."""
+        rams = [self.can_field(line, age) for line in RAM_LINES]
+        return Or(*rams) & self.scenario.military.can_field_role(UnitRole.military, age)
 
     def starting_unit(self, line: Age2UnitLineData) -> list[Age2UnitData]:
         for unit in sorted(line.units, key=lambda unit: unit.tier):

@@ -1,5 +1,5 @@
 from ..UnitLines import Age2UnitLineData
-from .UnitRoles import SHIP_LINES
+from .UnitRoles import RAM_LINES, SHIP_LINES
 
 
 LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
@@ -18,7 +18,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.ELEPHANT_ARCHER_LINE,
         Age2UnitLineData.GENITOUR_LINE,
         Age2UnitLineData.RATTAN_ARCHER_LINE,
-        Age2UnitLineData.BATTERING_RAM_LINE,
     ],
     Age2UnitLineData.HAND_CANNONEER_LINE: [
         Age2UnitLineData.SKIRMISHER_LINE,
@@ -64,7 +63,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.KONNIK_LINE,
         Age2UnitLineData.KESHIK_LINE,
         Age2UnitLineData.LEITIS_LINE,
-        Age2UnitLineData.BATTERING_RAM_LINE,
         Age2UnitLineData.STEPPE_LANCER_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
         Age2UnitLineData.SERJEANT_LINE,
@@ -81,7 +79,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.BOYAR_LINE,
         Age2UnitLineData.GENITOUR_LINE,
-        Age2UnitLineData.BATTERING_RAM_LINE,
     ],
     Age2UnitLineData.MANGUDAI_LINE: [
         Age2UnitLineData.SKIRMISHER_LINE,
@@ -162,7 +159,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CAMEL_ARCHER_LINE,
         Age2UnitLineData.GENITOUR_LINE,
         Age2UnitLineData.RATTAN_ARCHER_LINE,
-        Age2UnitLineData.BATTERING_RAM_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE, # should be for harder difficulty
         Age2UnitLineData.CAMEL_SCOUT_LINE,
@@ -518,7 +514,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.WAR_WAGON_LINE,
         Age2UnitLineData.GENITOUR_LINE,
         Age2UnitLineData.RATTAN_ARCHER_LINE,
-        Age2UnitLineData.BATTERING_RAM_LINE,
     ],
     Age2UnitLineData.CONQUISTADOR_LINE: [
         Age2UnitLineData.SKIRMISHER_LINE,
@@ -762,7 +757,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.MAGYAR_HUSZAR_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
-        Age2UnitLineData.BATTERING_RAM_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
@@ -809,7 +803,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.MAGYAR_HUSZAR_LINE,
         Age2UnitLineData.BOYAR_LINE,
-        Age2UnitLineData.BATTERING_RAM_LINE,
         Age2UnitLineData.STEPPE_LANCER_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
@@ -1102,6 +1095,19 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
 }
 
 
+RAM_COUNTER_TARGETS: tuple[Age2UnitLineData, ...] = (
+    Age2UnitLineData.ARCHER_LINE,
+    Age2UnitLineData.CAVALRY_ARCHER_LINE,
+    Age2UnitLineData.LONGBOWMAN_LINE,
+    Age2UnitLineData.PLUMED_ARCHER_LINE,
+    Age2UnitLineData.RATTAN_ARCHER_LINE,
+    Age2UnitLineData.BALLISTA_ELEPHANT_LINE,
+    Age2UnitLineData.SKIRMISHER_LINE,
+)
+"""What a ram counters only as a sponge: it soaks their fire while a military line kills them.
+Against siege a ram is an ordinary counter, in the table above."""
+
+
 for _line in Age2UnitLineData:
     _line.countered_by = LINE_TO_COUNTERS.get(_line, [])
 
@@ -1111,3 +1117,6 @@ for _line in Age2UnitLineData:
 assert not [(line, counter) for line, counters in LINE_TO_COUNTERS.items() for counter in counters
             if line not in SHIP_LINES and counter in SHIP_LINES], \
     "a ship countering a land unit"
+assert not [(line, ram) for line in RAM_COUNTER_TARGETS for ram in RAM_LINES
+            if ram in line.countered_by], \
+    "a ram countering a line it only soaks for on its own"

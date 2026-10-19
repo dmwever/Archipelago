@@ -1,5 +1,8 @@
 import ast
 from pathlib import Path
+from unittest import mock
+
+from rule_builder.rules import False_, True_
 
 from ..Options import IncludeUniqueUnits, Unitsanity
 from ..locations.Ages import Age2AgeData
@@ -9,6 +12,7 @@ from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
 from ..locations.connections.UnitRoles import ROLE_TO_LINES, SHIP_LINES, UnitRole
+from ..logic.scenarios.ScenarioUnitLogic import ScenarioUnitLogic
 from .bases import Age2RuleTestBase
 
 EVERYTHING = dict(unitsanity=Unitsanity.option_all,
@@ -172,6 +176,65 @@ class TestCounters(Age2RuleTestBase):
         for counter in (Age2UnitLineData.GALLEY_LINE, Age2UnitLineData.TURTLE_SHIP_LINE):
             with self.subTest(counter.name):
                 self.assertIn(counter, Age2UnitLineData.DEMOLITION_RAFT_LINE.countered_by)
+
+
+class TestRamsAreASponge(Age2RuleTestBase):
+    """A ram soaks arrows; it kills nothing that shoots back. It counts against the lines it soaks
+    for only with an army behind it doing the damage, and against siege it counts on its own."""
+
+    SOAKED = (
+        Age2UnitLineData.ARCHER_LINE,
+        Age2UnitLineData.CAVALRY_ARCHER_LINE,
+        Age2UnitLineData.LONGBOWMAN_LINE,
+        Age2UnitLineData.PLUMED_ARCHER_LINE,
+        Age2UnitLineData.RATTAN_ARCHER_LINE,
+        Age2UnitLineData.BALLISTA_ELEPHANT_LINE,
+        Age2UnitLineData.SKIRMISHER_LINE,
+    )
+    # Counters none of the soaked lines itself, so only the sponge can answer them with it.
+    ESCORT = Age2UnitLineData.HAND_CANNONEER_LINE
+    RAM = Age2UnitLineData.BATTERING_RAM_LINE
+
+    def can_counter_fielding(self, fielded: set[Age2UnitLineData],
+                             target: Age2UnitLineData) -> bool:
+        """Whether Attila 1 counters `target` in the Castle Age when `fielded` is all it fields."""
+        world = self.build(**EVERYTHING)
+        attila_1 = world.rules.logic.for_scenario(Age2ScenarioLocationData.ATT1_VICTORY.scenario)
+
+        def can_field(_unit_logic, line, age=None):
+            return True_() if line in fielded else False_()
+
+        with mock.patch.object(ScenarioUnitLogic, "can_field", autospec=True,
+                               side_effect=can_field):
+            rule = attila_1.military.counters(target, Age2AgeData.CASTLE)
+            return not rule.resolve(world).always_false
+
+    def test_the_escort_alone_counters_none_of_them(self):
+        for target in self.SOAKED:
+            with self.subTest(target.name):
+                self.assertFalse(self.can_counter_fielding({self.ESCORT}, target))
+
+    def test_rams_alone_do_not_counter_what_they_soak_for(self):
+        for target in self.SOAKED:
+            with self.subTest(target.name):
+                self.assertFalse(self.can_counter_fielding({self.RAM}, target))
+
+    def test_rams_with_any_army_counter_what_they_soak_for(self):
+        for target in self.SOAKED:
+            with self.subTest(target.name):
+                self.assertTrue(self.can_counter_fielding({self.RAM, self.ESCORT}, target))
+
+    def test_the_armored_elephant_is_the_ram_of_an_elephant_civilisation(self):
+        elephant_ram = Age2UnitLineData.ARMORED_ELEPHANT_LINE
+        self.assertTrue(self.can_counter_fielding(
+            {elephant_ram, self.ESCORT},
+            Age2UnitLineData.ARCHER_LINE,
+        ))
+
+    def test_rams_counter_trebuchets_with_no_escort(self):
+        for target in (Age2UnitLineData.TREBUCHET_LINE, Age2UnitLineData.MOUNTED_TREBUCHET_LINE):
+            with self.subTest(target.name):
+                self.assertTrue(self.can_counter_fielding({self.RAM}, target))
 
 
 class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):
