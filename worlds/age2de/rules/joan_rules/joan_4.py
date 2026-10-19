@@ -1,52 +1,24 @@
-
-from ...locations.Locations import Age2ScenarioLocationData
-
-from ...locations.Ages import Age2AgeData
-from ...locations.UnitLines import Age2UnitLineData
-
 from rule_builder.rules import Rule
 
-
+from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
+from ...logic.joan.joan_4 import Joan4Player
 from ..ScenarioRules import ScenarioRules
 
 
 class Joan4Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_JOAN_4)
-    
+
     def set_rules(self):
         super().set_rules()
-        # The Rising withholds the Cannon Galleon, and the Franks have no other ship that shoots
-        # buildings: green and orange fall to a land army only.
-        can_beat_green: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.counters_building() &
-            self.scenario_logic.military.has_navy(Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL)
-        )
-        can_beat_green = self.scenario_logic.named("can beat Green", can_beat_green)
-        can_beat_orange: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.has_siege() &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
-        )
-        can_beat_orange = self.scenario_logic.named("can beat Orange", can_beat_orange)
-        can_beat_yellow: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.has_siege() &
-            self.scenario_logic.military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
-        )
-        can_beat_yellow = self.scenario_logic.named("can beat Yellow", can_beat_yellow)
-        
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_CHALONS_TC], can_beat_green)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_TROYES_TC], can_beat_orange)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_RHEIMS_TC], can_beat_yellow)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_VICTORY], can_beat_green & can_beat_orange & can_beat_yellow)
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.JOAN4_VICTORY.scenario.scenario_name), can_beat_green & can_beat_orange & can_beat_yellow)
+        can_defeat_chalons: Rule = self.scenario_logic.defeats(Joan4Player.CHALONS)
+        can_defeat_troyes: Rule = self.scenario_logic.defeats(Joan4Player.TROYES)
+        can_defeat_rheims: Rule = self.scenario_logic.defeats(Joan4Player.RHEIMS)
+        can_win_scenario: Rule = can_defeat_chalons & can_defeat_troyes & can_defeat_rheims
+
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_CHALONS_TC], can_defeat_chalons)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_TROYES_TC], can_defeat_troyes)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_RHEIMS_TC], can_defeat_rheims)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_VICTORY], can_win_scenario)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.JOAN4_VICTORY.scenario.scenario_name), can_win_scenario)

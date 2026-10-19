@@ -9,6 +9,10 @@ from ..logic.attila.attila_3 import Attila3Player
 from ..logic.attila.attila_4 import Attila4Player
 from ..logic.attila.attila_5 import Attila5Player
 from ..logic.attila.attila_6 import Attila6Player
+from ..logic.joan.joan_2 import Joan2Player
+from ..logic.joan.joan_3 import Joan3Player
+from ..logic.joan.joan_4 import Joan4Player
+from ..logic.joan.joan_6 import Joan6Player
 from ..logic.genghis.genghis_1 import Genghis1Player
 from ..logic.genghis.genghis_2 import Genghis2Player
 from ..logic.genghis.genghis_3 import Genghis3Player
@@ -24,6 +28,10 @@ SCENARIO_PLAYERS: dict[Age2ScenarioData, type[ScenarioPlayer]] = {
     Age2ScenarioData.AP_ATTILA_4: Attila4Player,
     Age2ScenarioData.AP_ATTILA_5: Attila5Player,
     Age2ScenarioData.AP_ATTILA_6: Attila6Player,
+    Age2ScenarioData.AP_JOAN_2: Joan2Player,
+    Age2ScenarioData.AP_JOAN_3: Joan3Player,
+    Age2ScenarioData.AP_JOAN_4: Joan4Player,
+    Age2ScenarioData.AP_JOAN_6: Joan6Player,
     Age2ScenarioData.AP_GENGHIS_1: Genghis1Player,
     Age2ScenarioData.AP_GENGHIS_2: Genghis2Player,
     Age2ScenarioData.AP_GENGHIS_3: Genghis3Player,
@@ -33,8 +41,8 @@ SCENARIO_PLAYERS: dict[Age2ScenarioData, type[ScenarioPlayer]] = {
 }
 
 class TestDefeatRules(bases.Age2RuleTestBase):
-    campaigns = ["Attila the Hun", "Genghis Khan"]
-    starting_campaigns = ["Attila the Hun", "Genghis Khan"]
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+    starting_campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
 
     def setUp(self):
         self.build()
