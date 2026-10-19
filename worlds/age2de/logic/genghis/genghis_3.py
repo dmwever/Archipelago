@@ -5,11 +5,22 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Units import Age2UnitData
 from ...items.Items import Age2ItemData
+from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
+from ..ScenarioPlayer import ScenarioPlayer
 
 if TYPE_CHECKING:
     from ..Logic import Logic
+    from ..ScenarioLogic import ScenarioLogic
+
+class Genghis3Player(ScenarioPlayer):
+    """The Engineers have no member: they resign the moment the other four are gone."""
+    TANGUTS = 2, "the Tanguts"
+    XI_XIA = 3, "Xi Xia"
+    JIN = 4, "the Jin"
+    SONG = 5, "the Song"
 
 class Genghis3StartingState(ScenarioStartingState):
     transport: Rule = Has(Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name)
@@ -26,3 +37,80 @@ class Genghis3StartingState(ScenarioStartingState):
 
         self.starts_with_building[Age2BuildingData.SIEGE_WORKSHOP] = (
             self.bombards | self.engineers)
+
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+        military = scenario_logic.military
+        units = scenario_logic.units
+
+        has_siege: Rule = military.has_siege() | self.bombards
+        has_siege = scenario_logic.named("has siege or the bombards", has_siege)
+        has_long_siege: Rule = military.has_long_range_siege() | self.bombards
+        has_long_siege = scenario_logic.named(
+            "has long-range siege or the bombards",
+            has_long_siege,
+        )
+
+        can_invade_china: Rule = (
+            units.can_field(Age2UnitLineData.TRANSPORT_SHIP_LINE, Age2AgeData.FEUDAL) |
+            has_siege
+        )
+        can_invade_china = scenario_logic.named("can invade China", can_invade_china)
+
+        can_force_landing: Rule = (
+            units.can_field(Age2UnitLineData.TRANSPORT_SHIP_LINE, Age2AgeData.FEUDAL) &
+            military.has_navy(Age2AgeData.FEUDAL)
+        )
+        can_force_landing = scenario_logic.named("can force a landing", can_force_landing)
+
+        return {
+            Genghis3Player.TANGUTS: (
+                scenario_logic.has_base() &
+                can_invade_china &
+                military.has_military(Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.ROCKET_CART_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.FIRE_LANCER_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.MOUNTED_TREBUCHET_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
+                military.counters_building() &
+                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+            ),
+            Genghis3Player.XI_XIA: (
+                scenario_logic.has_base() &
+                can_invade_china &
+                military.has_military(Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.CHU_KO_NU_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.CASTLE) &
+                has_siege &
+                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+            ),
+            Genghis3Player.JIN: (
+                scenario_logic.has_base() &
+                can_force_landing &
+                military.has_military(Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.IRON_PAGODA_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.GRENADIER_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.STEPPE_LANCER_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.ROCKET_CART_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.GALLEY_LINE, Age2AgeData.IMPERIAL) &
+                has_long_siege &
+                scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
+            ),
+            Genghis3Player.SONG: (
+                scenario_logic.has_base() &
+                can_invade_china &
+                military.has_military(Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.ROCKET_CART_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.FIRE_LANCER_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
+                military.counters_building() &
+                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+            ),
+        }

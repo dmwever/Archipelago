@@ -1,9 +1,8 @@
 from rule_builder.rules import Rule
 
-from ...locations.Ages import Age2AgeData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
-from ...locations.UnitLines import Age2UnitLineData
+from ...logic.genghis.genghis_4 import Genghis4Player
 from ..ScenarioRules import ScenarioRules
 
 
@@ -19,37 +18,20 @@ class Genghis4Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        military = self.scenario_logic.military
+        defeats = self.scenario_logic.defeats
 
-        can_kill_red: Rule = (
-            self.scenario_logic.has_base() &
-            military.has_military(Age2AgeData.CASTLE) &
-            military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
-            military.counters(Age2UnitLineData.BOYAR_LINE, Age2AgeData.CASTLE) &
-            military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
-            military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
-            military.has_siege() &
-            self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+        self.world.set_rule(
+            self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_RUSSIANS],
+            defeats(Genghis4Player.RUSSIANS),
         )
-        can_kill_red = self.scenario_logic.named("can beat Red", can_kill_red)
-
-        can_kill_yellow: Rule = (
-            self.scenario_logic.has_base() &
-            military.has_military(Age2AgeData.IMPERIAL) &
-            military.counters(Age2UnitLineData.WAR_ELEPHANT_LINE, Age2AgeData.IMPERIAL) &
-            military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
-            military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.IMPERIAL) &
-            military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
-            military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
-            military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.IMPERIAL) &
-            military.has_long_range_siege() &
-            self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
+        self.world.set_rule(
+            self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_KHWARAZM],
+            defeats(Genghis4Player.KHWARAZM),
         )
-        can_kill_yellow = self.scenario_logic.named("can beat Yellow", can_kill_yellow)
 
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_RUSSIANS], can_kill_red)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_KHWARAZM], can_kill_yellow)
-
-        can_beat_scenario: Rule = can_kill_red & can_kill_yellow
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN4_VICTORY], can_beat_scenario)
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.GEN4_VICTORY.scenario.scenario_name), can_beat_scenario)
+        can_win_scenario: Rule = (
+            defeats(Genghis4Player.RUSSIANS) &
+            defeats(Genghis4Player.KHWARAZM)
+        )
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN4_VICTORY], can_win_scenario)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.GEN4_VICTORY.scenario.scenario_name), can_win_scenario)

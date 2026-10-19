@@ -4,11 +4,18 @@ from rule_builder.rules import False_, Has, Rule, True_
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...items.Items import Age2ItemData
+from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
+from ..ScenarioPlayer import ScenarioPlayer
 
 if TYPE_CHECKING:
     from ..Logic import Logic
+    from ..ScenarioLogic import ScenarioLogic
+
+class Genghis6Player(ScenarioPlayer):
+    HUNGARY = 2, "Hungary"
 
 class Genghis6StartingState(ScenarioStartingState):
 
@@ -23,3 +30,22 @@ class Genghis6StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.CASTLE] = True_()
         self.starts_with_building[Age2BuildingData.STABLE] = True_()
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = True_()
+
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+        military = scenario_logic.military
+        return {
+            Genghis6Player.HUNGARY: (
+                scenario_logic.has_base() &
+                military.has_military(Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.MAGYAR_HUSZAR_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.IMPERIAL) &
+                military.has_siege() &
+                scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
+            ),
+        }

@@ -11,10 +11,10 @@ Opponent, Defeat.
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Each Genghis scenario has a `Player` enum covering the opponents its rules defeat (neutral slots get no member)
-- [ ] `defeats(player)` returns the same rule object on repeated calls
-- [ ] No `can_kill_*` / `can_beat_*` locals remain in the Genghis rules files; labels read "can defeat ..."
-- [ ] The ticket-01 snapshot test is green
-- [ ] Full suite green
+- [x] Each Genghis scenario has a `Player` enum covering the opponents its rules defeat (neutral slots get no member)
+- [x] `defeats(player)` returns the same rule object on repeated calls
+- [x] No `can_kill_*` / `can_beat_*` locals remain in the Genghis rules files; labels read "can defeat ..."
+- [x] The ticket-01 snapshot test is green
+- [x] Full suite green
