@@ -276,11 +276,11 @@ class ScenarioResourceLogic:
 
     # -- the higher-difficulty stubs ----------------------------------------------------------
 
-    def market_trades(self) -> Rule:
+    def can_trade_at_market(self) -> Rule:
         if not self.world.options.market_trade:
             return False_()
         return (self.scenario.has_building(Age2BuildingData.MARKET)
-                & (self._can_get_wood_easily() | self.endless_food()))
+                & (self._can_get_wood_easily() | self.has_easy_source(Resource.FOOD)))
 
     def ally_trade_gold(self) -> Rule:
         if not ALLY_TRADE:

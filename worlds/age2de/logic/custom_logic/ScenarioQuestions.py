@@ -250,7 +250,7 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
         return (self._GATHERED_EASILY[self.resource](self, scenario)
                 | scenario.starting_state.easy_resource_sources[self.resource]
-                | scenario.economy.market_trades())
+                | scenario.economy.can_trade_at_market())
 
     def _food_easily(self, scenario: 'ScenarioLogic') -> Rule:
         economy = scenario.economy

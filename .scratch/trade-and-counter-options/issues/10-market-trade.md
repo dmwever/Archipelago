@@ -17,7 +17,7 @@ Spec: Implementation Decisions, "Options", "Trade logic". Glossary: Market trade
 
 ## Comments
 
-- The option is `MarketTrade` (`market_trade`). `ScenarioResourceLogic.market_trades` reads
+- The option is `MarketTrade` (`market_trade`). `ScenarioResourceLogic.can_trade_at_market` reads
   `self.world.options.market_trade` where `MARKET_ECONOMY` was; the rule behind it is unchanged.
 - `TestMarketTrade` in test_economy_rules: off by default; off, false in every scenario; on, depends
   on the Market item, false with neither wood nor endless food, satisfiable with wood. The old

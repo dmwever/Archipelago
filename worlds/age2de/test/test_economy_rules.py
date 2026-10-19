@@ -207,12 +207,12 @@ class TestMarketTrade(EconomyTestBase):
         self.build(market_trade=False)
         for scenario in self.world.rules.logic.scenarios:
             with self.subTest(scenario.scenario.name):
-                self.assertTrue(self.is_false(scenario.economy.market_trades()))
+                self.assertTrue(self.is_false(scenario.economy.can_trade_at_market()))
 
     def test_on_market_trade_asks_for_a_market(self):
         self.build(market_trade=True)
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        dependencies = set(self.resolved(attila_1.market_trades()).item_dependencies())
+        dependencies = set(self.resolved(attila_1.can_trade_at_market()).item_dependencies())
         self.assertIn(Age2BuildingData.MARKET.item.item_name, dependencies)
 
     def test_on_market_trade_needs_something_to_sell(self):
@@ -224,14 +224,14 @@ class TestMarketTrade(EconomyTestBase):
             mock.patch.object(resource_logic, "_can_get_wood_easily", return_value=False_()),
             mock.patch.object(resource_logic, "endless_food", return_value=False_()),
         ):
-            self.assertTrue(self.is_false(attila_1.market_trades()))
+            self.assertTrue(self.is_false(attila_1.can_trade_at_market()))
 
     def test_on_market_trade_is_satisfiable_with_a_market_and_wood(self):
         self.build(market_trade=True)
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
         with mock.patch.object(economy_module.ScenarioResourceLogic, "_can_get_wood_easily",
                                return_value=True_()):
-            self.assertFalse(self.is_false(attila_1.market_trades()))
+            self.assertFalse(self.is_false(attila_1.can_trade_at_market()))
 
 
 class TestStubs(EconomyTestBase):
