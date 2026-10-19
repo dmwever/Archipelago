@@ -1,70 +1,45 @@
 from rule_builder.rules import Has, Rule
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
-from ...locations.UnitLines import Age2UnitLineData
 
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
+from ...logic.attila.attila_4 import Attila4Player
 from ..ScenarioRules import ScenarioRules
 
 
 class Attila4Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_4)
-    
+
     def set_rules(self):
         super().set_rules()
-        can_beat_red: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.has_siege() &
-            self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
-        )
-        can_beat_red = self.scenario_logic.named("can beat Red", can_beat_red)
-        
-        can_beat_purple: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE)
-        )
-        can_beat_purple = self.scenario_logic.named("can beat Purple", can_beat_purple)
-        can_ally_purple: Rule = (
+        defeats = self.scenario_logic.defeats
+
+        can_ally_burgundy: Rule = (
             self.scenario_logic.has_base() &
             self.logic.buildings.has_building(Age2BuildingData.MARKET) &
             self.logic.buildings.has_building(Age2BuildingData.CASTLE) &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
-        can_ally_purple = self.scenario_logic.named("can ally with Purple", can_ally_purple)
-        
-        can_beat_cyan: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.has_long_range_siege() &
-            self.scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
-        )
-        can_beat_cyan = self.scenario_logic.named("can beat Cyan", can_beat_cyan)
-        can_beat_blue: Rule = can_beat_cyan
-        can_beat_blue = self.scenario_logic.named("can beat Blue", can_beat_blue)
-        
+        can_ally_burgundy = self.scenario_logic.named("can ally with Burgundy", can_ally_burgundy)
+
         if self.world.pool.scenarios.all_scenario_branches:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_TRIBUTE_BURGUNDY_ALL], Has(Age2ItemData.MARKET.item_name))
-            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_CASTLE_BURGUNDY_ALL], can_ally_purple)
-            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_BURGUNDY_ALL], can_beat_purple)
+            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_CASTLE_BURGUNDY_ALL], can_ally_burgundy)
+            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_BURGUNDY_ALL], defeats(Attila4Player.BURGUNDY))
         else:
-            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY], can_beat_purple | can_ally_purple)
-        
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_METZ], can_beat_red)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_ORLEANS], can_beat_cyan)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_ROMAN_ARMY], can_beat_blue)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_VICTORY], can_beat_blue & can_beat_red & (can_ally_purple | can_beat_purple))
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT4_VICTORY.scenario.scenario_name), can_beat_blue & can_beat_red & (can_ally_purple | can_beat_purple))
+            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY], defeats(Attila4Player.BURGUNDY) | can_ally_burgundy)
+
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_METZ], defeats(Attila4Player.METZ))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_ORLEANS], defeats(Attila4Player.ORLEANS))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_ROMAN_ARMY], defeats(Attila4Player.WESTERN_ROMAN_EMPIRE))
+
+        can_win_scenario: Rule = (
+            defeats(Attila4Player.WESTERN_ROMAN_EMPIRE) &
+            defeats(Attila4Player.METZ) &
+            (can_ally_burgundy | defeats(Attila4Player.BURGUNDY))
+        )
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_VICTORY], can_win_scenario)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT4_VICTORY.scenario.scenario_name), can_win_scenario)

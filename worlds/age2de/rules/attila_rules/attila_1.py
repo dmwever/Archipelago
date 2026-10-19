@@ -1,64 +1,36 @@
 from rule_builder.rules import Has, Rule
 
 from ...items.Items import Age2ItemData
-from ...locations.Ages import Age2AgeData
-from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
+from ...logic.attila.attila_1 import Attila1Player
 from ..ScenarioRules import ScenarioRules
 
 
 class Attila1Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_1)
-    
+
     def set_rules(self):
         super().set_rules()
-        
-        can_beat_purple: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.has_military()
+        defeats = self.scenario_logic.defeats
+
+        can_win_scenario: Rule = (
+            defeats(Attila1Player.EASTERN_ROMAN_EMPIRE) &
+            (defeats(Attila1Player.SCYTHIANS) | defeats(Attila1Player.PERSIANS))
         )
-        can_beat_purple = self.scenario_logic.named("can beat Purple", can_beat_purple)
-        
-        can_beat_blue: Rule = (
-            self.scenario_logic.ages.can_reach(Age2AgeData.FEUDAL) &
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.has_military()
-        )
-        can_beat_blue = self.scenario_logic.named("can beat Blue", can_beat_blue)
-        
-        can_beat_red: Rule = (
-            self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.has_siege() &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.WAR_ELEPHANT_LINE, Age2AgeData.CASTLE)
-        )
-        can_beat_red = self.scenario_logic.named("can beat Red", can_beat_red)
-        
-        can_beat_green: Rule = (
-            self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.has_siege() &
-            self.scenario_logic.military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.counters(Age2UnitLineData.MANGUDAI_LINE, Age2AgeData.CASTLE)
-        )
-        can_beat_green = self.scenario_logic.named("can beat Green", can_beat_green)
-        
-        self.world.set_rule(
-            self.locations[Age2ScenarioLocationData.ATT1_VICTORY],
-            can_beat_blue & (can_beat_green | can_beat_red)
-        )
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT1_VICTORY], can_win_scenario)
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.ATT1_DEFEAT_FIRST_PLAYER],
-            can_beat_blue | can_beat_red | can_beat_green
+            (
+                defeats(Attila1Player.EASTERN_ROMAN_EMPIRE) |
+                defeats(Attila1Player.PERSIANS) |
+                defeats(Attila1Player.SCYTHIANS)
+            ),
         )
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.ATT1_CAPTURE_HORSES_CAMP],
             Has(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name)
         )
-        
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name), 
-            can_beat_blue & (can_beat_green | can_beat_red))
+
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name), can_win_scenario)

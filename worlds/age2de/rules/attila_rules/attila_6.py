@@ -1,76 +1,35 @@
 from rule_builder.rules import Rule
-from ...locations.Ages import Age2AgeData
-from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
+from ...logic.attila.attila_6 import Attila6Player
 from ..ScenarioRules import ScenarioRules
 
 
 class Attila6Rules(ScenarioRules):
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_6)
-    
+
     def set_rules(self):
         super().set_rules()
-        can_beat_red: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.has_siege()
+        defeats = self.scenario_logic.defeats
+
+        can_win_scenario: Rule = (
+            defeats(Attila6Player.VERONA) &
+            defeats(Attila6Player.MEDIOLANUM) &
+            defeats(Attila6Player.PATAVIUM) &
+            defeats(Attila6Player.AQUILEIA)
         )
-        can_beat_red = self.scenario_logic.named("can beat Red", can_beat_red)
-        
-        can_beat_green: Rule = (
-            (
-                self.scenario_logic.has_base() &
-                self.scenario_logic.military.has_navy(Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.has_naval_bombardment()
-            ) |
-            (
-                self.scenario_logic.has_base() &
-                self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
-                self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
-            )
-        )
-        can_beat_green = self.scenario_logic.named("can beat Green", can_beat_green)
-        
-        can_beat_purple: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.has_long_range_siege()
-        )
-        can_beat_purple = self.scenario_logic.named("can beat Purple", can_beat_purple)
-        
-        can_beat_orange: Rule = (
-            self.scenario_logic.has_base() &
-            self.scenario_logic.military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL) &
-            self.scenario_logic.military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
-            self.scenario_logic.military.has_long_range_siege()
-        )
-        can_beat_orange = self.scenario_logic.named("can beat Orange", can_beat_orange)
-        can_beat_blue: Rule = self.scenario_logic.has_base() & self.scenario_logic.military.has_military()
-        victory = can_beat_orange & can_beat_green & can_beat_purple & can_beat_red
-        
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_AQUILEIA], can_beat_red)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_RED_WONDER], can_beat_red)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_MEDIOLANUM], can_beat_green)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_GREEN_WONDER], can_beat_green)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_PATAVIUM], can_beat_purple & can_beat_orange)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_PURPLE_WONDER], can_beat_purple)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_PURPLE_WONDER_2], can_beat_purple)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_VERONA], can_beat_orange)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_ORANGE_WONDER], can_beat_orange)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_THE_ITALIANS], victory)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_VICTORY], victory)
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT6_VICTORY.scenario.scenario_name), victory)
+
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_AQUILEIA], defeats(Attila6Player.AQUILEIA))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_RED_WONDER], defeats(Attila6Player.AQUILEIA))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_MEDIOLANUM], defeats(Attila6Player.MEDIOLANUM))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_GREEN_WONDER], defeats(Attila6Player.MEDIOLANUM))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_PATAVIUM], defeats(Attila6Player.PATAVIUM) & defeats(Attila6Player.VERONA))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_PURPLE_WONDER], defeats(Attila6Player.PATAVIUM))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_PURPLE_WONDER_2], defeats(Attila6Player.PATAVIUM))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_VERONA], defeats(Attila6Player.VERONA))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DESTROY_ORANGE_WONDER], defeats(Attila6Player.VERONA))
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_DEFEAT_THE_ITALIANS], can_win_scenario)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT6_VICTORY], can_win_scenario)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT6_VICTORY.scenario.scenario_name), can_win_scenario)

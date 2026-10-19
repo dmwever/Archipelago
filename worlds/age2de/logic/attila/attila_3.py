@@ -6,10 +6,17 @@ from ...locations.Buildings import Age2BuildingData
 from ...items.Items import Age2ItemData, Resource
 
 from ..ScenarioLogic import ScenarioStartingState
+from ..ScenarioPlayer import ScenarioPlayer
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
+    from ..ScenarioLogic import ScenarioLogic
+
+class Attila3Player(ScenarioPlayer):
+    CONSTANTINOPLE = 2, "Constantinople"
+    MARCIANOPOLIS = 3, "Marcianopolis"
+    PHILIPPOPOLIS = 4, "Philippopolis"
 
 class Attila3StartingState(ScenarioStartingState):
 
@@ -27,3 +34,13 @@ class Attila3StartingState(ScenarioStartingState):
         gold_lump = HasAny(Age2ItemData.AP_ATTILA_3_RED_GOLD.item_name,
                            Age2ItemData.AP_ATTILA_3_GREEN_GOLD.item_name)
         self.easy_resource_sources[Resource.GOLD] = gold_lump
+
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+        military = scenario_logic.military
+        # The scenario treats the two cities as interchangeable, so they share one rule.
+        can_defeat_a_city: Rule = military.has_military() & military.counters_building()
+        return {
+            Attila3Player.CONSTANTINOPLE: military.has_military() & military.has_siege(),
+            Attila3Player.MARCIANOPOLIS: can_defeat_a_city,
+            Attila3Player.PHILIPPOPOLIS: can_defeat_a_city,
+        }

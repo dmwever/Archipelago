@@ -14,10 +14,10 @@ with `assertIs(defeats(P).child, defeats(M).child)`.
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Each Attila scenario has a `Player` enum for the opponents its rules defeat
-- [ ] Attila 3's two cities map to one shared rule
-- [ ] No `can_beat_*` locals remain in the Attila rules files; labels read "can defeat ..."
-- [ ] The ticket-01 snapshot test is green
-- [ ] Full suite green
+- [x] Each Attila scenario has a `Player` enum for the opponents its rules defeat
+- [x] Attila 3's two cities map to one shared rule
+- [x] No `can_beat_*` locals remain in the Attila rules files; labels read "can defeat ..."
+- [x] The ticket-01 snapshot test is green
+- [x] Full suite green

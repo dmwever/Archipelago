@@ -7,7 +7,10 @@ beat Red" becoming "can defeat Red" passes, and so does wrapping a rule in a new
 cached question. And and Or are compared as flattened sets of operands, since naming a rule or
 lifting it out of a name can change how they nest without changing what they ask.
 
-Only Named and ScenarioQuestion are looked through: if defeats(player) returns any other wrapper,
+An And or Or whose operands all fingerprint alike is looked through too, since x | x asks x: two
+players sharing one defeat rule, OR'd, ask that one rule.
+
+Only Named and ScenarioQuestion are looked through as wrappers: if defeats(player) returns any other wrapper,
 teach Fingerprints to look through it too, or every defeat location fails here. Entrance rules
 are not covered, only location rules; the move is not meant to touch them.
 
@@ -104,11 +107,15 @@ class Fingerprints:
         return self.operands[id(rule)]
 
     def unwrapped(self, rule: Rule.Resolved) -> Rule.Resolved:
+        """Looks through names, and through an And or Or whose operands all ask the same thing:
+        Philippopolis or Marcianopolis, two names for one rule, asks that rule."""
         while True:
             if isinstance(rule, Named.Resolved):
                 rule = rule.child
             elif isinstance(rule, ScenarioQuestion.Resolved):
                 rule = rule.answer
+            elif isinstance(rule, (And.Resolved, Or.Resolved)) and len(self.operands_of(rule)) == 1:
+                rule = rule.children[0]
             else:
                 return rule
 

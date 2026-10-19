@@ -1,40 +1,27 @@
-from rule_builder.rules import Has, Rule
+from rule_builder.rules import Rule
 
-from ...items.Items import Age2ItemData
-from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
+from ...logic.attila.attila_2 import Attila2Player
 from ..ScenarioRules import ScenarioRules
 
 
 class Attila2Rules(ScenarioRules):
-    scythian_troop: Rule = Has(Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name)
     def __init__(self, rules):
         super().__init__(rules, Age2ScenarioData.AP_ATTILA_2)
-    
+
     def set_rules(self):
         super().set_rules()
-        can_beat_blue: Rule =  (
-            self.scythian_troop |
-            (
-                self.scenario_logic.has_base() &
-                self.scenario_logic.military.has_siege() &
-                self.scenario_logic.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
-                self.scenario_logic.military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
-                self.scenario_logic.military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
-            )
-        )
-        can_beat_blue = self.scenario_logic.named("can beat Blue", can_beat_blue)
+        can_defeat_romans: Rule = self.scenario_logic.defeats(Attila2Player.EASTERN_ROMAN_EMPIRE)
         town_center = Age2BuildingData.TOWN_CENTER
         can_build_tc = (self.scenario_logic.buildings.can_build_tc()
                         & self.scenario_logic.has_vils()
                         & self.scenario_logic.economy.can_pay(town_center.cost))
         can_build_tc = self.scenario_logic.named("can raise a Town Center", can_build_tc)
-        
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_beat_blue & can_build_tc)
-        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_beat_blue & can_build_tc)
+
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_defeat_romans & can_build_tc)
+        self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_defeat_romans & can_build_tc)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_SCYTHIAN_VILS], self.scenario_logic.has_vils())
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_BUILD_TC], can_build_tc)
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_BEAT_THE_ROMANS], can_beat_blue)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_BEAT_THE_ROMANS], can_defeat_romans)
