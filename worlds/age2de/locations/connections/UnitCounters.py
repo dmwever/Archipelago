@@ -565,7 +565,9 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
-    Age2UnitLineData.TURTLE_SHIP_LINE: [ # There may be no counters in here, but there are no enemies using Turtle Ships anyways, so we've got time until we shuffle enemy civs
+    # There may be no normal-difficulty counters here, but no enemy uses Turtle Ships,
+    # so we've got time until we shuffle enemy civs.
+    Age2UnitLineData.TURTLE_SHIP_LINE: [
         Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
     ],

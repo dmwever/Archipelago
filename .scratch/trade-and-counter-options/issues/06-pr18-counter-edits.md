@@ -10,9 +10,19 @@ Spec: Implementation Decisions, "Rams" and "PR 18".
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Every PR 18 counter-table change is applied except Hulk additions and ram removals
-- [ ] Entries added on `v0.3.0` after PR 18 branched are preserved
-- [ ] No duplicate or aliased unit-line ids
-- [ ] Full suite green
+- [x] Every PR 18 counter-table change is applied except Hulk additions and ram removals
+- [x] Entries added on `v0.3.0` after PR 18 branched are preserved
+- [x] No duplicate or aliased unit-line ids
+- [x] Full suite green
+
+## Comments
+
+- Hulk: v0.3.0 has the Hulk line (id 934) but no Hulk entries in the counter table. PR 18's Hulk
+  counters (vs Longboat, Cannon Galleon, Turtle Ship, Fire Galley, and Hulk's own list) are dropped
+  with its aliased id; re-author them against id 934 if wanted.
+- Every "should be for harder difficulty" tag is kept, including the Monk, Missionary, Mangonel and
+  Bombard ones that tickets 08 and 09 will cover. Those tickets should strip the tags they cover.
+- Turtle Ship is left with only Monk and Missionary, so once 08 lands it has no default counters.
+  No scenario fields Turtle Ships as an enemy.
