@@ -5,11 +5,11 @@ from .UnitRoles import SHIP_LINES
 LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.ARCHER_LINE: [
         Age2UnitLineData.SKIRMISHER_LINE,
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.TARKAN_LINE,
@@ -27,7 +27,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CAVALRY_ARCHER_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.TARKAN_LINE,
         Age2UnitLineData.PLUMED_ARCHER_LINE,
         Age2UnitLineData.CONDOTTIERO_LINE,
@@ -44,7 +44,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.WOAD_RAIDER_LINE,
         Age2UnitLineData.WAR_ELEPHANT_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.THROWING_AXEMAN_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
@@ -87,14 +87,14 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.SKIRMISHER_LINE,
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
-        Age2UnitLineData.SPEARMAN_LINE,
+        Age2UnitLineData.SPEARMAN_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.CAMEL_ARCHER_LINE,
-        Age2UnitLineData.FLEMISH_MILITIA_LINE,
+        Age2UnitLineData.FLEMISH_MILITIA_LINE, # should be for harder difficulty
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
     Age2UnitLineData.TEUTONIC_KNIGHT_LINE: [
@@ -102,13 +102,13 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.HAND_CANNONEER_LINE,
         Age2UnitLineData.JANISSARY_LINE,
         Age2UnitLineData.CHU_KO_NU_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.SLINGER_LINE,
         Age2UnitLineData.SCORPION_LINE,
         Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.CONQUISTADOR_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.ORGAN_GUN_LINE,
         Age2UnitLineData.RATTAN_ARCHER_LINE,
         Age2UnitLineData.LEITIS_LINE,
@@ -121,7 +121,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.WOAD_RAIDER_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
-        Age2UnitLineData.PETARD_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.TARKAN_LINE,
@@ -137,17 +136,16 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.KNIGHT_LINE: [
         Age2UnitLineData.TEUTONIC_KNIGHT_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.WAR_ELEPHANT_LINE,
-        Age2UnitLineData.THROWING_AXEMAN_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.BERSERK_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.BOYAR_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.LEITIS_LINE,
-        Age2UnitLineData.FLAMING_CAMEL_LINE,
+        Age2UnitLineData.FLAMING_CAMEL_LINE, # should be for harder difficulty
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
@@ -155,22 +153,23 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.SKIRMISHER_LINE,
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
-        Age2UnitLineData.SPEARMAN_LINE,
+        Age2UnitLineData.SPEARMAN_LINE, # should be for harder difficulty
         Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
-        Age2UnitLineData.KAMAYUK_LINE,
+        Age2UnitLineData.KAMAYUK_LINE, # should be for harder difficulty
         Age2UnitLineData.CAMEL_ARCHER_LINE,
         Age2UnitLineData.GENITOUR_LINE,
         Age2UnitLineData.RATTAN_ARCHER_LINE,
         Age2UnitLineData.BATTERING_RAM_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
-        Age2UnitLineData.FLEMISH_MILITIA_LINE,
+        Age2UnitLineData.FLEMISH_MILITIA_LINE, # should be for harder difficulty
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
     Age2UnitLineData.CATAPHRACT_LINE: [
         Age2UnitLineData.KNIGHT_LINE,
+        Age2UnitLineData.ARCHER_LINE, # should be for harder difficulty
         Age2UnitLineData.WAR_ELEPHANT_LINE,
         Age2UnitLineData.BOYAR_LINE,
     ],
@@ -179,7 +178,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.MILITIA_LINE,
         Age2UnitLineData.WOAD_RAIDER_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.THROWING_AXEMAN_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.JAGUAR_WARRIOR_LINE,
@@ -187,10 +185,10 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.JANISSARY_LINE: [
         Age2UnitLineData.ARCHER_LINE,
         Age2UnitLineData.SKIRMISHER_LINE,
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.CONDOTTIERO_LINE,
     ],
@@ -200,7 +198,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.BOYAR_LINE,
         Age2UnitLineData.GENITOUR_LINE,
@@ -272,7 +270,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.TARKAN_LINE,
@@ -299,33 +297,31 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.WAR_ELEPHANT_LINE: [
         Age2UnitLineData.CHU_KO_NU_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
-        Age2UnitLineData.CAMEL_ARCHER_LINE,
+        Age2UnitLineData.CAMEL_ARCHER_LINE, # should be for harder difficulty
         Age2UnitLineData.FLAMING_CAMEL_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
     Age2UnitLineData.LONGBOAT_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.TURTLE_SHIP_LINE,
         Age2UnitLineData.FIRE_GALLEY_LINE,
     ],
     Age2UnitLineData.SCORPION_LINE: [
         Age2UnitLineData.LONGBOWMAN_LINE,
         Age2UnitLineData.MANGUDAI_LINE,
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.WOAD_RAIDER_LINE,
         Age2UnitLineData.MANGONEL_LINE,
-        Age2UnitLineData.PETARD_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.TARKAN_LINE,
@@ -337,17 +333,16 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.MANGONEL_LINE: [
         Age2UnitLineData.LONGBOWMAN_LINE,
         Age2UnitLineData.MANGUDAI_LINE,
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.WOAD_RAIDER_LINE,
-        Age2UnitLineData.PETARD_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.TARKAN_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.MAGYAR_HUSZAR_LINE,
         Age2UnitLineData.CONDOTTIERO_LINE,
         Age2UnitLineData.SHOTEL_WARRIOR_LINE,
@@ -371,10 +366,10 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.ORGAN_GUN_LINE,
     ],
     Age2UnitLineData.MAMELUKE_LINE: [
-        Age2UnitLineData.SPEARMAN_LINE,
+        Age2UnitLineData.SPEARMAN_LINE, # should be for harder difficulty
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
-        Age2UnitLineData.FLEMISH_MILITIA_LINE,
+        Age2UnitLineData.FLEMISH_MILITIA_LINE, # should be for harder difficulty
     ],
     Age2UnitLineData.SAMURAI_LINE: [
         Age2UnitLineData.ARCHER_LINE,
@@ -391,7 +386,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.THROWING_AXEMAN_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
-        Age2UnitLineData.PETARD_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.TARKAN_LINE,
@@ -406,18 +400,20 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.TREBUCHET_LINE,
     ],
     Age2UnitLineData.CANNON_GALLEON_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.LONGBOAT_LINE,
         Age2UnitLineData.GALLEY_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.CARAVEL_LINE,
         Age2UnitLineData.FIRE_GALLEY_LINE,
-        Age2UnitLineData.DEMOLITION_RAFT_LINE,
+        Age2UnitLineData.DEMOLITION_RAFT_LINE, # should be for harder difficulty
     ],
     Age2UnitLineData.PETARD_LINE: [
         Age2UnitLineData.ARCHER_LINE,
         Age2UnitLineData.LONGBOWMAN_LINE,
+        Age2UnitLineData.MILITIA_LINE,
+        Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.MANGUDAI_LINE,
         Age2UnitLineData.CAVALRY_ARCHER_LINE,
         Age2UnitLineData.SCORPION_LINE,
@@ -425,9 +421,9 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.PLUMED_ARCHER_LINE,
         Age2UnitLineData.MAGYAR_HUSZAR_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
+        Age2UnitLineData.BOYAR_LINE,
     ],
     Age2UnitLineData.SCOUT_CAVALRY_LINE: [
-        Age2UnitLineData.SKIRMISHER_LINE,
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
@@ -442,7 +438,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.SHOTEL_WARRIOR_LINE,
-        Age2UnitLineData.FLAMING_CAMEL_LINE,
+        Age2UnitLineData.FLAMING_CAMEL_LINE, # should be for harder difficulty
         Age2UnitLineData.STEPPE_LANCER_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
         Age2UnitLineData.SERJEANT_LINE,
@@ -450,12 +446,9 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
     Age2UnitLineData.GALLEY_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
         Age2UnitLineData.LONGBOAT_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.TURTLE_SHIP_LINE,
         Age2UnitLineData.FIRE_GALLEY_LINE,
-        Age2UnitLineData.BALLISTA_ELEPHANT_LINE,
     ],
     Age2UnitLineData.BERSERK_LINE: [
         Age2UnitLineData.ARCHER_LINE,
@@ -481,7 +474,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.JANISSARY_LINE,
         Age2UnitLineData.SLINGER_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.CONQUISTADOR_LINE,
         Age2UnitLineData.BOYAR_LINE,
         Age2UnitLineData.ORGAN_GUN_LINE,
@@ -519,7 +512,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.WAR_WAGON_LINE,
@@ -532,7 +525,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.BERSERK_LINE,
@@ -546,7 +539,6 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.MISSIONARY_LINE: [
         Age2UnitLineData.ARCHER_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
@@ -560,23 +552,22 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.BERSERK_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.CAMEL_ARCHER_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
-    Age2UnitLineData.TURTLE_SHIP_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
-        Age2UnitLineData.MONK_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+    Age2UnitLineData.TURTLE_SHIP_LINE: [ # There may be no counters in here, but there are no enemies using Turtle Ships anyways, so we've got time until we shuffle enemy civs
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
     ],
     Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE: [
         Age2UnitLineData.ARCHER_LINE,
@@ -584,7 +575,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.CHU_KO_NU_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.PLUMED_ARCHER_LINE,
@@ -607,15 +598,15 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.SKIRMISHER_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.BERSERK_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
-        Age2UnitLineData.FLAMING_CAMEL_LINE,
+        Age2UnitLineData.FLAMING_CAMEL_LINE, # should be for harder difficulty
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
@@ -623,13 +614,13 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.ARCHER_LINE,
         Age2UnitLineData.TEUTONIC_KNIGHT_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.WAR_ELEPHANT_LINE,
         Age2UnitLineData.SCORPION_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.BERSERK_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.LEITIS_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
@@ -641,15 +632,13 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.TEUTONIC_KNIGHT_LINE,
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.JANISSARY_LINE,
-        Age2UnitLineData.MONK_LINE,
         Age2UnitLineData.SLINGER_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.THROWING_AXEMAN_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.JAGUAR_WARRIOR_LINE,
         Age2UnitLineData.PLUMED_ARCHER_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
         Age2UnitLineData.ORGAN_GUN_LINE,
         Age2UnitLineData.GBETO_LINE,
     ],
@@ -664,11 +653,11 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.ORGAN_GUN_LINE: [
         Age2UnitLineData.LONGBOWMAN_LINE,
         Age2UnitLineData.MANGUDAI_LINE,
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.TARKAN_LINE,
@@ -681,26 +670,25 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
     Age2UnitLineData.CARAVEL_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
         Age2UnitLineData.LONGBOAT_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.TURTLE_SHIP_LINE,
         Age2UnitLineData.FIRE_GALLEY_LINE,
     ],
     Age2UnitLineData.CAMEL_ARCHER_LINE: [
         Age2UnitLineData.SKIRMISHER_LINE,
+        Age2UnitLineData.SPEARMAN_LINE, # should be for harder difficulty
         Age2UnitLineData.HUSKARL_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
     Age2UnitLineData.GENITOUR_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
@@ -711,14 +699,12 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.HAND_CANNONEER_LINE,
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.JANISSARY_LINE,
-        Age2UnitLineData.MONK_LINE,
         Age2UnitLineData.SLINGER_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.JAGUAR_WARRIOR_LINE,
         Age2UnitLineData.PLUMED_ARCHER_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
     ],
     Age2UnitLineData.SHOTEL_WARRIOR_LINE: [
         Age2UnitLineData.HAND_CANNONEER_LINE,
@@ -729,24 +715,19 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.JANISSARY_LINE,
         Age2UnitLineData.MILITIA_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.JAGUAR_WARRIOR_LINE,
     ],
     Age2UnitLineData.FIRE_GALLEY_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
         Age2UnitLineData.LONGBOAT_LINE,
-        Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.TURTLE_SHIP_LINE,
-        Age2UnitLineData.DEMOLITION_RAFT_LINE,
-        Age2UnitLineData.BALLISTA_ELEPHANT_LINE,
+        Age2UnitLineData.DEMOLITION_RAFT_LINE, # should be for harder difficulty
     ],
     Age2UnitLineData.DEMOLITION_RAFT_LINE: [
-        Age2UnitLineData.ARCHER_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
         Age2UnitLineData.GALLEY_LINE,
         Age2UnitLineData.TURTLE_SHIP_LINE,
+        Age2UnitLineData.LONGBOAT_LINE,
     ],
     Age2UnitLineData.SIEGE_TOWER_LINE: [
         Age2UnitLineData.MANGUDAI_LINE,
@@ -769,18 +750,17 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     ],
     Age2UnitLineData.BALLISTA_ELEPHANT_LINE: [
         Age2UnitLineData.MANGUDAI_LINE,
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
         Age2UnitLineData.MAGYAR_HUSZAR_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.BATTERING_RAM_LINE,
-        Age2UnitLineData.FLAMING_CAMEL_LINE,
         Age2UnitLineData.COUSTILLIER_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
@@ -821,7 +801,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
         Age2UnitLineData.SCORPION_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
@@ -835,14 +815,13 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.BATTLE_ELEPHANT_LINE: [
         Age2UnitLineData.CAVALRY_ARCHER_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.WAR_ELEPHANT_LINE,
         Age2UnitLineData.SCORPION_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
-        Age2UnitLineData.FLAMING_CAMEL_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
         Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
@@ -850,15 +829,12 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.ARCHER_LINE,
         Age2UnitLineData.HAND_CANNONEER_LINE,
         Age2UnitLineData.TEUTONIC_KNIGHT_LINE,
-        Age2UnitLineData.SPEARMAN_LINE,
         Age2UnitLineData.WAR_ELEPHANT_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
         Age2UnitLineData.SAMURAI_LINE,
-        Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.BOYAR_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.BATTLE_ELEPHANT_LINE,
-        Age2UnitLineData.CAMEL_SCOUT_LINE,
     ],
     Age2UnitLineData.KESHIK_LINE: [
         Age2UnitLineData.TEUTONIC_KNIGHT_LINE,
@@ -889,9 +865,10 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.LEITIS_LINE: [
         Age2UnitLineData.ARCHER_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
         Age2UnitLineData.WAR_ELEPHANT_LINE,
         Age2UnitLineData.MAMELUKE_LINE,
+        Age2UnitLineData.MISSIONARY_LINE, # should be for harder difficulty
         Age2UnitLineData.GENOESE_CROSSBOWMAN_LINE,
         Age2UnitLineData.KAMAYUK_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
@@ -899,18 +876,17 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     ],
     Age2UnitLineData.BATTERING_RAM_LINE: [
         Age2UnitLineData.MANGUDAI_LINE,
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
         Age2UnitLineData.KNIGHT_LINE,
         Age2UnitLineData.CATAPHRACT_LINE,
         Age2UnitLineData.HUSKARL_LINE,
-        Age2UnitLineData.CHU_KO_NU_LINE,
+        Age2UnitLineData.CHU_KO_NU_LINE, # should be for harder difficulty
         Age2UnitLineData.MILITIA_LINE,
-        Age2UnitLineData.VILLAGER_MALE_LINE,
         Age2UnitLineData.WOAD_RAIDER_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
         Age2UnitLineData.THROWING_AXEMAN_LINE,
         Age2UnitLineData.SAMURAI_LINE,
-        Age2UnitLineData.PETARD_LINE,
+        Age2UnitLineData.PETARD_LINE, # should be for harder difficulty
         Age2UnitLineData.SCOUT_CAVALRY_LINE,
         Age2UnitLineData.JAGUAR_WARRIOR_LINE,
         Age2UnitLineData.EAGLE_SCOUT_LINE,
@@ -935,10 +911,8 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.CAVALRY_ARCHER_LINE,
         Age2UnitLineData.CHU_KO_NU_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
         Age2UnitLineData.SCORPION_LINE,
         Age2UnitLineData.PLUMED_ARCHER_LINE,
-        Age2UnitLineData.MISSIONARY_LINE,
         Age2UnitLineData.RATTAN_ARCHER_LINE,
         Age2UnitLineData.FLEMISH_MILITIA_LINE,
     ],
@@ -996,8 +970,8 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
         Age2UnitLineData.SAMURAI_LINE,
     ],
     Age2UnitLineData.HUSSITE_WAGON_LINE: [
-        Age2UnitLineData.BOMBARD_CANNON_LINE,
-        Age2UnitLineData.MANGONEL_LINE,
+        Age2UnitLineData.BOMBARD_CANNON_LINE, # should be for harder difficulty
+        Age2UnitLineData.MANGONEL_LINE, # should be for harder difficulty
     ],
     Age2UnitLineData.THIRISADAI_LINE: [
         Age2UnitLineData.FIRE_GALLEY_LINE,
@@ -1022,7 +996,7 @@ LINE_TO_COUNTERS: dict[Age2UnitLineData, list[Age2UnitLineData]] = {
     Age2UnitLineData.CENTURION_LINE: [  # authored: neither source covers it
         Age2UnitLineData.MILITIA_LINE,
         Age2UnitLineData.SPEARMAN_LINE,
-        Age2UnitLineData.MONK_LINE,
+        Age2UnitLineData.MONK_LINE, # should be for harder difficulty
     ],
     Age2UnitLineData.GRENADIER_LINE: [
         Age2UnitLineData.MANGONEL_LINE,
