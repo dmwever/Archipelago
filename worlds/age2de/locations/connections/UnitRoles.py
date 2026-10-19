@@ -30,6 +30,10 @@ CIVILIAN_LINES = (
 
 FAITH_LINES = (L.MONK_LINE, L.MISSIONARY_LINE)
 
+# Converting is the standard answer to an elephant, so a faith line counters these whatever the
+# monks option says.
+FAITH_EXCEPTION_TARGETS = (L.BATTLE_ELEPHANT_LINE, L.WAR_ELEPHANT_LINE, L.ELEPHANT_ARCHER_LINE)
+
 ANTI_BUILDING = (
     # Barracks
     L.MILITIA_LINE, L.SPEARMAN_LINE, L.EAGLE_SCOUT_LINE, L.CONDOTTIERO_LINE,

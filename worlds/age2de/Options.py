@@ -275,6 +275,16 @@ class Caveman(Toggle):
     internal_name = "caveman"
     display_name = "Caveman"
 
+
+class MonksCanCounter(Toggle):
+    """
+    Whether the logic may expect monks and missionaries to counter a unit by converting it.
+    Off: Monks are only considered a counter to elephants.
+    On: They can counter valuable unit-lines such as heavy cavalry and siege (with redemption).
+    """
+    internal_name = "monks_can_counter"
+    display_name = "Monks Can Counter"
+
     
 class TrapDifficulty(Choice):
     """
@@ -345,6 +355,7 @@ class Age2Options(PerGameCommonOptions):
     shuffle_villager: ShuffleVillager
     include_unique_units: IncludeUniqueUnits
     caveman: Caveman
+    monks_can_counter: MonksCanCounter
     goal: Goal
     local_start: LocalStart
     trap_difficulty: TrapDifficulty

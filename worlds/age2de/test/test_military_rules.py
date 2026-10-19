@@ -163,7 +163,7 @@ class TestCounters(Age2RuleTestBase):
         self.assertNotIn(monk, Age2UnitLineData.KNIGHT_LINE.counter_techs)
         # Only the counter it names needs the tech: a Knight answers a Mangonel as it is.
         self.assertNotIn(Age2UnitLineData.KNIGHT_LINE, Age2UnitLineData.MANGONEL_LINE.counter_techs)
-        world = self.build(**EVERYTHING)
+        world = self.build(monks_can_counter=True, **EVERYTHING)
         attila_1 = world.rules.logic.for_scenario(Age2ScenarioLocationData.ATT1_VICTORY.scenario)
         siege = attila_1.military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
         knight = attila_1.military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
@@ -235,6 +235,66 @@ class TestRamsAreASponge(Age2RuleTestBase):
         for target in (Age2UnitLineData.TREBUCHET_LINE, Age2UnitLineData.MOUNTED_TREBUCHET_LINE):
             with self.subTest(target.name):
                 self.assertTrue(self.can_counter_fielding({self.RAM}, target))
+
+
+class TestMonksCanCounter(Age2RuleTestBase):
+    """Converting is micro a yaml must ask for, except against elephants, where it is the standard
+    counter and always counts."""
+
+    FAITH = (Age2UnitLineData.MONK_LINE, Age2UnitLineData.MISSIONARY_LINE)
+    ELEPHANTS = (
+        Age2UnitLineData.BATTLE_ELEPHANT_LINE,
+        Age2UnitLineData.WAR_ELEPHANT_LINE,
+        Age2UnitLineData.ELEPHANT_ARCHER_LINE,
+    )
+    # Countered by both faith lines in the table.
+    NOT_AN_ELEPHANT = Age2UnitLineData.KNIGHT_LINE
+
+    def can_counter_fielding(self, faith: Age2UnitLineData, target: Age2UnitLineData,
+                             **options) -> bool:
+        """Whether Attila 1 counters `target` in the Castle Age when `faith` is all it fields."""
+        world = self.build(**EVERYTHING, **options)
+        attila_1 = world.rules.logic.for_scenario(Age2ScenarioLocationData.ATT1_VICTORY.scenario)
+
+        def can_field(_unit_logic, line, age=None):
+            return True_() if line is faith else False_()
+
+        with mock.patch.object(ScenarioUnitLogic, "can_field", autospec=True,
+                               side_effect=can_field):
+            rule = attila_1.military.counters(target, Age2AgeData.CASTLE)
+            return not rule.resolve(world).always_false
+
+    def test_monks_do_not_counter_by_default(self):
+        self.assertFalse(self.build().options.monks_can_counter)
+
+    def test_off_a_faith_line_does_not_counter_what_is_not_an_elephant(self):
+        for faith in self.FAITH:
+            with self.subTest(faith.name):
+                self.assertFalse(self.can_counter_fielding(
+                    faith,
+                    self.NOT_AN_ELEPHANT,
+                    monks_can_counter=False,
+                ))
+
+    def test_off_a_faith_line_still_counters_each_elephant(self):
+        for faith in self.FAITH:
+            for elephant in self.ELEPHANTS:
+                with self.subTest(faith=faith.name, target=elephant.name):
+                    self.assertTrue(self.can_counter_fielding(
+                        faith,
+                        elephant,
+                        monks_can_counter=False,
+                    ))
+
+    def test_on_a_faith_line_counters_elephants_and_everything_else(self):
+        for faith in self.FAITH:
+            for target in (self.NOT_AN_ELEPHANT, *self.ELEPHANTS):
+                with self.subTest(faith=faith.name, target=target.name):
+                    self.assertTrue(self.can_counter_fielding(
+                        faith,
+                        target,
+                        monks_can_counter=True,
+                    ))
 
 
 class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):

@@ -51,7 +51,8 @@ be standing.
 _Avoid_: beat, kill
 
 **Counter**:
-A unit line that the logic accepts as beating a target line on its own, by killing it.
+A unit line that the logic accepts as beating a target line on its own, by killing it, or for a
+faith line by converting it.
 _Avoid_: answer, check, beat
 
 **Sponge**:

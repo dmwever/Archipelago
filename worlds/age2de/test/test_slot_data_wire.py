@@ -22,6 +22,22 @@ class TestOptionsReachTheGame(unittest.TestCase):
             self.assertIn(option_name, fields, xs_name)
 
 
+class TestLogicOnlyOptionsStayOutOfTheGame(unittest.TestCase):
+    """These change only what the logic expects of P1. Wiring one would be a slot data shape
+    change, and with it a world version bump and a paired game release."""
+
+    LOGIC_ONLY = ("monks_can_counter",)
+
+    def test_no_logic_only_option_is_wired_to_the_game(self):
+        for option_name in self.LOGIC_ONLY:
+            self.assertNotIn(option_name, SlotData.OPTIONS.values())
+
+    def test_no_logic_only_option_is_written_to_slot_data(self):
+        slot_data = setup_solo_multiworld(Age2World).worlds[1].fill_slot_data()
+        for option_name in self.LOGIC_ONLY:
+            self.assertNotIn(option_name, slot_data)
+
+
 class TestSlotDataRoundTrip(unittest.TestCase):
     CHOSEN = {"techsanity": 3, "tech_behavior": 1, "shuffle_ages": 1,
               "shuffle_unique_techs": 1, "existing_techs": 1,

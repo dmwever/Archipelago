@@ -11,7 +11,12 @@ from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData
 from ...locations.connections.UnitCounters import RAM_COUNTER_TARGETS
-from ...locations.connections.UnitRoles import RAM_LINES, UnitRole
+from ...locations.connections.UnitRoles import (
+    FAITH_EXCEPTION_TARGETS,
+    FAITH_LINES,
+    RAM_LINES,
+    UnitRole,
+)
 from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
 
 if TYPE_CHECKING:
@@ -94,6 +99,8 @@ class ScenarioUnitLogic:
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
         ways: list[Rule] = []
         for line in target.countered_by:
+            if not self._is_expected_counter(line, target):
+                continue
             way = self.can_field(line, age)
             if line in target.counter_techs:
                 way = way & self.scenario.techs.has_researched(target.counter_techs[line])
@@ -101,6 +108,12 @@ class ScenarioUnitLogic:
         if target in RAM_COUNTER_TARGETS:
             ways.append(self.can_sponge_for_military(age))
         return Or(*ways)
+
+    def _is_expected_counter(self, line: Age2UnitLineData, target: Age2UnitLineData) -> bool:
+        """Whether the options let the logic expect `line` to counter `target`."""
+        if line in FAITH_LINES and target not in FAITH_EXCEPTION_TARGETS:
+            return bool(self.world.options.monks_can_counter)
+        return True
 
     def can_sponge_for_military(self, age: Age2AgeData) -> Rule:
         """A ram soaking fire while a military line does the killing."""
