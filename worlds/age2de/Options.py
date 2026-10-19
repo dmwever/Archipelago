@@ -296,6 +296,16 @@ class SiegeCanCounter(Toggle):
     internal_name = "siege_can_counter"
     display_name = "Siege Can Counter"
 
+
+class MarketTrade(Toggle):
+    """
+    Whether the logic may expect you to buy and sell resources at your own market.
+    Off: The market is never needed to afford anything.
+    On: A market with a steady supply of wood or food to sell can stand in for any resource.
+    """
+    internal_name = "market_trade"
+    display_name = "Market Trade"
+
     
 class TrapDifficulty(Choice):
     """
@@ -368,6 +378,7 @@ class Age2Options(PerGameCommonOptions):
     caveman: Caveman
     monks_can_counter: MonksCanCounter
     siege_can_counter: SiegeCanCounter
+    market_trade: MarketTrade
     goal: Goal
     local_start: LocalStart
     trap_difficulty: TrapDifficulty

@@ -19,10 +19,6 @@ if TYPE_CHECKING:
 TRADE_SEED_GOLD = 100
 TRADE_SEED_WOOD_AT_SEA = 400
 
-MARKET_ECONOMY = False
-"""Buying and selling at a market is a higher-difficulty expectation. The rule is real and
-tested; flipping this is what turns it on."""
-
 ALLY_TRADE = False
 """A trade cart is gold, but only against an ally who keeps a market standing. No scenario
 declares a trading ally yet."""
@@ -281,7 +277,7 @@ class ScenarioResourceLogic:
     # -- the higher-difficulty stubs ----------------------------------------------------------
 
     def market_trades(self) -> Rule:
-        if not MARKET_ECONOMY:
+        if not self.world.options.market_trade:
             return False_()
         return (self.scenario.has_building(Age2BuildingData.MARKET)
                 & (self._can_get_wood_easily() | self.endless_food()))

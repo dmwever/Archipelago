@@ -211,6 +211,7 @@ class TestWhereTheOptionsLive(unittest.TestCase):
         "tech_behavior",   # the game mod's business; slot data only
         "monks_can_counter",   # which counters count, read where counters resolve
         "siege_can_counter",   # which counters count, read where counters resolve
+        "market_trade",        # whether the market is an economy, read where it resolves
     }
 
     POOLS = pathlib.Path(__file__).parent.parent / "generation" / "pools"

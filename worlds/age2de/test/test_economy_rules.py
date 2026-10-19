@@ -196,11 +196,48 @@ class TestEndlessFood(EconomyTestBase):
             self.assertTrue(self.is_false(attila_1._endless_food()))
 
 
+class TestMarketTrade(EconomyTestBase):
+    """Buying and selling at P1's own market is a higher-difficulty expectation, so a yaml must
+    ask for it."""
+
+    def test_market_trade_is_off_by_default(self):
+        self.assertFalse(self.build().options.market_trade)
+
+    def test_off_market_trade_is_never_satisfiable(self):
+        self.build(market_trade=False)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                self.assertTrue(self.is_false(scenario.economy.market_trades()))
+
+    def test_on_market_trade_asks_for_a_market(self):
+        self.build(market_trade=True)
+        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        dependencies = set(self.resolved(attila_1.market_trades()).item_dependencies())
+        self.assertIn(Age2BuildingData.MARKET.item.item_name, dependencies)
+
+    def test_on_market_trade_needs_something_to_sell(self):
+        """Wood or endless food is what the market turns into everything else."""
+        self.build(market_trade=True)
+        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        resource_logic = economy_module.ScenarioResourceLogic
+        with (
+            mock.patch.object(resource_logic, "_can_get_wood_easily", return_value=False_()),
+            mock.patch.object(resource_logic, "endless_food", return_value=False_()),
+        ):
+            self.assertTrue(self.is_false(attila_1.market_trades()))
+
+    def test_on_market_trade_is_satisfiable_with_a_market_and_wood(self):
+        self.build(market_trade=True)
+        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        with mock.patch.object(economy_module.ScenarioResourceLogic, "_can_get_wood_easily",
+                               return_value=True_()):
+            self.assertFalse(self.is_false(attila_1.market_trades()))
+
+
 class TestStubs(EconomyTestBase):
-    def test_the_market_and_ally_trade_are_off(self):
+    def test_ally_trade_is_off(self):
         self.build()
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        self.assertIsInstance(attila_1.market_trades(), False_)
         self.assertIsInstance(attila_1.ally_trade_gold(), False_)
         self.assertIsInstance(attila_1.ally_trade_wood(), False_)
 
@@ -221,16 +258,14 @@ class TestStubs(EconomyTestBase):
             # still turn up in here, because the wood route is seeded with gold.
             self.assertIn(Age2BuildingData.DOCK.item.item_name, wood)
 
-    def test_the_market_rule_is_real_and_terminates_when_switched_on(self):
+    def test_the_market_rule_terminates_when_switched_on(self):
         """Written against the leaf gatherers, so the wood aggregate cannot ask the market
         which asks the wood aggregate."""
-        with mock.patch.object(economy_module, "MARKET_ECONOMY", True):
-            self.build()
-            attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-            self.assertNotIsInstance(attila_1.market_trades(), False_)
-            for resource in Resource:
-                self.resolved(attila_1.has_easy_source(resource))
-            self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
+        self.build(market_trade=True)
+        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        for resource in Resource:
+            self.resolved(attila_1.has_easy_source(resource))
+        self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
 
 
 class TestAffordability(EconomyTestBase):
