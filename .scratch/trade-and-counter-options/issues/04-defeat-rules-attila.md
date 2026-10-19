@@ -5,6 +5,13 @@ Marcianopolis share one defeat rule, as the scenario already treats them as inte
 
 Spec: Implementation Decisions, "Defeat rules". ADR 0001.
 
+**Decided (2026-10-19): per-player labels for the shared rule.** `defeat_rules` maps Philippopolis
+(P4) and Marcianopolis (P3) to the same rule object; `defeats()` labels each with its own name, as
+it already does. Red TC asks `defeats(PHILIPPOPOLIS)`, Green TC `defeats(MARCIANOPOLIS)`, and victory
+ORs the two: `((Philippopolis | Marcianopolis) & has_navy) | Constantinople`. No grouping by rule
+identity. The snapshot stays label-blind and flattens Or, so it stays green. Test the shared body
+with `assertIs(defeats(P).child, defeats(M).child)`.
+
 **Blocked by:** 03
 
 **Status:** ready-for-agent
