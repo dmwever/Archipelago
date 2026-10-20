@@ -279,8 +279,10 @@ class ScenarioResourceLogic:
     def can_trade_at_market(self) -> Rule:
         if not self.world.options.market_trade:
             return False_()
+        # Leaf gatherers only. has_easy_source asks the market, and easy food outside the base
+        # asks for an army, which asks gold and wood, which ask the market again.
         return (self.scenario.has_building(Age2BuildingData.MARKET)
-                & (self._can_get_wood_easily() | self.has_easy_source(Resource.FOOD)))
+                & (self._can_get_wood_easily() | self.endless_food()))
 
     def ally_trade_gold(self) -> Rule:
         if not ALLY_TRADE:
