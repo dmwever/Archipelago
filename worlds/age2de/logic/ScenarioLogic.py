@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
@@ -13,7 +13,7 @@ from rule_builder.rules import False_, Has, Rule, True_
 from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
 from .custom_logic.ScenarioQuestions import a_or_an
-from .ScenarioPlayer import ScenarioPlayer
+from .ScenarioPlayer import NoPlayers, ScenarioPlayer, Side
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -23,6 +23,9 @@ if TYPE_CHECKING:
 
 @dataclass
 class ScenarioStartingState:
+    players: ClassVar[type[ScenarioPlayer]] = NoPlayers
+    """This scenario's allies and enemies. A scenario with anyone to trade with or defeat
+    declares its own enumeration here."""
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
     has_base: Rule = field(default_factory=lambda: False_())
@@ -47,9 +50,27 @@ class ScenarioStartingState:
     starting_oysters: Rule = field(default_factory=lambda: False_())
     starting_whales: Rule = field(default_factory=lambda: False_())
     starting_relics: Rule = field(default_factory=lambda: True_())
-    trading_ally: Rule = field(default_factory=lambda: False_())
+    # An ally P1 can trade with. Read off the players unless a scenario reassigns it after
+    # super().__init__(), for one whose ally only arrives part way through. It gates the ally's
+    # usable buildings; it cannot open one no record keeps usable.
+    trading_ally: Rule = field(init=False)
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
+
+    def __post_init__(self) -> None:
+        has_ally_building = (
+            self.has_usable(Side.ALLY, Age2BuildingData.MARKET)
+            or self.has_usable(Side.ALLY, Age2BuildingData.DOCK)
+        )
+        self.trading_ally = True_() if has_ally_building else False_()
+
+    def has_usable(self, side: Side, building: Age2BuildingData) -> bool:
+        """The scenario-level fact - an ally's market, an enemy's dock - read off the players,
+        so the two can never disagree."""
+        return any(
+            player.side is side and player.can_trade_at(building)
+            for player in self.players
+        )
 
     def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
         from ..items.Items import Mercenary, SCENARIO_TO_ITEMS

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Collection, Mapping
 
 from rule_builder.rules import And, False_, Or, Rule, True_
 
+from ...Options import PartnerTrade
 from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.connections import ScenarioResources
@@ -12,16 +13,13 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
+from ..ScenarioPlayer import Side
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
 
 TRADE_SEED_GOLD = 100
 TRADE_SEED_WOOD_AT_SEA = 400
-
-ALLY_TRADE = False
-"""A trade cart is gold, but only against an ally who keeps a market standing. No scenario
-declares a trading ally yet."""
 
 RENEWABLE_FOOD: tuple[tuple[Age2BuildingData, Job], ...] = (
     (Age2BuildingData.FARM, Job.FARMER_MALE),
@@ -274,7 +272,7 @@ class ScenarioResourceLogic:
     def _endless_fish_traps(self) -> Rule:
         return self.has_infinite_fish() & self.scenario.buildings.has_fishing_boat_dropsite()
 
-    # -- the higher-difficulty stubs ----------------------------------------------------------
+    # -- trade --------------------------------------------------------------------------------
 
     def can_trade_at_market(self) -> Rule:
         if not self.world.options.market_trade:
@@ -284,45 +282,60 @@ class ScenarioResourceLogic:
         return (self.scenario.has_building(Age2BuildingData.MARKET)
                 & (self._can_get_wood_easily() | self.endless_food()))
 
-    def ally_trade_gold(self) -> Rule:
-        if not ALLY_TRADE:
+    def can_earn_gold_by_partner_trade(self) -> Rule:
+        """Trade carts to a trade partner's market, or trade cogs to its dock."""
+        partner_market = self.can_reach_partner(Age2BuildingData.MARKET)
+        partner_dock = self.can_reach_partner(Age2BuildingData.DOCK)
+        if isinstance(partner_market, False_) and isinstance(partner_dock, False_):
             return False_()
         resources = self.logic.resources
 
         seed_gold = (self.can_gather_gold()
                      | resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD))
 
-        wood_by_land = (self.scenario.has_building(Age2BuildingData.MARKET)
+        by_cart = (partner_market
+                   & self.scenario.has_building(Age2BuildingData.MARKET)
                    & self.logic.units.has_unit_items(Age2UnitData.TRADE_CART)
                    & self.can_gather_wood())
 
-        wood_by_sea = (self.scenario.has_building(Age2BuildingData.DOCK)
+        by_cog = (partner_dock
+                  & self.scenario.has_building(Age2BuildingData.DOCK)
                   & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
                   & (self.can_gather_wood()
                      | resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)))
 
-        return (self.scenario.starting_state.trading_ally
-                & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
-                & seed_gold & (wood_by_land | wood_by_sea))
+        return (self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
+                & seed_gold & (by_cart | by_cog))
 
-    def ally_trade_wood(self) -> Rule:
-        if not ALLY_TRADE:
+    def can_earn_wood_by_partner_trade(self) -> Rule:
+        """Trade cogs to a trade partner's dock: a sea route brings wood home, a cart does not."""
+        partner_dock = self.can_reach_partner(Age2BuildingData.DOCK)
+        if isinstance(partner_dock, False_):
             return False_()
         resources = self.logic.resources
         return (
-                    self.scenario.starting_state.trading_ally
-                    & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
-                    & self.scenario.has_building(Age2BuildingData.DOCK)
-                    & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
-                    & (
-                        resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)
-                        | self.can_gather_wood()
-                    )
-                    & (
-                        resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD)
-                        | self.can_gather_gold()
-                    )
-                )
+            partner_dock
+            & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
+            & self.scenario.has_building(Age2BuildingData.DOCK)
+            & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
+            & (
+                resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)
+                | self.can_gather_wood()
+            )
+            & (
+                resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD)
+                | self.can_gather_gold()
+            )
+        )
+
+    def can_reach_partner(self, building: Age2BuildingData) -> Rule:
+        """A trade partner's market or dock, as far as the yaml lets the logic count on one."""
+        if self.world.options.partner_trade == PartnerTrade.option_none:
+            return False_()
+        starting_state = self.scenario.starting_state
+        if not starting_state.has_usable(Side.ALLY, building):
+            return False_()
+        return starting_state.trading_ally
 
     # -- aggregates ---------------------------------------------------------------------------
 
@@ -344,4 +357,4 @@ class ScenarioResourceLogic:
     # -- private methods -------------------------------------------------------------
 
     def _can_get_wood_easily(self) -> Rule:
-        return self.ally_trade_wood() | self.can_gather_wood()
+        return self.can_earn_wood_by_partner_trade() | self.can_gather_wood()
