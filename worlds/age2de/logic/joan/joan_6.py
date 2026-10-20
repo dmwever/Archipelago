@@ -10,17 +10,12 @@ from ...locations.UnitLines import Age2UnitLineData
 from ...locations.Units import Age2UnitData as U
 from ...locations.Heroes import Age2HeroData as H
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Joan6Player(ScenarioPlayer):
-    BURGUNDY = 2, "Burgundy"
-    ENGLISH = 3, "the English"
-    SHREWSBURY = 4, "Shrewsbury"
 
 class Joan6StartingState(ScenarioStartingState):
 
@@ -42,17 +37,17 @@ class Joan6StartingState(ScenarioStartingState):
         self.obtains_unit[H.LA_HIRE] = army
         self.obtains_unit[H.CONSTABLE_RICHEMONT] = army
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Joan6Player.BURGUNDY: (
+            Age2PlayerData.JOAN6_BURGUNDY: (
                 scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE)
             ),
-            Joan6Player.ENGLISH: (
+            Age2PlayerData.JOAN6_ENGLISH: (
                 scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
@@ -60,7 +55,7 @@ class Joan6StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
             ),
-            Joan6Player.SHREWSBURY: (
+            Age2PlayerData.JOAN6_SHREWSBURY: (
                 scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &

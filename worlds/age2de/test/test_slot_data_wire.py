@@ -26,7 +26,12 @@ class TestLogicOnlyOptionsStayOutOfTheGame(unittest.TestCase):
     """These change only what the logic expects of P1. Wiring one would be a slot data shape
     change, and with it a world version bump and a paired game release."""
 
-    LOGIC_ONLY = ("monks_can_counter", "siege_can_counter", "market_trade")
+    LOGIC_ONLY = (
+        "monks_can_counter",
+        "siege_can_counter",
+        "market_trade",
+        "partner_trade",
+    )
 
     def test_no_logic_only_option_is_wired_to_the_game(self):
         for option_name in self.LOGIC_ONLY:

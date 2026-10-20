@@ -3,7 +3,7 @@ from rule_builder.rules import HasAll, Rule
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
-from ...logic.joan.joan_6 import Joan6Player
+from ...locations.Players import Age2PlayerData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -18,10 +18,10 @@ class Joan6Rules(ScenarioRules):
                 Age2ItemData.AP_JOAN_6_ARMY.item_name,
                 Age2ItemData.AP_JOAN_6_ARTILLERY.item_name
             ) |
-            self.scenario_logic.defeats(Joan6Player.BURGUNDY)
+            self.scenario_logic.defeats(Age2PlayerData.JOAN6_BURGUNDY)
         )
         can_siege_town = self.scenario_logic.named("can besiege the town", can_siege_town)
-        can_defeat_english: Rule = self.scenario_logic.defeats(Joan6Player.ENGLISH)
+        can_defeat_english: Rule = self.scenario_logic.defeats(Age2PlayerData.JOAN6_ENGLISH)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN6_BURGUNDIAN_TOWN], can_siege_town)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN6_VICTORY], can_siege_town & can_defeat_english)

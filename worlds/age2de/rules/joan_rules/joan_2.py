@@ -3,7 +3,7 @@ from rule_builder.rules import Has, HasAny, Rule
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
-from ...logic.joan.joan_2 import Joan2Player
+from ...locations.Players import Age2PlayerData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -17,8 +17,8 @@ class Joan2Rules(ScenarioRules):
         can_conquer_bridge: Rule = (Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
                                     | self.scenario_logic.military.has_military())
         can_conquer_bridge = self.scenario_logic.named("can take the bridge", can_conquer_bridge)
-        can_defeat_northern_english: Rule = self.scenario_logic.defeats(Joan2Player.NORTHERN_ENGLISH)
-        can_defeat_southern_english: Rule = self.scenario_logic.defeats(Joan2Player.SOUTHERN_ENGLISH)
+        can_defeat_northern_english: Rule = self.scenario_logic.defeats(Age2PlayerData.JOAN2_NORTHERN_ENGLISH)
+        can_defeat_southern_english: Rule = self.scenario_logic.defeats(Age2PlayerData.JOAN2_SOUTHERN_ENGLISH)
         victory: Rule = can_defeat_northern_english | can_defeat_southern_english
 
         if self.world.pool.scenarios.all_scenario_branches:

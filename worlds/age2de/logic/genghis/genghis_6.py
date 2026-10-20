@@ -8,14 +8,11 @@ from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Genghis6Player(ScenarioPlayer):
-    HUNGARY = 2, "Hungary"
 
 class Genghis6StartingState(ScenarioStartingState):
 
@@ -31,10 +28,10 @@ class Genghis6StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.STABLE] = True_()
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = True_()
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Genghis6Player.HUNGARY: (
+            Age2PlayerData.GEN6_HUNGARY: (
                 scenario_logic.has_base() &
                 military.has_military(Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &

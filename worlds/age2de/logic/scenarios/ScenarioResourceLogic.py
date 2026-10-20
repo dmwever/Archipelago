@@ -13,7 +13,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
-from ..ScenarioPlayer import Side
+from ...locations.Players import Side, TradeAccess
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -332,10 +332,13 @@ class ScenarioResourceLogic:
         """A trade partner's market or dock, as far as the yaml lets the logic count on one."""
         if self.world.options.partner_trade == PartnerTrade.option_none:
             return False_()
-        starting_state = self.scenario.starting_state
-        if not starting_state.has_usable(Side.ALLY, building):
+        has_open_ally_building = any(
+            player.side is Side.ALLY and player.trade_access(building) is TradeAccess.OPEN
+            for player in self.scenario.scenario.players
+        )
+        if not has_open_ally_building:
             return False_()
-        return starting_state.trading_ally
+        return self.scenario.has_trading_ally()
 
     # -- aggregates ---------------------------------------------------------------------------
 

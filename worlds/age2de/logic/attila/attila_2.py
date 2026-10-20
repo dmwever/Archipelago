@@ -8,15 +8,12 @@ from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Attila2Player(ScenarioPlayer):
-    EASTERN_ROMAN_EMPIRE = 7, "the Eastern Roman Empire"
 
 class Attila2StartingState(ScenarioStartingState):
     purple_vils: Rule = Has(Age2ItemData.AP_ATTILA_2_VILLAGERS.item_name)
@@ -31,10 +28,10 @@ class Attila2StartingState(ScenarioStartingState):
         self.obtains_unit[U.VILLAGER_MALE] = self.purple_vils
         self.obtains_unit[U.VILLAGER_FEMALE] = self.purple_vils
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Attila2Player.EASTERN_ROMAN_EMPIRE: (
+            Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE: (
                 self.scythian_troop |
                 (
                     scenario_logic.has_base() &

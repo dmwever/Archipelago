@@ -9,17 +9,12 @@ from ...locations.Buildings import Age2BuildingData
 from ...locations.Units import Age2UnitData as U
 from ...items.Items import Age2ItemData
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Joan3Player(ScenarioPlayer):
-    BURGUNDY = 2, "Burgundy"
-    ENGLISH = 3, "the English"
-    FASTOLF = 4, "Fastolf"
 
 class Joan3StartingState(ScenarioStartingState):
     has_boats: Rule = Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
@@ -36,7 +31,7 @@ class Joan3StartingState(ScenarioStartingState):
             logic.buildings.has_building(Age2BuildingData.DOCK)
             & logic.units.has_unit_items(U.TRANSPORT_SHIP))
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         transport = U.TRANSPORT_SHIP
         can_cross_ocean: Rule = (
@@ -48,7 +43,7 @@ class Joan3StartingState(ScenarioStartingState):
         )
         can_cross_ocean = scenario_logic.named("can cross the sea", can_cross_ocean)
         return {
-            Joan3Player.BURGUNDY: (
+            Age2PlayerData.JOAN3_BURGUNDY: (
                 scenario_logic.has_base() &
                 can_cross_ocean &
                 military.counters_building() &
@@ -57,7 +52,7 @@ class Joan3StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
             ),
             # Every castle on the map is English: taking a castle is defeating the English.
-            Joan3Player.ENGLISH: (
+            Age2PlayerData.JOAN3_ENGLISH: (
                 scenario_logic.has_base() &
                 can_cross_ocean &
                 military.has_siege() &
@@ -65,7 +60,7 @@ class Joan3StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
             ),
-            Joan3Player.FASTOLF: (
+            Age2PlayerData.JOAN3_FASTOLF: (
                 scenario_logic.has_base() &
                 can_cross_ocean &
                 military.counters_building() &

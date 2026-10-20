@@ -2,7 +2,7 @@ from rule_builder.rules import Rule
 
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
-from ...logic.joan.joan_4 import Joan4Player
+from ...locations.Players import Age2PlayerData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -12,9 +12,9 @@ class Joan4Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        can_defeat_chalons: Rule = self.scenario_logic.defeats(Joan4Player.CHALONS)
-        can_defeat_troyes: Rule = self.scenario_logic.defeats(Joan4Player.TROYES)
-        can_defeat_rheims: Rule = self.scenario_logic.defeats(Joan4Player.RHEIMS)
+        can_defeat_chalons: Rule = self.scenario_logic.defeats(Age2PlayerData.JOAN4_CHALONS)
+        can_defeat_troyes: Rule = self.scenario_logic.defeats(Age2PlayerData.JOAN4_TROYES)
+        can_defeat_rheims: Rule = self.scenario_logic.defeats(Age2PlayerData.JOAN4_RHEIMS)
         can_win_scenario: Rule = can_defeat_chalons & can_defeat_troyes & can_defeat_rheims
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN4_DESTROY_CHALONS_TC], can_defeat_chalons)

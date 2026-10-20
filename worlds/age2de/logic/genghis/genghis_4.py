@@ -9,15 +9,11 @@ from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Genghis4Player(ScenarioPlayer):
-    RUSSIANS = 3, "the Russians"
-    KHWARAZM = 4, "Khwarazm"
 
 class Genghis4StartingState(ScenarioStartingState):
     kipchak_camp: Rule = Has(Age2ItemData.AP_GENGHIS_4_KIPCHAK_CAMP.item_name)
@@ -42,10 +38,10 @@ class Genghis4StartingState(ScenarioStartingState):
         # him costs nothing.
         self.obtains_unit[Age2UnitData.CHAMPION] = True_()
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Genghis4Player.RUSSIANS: (
+            Age2PlayerData.GEN4_RUSSIANS: (
                 scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
@@ -55,7 +51,7 @@ class Genghis4StartingState(ScenarioStartingState):
                 military.has_siege() &
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
-            Genghis4Player.KHWARAZM: (
+            Age2PlayerData.GEN4_KHWARAZM: (
                 scenario_logic.has_base() &
                 military.has_military(Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.WAR_ELEPHANT_LINE, Age2AgeData.IMPERIAL) &

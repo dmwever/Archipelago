@@ -8,7 +8,7 @@ from BaseClasses import CollectionState
 from rule_builder.rules import False_, True_
 
 from . import bases
-from ..Options import Techsanity, Unitsanity
+from ..Options import PartnerTrade, Techsanity, Unitsanity
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections.ScenarioResources import Tier, total
@@ -233,31 +233,6 @@ class TestMarketTrade(EconomyTestBase):
                                return_value=True_()):
             self.assertFalse(self.is_false(attila_1.can_trade_at_market()))
 
-
-class TestStubs(EconomyTestBase):
-    def test_ally_trade_is_off(self):
-        self.build()
-        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        self.assertIsInstance(attila_1.ally_trade_gold(), False_)
-        self.assertIsInstance(attila_1.ally_trade_wood(), False_)
-
-    def test_trade_asks_for_the_buildings_that_train_the_traders(self):
-        """A cart wants a market, a cog wants a dock - and the dock is where water access comes
-        in. Both stay behind trading_ally, which no scenario declares."""
-        with mock.patch.object(economy_module, "ALLY_TRADE", True):
-            self.build()
-            attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-            # No scenario declares one, and without it the rule collapses before it can name
-            # anything, so the ally is granted here to see what is behind it.
-            attila_1.scenario.starting_state.trading_ally = True_()
-            gold = set(self.resolved(attila_1.ally_trade_gold()).item_dependencies())
-            wood = set(self.resolved(attila_1.ally_trade_wood()).item_dependencies())
-            self.assertIn(Age2BuildingData.MARKET.item.item_name, gold)
-            self.assertIn(Age2BuildingData.DOCK.item.item_name, gold)
-            # Cogs only for wood: a sea route brings wood home, a cart does not. The market can
-            # still turn up in here, because the wood route is seeded with gold.
-            self.assertIn(Age2BuildingData.DOCK.item.item_name, wood)
-
     def test_the_market_rule_terminates_when_switched_on(self):
         """Written against the leaf gatherers, so the wood aggregate cannot ask the market
         which asks the wood aggregate."""
@@ -265,6 +240,66 @@ class TestStubs(EconomyTestBase):
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
         for resource in Resource:
             self.resolved(attila_1.has_easy_source(resource))
+        self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
+
+
+class TestPartnerTrade(EconomyTestBase):
+    """Trade carts and trade cogs run to a trade partner. Which partners the logic may count on
+    is the yaml's choice; which buildings they keep usable is the scenario's player records."""
+
+    PARTNER_TRADE_SCENARIOS = {
+        Age2ScenarioData.AP_ATTILA_1,   # the Scythians' market
+        Age2ScenarioData.AP_ATTILA_5,   # the Ostrogoths' market
+        Age2ScenarioData.AP_ATTILA_6,   # the Western Roman Empire's dock
+        Age2ScenarioData.AP_JOAN_2,     # Blois' market
+    }
+
+    def test_partner_trade_is_allies_by_default(self):
+        self.assertEqual(self.build().options.partner_trade, PartnerTrade.option_allies)
+
+    def test_none_opens_no_trade_anywhere(self):
+        self.build(partner_trade=PartnerTrade.option_none)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                self.assertTrue(self.is_false(scenario.economy.can_earn_gold_by_partner_trade()))
+                self.assertTrue(self.is_false(scenario.economy.can_earn_wood_by_partner_trade()))
+
+    def test_allies_opens_trade_only_where_an_ally_has_a_usable_building(self):
+        self.build(partner_trade=PartnerTrade.option_allies)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                gold = scenario.economy.can_earn_gold_by_partner_trade()
+                self.assertEqual(
+                    not self.is_false(gold),
+                    scenario.scenario in self.PARTNER_TRADE_SCENARIOS,
+                )
+
+    def test_allies_never_opens_an_enemy_building(self):
+        """Genghis 5's only usable buildings are the Polish and German markets."""
+        self.build(partner_trade=PartnerTrade.option_allies)
+        genghis_5 = self.economy(Age2ScenarioData.AP_GENGHIS_5)
+        self.assertTrue(self.is_false(genghis_5.can_earn_gold_by_partner_trade()))
+
+    def test_a_cart_wants_a_market(self):
+        self.build()
+        attila_5 = self.economy(Age2ScenarioData.AP_ATTILA_5)
+        gold = set(self.resolved(attila_5.can_earn_gold_by_partner_trade()).item_dependencies())
+        self.assertIn(Age2BuildingData.MARKET.item.item_name, gold)
+        # The Ostrogoths keep no dock, so no cog route is offered.
+        self.assertTrue(self.is_false(attila_5.can_earn_wood_by_partner_trade()))
+
+    def test_a_cog_wants_a_dock_and_brings_wood_home(self):
+        self.build()
+        attila_6 = self.economy(Age2ScenarioData.AP_ATTILA_6)
+        wood = set(self.resolved(attila_6.can_earn_wood_by_partner_trade()).item_dependencies())
+        self.assertIn(Age2BuildingData.DOCK.item.item_name, wood)
+
+    def test_every_economy_question_terminates_with_partner_trade(self):
+        """Trade asks the Feudal Age, which asks the economy, which asks trade."""
+        self.build(partner_trade=PartnerTrade.option_allies)
+        for scenario in self.world.rules.logic.scenarios:
+            for resource in Resource:
+                self.resolved(scenario.economy.has_easy_source(resource))
         self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
 
 

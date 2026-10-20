@@ -212,6 +212,7 @@ class TestWhereTheOptionsLive(unittest.TestCase):
         "monks_can_counter",   # which counters count, read where counters resolve
         "siege_can_counter",   # which counters count, read where counters resolve
         "market_trade",        # whether the market is an economy, read where it resolves
+        "partner_trade",       # whose markets and docks are an economy, read where it resolves
     }
 
     POOLS = pathlib.Path(__file__).parent.parent / "generation" / "pools"

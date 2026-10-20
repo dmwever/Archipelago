@@ -13,6 +13,7 @@ type ScenarioUnit = Age2UnitData | Age2HeroData | Age2EscortUnitData
 if TYPE_CHECKING:
     from ..rules.ScenarioRules import ScenarioRules
     from ..logic.ScenarioLogic import ScenarioStartingState
+    from .Players import Age2PlayerData
     from .connections.ScenarioResources import (ScenarioResourceCount,
                                                 ScenarioResourceDemand, Tier)
 
@@ -49,6 +50,8 @@ class Age2ScenarioData(enum.IntEnum):
         self.excluded_techs: list['Age2TechData'] = []
         self.resources: dict['Tier', 'ScenarioResourceCount'] = {}
         self.demand: 'ScenarioResourceDemand' = None
+        self.players: list['Age2PlayerData'] = []
+        """Its allies and enemies, from connections/ScenarioPlayers."""
     
     AP_ATTILA_1 =           "The Scourge of God", "AP_Attila_1", "ATT1.xsdat", Age2CampaignData.ATTILA, 1, Age2CivData.HUNS, Age2AgeData.DARK, Age2AgeData.CASTLE, False
     AP_ATTILA_2 =               "The Great Ride", "AP_Attila_2", "ATT2.xsdat", Age2CampaignData.ATTILA, 2, Age2CivData.HUNS, Age2AgeData.CASTLE, Age2AgeData.CASTLE, False

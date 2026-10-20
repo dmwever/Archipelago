@@ -306,6 +306,21 @@ class MarketTrade(Toggle):
     internal_name = "market_trade"
     display_name = "Market Trade"
 
+
+class PartnerTrade(Choice):
+    """
+    Whether the logic may expect you to run trade carts and trade cogs to another player's market or dock, and to whose.
+    None: Trade with other players is never needed to afford anything.
+    Allies: Only an ally's market or dock, and only where the scenario's ally keeps one usable.
+    Allies And Enemies: An enemy's too, once you can defeat its owner, or straight away if it is undefended. A main opponent's only if undefended.
+    """
+    internal_name = "partner_trade"
+    display_name = "Partner Trade"
+    option_none = 0
+    option_allies = 1
+    option_allies_and_enemies = 2
+    default = option_allies
+
     
 class TrapDifficulty(Choice):
     """
@@ -379,6 +394,7 @@ class Age2Options(PerGameCommonOptions):
     monks_can_counter: MonksCanCounter
     siege_can_counter: SiegeCanCounter
     market_trade: MarketTrade
+    partner_trade: PartnerTrade
     goal: Goal
     local_start: LocalStart
     trap_difficulty: TrapDifficulty

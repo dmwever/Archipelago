@@ -7,19 +7,12 @@ from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Attila6Player(ScenarioPlayer):
-    """The Western Roman Empire fights beside P1, so it has no member."""
-    AQUILEIA = 2, "Aquileia"
-    MEDIOLANUM = 3, "Mediolanum"
-    VERONA = 4, "Verona"
-    PATAVIUM = 5, "Patavium"
 
 class Attila6StartingState(ScenarioStartingState):
 
@@ -30,10 +23,10 @@ class Attila6StartingState(ScenarioStartingState):
         self.has_base = True_()   # a Town Centre stands on the map at player one
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = True_()
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Attila6Player.AQUILEIA: (
+            Age2PlayerData.ATT6_AQUILEIA: (
                 scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
@@ -41,7 +34,7 @@ class Attila6StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
                 military.has_siege()
             ),
-            Attila6Player.MEDIOLANUM: (
+            Age2PlayerData.ATT6_MEDIOLANUM: (
                 (
                     scenario_logic.has_base() &
                     military.has_navy(Age2AgeData.IMPERIAL) &
@@ -55,7 +48,7 @@ class Attila6StartingState(ScenarioStartingState):
                     military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
                 )
             ),
-            Attila6Player.PATAVIUM: (
+            Age2PlayerData.ATT6_PATAVIUM: (
                 scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
@@ -63,7 +56,7 @@ class Attila6StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
                 military.has_long_range_siege()
             ),
-            Attila6Player.VERONA: (
+            Age2PlayerData.ATT6_VERONA: (
                 scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &

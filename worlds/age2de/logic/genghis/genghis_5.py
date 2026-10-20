@@ -9,15 +9,11 @@ from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Genghis5Player(ScenarioPlayer):
-    BOHEMIANS = 3, "the Bohemians"
-    GERMANS = 4, "the Germans"
 
 class Genghis5StartingState(ScenarioStartingState):
 
@@ -32,10 +28,10 @@ class Genghis5StartingState(ScenarioStartingState):
         # A scout rides in unasked early on.
         self.obtains_unit[Age2UnitData.SCOUT_CAVALRY] = True_()
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Genghis5Player.GERMANS: (
+            Age2PlayerData.GEN5_GERMANS: (
                 scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
@@ -45,7 +41,7 @@ class Genghis5StartingState(ScenarioStartingState):
                 military.has_siege() &
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
-            Genghis5Player.BOHEMIANS: (
+            Age2PlayerData.GEN5_BOHEMIANS: (
                 scenario_logic.has_base() &
                 military.has_military(Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &

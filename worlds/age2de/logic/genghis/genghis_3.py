@@ -9,18 +9,11 @@ from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Genghis3Player(ScenarioPlayer):
-    """The Engineers have no member: they resign the moment the other four are gone."""
-    TANGUTS = 2, "the Tanguts"
-    XI_XIA = 3, "Xi Xia"
-    JIN = 4, "the Jin"
-    SONG = 5, "the Song"
 
 class Genghis3StartingState(ScenarioStartingState):
     transport: Rule = Has(Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name)
@@ -38,7 +31,7 @@ class Genghis3StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.SIEGE_WORKSHOP] = (
             self.bombards | self.engineers)
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         units = scenario_logic.units
 
@@ -63,7 +56,7 @@ class Genghis3StartingState(ScenarioStartingState):
         can_force_landing = scenario_logic.named("can force a landing", can_force_landing)
 
         return {
-            Genghis3Player.TANGUTS: (
+            Age2PlayerData.GEN3_TANGUTS: (
                 scenario_logic.has_base() &
                 can_invade_china &
                 military.has_military(Age2AgeData.CASTLE) &
@@ -76,7 +69,7 @@ class Genghis3StartingState(ScenarioStartingState):
                 military.counters_building() &
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
-            Genghis3Player.XI_XIA: (
+            Age2PlayerData.GEN3_XI_XIA: (
                 scenario_logic.has_base() &
                 can_invade_china &
                 military.has_military(Age2AgeData.CASTLE) &
@@ -87,7 +80,7 @@ class Genghis3StartingState(ScenarioStartingState):
                 has_siege &
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
-            Genghis3Player.JIN: (
+            Age2PlayerData.GEN3_JIN: (
                 scenario_logic.has_base() &
                 can_force_landing &
                 military.has_military(Age2AgeData.IMPERIAL) &
@@ -100,7 +93,7 @@ class Genghis3StartingState(ScenarioStartingState):
                 has_long_siege &
                 scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
             ),
-            Genghis3Player.SONG: (
+            Age2PlayerData.GEN3_SONG: (
                 scenario_logic.has_base() &
                 can_invade_china &
                 military.has_military(Age2AgeData.CASTLE) &
