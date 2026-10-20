@@ -24,3 +24,7 @@ Spec: Implementation Decisions, "Options", "Trade logic". Glossary: Market trade
   termination test now builds with the option instead of patching the constant.
 - `market_trade` added to `LOGIC_ONLY` (test_slot_data_wire) and the pools exemption list.
 - Ageipelago: `market-trade.md`, its index row and its line in the defaults yaml, on the `0.3.0` branch.
+- Renamed `market_trades` to `can_trade_at_market` (predicate verbs).
+- Tried selling any easy food (`has_easy_source(FOOD)`, then easy food less the market): both
+  recurse. Food outside the base needs an army ("can protect its boats"), the army asks the gold and
+  wood questions, and those ask the market. Kept `endless_food`, which is built from leaf gatherers.
