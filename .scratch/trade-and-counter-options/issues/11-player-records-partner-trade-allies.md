@@ -24,7 +24,7 @@ its README. The raw per-scenario rulings are in `../research/grill-decisions.md`
 - [x] Records match every ruling in the spec (sides, neutral/ignored slots absent, main opponents, overridden flags)
 - [x] Derived scenario flags agree with the records for every connected scenario
 - [x] `none`: no partner trade anywhere; `allies`: trade opens only where an ally has a usable building
-- [x] `trading_ally` follows the records, and a starting-state override still wins
+- [x] `trading_ally` follows the records (override dropped on review, see Comments)
 - [x] `ALLY_TRADE` constant gone; option not in slot data or XS
 - [x] Ageipelago option reference page and index row added
 - [x] Full suite green
@@ -36,18 +36,18 @@ its README. The raw per-scenario rulings are in `../research/grill-decisions.md`
   `TradeAccess` for market and dock: CLOSED / OPEN / ONCE_DEFEATED). `connections/ScenarioPlayers.py`
   routes them (`SCENARIO_TO_PLAYERS` -> `Age2ScenarioData.players`). The per-scenario `XPlayer`
   enums, `logic/ScenarioPlayer.py` and `has_usable` are gone; there are no scenario-level flags.
-- `trading_ally` defaults to `None`; `ScenarioLogic.has_trading_ally()` follows the players unless a
-  scenario sets one. The override gates allies' open buildings but cannot open a closed one.
+- The `trading_ally` field is dropped: a rule must never be `None`, so there is no starting-state
+  override. `ScenarioLogic.has_trading_ally()` is true when any ally keeps a market or dock `OPEN`.
 - `PartnerTrade` (`partner_trade`): none / allies / allies_and_enemies, default allies.
   `allies_and_enemies` behaves as `allies` until ticket 12. `ALLY_TRADE` gone; `ally_trade_gold` /
   `ally_trade_wood` became `can_earn_gold_by_partner_trade` / `can_earn_wood_by_partner_trade`, behind
   `can_reach_partner(building)`.
 - Ally trade is now live by default in Attila 1, Attila 5, Attila 6 and Joan 2. No recursion.
 - Players with no defeat rule: Attila 2 Sofia, Naissus, Adrianople, Dyrrhachium, Thessalonica;
-  Genghis 4 Kipchaks; Genghis 5 Polish; Joan 4 English Guards; every ally but Attila 1's Scythians. `test_defeat_rules` now walks
-  the players that have defeat rules.
+  Genghis 4 Kipchaks; Genghis 5 Polish; Joan 4 English Guards; every ally but Attila 1's Scythians.
+  `test_defeat_rules` now walks the players that have defeat rules.
 - Open for the user: Genghis 3 Engineers stay without a member (pre-existing decision, though the scan
-  says enemy). Attila 1's Scythians are allies from the start, so `trading_ally` is open from the
-  start, even though the alliance forms at trigger D26 and can break at D27.
+  says enemy). Attila 1's Scythians are allies from the start, so ally trade is open from the start,
+  even though the alliance forms at trigger D26 and can break at D27.
 - Ageipelago: `partner-trade.md`, its index row and defaults line; `market-trade.md` no longer
   mentions `ALLY_TRADE`.

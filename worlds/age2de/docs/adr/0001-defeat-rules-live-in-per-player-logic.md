@@ -2,15 +2,16 @@
 status: accepted
 ---
 
-# Defeat rules live in the logic layer, keyed by per-scenario Player records
+# Defeat rules live in the logic layer, keyed by Age2PlayerData
 
 Partner trade needs to know when P1 can defeat one specific opponent, but "can P1 defeat this player"
 existed only as local variables inside each scenario's rules, named `can_beat_*`, `can_kill_*` or
-`can_defeat_*` and keyed by colour or faction. So each connected scenario now has an enumeration of
-its players (slot number, readable name, a fixed ally or enemy side, main-opponent flag, usable
-market and dock, and a gate per enemy building), each scenario's starting state builds one defeat
-rule per opponent, and scenario logic serves them through a cached `defeats(player)` that both the
-victory rules and the trade logic read.
+`can_defeat_*` and keyed by colour or faction. So every player of every connected scenario is a member
+of `Age2PlayerData`, with its data hard-coded inline (slot, readable name, a fixed ally or enemy side,
+main-opponent flag, and a trade access for its market and its dock: closed, open, or open once
+defeated), routed to its scenario by `connections/ScenarioPlayers`. Each scenario's starting state
+builds one defeat rule per opponent, keyed by those members, and scenario logic serves them through a
+cached `defeats(player)` that both the victory rules and the trade logic read.
 
 ## Considered Options
 
@@ -21,16 +22,20 @@ victory rules and the trade logic read.
   is met.** Rejected: by then the scenario is won, and usability differs between opponents in the
   same scenario.
 - **A player's side as a set, or stance changes during a scenario.** Rejected: every scenario was
-  resolvable as one fixed side per player, and neutral or ignored players simply get no record.
+  resolvable as one fixed side per player, and neutral or ignored players simply get no member.
 
 ## Consequences
 
-- A defeat rule must never depend on partner trade with its own player, or building it recurses. A
-  test guards this.
+- Partner trade never reads a defeat rule directly. A defeat asks for an army, the army asks the
+  economy, and the economy asks trade, so any defeat that costs resources would loop back into the
+  scenario's own economy questions, not only one that trades with its own player. Instead, at
+  `allies_and_enemies`, each enemy whose market or dock opens once defeated gets an event location
+  ("<scenario>: Can Defeat <player>") whose rule is `defeats(player)`, and trade asks for the event
+  item. The sweep settles the cycle. A test builds every defeat and trade rule to guard this.
 - The move must preserve behaviour: every location rule is snapshotted on `v0.3.0` before it and
   compared after each campaign moves; the snapshot is deleted once the move is complete.
-- The scenario-level ally and enemy market and dock facts are derived from the records, never
-  stored, so the two cannot disagree. Those facts record judged usability, not whether the building
-  exists; do not correct them from a scenario scan.
-- Connecting a new campaign now includes declaring its players and their defeat rules, not just
-  writing victory rules.
+- Trade usability lives only on the players; there are no scenario-level market or dock flags, and
+  whether P1 has a trading ally is read straight off them. Trade access records judged usability, not
+  whether the building exists; do not correct it from a scenario scan.
+- Connecting a new campaign now includes adding its players to `Age2PlayerData`, routing them in
+  `connections/ScenarioPlayers`, and writing their defeat rules, not just writing victory rules.

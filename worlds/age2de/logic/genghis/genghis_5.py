@@ -31,6 +31,15 @@ class Genghis5StartingState(ScenarioStartingState):
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
+            Age2PlayerData.GEN5_POLISH: (
+                scenario_logic.has_base() &
+                military.has_military(Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE) &
+                military.has_siege() &
+                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+            ),
             Age2PlayerData.GEN5_GERMANS: (
                 scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &

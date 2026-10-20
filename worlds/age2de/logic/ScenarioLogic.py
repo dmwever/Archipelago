@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
@@ -13,7 +13,7 @@ from rule_builder.rules import False_, Has, Rule, True_
 from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
 from .custom_logic.ScenarioQuestions import a_or_an
-from .ScenarioPlayer import NoPlayers, ScenarioPlayer, Side
+from ..locations.Players import Age2PlayerData, Side, TradeAccess
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -23,9 +23,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class ScenarioStartingState:
-    players: ClassVar[type[ScenarioPlayer]] = NoPlayers
-    """This scenario's allies and enemies. A scenario with anyone to trade with or defeat
-    declares its own enumeration here."""
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
     has_base: Rule = field(default_factory=lambda: False_())
@@ -50,27 +47,8 @@ class ScenarioStartingState:
     starting_oysters: Rule = field(default_factory=lambda: False_())
     starting_whales: Rule = field(default_factory=lambda: False_())
     starting_relics: Rule = field(default_factory=lambda: True_())
-    # An ally P1 can trade with. Read off the players unless a scenario reassigns it after
-    # super().__init__(), for one whose ally only arrives part way through. It gates the ally's
-    # usable buildings; it cannot open one no record keeps usable.
-    trading_ally: Rule = field(init=False)
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
-
-    def __post_init__(self) -> None:
-        has_ally_building = (
-            self.has_usable(Side.ALLY, Age2BuildingData.MARKET)
-            or self.has_usable(Side.ALLY, Age2BuildingData.DOCK)
-        )
-        self.trading_ally = True_() if has_ally_building else False_()
-
-    def has_usable(self, side: Side, building: Age2BuildingData) -> bool:
-        """The scenario-level fact - an ally's market, an enemy's dock - read off the players,
-        so the two can never disagree."""
-        return any(
-            player.side is side and player.can_trade_at(building)
-            for player in self.players
-        )
 
     def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
         from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
@@ -81,9 +59,7 @@ class ScenarioStartingState:
                 self.obtains_unit[soldier.unit] = (
                     self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
-        """What P1 needs to defeat each opponent, keyed by this scenario's players. Built once,
-        on the first ask, and read through ScenarioLogic.defeats."""
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         return {}
 
 class ScenarioLogic:
@@ -94,7 +70,7 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
-        self._defeats: dict[ScenarioPlayer, Rule] | None = None
+        self._defeats: dict[Age2PlayerData, Rule] | None = None
         data.default_mercenary_grants(scenario)
         from .scenarios.ScenarioAgeLogic import ScenarioAgeLogic
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
@@ -140,15 +116,23 @@ class ScenarioLogic:
                 & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
                 & (standing | town_center))
 
-    def defeats(self, player: ScenarioPlayer) -> Rule:
-        """P1 can overcome this player's army and take its ground. The same rule on every ask,
-        so victory and anything else asking about this player share one."""
+    def defeats(self, player: Age2PlayerData) -> Rule:
         if self._defeats is None:
             self._defeats = {
                 opponent: self.named(f"can defeat {opponent.player_name}", rule)
                 for opponent, rule in self.starting_state.defeat_rules(self).items()
             }
         return self._defeats[player]
+
+    def has_defeated(self, player: Age2PlayerData) -> Rule:
+        return Has(player.defeat_event(self.scenario.scenario_name))
+
+    def has_trading_ally(self) -> Rule:
+        has_open_ally_building = any(
+            player.side is Side.ALLY and TradeAccess.OPEN in (player.market, player.dock)
+            for player in self.scenario.players
+        )
+        return True_() if has_open_ally_building else False_()
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access

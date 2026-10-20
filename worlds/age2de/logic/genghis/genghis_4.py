@@ -41,6 +41,8 @@ class Genghis4StartingState(ScenarioStartingState):
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
+            # The Kipchaks offer no resistance: they surrender their camp.
+            Age2PlayerData.GEN4_KIPCHAKS: True_(),
             Age2PlayerData.GEN4_RUSSIANS: (
                 scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &

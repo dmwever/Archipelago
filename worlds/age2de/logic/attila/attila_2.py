@@ -31,6 +31,9 @@ class Attila2StartingState(ScenarioStartingState):
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
+            # Neither city offers any resistance.
+            Age2PlayerData.ATT2_DYRRHACHIUM: True_(),
+            Age2PlayerData.ATT2_THESSALONICA: True_(),
             Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE: (
                 self.scythian_troop |
                 (

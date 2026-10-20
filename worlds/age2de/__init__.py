@@ -18,7 +18,7 @@ from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
 from .regions.UnitRegions import UnitRegions
-from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching, ShuffleVillager
+from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, PartnerTrade, ScenarioBranching, ShuffleVillager
 from .items import Items
 from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
                         UnitLines, Units, VillagerJobs)
@@ -212,6 +212,11 @@ class Age2World(CachedRuleBuilderWorld):
             new_region.add_event("Complete " + scenario.scenario_name,
                                  scenario.scenario_name + ": Unlock Next Scenario",
                                  show_in_spoiler=False)
+        if self.options.partner_trade == PartnerTrade.option_allies_and_enemies:
+            for player in scenario.players:
+                if player.trades_once_defeated:
+                    new_region.add_event(player.defeat_event(scenario.scenario_name),
+                                         show_in_spoiler=False)
         return new_region
         
     

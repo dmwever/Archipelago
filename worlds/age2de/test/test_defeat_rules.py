@@ -1,8 +1,9 @@
 """Defeat rules: "can P1 defeat this player", asked of a scenario's logic (ADR 0001)."""
 
 from . import bases
+from ..Options import PartnerTrade
 from ..locations.Scenarios import Age2ScenarioData
-from ..locations.Players import Age2PlayerData, Side
+from ..locations.Players import Age2PlayerData, Side, TradeAccess
 from ..locations.connections.ScenarioPlayers import SCENARIO_TO_PLAYERS
 from ..logic.custom_logic.Named import Named
 
@@ -57,6 +58,32 @@ class TestDefeatRules(bases.Age2RuleTestBase):
         self.assertIs(philippopolis.child, marcianopolis.child)
         self.assertNotEqual(philippopolis.label, marcianopolis.label)
 
+    def test_every_defended_trade_partner_has_a_rule(self):
+        """Partner trade waits on these: a building open once defeated needs a defeat to wait on."""
+        for scenario, players in SCENARIO_TO_PLAYERS.items():
+            scenario_logic = self.world.rules.logic.for_scenario(scenario)
+            rules = scenario_logic.starting_state.defeat_rules(scenario_logic)
+            for player in players:
+                if TradeAccess.ONCE_DEFEATED in (player.market, player.dock):
+                    with self.subTest(player=player):
+                        self.assertIn(player, rules)
+
+    def test_the_cities_that_offer_no_resistance_are_free(self):
+        for scenario, player in (
+            (Age2ScenarioData.AP_ATTILA_2, Age2PlayerData.ATT2_DYRRHACHIUM),
+            (Age2ScenarioData.AP_ATTILA_2, Age2PlayerData.ATT2_THESSALONICA),
+            (Age2ScenarioData.AP_GENGHIS_4, Age2PlayerData.GEN4_KIPCHAKS),
+        ):
+            with self.subTest(player=player):
+                scenario_logic = self.world.rules.logic.for_scenario(scenario)
+                self.assertTrue(scenario_logic.defeats(player).resolve(self.world).always_true)
+
+    def test_the_polish_take_a_castle_age_army(self):
+        scenario_logic = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_GENGHIS_5)
+        polish = scenario_logic.defeats(Age2PlayerData.GEN5_POLISH).resolve(self.world)
+        self.assertFalse(polish.always_true)
+        self.assertFalse(polish.always_false)
+
     def test_the_roman_army_falls_with_orleans(self):
         """The Western Roman Empire's army stands with Orléans: one rule, each under its own name."""
         scenario_logic = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_4)
@@ -64,3 +91,21 @@ class TestDefeatRules(bases.Age2RuleTestBase):
         romans = scenario_logic.defeats(Age2PlayerData.ATT4_WESTERN_ROMAN_EMPIRE)
         self.assertIs(orleans.child, romans.child)
         self.assertNotEqual(orleans.label, romans.label)
+
+
+class TestDefeatAndTradeTerminate(bases.Age2RuleTestBase):
+    """Trade with an enemy waits on its defeat, and a defeat asks for an army P1 has to pay for:
+    building either must never come back round to itself."""
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+    starting_campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+
+    def test_every_defeat_and_trade_rule_builds(self):
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        for scenario in SCENARIO_TO_PLAYERS:
+            scenario_logic = self.world.rules.logic.for_scenario(scenario)
+            with self.subTest(scenario.name):
+                for player in scenario_logic.starting_state.defeat_rules(scenario_logic):
+                    scenario_logic.defeats(player).resolve(self.world)
+                scenario_logic.economy.can_earn_gold_by_partner_trade().resolve(self.world)
+                scenario_logic.economy.can_earn_wood_by_partner_trade().resolve(self.world)
+        self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)

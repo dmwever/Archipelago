@@ -2,10 +2,7 @@
 
 import unittest
 
-from rule_builder.rules import False_, Has
-
 from . import bases
-from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Players import Age2PlayerData, Side, TradeAccess
 from ..locations.Scenarios import Age2ScenarioData
@@ -130,6 +127,11 @@ class TestPlayersFollowTheRulings(unittest.TestCase):
             with self.subTest(player=player.name):
                 self.assertNotIn(TradeAccess.ONCE_DEFEATED, (player.market, player.dock))
 
+    def test_the_kipchaks_are_never_a_trade_partner(self):
+        """They surrender and hand their camp to P1: their market becomes P1's own."""
+        kipchaks = Age2PlayerData.GEN4_KIPCHAKS
+        self.assertEqual((TradeAccess.CLOSED, TradeAccess.CLOSED), (kipchaks.market, kipchaks.dock))
+
     def test_genghis_5_trades_with_both_the_polish_and_the_germans(self):
         self.assertIsNot(Age2PlayerData.GEN5_POLISH.market, TradeAccess.CLOSED)
         self.assertIsNot(Age2PlayerData.GEN5_GERMANS.market, TradeAccess.CLOSED)
@@ -158,32 +160,13 @@ class TestTradingAlly(bases.Age2RuleTestBase):
     campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
     starting_campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
 
-    def scenario_logic(self, scenario: Age2ScenarioData):
-        return self.world.rules.logic.for_scenario(scenario)
-
     def test_the_trading_ally_follows_the_players(self):
         self.build()
         for scenario, (ally_market, _, ally_dock, _) in JUDGED_FLAGS.items():
-            trading_ally = self.scenario_logic(scenario).has_trading_ally().resolve(self.world)
+            scenario_logic = self.world.rules.logic.for_scenario(scenario)
+            trading_ally = scenario_logic.has_trading_ally().resolve(self.world)
             with self.subTest(scenario.name):
                 if ally_market or ally_dock:
                     self.assertTrue(trading_ally.always_true)
                 else:
                     self.assertTrue(trading_ally.always_false)
-
-    def test_a_starting_state_can_close_the_ally(self):
-        self.build()
-        attila_5 = self.scenario_logic(Age2ScenarioData.AP_ATTILA_5)
-        attila_5.starting_state.trading_ally = False_()
-        gold = attila_5.economy.can_earn_gold_by_partner_trade().resolve(self.world)
-        self.assertTrue(gold.always_false)
-
-    def test_a_starting_state_can_gate_the_ally(self):
-        """"The ally only exists after X" stays expressible."""
-        self.build()
-        attila_1 = self.scenario_logic(Age2ScenarioData.AP_ATTILA_1)
-        # Another campaign's item, so nothing else in Attila 1's trade could be asking for it.
-        gate = Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name
-        attila_1.starting_state.trading_ally = Has(gate)
-        gold = attila_1.economy.can_earn_gold_by_partner_trade().resolve(self.world)
-        self.assertIn(gate, set(gold.item_dependencies()))

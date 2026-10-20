@@ -3,30 +3,17 @@ import enum
 from .Buildings import Age2BuildingData
 
 class Side(enum.Enum):
-    """Which side of P1 a player stands on, fixed for the whole scenario."""
     ALLY = "ally"
     ENEMY = "enemy"
+    NEUTRAL = "neutral"
 
 class TradeAccess(enum.Enum):
-    """Whether P1's carts or cogs can usefully run to a player's market or dock."""
     CLOSED = "closed"
-    """None stands, or none worth trading with."""
     OPEN = "open"
-    """An ally's, or an enemy's that nothing guards."""
     ONCE_DEFEATED = "once defeated"
-    """An enemy's, usable once P1 can defeat its owner."""
 
 @enum.unique
 class Age2PlayerData(enum.IntEnum):
-    """A player other than P1, as one scenario has it: one member per ally and enemy. A neutral or
-    ignored slot has no member. Routed to its scenario by connections/ScenarioPlayers.
-
-    The id is the scenario's id, then the slot. Trade access is hand-written from PR 19's judged
-    flags and the design rulings: where a flag is true, a player on that side is open if it owns
-    that building at the start or its AI builds one, unless it is a main opponent; where a flag is
-    false, no one is. The flags mean usability, never existence: do not correct them from a scan.
-    """
-
     def __new__(cls, id: int, *args, **kwargs):
         value = id
         obj = int.__new__(cls, value)
@@ -39,23 +26,25 @@ class Age2PlayerData(enum.IntEnum):
     ) -> None:
         self.id = id
         self.player_name = player_name
-        """How it reads mid-sentence: "can defeat the Jin"."""
         self.slot = slot
-        """Its slot in the scenario, P2 to P8."""
         self.side = side
         self.is_main_opponent = is_main_opponent
-        """Significantly stronger than the rest: its market and dock stay closed unless nothing
-        guards them."""
         self.market = market
         self.dock = dock
 
     def trade_access(self, building: Age2BuildingData) -> TradeAccess:
-        """The access for its market or its dock."""
         if building is Age2BuildingData.MARKET:
             return self.market
         if building is Age2BuildingData.DOCK:
             return self.dock
         raise ValueError(f"{building.name} is not a trade building")
+
+    @property
+    def trades_once_defeated(self) -> bool:
+        return TradeAccess.ONCE_DEFEATED in (self.market, self.dock)
+
+    def defeat_event(self, scenario_name: str) -> str:
+        return f"{scenario_name}: Can Defeat {self.player_name}"
 
     # Attila 1. Bleda (P2) is ignored. Ruled: the Scythians are an ally.
     ATT1_SCYTHIANS =            1013, "the Scythians",              3, Side.ALLY,  False, TradeAccess.OPEN,          TradeAccess.CLOSED
@@ -138,8 +127,9 @@ class Age2PlayerData(enum.IntEnum):
     GEN3_JIN =                  3034, "the Jin",                    4, Side.ENEMY, False, TradeAccess.CLOSED,        TradeAccess.CLOSED
     GEN3_SONG =                 3035, "the Song",                   5, Side.ENEMY, False, TradeAccess.CLOSED,        TradeAccess.CLOSED
 
-    # Genghis 4. Ruled: Khwarazm is an enemy and the main opponent; no ally market is usable.
-    GEN4_KIPCHAKS =             3042, "the Kipchaks",               2, Side.ENEMY, False, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
+    # Genghis 4. Ruled: Khwarazm is an enemy and the main opponent; no ally market is usable. The
+    # Kipchaks are never a trade partner: they surrender their camp, market and all, to P1.
+    GEN4_KIPCHAKS =             3042, "the Kipchaks",               2, Side.ENEMY, False, TradeAccess.CLOSED,        TradeAccess.CLOSED
     GEN4_RUSSIANS =             3043, "the Russians",               3, Side.ENEMY, False, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
     GEN4_KHWARAZM =             3044, "Khwarazm",                   4, Side.ENEMY, True,  TradeAccess.CLOSED,        TradeAccess.CLOSED
 

@@ -13,7 +13,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
-from ...locations.Players import Side, TradeAccess
+from ...locations.Players import Age2PlayerData, Side, TradeAccess
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -330,15 +330,26 @@ class ScenarioResourceLogic:
 
     def can_reach_partner(self, building: Age2BuildingData) -> Rule:
         """A trade partner's market or dock, as far as the yaml lets the logic count on one."""
-        if self.world.options.partner_trade == PartnerTrade.option_none:
+        partner_trade = self.world.options.partner_trade
+        if partner_trade == PartnerTrade.option_none:
             return False_()
-        has_open_ally_building = any(
-            player.side is Side.ALLY and player.trade_access(building) is TradeAccess.OPEN
-            for player in self.scenario.scenario.players
-        )
-        if not has_open_ally_building:
+        gates = [
+            self._partner_gate(player, building) for player in self.scenario.scenario.players
+            if player.side is Side.ALLY or partner_trade == PartnerTrade.option_allies_and_enemies
+        ]
+        gates = [gate for gate in gates if not isinstance(gate, False_)]
+        if not gates:
             return False_()
-        return self.scenario.has_trading_ally()
+        return Or(*gates)
+
+    def _partner_gate(self, player: Age2PlayerData, building: Age2BuildingData) -> Rule:
+        """What stands between P1 and this player's market or dock."""
+        access = player.trade_access(building)
+        if access is TradeAccess.OPEN:
+            return True_()
+        if access is TradeAccess.ONCE_DEFEATED:
+            return self.scenario.has_defeated(player)
+        return False_()
 
     # -- aggregates ---------------------------------------------------------------------------
 
