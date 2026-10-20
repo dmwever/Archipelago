@@ -127,7 +127,6 @@ class Age2UnitLineData(enum.IntEnum):
     WARRIOR_PRIEST_LINE           = 890, "Own Warrior Priest Line", "Warrior Priest Line", Age2UnitData.WARRIOR_PRIEST, Age2ItemData.UNIT_LINE_WARRIOR_PRIEST
     FIRE_LANCER_LINE              = 891, "Own Fire Lancer Line", "Fire Lancer Line", Age2UnitData.FIRE_LANCER, Age2ItemData.UNIT_LINE_FIRE_LANCER
     ROCKET_CART_LINE              = 892, "Own Rocket Cart Line", "Rocket Cart Line", Age2UnitData.ROCKET_CART, Age2ItemData.UNIT_LINE_ROCKET_CART
-    HEAVY_ROCKET_CART_LINE        = 893, "Own Heavy Rocket Cart Line", "Heavy Rocket Cart Line", Age2UnitData.HEAVY_ROCKET_CART, Age2ItemData.UNIT_LINE_HEAVY_ROCKET_CART
     IRON_PAGODA_LINE              = 894, "Own Iron Pagoda Line", "Iron Pagoda Line", Age2UnitData.IRON_PAGODA, Age2ItemData.UNIT_LINE_IRON_PAGODA
     GRENADIER_LINE                = 895, "Own Grenadier Line", "Grenadier Line", Age2UnitData.GRENADIER, Age2ItemData.UNIT_LINE_GRENADIER
     LIAO_DAO_LINE                 = 896, "Own Liao Dao Line", "Liao Dao Line", Age2UnitData.LIAO_DAO, Age2ItemData.UNIT_LINE_LIAO_DAO

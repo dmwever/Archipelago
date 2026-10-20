@@ -341,7 +341,6 @@ class Age2ItemData(enum.IntEnum):
     UNIT_LINE_WARRIOR_PRIEST           = 390, "Warrior Priest Line", UnitLine(890, Age2AgeData.CASTLE)
     UNIT_LINE_FIRE_LANCER              = 391, "Fire Lancer Line", UnitLine(891, Age2AgeData.CASTLE)
     UNIT_LINE_ROCKET_CART              = 392, "Rocket Cart Line", UnitLine(892, Age2AgeData.CASTLE)
-    UNIT_LINE_HEAVY_ROCKET_CART        = 393, "Heavy Rocket Cart Line", UnitLine(893, Age2AgeData.IMPERIAL)
     UNIT_LINE_IRON_PAGODA              = 394, "Iron Pagoda Line", UnitLine(894, Age2AgeData.CASTLE)
     UNIT_LINE_GRENADIER                = 395, "Grenadier Line", UnitLine(895, Age2AgeData.CASTLE)
     UNIT_LINE_LIAO_DAO                 = 396, "Liao Dao Line", UnitLine(896, Age2AgeData.CASTLE)
