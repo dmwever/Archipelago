@@ -113,11 +113,11 @@ re-read option values today.
 
 **Counter groups.** Three groups are defined once alongside the existing unit roles:
 - faith lines: Monk and Missionary (exists already);
-- anti-unit siege: Mangonel, Bombard Cannon, Rocket Cart and Heavy Rocket Cart lines - not Scorpion,
-  not Organ Gun;
+- anti-unit siege: Mangonel, Bombard Cannon and Rocket Cart lines (the Heavy Rocket Cart is the
+  Rocket Cart line's upgrade) - not Scorpion, not Organ Gun;
 - siege targets, for the siege option's exception: the Battering Ram, Armored Elephant, Trebuchet,
-  Traction Trebuchet, Mounted Trebuchet, Bombard Cannon, Mangonel, Scorpion, Rocket Cart and Heavy
-  Rocket Cart lines. This is its own group, not the existing building-breaker group: the Fire Archer
+  Traction Trebuchet, Mounted Trebuchet, Bombard Cannon, Mangonel, Scorpion and Rocket Cart lines.
+  This is its own group, not the existing building-breaker group: the Fire Archer
   and Petard lines are deliberately left out and count as armies, and the Organ Gun counts as an army.
   Mangonels and rocket carts do not counter the Bombard Cannon; the counter table already has no such
   entries, and none are added.
