@@ -50,7 +50,7 @@ class ScenarioRules:
                 event = self.world.get_location(player.defeat_event(self.scenario.scenario_name))
             except KeyError:
                 continue
-            self.world.set_rule(event, self.scenario_logic.defeats(player))
+            self.world.set_rule(event, self.scenario_logic.players.defeats(player))
 
     def set_rules(self):
         self.world.set_rule(self.entrance, self.scenario_logic.is_unlocked())

@@ -12,7 +12,7 @@ class Attila5Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.defeats
+        defeats = self.scenario_logic.players.defeats
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT5_DEFEAT_ALANS], defeats(Age2PlayerData.ATT5_ALANS))
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT5_DEFEAT_VISIGOTHS], defeats(Age2PlayerData.ATT5_VISIGOTHS))

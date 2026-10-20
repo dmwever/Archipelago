@@ -13,7 +13,7 @@ from rule_builder.rules import False_, Has, Rule, True_
 from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
 from .custom_logic.ScenarioQuestions import a_or_an
-from ..locations.Players import Age2PlayerData, Side, TradeAccess
+from ..locations.Players import Age2PlayerData
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -70,12 +70,12 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
-        self._defeats: dict[Age2PlayerData, Rule] | None = None
         data.default_mercenary_grants(scenario)
         from .scenarios.ScenarioAgeLogic import ScenarioAgeLogic
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
+        from .scenarios.ScenarioPlayerLogic import ScenarioPlayerLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioResourceLogic import ScenarioResourceLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
@@ -86,6 +86,7 @@ class ScenarioLogic:
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
+        self.players = ScenarioPlayerLogic(self)
 
     def has_vils(self) -> Rule:
         return self.named("has villagers", self.starting_state.has_vils)
@@ -115,24 +116,6 @@ class ScenarioLogic:
         return (self.can_have_base()
                 & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
                 & (standing | town_center))
-
-    def defeats(self, player: Age2PlayerData) -> Rule:
-        if self._defeats is None:
-            self._defeats = {
-                opponent: self.named(f"can defeat {opponent.player_name}", rule)
-                for opponent, rule in self.starting_state.defeat_rules(self).items()
-            }
-        return self._defeats[player]
-
-    def has_defeated(self, player: Age2PlayerData) -> Rule:
-        return Has(player.defeat_event(self.scenario.scenario_name))
-
-    def has_trading_ally(self) -> Rule:
-        has_open_ally_building = any(
-            player.side is Side.ALLY and TradeAccess.OPEN in (player.market, player.dock)
-            for player in self.scenario.players
-        )
-        return True_() if has_open_ally_building else False_()
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access

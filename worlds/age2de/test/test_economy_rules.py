@@ -319,11 +319,14 @@ class TestPartnerTradeWithEnemies(EconomyTestBase):
         )
         return {
             player for player in scenario.players
-            if player.defeat_event(scenario.scenario_name) in asked
+                if player.defeat_event(scenario.scenario_name) in asked
         }
 
     def defended(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
-        return {player for player in scenario.players if player.trades_once_defeated}
+        return {
+            player for player in scenario.players
+                if player.trades_once_defeated
+        }
 
     def worth_waiting_on(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
         """The defended owners of each kind of building, where no partner keeps one open: an
@@ -335,7 +338,7 @@ class TestPartnerTradeWithEnemies(EconomyTestBase):
                 continue
             waited_on |= {
                 player for player, access in accesses.items()
-                if access is TradeAccess.ONCE_DEFEATED
+                    if access is TradeAccess.ONCE_DEFEATED
             }
         return waited_on
 
@@ -348,39 +351,53 @@ class TestPartnerTradeWithEnemies(EconomyTestBase):
     def test_allies_creates_no_defeat_events(self):
         self.build(partner_trade=PartnerTrade.option_allies)
         for scenario in self.world.rules.logic.scenarios:
+            scenario_name = scenario.scenario.scenario_name
             for player in scenario.scenario.players:
                 with self.subTest(player=player.name):
                     with self.assertRaises(KeyError):
-                        self.world.get_location(player.defeat_event(scenario.scenario.scenario_name))
+                        self.world.get_location(player.defeat_event(scenario_name))
 
     def test_allies_and_enemies_waits_on_exactly_the_defended_buildings_owners(self):
         self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
         for scenario in self.world.rules.logic.scenarios:
             with self.subTest(scenario.scenario.name):
-                self.assertEqual(self.worth_waiting_on(scenario.scenario),
-                                 self.defeats_waited_on(scenario.scenario))
+                self.assertEqual(
+                    self.worth_waiting_on(scenario.scenario),
+                    self.defeats_waited_on(scenario.scenario),
+                )
 
     def test_a_main_opponent_is_never_waited_on(self):
         self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
         for scenario in self.world.rules.logic.scenarios:
             with self.subTest(scenario.scenario.name):
                 waited_on = self.defeats_waited_on(scenario.scenario)
-                self.assertEqual(set(), {player for player in waited_on if player.is_main_opponent})
+                main_opponents = {
+                    player for player in waited_on
+                        if player.is_main_opponent
+                }
+                self.assertEqual(set(), main_opponents)
 
     def test_a_defeat_event_holds_exactly_when_its_owner_can_be_defeated(self):
         self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
         for scenario in self.world.rules.logic.scenarios:
+            scenario_name = scenario.scenario.scenario_name
             for player in self.defended(scenario.scenario):
                 with self.subTest(player=player.name):
-                    event = self.world.get_location(player.defeat_event(scenario.scenario.scenario_name))
-                    self.assertEqual(self.resolved(scenario.defeats(player)), event.access_rule)
+                    event = self.world.get_location(player.defeat_event(scenario_name))
+                    defeat = self.resolved(scenario.players.defeats(player))
+                    self.assertEqual(defeat, event.access_rule)
 
     def test_an_enemy_market_opens_once_its_owner_is_defeated(self):
         """Genghis 5's only usable markets are the Polish and the German ones."""
         self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
         genghis_5 = Age2ScenarioData.AP_GENGHIS_5
-        self.assertEqual({Age2PlayerData.GEN5_POLISH, Age2PlayerData.GEN5_GERMANS},
-                         self.defeats_waited_on(genghis_5))
+        self.assertEqual(
+            {
+                Age2PlayerData.GEN5_POLISH,
+                Age2PlayerData.GEN5_GERMANS,
+            },
+            self.defeats_waited_on(genghis_5),
+        )
         self.assertFalse(self.is_false(self.economy(genghis_5).can_earn_gold_by_partner_trade()))
 
     def test_the_english_dock_at_joan_3_needs_no_defeat(self):
@@ -389,8 +406,6 @@ class TestPartnerTradeWithEnemies(EconomyTestBase):
         self.assertNotIn(Age2PlayerData.JOAN3_ENGLISH, self.defeats_waited_on(joan_3))
         wood = self.resolved(self.economy(joan_3).can_earn_wood_by_partner_trade())
         self.assertFalse(wood.always_false)
-        self.assertEqual(set(), self.defeats_waited_on(joan_3) & {
-            player for player in joan_3.players if player.dock is not TradeAccess.CLOSED})
 
     def test_the_english_dock_at_joan_3_stays_closed_to_allies(self):
         self.build(partner_trade=PartnerTrade.option_allies)

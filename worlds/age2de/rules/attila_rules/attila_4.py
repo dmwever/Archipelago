@@ -15,7 +15,7 @@ class Attila4Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.defeats
+        defeats = self.scenario_logic.players.defeats
 
         can_ally_burgundy: Rule = (
             self.scenario_logic.has_base() &

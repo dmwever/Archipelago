@@ -18,7 +18,7 @@ class Genghis3Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.defeats
+        defeats = self.scenario_logic.players.defeats
 
         transport: Rule = Has(Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name)
 

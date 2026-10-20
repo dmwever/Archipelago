@@ -12,7 +12,7 @@ class Genghis2Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.defeats
+        defeats = self.scenario_logic.players.defeats
 
         # Kushluk hides behind both camps, so reaching him asks for both.
         can_win_scenario: Rule = (

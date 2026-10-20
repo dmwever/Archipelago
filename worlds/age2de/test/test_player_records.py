@@ -164,7 +164,7 @@ class TestTradingAlly(bases.Age2RuleTestBase):
         self.build()
         for scenario, (ally_market, _, ally_dock, _) in JUDGED_FLAGS.items():
             scenario_logic = self.world.rules.logic.for_scenario(scenario)
-            trading_ally = scenario_logic.has_trading_ally().resolve(self.world)
+            trading_ally = scenario_logic.players.has_trading_ally().resolve(self.world)
             with self.subTest(scenario.name):
                 if ally_market or ally_dock:
                     self.assertTrue(trading_ally.always_true)

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Collection, Mapping
 
 from rule_builder.rules import And, False_, Or, Rule, True_
 
-from ...Options import PartnerTrade
 from ...items.Items import Resource
 from ...locations.Buildings import Age2BuildingData
 from ...locations.connections import ScenarioResources
@@ -13,7 +12,6 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ..custom_logic.ScenarioQuestions import ScenarioHasEasyResource
-from ...locations.Players import Age2PlayerData, Side, TradeAccess
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -284,8 +282,8 @@ class ScenarioResourceLogic:
 
     def can_earn_gold_by_partner_trade(self) -> Rule:
         """Trade carts to a trade partner's market, or trade cogs to its dock."""
-        partner_market = self.can_reach_partner(Age2BuildingData.MARKET)
-        partner_dock = self.can_reach_partner(Age2BuildingData.DOCK)
+        partner_market = self.scenario.players.can_reach_partner(Age2BuildingData.MARKET)
+        partner_dock = self.scenario.players.can_reach_partner(Age2BuildingData.DOCK)
         if isinstance(partner_market, False_) and isinstance(partner_dock, False_):
             return False_()
         resources = self.logic.resources
@@ -309,7 +307,7 @@ class ScenarioResourceLogic:
 
     def can_earn_wood_by_partner_trade(self) -> Rule:
         """Trade cogs to a trade partner's dock: a sea route brings wood home, a cart does not."""
-        partner_dock = self.can_reach_partner(Age2BuildingData.DOCK)
+        partner_dock = self.scenario.players.can_reach_partner(Age2BuildingData.DOCK)
         if isinstance(partner_dock, False_):
             return False_()
         resources = self.logic.resources
@@ -327,29 +325,6 @@ class ScenarioResourceLogic:
                 | self.can_gather_gold()
             )
         )
-
-    def can_reach_partner(self, building: Age2BuildingData) -> Rule:
-        """A trade partner's market or dock, as far as the yaml lets the logic count on one."""
-        partner_trade = self.world.options.partner_trade
-        if partner_trade == PartnerTrade.option_none:
-            return False_()
-        gates = [
-            self._partner_gate(player, building) for player in self.scenario.scenario.players
-            if player.side is Side.ALLY or partner_trade == PartnerTrade.option_allies_and_enemies
-        ]
-        gates = [gate for gate in gates if not isinstance(gate, False_)]
-        if not gates:
-            return False_()
-        return Or(*gates)
-
-    def _partner_gate(self, player: Age2PlayerData, building: Age2BuildingData) -> Rule:
-        """What stands between P1 and this player's market or dock."""
-        access = player.trade_access(building)
-        if access is TradeAccess.OPEN:
-            return True_()
-        if access is TradeAccess.ONCE_DEFEATED:
-            return self.scenario.has_defeated(player)
-        return False_()
 
     # -- aggregates ---------------------------------------------------------------------------
 

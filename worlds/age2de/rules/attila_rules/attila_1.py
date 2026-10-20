@@ -13,7 +13,7 @@ class Attila1Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.defeats
+        defeats = self.scenario_logic.players.defeats
 
         can_win_scenario: Rule = (
             defeats(Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE) &

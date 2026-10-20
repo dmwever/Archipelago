@@ -3,7 +3,7 @@
 from . import bases
 from ..Options import PartnerTrade
 from ..locations.Scenarios import Age2ScenarioData
-from ..locations.Players import Age2PlayerData, Side, TradeAccess
+from ..locations.Players import Age2PlayerData, Side
 from ..locations.connections.ScenarioPlayers import SCENARIO_TO_PLAYERS
 from ..logic.custom_logic.Named import Named
 
@@ -25,17 +25,19 @@ class TestDefeatRules(bases.Age2RuleTestBase):
     def test_asking_twice_returns_the_same_rule(self):
         for scenario_logic, player in self.logic_and_players():
             with self.subTest(player=player):
-                self.assertIs(scenario_logic.defeats(player), scenario_logic.defeats(player))
+                defeats = scenario_logic.players.defeats
+                self.assertIs(defeats(player), defeats(player))
 
     def test_every_player_can_be_defeated(self):
         for scenario_logic, player in self.logic_and_players():
             with self.subTest(player=player):
-                self.assertFalse(scenario_logic.defeats(player).resolve(self.world).always_false)
+                defeat = scenario_logic.players.defeats(player).resolve(self.world)
+                self.assertFalse(defeat.always_false)
 
     def test_the_rule_reads_as_defeat(self):
         for scenario_logic, player in self.logic_and_players():
             with self.subTest(player=player):
-                rule = scenario_logic.defeats(player)
+                rule = scenario_logic.players.defeats(player)
                 self.assertIsInstance(rule, Named)
                 self.assertTrue(rule.label.endswith(f"can defeat {player.player_name}"), rule.label)
 
@@ -53,8 +55,8 @@ class TestDefeatRules(bases.Age2RuleTestBase):
     def test_the_two_cities_share_one_rule(self):
         """Philippopolis and Marcianopolis are interchangeable: one rule, each under its own name."""
         scenario_logic = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
-        philippopolis = scenario_logic.defeats(Age2PlayerData.ATT3_PHILIPPOPOLIS)
-        marcianopolis = scenario_logic.defeats(Age2PlayerData.ATT3_MARCIANOPOLIS)
+        philippopolis = scenario_logic.players.defeats(Age2PlayerData.ATT3_PHILIPPOPOLIS)
+        marcianopolis = scenario_logic.players.defeats(Age2PlayerData.ATT3_MARCIANOPOLIS)
         self.assertIs(philippopolis.child, marcianopolis.child)
         self.assertNotEqual(philippopolis.label, marcianopolis.label)
 
@@ -64,7 +66,7 @@ class TestDefeatRules(bases.Age2RuleTestBase):
             scenario_logic = self.world.rules.logic.for_scenario(scenario)
             rules = scenario_logic.starting_state.defeat_rules(scenario_logic)
             for player in players:
-                if TradeAccess.ONCE_DEFEATED in (player.market, player.dock):
+                if player.trades_once_defeated:
                     with self.subTest(player=player):
                         self.assertIn(player, rules)
 
@@ -76,19 +78,20 @@ class TestDefeatRules(bases.Age2RuleTestBase):
         ):
             with self.subTest(player=player):
                 scenario_logic = self.world.rules.logic.for_scenario(scenario)
-                self.assertTrue(scenario_logic.defeats(player).resolve(self.world).always_true)
+                defeat = scenario_logic.players.defeats(player).resolve(self.world)
+                self.assertTrue(defeat.always_true)
 
     def test_the_polish_take_a_castle_age_army(self):
         scenario_logic = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_GENGHIS_5)
-        polish = scenario_logic.defeats(Age2PlayerData.GEN5_POLISH).resolve(self.world)
+        polish = scenario_logic.players.defeats(Age2PlayerData.GEN5_POLISH).resolve(self.world)
         self.assertFalse(polish.always_true)
         self.assertFalse(polish.always_false)
 
     def test_the_roman_army_falls_with_orleans(self):
         """The Western Roman Empire's army stands with Orléans: one rule, each under its own name."""
         scenario_logic = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_4)
-        orleans = scenario_logic.defeats(Age2PlayerData.ATT4_ORLEANS)
-        romans = scenario_logic.defeats(Age2PlayerData.ATT4_WESTERN_ROMAN_EMPIRE)
+        orleans = scenario_logic.players.defeats(Age2PlayerData.ATT4_ORLEANS)
+        romans = scenario_logic.players.defeats(Age2PlayerData.ATT4_WESTERN_ROMAN_EMPIRE)
         self.assertIs(orleans.child, romans.child)
         self.assertNotEqual(orleans.label, romans.label)
 
@@ -105,7 +108,7 @@ class TestDefeatAndTradeTerminate(bases.Age2RuleTestBase):
             scenario_logic = self.world.rules.logic.for_scenario(scenario)
             with self.subTest(scenario.name):
                 for player in scenario_logic.starting_state.defeat_rules(scenario_logic):
-                    scenario_logic.defeats(player).resolve(self.world)
+                    scenario_logic.players.defeats(player).resolve(self.world)
                 scenario_logic.economy.can_earn_gold_by_partner_trade().resolve(self.world)
                 scenario_logic.economy.can_earn_wood_by_partner_trade().resolve(self.world)
         self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)

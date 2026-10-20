@@ -18,10 +18,10 @@ class Joan6Rules(ScenarioRules):
                 Age2ItemData.AP_JOAN_6_ARMY.item_name,
                 Age2ItemData.AP_JOAN_6_ARTILLERY.item_name
             ) |
-            self.scenario_logic.defeats(Age2PlayerData.JOAN6_BURGUNDY)
+            self.scenario_logic.players.defeats(Age2PlayerData.JOAN6_BURGUNDY)
         )
         can_siege_town = self.scenario_logic.named("can besiege the town", can_siege_town)
-        can_defeat_english: Rule = self.scenario_logic.defeats(Age2PlayerData.JOAN6_ENGLISH)
+        can_defeat_english: Rule = self.scenario_logic.players.defeats(Age2PlayerData.JOAN6_ENGLISH)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN6_BURGUNDIAN_TOWN], can_siege_town)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN6_VICTORY], can_siege_town & can_defeat_english)

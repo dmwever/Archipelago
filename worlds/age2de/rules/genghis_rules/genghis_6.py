@@ -13,6 +13,6 @@ class Genghis6Rules(ScenarioRules):
     def set_rules(self):
         super().set_rules()
 
-        can_win_scenario: Rule = self.scenario_logic.defeats(Age2PlayerData.GEN6_HUNGARY)
+        can_win_scenario: Rule = self.scenario_logic.players.defeats(Age2PlayerData.GEN6_HUNGARY)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN6_VICTORY], can_win_scenario)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.GEN6_VICTORY.scenario.scenario_name), can_win_scenario)
