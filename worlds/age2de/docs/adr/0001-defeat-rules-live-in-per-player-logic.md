@@ -10,8 +10,9 @@ existed only as local variables inside each scenario's rules, named `can_beat_*`
 of `Age2PlayerData`, with its data hard-coded inline (slot, readable name, a fixed ally or enemy side,
 main-opponent flag, and a trade access for its market and its dock: closed, open, or open once
 defeated), routed to its scenario by `connections/ScenarioPlayers`. Each scenario's starting state
-builds one defeat rule per opponent, keyed by those members, and scenario logic serves them through a
-cached `defeats(player)` that both the victory rules and the trade logic read.
+builds one defeat rule per opponent, keyed by those members, and the scenario's player logic
+(`ScenarioPlayerLogic`, `scenario_logic.players`) serves them through a cached `defeats(player)`
+that both the victory rules and the trade logic read.
 
 ## Considered Options
 

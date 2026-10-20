@@ -30,7 +30,7 @@ Defeat, Main opponent. Scan data and AI scripts: `../research/`.
   `set_rules`. Chosen on review: at `allies_and_enemies` each player with a `ONCE_DEFEATED`
   building gets a hidden event location `"<scenario>: Can Defeat <player>"` (rule `defeats(player)`,
   set in `ScenarioRules.set_defeat_event_rules`), and the trade gate is
-  `ScenarioLogic.has_defeated(player)`. "Can Defeat" because "Defeat Metz" and others are real
+  `ScenarioPlayerLogic.has_defeated(player)`. "Can Defeat" because "Defeat Metz" and others are real
   locations. No events at `none` or `allies`, so the default region graph is unchanged. ADR 0001's
   consequence rewritten to match.
 - `can_reach_partner` is an OR of one gate per partner (`OPEN` -> true, `ONCE_DEFEATED` -> event,
@@ -41,3 +41,7 @@ Defeat, Main opponent. Scan data and AI scripts: `../research/`.
   Polish as specified.
 - No typecheck run: mypy is not installed in this environment.
 - Ageipelago: `partner-trade.md` describes the gate, the defeat events and the new tests.
+- On review: player-specific logic moved to `logic/scenarios/ScenarioPlayerLogic.py`, reached as
+  `scenario_logic.players`: `defeats` (and its cache), `has_defeated`, `has_trading_ally`,
+  `can_reach_partner` and `_partner_gate`. Rules and tests call `scenario_logic.players.defeats`.
+  House-style fixes in the new tests (comprehension indent, exploded wrapping, line length).
