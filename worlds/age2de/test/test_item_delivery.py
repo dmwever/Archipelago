@@ -515,7 +515,7 @@ class TestNamingACopyToSpend(TestItemDelivery):
         self.assertEqual(-1, self.ctx.unspent_index(self.MERCENARY))
 
     def test_recording_a_position_twice_reports_no_change(self) -> None:
-        """on_mercenary_used fires off the return, so a repeated ack must not announce a spend."""
+        """on_item_spent fires off the return, so a repeated ack must not announce a spend."""
         self.unlock(self.MERCENARY)
 
         self.assertTrue(self.ctx.mark_items_spent({0}))

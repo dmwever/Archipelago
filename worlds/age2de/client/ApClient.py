@@ -245,8 +245,7 @@ class Age2Context(CommonContext):
             if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
             self.game_ctx.client_status.unlocked_items.append(item_data)
-        self.game_ctx.item_handler.set_current_item_index(
-            self.game_ctx.client_status.unlocked_items)
+        self.game_ctx.update_current_item_index()
         if args.get("index", -1) == 0:
             self.items_loaded = True
         self._try_reconcile_spent()
@@ -288,10 +287,6 @@ class Age2Context(CommonContext):
                 ]
             }
         ]))
-
-    def on_mercenary_used(self, mercenary: Items.Age2ItemData) -> None:
-        """The record was written where the spend happened; this only tells the server."""
-        self._push_spent(self.game_ctx.client_status.spent_mask)
 
     def on_item_spent(self, spent: int) -> None:
         self._push_spent(spent)

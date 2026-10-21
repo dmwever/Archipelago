@@ -28,7 +28,7 @@ from .. import Age2World
 from ..generation import Identity, SlotData, WorldVersion
 from ..campaign import XsdatFile
 from ..items import Items
-from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
+from ..items.Items import Age2ItemData, ScenarioItem
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Techs import Age2TechData
 
@@ -56,10 +56,6 @@ class APClientInterface(Protocol):
         """Called when a new location is received"""
         pass
 
-    def on_mercenary_used(self, mercenary: Age2ItemData):
-        """Called when the game has finished spawning a mercenary, so it is spent for good"""
-        pass
-
     def on_item_spent(self, spent: int):
         """Called when the spent record has moved past what the server has been told"""
         pass
@@ -79,9 +75,6 @@ class DefaultClientInterface:
     def fetch_locations_collected(self, location_status: dict[int, int], new_mission_id: int) -> None:
         for k in location_status:
             location_status[k] = 0
-
-    def on_mercenary_used(self, mercenary: Age2ItemData) -> None:
-        pass
 
     def on_item_spent(self, spent: int) -> None:
         pass
@@ -300,10 +293,18 @@ class Age2GameContext:
         self.client_status.spent_mask = 0
         return True
 
+    def update_current_item_index(self) -> None:
+        self.item_handler.set_current_item_index(self.client_status.unlocked_items)
+
     def spent_items(self) -> set[int]:
         mask = self.client_status.spent_mask
         return {index for index in range(len(self.client_status.unlocked_items))
                 if (mask >> index) & 1}
+
+    def spent_mercenaries(self) -> list[Age2ItemData]:
+        unlocked = self.client_status.unlocked_items
+        return [unlocked[index] for index in self.spent_items()
+                if unlocked[index] in Items.SPENT_ON_USE_ITEMS]
 
     def unspent_index(self, item: Age2ItemData) -> int:
 
@@ -551,7 +552,7 @@ async def status_tick(ctx: Age2GameContext) -> None:
     if ctx.client_status.record_known:
         unlocked = ctx.client_status.unlocked_items
         spent = ctx.spent_items()
-        ctx.mercenary_handler.try_sync_mercenaries(unlocked, [unlocked[index] for index in spent])
+        ctx.mercenary_handler.try_sync_mercenaries(unlocked, ctx.spent_mercenaries())
         delivered = ctx.item_handler.try_sync_items(
             unlocked, packet.applied_item_count, spent)
         if ctx.mark_items_spent(delivered):
@@ -571,11 +572,11 @@ async def status_tick(ctx: Age2GameContext) -> None:
             logger.warning("The scenario acked mercenary id %s, which this apworld does not "
                            "know. Reinstall the Ageipelago files for this slot.",
                            packet.completed_mercenary_id)
-        elif mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary]:
+        elif mercenary_item in Items.SPENT_ON_USE_ITEMS:
             index = ctx.unspent_index(mercenary_item)
             if index != -1 and ctx.mark_items_spent({index}):
                 ctx.mercenary_handler.use_mercenary(mercenary_item)
-                ctx.client_interface.on_mercenary_used(mercenary_item)
+                ctx.client_interface.on_item_spent(ctx.client_status.spent_mask)
     
     ctx.ping_game()
     if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
