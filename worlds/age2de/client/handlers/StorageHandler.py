@@ -68,10 +68,10 @@ class StorageHandler(FolderHandler):
                              self.state_path())
             self._spent = None
 
-    def _read(self) -> int:
+    def _read(self) -> int | None:
         state = json.loads(self.state_path().read_text(encoding="utf-8"))
         spent = state["spent"]
-        return int(spent)
+        return None if spent is None else int(spent)
 
     def _flush(self) -> None:
         try:
