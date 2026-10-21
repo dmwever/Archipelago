@@ -61,10 +61,13 @@ class TestMercenaryLogicFlag(unittest.TestCase):
 
 
 class TestPackedBitfields(unittest.TestCase):
-    """A spent mercenary must never be offered again, across reconnect and save/load, so the used
-    set lives in DataStorage as a bitfield. The bit is an index into the seed's roster rather than a
-    number declared on the item, so a Joan-only seed packs into bits 0-n instead of leaving every
-    Attila bit permanently zero.
+    """Scenario completion lives in DataStorage as a bitfield. The bit is an index into the seed's
+    roster rather than a number declared on the scenario, so a Joan-only seed packs into bits 0-n
+    instead of leaving every Attila bit permanently zero.
+
+    Spent mercenaries used to be packed the same way. They are now one bit in the spent mask, at
+    the stream index the mercenary arrived at, alongside traps and filler resources -- see
+    test_storage_handler.
     """
 
     def views(self, campaigns: list[Age2CampaignData] = None) -> list[tuple]:
@@ -74,8 +77,6 @@ class TestPackedBitfields(unittest.TestCase):
         views = []
         for shape in shapes:
             storage = DataStorage(shape)
-            views.append((storage.mercenaries, storage.used_mercenaries,
-                          storage.mercenary_field, storage.mercenary_bit))
             views.append((storage.scenarios, storage.completed_scenarios,
                           storage.scenario_field, storage.scenario_bit))
         return views
@@ -116,10 +117,6 @@ class TestPackedBitfields(unittest.TestCase):
         check membership first; it cannot be caught after the shift."""
         joan_only = DataStorage([Age2CampaignData.JOAN])
         attila = DataStorage([Age2CampaignData.ATTILA])
-        for item in attila.mercenaries:
-            with self.assertRaises(ValueError,
-                                   msg=f"{item.item_name} is not in a Joan-only seed"):
-                joan_only.mercenary_bit(item)
         for scenario in attila.scenarios:
             with self.assertRaises(ValueError,
                                    msg=f"{scenario.scenario_name} is not in a Joan-only seed"):
@@ -127,21 +124,11 @@ class TestPackedBitfields(unittest.TestCase):
 
 
 class TestRosterStability(unittest.TestCase):
-    """The rosters are sorted by id, so a stored bitfield only keeps its meaning while ids do.
-    Mercenary ids must be append-only. Scenario ids are computed as campaign.value * 100 + chapter,
+    """The roster is sorted by id, so a stored bitfield only keeps its meaning while ids do.
+    Scenario ids are computed as campaign.value * 100 + chapter,
     so campaign values must be append-only and a shipped campaign's chapter count must never change:
     inserting a chapter shifts every later campaign's index and silently re-points stored bits.
     """
-
-    def test_a_higher_id_mercenary_appends_and_shifts_nothing(self) -> None:
-        storage = DataStorage(list(Age2CampaignData))
-        roster = storage.mercenaries
-        highest = max(item.id for item in roster)
-        for index, item in enumerate(roster):
-            self.assertLess(item.id, highest + 1)
-            self.assertEqual(index, storage.mercenary_bit(item))
-        self.assertEqual(sorted(roster, key=lambda item: item.id), roster,
-                         "the roster is not in id order, so append-only ids would not protect it")
 
     def test_scenario_ids_stay_campaign_major(self) -> None:
         roster = DataStorage(list(Age2CampaignData)).scenarios

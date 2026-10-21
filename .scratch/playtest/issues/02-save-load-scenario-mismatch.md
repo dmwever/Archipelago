@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-19, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -10,7 +10,7 @@ Switching from one scenario to another by loading a save gives a scenario mismat
 
 ## Resolution
 
-Folded into the delivery-cursor change, scoped 2026-10-20. Spec:
+Fixed and verified in game 2026-10-20 by slice 01 of the delivery-cursor change. Spec:
 `worlds/age2de/docs/spec-item-delivery-cursor.md`; fixed by slice 01. Three parts, all in that ticket's spec:
 
 - `AP_Read` validates identity (world version, slot id, seed halves) *before* the scenario id,

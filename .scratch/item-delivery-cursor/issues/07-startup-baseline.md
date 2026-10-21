@@ -1,4 +1,4 @@
-# 05: `startupBaseline`, so starting resources land once
+# 07: `startupBaseline`, so starting resources land once
 
 **What to build:** `StartingResources` and `TCResources` are paid out by `startup.xsdat` at every
 `ConnectAP` *and* streamed through the item window, so receiving one in the menu and then starting a
@@ -10,7 +10,7 @@ Give `startup.xsdat` a leading `startupBase` int (the stream length when the cli
 
 Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (`startupBaseline`, so starting resources still land mid-playthrough).
 
-**Blocked by:** 03
+**Blocked by:** 06 (so it is written inside `ItemHandler`, not moved afterwards)
 
 **Status:** ready-for-agent
 

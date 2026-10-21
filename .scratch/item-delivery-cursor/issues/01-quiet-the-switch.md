@@ -13,7 +13,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (02: quiet the switch, a
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `AP_Read` validates version, slot and seed before acting on the scenario id, still through
       `ReportMismatch`, still disabling `ReadAP`
@@ -26,7 +26,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (02: quiet the switch, a
 - [x] `test_scenario_switch.py` covers first-scan, moving, static, backwards, inactive, truncated,
       already-followed, locked, switch-with-deactivation, and stale-recorded-ping
 - [x] `xs-check` reports nothing new for `AP.xs`
-- [ ] In game: save in Genghis 1, load Attila 1 — no red text, one yellow line, pickup inside ~1 s
-- [ ] In game: pause for 10 s — no spurious disconnect message
-- [ ] In game: drop a scenario from another slot into the profile folder — the slot/seed mismatch
+- [x] In game: save in Genghis 1, load Attila 1 — no red text, one yellow line, pickup inside ~1 s
+- [x] In game: pause for 10 s — no spurious disconnect message
+- [x] In game: drop a scenario from another slot into the profile folder — the slot/seed mismatch
       still reports and still disables `ReadAP`

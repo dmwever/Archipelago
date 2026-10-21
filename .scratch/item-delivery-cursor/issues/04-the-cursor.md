@@ -1,4 +1,4 @@
-# 03: Move the delivery cursor into the game
+# 04: Move the delivery cursor into the game
 
 **What to build:** The cursor lives in client memory, so it survives neither a save nor a reconnect.
 Move it into XS state as `appliedItemCount` — a plain `int` global, confirmed in game to survive a
@@ -13,7 +13,7 @@ than reading the base as a resource item id.
 Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (The mechanism, Window base). Fixes
 `.scratch/playtest/issues/06-reload-misses-scenario-items.md`.
 
-**Blocked by:** 02
+**Blocked by:** 03
 
 **Status:** ready-for-agent
 

@@ -14,17 +14,19 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Persistence, Skipping w
 
 **Blocked by:** None (independent of 01)
 
-**Status:** ready-for-agent
+**Status:** ready-for-agent (storage shape superseded by 03)
 
-- [ ] `StorageHandler` writes one `APData/state_<tag>_<player>.json` holding both the spent
+- [x] `StorageHandler` writes one `APData/state_<tag>_<player>.json` holding both the spent
       mercenary records and the mark
-- [ ] Any `APData/mercenaries_<tag>_<player>.json` found is deleted, not migrated; spent mercenaries
-      come back from the server through `reconcile_spent(None, server)`
-- [ ] `{team}_{slot}_items_spent` is set with `{"operation": "max"}`, `set_notify`'d, and read
+- [~] Superseded by 03: there is no legacy handling at all. An old file is simply not read,
+      and an unreadable record defers to the server, which needs no migration code
+- [x] `{team}_{slot}_items_spent` is set with `{"operation": "max"}`, `set_notify`'d, and read
       back in `_handle_set_reply`
-- [ ] The mark advances to `max(spent, acked_items)` on every pass that moves the cursor
-- [ ] `send_items` writes nothing at all until the mark's reply has landed
-- [ ] Filler `Resources` and `Trap` entries below the mark go out as `ITEM_SKIP`; flag items do not
-- [ ] Tests: sentinel substitution, the `storage_ready` gate, the new file shape, the old file's
+- [x] The mark advances to `max(spent, acked_items)` on every pass that moves the cursor
+- [x] `send_items` writes nothing at all until the mark's reply has landed
+- [x] Filler `Resources` and `Trap` entries below the mark go out as `ITEM_SKIP`; flag items do not
+- [x] Tests: sentinel substitution, the `storage_ready` gate, the new file shape, the old file's
       removal
+- [x] `mercenaries: null` keeps "no local record" distinguishable from "nothing is spent",
+      now that the file exists for the mark's sake
 - [ ] In game: receive a trap, disconnect and reconnect mid-scenario — no trap re-fires

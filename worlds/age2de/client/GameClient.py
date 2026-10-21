@@ -60,6 +60,10 @@ class APClientInterface(Protocol):
         """Called when the game has finished spawning a mercenary, so it is spent for good"""
         pass
 
+    def on_item_spent(self, spent: int):
+        """Called when the spent record has moved past what the server has been told"""
+        pass
+
 
 class DefaultClientInterface:
     def on_scenario_completion(self, scenario_id: Age2ScenarioData) -> None:
@@ -77,6 +81,9 @@ class DefaultClientInterface:
             location_status[k] = 0
 
     def on_mercenary_used(self, mercenary: Age2ItemData) -> None:
+        pass
+
+    def on_item_spent(self, spent: int) -> None:
         pass
 
 
@@ -145,6 +152,8 @@ class ClientStatus:
     slot_data: dict = None
     player_name: str = ''
     in_flight: list[int] = field(default_factory=list[int])
+    spent_mask: int = 0
+    storage_ready: bool = False
 
 class Age2GameContext:
     running: bool = False
@@ -177,7 +186,7 @@ class Age2GameContext:
         self.unit_handler = UnitHandler()
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
-        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
+        self.storage_handler = StorageHandler()
 
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
                 player_name: str):
@@ -187,6 +196,7 @@ class Age2GameContext:
         self.client_status.player_name = player_name
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
+        self.client_status.spent_mask = self.storage_handler.spent_mask()
         self.campaign_handler.setup_victory_requirements(slot_data)
         self.try_startup_game_connection()
         self.message_handler.add_message("Client Connected!")
@@ -221,7 +231,7 @@ class Age2GameContext:
         self.unit_handler = UnitHandler()
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
-        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
+        self.storage_handler = StorageHandler()
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -295,7 +305,56 @@ class Age2GameContext:
             self.client_status.acked_items += confirmed
             del self.client_status.in_flight[:confirmed]
 
+    def id_for_game(self, index: int, item: Age2ItemData) -> int:
+        if (self.client_status.spent_mask >> index) & 1:
+            return Items.SKIP_ITEM_ID
+        return item.id
+
+    def mark_delivered_spent(self) -> None:
+        mask = self.client_status.spent_mask
+        for index in range(self.client_status.acked_items):
+            if self.client_status.unlocked_items[index] in Items.ONE_SHOT_ITEMS:
+                mask |= 1 << index
+        if mask == self.client_status.spent_mask:
+            return
+        self.client_status.spent_mask = mask
+        self.storage_handler.try_save(mask)
+        self.client_interface.on_item_spent(mask)
+
+    def spent_items(self) -> list[Age2ItemData]:
+        return [item for index, item in enumerate(self.client_status.unlocked_items)
+                if (self.client_status.spent_mask >> index) & 1]
+
+    def mark_item_spent(self, item: Age2ItemData) -> bool:
+        try:
+            index = self.client_status.unlocked_items.index(item)
+        except ValueError:
+            return False
+        bit = 1 << index
+        if self.client_status.spent_mask & bit:
+            return False
+        self.client_status.spent_mask |= bit
+        self.storage_handler.try_save(self.client_status.spent_mask)
+        return True
+
+    def clear_spent_state(self) -> bool:
+        if not self.storage_handler.try_clear():
+            return False
+        self.mercenary_handler.reset_used()
+        self.client_status.spent_mask = 0
+        return True
+
+    def reconcile_spent(self, server: int) -> int:
+        local = self.storage_handler.try_load()
+        spent = server if local is None else local
+        self.client_status.spent_mask = spent
+        self.storage_handler.try_save(spent)
+        self.client_status.storage_ready = True
+        return spent
+
     def send_items(self) -> None:
+        if not self.client_status.storage_ready:
+            return
         if any(item != -1 for item in self.current_packet.item_ids):
             return
         num_items = len(self.client_status.unlocked_items) - self.client_status.acked_items
@@ -304,8 +363,10 @@ class Age2GameContext:
         if num_items <= 0:
             self.client_status.in_flight = []
             return
-        window = self.client_status.unlocked_items[self.client_status.acked_items:self.client_status.acked_items+num_items]
-        item_ids = [item.id for item in window]
+        start = self.client_status.acked_items
+        window = self.client_status.unlocked_items[start:start + num_items]
+        item_ids = [self.id_for_game(start + offset, item)
+                    for offset, item in enumerate(window)]
         if item_ids == self.client_status.in_flight:
             return
         try:
@@ -452,7 +513,8 @@ async def status_loop(ctx: Age2GameContext):
         ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
         ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
-        ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items)
+        ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items,
+                                                   ctx.spent_items())
         ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
         ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
@@ -550,6 +612,7 @@ async def status_loop(ctx: Age2GameContext):
         
         if (any(x != -1 for x in ctx.current_packet.item_ids)):
             ctx.ack_items()
+            ctx.mark_delivered_spent()
         
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             ctx.send_items()
@@ -563,9 +626,10 @@ async def status_loop(ctx: Age2GameContext):
 
         if packet.completed_mercenary_id != -1:
             mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
-            if mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary] and not ctx.mercenary_handler.is_used(mercenary_item):
+            if (mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary]
+                    and ctx.mark_item_spent(mercenary_item)):
                 ctx.mercenary_handler.use_mercenary(mercenary_item)
-                ctx.client_interface.on_mercenary_used(Items.ID_TO_ITEM[packet.completed_mercenary_id])
+                ctx.client_interface.on_mercenary_used(mercenary_item)
         
         ctx.free_items()
         ctx.ping_game()

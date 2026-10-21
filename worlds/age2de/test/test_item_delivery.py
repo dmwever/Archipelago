@@ -21,6 +21,7 @@ from ..client.GameClient import (
     Age2GameContext,
     DefaultClientInterface,
 )
+from ..items import Items
 from ..items.Items import Age2ItemData
 
 ITEM_WINDOW = 12
@@ -72,7 +73,11 @@ class TestItemDelivery(unittest.TestCase):
         os.makedirs(self._tmp.name + AGE2_USER_PROFILE, exist_ok=True)
 
         self.ctx = Age2GameContext(DefaultClientInterface())
-        self.ctx.client_status.user_folder = self._tmp.name
+        # Goes through the real setter so the storage handler writes into the temp folder
+        # too; mark_delivered_spent persists the record on every tick.
+        self.ctx.update_game_user_folder(self._tmp.name)
+        # These exercise the window, not the gate on it. TestOneShotSkipping covers that.
+        self.ctx.client_status.storage_ready = True
         self.folder = self.ctx.profile_folder()
         self.game = FakeGame()
 
@@ -88,6 +93,7 @@ class TestItemDelivery(unittest.TestCase):
         """The item phase of status_loop, in the same order."""
         if any(x != -1 for x in self.ctx.current_packet.item_ids):
             self.ctx.ack_items()
+            self.ctx.mark_delivered_spent()
         if self.ctx.client_status.acked_items < len(self.ctx.client_status.unlocked_items):
             self.ctx.send_items()
         self.ctx.free_items()
@@ -256,6 +262,158 @@ class TestItemDelivery(unittest.TestCase):
             [999, 998],
             "stale slots were never released, so no new window can be sent",
         )
+
+
+class TestOneShotSkipping(TestItemDelivery):
+    """Filler resources and traps add rather than set, so a replayed stream must not re-send them.
+
+    The window is positional, so they are replaced in place by SKIP_ITEM_ID, not dropped.
+    """
+
+    FILLER = Age2ItemData.FILLER_WOOD_SMALL
+    TRAP = Age2ItemData.TRAP_WOLOLO
+    FLAG = Age2ItemData.FISH_TRAP
+
+    def test_nothing_is_sent_before_the_stored_mark_has_come_back(self) -> None:
+        self.ctx.client_status.storage_ready = False
+        self.unlock(self.TRAP)
+
+        self.ctx.send_items()
+
+        self.assertEqual([], self.sent_items(),
+                         "sending before the mark lands is exactly the reconnect trap bug")
+        self.assertEqual([], self.ctx.client_status.in_flight)
+
+    def test_a_rewound_cursor_skips_the_one_shots_it_already_paid(self) -> None:
+        self.unlock(self.FILLER, self.FLAG, self.TRAP, self.FLAG, self.FILLER, self.TRAP, self.FLAG)
+        # The reconnect case: the record survived, the cursor did not. Only the filler at 0
+        # and 4 and the trap at 2 can carry a bit; flags are replayable and never spend.
+        self.ctx.client_status.spent_mask = (1 << 0) | (1 << 2) | (1 << 4)
+        self.ctx.client_status.acked_items = 0
+
+        self.ctx.send_items()
+
+        self.assertEqual(
+            [Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID,
+             self.TRAP.id, self.FLAG.id],
+            self.sent_items(),
+            "one-shots below the mark skip, flags resend, and anything above the mark is real")
+
+    def test_skipping_does_not_shorten_the_window(self) -> None:
+        """The game counts entries, so a dropped one would shift every index after it."""
+        items = [self.TRAP] * 7
+        self.unlock(*items)
+        self.ctx.client_status.spent_mask = 0b1111111
+        self.ctx.client_status.acked_items = 0
+
+        self.ctx.send_items()
+
+        self.assertEqual([Items.SKIP_ITEM_ID] * 7, self.sent_items())
+
+    def test_forward_delivery_never_skips_anything(self) -> None:
+        """The mark only ever reaches the cursor, so a window is always entirely unpaid."""
+        items = [self.FILLER, self.TRAP, self.FLAG] * 5
+        self.unlock(*items)
+
+        for _ in range(30):
+            self.full_tick()
+            if self.ctx.client_status.acked_items >= len(items):
+                break
+
+        self.assertEqual([item.id for item in items], self.game.granted,
+                         "a first delivery was skipped as though it had already been paid")
+        spent = self.ctx.client_status.spent_mask
+        for index, item in enumerate(items):
+            one_shot = item in Items.ONE_SHOT_ITEMS
+            self.assertEqual(one_shot, bool((spent >> index) & 1),
+                             f"index {index} ({item.item_name}) should "
+                             f"{'be' if one_shot else 'not be'} spent")
+
+    def test_the_mark_follows_the_cursor_and_is_reported_once_per_move(self) -> None:
+        reported: list[int] = []
+        self.ctx.client_interface.on_item_spent = reported.append
+        self.unlock(*[self.FLAG] * 20)
+
+        for _ in range(30):
+            self.full_tick()
+            if self.ctx.client_status.acked_items >= 20:
+                break
+
+        self.assertEqual(0, self.ctx.client_status.spent_mask,
+                         "flag items are replayable, so none of them is ever spent")
+        self.assertEqual([], reported, "nothing was spent, so nothing to report")
+
+
+class TestDecodingTheSpentRecord(TestItemDelivery):
+    """spent_items turns the record back into entries, and is the only place indices are read.
+
+    Everything downstream -- the mercenary handler in particular -- is handed items, not bits.
+    """
+
+    def test_bits_name_the_entries_they_sit_over(self) -> None:
+        items = [Age2ItemData.FILLER_WOOD_SMALL, Age2ItemData.FISH_TRAP,
+                 Age2ItemData.TRAP_WOLOLO]
+        self.unlock(*items)
+        self.ctx.client_status.spent_mask = (1 << 0) | (1 << 2)
+
+        self.assertEqual([Age2ItemData.FILLER_WOOD_SMALL, Age2ItemData.TRAP_WOLOLO],
+                         self.ctx.spent_items())
+
+    def test_an_empty_record_names_nothing(self) -> None:
+        self.unlock(Age2ItemData.TRAP_WOLOLO)
+        self.assertEqual([], self.ctx.spent_items())
+
+    def test_a_bit_past_the_received_stream_names_nothing(self) -> None:
+        """A record outlives the apsave, so it can carry bits for a stream that is not back yet."""
+        self.unlock(Age2ItemData.TRAP_WOLOLO)
+        self.ctx.client_status.spent_mask = 1 << 40
+
+        self.assertEqual([], self.ctx.spent_items(),
+                         "a bit beyond what has been received cannot name an entry")
+
+    def test_duplicates_are_named_once_each(self) -> None:
+        """Filler repeats, so the same id can sit at several indices and spend independently."""
+        wood = Age2ItemData.FILLER_WOOD_SMALL
+        self.unlock(wood, wood, wood)
+        self.ctx.client_status.spent_mask = (1 << 0) | (1 << 2)
+
+        self.assertEqual([wood, wood], self.ctx.spent_items())
+
+
+class TestReconcilingTheSpentRecord(TestItemDelivery):
+    """The local record is authoritative for *spent*, the server for *unlocked*.
+
+    A spend the server never stored must not be handed back, so a local record overrules it even
+    when it knows less. A union would make "the server is behind" indistinguishable from "the
+    server is ahead", and would mean nothing could ever be un-spent.
+    """
+
+    def saved(self, spent: int) -> None:
+        self.ctx.storage_handler.try_save(spent)
+
+    def test_no_local_record_adopts_the_server(self) -> None:
+        self.assertEqual(0b101, self.ctx.reconcile_spent(0b101))
+        self.assertEqual(0b101, self.ctx.client_status.spent_mask)
+
+    def test_the_local_record_wins_over_a_server_that_is_behind(self) -> None:
+        self.saved(0b101)
+        self.assertEqual(0b101, self.ctx.reconcile_spent(0b001),
+                         "a spend the server never stored must not be handed back")
+
+    def test_the_local_record_wins_even_when_it_knows_less(self) -> None:
+        self.saved(0b001)
+        self.assertEqual(0b001, self.ctx.reconcile_spent(0b101))
+
+    def test_an_empty_record_is_not_a_missing_record(self) -> None:
+        """Both are falsy, and confusing them would silently restore every spend."""
+        self.saved(0)
+        self.assertEqual(0, self.ctx.reconcile_spent(0b101),
+                         "a playthrough that has spent nothing still wins")
+
+    def test_reconciling_opens_the_gate_on_sending(self) -> None:
+        self.ctx.client_status.storage_ready = False
+        self.ctx.reconcile_spent(0)
+        self.assertTrue(self.ctx.client_status.storage_ready)
 
 
 if __name__ == "__main__":

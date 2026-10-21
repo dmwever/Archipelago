@@ -197,9 +197,12 @@ otherwise replay.
 |---|---|---|---|---|
 | 01 | Quiet the switch, check identity harder | playtest 02 | XS + client | — |
 | 02 | Persist the one-shot mark | playtest 08 | client only | — |
-| 03 | The cursor | playtest 06 | both | 27 → 26 |
-| 04 | Retire the echo ring | — | both | — |
-| 05 | `startupBaseline` | the double-grant | both | 26 → 25 |
+| 03 | One spent record, as a bitmask | — | client only | — |
+| 04 | The cursor | playtest 06 | both | 27 → 26 |
+| 05 | Retire the echo ring | — | both | — |
+| 06 | Move item delivery into `ItemHandler` | — | client only | — |
+| 07 | `startupBaseline` | the double-grant | both | 26 → 25 |
 
-Version stays 0.3.0 throughout; slices 03 and 05 move the packet, so each needs a `/install`
-and a fresh scenario start.
+Version stays 0.3.0 throughout; slices 04 and 07 move the packet, so each needs a `/install`
+and a fresh scenario start. Slice 06 is a pure refactor, placed after 05 so it moves only the
+code that survives, and before 07 so the last functional change is written in its final home.

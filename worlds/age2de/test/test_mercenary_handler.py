@@ -46,28 +46,29 @@ class MercenaryHandlerTestBase(unittest.TestCase):
 
 
 class TestSpentStateAgainstWhatWasReceived(MercenaryHandlerTestBase):
-    """The local spent store is keyed by seed tag and outlives the apsave, so a reset playthrough
-    starts out claiming mercenaries the server has never handed out."""
+    """The handler is told which mercenaries are spent, in item terms, as it always has been.
 
-    def test_a_spent_mercenary_that_was_never_received_is_forgotten(self) -> None:
+    Where that list comes from is not its business: Age2GameContext.spent_items decodes the record,
+    and test_item_delivery covers what a stale or oversized record decodes to.
+    """
+
+    def test_a_spent_mercenary_is_marked_and_withdrawn(self) -> None:
         handler = self.handler()
         roster = self.roster()
-        spent, held = roster[0], roster[1]
-        handler.set_used(spent)
-        handler.try_sync_mercenaries([held])
-        self.assertFalse(handler.is_used(spent),
-                         "a mercenary the server never sent cannot have been spent")
-        self.assertNotIn(spent, handler.queued() + handler.seated(),
-                         "clearing the spent flag must not offer an item that never arrived")
+        first, second = roster[0], roster[1]
+        handler.try_sync_mercenaries([first, second], spent=[second])
+        self.assertFalse(handler.is_used(first))
+        self.assertTrue(handler.is_used(second), "a genuinely spent mercenary was resurrected")
+        self.assertNotIn(second, handler.queued() + handler.seated())
 
-    def test_a_spent_mercenary_that_was_received_stays_spent(self) -> None:
+    def test_spends_that_are_not_mercenaries_are_ignored(self) -> None:
+        """The record covers traps and filler too, so the whole of it is handed over as-is."""
         handler = self.handler()
-        roster = self.roster()
-        spent = roster[0]
-        handler.set_used(spent)
-        handler.try_sync_mercenaries([spent])
-        self.assertTrue(handler.is_used(spent), "a genuinely spent mercenary was resurrected")
-        self.assertNotIn(spent, handler.queued() + handler.seated())
+        held = self.roster()[1]
+        handler.try_sync_mercenaries([held], spent=[Age2ItemData.TRAP_WOLOLO,
+                                                    Age2ItemData.FILLER_WOOD_SMALL])
+        self.assertFalse(handler.is_used(held))
+        self.assertIn(held, handler.queued() + handler.seated())
 
     def test_an_empty_received_list_changes_nothing(self) -> None:
         """The used-reply can land before ReceivedItems; acting on an empty list would wipe",

@@ -1,4 +1,4 @@
-# 04: Retire the echo ring
+# 05: Retire the echo ring
 
 **What to build:** `windowBase` makes the twelve-slot echo redundant, so delete it. This is pure
 deletion with no behaviour change — if anything differs in game after this ticket, the deletion was
@@ -9,7 +9,7 @@ byte offset 72 for `find_active_campaign`'s hardcoded `skip_int(fp, 18)`.
 
 Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Window base).
 
-**Blocked by:** 03
+**Blocked by:** 04
 
 **Status:** ready-for-agent
 
