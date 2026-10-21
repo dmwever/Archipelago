@@ -14,7 +14,7 @@ SEED_A = "56761350679959987564"
 SEED_B = "31415926535897932384"
 
 FIXED_CLIENT_FILES = [
-    "AP.xsdat", "items.xsdat", "free_items.xsdat", "locations.xsdat",
+    "AP.xsdat", "items.xsdat", "locations.xsdat",
     "startup.xsdat", "buildings.xsdat", "messages.xsdat",
     "ATT1.xsdat", "JOAN6.xsdat",
 ]

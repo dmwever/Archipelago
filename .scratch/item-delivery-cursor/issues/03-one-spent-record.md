@@ -28,7 +28,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Persistence).
 
 **Blocked by:** None (reshapes 02's persistence before 04 builds on it)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] One server key, `{team}_{slot}_spent`, replacing `mercenaries_used` and `items_spent`
 - [x] One local field, a bitmask, in `state_<tag>_<player>.json`; null still means "no local record"
@@ -42,5 +42,28 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Persistence).
 - [x] `/install`'s clear still touches nothing on the server
 - [x] Mercenary seats are not synced from a mask before `ReceivedItems` has landed, or the mask is
       read against an empty stream
-- [ ] In game: spend a mercenary, reconnect, confirm it is still spent and still out of the pavilion
-- [ ] In game: receive a trap, reconnect, confirm it does not re-fire
+- [x] In game: spend a mercenary, reconnect, confirm it is still spent and still out of the pavilion
+- [x] In game: receive a trap, reconnect, confirm it does not re-fire
+
+## Amendment
+
+After this ticket was written, `reconcile_spent` gained one line:
+
+    spent &= (1 << len(self.client_status.unlocked_items)) - 1
+
+Bits past the received stream describe a playthrough that no longer exists, because the
+server was reset or rolled back. The stream is append-only, so whatever is still in range
+really was spent and is kept; a full reset empties the stream and the record falls to zero on
+its own.
+
+This restores the ground `MercenaryHandler._forget_unreceived` used to cover and that this
+ticket removed on the mistaken argument that stream indexing made it unnecessary. Indexing
+makes a stale bit inert *at that moment*, not once the stream refills and the bit names a
+real entry again. The replacement is decisive rather than progressive, repairs the record
+rather than only the pavilion queue, and covers traps and filler, which were never covered.
+
+`ApClient` gates reconciliation on the full `ReceivedItems` having landed, because an empty
+stream and a stream that has not arrived yet are the same observation and the record is
+truncated against it.
+
+A rollback that lands on exactly the same stream length has no signal. Accepted.

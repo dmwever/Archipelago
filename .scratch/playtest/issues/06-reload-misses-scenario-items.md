@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-19, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -47,7 +47,7 @@ that's a separate bug.
 ## Fix
 
 Specced as part of the delivery-cursor change, which also covers 08 and 02:
-`worlds/age2de/docs/spec-item-delivery-cursor.md`. This report is fixed by slice 03.
+`worlds/age2de/docs/spec-item-delivery-cursor.md`. Fixed and verified in game 2026-10-21 by slice 04: the reported repro now passes.
 
 ## Original sketch
 

@@ -99,12 +99,10 @@ class Age2Packet:
     completed_mercenary_id: int = -1
     acked_queue_serial: int = -1
     applied_item_count: int = 0
-    item_ids: List[int]
     location_ids: List[int]
     
     def __init__(self, fp = None):
         self.location_ids = []
-        self.item_ids = [-1 for _ in range(12)]
         if not fp:
             return
         self.active = XsdatFile.read_bool(fp)
@@ -112,8 +110,7 @@ class Age2Packet:
         self.world_major = XsdatFile.read_int(fp)
         self.slot_id = XsdatFile.read_int(fp)
         self.latest_message_id = XsdatFile.read_int(fp)
-        for num in range(len(self.item_ids)):
-            self.item_ids[num] = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 12)  # the echo ring, retired; the ints hold ScenarioId's offset
         self.completed = XsdatFile.read_bool(fp)
         self.scenario_id = XsdatFile.read_int(fp)
         self.world_minor = XsdatFile.read_int(fp)
@@ -294,20 +291,6 @@ class Age2GameContext:
         except Exception as ex:
             print(ex)
 
-    def ack_items(self) -> None:
-        if not self.client_status.in_flight:
-            return
-        echoed = [item for item in self.current_packet.item_ids if item != -1]
-        confirmed = 0
-        for item_id in self.client_status.in_flight:
-            if item_id not in echoed:
-                break
-            echoed.remove(item_id)
-            confirmed += 1
-        if confirmed > 0:
-            self.client_status.acked_items += confirmed
-            del self.client_status.in_flight[:confirmed]
-
     def id_for_game(self, index: int, item: Age2ItemData) -> int:
         if (self.client_status.spent_mask >> index) & 1:
             return Items.SKIP_ITEM_ID
@@ -403,23 +386,6 @@ class Age2GameContext:
     def profile_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
 
-    def free_items(self) -> None:
-        pending = list(self.client_status.in_flight)
-        freeing: list[int] = []
-        for item in self.current_packet.item_ids:
-            if item == -1:
-                continue
-            if item in pending:
-                pending.remove(item)
-                continue
-            freeing.append(item)
-        try:
-            with open(self.profile_folder() + "free_items.xsdat", "wb") as fp:
-                for item in freeing:
-                    XsdatFile.write_int(fp, item)
-        except Exception as ex:
-            print(ex)
-
     def flush_files(self) -> None:
         try:
             self.message_handler.try_flush_from_folder()
@@ -430,8 +396,6 @@ class Age2GameContext:
                 os.remove(self.profile_folder() + "AP.xsdat")
             if os.path.exists(self.profile_folder() + "items.xsdat"):
                 os.remove(self.profile_folder() + "items.xsdat")
-            if os.path.exists(self.profile_folder() + "free_items.xsdat"):
-                os.remove(self.profile_folder() + "free_items.xsdat")
             if os.path.exists(self.profile_folder() + "locations.xsdat"):
                 os.remove(self.profile_folder() + "locations.xsdat")
             if os.path.exists(self.profile_folder() + "startup.xsdat"):
@@ -497,7 +461,6 @@ class Age2GameContext:
                 XsdatFile.write_int(fp, high)
                 XsdatFile.write_int(fp, low)
                 XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
-                XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
                 XsdatFile.write_bool(fp, self.mercenary_handler.queue_serial()
                                      != self.current_packet.acked_queue_serial) # Send Mercenaries
@@ -640,7 +603,6 @@ async def status_loop(ctx: Age2GameContext):
                 ctx.mercenary_handler.use_mercenary(mercenary_item)
                 ctx.client_interface.on_mercenary_used(mercenary_item)
         
-        ctx.free_items()
         ctx.ping_game()
         if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
             ctx.client_interface.on_goal()

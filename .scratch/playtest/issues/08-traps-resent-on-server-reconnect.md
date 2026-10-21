@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-20, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -11,7 +11,7 @@ in game.
 
 ## Resolution
 
-Same root cause as playtest 06: the delivery cursor lives in `ClientStatus.acked_items`, in client
+Fixed and verified in game 2026-10-21. Same root cause as playtest 06: the delivery cursor lives in `ClientStatus.acked_items`, in client
 memory, so it survives neither a reconnect nor a save load. The agreed fix moves the cursor
 into XS state (`AppliedItemCount` in the packet) and adds a persisted one-shot high-water mark
 (`{team}_{slot}_items_spent`, AP data storage, `max` operation) so a replayed stream sends a

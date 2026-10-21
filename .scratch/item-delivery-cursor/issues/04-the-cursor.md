@@ -15,7 +15,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (The mechanism, Window b
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `AP_ITEM_SKIP` and `AP_ITEM_WINDOW = 64` live in `AP_Constants.xs`, with `GiveItem` returning
       early on the sentinel
@@ -26,5 +26,17 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (The mechanism, Window b
 - [x] `test_mercenary_packet` still pins `FIXED_INTS = 49` and `scenario_id` at byte 72, and pins
       the new field
 - [x] Tests: a rewound cursor replays the gap; a mismatched `windowBase` applies nothing
-- [ ] In game: save in Genghis 1, play Attila 1, receive Kereyid Tribe, reload Genghis 1 — the
+- [x] In game: save in Genghis 1, play Attila 1, receive Kereyid Tribe, reload Genghis 1 — the
       blue-tribe check is live, and reloading again doubles nothing
+
+## Amendment
+
+The negative encoding on `windowBase` was dropped before this ticket closed. It guarded a
+stale install reading the base as an item id, but a stale install never writes
+`appliedItemCount`, so its cursor is pinned at 0, every window is addressed to base 0, and
+`GiveItem(0)` already falls through every band. The one guard it was really providing -- a
+truncated file -- is now an explicit `fileInts < 1` check.
+
+`adopt_cursor` also clears `in_flight` once the cursor has passed the window it describes.
+Without that the client kept arming `ReadItems` forever against a file the game would always
+reject.
