@@ -325,7 +325,7 @@ class TestPartnerTradeWithEnemies(EconomyTestBase):
     def defended(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
         return {
             player for player in scenario.players
-                if player.trades_once_defeated
+                if player.can_trade_once_defeated
         }
 
     def worth_waiting_on(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
@@ -384,7 +384,7 @@ class TestPartnerTradeWithEnemies(EconomyTestBase):
             for player in self.defended(scenario.scenario):
                 with self.subTest(player=player.name):
                     event = self.world.get_location(player.defeat_event(scenario_name))
-                    defeat = self.resolved(scenario.players.defeats(player))
+                    defeat = self.resolved(scenario.player_logic.defeats(player))
                     self.assertEqual(defeat, event.access_rule)
 
     def test_an_enemy_market_opens_once_its_owner_is_defeated(self):

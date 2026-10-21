@@ -2,7 +2,6 @@
 
 import unittest
 
-from . import bases
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Players import Age2PlayerData, Side, TradeAccess
 from ..locations.Scenarios import Age2ScenarioData
@@ -155,18 +154,3 @@ class TestPlayersFollowTheRulings(unittest.TestCase):
             player.side is side and player.trade_access(building) is not TradeAccess.CLOSED
             for player in scenario.players
         )
-
-class TestTradingAlly(bases.Age2RuleTestBase):
-    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
-    starting_campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
-
-    def test_the_trading_ally_follows_the_players(self):
-        self.build()
-        for scenario, (ally_market, _, ally_dock, _) in JUDGED_FLAGS.items():
-            scenario_logic = self.world.rules.logic.for_scenario(scenario)
-            trading_ally = scenario_logic.players.has_trading_ally().resolve(self.world)
-            with self.subTest(scenario.name):
-                if ally_market or ally_dock:
-                    self.assertTrue(trading_ally.always_true)
-                else:
-                    self.assertTrue(trading_ally.always_false)

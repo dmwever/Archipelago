@@ -11,7 +11,12 @@ from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
-from ..locations.connections.UnitRoles import ROLE_TO_LINES, SHIP_LINES, SIEGE_TARGETS, UnitRole
+from ..locations.connections.UnitRoles import (
+    ROLE_TO_LINES,
+    SHIP_LINES,
+    SIEGE_ALWAYS_COUNTERS,
+    UnitRole,
+)
 from ..logic.scenarios.ScenarioUnitLogic import ScenarioUnitLogic
 from .bases import Age2RuleTestBase
 
@@ -399,7 +404,7 @@ class TestSiegeCanCounter(Age2RuleTestBase):
             Age2UnitLineData.ORGAN_GUN_LINE,
         ):
             with self.subTest(line.name):
-                self.assertNotIn(line, SIEGE_TARGETS)
+                self.assertNotIn(line, SIEGE_ALWAYS_COUNTERS)
 
 
 class TestMilitaryIsAskedOfAScenario(Age2RuleTestBase):

@@ -21,8 +21,14 @@ class Age2PlayerData(enum.IntEnum):
         return obj
 
     def __init__(
-        self, id: int, player_name: str, slot: int, side: Side, is_main_opponent: bool,
-        market: TradeAccess, dock: TradeAccess
+        self,
+        id: int,
+        player_name: str,
+        slot: int,
+        side: Side,
+        is_main_opponent: bool,
+        market: TradeAccess,
+        dock: TradeAccess,
     ) -> None:
         self.id = id
         self.player_name = player_name
@@ -40,7 +46,7 @@ class Age2PlayerData(enum.IntEnum):
         raise ValueError(f"{building.name} is not a trade building")
 
     @property
-    def trades_once_defeated(self) -> bool:
+    def can_trade_once_defeated(self) -> bool:
         return TradeAccess.ONCE_DEFEATED in (self.market, self.dock)
 
     def defeat_event(self, scenario_name: str) -> str:

@@ -6,7 +6,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Buildings import Age2BuildingData
-from ...locations.Units import Age2UnitData as U
+from ...locations.Units import Age2UnitData
 from ...items.Items import Age2ItemData
 from ..ScenarioLogic import ScenarioStartingState
 from ...locations.Players import Age2PlayerData
@@ -25,15 +25,15 @@ class Joan3StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN2_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 2)
         self.has_vils = True_()
 
-        self.obtains_unit[U.TRANSPORT_SHIP] = self.has_boats
-        self.obtains_unit[U.DEMOLITION_SHIP] = self.has_boats
+        self.obtains_unit[Age2UnitData.TRANSPORT_SHIP] = self.has_boats
+        self.obtains_unit[Age2UnitData.DEMOLITION_SHIP] = self.has_boats
         self.meets_additional_base_requirements = self.has_boats | (
             logic.buildings.has_building(Age2BuildingData.DOCK)
-            & logic.units.has_unit_items(U.TRANSPORT_SHIP))
+            & logic.units.has_unit_items(Age2UnitData.TRANSPORT_SHIP))
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
-        transport = U.TRANSPORT_SHIP
+        transport = Age2UnitData.TRANSPORT_SHIP
         can_cross_ocean: Rule = (
             self.has_boats |
             (

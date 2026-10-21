@@ -1114,9 +1114,13 @@ for _line in Age2UnitLineData:
 
 # A line may counter itself: Trebuchets answer Trebuchets.
 # A unit on the shore can fight a ship, but a ship never answers an army on land.
-assert not [(line, counter) for line, counters in LINE_TO_COUNTERS.items() for counter in counters
-            if line not in SHIP_LINES and counter in SHIP_LINES], \
-    "a ship countering a land unit"
-assert not [(line, ram) for line in RAM_COUNTER_TARGETS for ram in RAM_LINES
-            if ram in line.countered_by], \
-    "a ram countering a line it only soaks for on its own"
+assert not [
+    (line, counter) for line, counters in LINE_TO_COUNTERS.items()
+        for counter in counters
+        if line not in SHIP_LINES and counter in SHIP_LINES
+], "a ship countering a land unit"
+assert not [
+    (line, ram) for line in RAM_COUNTER_TARGETS
+        for ram in RAM_LINES
+        if ram in line.countered_by
+], "a ram countering a line it only soaks for on its own"

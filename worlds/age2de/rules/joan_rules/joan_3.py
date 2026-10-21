@@ -12,8 +12,8 @@ class Joan3Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        can_defeat_english: Rule = self.scenario_logic.players.defeats(Age2PlayerData.JOAN3_ENGLISH)
-        can_defeat_fastolf: Rule = self.scenario_logic.players.defeats(Age2PlayerData.JOAN3_FASTOLF)
+        can_defeat_english: Rule = self.scenario_logic.player_logic.defeats(Age2PlayerData.JOAN3_ENGLISH)
+        can_defeat_fastolf: Rule = self.scenario_logic.player_logic.defeats(Age2PlayerData.JOAN3_FASTOLF)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_SLAY_FASTOLF], can_defeat_fastolf)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_VICTORY], can_defeat_english & can_defeat_fastolf)

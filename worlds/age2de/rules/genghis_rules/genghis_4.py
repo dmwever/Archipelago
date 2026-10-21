@@ -18,7 +18,7 @@ class Genghis4Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.players.defeats
+        defeats = self.scenario_logic.player_logic.defeats
 
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_RUSSIANS],

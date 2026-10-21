@@ -11,7 +11,7 @@ of `Age2PlayerData`, with its data hard-coded inline (slot, readable name, a fix
 main-opponent flag, and a trade access for its market and its dock: closed, open, or open once
 defeated), routed to its scenario by `connections/ScenarioPlayers`. Each scenario's starting state
 builds one defeat rule per opponent, keyed by those members, and the scenario's player logic
-(`ScenarioPlayerLogic`, `scenario_logic.players`) serves them through a cached `defeats(player)`
+(`ScenarioPlayerLogic`, `scenario_logic.player_logic`) serves them through a cached `defeats(player)`
 that both the victory rules and the trade logic read.
 
 ## Considered Options

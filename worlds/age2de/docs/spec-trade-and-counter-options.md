@@ -70,9 +70,9 @@ logic that both victory and trade read.
 24. As a player, I want markets an AI builds after the start counted as well as the ones it starts with, so that the logic matches scenarios where the market appears later.
 25. As a player, I want neutral players ignored by trade and defeat logic, so that bystanders never become requirements.
 26. As a player, I want fixed-force scenarios to have no trade at all, so that no logic expects an economy where there is none.
-27. As a maintainer, I want each scenario's trading-ally default to come from its player records, so that no scenario has to hand-author it.
-28. As a maintainer, I want a scenario's logic still able to override the trading-ally default with its own rule, so that "the ally only exists after X" stays expressible.
-29. As a maintainer, I want the scenario-level ally and enemy market and dock flags derived from the player records, so that the two cannot disagree.
+27. As a maintainer, I want each scenario's trading allies to come from its player records, so that no scenario has to hand-author them.
+28. As a maintainer, I want an ally's trade access to be the whole answer, with no per-scenario override, so that an ally open from the start (Attila 1's Scythians) asks only what any trade asks: a market, the Feudal Age and trade carts.
+29. As a maintainer, I want trade usability to live only on the player records, with no scenario-level ally and enemy market and dock flags, so that the two cannot disagree.
 30. As a maintainer, I want every connected scenario's players named for what the campaign calls them, so that rules read as the scenario does.
 31. As a maintainer, I want each player record to carry its scenario slot number, so that the record is exact against the scenario file.
 32. As a maintainer, I want each player to be exactly one of ally or enemy, so that the model does not branch on stance changes the scenarios do not need.
@@ -83,7 +83,7 @@ logic that both victory and trade read.
 37. As a maintainer, I want a defeat rule allowed to be free, so that a city that offers no resistance needs no fabricated requirement.
 38. As a maintainer, I want every defeat rule's label to say "defeat", so that explain output uses the glossary's word.
 39. As a maintainer, I want every location rule proved unchanged by the move, so that the refactor cannot silently weaken or tighten any scenario.
-40. As a maintainer, I want a guard that no defeat rule depends on trade with its own player, so that building the rules can never recurse.
+40. As a maintainer, I want partner trade to ask for a defeat event rather than a defeat rule, and a test that builds every defeat and trade rule, so that building the rules can never recurse.
 41. As a maintainer, I want the ram counters in their own table, so that the sponge's extra requirement applies to exactly the targets it belongs to.
 42. As a maintainer, I want the faith-line, anti-unit-siege and siege-target groups defined once, so that the options filter against one definition.
 43. As a maintainer, I want PR 18's remaining "harder difficulty" tags kept as comments with their entries live, so that the judgement is preserved for a later decision without changing behaviour now.
@@ -151,7 +151,8 @@ slot has no member. Each member carries:
 - usable market and usable dock;
 - for enemies, a gate per usable building: defeat its owner (default) or none (undefended).
 
-The scenario-level ally and enemy market and dock facts are derived from the records, not stored.
+Trade usability lives only on the records; there are no scenario-level ally and enemy market and dock
+flags.
 
 **Seeding the records.** Where PR 19's flag for a side and building is true, a player on that side is
 usable for it if it owns that building at the start or its AI script builds one, unless it is a main
@@ -184,10 +185,12 @@ rules:
 - Genghis 5 Polish: a base, a Castle Age army, siege, Castle Age, and counters for the militia, knight
   and mangonel lines at Castle Age.
 
-**Trade logic.** The trading-ally default for a scenario becomes true when any ally record has a usable
-market or dock; a scenario's starting state may still override it. Partner trade at "allies" opens
-trade with usable ally buildings; at "allies and enemies" it also opens usable enemy buildings, each
-behind its gate. Carts need a usable market, cogs a usable dock, as today. Market trade replaces its
+**Trade logic.** P1 has a trading ally wherever an ally record has a usable market or dock; there is
+no per-scenario override. Partner trade at "allies" opens trade with usable ally buildings; at "allies
+and enemies" it also opens usable enemy buildings, each behind its gate. A defended building's gate is
+an event location, "<scenario>: Can Defeat <player>", created only at "allies and enemies". Its rule is
+that player's defeat rule, and trade asks for the event item, never the defeat rule itself: a defeat
+asks for an army, the army asks the economy, and the economy asks trade, so a direct read could loop. Carts need a usable market, cogs a usable dock, as today. Market trade replaces its
 module constant one for one.
 
 **Unconnected campaigns.** Saladin, Barbarossa, El Cid and Montezuma resource files land with their
@@ -215,8 +218,7 @@ Tests are written first for each new behaviour:
 - partner trade at each of its three values, against the scenarios with design rulings (Attila 2,
   Joan 2, Joan 3, Genghis 4, Genghis 5);
 - a main opponent's buildings closed to trade, and Joan 3's undefended dock open without defeat;
-- the trading-ally default following the records, and an override still winning;
-- the derived scenario flags agreeing with the records.
+- the player records agreeing with PR 19's judged flags.
 
 Two guards:
 - **Location regression.** Every connected scenario's resolved location rules, victory included, are
@@ -225,8 +227,8 @@ Two guards:
   change. The snapshot is a temporary guard: it is deleted once all three campaigns have moved,
   because the counter changes that follow alter resolved rules on purpose. Counter changes land only
   after it is gone.
-- **No self-recursion.** Every scenario's defeat rules and trade rules build without recursion, so no
-  defeat rule can depend on trade with its own player.
+- **No self-recursion.** Every scenario's defeat rules and trade rules build without recursion. Trade
+  reads defeat events, not defeat rules, so the sweep settles any cycle.
 
 Prior art: the military rules tests (per-scenario counters and roles, resolved against a built world)
 and the economy rules tests (per-scenario economy questions, resolved). Both use the shared rule test

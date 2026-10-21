@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, Or, Rule, True_
+
+from ...Options import MonksCanCounter, SiegeCanCounter
 
 from ...locations.Ages import Age2AgeData
 from ...locations.EscortUnits import Age2EscortUnitData
@@ -13,14 +16,17 @@ from ...locations.VillagerJobs import Age2VillagerJobData
 from ...locations.connections.UnitCounters import RAM_COUNTER_TARGETS
 from ...locations.connections.UnitRoles import (
     ANTI_UNIT_SIEGE,
-    FAITH_EXCEPTION_TARGETS,
     FAITH_LINES,
+    MONKS_ALWAYS_COUNTER,
     RAM_LINES,
     ROLE_TO_LINES,
-    SIEGE_TARGETS,
+    SIEGE_ALWAYS_COUNTERS,
     UnitRole,
 )
 from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
+
+MONKS_CAN_COUNTER = OptionFilter(MonksCanCounter, MonksCanCounter.option_true)
+SIEGE_CAN_COUNTER = OptionFilter(SiegeCanCounter, SiegeCanCounter.option_true)
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -102,33 +108,40 @@ class ScenarioUnitLogic:
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
         ways: list[Rule] = []
         for line in target.countered_by:
-            if not self.counter_in_logic(line, target):
-                continue
             way = self.can_field(line, age)
             if line in target.counter_techs:
                 way = way & self.scenario.techs.has_researched(target.counter_techs[line])
-            ways.append(way)
+            ways.append(self._with_counter_options(way, line, target))
         if target in RAM_COUNTER_TARGETS:
             ways.append(self.can_sponge_for_military(age))
         return Or(*ways)
 
-    def counter_in_logic(self, line: Age2UnitLineData, target: Age2UnitLineData) -> bool:
-        if line in FAITH_LINES and target not in FAITH_EXCEPTION_TARGETS:
-            return bool(self.world.options.monks_can_counter)
-        if line in ANTI_UNIT_SIEGE and target not in SIEGE_TARGETS:
-            return bool(self.world.options.siege_can_counter)
-        return True
+    def _with_counter_options(
+        self,
+        way: Rule,
+        line: Age2UnitLineData,
+        target: Age2UnitLineData,
+    ) -> Rule:
+        if line in FAITH_LINES and target not in MONKS_ALWAYS_COUNTER:
+            return way & MONKS_CAN_COUNTER
+        if line in ANTI_UNIT_SIEGE and target not in SIEGE_ALWAYS_COUNTERS:
+            return way & SIEGE_CAN_COUNTER
+        return way
 
     def can_sponge_for_military(self, age: Age2AgeData) -> Rule:
         rams = [self.can_field(line, age) for line in RAM_LINES]
-        escorts = [self.can_field(line, age) for line in ROLE_TO_LINES[UnitRole.military]
-                   if self.escort_in_logic(line)]
-        return Or(*rams) & Or(*[escort for escort in escorts if not isinstance(escort, False_)])
+        escorts: list[Rule] = []
+        for line in ROLE_TO_LINES[UnitRole.military]:
+            escort = self.can_field(line, age)
+            if isinstance(escort, False_):
+                continue
+            escorts.append(self._with_escort_options(escort, line))
+        return Or(*rams) & Or(*escorts)
 
-    def escort_in_logic(self, line: Age2UnitLineData) -> bool:
+    def _with_escort_options(self, escort: Rule, line: Age2UnitLineData) -> Rule:
         if line in ANTI_UNIT_SIEGE:
-            return bool(self.world.options.siege_can_counter)
-        return True
+            return escort & SIEGE_CAN_COUNTER
+        return escort
 
     def starting_unit(self, line: Age2UnitLineData) -> list[Age2UnitData]:
         for unit in sorted(line.units, key=lambda unit: unit.tier):

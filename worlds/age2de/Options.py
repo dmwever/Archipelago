@@ -5,6 +5,7 @@ from Options import (Choice, DefaultOnToggle, OptionCounter, OptionError, Option
                      Range, StartInventoryPool, Toggle)
 from worlds.age2de.locations.Campaigns import Age2CampaignData
 from .locations.Buildings import NAME_TO_BUILDING, BuildingOption
+from .locations.Players import Age2PlayerData
 from .items.Items import TRAP_NAMES
 
 class Goal(Choice):
@@ -127,7 +128,6 @@ class ShuffleAges(DefaultOnToggle):
     internal_name = "shuffle_ages"
     display_name = "Shuffle Ages"
 
-
 class Techsanity(Choice):
     """
     Shuffles technologies. A shuffled technology stays researchable; researching it sends its
@@ -145,12 +145,10 @@ class Techsanity(Choice):
     option_all = 3
     default = option_all
 
-
 def upgrade_techs_shuffled(techsanity: int) -> bool:
     """Whether unit-line upgrade technologies are items. Generic shuffles Loom and Fletching
     and leaves the upgrades free, so it does not count."""
     return techsanity in (Techsanity.option_units, Techsanity.option_all)
-
 
 class TechBehavior(Choice):
     """
@@ -167,7 +165,6 @@ class TechBehavior(Choice):
     option_instant = 1
     default = option_must_research
 
-
 class ShuffleUniqueTechs(Choice):
     """
     Whether civilization unique technologies join the pool. Requires Techsanity.
@@ -181,7 +178,6 @@ class ShuffleUniqueTechs(Choice):
     option_shuffled = 1
     option_shuffled_everywhere = 2
     default = option_shuffled
-
 
 class ExistingTechs(Choice):
     """
@@ -200,7 +196,6 @@ class ExistingTechs(Choice):
     option_start_in_dark_age = 3
     default = option_vanilla
 
-
 class Unitsanity(Choice):
     """
     Shuffles units. Owning a unit sends its check, and items are what let you train one.
@@ -214,7 +209,6 @@ class Unitsanity(Choice):
     option_unit_line = 1
     option_all = 2
     default = option_unit_line
-
 
 class UnitsanityItems(Choice):
     """
@@ -232,7 +226,6 @@ class UnitsanityItems(Choice):
     option_buildings = 2
     default = option_unit_line
 
-
 class ShuffleVillager(Choice):
     """
     Whether the villager is shuffled. Independent of Unitsanity.
@@ -246,7 +239,6 @@ class ShuffleVillager(Choice):
     option_yes = 1
     option_include_professions = 2
     default = option_no
-
 
 class IncludeUniqueUnits(Choice):
     """
@@ -266,7 +258,6 @@ class IncludeUniqueUnits(Choice):
     option_both = 3
     default = option_both
 
-
 class Caveman(Toggle):
     """
     OOOK ONK. Need Unit.
@@ -274,7 +265,6 @@ class Caveman(Toggle):
     """
     internal_name = "caveman"
     display_name = "Caveman"
-
 
 class MonksCanCounter(Toggle):
     """
@@ -284,7 +274,6 @@ class MonksCanCounter(Toggle):
     """
     internal_name = "monks_can_counter"
     display_name = "Monks Can Counter"
-
 
 class SiegeCanCounter(Toggle):
     """
@@ -296,7 +285,6 @@ class SiegeCanCounter(Toggle):
     internal_name = "siege_can_counter"
     display_name = "Siege Can Counter"
 
-
 class MarketTrade(Toggle):
     """
     Whether the logic may expect you to buy and sell resources at your own market.
@@ -305,7 +293,6 @@ class MarketTrade(Toggle):
     """
     internal_name = "market_trade"
     display_name = "Market Trade"
-
 
 class PartnerTrade(Choice):
     """
@@ -321,7 +308,9 @@ class PartnerTrade(Choice):
     option_allies_and_enemies = 2
     default = option_allies
 
-    
+    def needs_defeat_event(self, player: Age2PlayerData) -> bool:
+        return self.value == self.option_allies_and_enemies and player.can_trade_once_defeated
+
 class TrapDifficulty(Choice):
     """
     How punishing traps are when they are enabled. No Traps keeps them out of the item pool entirely.
@@ -339,7 +328,6 @@ class TrapDifficulty(Choice):
     def include_traps(self) -> bool:
         return self.value > 0
 
-
 class TrapPercentage(Range):
     """
     Percentage of the leftover filler slots to replace with traps. Starting resources are always
@@ -352,9 +340,7 @@ class TrapPercentage(Range):
     range_end = 100
     default = 20
 
-
 TRAP_DEFAULT_WEIGHT = 100
-
 
 class TrapDistribution(OptionCounter):
     """
@@ -368,7 +354,6 @@ class TrapDistribution(OptionCounter):
     max = 1000
     valid_keys = frozenset(TRAP_NAMES)
     default = {_trap_name: TRAP_DEFAULT_WEIGHT for _trap_name in TRAP_NAMES}
-
 
 @dataclass
 class Age2Options(PerGameCommonOptions):

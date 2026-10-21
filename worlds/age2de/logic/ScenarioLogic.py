@@ -86,7 +86,7 @@ class ScenarioLogic:
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
-        self.players = ScenarioPlayerLogic(self)
+        self.player_logic = ScenarioPlayerLogic(self)
 
     def has_vils(self) -> Rule:
         return self.named("has villagers", self.starting_state.has_vils)

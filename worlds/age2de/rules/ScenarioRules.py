@@ -7,11 +7,6 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Locations import SCENARIO_TO_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..logic.ScenarioLogic import ScenarioLogic
 
-
-
-
-
-
 if TYPE_CHECKING:
     from .. import Age2World
     from .Rules import Rules
@@ -44,13 +39,11 @@ class ScenarioRules:
     
     def set_defeat_event_rules(self):
         for player in self.scenario.players:
-            if not player.trades_once_defeated:
+            if not self.world.options.partner_trade.needs_defeat_event(player):
                 continue
-            try:
-                event = self.world.get_location(player.defeat_event(self.scenario.scenario_name))
-            except KeyError:
-                continue
-            self.world.set_rule(event, self.scenario_logic.players.defeats(player))
+            event_name = player.defeat_event(self.scenario.scenario_name)
+            event = self.world.get_location(event_name)
+            self.world.set_rule(event, self.scenario_logic.player_logic.defeats(player))
 
     def set_rules(self):
         self.world.set_rule(self.entrance, self.scenario_logic.is_unlocked())

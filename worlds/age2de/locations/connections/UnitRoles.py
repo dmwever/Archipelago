@@ -30,21 +30,23 @@ CIVILIAN_LINES = (
 
 FAITH_LINES = (L.MONK_LINE, L.MISSIONARY_LINE)
 
-# Converting is the standard answer to an elephant, so a faith line counters these whatever the
-# monks option says.
-FAITH_EXCEPTION_TARGETS = (L.BATTLE_ELEPHANT_LINE, L.WAR_ELEPHANT_LINE, L.ELEPHANT_ARCHER_LINE)
+MONKS_ALWAYS_COUNTER = (L.BATTLE_ELEPHANT_LINE, L.WAR_ELEPHANT_LINE, L.ELEPHANT_ARCHER_LINE)
 
-# The clumsy siege that fights armies. The Scorpion is easy enough to count as an ordinary counter.
 ANTI_UNIT_SIEGE = (
-    L.MANGONEL_LINE, L.BOMBARD_CANNON_LINE, L.ROCKET_CART_LINE,
+    L.MANGONEL_LINE,
+    L.BOMBARD_CANNON_LINE,
+    L.ROCKET_CART_LINE,
 )
 
-# Siege duels need no micro, so anti-unit siege counters these whatever the siege option says.
-# Not SIEGE: the Fire Archer and Petard count as armies here, as does the Organ Gun.
-SIEGE_TARGETS = (
-    L.BATTERING_RAM_LINE, L.ARMORED_ELEPHANT_LINE,
-    L.TREBUCHET_LINE, L.TRACTION_TREBUCHET_LINE, L.MOUNTED_TREBUCHET_LINE,
-    L.BOMBARD_CANNON_LINE, L.MANGONEL_LINE, L.SCORPION_LINE,
+SIEGE_ALWAYS_COUNTERS = (
+    L.BATTERING_RAM_LINE,
+    L.ARMORED_ELEPHANT_LINE,
+    L.TREBUCHET_LINE,
+    L.TRACTION_TREBUCHET_LINE,
+    L.MOUNTED_TREBUCHET_LINE,
+    L.BOMBARD_CANNON_LINE,
+    L.MANGONEL_LINE,
+    L.SCORPION_LINE,
     L.ROCKET_CART_LINE,
 )
 
@@ -79,18 +81,18 @@ ANTI_BUILDING = (
 
 SIEGE = (
     L.BATTERING_RAM_LINE,
-    L.ARMORED_ELEPHANT_LINE,   # the ram of the civilisations that have elephants
+    L.ARMORED_ELEPHANT_LINE,
     L.TREBUCHET_LINE,
     L.TRACTION_TREBUCHET_LINE,
     L.MOUNTED_TREBUCHET_LINE,
-    L.BOMBARD_CANNON_LINE,     # the Houfnice is its Imperial tier
+    L.BOMBARD_CANNON_LINE,
     L.PETARD_LINE,
-    L.FIRE_ARCHER_LINE,        # shoots buildings alight, so it counts as siege
+    L.FIRE_ARCHER_LINE,
 )
 
 RAM_LINES = (
     L.BATTERING_RAM_LINE,
-    L.ARMORED_ELEPHANT_LINE,   # the ram of the civilisations that have elephants
+    L.ARMORED_ELEPHANT_LINE,
 )
 
 LONG_RANGE_SIEGE = (
@@ -101,18 +103,18 @@ LONG_RANGE_SIEGE = (
 NAVAL_BOMBARDMENT = (
     L.CANNON_GALLEON_LINE,
     L.CATAPULT_GALLEON_LINE,
-    L.DROMON_LINE,             # the Huns' only one - they have no Cannon Galleon
+    L.DROMON_LINE,
     L.LOU_CHUAN_LINE,
 )
 
 SUICIDE_RAFT_LINES = (
-    # Blow themselves up on contact: they sink a fleet, but can never hold the water.
-    L.DEMOLITION_RAFT_LINE, L.INCENDIARY_RAFT_LINE,
+    L.DEMOLITION_RAFT_LINE,
+    L.INCENDIARY_RAFT_LINE,
 )
 
 NAVY = tuple(line for line in SHIP_LINES
                    if line not in CIVILIAN_LINES + SUICIDE_RAFT_LINES)
-# Siege breaks buildings and cannot hold a field against an army: it is never one on its own.
+
 MILITARY = tuple(line for line in L if line not in CIVILIAN_LINES + SHIP_LINES
                        + FAITH_LINES + SIEGE)
 
