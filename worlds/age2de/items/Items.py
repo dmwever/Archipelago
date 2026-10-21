@@ -862,6 +862,11 @@ for item in Age2ItemData:
 
 TRAP_NAMES: list[str] = [_trap.item_name for _trap in CATEGORY_TO_ITEMS[Trap]]
 
+SKIP_ITEM_ID: int = -2
+
+ONE_SHOT_ITEMS: frozenset[Age2ItemData] = frozenset(
+    CATEGORY_TO_ITEMS[Resources] + CATEGORY_TO_ITEMS[Trap])
+
 item_mapping: dict[str, str] = {
     Age2ItemData.AP_JOAN_5_REFUGEE_1.item_name: "Refugee",
     Age2ItemData.AP_JOAN_5_REFUGEE_2.item_name: "Refugee",
