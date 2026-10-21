@@ -14,4 +14,4 @@ Spec: Implementation Decisions, "Unconnected campaigns".
 - [x] The duplicate Montezuma file is removed; only one copy remains
 - [x] The Saladin docstring no longer says "Khan" or "Mongols"
 - [x] Each docstring says the file is not imported, and that its flags must be rescanned per player when the campaign is connected
-- [ ] Nothing imports them; the existing suite is green; no new tests (nothing imports them and no tests were added; the suite was not run, by request)
+- [x] Nothing imports them; the existing suite is green; no new tests (suite run 2026-10-21 after issue 13: 933 passed)
