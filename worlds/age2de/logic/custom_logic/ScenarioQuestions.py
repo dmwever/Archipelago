@@ -278,7 +278,7 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
             *economy.tiered(economy.can_hunt_whales(), "whale_count", afloat),
         )
 
-        return economy.ally_trade_gold() | (
+        return economy.can_earn_gold_by_partner_trade() | (
             SufficientRawResources(sources=raw_gold, needed=scenario.scenario.demand.gold, resource="gold")
             & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
 

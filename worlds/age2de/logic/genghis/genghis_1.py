@@ -7,15 +7,10 @@ from ...locations.Units import Age2UnitData
 from ...items.Items import Age2ItemData
 
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
-
-class Genghis1Player(ScenarioPlayer):
-    """No one to defeat: victory is the Kereyid monk, and every other slot is an ally or
-    neutral."""
 
 class Genghis1StartingState(ScenarioStartingState):
 

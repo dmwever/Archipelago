@@ -2,7 +2,7 @@ from rule_builder.rules import Rule
 
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
-from ...logic.genghis.genghis_4 import Genghis4Player
+from ...locations.Players import Age2PlayerData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -18,20 +18,20 @@ class Genghis4Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.defeats
+        defeats = self.scenario_logic.players.defeats
 
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_RUSSIANS],
-            defeats(Genghis4Player.RUSSIANS),
+            defeats(Age2PlayerData.GEN4_RUSSIANS),
         )
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.GEN4_DEFEAT_KHWARAZM],
-            defeats(Genghis4Player.KHWARAZM),
+            defeats(Age2PlayerData.GEN4_KHWARAZM),
         )
 
         can_win_scenario: Rule = (
-            defeats(Genghis4Player.RUSSIANS) &
-            defeats(Genghis4Player.KHWARAZM)
+            defeats(Age2PlayerData.GEN4_RUSSIANS) &
+            defeats(Age2PlayerData.GEN4_KHWARAZM)
         )
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN4_VICTORY], can_win_scenario)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.GEN4_VICTORY.scenario.scenario_name), can_win_scenario)

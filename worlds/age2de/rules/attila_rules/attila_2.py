@@ -3,7 +3,7 @@ from rule_builder.rules import Rule
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
-from ...logic.attila.attila_2 import Attila2Player
+from ...locations.Players import Age2PlayerData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -13,7 +13,7 @@ class Attila2Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        can_defeat_romans: Rule = self.scenario_logic.defeats(Attila2Player.EASTERN_ROMAN_EMPIRE)
+        can_defeat_romans: Rule = self.scenario_logic.players.defeats(Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE)
         town_center = Age2BuildingData.TOWN_CENTER
         can_build_tc = (self.scenario_logic.buildings.can_build_tc()
                         & self.scenario_logic.has_vils()

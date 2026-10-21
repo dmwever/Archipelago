@@ -42,6 +42,16 @@ class ScenarioRules:
             except KeyError:
                 logger.debug("%s is not in this playthrough.", location.global_name())
     
+    def set_defeat_event_rules(self):
+        for player in self.scenario.players:
+            if not player.trades_once_defeated:
+                continue
+            try:
+                event = self.world.get_location(player.defeat_event(self.scenario.scenario_name))
+            except KeyError:
+                continue
+            self.world.set_rule(event, self.scenario_logic.players.defeats(player))
+
     def set_rules(self):
         self.world.set_rule(self.entrance, self.scenario_logic.is_unlocked())
         self.has_navy: Rule = self.scenario_logic.military.has_navy()

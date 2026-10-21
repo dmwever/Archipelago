@@ -13,7 +13,7 @@ from rule_builder.rules import False_, Has, Rule, True_
 from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
 from .custom_logic.ScenarioQuestions import a_or_an
-from .ScenarioPlayer import ScenarioPlayer
+from ..locations.Players import Age2PlayerData
 from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
@@ -47,7 +47,6 @@ class ScenarioStartingState:
     starting_oysters: Rule = field(default_factory=lambda: False_())
     starting_whales: Rule = field(default_factory=lambda: False_())
     starting_relics: Rule = field(default_factory=lambda: True_())
-    trading_ally: Rule = field(default_factory=lambda: False_())
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
 
@@ -60,9 +59,7 @@ class ScenarioStartingState:
                 self.obtains_unit[soldier.unit] = (
                     self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
-        """What P1 needs to defeat each opponent, keyed by this scenario's players. Built once,
-        on the first ask, and read through ScenarioLogic.defeats."""
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         return {}
 
 class ScenarioLogic:
@@ -73,12 +70,12 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
-        self._defeats: dict[ScenarioPlayer, Rule] | None = None
         data.default_mercenary_grants(scenario)
         from .scenarios.ScenarioAgeLogic import ScenarioAgeLogic
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
+        from .scenarios.ScenarioPlayerLogic import ScenarioPlayerLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioResourceLogic import ScenarioResourceLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
@@ -89,6 +86,7 @@ class ScenarioLogic:
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
+        self.players = ScenarioPlayerLogic(self)
 
     def has_vils(self) -> Rule:
         return self.named("has villagers", self.starting_state.has_vils)
@@ -118,16 +116,6 @@ class ScenarioLogic:
         return (self.can_have_base()
                 & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
                 & (standing | town_center))
-
-    def defeats(self, player: ScenarioPlayer) -> Rule:
-        """P1 can overcome this player's army and take its ground. The same rule on every ask,
-        so victory and anything else asking about this player share one."""
-        if self._defeats is None:
-            self._defeats = {
-                opponent: self.named(f"can defeat {opponent.player_name}", rule)
-                for opponent, rule in self.starting_state.defeat_rules(self).items()
-            }
-        return self._defeats[player]
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access

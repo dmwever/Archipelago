@@ -9,18 +9,12 @@ from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
 from ..ScenarioLogic import ScenarioStartingState
-from ..ScenarioPlayer import ScenarioPlayer
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
     from ..ScenarioLogic import ScenarioLogic
-
-class Joan2Player(ScenarioPlayer):
-    """Orléans, Blois and Chinon (P4 to P6) are allies with no member: the logic never fights them."""
-    BURGUNDY = 2, "Burgundy"
-    NORTHERN_ENGLISH = 3, "the Northern English"
-    SOUTHERN_ENGLISH = 7, "the Southern English"
 
 class Joan2StartingState(ScenarioStartingState):
 
@@ -48,17 +42,17 @@ class Joan2StartingState(ScenarioStartingState):
         self.obtains_unit[U.VILLAGER_FEMALE] = has_orleans
         self.obtains_unit[U.TRANSPORT_SHIP] = Has(Age2ItemData.AP_JOAN_2_DOCK.item_name)
 
-    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[ScenarioPlayer, Rule]:
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Joan2Player.BURGUNDY: scenario_logic.has_base() & military.counters_building(),
-            Joan2Player.NORTHERN_ENGLISH: (
+            Age2PlayerData.JOAN2_BURGUNDY: scenario_logic.has_base() & military.counters_building(),
+            Age2PlayerData.JOAN2_NORTHERN_ENGLISH: (
                 scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE)
             ),
-            Joan2Player.SOUTHERN_ENGLISH: (
+            Age2PlayerData.JOAN2_SOUTHERN_ENGLISH: (
                 scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &

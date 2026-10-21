@@ -3,7 +3,7 @@ from rule_builder.rules import Has, Rule
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
-from ...logic.attila.attila_1 import Attila1Player
+from ...locations.Players import Age2PlayerData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -13,19 +13,19 @@ class Attila1Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
-        defeats = self.scenario_logic.defeats
+        defeats = self.scenario_logic.players.defeats
 
         can_win_scenario: Rule = (
-            defeats(Attila1Player.EASTERN_ROMAN_EMPIRE) &
-            (defeats(Attila1Player.SCYTHIANS) | defeats(Attila1Player.PERSIANS))
+            defeats(Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE) &
+            (defeats(Age2PlayerData.ATT1_SCYTHIANS) | defeats(Age2PlayerData.ATT1_PERSIANS))
         )
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT1_VICTORY], can_win_scenario)
         self.world.set_rule(
             self.locations[Age2ScenarioLocationData.ATT1_DEFEAT_FIRST_PLAYER],
             (
-                defeats(Attila1Player.EASTERN_ROMAN_EMPIRE) |
-                defeats(Attila1Player.PERSIANS) |
-                defeats(Attila1Player.SCYTHIANS)
+                defeats(Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE) |
+                defeats(Age2PlayerData.ATT1_PERSIANS) |
+                defeats(Age2PlayerData.ATT1_SCYTHIANS)
             ),
         )
         self.world.set_rule(
