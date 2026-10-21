@@ -89,7 +89,7 @@ class TestItemDelivery(unittest.TestCase):
         """
         if not self.ctx.client_status.record_known:
             return
-        delivered = self.ctx.item_handler.sync_items(
+        delivered = self.ctx.item_handler.try_sync_items(
             self.ctx.client_status.unlocked_items, applied, self.ctx.spent_items())
         if self.ctx.mark_items_spent(delivered):
             self.ctx.client_interface.on_item_spent(self.ctx.client_status.spent_mask)
@@ -543,6 +543,50 @@ class TestNamingACopyToSpend(TestItemDelivery):
         self.send()   # the scenario restarts, so the same items go out again
         self.assertEqual([item.id for item in items], self.sent_window(),
                          "a cleared record still skipped items as though they were paid for")
+
+
+class TestRecordingBeforeSkipping(TestItemDelivery):
+    """A one-shot is skipped on the strength of the record, so the record has to exist first.
+
+    The pass that notices the game took a one-shot is the pass that would write a file skipping
+    it. Writing both at once stakes the skip on a save that has not happened, and a save that
+    fails then costs the item outright -- the game never sees it again.
+    """
+
+    def test_a_pass_that_pays_out_writes_nothing(self) -> None:
+        items = [Age2ItemData.FILLER_WOOD_SMALL] * 12 + [Age2ItemData.FISH_TRAP] * 3
+        self.unlock(*items)
+        self.full_tick()
+        self.assertEqual(12, self.game.applied_item_count, "the fixture never got going")
+
+        self.sync(self.game.applied_item_count)   # the pass that pays out the twelve
+
+        self.assertEqual(0, self.sent_items()[0],
+                         "a file went out before the spends it skips were recorded")
+        self.assertFalse(self.ctx.item_handler.in_flight())
+
+        self.sync(self.game.applied_item_count)   # now the record carries them
+
+        self.assertEqual(12, self.sent_items()[0], "the tail never went out")
+
+    def test_a_spend_that_did_not_reach_disk_is_not_claimed(self) -> None:
+        items = [Age2ItemData.FILLER_WOOD_SMALL] * 3
+        self.unlock(*items)
+        self.full_tick()
+        self.assertEqual(3, self.game.applied_item_count)
+
+        saved = self.ctx.storage_handler.try_save
+        self.ctx.storage_handler.try_save = lambda spent: False
+        self.sync(self.game.applied_item_count)
+
+        self.assertEqual(0, self.ctx.client_status.spent_mask,
+                         "the mask moved past a record that is not on disk")
+
+        self.ctx.storage_handler.try_save = saved
+        self.sync(self.game.applied_item_count)
+
+        self.assertEqual(0b111, self.ctx.client_status.spent_mask,
+                         "the pass after the failure never tried again")
 
 
 if __name__ == "__main__":

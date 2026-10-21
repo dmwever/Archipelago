@@ -15,13 +15,6 @@ NOTHING_SENT = -1
 
 @dataclass
 class ManagedItem:
-    """One received item, at the position it arrived at.
-
-    Items repeat -- five copies of +100 Wood are five entries -- so what is managed here is the
-    position, not the item. That is the one place this cannot follow MercenaryHandler, where an
-    item appears at most once and can key a dict.
-    """
-
     index: int
     data: Age2ItemData
     delivered: bool = False
@@ -56,31 +49,24 @@ class ItemHandler(FolderHandler):
         self._current_item = min(self._current_item, len(unlocked_items))
 
     def reset_delivery(self) -> None:
-        """Pairs with MercenaryHandler.reset_used: the record is gone, so nothing is paid for."""
         for managed in self._items:
             managed.spent = False
         self._forget_sent()
 
-    def sync_items(self, unlocked_items: list[Age2ItemData], applied: int,
-                   spent: set[int]) -> set[int]:
-        """One delivery pass.
-
-        Returns the positions it paid out, for the caller to record. This never writes the
-        record or tells the server itself, the way MercenaryHandler does not either.
-        """
-        self._sync_applied_items(applied, unlocked_items)
-        self._sync_managed_items(unlocked_items, spent)
-        delivered = self._report_delivered()
-        if self._current_item < len(self._items):
-            self._try_write_to_file()
-        return delivered
+    def try_sync_items(self, unlocked_items: list[Age2ItemData], applied: int,
+                       spent: set[int]) -> set[int]:
+        try:
+            self._sync_applied_items(applied, unlocked_items)
+            self._sync_managed_items(unlocked_items, spent)
+            delivered = self._report_delivered()
+            if not delivered and self._current_item < len(self._items):
+                self._try_write_to_file()
+            return delivered
+        except Exception:
+            logger.exception("Could not sync items.")
+            return set()
 
     def try_flush_from_folder(self) -> None:
-        """What was sent is gone from disk, so stop claiming it was sent.
-
-        Without that, a scenario switch that leaves the item index where it was makes the next
-        write look like one already made, and items.xsdat is deleted and never written again.
-        """
         self._forget_sent()
         try:
             if os.path.exists(self._user_folder + "items.xsdat"):
@@ -100,8 +86,6 @@ class ItemHandler(FolderHandler):
             self._forget_sent()
 
     def _sync_managed_items(self, unlocked_items: list[Age2ItemData], spent: set[int]) -> None:
-        """The received items, with the two facts the client knows about each one hung off it:
-        whether the game has taken it, and whether the record has paid for it."""
         del self._items[len(unlocked_items):]
         for index, data in enumerate(unlocked_items):
             if index < len(self._items):
@@ -114,16 +98,8 @@ class ItemHandler(FolderHandler):
             managed.spent = index in spent
 
     def _report_delivered(self) -> set[int]:
-        """One-shots the game has taken that the record has not paid for yet.
-
-        Marked here as well as returned, so what is written below already skips them rather
-        than sending them once more.
-        """
-        delivered = {managed.index for managed in self._items
-                     if managed.delivered and managed.one_shot and not managed.spent}
-        for index in delivered:
-            self._items[index].spent = True
-        return delivered
+        return {managed.index for managed in self._items
+                if managed.delivered and managed.one_shot and not managed.spent}
 
     def _id_for_game(self, managed: ManagedItem) -> int:
         return Items.SKIP_ITEM_ID if managed.spent else managed.data.id
@@ -140,7 +116,6 @@ class ItemHandler(FolderHandler):
                 for item_id in item_ids:
                     XsdatFile.write_int(fp, item_id)
         except Exception:
-            # What is on disk is not what was meant to be there, so claim nothing.
             logger.exception("Could not write items.xsdat.")
             self._forget_sent()
             return

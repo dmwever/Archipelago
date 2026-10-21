@@ -42,10 +42,10 @@ class StorageHandler(FolderHandler):
     def spent_mask(self) -> int:
         return self.try_load() or 0
 
-    def try_save(self, spent: int) -> None:
+    def try_save(self, spent: int) -> bool:
         self._ensure_loaded()
         self._spent = spent
-        self._flush()
+        return self._flush()
 
     def try_clear(self) -> bool:
         self._ensure_loaded()
@@ -73,10 +73,12 @@ class StorageHandler(FolderHandler):
         spent = state["spent"]
         return None if spent is None else int(spent)
 
-    def _flush(self) -> None:
+    def _flush(self) -> bool:
         try:
             self.apdata_dir().mkdir(parents=True, exist_ok=True)
             self.state_path().write_text(
                 json.dumps({"spent": self._spent}, indent=4), encoding="utf-8")
         except Exception:
             logger.exception("Could not write %s.", self.state_path())
+            return False
+        return True

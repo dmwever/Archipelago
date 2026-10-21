@@ -31,7 +31,6 @@ from ..items import Items
 from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Techs import Age2TechData
-from worlds.age2de.locations import Scenarios
 
 logger = logging.getLogger("Client")
 
@@ -320,8 +319,9 @@ class Age2GameContext:
             mask |= 1 << index
         if mask == self.client_status.spent_mask:
             return False
+        if not self.storage_handler.try_save(mask):
+            return False
         self.client_status.spent_mask = mask
-        self.storage_handler.try_save(mask)
         return True
 
     def reconcile_spent(self, server: int) -> int:
@@ -440,132 +440,145 @@ async def long_sleep() -> None:
 
 async def status_loop(ctx: Age2GameContext):
     while ctx.running:
-        
-        # Sync files that are scenario-agnostic before connection.
-        ctx.sync_starting_resources()
-        ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
-        ctx.sync_checked_locations()
-        ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
-        ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
-        ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
-        ctx.message_handler.try_write_to_folder()
-        
-        # Check all unlocked scenarios every 2 seconds to find active scenario.
-        if not ctx.campaign_handler.active_file:
-            ctx.campaign_handler.find_active_campaign()
+        try:
+            await status_tick(ctx)
+        except Exception:
+            logger.exception("The game loop hit an error. Continuing.")
+            await long_sleep()
+
+
+async def status_tick(ctx: Age2GameContext) -> None:
+    # Sync files that are scenario-agnostic before connection.
+    ctx.sync_starting_resources()
+    ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
+    ctx.sync_checked_locations()
+    ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
+    ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
+    ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
+    ctx.message_handler.try_write_to_folder()
+    
+    # Check all unlocked scenarios every 2 seconds to find active scenario.
+    if not ctx.campaign_handler.active_file:
+        ctx.campaign_handler.find_active_campaign()
+        if not ctx.campaign_handler.has_active_scenario():
+            ctx.campaign_handler.find_active_scenario()
             if not ctx.campaign_handler.has_active_scenario():
-                ctx.campaign_handler.find_active_scenario()
-                if not ctx.campaign_handler.has_active_scenario():
-                    ctx.report_install_mismatch_once()
-                    await long_sleep()
-                    continue
-                else:
-                    ctx.note_scenario_found()
-                    logger.info("Connected!")
+                ctx.report_install_mismatch_once()
+                await long_sleep()
+                return
             else:
                 ctx.note_scenario_found()
                 logger.info("Connected!")
-        
-        if ctx.packet_repeat_count > 0 and ctx.campaign_handler.find_live_scenario():
-            logger.info("The game is running %s now. Following it.",
-                        ctx.campaign_handler.active_file.current_scenario.data.scenario_name)
-            ctx.flush_files()
-            ctx.packet_repeat_count = 0
-            ctx.paused = False
-            continue
-        
-        packet: Age2Packet
-        try:
-            packet = ctx.read_packet()
-        except Exception as ex:
-            logger.exception(ex)
-            await long_sleep()
-            continue
-        
-        # Improper read. Ping is never -1
-        if packet.current_ping_id == -1:
-            await short_sleep()
-            continue
-        
-        packetStatus = ctx.update_packet(packet)
-        
-        if packet.scenario_id != ctx.campaign_handler.active_file.current_scenario.data.id:
-            logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
-            ctx.flush_files()
-            ctx.campaign_handler.deactivate_scenario()
-            continue
-        
-        if packetStatus == PacketStatus.REPEAT:
-            ctx.packet_repeat_count += 1
-        
-            if ctx.packet_repeat_count == 10:
-                logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
-                ctx.campaign_handler.deactivate_scenario()
-                ctx.paused = True
-            
-            await short_sleep()
-            continue
         else:
-            ctx.packet_repeat_count = 0
-            ctx.paused = False
-            ctx.reported_packet_mismatch = ''
-            
-        if packetStatus == PacketStatus.INACTIVE:
-            logger.info("The Current Scenario is no longer active.")
-            ctx.campaign_handler.deactivate_scenario()
-            await long_sleep()
-            continue
-        if packetStatus == PacketStatus.WRONG_VERSION:
-            ctx.report_packet_mismatch_once(
-                "version",
-                f"The Age2 files in your user folder are version "
-                f"{packet.installed_version().as_simple_string()}, but this client is "
-                f"{AP_WORLD_VERSION.as_simple_string()}. Reinstall the Ageipelago files.")
-            ctx.campaign_handler.deactivate_scenario()
-            await long_sleep()
-            continue
-        if packetStatus == PacketStatus.WRONG_SLOT:
-            ctx.report_packet_mismatch_once(
-                "slot",
-                f"This scenario was generated for slot {packet.slot_id}, but this client is slot "
-                f"{ctx.client_status.slot_id}. Those files belong to a different player -- they were "
-                "renamed or copied from another slot install.")
-            ctx.campaign_handler.deactivate_scenario()
-            await long_sleep()
-            continue
-        if packetStatus == PacketStatus.UPDATE:
-            ctx.client_interface.on_location_received(ctx.current_packet.location_ids)
-            for location_id in ctx.current_packet.location_ids:
-                ctx.client_status.checked_locations.add(location_id)
-            
-        if packetStatus == PacketStatus.ACTIVE:
-            pass
-        
-        if ctx.client_status.record_known:
-            unlocked = ctx.client_status.unlocked_items
-            spent = ctx.spent_items()
-            ctx.mercenary_handler.try_sync_mercenaries(unlocked, [unlocked[index] for index in spent])
-            delivered = ctx.item_handler.sync_items(unlocked, packet.applied_item_count, spent)
-            if ctx.mark_items_spent(delivered):
-                ctx.client_interface.on_item_spent(ctx.client_status.spent_mask)
-        
-        if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
-            ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
-        
-        if packet.completed == True and not ctx.campaign_handler.is_active_scenario_complete():
-            ctx.campaign_handler.complete_active_scenario()
-            ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
-
-        if packet.completed_mercenary_id != -1:
-            mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
-            if mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary]:
-                index = ctx.unspent_index(mercenary_item)
-                if index != -1 and ctx.mark_items_spent({index}):
-                    ctx.mercenary_handler.use_mercenary(mercenary_item)
-                    ctx.client_interface.on_mercenary_used(mercenary_item)
-        
-        ctx.ping_game()
-        if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
-            ctx.client_interface.on_goal()
-            ctx.client_status.finished_game = True
+            ctx.note_scenario_found()
+            logger.info("Connected!")
+    
+    if ctx.packet_repeat_count > 0 and ctx.campaign_handler.find_live_scenario():
+        logger.info("The game is running %s now. Following it.",
+                    ctx.campaign_handler.active_file.current_scenario.data.scenario_name)
+        ctx.flush_files()
+        ctx.packet_repeat_count = 0
+        ctx.paused = False
+        return
+    
+    packet: Age2Packet
+    try:
+        packet = ctx.read_packet()
+    except Exception as ex:
+        logger.exception(ex)
+        await long_sleep()
+        return
+    
+    # Improper read. Ping is never -1
+    if packet.current_ping_id == -1:
         await short_sleep()
+        return
+    
+    packetStatus = ctx.update_packet(packet)
+    
+    if packet.scenario_id != ctx.campaign_handler.active_file.current_scenario.data.id:
+        logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
+        ctx.flush_files()
+        ctx.campaign_handler.deactivate_scenario()
+        return
+    
+    if packetStatus == PacketStatus.REPEAT:
+        ctx.packet_repeat_count += 1
+    
+        if ctx.packet_repeat_count == 10:
+            logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
+            ctx.campaign_handler.deactivate_scenario()
+            ctx.paused = True
+        
+        await short_sleep()
+        return
+    else:
+        ctx.packet_repeat_count = 0
+        ctx.paused = False
+        ctx.reported_packet_mismatch = ''
+        
+    if packetStatus == PacketStatus.INACTIVE:
+        logger.info("The Current Scenario is no longer active.")
+        ctx.campaign_handler.deactivate_scenario()
+        await long_sleep()
+        return
+    if packetStatus == PacketStatus.WRONG_VERSION:
+        ctx.report_packet_mismatch_once(
+            "version",
+            f"The Age2 files in your user folder are version "
+            f"{packet.installed_version().as_simple_string()}, but this client is "
+            f"{AP_WORLD_VERSION.as_simple_string()}. Reinstall the Ageipelago files.")
+        ctx.campaign_handler.deactivate_scenario()
+        await long_sleep()
+        return
+    if packetStatus == PacketStatus.WRONG_SLOT:
+        ctx.report_packet_mismatch_once(
+            "slot",
+            f"This scenario was generated for slot {packet.slot_id}, but this client is slot "
+            f"{ctx.client_status.slot_id}. Those files belong to a different player -- they were "
+            "renamed or copied from another slot install.")
+        ctx.campaign_handler.deactivate_scenario()
+        await long_sleep()
+        return
+    if packetStatus == PacketStatus.UPDATE:
+        ctx.client_interface.on_location_received(ctx.current_packet.location_ids)
+        for location_id in ctx.current_packet.location_ids:
+            ctx.client_status.checked_locations.add(location_id)
+        
+    if packetStatus == PacketStatus.ACTIVE:
+        pass
+    
+    if ctx.client_status.record_known:
+        unlocked = ctx.client_status.unlocked_items
+        spent = ctx.spent_items()
+        ctx.mercenary_handler.try_sync_mercenaries(unlocked, [unlocked[index] for index in spent])
+        delivered = ctx.item_handler.try_sync_items(
+            unlocked, packet.applied_item_count, spent)
+        if ctx.mark_items_spent(delivered):
+            ctx.client_interface.on_item_spent(ctx.client_status.spent_mask)
+    
+    if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
+        ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
+    
+    if packet.completed == True and not ctx.campaign_handler.is_active_scenario_complete():
+        ctx.campaign_handler.complete_active_scenario()
+        ctx.client_interface.on_scenario_completion(
+            ctx.campaign_handler.active_file.current_scenario.data)
+
+    if packet.completed_mercenary_id != -1:
+        mercenary_item = Items.ID_TO_ITEM.get(packet.completed_mercenary_id)
+        if mercenary_item is None:
+            logger.warning("The scenario acked mercenary id %s, which this apworld does not "
+                           "know. Reinstall the Ageipelago files for this slot.",
+                           packet.completed_mercenary_id)
+        elif mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary]:
+            index = ctx.unspent_index(mercenary_item)
+            if index != -1 and ctx.mark_items_spent({index}):
+                ctx.mercenary_handler.use_mercenary(mercenary_item)
+                ctx.client_interface.on_mercenary_used(mercenary_item)
+    
+    ctx.ping_game()
+    if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
+        ctx.client_interface.on_goal()
+        ctx.client_status.finished_game = True
+    await short_sleep()
