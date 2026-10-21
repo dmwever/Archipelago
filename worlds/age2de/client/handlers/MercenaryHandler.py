@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Iterable
 import io
 import zlib
 import logging
@@ -94,8 +95,11 @@ class MercenaryHandler(FolderHandler):
     def queued(self) -> list[Age2ItemData]:
         return list(self._queue)
 
-    def try_sync_mercenaries(self, unlocked_items: list[Age2ItemData]) -> None:
+    def try_sync_mercenaries(self, unlocked_items: list[Age2ItemData],
+                             spent: Iterable[Age2ItemData] = ()) -> None:
         try:
+            for item in set(spent).intersection(self._mercenaries):
+                self.set_used(item, True)
             self._enqueue_unlocked(unlocked_items)
             self._fill_seats()
             self._write_queue()
@@ -111,7 +115,6 @@ class MercenaryHandler(FolderHandler):
                 print(ex)
 
     def _enqueue_unlocked(self, unlocked_items: list[Age2ItemData]) -> None:
-        self._forget_unreceived(unlocked_items)
         for item in unlocked_items:
             if item not in self._mercenaries:
                 continue
@@ -120,16 +123,6 @@ class MercenaryHandler(FolderHandler):
             if managed.used or managed.seat != NO_SEAT or item in self._queue:
                 continue
             self._queue.append(item)
-
-    def _forget_unreceived(self, unlocked_items: list[Age2ItemData]) -> None:
-        received = set(unlocked_items)
-        if not received:
-            return
-        for item, managed in self._mercenaries.items():
-            if managed.used and item not in received:
-                logger.info("Mercenary %s was marked spent but has not been received; "
-                            "treating it as unspent.", item.item_name)
-                self.set_used(item, False)
 
     def _fill_seats(self) -> None:
         for seat in range(SEAT_COUNT):
