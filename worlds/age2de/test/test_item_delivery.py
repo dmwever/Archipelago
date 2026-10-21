@@ -540,9 +540,9 @@ class TestNamingACopyToSpend(TestItemDelivery):
         self.assertTrue(self.ctx.clear_spent_state())
 
         self.assertEqual(0, self.ctx.client_status.spent_mask)
-        self.assertEqual([], [managed for managed in self.ctx.item_handler.items()
-                              if managed.spent],
-                         "the handler still believed those items had been paid for")
+        self.send()   # the scenario restarts, so the same items go out again
+        self.assertEqual([item.id for item in items], self.sent_window(),
+                         "a cleared record still skipped items as though they were paid for")
 
 
 if __name__ == "__main__":

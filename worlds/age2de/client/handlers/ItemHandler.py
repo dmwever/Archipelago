@@ -52,29 +52,6 @@ class ItemHandler(FolderHandler):
     def in_flight(self) -> bool:
         return len(self._in_flight) != 0
 
-    def items(self) -> list[ManagedItem]:
-        return list(self._items)
-
-    def is_delivered(self, managed: ManagedItem) -> bool:
-        return managed.delivered
-
-    def is_spent(self, managed: ManagedItem) -> bool:
-        return managed.spent
-
-    def is_sent(self, managed: ManagedItem) -> bool:
-        """In the file the game is being asked to read, but not applied yet."""
-        return (self._sent_base != NOTHING_SENT
-                and self._sent_base <= managed.index < self._sent_base + len(self._in_flight))
-
-    def status(self, managed: ManagedItem) -> str:
-        if self.is_spent(managed):
-            return "Spent"
-        if self.is_delivered(managed):
-            return "Delivered"
-        if self.is_sent(managed):
-            return "Sent"
-        return "Pending"
-
     def set_current_item_index(self, unlocked_items: list[Age2ItemData]) -> None:
         self._current_item = min(self._current_item, len(unlocked_items))
 

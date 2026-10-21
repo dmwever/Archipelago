@@ -124,43 +124,6 @@ class Age2CommandProcessor(ClientCommandProcessor):
         for mercenary in ctx.data_storage.mercenaries:
             self.output(f"{handler.status(mercenary):<12}{mercenary.item_name}")
 
-    def _cmd_items(self, mode: str = "") -> None:
-        """
-        Items: Lists what Archipelago has sent and how far the game has taken it.
-
-        Pending has not been offered yet, Sent is in the file the game is being asked to
-        read, Delivered has been applied in game, and Spent is a one-shot the record has
-        already paid for. Lists what has not landed yet; /items all lists every row.
-        """
-        ctx = self.ctx
-        if ctx.data_storage is None:
-            self.output("Connect to your multiworld first, so the client knows this seed.")
-            return
-        everything = mode.strip().lower() == "all"
-        if mode and not everything:
-            self.output(f"Unknown option {mode!r}. Use /items or /items all.")
-            return
-
-        handler = ctx.game_ctx.item_handler
-        received = handler.items()
-        if not received:
-            self.output("Archipelago has not sent any items yet.")
-            return
-        delivered = sum(1 for managed in received if managed.delivered)
-        spent = sum(1 for managed in received if managed.spent)
-        self.output(f"{delivered} of {len(received)} delivered to the game, {spent} spent.")
-
-        rows = received if everything else [managed for managed in received
-                                            if not managed.delivered]
-        if not rows:
-            self.output("Everything Archipelago has sent has reached the game.")
-            return
-        shown = rows if everything else rows[:Items.ITEM_WINDOW * 2]
-        for managed in shown:
-            self.output(f"{handler.status(managed):<10}{managed.data.item_name}")
-        if len(shown) != len(rows):
-            self.output(f"...and {len(rows) - len(shown)} more. /items all lists every row.")
-
     def _cmd_scenarios(self) -> None:
         """
         Scenarios: Lists this seed's scenarios and where each one stands.
