@@ -66,7 +66,7 @@ class TestDefeatRules(bases.Age2RuleTestBase):
             scenario_logic = self.world.rules.logic.for_scenario(scenario)
             rules = scenario_logic.starting_state.defeat_rules(scenario_logic)
             for player in players:
-                if player.trades_once_defeated:
+                if player.can_trade_once_defeated:
                     with self.subTest(player=player):
                         self.assertIn(player, rules)
 

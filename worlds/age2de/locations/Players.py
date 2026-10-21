@@ -40,7 +40,7 @@ class Age2PlayerData(enum.IntEnum):
         raise ValueError(f"{building.name} is not a trade building")
 
     @property
-    def trades_once_defeated(self) -> bool:
+    def can_trade_once_defeated(self) -> bool:
         return TradeAccess.ONCE_DEFEATED in (self.market, self.dock)
 
     def defeat_event(self, scenario_name: str) -> str:

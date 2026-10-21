@@ -7,11 +7,6 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Locations import SCENARIO_TO_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..logic.ScenarioLogic import ScenarioLogic
 
-
-
-
-
-
 if TYPE_CHECKING:
     from .. import Age2World
     from .Rules import Rules
@@ -44,7 +39,7 @@ class ScenarioRules:
     
     def set_defeat_event_rules(self):
         for player in self.scenario.players:
-            if not player.trades_once_defeated:
+            if not player.can_trade_once_defeated:
                 continue
             try:
                 event = self.world.get_location(player.defeat_event(self.scenario.scenario_name))

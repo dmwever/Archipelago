@@ -291,16 +291,22 @@ class ScenarioResourceLogic:
         seed_gold = (self.can_gather_gold()
                      | resources.has_amount(Resource.GOLD, TRADE_SEED_GOLD))
 
-        by_cart = (partner_market
-                   & self.scenario.has_building(Age2BuildingData.MARKET)
-                   & self.logic.units.has_unit_items(Age2UnitData.TRADE_CART)
-                   & self.can_gather_wood())
+        by_cart = (
+            partner_market
+            & self.scenario.has_building(Age2BuildingData.MARKET)
+            & self.logic.units.has_unit_items(Age2UnitData.TRADE_CART)
+            & self.can_gather_wood()
+        )
 
-        by_cog = (partner_dock
-                  & self.scenario.has_building(Age2BuildingData.DOCK)
-                  & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
-                  & (self.can_gather_wood()
-                     | resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)))
+        by_cog = (
+            partner_dock
+            & self.scenario.has_building(Age2BuildingData.DOCK)
+            & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
+            & (
+                self.can_gather_wood()
+                | resources.has_amount(Resource.WOOD, TRADE_SEED_WOOD_AT_SEA)
+            )
+        )
 
         return (self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
                 & seed_gold & (by_cart | by_cog))

@@ -51,7 +51,7 @@ class ScenarioPlayerLogic:
         gates = [
             self._partner_gate(player, building) for player in self.scenario.scenario.players
                 if player.side is Side.ALLY
-                or partner_trade == PartnerTrade.option_allies_and_enemies
+                    or partner_trade == PartnerTrade.option_allies_and_enemies
         ]
         gates = [gate for gate in gates if not isinstance(gate, False_)]
         if not gates:

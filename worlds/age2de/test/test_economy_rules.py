@@ -325,7 +325,7 @@ class TestPartnerTradeWithEnemies(EconomyTestBase):
     def defended(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
         return {
             player for player in scenario.players
-                if player.trades_once_defeated
+                if player.can_trade_once_defeated
         }
 
     def worth_waiting_on(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:

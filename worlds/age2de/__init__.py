@@ -214,7 +214,7 @@ class Age2World(CachedRuleBuilderWorld):
                                  show_in_spoiler=False)
         if self.options.partner_trade == PartnerTrade.option_allies_and_enemies:
             for player in scenario.players:
-                if player.trades_once_defeated:
+                if player.can_trade_once_defeated:
                     new_region.add_event(player.defeat_event(scenario.scenario_name),
                                          show_in_spoiler=False)
         return new_region
