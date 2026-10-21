@@ -1,6 +1,7 @@
 from typing import Iterable
 
 from ..items.Items import Age2ItemData, CATEGORY_TO_ITEMS, Mercenary
+
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 
@@ -21,24 +22,11 @@ class DataStorage:
                                  if scenario.campaign in included),
                                 key=lambda scenario: scenario.id)
 
-    def used_mercenaries(self, storage_int: int) -> set[Age2ItemData]:
-        return {mercenary for index, mercenary in enumerate(self.mercenaries) if storage_int & (1 << index) != 0}
-
     def completed_scenarios(self, storage_int: int) -> set[Age2ScenarioData]:
         return {scenario for index, scenario in enumerate(self.scenarios) if storage_int & (1 << index) != 0}
 
-    def mercenary_bit(self, mercenary: Age2ItemData) -> int:
-        return self.mercenaries.index(mercenary)
-
     def scenario_bit(self, scenario: Age2ScenarioData) -> int:
         return self.scenarios.index(scenario)
-
-    def mercenary_field(self, mercenaries: Iterable[Age2ItemData]) -> int:
-        storage_int: int = 0
-        for index, mercenary in enumerate(self.mercenaries):
-            if mercenary in mercenaries:
-                storage_int = storage_int | (1 << index)
-        return storage_int
 
     def scenario_field(self, scenarios: Iterable[Age2ScenarioData]) -> int:
         storage_int: int = 0
