@@ -1,0 +1,76 @@
+# 09: Receiving Castle Age before reaching Feudal covers the Feudal Age button
+
+**Reported:** 2026-10-20, playtesting
+
+**Status:** needs-triage
+
+## Report
+
+When Castle Age is received after Feudal Age (both held, Feudal not yet researched), Castle Age
+takes over the age-up slot in the Town Center and covers Feudal Age.
+
+## Audit (from code, not verified in game)
+
+`UnlockAge` (`Ages.xs:59-71`), called from `GiveItem` for item ids 26–28 (`ItemHandler.xs:53-55`),
+sets the age tech straight to `STATE_ENABLE`. It only checks that this tech isn't already done and
+that the age is within `apMaxAge`. It never checks whether the *previous* age has been researched.
+
+The three age techs (101/102/103) share one Town Center button position. Normally Castle Age only
+becomes available once Feudal is done. Force-enabling it while the player is still in Dark puts two
+available techs in the same slot, and Castle wins, hiding Feudal.
+
+Nothing re-runs the unlock later: an age item is handled once, when it arrives. So doing nothing on
+an out-of-order item would leave Castle locked after Feudal is researched, unless something enables
+it then. (`ShuffleAgesUpdate` only sends checks; it doesn't unlock anything, and it only runs under
+`shuffle_ages`.)
+
+The apworld already assumes in-order ages: `ScenarioAgeLogic._climb_rule` requires
+`has_reached(previous age)`. So this is game-side only.
+
+Open question: can Castle Age actually be *researched* from Dark in this state, skipping Feudal? If
+so, that's a sequence break on top of the hidden button.
+
+## Likely shape of a fix
+
+Only enable an age when its item is held **and** the previous age is done. Add a small rule that,
+when an age finishes, enables the next one if its item is already held.
+
+## Comments
+
+**2026-10-20, review of the reporter's `Ages.xs` change** (`UnlockAge` now gates on `ageReached(id - 1)`):
+
+- `id` is the age **tech** id (101/102/103), but `ageReached` takes an age **constant** (26/27/28),
+  so `id - 1` is 100/101/102. None of those match, and `ageReached` falls through to `return (true)`.
+  The gate is always true: Castle and Imperial still enable on receipt, as before. `itemId - 1`
+  is the age constant the gate wants (Feudal → 25 Dark, which also falls through to true, correctly).
+- With that fixed, the reporter's case fails as expected: Feudal and Castle items both held, Feudal
+  researched afterwards. `UnlockAge(CASTLE)` ran once, on receipt, while Feudal wasn't done, and
+  nothing calls it again. Castle stays disabled for the rest of the scenario. Same for Imperial
+  received before Castle is researched. Needs a hook when an age completes: re-run `UnlockAge` for
+  the next age if its item is held. `ShuffleAgesUpdate` already polls age completion every second.
+- `ShuffleAgesUpdate`'s exit is now `reached == apMaxAge`. `reached` counts 0–3 but `apMaxAge` is an
+  age constant (26–28), so the rule never disables itself. Harmless, but it polls forever. To
+  compare like with like, count how many ages up to `apMaxAge` exist (`apMaxAge - DARK_AGE`).
+
+**2026-10-20, second review** (held flags `has_castle` / `has_imperial`, re-unlock in `ShuffleAgesUpdate`):
+
+- **Blocker:** `Ages.xs:77` and `:80` use `=`, not `==` (`if (itemId = CASTLE_AGE)`). XS rejects it
+  as a parse error, so `Ages.xs` fails to compile, and every scenario fails with it. Linted all 18
+  entry points (`AP_*_N.xs`): each has the same 6–7 errors, all cascading from this one
+  (`InitAges`, `UnlockAge`, `SetVanillaAge`, `SetMaxAge`, `completeIfPending`, `apVanillaAge` "not
+  defined"). The 6 warnings are identical in every file.
+- Once that compiles: `has_castle` is never cleared, so after Feudal is done `ShuffleAgesUpdate`
+  calls `UnlockAge(CASTLE_AGE)` every second until Castle is *done*. That re-applies `STATE_ENABLE`
+  while Castle is researching. Not known whether that cancels or restarts the research; clearing the
+  flag when the enable fires avoids the question. Same for `has_imperial`.
+- Exit condition `apMaxAge - DARK_AGE` is right now.
+- Nit: `has_castle` / `has_imperial` are snake_case; the XS globals are camelCase (`cavemanReady`,
+  `apMaxAge`).
+
+**2026-10-20, third review:** `==` fixed. All 18 entry points lint with 0 errors; the 6 warnings
+are unrelated (DiscardedFn ×5, FirstOprArith in `TrapItems.xs:68`). Logic traced for: Castle before
+Feudal researched, Castle after, Imperial before Castle, Feudal at start — all enable at the right
+time. Still open: `has_castle` / `has_imperial` are never cleared, so `UnlockAge` re-applies
+`STATE_ENABLE` every second while the next age is researching.
+
+**2026-10-20, fourth review:** flags now cleared after the enable fires. Still lints 0 errors on all 18 entry points. No open review points; needs a playtest of the out-of-order case.
