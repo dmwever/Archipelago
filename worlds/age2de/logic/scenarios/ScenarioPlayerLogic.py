@@ -36,13 +36,6 @@ class ScenarioPlayerLogic:
 
     # -- trade --------------------------------------------------------------------------------
 
-    def has_trading_ally(self) -> Rule:
-        has_open_ally_building = any(
-            player.side is Side.ALLY and TradeAccess.OPEN in (player.market, player.dock)
-            for player in self.scenario.scenario.players
-        )
-        return True_() if has_open_ally_building else False_()
-
     def can_reach_partner(self, building: Age2BuildingData) -> Rule:
         """A trade partner's market or dock, as far as the yaml lets the logic count on one."""
         partner_trade = self.world.options.partner_trade
