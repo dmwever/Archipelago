@@ -21,8 +21,14 @@ class Age2PlayerData(enum.IntEnum):
         return obj
 
     def __init__(
-        self, id: int, player_name: str, slot: int, side: Side, is_main_opponent: bool,
-        market: TradeAccess, dock: TradeAccess
+        self,
+        id: int,
+        player_name: str,
+        slot: int,
+        side: Side,
+        is_main_opponent: bool,
+        market: TradeAccess,
+        dock: TradeAccess,
     ) -> None:
         self.id = id
         self.player_name = player_name
