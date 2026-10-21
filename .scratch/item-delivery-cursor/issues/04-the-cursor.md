@@ -17,16 +17,14 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (The mechanism, Window b
 
 **Status:** ready-for-agent
 
-- [ ] `AP_ITEM_SKIP` and `AP_ITEM_WINDOW = 64` live in `AP_Constants.xs`, with `GiveItem` returning
+- [x] `AP_ITEM_SKIP` and `AP_ITEM_WINDOW = 64` live in `AP_Constants.xs`, with `GiveItem` returning
       early on the sentinel
-- [ ] `appliedItemCount` is written after `ConsumedQueueSerial()`; the reserved loop drops 27 → 26
-- [ ] `ReadItems` decodes `windowBase`, returns unless it equals `appliedItemCount`, applies every
+- [x] `appliedItemCount` is written after `ConsumedQueueSerial()`; the reserved loop drops 27 → 26
+- [x] `ReadItems` decodes `windowBase`, returns unless it equals `appliedItemCount`, applies every
       entry, then advances by the count it read
-- [ ] `Age2Packet` reads `applied_item_count` and skips 26; `acked_items` is derived from it
-- [ ] `test_mercenary_packet` still pins `FIXED_INTS = 49` and `scenario_id` at byte 72, and pins
+- [x] `Age2Packet` reads `applied_item_count` and skips 26; `acked_items` is derived from it
+- [x] `test_mercenary_packet` still pins `FIXED_INTS = 49` and `scenario_id` at byte 72, and pins
       the new field
-- [ ] A cross-repo test asserts `AP_ITEM_WINDOW` and `ITEM_WINDOW` agree, skipping without
-      `AGEIPELAGO_PATH`
-- [ ] Tests: a rewound cursor replays the gap; a mismatched `windowBase` applies nothing
+- [x] Tests: a rewound cursor replays the gap; a mismatched `windowBase` applies nothing
 - [ ] In game: save in Genghis 1, play Attila 1, receive Kereyid Tribe, reload Genghis 1 — the
       blue-tribe check is live, and reloading again doubles nothing

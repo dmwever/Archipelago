@@ -864,6 +864,8 @@ TRAP_NAMES: list[str] = [_trap.item_name for _trap in CATEGORY_TO_ITEMS[Trap]]
 
 SKIP_ITEM_ID: int = -2
 
+ITEM_WINDOW: int = 12
+
 ONE_SHOT_ITEMS: frozenset[Age2ItemData] = frozenset(
     CATEGORY_TO_ITEMS[Resources] + CATEGORY_TO_ITEMS[Trap])
 

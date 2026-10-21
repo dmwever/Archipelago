@@ -98,6 +98,7 @@ class Age2Packet:
     scenario_id: int = 0
     completed_mercenary_id: int = -1
     acked_queue_serial: int = -1
+    applied_item_count: int = 0
     item_ids: List[int]
     location_ids: List[int]
     
@@ -118,7 +119,8 @@ class Age2Packet:
         self.world_minor = XsdatFile.read_int(fp)
         self.completed_mercenary_id = XsdatFile.read_int(fp)
         self.acked_queue_serial = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 27)
+        self.applied_item_count = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 26)
         while True:
             data = fp.read(4)
             if not data:
@@ -154,6 +156,7 @@ class ClientStatus:
     in_flight: list[int] = field(default_factory=list[int])
     spent_mask: int = 0
     storage_ready: bool = False
+    items_sent_to_game_count: int = -1
 
 class Age2GameContext:
     running: bool = False
@@ -347,33 +350,40 @@ class Age2GameContext:
     def reconcile_spent(self, server: int) -> int:
         local = self.storage_handler.try_load()
         spent = server if local is None else local
+        spent &= (1 << len(self.client_status.unlocked_items)) - 1
         self.client_status.spent_mask = spent
         self.storage_handler.try_save(spent)
         self.client_status.storage_ready = True
         return spent
 
+    def sync_applied_items(self, applied: int) -> None:
+        self.client_status.acked_items = min(
+            applied, len(self.client_status.unlocked_items))
+        if self.client_status.acked_items != self.client_status.items_sent_to_game_count:
+            self.client_status.in_flight = []
+
     def send_items(self) -> None:
         if not self.client_status.storage_ready:
             return
-        if any(item != -1 for item in self.current_packet.item_ids):
-            return
-        num_items = len(self.client_status.unlocked_items) - self.client_status.acked_items
-        if num_items > 12:
-            num_items = 12
+        start = self.client_status.acked_items
+        num_items = len(self.client_status.unlocked_items) - start
+        if num_items > Items.ITEM_WINDOW:
+            num_items = Items.ITEM_WINDOW
         if num_items <= 0:
             self.client_status.in_flight = []
             return
-        start = self.client_status.acked_items
         window = self.client_status.unlocked_items[start:start + num_items]
         item_ids = [self.id_for_game(start + offset, item)
                     for offset, item in enumerate(window)]
-        if item_ids == self.client_status.in_flight:
+        if start == self.client_status.items_sent_to_game_count and item_ids == self.client_status.in_flight:
             return
         try:
             with open(self.profile_folder() + "items.xsdat", "wb") as fp:
+                XsdatFile.write_int(fp, start)
                 for item_id in item_ids:
                     XsdatFile.write_int(fp, item_id)
             self.client_status.in_flight = item_ids
+            self.client_status.items_sent_to_game_count = start
         except Exception as ex:
             print(ex)
 
@@ -610,9 +620,8 @@ async def status_loop(ctx: Age2GameContext):
         if packetStatus == PacketStatus.ACTIVE:
             pass
         
-        if (any(x != -1 for x in ctx.current_packet.item_ids)):
-            ctx.ack_items()
-            ctx.mark_delivered_spent()
+        ctx.sync_applied_items(packet.applied_item_count)
+        ctx.mark_delivered_spent()
         
         if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
             ctx.send_items()

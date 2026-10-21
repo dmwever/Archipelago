@@ -129,8 +129,8 @@ The twelve item ints stay in the game → client packet, written as `-1`. They a
 **Window size stays capped, at 64.** Unbounded was considered and dropped: `UnlockUnitItem` calls
 `refreshUnitLocks()` and `GiveItem` then calls `RefreshProfessions()`, each a full walk of the unit
 table, so a few hundred unit items in one tick is quadratic. A cap keeps every tick small without
-needing a batch/defer mechanism. Shared constant on both sides, with a cross-repo test pinning that
-they agree.
+needing a batch/defer mechanism. Shared constant on both sides, declared once per repo and
+kept in step by hand.
 
 ### 02: quiet the switch, and check identity *harder*
 

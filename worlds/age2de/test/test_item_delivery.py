@@ -1,13 +1,12 @@
-"""Item delivery over items.xsdat / free_items.xsdat.
+"""Item delivery over items.xsdat.
 
-These exercise the client half of the one-time item channel: the sliding window
-in send_items, the acknowledgement cursor in ack_items, and the release echo in
-free_items. FakeGame below stands in for AP.xs's ReadItems / FreeItems rules so a
-full delivery can be driven without the game running.
+The window is addressed, not positional: it carries the cursor it was written for, and the game
+applies it only when that matches its own, all of it or none. Re-reading a window it has already
+applied is a no-op, because the base no longer matches.
 
-Regression cover for the defect where ack_items advanced acked_items once per
-occupied echo slot per tick, over-running the send window and stranding every
-item past it.
+That makes the cursor the whole protocol. The game owns it, a loaded save rewinds it, and the
+client streams from wherever the packet says it is. FakeGame below stands in for AP.xs's ReadItems
+so a full delivery can be driven without the game running.
 """
 
 import os
@@ -36,34 +35,23 @@ def read_ints(path: str) -> list[int]:
 
 
 class FakeGame:
-    """The XS side of the handshake, as AP.xs implements it after the fix.
-
-    ReadItems grants an id only into a free slot; FreeItems releases one slot per
-    id echoed back by the client.
-    """
+    """The XS side of the handshake, as AP.xs implements it once the window gained a base."""
 
     def __init__(self) -> None:
-        self.slots = [-1] * ITEM_WINDOW
+        self.applied_item_count = 0
         self.granted: list[int] = []
-        self.discarded: list[int] = []
+        self.ignored: list[list[int]] = []
 
     def read_items(self, folder: str) -> None:
-        for i, item_id in enumerate(read_ints(folder + "items.xsdat")[:ITEM_WINDOW]):
-            if self.slots[i] == -1:
-                self.granted.append(item_id)
-                self.slots[i] = item_id
-            else:
-                self.discarded.append(item_id)
-
-    def free_items(self, folder: str) -> None:
-        for item_id in read_ints(folder + "free_items.xsdat"):
-            for j in range(ITEM_WINDOW):
-                if self.slots[j] == item_id:
-                    self.slots[j] = -1
-                    break
-
-    def echo(self) -> list[int]:
-        return list(self.slots)
+        data = read_ints(folder + "items.xsdat")
+        if not data:
+            return
+        base, entries = data[0], data[1:]
+        if base != self.applied_item_count:
+            self.ignored.append(entries)
+            return
+        self.granted.extend(entries)
+        self.applied_item_count += len(entries)
 
 
 class TestItemDelivery(unittest.TestCase):
@@ -86,75 +74,88 @@ class TestItemDelivery(unittest.TestCase):
     def unlock(self, *items: Age2ItemData) -> None:
         self.ctx.client_status.unlocked_items.extend(items)
 
-    def set_echo(self, echoed: list[int]) -> None:
-        self.ctx.current_packet.item_ids = list(echoed) + [-1] * (ITEM_WINDOW - len(echoed))
-
-    def client_tick(self) -> None:
-        """The item phase of status_loop, in the same order."""
-        if any(x != -1 for x in self.ctx.current_packet.item_ids):
-            self.ctx.ack_items()
-            self.ctx.mark_delivered_spent()
+    def full_tick(self) -> None:
+        """The item phase of status_loop, in the same order, plus the game's response."""
+        self.ctx.sync_applied_items(self.game.applied_item_count)
+        self.ctx.mark_delivered_spent()
         if self.ctx.client_status.acked_items < len(self.ctx.client_status.unlocked_items):
             self.ctx.send_items()
-        self.ctx.free_items()
-
-    def full_tick(self) -> None:
-        """One client tick plus the game's response to it."""
-        self.set_echo([x for x in self.game.echo() if x != -1])
-        self.client_tick()
-        # ping_game arms the game's ReadItems rule only while a window is
-        # outstanding, so a stale items.xsdat is never re-read.
-        if len(self.ctx.client_status.in_flight) != 0:
+        # ping_game arms ReadItems only while a window is outstanding.
+        if self.ctx.client_status.in_flight:
             self.game.read_items(self.folder)
-        self.game.free_items(self.folder)
 
     def sent_items(self) -> list[int]:
         return read_ints(self.folder + "items.xsdat")
 
+    def sent_window(self) -> list[int]:
+        """The entries, without the base that addresses them."""
+        return self.sent_items()[1:]
+
     # -- tests -----------------------------------------------------------
 
-    def test_ack_does_not_advance_twice_for_one_window(self) -> None:
-        """The same echo on consecutive ticks must advance the cursor once."""
-        self.unlock(*list(Age2ItemData)[:20])
+    def test_the_window_carries_the_cursor_it_was_written_for(self) -> None:
+        self.unlock(*list(Age2ItemData)[:100])
 
         self.ctx.send_items()
-        window = self.sent_items()
-        self.assertEqual(len(window), ITEM_WINDOW)
 
-        self.set_echo(window)
-        self.ctx.ack_items()
-        self.assertEqual(self.ctx.client_status.acked_items, ITEM_WINDOW)
+        written = self.sent_items()
+        self.assertEqual(0, written[0], "the window is addressed to the cursor it starts at")
+        self.assertEqual(Items.ITEM_WINDOW, len(written) - 1)
 
-        self.ctx.ack_items()
-        self.assertEqual(
-            self.ctx.client_status.acked_items,
-            ITEM_WINDOW,
-            "a second tick on the same echo re-acked items that were never sent",
-        )
-
-    def test_full_window_acks_exactly_twelve(self) -> None:
-        self.unlock(*list(Age2ItemData)[:ITEM_WINDOW])
-        self.ctx.send_items()
-        self.set_echo(self.sent_items())
-        self.ctx.ack_items()
-        self.assertEqual(self.ctx.client_status.acked_items, ITEM_WINDOW)
-
-    def test_no_send_while_game_still_holds_a_window(self) -> None:
+    def test_a_window_for_another_cursor_applies_nothing(self) -> None:
+        """A leftover file, or one written before a save was loaded, must not be replayed."""
         self.unlock(*list(Age2ItemData)[:20])
         self.ctx.send_items()
-        first = self.sent_items()
+        self.game.applied_item_count = 5
 
-        # The cursor has moved on, but the game has not released the slots yet.
-        self.set_echo(first)
-        self.ctx.ack_items()
-        self.assertEqual(self.ctx.client_status.acked_items, ITEM_WINDOW)
+        self.game.read_items(self.folder)
 
+        self.assertEqual([], self.game.granted)
+        self.assertEqual(5, self.game.applied_item_count)
+
+    def test_re_reading_an_applied_window_is_a_no_op(self) -> None:
+        """The cursor moved past the base, so the same file can never be applied twice."""
+        self.unlock(*list(Age2ItemData)[:20])
         self.ctx.send_items()
-        self.assertEqual(
-            self.sent_items(),
-            first,
-            "a new window was written while the game still held the previous one",
-        )
+        self.game.read_items(self.folder)
+        granted_once = list(self.game.granted)
+
+        self.game.read_items(self.folder)
+
+        self.assertEqual(granted_once, self.game.granted)
+
+    def test_an_empty_file_applies_nothing(self) -> None:
+        """A truncated or half-written file has no base to match, and must not advance."""
+        open(self.folder + "items.xsdat", "wb").close()
+
+        self.game.read_items(self.folder)
+
+        self.assertEqual([], self.game.granted)
+        self.assertEqual(0, self.game.applied_item_count)
+
+    def test_a_rewound_cursor_replays_the_gap(self) -> None:
+        """The whole point: a loaded save reports less, and the client streams from there."""
+        items = list(Age2ItemData)[:20]
+        self.unlock(*items)
+        for _ in range(10):
+            self.full_tick()
+            if self.ctx.client_status.acked_items >= len(items):
+                break
+        self.assertEqual(len(items), self.game.applied_item_count)
+
+        self.game.applied_item_count = 5
+        self.game.granted.clear()
+        for _ in range(10):
+            self.full_tick()
+            if self.ctx.client_status.acked_items >= len(items):
+                break
+
+        expected = [Items.SKIP_ITEM_ID if item in Items.ONE_SHOT_ITEMS else item.id
+                    for item in items[5:]]
+        self.assertIn(Items.SKIP_ITEM_ID, expected,
+                      "this fixture proves nothing unless the replayed range holds a one-shot")
+        self.assertEqual(expected, self.game.granted,
+                         "the gap was not replayed, or a one-shot was paid out a second time")
 
     def test_every_item_is_delivered(self) -> None:
         """20 items across two windows: all 20 reach the game, none skipped."""
@@ -166,7 +167,7 @@ class TestItemDelivery(unittest.TestCase):
             if self.ctx.client_status.acked_items >= len(items):
                 break
 
-        self.assertEqual(self.game.discarded, [], "the game discarded ids it was sent")
+        self.assertEqual(self.game.ignored, [], "the game discarded ids it was sent")
         self.assertEqual(
             self.game.granted,
             [item.id for item in items],
@@ -186,25 +187,6 @@ class TestItemDelivery(unittest.TestCase):
 
         self.assertEqual(self.game.granted, [wood.id] * 5)
         self.assertEqual(self.ctx.client_status.acked_items, 5)
-
-    def test_free_items_does_not_release_unacked_ids(self) -> None:
-        """Nothing may be freed from the game's slots before the cursor passes it."""
-        items = list(Age2ItemData)[:ITEM_WINDOW]
-        self.unlock(*items)
-        self.ctx.send_items()
-
-        # The game has taken only part of the window so far.
-        partial = self.sent_items()[:4]
-        self.set_echo(partial)
-        self.ctx.ack_items()
-        self.ctx.free_items()
-
-        freed = read_ints(self.folder + "free_items.xsdat")
-        self.assertEqual(
-            freed,
-            partial,
-            "free_items released ids the client had not acknowledged",
-        )
 
     def test_an_unknown_item_id_is_skipped_not_raised(self) -> None:
         """An id this world does not know must not take the connection down with it."""
@@ -251,18 +233,6 @@ class TestItemDelivery(unittest.TestCase):
         )
         self.assertEqual(self.ctx.client_status.acked_items, 2)
 
-    def test_free_items_releases_orphans_from_a_previous_session(self) -> None:
-        """After a reconnect the game may hold ids this session never sent."""
-        self.unlock(*list(Age2ItemData)[:4])
-        self.set_echo([999, 998])
-        self.client_tick()
-
-        self.assertEqual(
-            read_ints(self.folder + "free_items.xsdat"),
-            [999, 998],
-            "stale slots were never released, so no new window can be sent",
-        )
-
 
 class TestOneShotSkipping(TestItemDelivery):
     """Filler resources and traps add rather than set, so a replayed stream must not re-send them.
@@ -296,7 +266,7 @@ class TestOneShotSkipping(TestItemDelivery):
         self.assertEqual(
             [Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID,
              self.TRAP.id, self.FLAG.id],
-            self.sent_items(),
+            self.sent_window(),
             "one-shots below the mark skip, flags resend, and anything above the mark is real")
 
     def test_skipping_does_not_shorten_the_window(self) -> None:
@@ -308,7 +278,7 @@ class TestOneShotSkipping(TestItemDelivery):
 
         self.ctx.send_items()
 
-        self.assertEqual([Items.SKIP_ITEM_ID] * 7, self.sent_items())
+        self.assertEqual([Items.SKIP_ITEM_ID] * 7, self.sent_window())
 
     def test_forward_delivery_never_skips_anything(self) -> None:
         """The mark only ever reaches the cursor, so a window is always entirely unpaid."""
@@ -389,9 +359,12 @@ class TestReconcilingTheSpentRecord(TestItemDelivery):
     """
 
     def saved(self, spent: int) -> None:
+        """A local record, over a stream long enough for it to survive truncation."""
+        self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 16
         self.ctx.storage_handler.try_save(spent)
 
     def test_no_local_record_adopts_the_server(self) -> None:
+        self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 16
         self.assertEqual(0b101, self.ctx.reconcile_spent(0b101))
         self.assertEqual(0b101, self.ctx.client_status.spent_mask)
 
@@ -410,7 +383,31 @@ class TestReconcilingTheSpentRecord(TestItemDelivery):
         self.assertEqual(0, self.ctx.reconcile_spent(0b101),
                          "a playthrough that has spent nothing still wins")
 
+    def test_bits_past_the_received_stream_are_dropped(self) -> None:
+        """A reset or rolled-back server leaves a record describing a playthrough that is gone.
+
+        The stream is append-only, so a bit still inside it really was spent and is kept; a bit
+        past the end names nothing now and would name the wrong entry once the stream refilled.
+        """
+        self.saved((1 << 1) | (1 << 7))
+        self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 3
+
+        self.assertEqual(1 << 1, self.ctx.reconcile_spent(0),
+                         "the surviving prefix was discarded, or the stale bit was kept")
+
+    def test_a_reset_to_an_empty_stream_clears_the_record(self) -> None:
+        self.saved((1 << 2) | (1 << 9))
+        self.ctx.client_status.unlocked_items.clear()
+
+        self.assertEqual(0, self.ctx.reconcile_spent(0))
+
+    def test_a_full_stream_truncates_nothing(self) -> None:
+        self.saved((1 << 2) | (1 << 9))
+
+        self.assertEqual((1 << 2) | (1 << 9), self.ctx.reconcile_spent(0))
+
     def test_reconciling_opens_the_gate_on_sending(self) -> None:
+        self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 16
         self.ctx.client_status.storage_ready = False
         self.ctx.reconcile_spent(0)
         self.assertTrue(self.ctx.client_status.storage_ready)

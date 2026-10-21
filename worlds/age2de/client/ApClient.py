@@ -151,6 +151,8 @@ class Age2Context(CommonContext):
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
     spent_key: str
+    items_loaded: bool = False
+    pending_spent: int | None = None
     data_storage: DataStorage = None
     installed_seed_name: str = ''
     seed_world_version = WorldVersion.UNKNOWN
@@ -191,6 +193,8 @@ class Age2Context(CommonContext):
     def _handle_connected(self, slot_data):
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         self.spent_key = f"{self.team}_{self.slot}_spent"
+        self.items_loaded = False
+        self.pending_spent = None
         self.seed_world_version = WorldVersion.parse(slot_data.get(WorldVersion.SLOT_DATA_KEY))
         if not self.seed_is_compatible():
             logger.warning(WorldVersion.describe(self.seed_world_version, Age2World.world_version))
@@ -244,6 +248,9 @@ class Age2Context(CommonContext):
         status = self.game_ctx.client_status
         if status.acked_items > len(status.unlocked_items):
             status.acked_items = len(status.unlocked_items)
+        if args.get("index", -1) == 0:
+            self.items_loaded = True
+        self._try_reconcile_spent()
 
     def _handle_set_reply(self, args: dict) -> None:
         if args["key"] == self.scenario_completion_key:
@@ -258,9 +265,16 @@ class Age2Context(CommonContext):
             managed_scenario.completed = scenario_data in finished
 
     def _handle_spent_reply(self) -> None:
-        server: int = self.stored_data.get(self.spent_key) or 0
-        spent = self.game_ctx.reconcile_spent(server)
-        if spent != server:
+        self.pending_spent = self.stored_data.get(self.spent_key) or 0
+        self._try_reconcile_spent()
+
+    def _try_reconcile_spent(self) -> None:
+        if not self.items_loaded or self.pending_spent is None:
+            return
+        spent_item_count = self.pending_spent
+        self.pending_spent = None
+        spent = self.game_ctx.reconcile_spent(spent_item_count)
+        if spent != spent_item_count:
             self._push_spent(spent)
 
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
@@ -280,7 +294,7 @@ class Age2Context(CommonContext):
         """The record was written where the spend happened; this only tells the server."""
         self._push_spent(self.game_ctx.client_status.spent_mask)
 
-    def on_spent_changed(self, spent: int) -> None:
+    def on_item_spent(self, spent: int) -> None:
         self._push_spent(spent)
 
     def _push_spent(self, spent: int) -> None:
