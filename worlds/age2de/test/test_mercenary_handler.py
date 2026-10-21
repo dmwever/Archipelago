@@ -48,7 +48,7 @@ class MercenaryHandlerTestBase(unittest.TestCase):
 class TestSpentStateAgainstWhatWasReceived(MercenaryHandlerTestBase):
     """The handler is told which mercenaries are spent, in item terms, as it always has been.
 
-    Where that list comes from is not its business: Age2GameContext.spent_items decodes the record,
+    Where that list comes from is not its business: Age2GameContext.spent_indices decodes the record and status_loop names the entries,
     and test_item_delivery covers what a stale or oversized record decodes to.
     """
 

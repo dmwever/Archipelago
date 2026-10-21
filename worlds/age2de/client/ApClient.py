@@ -245,9 +245,8 @@ class Age2Context(CommonContext):
             if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
             self.game_ctx.client_status.unlocked_items.append(item_data)
-        status = self.game_ctx.client_status
-        if status.acked_items > len(status.unlocked_items):
-            status.acked_items = len(status.unlocked_items)
+        self.game_ctx.item_handler.set_current_item_index(
+            self.game_ctx.client_status.unlocked_items)
         if args.get("index", -1) == 0:
             self.items_loaded = True
         self._try_reconcile_spent()

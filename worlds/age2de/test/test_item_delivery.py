@@ -65,7 +65,7 @@ class TestItemDelivery(unittest.TestCase):
         # too; mark_delivered_spent persists the record on every tick.
         self.ctx.update_game_user_folder(self._tmp.name)
         # These exercise the window, not the gate on it. TestOneShotSkipping covers that.
-        self.ctx.client_status.storage_ready = True
+        self.ctx.client_status.record_known = True
         self.folder = self.ctx.profile_folder()
         self.game = FakeGame()
 
@@ -76,13 +76,25 @@ class TestItemDelivery(unittest.TestCase):
 
     def full_tick(self) -> None:
         """The item phase of status_loop, in the same order, plus the game's response."""
-        self.ctx.sync_applied_items(self.game.applied_item_count)
-        self.ctx.mark_delivered_spent()
-        if self.ctx.client_status.acked_items < len(self.ctx.client_status.unlocked_items):
-            self.ctx.send_items()
+        self.sync(self.game.applied_item_count)
         # ping_game arms ReadItems only while a window is outstanding.
-        if self.ctx.client_status.in_flight:
+        if self.ctx.item_handler.in_flight():
             self.game.read_items(self.folder)
+
+    def sync(self, applied: int = 0) -> None:
+        """One delivery pass, gated the way status_loop gates it."""
+        if not self.ctx.client_status.record_known:
+            return
+        self.ctx.item_handler.sync_items(self.ctx.client_status.unlocked_items, applied,
+                                         self.ctx.spent_items())
+
+    def send(self, applied: int = 0) -> None:
+        self.sync(applied)
+
+    def spent(self, mask: int) -> None:
+        """Put a record in place the way a connect does: save it, then reconcile."""
+        self.ctx.storage_handler.try_save(mask)
+        self.ctx.reconcile_spent(0)
 
     def sent_items(self) -> list[int]:
         return read_ints(self.folder + "items.xsdat")
@@ -96,7 +108,7 @@ class TestItemDelivery(unittest.TestCase):
     def test_the_window_carries_the_cursor_it_was_written_for(self) -> None:
         self.unlock(*list(Age2ItemData)[:100])
 
-        self.ctx.send_items()
+        self.send()
 
         written = self.sent_items()
         self.assertEqual(0, written[0], "the window is addressed to the cursor it starts at")
@@ -105,7 +117,7 @@ class TestItemDelivery(unittest.TestCase):
     def test_a_window_for_another_cursor_applies_nothing(self) -> None:
         """A leftover file, or one written before a save was loaded, must not be replayed."""
         self.unlock(*list(Age2ItemData)[:20])
-        self.ctx.send_items()
+        self.send()
         self.game.applied_item_count = 5
 
         self.game.read_items(self.folder)
@@ -116,7 +128,7 @@ class TestItemDelivery(unittest.TestCase):
     def test_re_reading_an_applied_window_is_a_no_op(self) -> None:
         """The cursor moved past the base, so the same file can never be applied twice."""
         self.unlock(*list(Age2ItemData)[:20])
-        self.ctx.send_items()
+        self.send()
         self.game.read_items(self.folder)
         granted_once = list(self.game.granted)
 
@@ -139,7 +151,7 @@ class TestItemDelivery(unittest.TestCase):
         self.unlock(*items)
         for _ in range(10):
             self.full_tick()
-            if self.ctx.client_status.acked_items >= len(items):
+            if self.ctx.item_handler.current_item_index() >= len(items):
                 break
         self.assertEqual(len(items), self.game.applied_item_count)
 
@@ -147,7 +159,7 @@ class TestItemDelivery(unittest.TestCase):
         self.game.granted.clear()
         for _ in range(10):
             self.full_tick()
-            if self.ctx.client_status.acked_items >= len(items):
+            if self.ctx.item_handler.current_item_index() >= len(items):
                 break
 
         expected = [Items.SKIP_ITEM_ID if item in Items.ONE_SHOT_ITEMS else item.id
@@ -164,7 +176,7 @@ class TestItemDelivery(unittest.TestCase):
 
         for _ in range(30):
             self.full_tick()
-            if self.ctx.client_status.acked_items >= len(items):
+            if self.ctx.item_handler.current_item_index() >= len(items):
                 break
 
         self.assertEqual(self.game.ignored, [], "the game discarded ids it was sent")
@@ -173,7 +185,7 @@ class TestItemDelivery(unittest.TestCase):
             [item.id for item in items],
             "not every unlocked item reached the game",
         )
-        self.assertEqual(self.ctx.client_status.acked_items, len(items))
+        self.assertEqual(self.ctx.item_handler.current_item_index(), len(items))
 
     def test_duplicate_ids_in_one_window(self) -> None:
         """Filler resources repeat; acking must count them, not collapse them."""
@@ -182,11 +194,11 @@ class TestItemDelivery(unittest.TestCase):
 
         for _ in range(20):
             self.full_tick()
-            if self.ctx.client_status.acked_items >= 5:
+            if self.ctx.item_handler.current_item_index() >= 5:
                 break
 
         self.assertEqual(self.game.granted, [wood.id] * 5)
-        self.assertEqual(self.ctx.client_status.acked_items, 5)
+        self.assertEqual(self.ctx.item_handler.current_item_index(), 5)
 
     def test_an_unknown_item_id_is_skipped_not_raised(self) -> None:
         """An id this world does not know must not take the connection down with it."""
@@ -224,14 +236,14 @@ class TestItemDelivery(unittest.TestCase):
         ap._handle_received_items(packet)
         self.assertEqual(len(self.ctx.client_status.unlocked_items), len(items))
 
-        self.ctx.client_status.acked_items = 2
+        self.send(2)
         ap._handle_received_items(packet)
         self.assertEqual(
             len(self.ctx.client_status.unlocked_items),
             len(items),
             "a resync appended a second copy of every item",
         )
-        self.assertEqual(self.ctx.client_status.acked_items, 2)
+        self.assertEqual(self.ctx.item_handler.current_item_index(), 2)
 
 
 class TestOneShotSkipping(TestItemDelivery):
@@ -245,23 +257,22 @@ class TestOneShotSkipping(TestItemDelivery):
     FLAG = Age2ItemData.FISH_TRAP
 
     def test_nothing_is_sent_before_the_stored_mark_has_come_back(self) -> None:
-        self.ctx.client_status.storage_ready = False
+        self.ctx.client_status.record_known = False
         self.unlock(self.TRAP)
 
-        self.ctx.send_items()
+        self.send()
 
         self.assertEqual([], self.sent_items(),
                          "sending before the mark lands is exactly the reconnect trap bug")
-        self.assertEqual([], self.ctx.client_status.in_flight)
+        self.assertFalse(self.ctx.item_handler.in_flight())
 
     def test_a_rewound_cursor_skips_the_one_shots_it_already_paid(self) -> None:
         self.unlock(self.FILLER, self.FLAG, self.TRAP, self.FLAG, self.FILLER, self.TRAP, self.FLAG)
         # The reconnect case: the record survived, the cursor did not. Only the filler at 0
         # and 4 and the trap at 2 can carry a bit; flags are replayable and never spend.
         self.ctx.client_status.spent_mask = (1 << 0) | (1 << 2) | (1 << 4)
-        self.ctx.client_status.acked_items = 0
 
-        self.ctx.send_items()
+        self.send()
 
         self.assertEqual(
             [Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID,
@@ -274,9 +285,8 @@ class TestOneShotSkipping(TestItemDelivery):
         items = [self.TRAP] * 7
         self.unlock(*items)
         self.ctx.client_status.spent_mask = 0b1111111
-        self.ctx.client_status.acked_items = 0
 
-        self.ctx.send_items()
+        self.send()
 
         self.assertEqual([Items.SKIP_ITEM_ID] * 7, self.sent_window())
 
@@ -287,7 +297,7 @@ class TestOneShotSkipping(TestItemDelivery):
 
         for _ in range(30):
             self.full_tick()
-            if self.ctx.client_status.acked_items >= len(items):
+            if self.ctx.item_handler.current_item_index() >= len(items):
                 break
 
         self.assertEqual([item.id for item in items], self.game.granted,
@@ -306,7 +316,7 @@ class TestOneShotSkipping(TestItemDelivery):
 
         for _ in range(30):
             self.full_tick()
-            if self.ctx.client_status.acked_items >= 20:
+            if self.ctx.item_handler.current_item_index() >= 20:
                 break
 
         self.assertEqual(0, self.ctx.client_status.spent_mask,
@@ -315,7 +325,7 @@ class TestOneShotSkipping(TestItemDelivery):
 
 
 class TestDecodingTheSpentRecord(TestItemDelivery):
-    """spent_items turns the record back into entries, and is the only place indices are read.
+    """spent_indices turns the record back into stream positions, the one decode of the mask.
 
     Everything downstream -- the mercenary handler in particular -- is handed items, not bits.
     """
@@ -326,19 +336,18 @@ class TestDecodingTheSpentRecord(TestItemDelivery):
         self.unlock(*items)
         self.ctx.client_status.spent_mask = (1 << 0) | (1 << 2)
 
-        self.assertEqual([Age2ItemData.FILLER_WOOD_SMALL, Age2ItemData.TRAP_WOLOLO],
-                         self.ctx.spent_items())
+        self.assertEqual({0, 2}, self.ctx.spent_items())
 
     def test_an_empty_record_names_nothing(self) -> None:
         self.unlock(Age2ItemData.TRAP_WOLOLO)
-        self.assertEqual([], self.ctx.spent_items())
+        self.assertEqual(set(), self.ctx.spent_items())
 
     def test_a_bit_past_the_received_stream_names_nothing(self) -> None:
         """A record outlives the apsave, so it can carry bits for a stream that is not back yet."""
         self.unlock(Age2ItemData.TRAP_WOLOLO)
         self.ctx.client_status.spent_mask = 1 << 40
 
-        self.assertEqual([], self.ctx.spent_items(),
+        self.assertEqual(set(), self.ctx.spent_items(),
                          "a bit beyond what has been received cannot name an entry")
 
     def test_duplicates_are_named_once_each(self) -> None:
@@ -347,7 +356,7 @@ class TestDecodingTheSpentRecord(TestItemDelivery):
         self.unlock(wood, wood, wood)
         self.ctx.client_status.spent_mask = (1 << 0) | (1 << 2)
 
-        self.assertEqual([wood, wood], self.ctx.spent_items())
+        self.assertEqual({0, 2}, self.ctx.spent_items())
 
 
 class TestReconcilingTheSpentRecord(TestItemDelivery):
@@ -408,9 +417,9 @@ class TestReconcilingTheSpentRecord(TestItemDelivery):
 
     def test_reconciling_opens_the_gate_on_sending(self) -> None:
         self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 16
-        self.ctx.client_status.storage_ready = False
+        self.ctx.client_status.record_known = False
         self.ctx.reconcile_spent(0)
-        self.assertTrue(self.ctx.client_status.storage_ready)
+        self.assertTrue(self.ctx.client_status.record_known)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ from ..locations.Scenarios import Age2ScenarioData
 
 from .handlers.CampaignHandler import CampaignHandler
 from .handlers.InstallHandler import InstallHandler
+from .handlers.ItemHandler import ItemHandler
 from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
 from .handlers.StorageHandler import StorageHandler
@@ -143,17 +144,14 @@ class PacketStatus(Enum):
 class ClientStatus:
     unlocked_items: list[Age2ItemData] = field(default_factory=list[Age2ItemData])
     checked_locations: set[int] = None
-    acked_items: int = 0
     user_folder: str = ''
     finished_game: bool = False
     slot_id: int = -1
     tag: str = ''
     slot_data: dict = None
     player_name: str = ''
-    in_flight: list[int] = field(default_factory=list[int])
     spent_mask: int = 0
-    storage_ready: bool = False
-    items_sent_to_game_count: int = -1
+    record_known: bool = False
 
 class Age2GameContext:
     running: bool = False
@@ -169,6 +167,7 @@ class Age2GameContext:
     unit_handler: UnitHandler
     message_handler: MessageHandler
     install_handler: InstallHandler
+    item_handler: ItemHandler
     storage_handler: StorageHandler
     client_interface: APClientInterface
     missing_since: float = 0.0
@@ -187,6 +186,7 @@ class Age2GameContext:
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler()
+        self.item_handler = ItemHandler(self)
 
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
                 player_name: str):
@@ -232,6 +232,7 @@ class Age2GameContext:
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler()
+        self.item_handler = ItemHandler(self)
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -251,6 +252,7 @@ class Age2GameContext:
         self.campaign_handler.set_tag(self.client_status.tag)
         self.campaign_handler.set_player_name(self.client_status.player_name)
         self.install_handler.set_user_folder(user_folder)
+        self.item_handler.set_user_folder(self.profile_folder())
         self.storage_handler.set_user_folder(user_folder)
         self.storage_handler.set_tag(self.client_status.tag)
         self.storage_handler.set_player_name(self.client_status.player_name)
@@ -291,25 +293,17 @@ class Age2GameContext:
         except Exception as ex:
             print(ex)
 
-    def id_for_game(self, index: int, item: Age2ItemData) -> int:
-        if (self.client_status.spent_mask >> index) & 1:
-            return Items.SKIP_ITEM_ID
-        return item.id
+    def clear_spent_state(self) -> bool:
+        if not self.storage_handler.try_clear():
+            return False
+        self.mercenary_handler.reset_used()
+        self.client_status.spent_mask = 0
+        return True
 
-    def mark_delivered_spent(self) -> None:
+    def spent_items(self) -> set[int]:
         mask = self.client_status.spent_mask
-        for index in range(self.client_status.acked_items):
-            if self.client_status.unlocked_items[index] in Items.ONE_SHOT_ITEMS:
-                mask |= 1 << index
-        if mask == self.client_status.spent_mask:
-            return
-        self.client_status.spent_mask = mask
-        self.storage_handler.try_save(mask)
-        self.client_interface.on_item_spent(mask)
-
-    def spent_items(self) -> list[Age2ItemData]:
-        return [item for index, item in enumerate(self.client_status.unlocked_items)
-                if (self.client_status.spent_mask >> index) & 1]
+        return {index for index in range(len(self.client_status.unlocked_items))
+                if (mask >> index) & 1}
 
     def mark_item_spent(self, item: Age2ItemData) -> bool:
         try:
@@ -323,12 +317,13 @@ class Age2GameContext:
         self.storage_handler.try_save(self.client_status.spent_mask)
         return True
 
-    def clear_spent_state(self) -> bool:
-        if not self.storage_handler.try_clear():
-            return False
-        self.mercenary_handler.reset_used()
-        self.client_status.spent_mask = 0
-        return True
+    def on_item_spent(self, delivered: set[int]) -> None:
+        mask = self.client_status.spent_mask
+        for index in delivered:
+            mask |= 1 << index
+        self.client_status.spent_mask = mask
+        self.storage_handler.try_save(mask)
+        self.client_interface.on_item_spent(mask)
 
     def reconcile_spent(self, server: int) -> int:
         local = self.storage_handler.try_load()
@@ -336,50 +331,17 @@ class Age2GameContext:
         spent &= (1 << len(self.client_status.unlocked_items)) - 1
         self.client_status.spent_mask = spent
         self.storage_handler.try_save(spent)
-        self.client_status.storage_ready = True
+        self.client_status.record_known = True
         return spent
 
-    def sync_applied_items(self, applied: int) -> None:
-        self.client_status.acked_items = min(
-            applied, len(self.client_status.unlocked_items))
-        if self.client_status.acked_items != self.client_status.items_sent_to_game_count:
-            self.client_status.in_flight = []
-
-    def send_items(self) -> None:
-        if not self.client_status.storage_ready:
-            return
-        start = self.client_status.acked_items
-        num_items = len(self.client_status.unlocked_items) - start
-        if num_items > Items.ITEM_WINDOW:
-            num_items = Items.ITEM_WINDOW
-        if num_items <= 0:
-            self.client_status.in_flight = []
-            return
-        window = self.client_status.unlocked_items[start:start + num_items]
-        item_ids = [self.id_for_game(start + offset, item)
-                    for offset, item in enumerate(window)]
-        if start == self.client_status.items_sent_to_game_count and item_ids == self.client_status.in_flight:
-            return
-        try:
-            with open(self.profile_folder() + "items.xsdat", "wb") as fp:
-                XsdatFile.write_int(fp, start)
-                for item_id in item_ids:
-                    XsdatFile.write_int(fp, item_id)
-            self.client_status.in_flight = item_ids
-            self.client_status.items_sent_to_game_count = start
-        except Exception as ex:
-            print(ex)
-
     def sync_starting_resources(self) -> None:
-        item_ids: list[int] = []
-        for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.StartingResources], self.client_status.unlocked_items)):
-            item_ids.append(item.id)
-        for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.TCResources], self.client_status.unlocked_items)):
-            item_ids.append(item.id)
+        item_ids = [item.id for item in self.client_status.unlocked_items
+                    if item in Items.CATEGORY_TO_ITEMS[Items.StartingResources]
+                    or item in Items.CATEGORY_TO_ITEMS[Items.TCResources]]
         try:
             with open(self.profile_folder() + "startup.xsdat", "wb") as fp:
-                for id in item_ids:
-                    XsdatFile.write_int(fp, id)
+                for item_id in item_ids:
+                    XsdatFile.write_int(fp, item_id)
         except Exception as ex:
             print(ex)
 
@@ -391,15 +353,14 @@ class Age2GameContext:
             self.message_handler.try_flush_from_folder()
             self.mercenary_handler.try_flush_from_folder()
             self.campaign_handler.try_flush_from_folder()
+            self.item_handler.try_flush_from_folder()
+            if os.path.exists(self.profile_folder() + "startup.xsdat"):
+                os.remove(self.profile_folder() + "startup.xsdat")
             
             if os.path.exists(self.profile_folder() + "AP.xsdat"):
                 os.remove(self.profile_folder() + "AP.xsdat")
-            if os.path.exists(self.profile_folder() + "items.xsdat"):
-                os.remove(self.profile_folder() + "items.xsdat")
             if os.path.exists(self.profile_folder() + "locations.xsdat"):
                 os.remove(self.profile_folder() + "locations.xsdat")
-            if os.path.exists(self.profile_folder() + "startup.xsdat"):
-                os.remove(self.profile_folder() + "startup.xsdat")
             if os.path.exists(self.profile_folder() + "buildings.xsdat"):
                 os.remove(self.profile_folder() + "buildings.xsdat")
             if os.path.exists(self.profile_folder() + "techs.xsdat"):
@@ -460,7 +421,7 @@ class Age2GameContext:
                 high, low = self.seed_halves()
                 XsdatFile.write_int(fp, high)
                 XsdatFile.write_int(fp, low)
-                XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
+                XsdatFile.write_bool(fp, self.item_handler.in_flight()) # Send Items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
                 XsdatFile.write_bool(fp, self.mercenary_handler.queue_serial()
                                      != self.current_packet.acked_queue_serial) # Send Mercenaries
@@ -486,8 +447,6 @@ async def status_loop(ctx: Age2GameContext):
         ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
         ctx.sync_checked_locations()
         ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
-        ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items,
-                                                   ctx.spent_items())
         ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
         ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
         ctx.message_handler.try_write_to_folder()
@@ -583,11 +542,11 @@ async def status_loop(ctx: Age2GameContext):
         if packetStatus == PacketStatus.ACTIVE:
             pass
         
-        ctx.sync_applied_items(packet.applied_item_count)
-        ctx.mark_delivered_spent()
-        
-        if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
-            ctx.send_items()
+        if ctx.client_status.record_known:
+            unlocked = ctx.client_status.unlocked_items
+            spent = ctx.spent_items()
+            ctx.mercenary_handler.try_sync_mercenaries(unlocked, [unlocked[index] for index in spent])
+            ctx.item_handler.sync_items(unlocked, packet.applied_item_count, spent)
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)

@@ -58,3 +58,41 @@ class TestDisconnectBound(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDisconnectResetsDeliveryState(unittest.TestCase):
+    """disconnect rebuilds every handler, and the item handler has to go with them.
+
+    It holds the delivery index and the window it last wrote. Carrying either into a reconnect
+    means streaming from a position the new session never agreed to.
+    """
+
+    def context(self) -> Age2GameContext:
+        ctx = Age2GameContext(DefaultClientInterface())
+        ctx.client_status.user_folder = ''   # skip flush_files, which wants a real folder
+        return ctx
+
+    def test_the_item_handler_is_rebuilt(self) -> None:
+        async def scenario() -> tuple:
+            ctx = self.context()
+            before = ctx.item_handler
+            before._current_item = 7
+            await ctx.disconnect()
+            return before, ctx.item_handler
+
+        before, after = asyncio.run(scenario())
+        self.assertIsNot(before, after, "the old item handler survived the disconnect")
+        self.assertEqual(0, after.current_item_index())
+        self.assertFalse(after.in_flight())
+
+    def test_the_spent_record_is_not_assumed_on_a_new_connection(self) -> None:
+        """record_known gates both readers of the record; a reconnect has not heard back yet."""
+        async def scenario() -> bool:
+            ctx = self.context()
+            ctx.client_status.record_known = True
+            await ctx.disconnect()
+            return ctx.client_status.record_known
+
+        self.assertFalse(asyncio.run(scenario()),
+                         "the record gate was already open on a fresh connection")
+
