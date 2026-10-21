@@ -473,14 +473,13 @@ async def status_loop(ctx: Age2GameContext):
                 ctx.note_scenario_found()
                 logger.info("Connected!")
         
-        # Check all unlocked scenarios every 2.5 seconds after scenario stops updating packet in case user has switched scenarios.
-        if ctx.paused and ctx.packet_repeat_count % 5 == 0:
-            ctx.campaign_handler.find_active_campaign()
-            if not ctx.campaign_handler.has_active_scenario():
-                ctx.campaign_handler.find_active_scenario()
-                if not ctx.campaign_handler.has_active_scenario():
-                    await short_sleep()
-                    continue
+        if ctx.packet_repeat_count > 0 and ctx.campaign_handler.find_live_scenario():
+            logger.info("The game is running %s now. Following it.",
+                        ctx.campaign_handler.active_file.current_scenario.data.scenario_name)
+            ctx.flush_files()
+            ctx.packet_repeat_count = 0
+            ctx.paused = False
+            continue
         
         packet: Age2Packet
         try:

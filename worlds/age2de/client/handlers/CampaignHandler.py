@@ -200,6 +200,61 @@ class CampaignHandler(FolderHandler):
                     print(ex)
         self.active_file = None
     
+    def _probe(self, read_name: str) -> tuple[bool, int, int] | None:
+        try:
+            with open(self._user_folder + read_name, "rb") as fp:
+                active = XsdatFile.read_bool(fp)
+                ping = XsdatFile.read_int(fp)
+                XsdatFile.skip_int(fp, 16)
+                return (active, ping, XsdatFile.read_int(fp))
+        except Exception:
+            return None
+
+    def _ping_moved(self, read_name: str, probe: tuple[bool, int, int] | None) -> bool:
+        if probe is None:
+            self._last_pings.pop(read_name, None)
+            return False
+        active, ping, _ = probe
+        seen = self._last_pings.get(read_name)
+        self._last_pings[read_name] = ping
+        return active and seen is not None and seen != ping
+
+    def _follow(self, scenario: ManagedScenario, read_name: str) -> bool:
+        if self.active_file is not None:
+            if self.active_file.read_file_name == read_name:
+                return False
+            self.deactivate_scenario()
+        self._last_pings.clear()
+        self.active_file = ActiveFile(scn=scenario, read_file_name=read_name)
+        return True
+
+    def find_live_scenario(self) -> bool:
+        for campaign in self._campaigns.values():
+            if not campaign.unlocked:
+                continue
+            read_name = self.campaign_read_name(campaign.data)
+            probe = self._probe(read_name)
+            if not self._ping_moved(read_name, probe):
+                continue
+            scenario_data = scenario_from_id.get(probe[2])
+            if scenario_data is None:
+                continue
+            scenario = self.scenarios[scenario_data]
+            if not scenario.unlocked:
+                self._note_locked_scenario(scenario)
+                continue
+            return self._follow(scenario, read_name)
+
+        for scenario in self.scenarios.values():
+            if not scenario.unlocked:
+                continue
+            read_name = self.read_name(scenario.data)
+            if not self._ping_moved(read_name, self._probe(read_name)):
+                continue
+            return self._follow(scenario, read_name)
+
+        return False
+
     def has_active_scenario(self) -> bool:
         return self.active_file is not None
     
@@ -210,6 +265,7 @@ class CampaignHandler(FolderHandler):
         self.active_file.current_scenario.completed = True
     
     def deactivate_scenario(self) -> bool:
+        self._last_pings.clear()
         try:
             with open(self._user_folder + self.active_file.read_file_name, "wb") as fp:
                 XsdatFile.write_bool(fp, False)
