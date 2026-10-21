@@ -43,7 +43,7 @@ class ScenarioRules:
                 continue
             event_name = player.defeat_event(self.scenario.scenario_name)
             event = self.world.get_location(event_name)
-            self.world.set_rule(event, self.scenario_logic.players.defeats(player))
+            self.world.set_rule(event, self.scenario_logic.player_logic.defeats(player))
 
     def set_rules(self):
         self.world.set_rule(self.entrance, self.scenario_logic.is_unlocked())

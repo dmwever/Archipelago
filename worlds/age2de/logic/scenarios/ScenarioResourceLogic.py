@@ -302,7 +302,7 @@ class ScenarioResourceLogic:
         )
 
     def can_run_trade_carts(self) -> Rule:
-        partner_market = self.scenario.players.can_reach_partner(Age2BuildingData.MARKET)
+        partner_market = self.scenario.player_logic.can_reach_partner(Age2BuildingData.MARKET)
         if isinstance(partner_market, False_):
             return False_()
         return (
@@ -314,7 +314,7 @@ class ScenarioResourceLogic:
         )
 
     def can_run_trade_cogs(self) -> Rule:
-        partner_dock = self.scenario.players.can_reach_partner(Age2BuildingData.DOCK)
+        partner_dock = self.scenario.player_logic.can_reach_partner(Age2BuildingData.DOCK)
         if isinstance(partner_dock, False_):
             return False_()
         return (

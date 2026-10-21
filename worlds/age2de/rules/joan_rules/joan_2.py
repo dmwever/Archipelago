@@ -17,8 +17,8 @@ class Joan2Rules(ScenarioRules):
         can_conquer_bridge: Rule = (Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
                                     | self.scenario_logic.military.has_military())
         can_conquer_bridge = self.scenario_logic.named("can take the bridge", can_conquer_bridge)
-        can_defeat_northern_english: Rule = self.scenario_logic.players.defeats(Age2PlayerData.JOAN2_NORTHERN_ENGLISH)
-        can_defeat_southern_english: Rule = self.scenario_logic.players.defeats(Age2PlayerData.JOAN2_SOUTHERN_ENGLISH)
+        can_defeat_northern_english: Rule = self.scenario_logic.player_logic.defeats(Age2PlayerData.JOAN2_NORTHERN_ENGLISH)
+        can_defeat_southern_english: Rule = self.scenario_logic.player_logic.defeats(Age2PlayerData.JOAN2_SOUTHERN_ENGLISH)
         victory: Rule = can_defeat_northern_english | can_defeat_southern_english
 
         if self.world.pool.scenarios.all_scenario_branches:
