@@ -5,6 +5,7 @@ from Options import (Choice, DefaultOnToggle, OptionCounter, OptionError, Option
                      Range, StartInventoryPool, Toggle)
 from worlds.age2de.locations.Campaigns import Age2CampaignData
 from .locations.Buildings import NAME_TO_BUILDING, BuildingOption
+from .locations.Players import Age2PlayerData
 from .items.Items import TRAP_NAMES
 
 class Goal(Choice):
@@ -306,6 +307,9 @@ class PartnerTrade(Choice):
     option_allies = 1
     option_allies_and_enemies = 2
     default = option_allies
+
+    def needs_defeat_event(self, player: Age2PlayerData) -> bool:
+        return self.value == self.option_allies_and_enemies and player.can_trade_once_defeated
 
 class TrapDifficulty(Choice):
     """

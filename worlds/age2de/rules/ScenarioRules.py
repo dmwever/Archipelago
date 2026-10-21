@@ -39,12 +39,10 @@ class ScenarioRules:
     
     def set_defeat_event_rules(self):
         for player in self.scenario.players:
-            if not player.can_trade_once_defeated:
+            if not self.world.options.partner_trade.needs_defeat_event(player):
                 continue
-            try:
-                event = self.world.get_location(player.defeat_event(self.scenario.scenario_name))
-            except KeyError:
-                continue
+            event_name = player.defeat_event(self.scenario.scenario_name)
+            event = self.world.get_location(event_name)
             self.world.set_rule(event, self.scenario_logic.players.defeats(player))
 
     def set_rules(self):
