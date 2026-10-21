@@ -5,7 +5,7 @@ from enum import Enum
 import os
 import struct
 import time
-from typing import List, Protocol
+from typing import Iterable, List, Protocol
 
 from ... import user_folder
 from worlds.age2de.client.handlers.BuildingHandler import BuildingHandler
@@ -186,7 +186,7 @@ class Age2GameContext:
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler()
-        self.item_handler = ItemHandler(self)
+        self.item_handler = ItemHandler()
 
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
                 player_name: str):
@@ -232,7 +232,7 @@ class Age2GameContext:
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler()
-        self.item_handler = ItemHandler(self)
+        self.item_handler = ItemHandler()
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -297,6 +297,7 @@ class Age2GameContext:
         if not self.storage_handler.try_clear():
             return False
         self.mercenary_handler.reset_used()
+        self.item_handler.reset_delivery()
         self.client_status.spent_mask = 0
         return True
 
@@ -305,25 +306,23 @@ class Age2GameContext:
         return {index for index in range(len(self.client_status.unlocked_items))
                 if (mask >> index) & 1}
 
-    def mark_item_spent(self, item: Age2ItemData) -> bool:
-        try:
-            index = self.client_status.unlocked_items.index(item)
-        except ValueError:
-            return False
-        bit = 1 << index
-        if self.client_status.spent_mask & bit:
-            return False
-        self.client_status.spent_mask |= bit
-        self.storage_handler.try_save(self.client_status.spent_mask)
-        return True
+    def unspent_index(self, item: Age2ItemData) -> int:
 
-    def on_item_spent(self, delivered: set[int]) -> None:
         mask = self.client_status.spent_mask
-        for index in delivered:
+        for index, unlocked in enumerate(self.client_status.unlocked_items):
+            if unlocked is item and not (mask >> index) & 1:
+                return index
+        return -1
+
+    def mark_items_spent(self, indices: Iterable[int]) -> bool:
+        mask = self.client_status.spent_mask
+        for index in indices:
             mask |= 1 << index
+        if mask == self.client_status.spent_mask:
+            return False
         self.client_status.spent_mask = mask
         self.storage_handler.try_save(mask)
-        self.client_interface.on_item_spent(mask)
+        return True
 
     def reconcile_spent(self, server: int) -> int:
         local = self.storage_handler.try_load()
@@ -546,7 +545,9 @@ async def status_loop(ctx: Age2GameContext):
             unlocked = ctx.client_status.unlocked_items
             spent = ctx.spent_items()
             ctx.mercenary_handler.try_sync_mercenaries(unlocked, [unlocked[index] for index in spent])
-            ctx.item_handler.sync_items(unlocked, packet.applied_item_count, spent)
+            delivered = ctx.item_handler.sync_items(unlocked, packet.applied_item_count, spent)
+            if ctx.mark_items_spent(delivered):
+                ctx.client_interface.on_item_spent(ctx.client_status.spent_mask)
         
         if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
             ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
@@ -557,10 +558,11 @@ async def status_loop(ctx: Age2GameContext):
 
         if packet.completed_mercenary_id != -1:
             mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
-            if (mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary]
-                    and ctx.mark_item_spent(mercenary_item)):
-                ctx.mercenary_handler.use_mercenary(mercenary_item)
-                ctx.client_interface.on_mercenary_used(mercenary_item)
+            if mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary]:
+                index = ctx.unspent_index(mercenary_item)
+                if index != -1 and ctx.mark_items_spent({index}):
+                    ctx.mercenary_handler.use_mercenary(mercenary_item)
+                    ctx.client_interface.on_mercenary_used(mercenary_item)
         
         ctx.ping_game()
         if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:

@@ -62,7 +62,7 @@ class TestItemDelivery(unittest.TestCase):
 
         self.ctx = Age2GameContext(DefaultClientInterface())
         # Goes through the real setter so the storage handler writes into the temp folder
-        # too; mark_delivered_spent persists the record on every tick.
+        # too; sync() below records what each pass paid out, on every tick.
         self.ctx.update_game_user_folder(self._tmp.name)
         # These exercise the window, not the gate on it. TestOneShotSkipping covers that.
         self.ctx.client_status.record_known = True
@@ -82,11 +82,17 @@ class TestItemDelivery(unittest.TestCase):
             self.game.read_items(self.folder)
 
     def sync(self, applied: int = 0) -> None:
-        """One delivery pass, gated the way status_loop gates it."""
+        """One delivery pass, gated and recorded the way status_loop does it.
+
+        The handler reports what it paid out and the context records it -- the same shape as the
+        mercenary path, where the handler never touches the record or the server itself.
+        """
         if not self.ctx.client_status.record_known:
             return
-        self.ctx.item_handler.sync_items(self.ctx.client_status.unlocked_items, applied,
-                                         self.ctx.spent_items())
+        delivered = self.ctx.item_handler.sync_items(
+            self.ctx.client_status.unlocked_items, applied, self.ctx.spent_items())
+        if self.ctx.mark_items_spent(delivered):
+            self.ctx.client_interface.on_item_spent(self.ctx.client_status.spent_mask)
 
     def send(self, applied: int = 0) -> None:
         self.sync(applied)
@@ -420,6 +426,123 @@ class TestReconcilingTheSpentRecord(TestItemDelivery):
         self.ctx.client_status.record_known = False
         self.ctx.reconcile_spent(0)
         self.assertTrue(self.ctx.client_status.record_known)
+
+
+class TestFlushingWhatWasSent(TestItemDelivery):
+    """flush_files deletes items.xsdat on every scenario switch, and on every save/load.
+
+    The handler suppresses a rewrite when what it is about to write is what it already sent. A
+    switch that leaves the item index where it was makes those two identical, so unless the
+    deletion withdraws the claim the file is gone and never written again: the new scenario is
+    handed nothing, while the client keeps arming ReadItems over a file that is not there.
+    """
+
+    def test_a_file_deleted_under_the_handler_is_written_again(self) -> None:
+        self.unlock(*list(Age2ItemData)[:20])
+        self.send()
+        first = self.sent_items()
+        self.assertNotEqual([], first, "the fixture never wrote a window to begin with")
+
+        self.ctx.item_handler.try_flush_from_folder()
+        self.assertEqual([], self.sent_items(), "the fixture did not delete the window")
+
+        self.send()   # same index, same entries: exactly the suppression case
+
+        self.assertEqual(first, self.sent_items(),
+                         "nothing was written again after the file was deleted")
+
+    def test_flushing_withdraws_the_claim_on_the_game(self) -> None:
+        """in_flight is what arms ReadItems. Leaving it set over a file that is gone has the
+        game open nothing, every tick, for the rest of the session."""
+        self.unlock(*list(Age2ItemData)[:20])
+        self.send()
+        self.assertTrue(self.ctx.item_handler.in_flight())
+
+        self.ctx.item_handler.try_flush_from_folder()
+
+        self.assertFalse(self.ctx.item_handler.in_flight())
+
+    def test_a_switch_before_anything_was_applied_still_delivers(self) -> None:
+        """The whole path. Scenario A is offered items and applies none of them, so the index
+        is still zero when the switch flushes the file and scenario B starts counting from zero.
+        """
+        items = list(Age2ItemData)[:20]
+        self.unlock(*items)
+        self.send()
+        self.ctx.item_handler.try_flush_from_folder()   # flush_files, on the switch
+        self.game = FakeGame()                          # scenario B has applied nothing
+
+        for _ in range(30):
+            self.full_tick()
+            if self.ctx.item_handler.current_item_index() >= len(items):
+                break
+
+        self.assertEqual([item.id for item in items], self.game.granted,
+                         "the scenario switched to was never handed its items")
+
+
+class TestNamingACopyToSpend(TestItemDelivery):
+    """The record is positional, so spending an item by identity has to pick a copy.
+
+    Mercenaries happen to be unique in the pool, but the mask they write is the one the items
+    use, where duplicates are ordinary. list.index picks the first copy every time, so it would
+    spend the same bit twice and leave the second copy payable forever.
+    """
+
+    MERCENARY = Age2ItemData.AP_ATTILA_1_MANGUDAI
+
+    def test_the_first_unpaid_copy_is_the_one_named(self) -> None:
+        wood = Age2ItemData.FILLER_WOOD_SMALL
+        self.unlock(wood, wood, wood)
+
+        self.assertEqual(0, self.ctx.unspent_index(wood))
+        self.assertTrue(self.ctx.mark_items_spent({0}))
+        self.assertEqual(1, self.ctx.unspent_index(wood),
+                         "the copy at 0 is paid for, so naming it again would spend nothing")
+        self.assertTrue(self.ctx.mark_items_spent({1}))
+        self.assertEqual(2, self.ctx.unspent_index(wood))
+
+    def test_an_item_with_no_unpaid_copy_names_nothing(self) -> None:
+        wood = Age2ItemData.FILLER_WOOD_SMALL
+        self.unlock(wood)
+        self.ctx.client_status.spent_mask = 1 << 0
+
+        self.assertEqual(-1, self.ctx.unspent_index(wood))
+
+    def test_an_item_that_never_arrived_names_nothing(self) -> None:
+        self.unlock(Age2ItemData.FILLER_WOOD_SMALL)
+
+        self.assertEqual(-1, self.ctx.unspent_index(self.MERCENARY))
+
+    def test_recording_a_position_twice_reports_no_change(self) -> None:
+        """on_mercenary_used fires off the return, so a repeated ack must not announce a spend."""
+        self.unlock(self.MERCENARY)
+
+        self.assertTrue(self.ctx.mark_items_spent({0}))
+        self.assertFalse(self.ctx.mark_items_spent({0}))
+
+    def test_recording_nothing_reports_no_change(self) -> None:
+        self.unlock(Age2ItemData.FISH_TRAP)
+
+        self.assertFalse(self.ctx.mark_items_spent(set()))
+
+    def test_clearing_the_record_unpays_every_item(self) -> None:
+        """/install full clears both halves: reset_used for mercenaries, reset_delivery here."""
+        items = [Age2ItemData.FILLER_WOOD_SMALL] * 3
+        self.unlock(*items)
+        for _ in range(10):
+            self.full_tick()
+            if self.ctx.item_handler.current_item_index() >= len(items):
+                break
+        self.assertNotEqual(0, self.ctx.client_status.spent_mask,
+                            "the fixture never paid for anything")
+
+        self.assertTrue(self.ctx.clear_spent_state())
+
+        self.assertEqual(0, self.ctx.client_status.spent_mask)
+        self.assertEqual([], [managed for managed in self.ctx.item_handler.items()
+                              if managed.spent],
+                         "the handler still believed those items had been paid for")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,9 @@ import unittest
 
 from ..client.DataStorage import DataStorage
 from ..client.handlers.CampaignHandler import ActiveFile, CampaignHandler
+from ..client.handlers.ItemHandler import ItemHandler
 from ..client.handlers.MercenaryHandler import MercenaryHandler, NO_SEAT, SEAT_COUNT
+from ..items import Items
 from ..items.Items import (Age2ItemData, CATEGORY_TO_ITEMS, Campaign, Mercenary,
                            ProgressiveScenario)
 from ..locations.Campaigns import Age2CampaignData
@@ -58,6 +60,39 @@ class TestMercenaryStatuses(unittest.TestCase):
         self.assertEqual(SEAT_COUNT, counted.count("In-Pavilion"),
                          "every seat should be filled while the queue still has mercenaries in it")
         self.assertEqual(1, counted.count("Used"))
+
+
+class TestItemStatuses(unittest.TestCase):
+    """The four states /items prints. The distinction worth keeping is that Pending and Sent
+    both mean "not in the game yet", and only one of them is in the file the game reads."""
+
+    def setUp(self) -> None:
+        self._items = tempfile.TemporaryDirectory()
+        self.addCleanup(self._items.cleanup)
+        self.handler = ItemHandler()
+        self.handler.set_user_folder(self._items.name + "/")
+        self.received = [Age2ItemData.FILLER_WOOD_SMALL] * (Items.ITEM_WINDOW + 2)
+
+    def statuses(self, applied: int = 0, spent: set = frozenset()) -> list[str]:
+        self.handler.sync_items(self.received, applied, set(spent))
+        return [self.handler.status(managed) for managed in self.handler.items()]
+
+    def test_nothing_applied_yet_is_one_fileful_and_a_tail(self) -> None:
+        self.assertEqual(["Sent"] * Items.ITEM_WINDOW + ["Pending"] * 2, self.statuses(),
+                         "only what the game is being asked to read counts as sent")
+
+    def test_a_one_shot_the_game_took_reads_spent(self) -> None:
+        self.statuses()
+        found = self.statuses(applied=3)
+
+        self.assertEqual(["Spent"] * 3, found[:3],
+                         "filler is one-shot, so the record pays for it as the game takes it")
+
+    def test_a_replayable_item_the_game_took_reads_delivered(self) -> None:
+        self.received = [Age2ItemData.FISH_TRAP] * 3
+
+        self.assertEqual(["Delivered", "Delivered", "Sent"], self.statuses(applied=2),
+                         "flags are replayable, so delivery never pays for them")
 
 
 class TestScenarioStatuses(unittest.TestCase):
