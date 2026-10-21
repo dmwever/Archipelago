@@ -61,6 +61,7 @@ class CampaignHandler(FolderHandler):
         self._scenario_items = {}
         self.active_file = None
         self._reported_locked: set[Age2ScenarioData] = set()
+        self._last_pings: dict[str, int] = {}
         for cpn_data in data:
             scenarios_as_data: list[Age2ScenarioData] = []
             for scn_data in CAMPAIGN_TO_SCENARIOS[cpn_data]:
