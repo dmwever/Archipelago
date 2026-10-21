@@ -442,8 +442,8 @@ async def status_loop(ctx: Age2GameContext):
     while ctx.running:
         try:
             await status_tick(ctx)
-        except Exception:
-            logger.exception("The game loop hit an error. Continuing.")
+        except Exception as ex:
+            logger.exception("The game loop hit an error, continuing: %s", ex)
             await long_sleep()
 
 
