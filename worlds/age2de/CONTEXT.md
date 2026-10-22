@@ -16,7 +16,27 @@ Any other slot in a scenario, P2 to P8, named for what the campaign calls it (a 
 colour). Each is an ally or an enemy of P1, or is neutral and ignored by the logic.
 _Avoid_: faction, side, player number or colour (as an identity), AP slot (the Archipelago sense)
 
+**Fixed-force scenario**:
+A scenario fought only with what it hands P1: no base, no villagers, no economy and no age to
+climb. A villager job never counts one.
+_Avoid_: no-economy scenario, army scenario
+
 ### Economy
+
+**Villager job**:
+The form a villager takes while working: Shepherd, Hunter, Lumberjack, Repairer and so on. P1
+owns one by having a villager start that work in a scenario, which needs the villagers and the
+thing worked in that same scenario. Sheep count only in the base or the open; every other
+resource counts wherever it is. The item that permits a job is its **profession**.
+_Avoid_: profession (when the job or its location is meant), gatherer type
+
+**Base**:
+A Town Center P1 can turn out villagers from: one standing at the start, or one P1 puts up, paid
+for by the starting Town Center resources and stood on ground P1 can reach. It also takes the food
+to train the first villagers and the Villager Line, even where villagers already stand. Gathering
+any resource at scale needs a base, so anything paid for by gathering does too, climbing an age
+included.
+_Avoid_: Town Center (when the base is meant), camp, having villagers
 
 **Trade partner**:
 A player whose market or dock P1 can actually trade with: an ally, or an opponent whose market or
@@ -74,3 +94,12 @@ The clumsy siege that fights armies: the mangonel, bombard cannon and rocket car
 scorpion is deliberately not one; it is easy enough to use that it counts as an ordinary counter.
 Distinct from building-breaking siege such as rams and trebuchets.
 _Avoid_: siege (unqualified, when only anti-unit siege is meant)
+
+### Locations
+
+**Registered location**:
+A location the current scenario can check: a scenario objective, or a global tech, building, unit
+or age location that is still achievable in this scenario. A global location already granted at
+start, or out of the civ's reach, is not registered here, even when another scenario checked it.
+A checked location the server reports that is not registered is expected, not an error.
+_Avoid_: existing location, known location
