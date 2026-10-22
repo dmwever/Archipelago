@@ -49,6 +49,11 @@ works resources on the map.
 
 - A bank is *some* only for an economy seed whose authored amount it covers (`TRADE_SEED_GOLD`,
   `TRADE_SEED_WOOD_AT_SEA`). The Fishing Ship's 75-wood bank check goes.
+- The naval guard (folded in from [#21](21-structural-field-asks-price.md)) is not a route: it is
+  part of the economy seed of every route working through the afloat or shoreline gates. #19 leaves
+  its navy cost as route needs **at scale**; lower them to **some**. No bank pays for the guard: its
+  wood and gold come only from a running route (a few villagers chopping, relics, a little mining,
+  cogs, a scenario's *some* hook), never from `HasResourceAmount`.
 - With no base and no trade partner's dock, no route reaches *at scale*: that is intended. The cog is
   the only route an economy seed of *some* can start.
 - `has_base()` stays the base exactly as #05 leaves it.
@@ -75,6 +80,9 @@ works resources on the map.
       wood at scale and the map's amount allow.
 - [ ] 50 banked wood does not seed cogs; 400 does.
 - [ ] Relics alone never make easy gold.
+- [ ] Naval guard: with a fieldable navy and water access, Fishing Ships work deep fish when the
+      navy's wood and gold come from routes of *some* (no easy wood or gold). With the same wood and
+      gold only banked, and no route yielding them, they do not.
 - [ ] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes. If an existing test
       asserted old behaviour, change it to the new behaviour and list each such test in this issue.
 - [ ] **Fill gate.** Replay the 63 generations in

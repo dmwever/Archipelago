@@ -30,6 +30,10 @@ would have to be unpicked one rule at a time.
   paid for) does. A paid form pays for every building it leans on. A structural form, and every
   question inside the economy (dropsites, fortification, market, dock), pays for nothing. That keeps
   the easy sources from asking themselves.
+- Guarding boats is part of an economy seed, not a price and not free (#21). The structural form
+  of fielding pays for nothing, so the navy that guards the afloat and shoreline tiers is fielded
+  structurally, and its wood and gold are route needs of the routes working those tiers
+  (ADR-0003): *some*, from a running route, never from a bank.
 - The Town Center is paid for by the base, never by an easy source. A standing one is free; a built
   one is paid for by the Town Center items, which the location reaches through its own price.
 - A banked pile (`HasResourceAmount`) never pays for a building. It counts the Town Center items,

@@ -121,7 +121,8 @@ base itself: it reaches the base only through its price.
 - A unit therefore needs a base exactly when some resource in its price (including, after #17, its
   training building's price) has no source that reaches no base. That is deliberate: do not add a
   base back for any unit line (the faith line included).
-- The structural form keeps its `can_sustain` as it is (#21 decides that).
+- Leave the structural form's `can_sustain` to #19, which removes it (folded in from #21). If #19
+  has landed first, the structural form already asks no price; keep it that way.
 - Respect ADR-0002: add no direct `has_base()` anywhere.
 
 **Key interfaces:**
@@ -155,7 +156,7 @@ base itself: it reaches the base only through its price.
 **Out of scope:**
 - `has_base()` on the gathering side (easy gold and stone, chopping wood) and in LocalStart.
 - Attila 4's "can ally with Burgundy": #17.
-- The structural form's `can_sustain`: #21.
+- The structural form's `can_sustain`: #19 (folded in from #21).
 - Whether trade cogs may be a no-base economy: #19.
 - Any XS (game-side) change.
 - Committing: leave the changes uncommitted.

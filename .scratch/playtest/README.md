@@ -20,7 +20,9 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |
 | 15 | [Joan 2 bridge accepts a military that needs Orleans first](issues/15-joan2-bridge-military-needs-orleans.md) | ready-for-agent |
 | 16 | [Under caveman, are scenario-granted ships and carts knocked down?](issues/16-caveman-scenario-ships-and-carts.md) | needs-info |
-| 17 | [Buildings "standing or buildable" are never paid for](issues/17-buildable-buildings-unpaid.md) | needs-triage |
-| 18 | [Military asks for a base directly instead of through its price](issues/18-military-base-through-price.md) | needs-triage |
-| 19 | [Partner trade by cog is an easy source with no base](issues/19-trade-cogs-without-base.md) | needs-triage |
+| 17 | [Buildings "standing or buildable" are never paid for](issues/17-buildable-buildings-unpaid.md) | ready-for-agent |
+| 18 | [Military asks for a base directly instead of through its price](issues/18-military-base-through-price.md) | ready-for-agent |
+| 19 | [Economy routes, resolved together (no behaviour change)](issues/19-trade-cogs-without-base.md) | ready-for-agent (folds in #21) |
 | 20 | [Retire the `starting_*` resource flags in favour of the scan](issues/20-retire-starting-resource-flags.md) | needs-triage |
+| 21 | [Structural fielding still asks for a price](issues/21-structural-field-asks-price.md) | folded into #19 / #22 |
+| 22 | [The economy route catalog](issues/22-economy-route-catalog.md) | ready-for-agent (folds in #21) |

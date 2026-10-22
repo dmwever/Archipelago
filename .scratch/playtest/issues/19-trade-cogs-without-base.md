@@ -102,6 +102,16 @@ included.
   (for example Trade Carts and Fishing Ships asking `can_gather_wood()`, i.e. villagers chopping with
   a base, and not cog wood), that stays in the leaf part so the answer does not widen. Moving those to
   route needs is #22.
+- **The naval guard is a route need, not leaf** (folded in from
+  [#21](21-structural-field-asks-price.md)). The `"afloat"` tier gate (deep fish, whales) and the
+  `"shoreline"` gate (shore fish, oysters) ask `can_protect_boats`, whose navy today asks
+  `economy.can_sustain(...)`: easy sources inside what must be leaf. Split it: the leaf part keeps
+  the navy fielded structurally (`can_field_structurally` with no `can_sustain`) and water access;
+  the navy's cost (wood and gold for the shipped lines) becomes route needs **at scale** of every
+  route working through those gates. The shoreline gate is `can_hold_a_shoreline() | guard`; an Or
+  between a leaf way and a way with route needs may take one route per way. Answers stay identical
+  on every shipped scenario, and the oyster/whale loop in Barbarossa and Saladin (easy gold ->
+  guard -> easy gold) resolves instead of raising `RecursionError`.
 - Scenarios keep `easy_resource_sources` as an at-scale scenario route, and gain a sibling
   `ScenarioStartingState` field for scenario routes yielding *some* (default: nothing for every
   resource). No scenario sets it in this ticket.
@@ -129,6 +139,10 @@ included.
       one across a set of states (at least: empty state, all items, and a few hundred random item
       subsets per scenario, with fixed RNG seeds). Capture the old answers before editing.
 - [ ] Every economy question still terminates (the existing termination tests pass).
+- [ ] `ScenarioUnitLogic._field` asks `can_sustain` only in its paid form; the structural form pays
+      for nothing (ADR-0002).
+- [ ] A test enables a scenario with oysters (Barbarossa or Saladin) with water access and a
+      fieldable navy, and shows its easy gold builds and resolves with no `RecursionError`.
 - [ ] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes with no existing
       test's assertion changed. If one must change, stop and hand back: that means an answer moved.
 - [ ] **Fill gate.** Before editing, replay every generation in
