@@ -307,7 +307,6 @@ class Age2GameContext:
                 if unlocked[index] in Items.SPENT_ON_USE_ITEMS]
 
     def unspent_index(self, item: Age2ItemData) -> int:
-
         mask = self.client_status.spent_mask
         for index, unlocked in enumerate(self.client_status.unlocked_items):
             if unlocked is item and not (mask >> index) & 1:

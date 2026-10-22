@@ -12,10 +12,12 @@ APDATA_SUBPATH = "APData"
 STATE_STEM = "state"
 
 class StorageHandler(FolderHandler):
-    _tag: str = ''
-    _player_name: str = ''
+    _tag: str
+    _player_name: str
 
     def __init__(self):
+        self._tag = ''
+        self._player_name = ''
         self._spent: int | None = None
         self._loaded: bool = False
         super().__init__()

@@ -1,5 +1,4 @@
 class FolderHandler:
-    _user_folder: str
     _user_folder: str = ''
     
     def __init__(self):

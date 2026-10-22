@@ -23,8 +23,6 @@ from ..client.GameClient import (
 from ..items import Items
 from ..items.Items import Age2ItemData
 
-ITEM_WINDOW = 12
-
 
 def read_ints(path: str) -> list[int]:
     if not os.path.exists(path):
