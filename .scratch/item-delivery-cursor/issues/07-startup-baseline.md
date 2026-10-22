@@ -1,31 +1,39 @@
-# 07: `startupBaseline`, so starting resources land once
+# 07: Retire `startup.xsdat`, so starting resources land once
 
 **What to build:** `StartingResources` and `TCResources` are paid out by `startup.xsdat` at every
-`ConnectAP` *and* streamed through the item window, so receiving one in the menu and then starting a
-scenario pays it twice. They cannot be governed by the once-ever mark from ticket 02 — they are
-per-scenario-start, and they still have to land immediately when received mid-scenario.
+`ConnectAP` *and* streamed through the item window, so every scenario start pays them twice. They
+cannot be governed by the once-ever mark from ticket 02 — they are per-scenario-start, and they
+still have to land immediately when received mid-scenario.
 
-Give `startup.xsdat` a leading `startupBase` int (the stream length when the client wrote it), have
-`GiveStartupItems` record it, ship it in the packet, and sentinel those two categories below it.
+The window already does exactly that on its own: the cursor starts at 0 in every new scenario, so
+it replays the whole stream there, and a loaded save carries its own cursor. Delete the second path:
+`startup.xsdat`, `GiveStartupItems`, and the client's `sync_starting_resources`.
 
-Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (`startupBaseline`, so starting resources still land mid-playthrough).
+Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Retire `startup.xsdat`, so starting resources have one path).
 
-**Blocked by:** 06 (only the sentinel decision is written inside `ItemHandler`; `startup.xsdat`
-itself deliberately stays outside it — see Triage below)
+**Blocked by:** 06
 
 **Status:** ready-for-agent
 
-- [ ] `startup.xsdat` carries `startupBase`; `GiveStartupItems` stores it as a saved `int` global
-- [ ] The packet carries `startupBaseline`; the reserved loop drops 26 → 25 and `scenario_id` stays
-      at byte 72
-- [ ] `StartingResources` and `TCResources` below the baseline go out as `ITEM_SKIP`; above it they
-      go out for real
-- [ ] A failed `startup.xsdat` open leaves the baseline at 0, so everything comes through the window
-      once
-- [ ] Tests: above-baseline sends, below-baseline sentinels, packet layout
+- [x] The client writes no `startup.xsdat`; `sync_starting_resources` and its removal in
+      `flush_files` are gone
+- [x] `GiveStartupItems` and its call in `ConnectAP` are gone
+- [x] Starting resources stay out of `ONE_SHOT_ITEMS` and are never marked spent
+- [x] The packet is unchanged
+- [x] Tests: no pile is written, a scenario start pays each once, mid-scenario lands immediately,
+      the next scenario pays the whole pile again, a loaded save gets only the gap
 - [ ] In game: receive a starting resource in the menu, start a scenario — granted once
 - [ ] In game: receive one mid-scenario — it lands immediately
-- [ ] In game: start the next scenario — the full pile applies again from `startup.xsdat`
+- [ ] In game: start the next scenario — the full pile applies again
+
+## Amendment
+
+(2026-10-22) The `startupBaseline` design below was built first and works, but it only coordinates
+two payment paths where the window alone is enough, and it needed a not-yet-read `-1` state to
+close a race against the packets `WriteAP` sends before `ConnectAP` reads the pile. Retiring the
+file removes both. The cost is latency: starting resources now arrive through the window at
+`ITEM_WINDOW` entries per `ReadItems` pass instead of all at once at `ConnectAP`. The Triage below
+is kept for history; its "Where the code goes" no longer applies.
 
 ## Triage
 

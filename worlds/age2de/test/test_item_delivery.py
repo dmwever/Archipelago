@@ -9,12 +9,15 @@ client streams from wherever the packet says it is. FakeGame below stands in for
 so a full delivery can be driven without the game running.
 """
 
+import asyncio
 import os
 import struct
 import tempfile
 import unittest
+from unittest import mock
 
 from ..campaign import XsdatFile
+from ..client import GameClient
 from ..client.GameClient import (
     AGE2_USER_PROFILE,
     Age2GameContext,
@@ -326,6 +329,75 @@ class TestOneShotSkipping(TestItemDelivery):
         self.assertEqual(0, self.ctx.client_status.spent_mask,
                          "flag items are replayable, so none of them is ever spent")
         self.assertEqual([], reported, "nothing was spent, so nothing to report")
+
+
+class TestStartingResources(TestItemDelivery):
+    """Starting resources pay out once per scenario run, and the window is the only path.
+
+    The cursor starts at 0 in every new scenario, so the window replays the whole stream there:
+    that is the starting pile. One received mid-scenario lands at the cursor, and a loaded save
+    carries its own cursor, so it is handed only what it never saw. There used to be a second path,
+    startup.xsdat, and paying both was a double grant.
+    """
+
+    WOOD = Age2ItemData.STARTING_WOOD_SMALL
+    TC = Age2ItemData.TOWN_CENTER_WOOD
+    FLAG = Age2ItemData.FISH_TRAP
+
+    def deliver(self) -> None:
+        for _ in range(10):
+            self.full_tick()
+
+    def test_a_status_pass_writes_no_startup_pile(self) -> None:
+        self.unlock(self.WOOD, self.TC)
+
+        with mock.patch.object(GameClient, "long_sleep", mock.AsyncMock()):
+            asyncio.run(GameClient.status_tick(self.ctx))
+
+        self.assertFalse(os.path.exists(self.folder + "startup.xsdat"),
+                         "a second path for starting resources pays them twice")
+
+    def test_a_scenario_start_pays_each_starting_resource_once(self) -> None:
+        self.unlock(self.WOOD, self.FLAG, self.TC)
+
+        self.deliver()
+
+        self.assertEqual([self.WOOD.id, self.FLAG.id, self.TC.id], self.game.granted)
+
+    def test_one_received_mid_scenario_lands_immediately(self) -> None:
+        self.unlock(self.WOOD)
+        self.deliver()
+
+        self.unlock(self.TC)
+        self.full_tick()
+
+        self.assertEqual([self.WOOD.id, self.TC.id], self.game.granted)
+
+    def test_the_next_scenario_pays_the_whole_pile_again(self) -> None:
+        self.unlock(self.WOOD, self.TC)
+        self.deliver()
+
+        self.ctx.item_handler.try_flush_from_folder()   # flush_files, on the switch
+        self.game = FakeGame()                          # the next scenario has applied nothing
+        self.deliver()
+
+        self.assertEqual([self.WOOD.id, self.TC.id], self.game.granted)
+
+    def test_a_loaded_save_is_handed_only_what_it_never_saw(self) -> None:
+        self.unlock(self.WOOD, self.TC, self.WOOD)
+        self.game.applied_item_count = 2                # the save had applied the first two
+
+        self.deliver()
+
+        self.assertEqual([self.WOOD.id], self.game.granted)
+
+    def test_starting_resources_are_never_marked_spent(self) -> None:
+        """Spending one would skip it in the next scenario, which is owed it again."""
+        self.unlock(self.WOOD, self.TC)
+
+        self.deliver()
+
+        self.assertEqual(0, self.ctx.client_status.spent_mask)
 
 
 class TestDecodingTheSpentRecord(TestItemDelivery):

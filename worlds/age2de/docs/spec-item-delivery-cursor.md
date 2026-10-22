@@ -73,7 +73,7 @@ The exceptions are additive, and they split into **two kinds with two different 
 | Kind | Categories | Ids | Rule |
 |---|---|---|---|
 | Fires once, ever | `Resources` (filler), `Trap` | 1-12, 5000-5008 | skip if index < the global spent mark |
-| Fires once per scenario run | `StartingResources`, `TCResources` | 13-24, 1000/1001/1024 | skip if index < this save's `startupBaseline` |
+| Fires once per scenario run | `StartingResources`, `TCResources` | 13-24, 1000/1001/1024 | never skipped; the window is their only path |
 
 Mercenaries are *not* in either list despite being single-use. `GiveMercenary` only sets a
 per-scenario flag; "spent" is a pavilion concept the client already tracks in `MercenaryHandler` /
@@ -86,31 +86,33 @@ later index. The client substitutes `AP_ITEM_SKIP = -2`, which the game counts a
 not available; it is the empty marker elsewhere in the protocol.) `GiveItem` gets an explicit early
 return for it rather than relying on the band dispatch falling through.
 
-### `startupBaseline`, so starting resources still land mid-playthrough
+### Retire `startup.xsdat`, so starting resources have one path
 
-`startup.xsdat` is applied by `GiveStartupItems` at every `ConnectAP` — that is the point of a
-*starting* pile, and it is why these items cannot be governed by the once-ever mark. But sending
-them through the window as well is a live double-grant today: receive one in the menu, start a
-scenario, and `startup.xsdat` and the window both pay out.
+`startup.xsdat` was a second path for starting resources: `GiveStartupItems` applied it at every
+`ConnectAP`, and the window sent the same items as well. That is a live double-grant, and on every
+scenario start, not only the first: the cursor starts at 0 in each new scenario, so the window
+replays the whole stream there.
 
-Fix it exactly:
+That replay is also why the file is redundant. Each case already comes out right through the window
+alone:
 
-1. `startup.xsdat` gains a leading `startupBase` int — `len(unlocked_items)` when the client wrote
-   that file.
-2. `GiveStartupItems` stores it as `startupBaseline`, a plain `int` global, saved with the scenario.
-3. It rides out in the packet, and the client sentinels `StartingResources` / `TCResources` entries
-   below it.
+- **Scenario start**: the cursor is 0, so every starting resource in the stream is paid once. The
+  next scenario starts at 0 again and pays the whole pile again.
+- Received **mid-scenario**: it lands at the cursor, immediately.
+- **Loaded save**: the save carries its own cursor, so the replay pays out exactly what that
+  scenario run never saw.
 
-Behaviour that falls out, all of it wanted:
+So `startup.xsdat` goes, and with it `GiveStartupItems` and the client's `sync_starting_resources`.
+Starting resources are not added to `ONE_SHOT_ITEMS`: they are owed again in every scenario run.
 
-- Received **mid-scenario** (index >= baseline): not in the file the game read, so the window
-  delivers it immediately. This is the case you asked to preserve.
-- Received **in the menu** (index < baseline): in the file, already applied, so it is sentinel'd.
-  No double-grant.
-- **Loaded save**: the baseline is the one that save's own `ConnectAP` recorded, so the replay pays
-  out exactly what that scenario run never saw.
-- `startup.xsdat` failing to open leaves the baseline at 0 and everything comes through the window
-  once — a sane fallback.
+The cost is latency. The pile landed at `ConnectAP`; the window pays `ITEM_WINDOW` entries per
+`ReadItems` pass, so a starting resource deep in a long stream arrives some seconds into the
+scenario rather than at its first second.
+
+A `startupBaseline` (a leading `startupBase` in the file, echoed in the packet, with the client
+sentinelling starting resources below it) was designed and built first. It works, but it only
+coordinates two paths where one will do, and it needs a not-yet-read state to close a race against
+the packets `WriteAP` sends before `ConnectAP` reads the pile.
 
 ### Window base, so the cursor and the stream cannot drift
 
@@ -201,8 +203,8 @@ otherwise replay.
 | 04 | The cursor | playtest 06 | both | 27 → 26 |
 | 05 | Retire the echo ring | — | both | — |
 | 06 | Move item delivery into `ItemHandler` | — | client only | — |
-| 07 | `startupBaseline` | the double-grant | both | 26 → 25 |
+| 07 | Retire `startup.xsdat` | the double-grant | both | — |
 
-Version stays 0.3.0 throughout; slices 04 and 07 move the packet, so each needs a `/install`
-and a fresh scenario start. Slice 06 is a pure refactor, placed after 05 so it moves only the
+Version stays 0.3.0 throughout; slice 04 moves the packet and slice 07 changes what the game
+reads at `ConnectAP`, so each needs a `/install` and a fresh scenario start. Slice 06 is a pure refactor, placed after 05 so it moves only the
 code that survives, and before 07 so the last functional change is written in its final home.

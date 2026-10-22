@@ -333,17 +333,6 @@ class Age2GameContext:
         self.client_status.record_known = True
         return spent
 
-    def sync_starting_resources(self) -> None:
-        item_ids = [item.id for item in self.client_status.unlocked_items
-                    if item in Items.CATEGORY_TO_ITEMS[Items.StartingResources]
-                    or item in Items.CATEGORY_TO_ITEMS[Items.TCResources]]
-        try:
-            with open(self.profile_folder() + "startup.xsdat", "wb") as fp:
-                for item_id in item_ids:
-                    XsdatFile.write_int(fp, item_id)
-        except Exception as ex:
-            print(ex)
-
     def profile_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
 
@@ -353,8 +342,6 @@ class Age2GameContext:
             self.mercenary_handler.try_flush_from_folder()
             self.campaign_handler.try_flush_from_folder()
             self.item_handler.try_flush_from_folder()
-            if os.path.exists(self.profile_folder() + "startup.xsdat"):
-                os.remove(self.profile_folder() + "startup.xsdat")
             
             if os.path.exists(self.profile_folder() + "AP.xsdat"):
                 os.remove(self.profile_folder() + "AP.xsdat")
@@ -449,7 +436,6 @@ async def status_loop(ctx: Age2GameContext):
 
 async def status_tick(ctx: Age2GameContext) -> None:
     # Sync files that are scenario-agnostic before connection.
-    ctx.sync_starting_resources()
     ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
     ctx.sync_checked_locations()
     ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
