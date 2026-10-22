@@ -103,9 +103,9 @@ class ScenarioLogic:
                 & self.starting_state.meets_additional_base_requirements)
 
     def has_base(self) -> Rule:
-        """A base, paid for: the villagers' food, and the Town Center's wood and stone where none
-        stands. Paid by the items that seed it, never by an easy source - the easy sources ask
-        for a base themselves."""
+        """A base, paid for: the Villager Line and the villagers' food, and the Town Center's wood
+        and stone where none stands. Paid by the items that seed it, never by an easy source - the
+        easy sources ask for a base themselves."""
         return self.named("has a base", self._has_base())
 
     def _has_base(self) -> Rule:
@@ -114,6 +114,7 @@ class ScenarioLogic:
         town_center = (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
                        & Has(Age2ItemData.TOWN_CENTER_STONE.item_name))
         return (self.can_have_base()
+                & self.logic.units.has_villager_item()
                 & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
                 & (standing | town_center))
 
