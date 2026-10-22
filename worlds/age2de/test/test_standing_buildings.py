@@ -66,26 +66,30 @@ class TestABaseStandsATownCenter(bases.Age2RuleTestBase):
     to declare the Town Center standing too. Attila 1's Bleda's Camp once did not, and the budget
     and the age-ups quietly paid for a Town Center the camp had already put up."""
 
-    campaigns = ["Attila the Hun", "Joan of Arc"]
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
     starting_campaigns = ["Attila the Hun"]
 
-    def test_every_base_declares_its_town_center(self):
+    def test_every_standing_town_center_is_a_base(self):
         from BaseClasses import CollectionState
-        self.build()
+        from ..Options import BuildingOption, ShuffleVillager
+        self.build(
+            shuffle_villager=ShuffleVillager.option_include_professions,
+            shuffle_buildings={BuildingOption.base},
+        )
         for scenario in self.world.rules.logic.scenarios:
             state = scenario.starting_state
-            base = state.has_base.resolve(self.world)
-            if base.always_false:
-                continue
             town_center = state.starts_with_building[Age2BuildingData.TOWN_CENTER].resolve(self.world)
-            with_base = CollectionState(self.multiworld)
-            for name in base.item_dependencies():
-                with_base.collect(self.world.create_item(name), prevent_sweep=True)
+            if town_center.always_false:
+                continue
+            base = scenario.can_have_base().resolve(self.world)
+            with_town_center = CollectionState(self.multiworld)
+            for name in town_center.item_dependencies():
+                with_town_center.collect(self.world.create_item(name), prevent_sweep=True)
             with self.subTest(scenario.scenario.scenario_name):
-                self.assertTrue(base(with_base), "collecting the base's items should give the base")
-                self.assertTrue(town_center(with_base),
-                                "the base is there but its Town Center is not declared standing")
-
+                self.assertTrue(town_center(with_town_center),
+                                "collecting the Town Center's items should stand it")
+                self.assertTrue(base(with_town_center),
+                                "the Town Center stands but the base still has to be built")
 
 
 class TestTheBaseIsPaidByItsItems(bases.Age2RuleTestBase):

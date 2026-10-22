@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 class ScenarioStartingState:
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
-    has_base: Rule = field(default_factory=lambda: False_())
     # A base is no use where you cannot stand: some scenarios must first reach the ground
     # they are meant to settle. Kept free of the economy, since has_base feeds it.
     meets_additional_base_requirements: Rule = field(default_factory=lambda: True_())
@@ -99,7 +98,8 @@ class ScenarioLogic:
     def can_have_base(self) -> Rule:
         """A base, less paying for it: one to start with or one to put up, and the ground to
         stand it on."""
-        return ((self.starting_state.has_base | self.buildings.can_build_base())
+        return ((self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER]
+                 | self.buildings.can_build_base())
                 & self.starting_state.meets_additional_base_requirements)
 
     def has_base(self) -> Rule:
@@ -109,8 +109,7 @@ class ScenarioLogic:
         return self.named("has a base", self._has_base())
 
     def _has_base(self) -> Rule:
-        standing = (self.starting_state.has_base
-                    | self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER])
+        standing = self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER]
         town_center = (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
                        & Has(Age2ItemData.TOWN_CENTER_STONE.item_name))
         return (self.can_have_base()

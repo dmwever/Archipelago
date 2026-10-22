@@ -210,6 +210,10 @@ Center" rule asks for villagers but not for the Builder profession.
 - Side effect: with `shuffle_villager` on, local start (`scenario_base_rule` asks `has_base()`)
   now places the Villager Line in the local-start pile. Follows from "the base always asks the
   Villager Line".
-- Noticed, out of scope: Genghis 2, 4, 5 and 6 set `starts_with_building[TOWN_CENTER]` but not
-  `starting_state.has_base`, so `can_have_base` still asks `can_build_base()` (TC item if
-  shuffled, Builders, House) though a Town Center stands.
+- Follow-up (asked during review): Genghis 2, 4, 5 and 6 set `starts_with_building[TOWN_CENTER]`
+  but not `starting_state.has_base`, so their base still asked `can_build_base()` (TC item if
+  shuffled, Builders, House) though a Town Center stands. Fixed by dropping the
+  `starting_state.has_base` field: `can_have_base` and `_has_base` read the standing Town Center.
+  `TestABaseStandsATownCenter` now checks the other direction: with base buildings and
+  professions shuffled, every standing Town Center is a base without building one (it failed for
+  Genghis 2, 4, 5 and 6 before the fix). Fill gate re-run: 0/63.

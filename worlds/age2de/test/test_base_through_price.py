@@ -5,9 +5,10 @@ from BaseClasses import CollectionState
 from rule_builder.rules import True_
 
 from . import bases
-from ..Options import ExistingTechs, ShuffleVillager, Unitsanity
+from ..Options import BuildingOption, ExistingTechs, ShuffleVillager, Unitsanity
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Ages import Age2AgeData
+from ..locations.Buildings import Age2BuildingData
 from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
@@ -67,6 +68,29 @@ class TestABaseNeedsTheVillagerLine(BaseThroughPriceTestBase):
                 has_base = self.scenario_logic(Age2ScenarioData.AP_ATTILA_3).has_base()
                 self.assertFalse(self.holds(has_base, self.state_without(VILLAGER_LINE)))
                 self.assertTrue(self.holds(has_base, self.state_without()))
+
+
+class TestAStandingTownCenterIsABase(BaseThroughPriceTestBase):
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+
+    def test_genghis_needs_nothing_to_build_a_base_it_starts_with(self):
+        self.build(
+            shuffle_villager=ShuffleVillager.option_include_professions,
+            shuffle_buildings={BuildingOption.base},
+        )
+        building_items = (
+            Age2VillagerJobData.BUILDER_MALE.item.item_name,
+            Age2BuildingData.TOWN_CENTER.item.item_name,
+            Age2BuildingData.HOUSE.item.item_name,
+        )
+        state = self.state_without(*building_items)
+        for scenario in (
+            Age2ScenarioData.AP_GENGHIS_4,
+            Age2ScenarioData.AP_GENGHIS_5,
+            Age2ScenarioData.AP_GENGHIS_6,
+        ):
+            with self.subTest(scenario.name):
+                self.assertTrue(self.holds(self.scenario_logic(scenario).has_base(), state))
 
 
 class TestEasyFoodNeedsABase(BaseThroughPriceTestBase):
