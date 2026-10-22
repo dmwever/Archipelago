@@ -31,15 +31,25 @@ to Militia.
 Not affected: villagers (caveman-exempt, `UnitData.is_caveman_exempt`), heroes and escort units, and
 every `counters` / `has_military` check (those are training-based and already ask for unit items).
 
-## Open question
+## Mercenary routing (settled 2026-10-22)
 
-Mercenary spawns are caveman-immune in the game: `MercenarySpawn.xs:77` calls
-`MarkUnitCavemanImmune`. If that is intended, the *(mercenary)* rows — including the reported
-Genghis 1 case — are not real game-side problems, and logic is only being conservative. If the
-Kereyid monks did turn into Militia in the playtest, the immunity itself is broken.
+A mercenary item reaches the player by two routes, and only one of them is caveman-immune:
 
-Units handed over by scenario triggers (Joan 1/2/3/6, Genghis 3 transport) are not immune, so those
-rows are real.
+- **Pavilion route.** The soldiers are mustered at the pavilion by `SpawnNextSoldier`
+  (`MercenarySpawn.xs`), which calls `MarkUnitCavemanImmune` on every unit it creates
+  (`MercenarySpawn.xs:77`). These are never knocked down.
+- **Scenario route.** `GiveMercenary` (`MercenaryItems.xs:207`) sets a per-mercenary flag — e.g.
+  `Genghis1BlueForce` for the Kereyid Tribe — which the scenario's own triggers read. The units
+  handed over are the scenario's, created by trigger, with nothing marking them immune. These are
+  knocked down like any other unit.
+
+So the Kereyid monks turning into Militia is the scenario route behaving normally, **not** broken
+immunity. There is nothing to chase there. Units handed over by scenario triggers (Joan 1/2/3/6,
+Genghis 3 transport) are the same route, so those rows are real.
+
+The maintainer's rulings below stand unchanged: the monks turning is the wanted behaviour, and the
+non-monk *(mercenary)* rows are not bugs. Routing was nailed down while triaging
+[issue 10](10-caveman-sweep-delayed.md).
 
 ## Comments
 
