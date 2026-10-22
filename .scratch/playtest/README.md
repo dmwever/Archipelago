@@ -12,9 +12,9 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 06 | [Loading a mid-scenario save misses scenario items received since](issues/06-reload-misses-scenario-items.md) | done |
 | 07 | [Own Shepherd in logic where no scenario with villagers has sheep](issues/07-own-shepherd-without-sheep.md) | ready-for-agent |
 | 08 | [Traps fire again after reconnecting to the server](issues/08-traps-resent-on-server-reconnect.md) | done |
-| 09 | [Castle Age received before reaching Feudal covers the Feudal button](issues/09-castle-age-covers-feudal-button.md) | needs-triage |
+| 09 | [Castle Age received before reaching Feudal covers the Feudal button](issues/09-castle-age-covers-feudal-button.md) | done |
 | 10 | [Caveman is late to knock a unit down (Knight → Militia much later)](issues/10-caveman-sweep-delayed.md) | needs-info |
-| 11 | [Khan shows up as trainable at the Castle](issues/11-khan-trainable-at-castle.md) | needs-triage |
+| 11 | [Khan shows up as trainable at the Castle](issues/11-khan-trainable-at-castle.md) | ready-for-agent |
 | 12 | [Build Fish Trap doesn't require a Fishing Ship](issues/12-fish-trap-without-fishing-ship.md) | ready-for-agent |
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | folded into #05 |
 | 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |

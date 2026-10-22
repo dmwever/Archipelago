@@ -2,43 +2,135 @@
 
 **Reported:** 2026-10-20, playtesting
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 ## Report
 
 A Khan appears in the Castle's train menu.
 
-## Audit (from code, not verified in game)
+Confirmed in game on 2026-10-22: the Khan does not merely appear, it **displaces whichever unique
+unit occupies that building's first button slot**. Every civilisation's unique unit sits at Castle
+slot 1, so under Huns that is the Tarkan, under Franks the Throwing Axeman, and under Mongols the
+Mangudai. In a unitsanity seed that has already handed the player the Mangudai Line item, Genghis 6
+loses the unit the scenario is built around.
 
-Khan is `Age2HeroData.KHAN` (location 604, unit 1275, `locations/Heroes.py:39`: "scenario-only unit,
-not a hero"). The installed `UnitData.xs` gives it the same kind of row as every hero and escort
-unit (locations 584–605, `UnitData.xs:266-283`):
+The displacement is positional: a unit that is enabled takes its own (train location, button slot)
+pair and pushes out whatever was there. Nothing about it is specific to the Castle.
 
-```
-addUnit(604, 1275, -1, 25, 0, -1, 1);   // no line, Dark Age, caveman-exempt, no items
-```
+## Game data (read from `empires2_x2_p1.dat`, VER 8.9, all 63 civs identical)
 
-What happens to such a row in `Unitsanity.xs`:
+Of the eighteen rows this seed installs with no line, Khan is the only one with a real train
+location:
 
-1. `addUnit` sets `"trainable"` to true by default (`:68`). Only `addUnitUntrainable` clears it, and
-   the client writes no untrainable entries for a granted-only row
-   (`client/handlers/install/UnitData.py`, `unit_row` → `is_granted_only` passes `()` for
-   untrainable civs).
-2. `InitUnitsanity` hides it (`setUnitHidden(unit, true)`).
-3. The first `refreshUnitLocks` finds it locked with no items, so it counts as having all of them,
-   and unhides it: `setUnitHidden(unit, false)` → `setUnitDisable(unit, 0.0)`.
-4. `setUnitDisable` (`:141-155`): Dark Age reached and `trainable` true → `enable = true` →
-   `cEnableObject` on 1275.
+| unit | train location | button slot | notes |
+| --- | --- | --- | --- |
+| 1275 Khan | 82 Castle | 1 | 55 wood + 65 gold, 26s - the only visible button |
+| 698 Subotai, 706 Saboteur, 1338 Cart | none | 3, 7, 1 | orphan slot numbers, no location, nothing renders |
+| 814 Horse | none | 0 | already `enabled = 1` in base data, so enabling is a no-op |
+| the other thirteen | none | 0 | enabled in the tech tree, no button anywhere |
 
-`cEnableObject` makes the unit available to player 1. Khan has a Castle train slot in the game data,
-so it shows up there.
+All eighteen carry `creatable` with `train_location_count = 1`; it is `train_unit_id` inside that
+row which is `-1` for seventeen of them. Structure-verified against the file, not observed in
+engine.
 
-Every hero/escort row goes through the same path; the Khan is just the one whose data has a train
-location. Any granted-only row whose unit has a train button would do the same, for any civ.
+## Audit (corrected during triage, 2026-10-22)
 
-## Likely shape of a fix
+The original audit named `is_granted_only` as the source of the row. That is wrong for this seed.
+There are two producers of a row with no line, and this seed exercises the other one.
 
-Granted-only rows must never be enabled, only un-disabled. Either have the client mark them
-untrainable for every civ, or have the XS skip `cEnableObject` for rows with no line
-(`lineId < 0`). Note that the `cDisabledFlag` reset to 0 also matters, if a scenario relied on the
-unit staying disabled.
+- **Khan is an `Age2HeroData` member deliberately**, and is not in `Age2UnitData` at all. Its row
+  therefore comes from `UnitData.owned_type_row`, which every hero and escort takes.
+  `owned_type_row` hard-codes `NO_LINE`, Dark Age, tier 0, no items and `untrainable_civs = ()`,
+  and consults nothing - not caveman, not the items mode, not the civs.
+- `unit_row`'s `is_granted_only` branch produces an identical row shape for ordinary units, but
+  needs unitsanity `all` **and caveman off**. This seed is `all` with caveman on, so that branch is
+  dormant here - visible in the installed unit data, where units no civilisation trains are getting
+  real line ids, items and `addUnitUntrainable` lines exactly as that branch intends.
+- **Hero and escort locations exist only under unitsanity `all`**; `UnitPool.heroes` and
+  `UnitPool.escorts` return nothing otherwise.
+- **Khan reaches the table by exactly one route.** It appears in no authored startup or trigger
+  list. It is a soldier of the `AP_GENGHIS_6_SUBOTAIS_ARMY` mercenary, and the helper that folds a
+  muster's soldiers into a scenario's trigger units is what puts it in the granted set. So the row
+  exists if and only if unitsanity is `all` and Genghis 6 is in the seed.
+
+What happens to such a row once installed:
+
+1. `addUnit` sets `trainable` true by default. Only `addUnitUntrainable` clears it, and neither
+   producer emits one for these rows.
+2. `InitUnitsanity` hides it.
+3. The first `refreshUnitLocks` finds it locked with no items, so `hasAllItems` returns true on the
+   first empty slot and the row is unhidden.
+4. `setUnitDisable` sees the Dark Age reached and `trainable` still true, so it enables the object.
+   `ageReached` returns true unconditionally for anything but Feudal, Castle and Imperial, so the
+   age gate is a no-op here.
+
+The location itself is legitimate and stays: mustering Subotai's Army genuinely does hand the
+player a Khan, and owning a unit to check it is unitsanity's rule everywhere else. Logic is also
+fine - reaching a location earlier than logic expects never makes a seed unbeatable.
+
+## Comments
+
+> *This was generated by AI during triage.*
+
+### Agent Brief (2026-10-22)
+
+**Category:** bug
+
+**Summary:** Rows that no civilisation can train are reported as trainable, so the mod enables them
+and they displace real units at their train slot
+
+**Current behavior:**
+The installed unit table describes a hero, escort or granted-only unit as trainable by every
+civilisation in the seed. The row carries no line and no items, so it unlocks on the first refresh
+after install, and the game is told to enable the unit for the player. Any such unit that has a
+train location in the game data then takes its button slot and pushes out whatever occupied it. The
+Khan is the live instance: it trains at the Castle in slot 1, which is the slot every
+civilisation's unique unit uses.
+
+**Desired behavior:**
+A unit that no civilisation in the seed can train is described as untrainable by every civilisation
+in the seed, so the mod never enables it. The unit still arrives when a scenario or a mercenary
+muster hands one over, and owning one still sends its check. No train button appears for it
+anywhere, and no existing button is displaced.
+
+**Key interfaces:**
+
+- `UnitData.owned_type_row`: its hero/escort branch currently returns a `Row` whose
+  `untrainable_civs` is empty. It should name every civilisation in the seed. Its villager-job
+  branch must keep returning an empty tuple - profession rows are driven through villager swap
+  groups and never read the trainable flag, so marking them would be noise.
+- `UnitData.unit_row`: the branch taken when `is_granted_only` holds has the same empty tuple and
+  the same fix. These rows are reachable under unitsanity `all` with caveman off, where the units
+  involved (transport ships, trade carts, unique units of civilisations not in the seed) mostly do
+  have train buttons.
+- `Row.untrainable_civs` and the `addUnitUntrainable` lines rendered from it: the existing mechanism
+  is correct and needs no change. It already no-ops for any civilisation that is not the player's.
+- No XS change. The guard that reads the trainable flag before enabling is already right; it is
+  being fed a false value.
+
+**Acceptance criteria:**
+
+- [ ] A seed with unitsanity `all` renders an `addUnitUntrainable` line, for every civilisation in
+      the seed, after every hero and escort row
+- [ ] The same holds for rows produced by the granted-only branch under unitsanity `all` with
+      caveman off
+- [ ] Villager job rows render no `addUnitUntrainable` lines
+- [ ] A test covers the hero/escort case and a test covers the granted-only case, alongside the
+      existing per-civ untrainable tests
+- [ ] The existing test asserting that a granted-only row holds no items and no line still passes;
+      only its untrainable expectation changes
+- [ ] The full world test suite passes
+- [ ] **Not verifiable by the agent:** after regenerating and installing, Genghis 6 shows the
+      Mangudai in Castle slot 1 and no Khan anywhere in the train menu. A human confirms this in
+      game before the ticket closes
+
+**Out of scope:**
+
+- Removing or regating the "Own Khan" location. It is legitimate; a mustered Khan is a Khan owned
+- Moving Khan out of the hero enum. It is filed there deliberately
+- The unconditional disabled-flag write that accompanies unhiding a row. Enabling and the flag
+  write currently fire together, so the playtest cannot tell them apart; if the Castle is still
+  wrong once enabling stops, that is a new ticket with evidence behind it
+- Whether a granted hero should be cavemanified. See issue 16
+- The button-slot collision as a general mechanism. This ticket stops the mod from enabling units
+  it should never enable; it does not teach the mod about slot conflicts

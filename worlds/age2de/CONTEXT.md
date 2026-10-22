@@ -103,3 +103,19 @@ or age location that is still achievable in this scenario. A global location alr
 start, or out of the civ's reach, is not registered here, even when another scenario checked it.
 A checked location the server reports that is not registered is expected, not an error.
 _Avoid_: existing location, known location
+
+### Units
+
+**Unit row**:
+The entry the installed unit table holds for one unit: which location owning it checks, which
+line it belongs to, which items unlock it, and whether any civilisation in the seed can train it.
+One row per unit, not per line.
+_Avoid_: unit entry, unit record
+
+**Granted-only row**:
+A unit row for a unit no civilisation in the seed can train, so only a scenario or a mercenary
+muster hands one over. It has no line and no items, which makes it unlocked from the start;
+owning one is still its own check. Heroes and escorts are always granted-only. Being granted-only
+says nothing about whether the game has a train button for the unit, and a granted-only unit is
+never one the player may train.
+_Avoid_: hero row, untrainable row (that is the per-civ flag, a different thing)

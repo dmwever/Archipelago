@@ -9,7 +9,11 @@ No behaviour change. This ticket is only sound if nothing differs in game and th
 
 Deliberately after 05: that ticket deletes `ack_items`, `free_items` and `in_flight` outright, and
 moving code two slices before deleting it is wasted motion. Deliberately before 07, so the
-`startupBaseline` work is written in its final home rather than moved afterwards.
+`startupBaseline` skip decision is written in its final home rather than moved afterwards.
+
+Starting resources stay out. `startup.xsdat` is the starting pile, applied once per scenario start,
+not part of the item stream, so writing and removing it stays on `Age2GameContext`. `ItemHandler`
+only learns the baseline (07) so it can skip stream entries the pile already paid.
 
 Mercenaries stay separate. `MercenaryHandler` owns a model — a queue, four seats, and the status
 `/mercenaries` renders. `ItemHandler` owns a cursor: a position, a window and a high-water mark,
@@ -22,10 +26,10 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md`.
 
 **Status:** ready-for-agent
 
-- [x] `ItemHandler(FolderHandler)` owns `items.xsdat` and `startup.xsdat`, with its own
-      `try_flush_from_folder`, and `flush_files` defers to it
-- [x] `send_items`, `wire_id`, `note_delivered`, `adopt_items_spent` and `sync_starting_resources`
-      move off `Age2GameContext`
+- [x] `ItemHandler(FolderHandler)` owns `items.xsdat`, with its own `try_flush_from_folder`, and
+      `flush_files` defers to it. `startup.xsdat` stays with `Age2GameContext`
+- [x] `send_items`, `wire_id`, `note_delivered` and `adopt_items_spent` move off
+      `Age2GameContext`; `sync_starting_resources` deliberately stays
 - [x] `acked_items`, `items_spent` and `storage_ready` move off `ClientStatus` into the handler
 - [x] `unlocked_items` stays on `ClientStatus` — six handlers read it — and `ItemHandler` takes it
       as a parameter, matching the existing `try_sync_*(unlocked_items)` shape
@@ -41,7 +45,12 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md`.
 
 Names had drifted since this was written: `wire_id` is `id_for_game`, `note_delivered` is
 `mark_delivered_spent`, `adopt_items_spent` is `reconcile_spent`, `items_spent` is
-`spent_mask`. All of them moved regardless.
+`spent_mask`.
+
+Correction (triage, 2026-10-22): not all of them moved. `reconcile_spent` is still on
+`Age2GameContext`, and `spent_mask` / `record_known` are still on `ClientStatus`. Giving the spent
+record a single owner is ticket 08. `sync_starting_resources` and the `startup.xsdat` removal in
+`flush_files` stayed on `Age2GameContext` on purpose (see above and 07).
 
 Three things landed slightly differently from the plan:
 
