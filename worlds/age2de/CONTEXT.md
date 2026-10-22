@@ -30,13 +30,34 @@ thing worked in that same scenario. Sheep count only in the base or the open; ev
 resource counts wherever it is. The item that permits a job is its **profession**.
 _Avoid_: profession (when the job or its location is meant), gatherer type
 
+**Economy route**:
+One way P1 brings a resource in: a **producer** (villagers on a job, Fishing Ships, Trade Cogs,
+Trade Carts, or something a scenario provides) that **yields** one or more resources once its
+**economy seed** is met. A route yields at one of two strengths: **some** (enough to pay an
+economy seed once, such as a few villagers chopping with no base) or **at scale** (enough to keep
+paying).
+_Avoid_: economy (when one route is meant), income, source (unqualified)
+
+**Easy source**:
+A route yielding a resource at scale, with its economy seed met. Only an easy source pays a
+location's price.
+_Avoid_: income, steady supply
+
+**Economy seed**:
+Everything a route's producer needs before it starts yielding: resources gathered or banked,
+buildings, access such as water or a trade partner's dock, villagers (any number), or a scenario's own
+grant. A bundle, not a pile, and particular to its route. Its resources may come from any route
+already yielding them, at either strength, so one route can seed the next.
+_Avoid_: seed (alone: it is the Archipelago generation seed), seed resources, starting resources
+(when the whole bundle is meant)
+
 **Base**:
 A Town Center P1 can turn out villagers from: one standing at the start, or one P1 puts up, paid
 for by the starting Town Center resources and stood on ground P1 can reach. It also takes the food
-to train the first villagers and the Villager Line, even where villagers already stand. Gathering
-any resource at scale needs a base, so anything paid for by gathering does too, climbing an age
-included.
-_Avoid_: Town Center (when the base is meant), camp, having villagers
+to train the first villagers and the Villager Line, even where villagers already stand. The base
+is the economy seed of villagers gathering at scale: one route's economy seed, not the economy
+itself.
+_Avoid_: Town Center (when the base is meant), camp, having villagers, economy
 
 **Trade partner**:
 A player whose market or dock P1 can actually trade with: an ally, or an opponent whose market or
@@ -46,7 +67,8 @@ _Avoid_: trading ally (when an opponent may be meant)
 
 **Partner trade**:
 Gold or wood earned by sending trade carts to a trade partner's market or trade cogs to its dock.
-One thing whichever route it takes.
+One thing whichever route it takes. Trade is not gathering and asks no base itself: cogs bring
+their own wood home, and carts run on wood from any easy source.
 _Avoid_: ally trade, trade cogs, trade carts (when both are meant), trading
 
 **Market trade**:

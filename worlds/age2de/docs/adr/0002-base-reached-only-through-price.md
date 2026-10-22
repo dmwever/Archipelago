@@ -23,11 +23,23 @@ would have to be unpicked one rule at a time.
 
 ## Consequences
 
-- Prerequisites stay structural. `has_reached` (an age as a prerequisite) and `has_building`
-  (standing or buildable) never pay. What depends on them pays its own price.
+- Prerequisites stay structural. `has_reached` (an age as a prerequisite) never pays. What depends
+  on it pays its own price.
+- Buildings have the same paid and structural pair as ages, techs and units (#17):
+  `has_building_structurally` (standing or buildable) never pays, and `has_building` (standing or
+  paid for) does. A paid form pays for every building it leans on. A structural form, and every
+  question inside the economy (dropsites, fortification, market, dock), pays for nothing. That keeps
+  the easy sources from asking themselves.
+- The Town Center is paid for by the base, never by an easy source. A standing one is free; a built
+  one is paid for by the Town Center items, which the location reaches through its own price.
+- A banked pile (`HasResourceAmount`) never pays for a building. It counts the Town Center items,
+  which the base has already spent, and it can't add up two buildings. Banks pay only for one-off
+  seeds such as a Fishing Ship or a trade seed.
 - The structural climb asks for a Town Center structurally, because an age is researched there. The
   base arrives through the age's food cost.
-- A route to an easy source that reaches no base (Trade Cogs, #19) may be a deliberate non-base
-  economy, not automatically a gap.
-- Follow-ups that apply this: #17 (building costs on the buildable path), #18 (military's remaining
-  direct `has_base()`), #19 (cog trade).
+- Trade Cogs are a deliberate non-base economy (#19): cogs to a trade partner's dock bring in easy
+  wood and gold with no base. A route to an easy source that reaches no base is not automatically a
+  gap. ADR-0003 generalises this: the base is one economy route's economy seed, not the gathering
+  side as a whole.
+- Follow-ups that apply this: #17 (paying for the buildings a location leans on), #18 (the direct
+  `has_base()` left in military and in the defeat rules), #19 (cog trade).
