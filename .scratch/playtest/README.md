@@ -17,5 +17,5 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 11 | [Khan shows up as trainable at the Castle](issues/11-khan-trainable-at-castle.md) | needs-triage |
 | 12 | [Build Fish Trap doesn't require a Fishing Ship](issues/12-fish-trap-without-fishing-ship.md) | needs-triage |
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | needs-triage |
-| 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | needs-info |
+| 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |
 | 15 | [Joan 2 bridge accepts a military that needs Orleans first](issues/15-joan2-bridge-military-needs-orleans.md) | needs-triage |
