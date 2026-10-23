@@ -26,13 +26,6 @@ HORSE_LINE = Age2UnitLineData.SCOUT_CAVALRY_LINE
 
 
 class UnitLogic:
-    """Whether a unit can be had **somewhere**, which is what its global location asks.
-
-    Every question that depends on where you are standing belongs to ScenarioUnitLogic, and the
-    answers here are an Or over the scenarios that can be reached. What is left is the item half:
-    an item is global by nature, so holding the Archer Line holds it everywhere.
-    """
-
     def __init__(self, logic: 'Logic', world: Age2World):
         self.logic = logic
         self.world = world
@@ -40,8 +33,11 @@ class UnitLogic:
     # -- owning ------------------------------------------------------------------------------
 
     def can_own_anywhere(self, unit: Age2UnitData) -> Rule:
-        granted = self.is_granted_anywhere(unit) & (NOT_CAVEMAN | self.can_restore(unit))
+        granted = self.is_granted_anywhere(unit) & self.survives_caveman(unit)
         return self.can_train_anywhere(unit) | granted | self.can_convert(unit)
+
+    def survives_caveman(self, unit: Age2UnitData) -> Rule:
+        return NOT_CAVEMAN | self.can_restore(unit)
 
     def can_restore(self, unit: Age2UnitData) -> Rule:
         tech = unit.upgrade_tech
@@ -50,7 +46,6 @@ class UnitLogic:
         return self.has_unit_items(unit) & Has(tech.item.item_name)
 
     def can_own_line_anywhere(self, line: Age2UnitLineData) -> Rule:
-        """Owning any tier is owning the line."""
         return Or(*[self.can_own_anywhere(unit) for unit in line.units
                     if self.world.pool.units.includes(unit)])
 
@@ -81,7 +76,6 @@ class UnitLogic:
         return Or(*ways)
 
     def can_get_villager_anywhere(self) -> Rule:
-        """Any villager location: one villager, priced at the food that staffs a base."""
         villager, food = Age2UnitData.VILLAGER_MALE, Age2ItemData.STARTING_VILLAGER_FOOD.type
         ways: list[Rule] = []
         for scenario in self.logic.scenarios:
@@ -146,7 +140,6 @@ class UnitLogic:
         return self.has_horses()
 
     def has_horses(self) -> bool:
-        """A meso-american civilisation trains a trade cart and has nothing to pull it."""
         return any(self.world.pool.civs.any_trains(unit) for unit in HORSE_LINE.units)
 
     def has_building_item(self, unit: Age2UnitData) -> Rule:

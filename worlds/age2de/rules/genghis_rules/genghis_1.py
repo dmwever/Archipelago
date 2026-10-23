@@ -3,6 +3,7 @@ from rule_builder.rules import Has, Rule
 from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
+from ...locations.Units import Age2UnitData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -13,7 +14,8 @@ class Genghis1Rules(ScenarioRules):
     def set_rules(self):
         super().set_rules()
 
-        has_monk: Rule = Has(Age2ItemData.AP_GENGHIS_1_KEREYID_TRIBE.item_name)
+        has_monk: Rule = (Has(Age2ItemData.AP_GENGHIS_1_KEREYID_TRIBE.item_name)
+                          & self.logic.units.survives_caveman(Age2UnitData.MONK))
 
         if self.world.pool.scenarios.all_scenario_branches:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN1_RELIC_RED_MONASTERY], has_monk)

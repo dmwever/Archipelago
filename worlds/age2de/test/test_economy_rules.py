@@ -8,9 +8,10 @@ from BaseClasses import CollectionState
 from rule_builder.rules import False_, True_
 
 from . import bases
-from ..Options import PartnerTrade, Techsanity, Unitsanity
+from ..Options import Caveman, PartnerTrade, Techsanity, Unitsanity, UnitsanityItems
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
+from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Players import Age2PlayerData, TradeAccess
 from ..locations.connections.ScenarioResources import Tier, total
 from ..locations.Scenarios import Age2ScenarioData
@@ -113,6 +114,38 @@ class TestSourcesPerScenario(EconomyTestBase):
                        if not self.is_false(self.economy(scenario).can_collect_relics())}
         self.assertEqual(with_relics, {Age2ScenarioData.AP_ATTILA_3, Age2ScenarioData.AP_ATTILA_4,
                                        Age2ScenarioData.AP_GENGHIS_5})
+
+
+class TestRelicsUnderCaveman(EconomyTestBase):
+    """Genghis 5 has no monk of its own: the Hermit Monks mercenary is what brings one, and the
+    relics ride on that. Under caveman those monks come down as Militia like any unit a scenario
+    hands over, so the relics want the Monk's unit items too."""
+
+    HERMITS = Age2ItemData.AP_GENGHIS_5_HERMITS.item_name
+    MONK_LINE = Age2UnitLineData.MONK_LINE.item.item_name
+
+    CAVEMAN = dict(caveman=Caveman.option_true, unitsanity=Unitsanity.option_all,
+                   unitsanity_items=UnitsanityItems.option_unit_line)
+
+    def can_collect(self, state) -> bool:
+        rule = self.economy(Age2ScenarioData.AP_GENGHIS_5).can_collect_relics()
+        return bool(rule.resolve(self.world)(state))
+
+    def test_granted_monks_alone_do_not_collect_relics_under_caveman(self):
+        self.build(**self.CAVEMAN)
+        self.assertFalse(self.can_collect(self.state_without(self.MONK_LINE)))
+        self.assertTrue(self.can_collect(self.state_without()))
+
+    def test_the_training_branch_is_untouched(self):
+        """Caveman only ever gates the granted half. Genghis 5 can raise a monastery, so holding
+        the Monk Line collects relics there whether or not the hermits ever show up."""
+        self.build(**self.CAVEMAN)
+        self.assertTrue(self.can_collect(self.state_without(self.HERMITS)))
+
+    def test_without_caveman_the_mercenary_is_enough(self):
+        self.build(unitsanity=Unitsanity.option_all,
+                   unitsanity_items=UnitsanityItems.option_unit_line)
+        self.assertTrue(self.can_collect(self.state_without(self.MONK_LINE)))
 
 
 class TestFixedForceNeedsNoSpecialCase(EconomyTestBase):

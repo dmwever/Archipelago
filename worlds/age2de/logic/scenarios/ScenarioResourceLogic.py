@@ -49,8 +49,6 @@ class ScenarioResourceLogic:
         return gates
 
     def _open_gate(self, kind: str) -> Rule:
-        """What working a source out in the open asks: a navy at sea, a held shoreline, or on land
-        somewhere to fall back to - each a shared question, as every source of that kind asks it."""
         if kind == "afloat":
             return self.scenario.military.can_protect_boats()
         if kind == "shoreline":
@@ -217,8 +215,8 @@ class ScenarioResourceLogic:
         return (
             self.scenario.has_building(Age2BuildingData.MONASTERY)
             & (
-                self.logic.units.has_unit_items(Age2UnitData.MONK)
-                | self.scenario.obtains_unit(monk)
+                self.logic.units.has_unit_items(monk)
+                | (self.scenario.obtains_unit(monk) & self.logic.units.survives_caveman(monk))
             )
             & self.scenario.ages.has_reached(Age2UnitData.MONK.age)
             & self.can_mine_some()

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-15, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -138,18 +138,18 @@ Hermit Monks) and has the same blind spot under caveman.
 - `ScenarioResourceLogic._collect_relics`.
 
 **Acceptance criteria:**
-- [ ] With caveman and unitsanity on, holding the Kereyid Tribe without the Monk's unit items leaves
+- [x] With caveman and unitsanity on, holding the Kereyid Tribe without the Monk's unit items leaves
       every Genghis 1 location the Kereyid gate covers unreachable.
-- [ ] With caveman and unitsanity on, holding the Kereyid Tribe and the Monk's unit items makes those
+- [x] With caveman and unitsanity on, holding the Kereyid Tribe and the Monk's unit items makes those
       locations reachable.
-- [ ] With caveman off, or with unitsanity off, those locations need only the Kereyid Tribe, the same
+- [x] With caveman off, or with unitsanity off, those locations need only the Kereyid Tribe, the same
       as today.
-- [ ] A test covers the cases above with `unitsanity_items: unit_line` (the Monk Line item), run in
+- [x] A test covers the cases above with `unitsanity_items: unit_line` (the Monk Line item), run in
       both the all-branches and the single-branch (`GEN1_ANY_RELIC`) setups.
-- [ ] With caveman and unitsanity on, relic collection that relies only on mercenary-granted monks
+- [x] With caveman and unitsanity on, relic collection that relies only on mercenary-granted monks
       (for example Genghis 5 with the Hermit Monks but not the Monk's unit items) is unreachable.
       Holding the Monk's unit items makes it reachable again.
-- [ ] The existing test suite passes, with `AGEIPELAGO_PATH` set.
+- [x] The existing test suite passes, with `AGEIPELAGO_PATH` set.
 
 **Out of scope:**
 - Any game-side (XS) change: no caveman immunity for monks, and no change to mercenary immunity.
@@ -158,3 +158,35 @@ Hermit Monks) and has the same blind spot under caveman.
   [issue 16](16-caveman-scenario-ships-and-carts.md).
 - Non-monk mercenary rows (Scythians, Bombards, Artillery): immune by design.
 - `counters` / `has_military` checks: they are training-based and already ask for unit items.
+
+### Implementation (2026-10-22)
+
+Landed in the working tree, uncommitted.
+
+- `UnitLogic.survives_caveman(unit)` (`worlds/age2de/logic/unit_logic.py:45`) names the
+  `NOT_CAVEMAN | can_restore(unit)` test that `can_own_anywhere` already applied inline. The
+  inline use was replaced by the call, so there is one place that says what a granted unit is
+  still worth.
+- `Genghis1Rules.set_rules` (`worlds/age2de/rules/genghis_rules/genghis_1.py:17`): `has_monk` is
+  now `Has(Kereyid Tribe) & survives_caveman(MONK)`. The Ungirrad Tribe was not added, and the
+  gate still covers Victory and Complete.
+- `ScenarioResourceLogic._collect_relics`
+  (`worlds/age2de/logic/scenarios/ScenarioResourceLogic.py:220`): the granted half is now
+  `obtains_unit(monk) & survives_caveman(monk)`. The training half (`has_unit_items`) is
+  untouched.
+
+Tests:
+
+- `worlds/age2de/test/test_scenario_rules.py` (new) - Genghis 1 across both branching modes:
+  caveman wants the Monk Line on top of the tribe; the tribe is still required; caveman off needs
+  only the tribe; caveman without unitsanity asks for nothing new.
+- `worlds/age2de/test/test_economy_rules.py::TestRelicsUnderCaveman` - Genghis 5's Hermit Monks:
+  granted monks alone no longer collect relics under caveman, the Monk Line restores them, the
+  monastery-training branch is untouched, and caveman off is unchanged.
+
+One assumption from triage turned out to be wrong and is worth recording: Genghis 5 *can* raise a
+monastery, so holding the Monk Line collects relics there with no mercenary at all. The first
+draft of `test_the_training_branch_is_untouched` asserted the opposite and failed.
+
+`python -m pytest worlds/age2de -q`: 1059 passed, 37177 subtests passed, in 29m24s. Nothing reads
+`AGEIPELAGO_PATH` - it appears only in these issue files, so the suite runs without it.

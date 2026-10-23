@@ -4,7 +4,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 
 | # | Issue | Status |
 | --- | --- | --- |
-| 01 | [Caveman is not applied to scenario rules](issues/01-caveman-scenario-rules.md) | ready-for-agent |
+| 01 | [Caveman is not applied to scenario rules](issues/01-caveman-scenario-rules.md) | done |
 | 02 | [Switching scenarios by save/load reports a scenario mismatch](issues/02-save-load-scenario-mismatch.md) | done |
 | 03 | ["Location does not exist: 3616" (Loom)](issues/03-location-3616-does-not-exist.md) | ready-for-agent |
 | 04 | [Reach Feudal / Castle sent at scenario start (Joan 1)](issues/04-age-checks-sent-at-start.md) | ready-for-agent |
