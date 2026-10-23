@@ -26,7 +26,6 @@ class Attila6StartingState(ScenarioStartingState):
         military = scenario_logic.military
         return {
             Age2PlayerData.ATT6_AQUILEIA: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
@@ -35,12 +34,10 @@ class Attila6StartingState(ScenarioStartingState):
             ),
             Age2PlayerData.ATT6_MEDIOLANUM: (
                 (
-                    scenario_logic.has_base() &
                     military.has_navy(Age2AgeData.IMPERIAL) &
                     military.has_naval_bombardment()
                 ) |
                 (
-                    scenario_logic.has_base() &
                     military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
                     military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
                     military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
@@ -48,7 +45,6 @@ class Attila6StartingState(ScenarioStartingState):
                 )
             ),
             Age2PlayerData.ATT6_PATAVIUM: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
@@ -56,7 +52,6 @@ class Attila6StartingState(ScenarioStartingState):
                 military.has_long_range_siege()
             ),
             Age2PlayerData.ATT6_VERONA: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &

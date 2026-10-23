@@ -32,7 +32,6 @@ class Genghis5StartingState(ScenarioStartingState):
         military = scenario_logic.military
         return {
             Age2PlayerData.GEN5_POLISH: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
@@ -41,7 +40,6 @@ class Genghis5StartingState(ScenarioStartingState):
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
             Age2PlayerData.GEN5_GERMANS: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE) &
@@ -51,7 +49,6 @@ class Genghis5StartingState(ScenarioStartingState):
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
             Age2PlayerData.GEN5_BOHEMIANS: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &

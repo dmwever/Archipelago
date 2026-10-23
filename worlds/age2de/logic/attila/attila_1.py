@@ -47,12 +47,10 @@ class Attila1StartingState(ScenarioStartingState):
         return {
             Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE: (
                 scenario_logic.ages.can_reach(Age2AgeData.FEUDAL) &
-                scenario_logic.has_base() &
                 military.has_military()
             ),
             Age2PlayerData.ATT1_PERSIANS: (
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE) &
@@ -60,7 +58,6 @@ class Attila1StartingState(ScenarioStartingState):
             ),
             Age2PlayerData.ATT1_SCYTHIANS: (
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MANGUDAI_LINE, Age2AgeData.CASTLE)

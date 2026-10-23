@@ -26,7 +26,6 @@ class Attila5StartingState(ScenarioStartingState):
         military = scenario_logic.military
         return {
             Age2PlayerData.ATT5_ALANS: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
@@ -34,7 +33,6 @@ class Attila5StartingState(ScenarioStartingState):
                 military.has_long_range_siege()
             ),
             Age2PlayerData.ATT5_VISIGOTHS: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.HUSKARL_LINE, Age2AgeData.IMPERIAL) &
@@ -43,7 +41,6 @@ class Attila5StartingState(ScenarioStartingState):
                 military.has_long_range_siege()
             ),
             Age2PlayerData.ATT5_WESTERN_ROMAN_EMPIRE: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.CENTURION_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &

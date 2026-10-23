@@ -32,7 +32,6 @@ class Genghis6StartingState(ScenarioStartingState):
         military = scenario_logic.military
         return {
             Age2PlayerData.GEN6_HUNGARY: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.IMPERIAL) &

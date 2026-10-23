@@ -41,14 +41,12 @@ class Joan6StartingState(ScenarioStartingState):
         military = scenario_logic.military
         return {
             Age2PlayerData.JOAN6_BURGUNDY: (
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE)
             ),
             Age2PlayerData.JOAN6_ENGLISH: (
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
@@ -56,7 +54,6 @@ class Joan6StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
             ),
             Age2PlayerData.JOAN6_SHREWSBURY: (
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &

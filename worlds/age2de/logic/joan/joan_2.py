@@ -46,15 +46,13 @@ class Joan2StartingState(ScenarioStartingState):
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {
-            Age2PlayerData.JOAN2_BURGUNDY: scenario_logic.has_base() & military.counters_building(),
+            Age2PlayerData.JOAN2_BURGUNDY: military.counters_building(),
             Age2PlayerData.JOAN2_NORTHERN_ENGLISH: (
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE)
             ),
             Age2PlayerData.JOAN2_SOUTHERN_ENGLISH: (
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE)

@@ -28,7 +28,6 @@ class Attila4StartingState(ScenarioStartingState):
         military = scenario_logic.military
         # The Roman army stands with Orléans, so it falls to the same army.
         can_defeat_orleans: Rule = (
-            scenario_logic.has_base() &
             military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
             military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
             military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &
@@ -40,13 +39,11 @@ class Attila4StartingState(ScenarioStartingState):
         )
         return {
             Age2PlayerData.ATT4_BURGUNDY: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE)
             ),
             Age2PlayerData.ATT4_METZ: (
-                scenario_logic.has_base() &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.THROWING_AXEMAN_LINE, Age2AgeData.IMPERIAL) &

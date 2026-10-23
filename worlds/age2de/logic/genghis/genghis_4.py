@@ -44,7 +44,6 @@ class Genghis4StartingState(ScenarioStartingState):
             # The Kipchaks offer no resistance: they surrender their camp.
             Age2PlayerData.GEN4_KIPCHAKS: True_(),
             Age2PlayerData.GEN4_RUSSIANS: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.BOYAR_LINE, Age2AgeData.CASTLE) &
@@ -54,7 +53,6 @@ class Genghis4StartingState(ScenarioStartingState):
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
             Age2PlayerData.GEN4_KHWARAZM: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.WAR_ELEPHANT_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &

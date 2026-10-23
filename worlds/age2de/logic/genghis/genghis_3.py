@@ -57,7 +57,6 @@ class Genghis3StartingState(ScenarioStartingState):
 
         return {
             Age2PlayerData.GEN3_TANGUTS: (
-                scenario_logic.has_base() &
                 can_invade_china &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
@@ -70,7 +69,6 @@ class Genghis3StartingState(ScenarioStartingState):
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
             Age2PlayerData.GEN3_XI_XIA: (
-                scenario_logic.has_base() &
                 can_invade_china &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.CHU_KO_NU_LINE, Age2AgeData.CASTLE) &
@@ -81,7 +79,6 @@ class Genghis3StartingState(ScenarioStartingState):
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
             Age2PlayerData.GEN3_JIN: (
-                scenario_logic.has_base() &
                 can_force_landing &
                 military.has_military(Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.IRON_PAGODA_LINE, Age2AgeData.IMPERIAL) &
@@ -94,7 +91,6 @@ class Genghis3StartingState(ScenarioStartingState):
                 scenario_logic.ages.can_reach(Age2AgeData.IMPERIAL)
             ),
             Age2PlayerData.GEN3_SONG: (
-                scenario_logic.has_base() &
                 can_invade_china &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &

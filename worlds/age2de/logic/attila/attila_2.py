@@ -37,7 +37,6 @@ class Attila2StartingState(ScenarioStartingState):
             Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE: (
                 self.scythian_troop |
                 (
-                    scenario_logic.has_base() &
                     military.has_siege() &
                     military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
                     military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &

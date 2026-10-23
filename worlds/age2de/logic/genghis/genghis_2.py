@@ -37,7 +37,6 @@ class Genghis2StartingState(ScenarioStartingState):
         military = scenario_logic.military
         return {
             Age2PlayerData.GEN2_KARA_KHITAI: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
@@ -48,7 +47,6 @@ class Genghis2StartingState(ScenarioStartingState):
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
             ),
             Age2PlayerData.GEN2_KUSHLUK: (
-                scenario_logic.has_base() &
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MANGUDAI_LINE, Age2AgeData.CASTLE) &

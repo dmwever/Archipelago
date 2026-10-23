@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-22, split from [#05](05-attila1-forging-without-town-center.md) during triage
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -132,26 +132,37 @@ base itself: it reaches the base only through its price.
   easy sources should not change, because those sources ask the base themselves after #05.
 
 **Acceptance criteria:**
-- [ ] `_field` contains no `has_base()` in either form.
-- [ ] No `defeat_rules` override asks `has_base()`. `grep -rn "has_base()"` over `logic/` and `rules/`
+- [x] `_field` contains no `has_base()` in either form.
+      `worlds/age2de/test/test_military_through_price.py::TestNoMilitaryQuestionAsksABaseDirectly::test_fielding_asks_no_base_in_either_form`: red.
+- [x] No `defeat_rules` override asks `has_base()`. `grep -rn "has_base()"` over `logic/` and `rules/`
       finds only the gathering side (easy gold and stone, chopping wood) and `ScenarioLogic`'s own
       definition; `generation/LocalStart.py` is unchanged.
-- [ ] A rule test pins the shipped Attila 3 Monk: with every item except the Villager Line (and the
+      `worlds/age2de/test/test_military_through_price.py::TestNoMilitaryQuestionAsksABaseDirectly::test_no_defeat_rules_asks_a_base`: red (all 14
+      overrides fail with the fix reverted). Grep after: `ScenarioQuestions.py` 279/293/302 (easy gold,
+      stone), `ScenarioResourceLogic.py:233` (chopping), `ScenarioLogic.py:109` (definition). LocalStart
+      untouched.
+- [x] A rule test pins the shipped Attila 3 Monk: with every item except the Villager Line (and the
       professions it implies, where shuffled), state whether the Monk is fieldable in the Castle Age,
       assert that, and record the answer and the reason (which source made it true or false) in
       this issue. Do not change scenario data to make it come out either way.
-- [ ] A rule test shows a food-costing unit (Scout Cavalry or Militia) is not fieldable where no
+      `worlds/age2de/test/test_military_through_price.py::TestAttila3MonkWithoutVillagers::test_the_monk_is_not_fielded_in_the_castle_age`: held
+      before. Answer and reason under *Implementation* below.
+- [x] A rule test shows a food-costing unit (Scout Cavalry or Militia) is not fieldable where no
       base is reachable, so the base still arrives through the price.
-- [ ] Every economy question still terminates with `market_trade` on and off, and with partner trade
+      `worlds/age2de/test/test_military_through_price.py::TestAFoodUnitBringsTheBase::test_no_base_fields_no_scout_cavalry`: held before.
+- [x] Every economy question still terminates with `market_trade` on and off, and with partner trade
       (the existing termination tests pass).
-- [ ] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes. Where an existing
+      `test_economy_rules.py` `test_the_market_rule_terminates_when_switched_on` and
+      `test_every_economy_question_terminates_with_partner_trade`: held before (pass in the full run).
+- [x] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes. Where an existing
       test asserted the old behaviour, change it and list each such test in this issue.
-- [ ] **Fill gate.** After #05 and #17 have landed and before editing, replay every generation in
+      1058 passed, 37742 subtests. No existing test asserted the old behaviour; none changed.
+- [x] **Fill gate.** After #05 and #17 have landed and before editing, replay every generation in
       `worlds/age2de/fuzz/fuzz_output_lock_items/error/age2de/` (each folder's YAMLs and the
       `Seed: <n>` in its log) and record the failure count. Replay the same set after the change.
       The count must not rise. If it rises, stop: record which generations newly fail and the fill
       error, and hand back. Do not tighten or loosen any rule to make the fill pass.
-- [ ] Before/after replay counts recorded in this issue.
+- [x] Before/after replay counts recorded in this issue: 0/63 before, 0/63 after (see below).
 
 **Out of scope:**
 - `has_base()` on the gathering side (easy gold and stone, chopping wood) and in LocalStart.
@@ -160,3 +171,46 @@ base itself: it reaches the base only through its price.
 - Whether trade cogs may be a no-base economy: #19.
 - Any XS (game-side) change.
 - Committing: leave the changes uncommitted.
+
+### Implementation (2026-10-23)
+
+- `ScenarioUnitLogic._field` returns `Or(*trained) & economy.can_sustain(sustained)` in both forms.
+  The structural `can_sustain` stays for #19.
+- 38 direct `scenario_logic.has_base()` conjuncts removed from the `defeat_rules` of Attila 1, 2,
+  4, 5, 6, Genghis 2-6 and Joan 2, 3, 4, 6. The rest of each conjunction is unchanged.
+- **Attila 3 Monk, Castle Age, everything but the Villager Line (and its professions):
+  not fieldable**, with `shuffle_villager` yes and include_professions. Easy gold holds (the
+  authored lumps, no base), so the Monk's 100 gold is covered. What fails is the paid Monastery
+  from #17: it costs wood, and there is no easy wood. Chopping needs a base, and cog wood needs
+  Marcianopolis or Philippopolis defeated, which needs a fielded army and so its price. Under
+  include_professions the Monastery is also not structurally trainable (no builder). The test
+  pins easy gold true, easy wood false and the unpaid training building alongside the answer.
+- Scout Cavalry in Attila 3 with no villagers: trainable structurally, no easy food, no base, not
+  fielded. Militia was dropped from that test: under include_professions its Barracks is not
+  structurally trainable, so it would not isolate the price.
+- **Fill gate:** the 63 generations in `fuzz_output_lock_items/error/age2de/`, each replayed with
+  its YAMLs and logged seed (`PYTHONHASHSEED=0`, `--skip_output`): **0/63 failed before, 0/63
+  after.**
+- Red check note: `tools/red_check.py` reported the defeat-rules test GREEN with the fix reverted.
+  Its regex matches `SUBFAILED(...)`, but pytest prints `SUBFAILED[...]`, so subtest failures are
+  missed. Reverted by hand instead: 14 of 14 overrides fail.
+
+### Follow-up: no military defeat without a base (2026-10-23)
+
+The maintainer asked for a guard that a defeat needing a military cannot be expected without a base
+somewhere in its logic. `test_military_through_price.py::TestNoMilitaryDefeatWithoutABase` builds
+every Attila, Joan and Genghis scenario three times. The defeats that go false with `_field`
+forced false are the military ones. Each must also be false with `has_base` forced false and every
+item collected. Held before.
+
+Probe across trade options, with no base and every item:
+
+- Partner trade off, market trade on or off: every military defeat needs a base.
+- Ally trade (default): Attila 6 Aquileia and Mediolanum are defeatable.
+- Enemy trade with market trade on: all four Attila 6 cities and all three Joan 3 players are
+  defeatable.
+
+Cause: Trade Cogs, seeded from banked wood and gold, give easy wood, food and gold with no base.
+#19 rules that a deliberate non-base route. Ruling (2026-10-23): pin the guard with
+`partner_trade: none`, market trade on and off, so any new non-base route other than cogs turns it
+red. Checked that it bites: switched to ally trade, it fails on exactly the Attila 6 cities above.

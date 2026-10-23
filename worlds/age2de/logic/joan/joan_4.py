@@ -35,20 +35,17 @@ class Joan4StartingState(ScenarioStartingState):
         # buildings: Chalons and Troyes fall to a land army only.
         return {
             Age2PlayerData.JOAN4_TROYES: (
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
             ),
             Age2PlayerData.JOAN4_CHALONS: (
-                scenario_logic.has_base() &
                 military.counters_building() &
                 military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL)
             ),
             Age2PlayerData.JOAN4_RHEIMS: (
-                scenario_logic.has_base() &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &

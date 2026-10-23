@@ -103,9 +103,7 @@ class ScenarioUnitLogic:
                 if paid else self.can_train_structurally(unit)
                 for unit in tiers
         ]
-        return (Or(*trained)
-                & self.scenario.has_base()
-                & self.scenario.economy.can_sustain(sustained))
+        return Or(*trained) & self.scenario.economy.can_sustain(sustained)
 
     def can_pay_for_training_building(self, unit: Age2UnitData) -> Rule:
         return Or(*[self.scenario.has_building(building)

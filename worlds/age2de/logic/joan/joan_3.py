@@ -44,7 +44,6 @@ class Joan3StartingState(ScenarioStartingState):
         can_cross_ocean = scenario_logic.named("can cross the sea", can_cross_ocean)
         return {
             Age2PlayerData.JOAN3_BURGUNDY: (
-                scenario_logic.has_base() &
                 can_cross_ocean &
                 military.counters_building() &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
@@ -53,7 +52,6 @@ class Joan3StartingState(ScenarioStartingState):
             ),
             # Every castle on the map is English: taking a castle is defeating the English.
             Age2PlayerData.JOAN3_ENGLISH: (
-                scenario_logic.has_base() &
                 can_cross_ocean &
                 military.has_siege() &
                 military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
@@ -61,7 +59,6 @@ class Joan3StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
             ),
             Age2PlayerData.JOAN3_FASTOLF: (
-                scenario_logic.has_base() &
                 can_cross_ocean &
                 military.counters_building() &
                 military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
