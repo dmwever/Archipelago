@@ -10,6 +10,7 @@ is authoritative for *spent* and the server for *unlocked*. These pin that rule 
 behaviour underneath it.
 """
 
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -102,6 +103,24 @@ class TestTheFile(StorageHandlerTestBase):
         self.assertNotEqual(one.state_path(), two.state_path())
 
 
+class TestSpentIndices(StorageHandlerTestBase):
+    """The one decode of the mask: everyone else asks in stream positions, never in bits."""
+
+    def test_bits_name_the_positions_they_sit_over(self) -> None:
+        handler = self.handler()
+        handler.mark_spent({0, 2, 5})
+        self.assertEqual({0, 2, 5}, handler.spent_indices(8))
+
+    def test_a_bit_past_the_received_stream_names_nothing(self) -> None:
+        """A record outlives the apsave, so it can carry bits for a stream that is not back yet."""
+        handler = self.handler()
+        handler.mark_spent({1, 40})
+        self.assertEqual({1}, handler.spent_indices(3))
+
+    def test_a_missing_record_names_nothing(self) -> None:
+        self.assertEqual(set(), self.handler().spent_indices(4))
+
+
 class TestClearing(StorageHandlerTestBase):
     def test_clearing_forgets_the_record(self) -> None:
         """Local only. The caller does not touch the server, which holds the real spends."""
@@ -125,6 +144,80 @@ class TestClearing(StorageHandlerTestBase):
         handler.try_save(mask(2))
 
         self.assertEqual(mask(2), handler.try_load())
+
+
+class TestAFailedWrite(StorageHandlerTestBase):
+    """The record lives in memory; the disk is written behind it and may lag.
+
+    A save that fails must not cost a mark: delivery holds nothing back on the disk, and the
+    server push persists the spend meanwhile.
+    """
+
+    def blocked(self) -> StorageHandler:
+        handler = self.handler()
+        self.block(handler)
+        return handler
+
+    def block(self, handler: StorageHandler) -> None:
+        """A file where APData should be, so nothing can be written under it."""
+        shutil.rmtree(handler.apdata_dir(), ignore_errors=True)
+        handler.apdata_dir().write_text("in the way", encoding="utf-8")
+
+    def unblock(self, handler: StorageHandler) -> None:
+        handler.apdata_dir().unlink()
+
+    def test_a_mark_lands_in_memory_when_the_disk_refuses_it(self) -> None:
+        handler = self.blocked()
+        with self.assertLogs("Client", level="WARNING"):
+            self.assertTrue(handler.mark_spent({3}), "a mark that changed the record must say so")
+        self.assertEqual(mask(3), handler.spent_mask())
+
+    def test_the_warning_names_the_path_and_comes_once(self) -> None:
+        handler = self.blocked()
+        with self.assertLogs("Client", level="WARNING") as logs:
+            handler.mark_spent({1})
+            handler.try_flush()
+            handler.mark_spent({2})
+        self.assertEqual(1, len(logs.records), "a failing disk warned on every tick")
+        self.assertIn(str(handler.state_path()), logs.output[0])
+
+    def test_the_next_flush_retries_the_write(self) -> None:
+        handler = self.blocked()
+        with self.assertLogs("Client", level="WARNING"):
+            handler.mark_spent({1, 4})
+        self.unblock(handler)
+
+        handler.try_flush()
+
+        self.assertEqual(mask(1, 4), self.handler().try_load())
+
+    def test_a_write_that_succeeds_clears_the_warning(self) -> None:
+        """So a disk that fails again later is reported again."""
+        handler = self.blocked()
+        with self.assertLogs("Client", level="WARNING"):
+            handler.mark_spent({1})
+        self.unblock(handler)
+        handler.try_flush()
+        self.block(handler)
+
+        with self.assertLogs("Client", level="WARNING"):
+            handler.mark_spent({2})
+
+    def test_resetting_the_same_identity_keeps_an_unwritten_mark(self) -> None:
+        """/set_user_folder sets the tag and player again; rereading the disk would drop it."""
+        handler = self.blocked()
+        with self.assertLogs("Client", level="WARNING"):
+            handler.mark_spent({5})
+
+        handler.set_tag(TAG)
+        handler.set_player_name(PLAYER)
+
+        self.assertEqual(mask(5), handler.spent_mask())
+
+    def test_a_flush_with_nothing_owed_writes_nothing(self) -> None:
+        handler = self.handler()
+        handler.try_flush()
+        self.assertFalse(handler.apdata_dir().exists())
 
 
 if __name__ == "__main__":

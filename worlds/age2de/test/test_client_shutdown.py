@@ -5,6 +5,7 @@ everything queued behind it - connection_closed calls disconnect from server_loo
 a stuck loop took reconnect with it.
 """
 import asyncio
+import tempfile
 import unittest
 from unittest import mock
 
@@ -82,16 +83,18 @@ class TestDisconnectResetsDeliveryState(unittest.TestCase):
 
         before, after = asyncio.run(scenario())
         self.assertIsNot(before, after, "the old item handler survived the disconnect")
-        self.assertEqual(0, after.current_item_index())
+        self.assertEqual(0, after._current_item)
         self.assertFalse(after.in_flight())
 
     def test_the_spent_record_is_not_assumed_on_a_new_connection(self) -> None:
         """record_known gates both readers of the record; a reconnect has not heard back yet."""
         async def scenario() -> bool:
             ctx = self.context()
-            ctx.client_status.record_known = True
-            await ctx.disconnect()
-            return ctx.client_status.record_known
+            with tempfile.TemporaryDirectory() as folder:
+                ctx.storage_handler.set_user_folder(folder)
+                ctx.reconcile_spent(0)
+                await ctx.disconnect()
+            return ctx.storage_handler.is_up_to_date()
 
         self.assertFalse(asyncio.run(scenario()),
                          "the record gate was already open on a fresh connection")

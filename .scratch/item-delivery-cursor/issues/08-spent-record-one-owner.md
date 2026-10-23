@@ -29,14 +29,14 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Persistence).
 
 **Status:** ready-for-agent
 
-- [ ] `ClientStatus.spent_mask` is gone; every read and write of the spent record goes through
+- [x] `ClientStatus.spent_mask` is gone; every read and write of the spent record goes through
       `StorageHandler`
-- [ ] `record_known` lives with the record
-- [ ] A mark always updates the in-memory record, even when the flush to disk fails
-- [ ] A failed flush warns once with the path, is retried on the next tick, and clears the warning
+- [x] `record_known` lives with the record
+- [x] A mark always updates the in-memory record, even when the flush to disk fails
+- [x] A failed flush warns once with the path, is retried on the next tick, and clears the warning
       once it succeeds
-- [ ] One sync marks the delivered one-shots and writes the window; nothing is held back a tick
-- [ ] `set_current_item_index`, `current_item_index`, `reset_delivery` and
+- [x] One sync marks the delivered one-shots and writes the window; nothing is held back a tick
+- [x] `set_current_item_index`, `current_item_index`, `reset_delivery` and
       `update_current_item_index` are deleted
-- [ ] Tests: an unwritable APData folder still delivers every window; mark and write in the same sync
-- [ ] Existing client tests stay green
+- [x] Tests: an unwritable APData folder still delivers every window; mark and write in the same sync
+- [ ] Existing client tests stay green (all but `test_the_window_carries_the_cursor_it_was_written_for`, which still reads `Items.ITEM_WINDOW` after commit 60943c29b removed it)
