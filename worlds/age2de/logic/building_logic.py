@@ -17,7 +17,7 @@ class BuildingLogic:
         self.logic = logic
         self.world = world
 
-    def has_building(self, building: Age2BuildingData) -> Rule:
+    def has_building_items(self, building: Age2BuildingData) -> Rule:
         return self.has_prerequisites(building) & self.has_building_item(building)
 
     def has_building_item(self, building: Age2BuildingData) -> Rule:
@@ -34,9 +34,9 @@ class BuildingLogic:
         prerequisite = self.prerequisite(building)
         if prerequisite is None:
             return True_()
-        return self.has_building(prerequisite)
+        return self.has_building_items(prerequisite)
 
     def can_build_tc(self) -> Rule:
         """Putting one up, less paying for it: ages, dropsites and second Town Centers ask this
         structurally, and the base pays for its own."""
-        return self.has_building(Age2BuildingData.TOWN_CENTER)
+        return self.has_building_items(Age2BuildingData.TOWN_CENTER)

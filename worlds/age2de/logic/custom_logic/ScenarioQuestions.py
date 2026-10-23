@@ -157,7 +157,7 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
                 & scenario.ages.has_reached(self.building.age))
         prerequisite = buildings.prerequisite(self.building)
         if prerequisite is not None:
-            rule = rule & scenario.has_building(prerequisite)
+            rule = rule & scenario.has_building_structurally(prerequisite)
         if self.building in self._WATER_BUILDINGS:
             rule = rule & scenario.has_water_access()
         return rule
@@ -209,7 +209,7 @@ class ScenarioCanTrain(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        somewhere = Or(*[scenario.has_building(building)
+        somewhere = Or(*[scenario.has_building_structurally(building)
                          for building in self.unit.logic_buildings
                          if scenario.civilization.can_build(building)])
         return (scenario.logic.units.has_unit_items(self.unit)
@@ -305,7 +305,7 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
         return scenario.economy._can_get_wood_easily()
 
     def _at_scale(self, scenario: 'ScenarioLogic', camp: Age2BuildingData) -> Rule:
-        return (scenario.buildings.can_build_building(camp)
+        return (scenario.buildings.can_build_structurally(camp)
                 | scenario.buildings.can_build_multiple_tc())
 
     _GATHERED_EASILY = {

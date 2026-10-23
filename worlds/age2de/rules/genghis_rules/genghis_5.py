@@ -32,7 +32,7 @@ class Genghis5Rules(ScenarioRules):
         )
 
         can_raise_castles: Rule = (
-            self.scenario_logic.buildings.can_build_building(Age2BuildingData.CASTLE) &
+            self.scenario_logic.buildings.can_build_structurally(Age2BuildingData.CASTLE) &
             self.scenario_logic.economy.has_easy_source(Resource.STONE) &
             defeats(Age2PlayerData.GEN5_GERMANS)
         )

@@ -55,7 +55,7 @@ class Logic:
     
         for building in Age2BuildingData:
             self._can_build[building].children = tuple(
-                scenario.is_unlocked() & scenario.buildings.can_build_building(building)
+                scenario.is_unlocked() & scenario.buildings.can_build_structurally(building)
                 for scenario in self.scenarios)
 
         for tech in Age2TechData:
@@ -88,11 +88,10 @@ class Logic:
     def can_research_anywhere(self, tech: Age2TechData) -> Rule:
         return self._can_research[tech]
 
-    def can_build_building_anywhere(self, building: Age2BuildingData) -> Rule:
+    def can_build_structurally_anywhere(self, building: Age2BuildingData) -> Rule:
         return self._can_build[building]
 
-    def can_build_location_anywhere(self, building: Age2BuildingData) -> Rule:
+    def can_build_anywhere(self, building: Age2BuildingData) -> Rule:
         """The Build location: putting it up, paid for."""
-        return Or(*[scenario.is_unlocked() & scenario.buildings.can_build_building(building)
-                    & scenario.economy.can_pay(building.cost)
+        return Or(*[scenario.is_unlocked() & scenario.buildings.can_build(building)
                     for scenario in self.scenarios])

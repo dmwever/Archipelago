@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Or, Rule
+from rule_builder.rules import False_, Has, Or, Rule
+
+from ...items.Items import Age2ItemData
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
@@ -32,15 +34,28 @@ class ScenarioBuildingLogic:
         self.world = scenario.logic.world
         self.buildings: BuildingLogic = scenario.logic.buildings
 
-    def can_build_building(self, building: Age2BuildingData) -> Rule:
+    def can_build_structurally(self, building: Age2BuildingData) -> Rule:
         if not self.scenario.civilization.can_build(building):
             return False_()   # not this civilisation's to put up, and that is free to answer
         if building in self.scenario.scenario.excluded_buildings:
             return False_()   # the scenario forbids it, whatever the civilisation allows
         return ScenarioCanBuild(scenario=self.scenario.scenario, building=building)
 
+    def can_build(self, building: Age2BuildingData) -> Rule:
+        return self.can_build_structurally(building) & self.can_pay_for(building)
+
+    def can_pay_for(self, building: Age2BuildingData) -> Rule:
+        if building is Age2BuildingData.TOWN_CENTER:
+            return (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
+                    & Has(Age2ItemData.TOWN_CENTER_STONE.item_name))
+        rule = self.scenario.economy.can_pay(building.cost)
+        prerequisite = self.buildings.prerequisite(building)
+        if prerequisite is not None:
+            rule = rule & self.scenario.has_building(prerequisite)
+        return rule
+
     def can_build_anything(self) -> Rule:
-        return Or(*[self.can_build_building(building) for building in Age2BuildingData
+        return Or(*[self.can_build_structurally(building) for building in Age2BuildingData
                     if self.scenario.civilization.can_build(building)])
 
     def can_build_tc(self) -> Rule:
@@ -49,7 +64,7 @@ class ScenarioBuildingLogic:
     def can_build_base(self) -> Rule:
         if not self.scenario.civilization.can_build(Age2BuildingData.HOUSE):
             return self.can_build_tc()
-        return self.can_build_tc() & self.can_build_building(Age2BuildingData.HOUSE)
+        return self.can_build_tc() & self.can_build_structurally(Age2BuildingData.HOUSE)
 
     def can_build_multiple_tc(self) -> Rule:
         return self.scenario.named("can build more Town Centers", self._multiple_tc())
@@ -63,23 +78,23 @@ class ScenarioBuildingLogic:
         return self.scenario.economy.can_defend_resources()
 
     def _fortified(self) -> Rule:
-        strongpoint = Or(*[self.scenario.has_building(building) for building in
+        strongpoint = Or(*[self.scenario.has_building_structurally(building) for building in
                            (Age2BuildingData.TOWN_CENTER, Age2BuildingData.CASTLE,
                             Age2BuildingData.FORTIFIED_CHURCH, Age2BuildingData.KREPOST,
                             Age2BuildingData.DONJON)
                            if self.scenario.civilization.can_build(building)])
-        wall = Or(*[self.scenario.has_building(building) for building in
+        wall = Or(*[self.scenario.has_building_structurally(building) for building in
                     (Age2BuildingData.STONE_WALL, Age2BuildingData.PALISADE_WALL)
                     if self.scenario.civilization.can_build(building)])
-        tower = Or(*[self.scenario.has_building(building) for building in
+        tower = Or(*[self.scenario.has_building_structurally(building) for building in
                      (Age2BuildingData.WATCH_TOWER, Age2BuildingData.BOMBARD_TOWER)
                      if self.scenario.civilization.can_build(building)])
         return strongpoint | (wall & tower)
 
     def can_hold_a_shoreline(self) -> Rule:
-        return ((self.scenario.has_building(Age2BuildingData.MILL) & self.is_fortified())
+        return ((self.scenario.has_building_structurally(Age2BuildingData.MILL) & self.is_fortified())
                 | self.can_build_multiple_tc()
-                | self.scenario.has_building(Age2BuildingData.DOCK))
+                | self.scenario.has_building_structurally(Age2BuildingData.DOCK))
 
     def has_gold_dropsite(self) -> Rule:
         return self._any_of(GOLD_DROPSITES)
@@ -97,7 +112,7 @@ class ScenarioBuildingLogic:
         return self._any_of(HUNT_DROPSITES)
 
     def _any_of(self, buildings: list[Age2BuildingData]) -> Rule:
-        return Or(*[self.scenario.has_building(building) for building in buildings])
+        return Or(*[self.scenario.has_building_structurally(building) for building in buildings])
 
     def has_fishing_boat_dropsite(self) -> Rule:
         return self._any_of(FISHING_BOAT_DROPSITES)

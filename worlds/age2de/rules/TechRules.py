@@ -25,7 +25,7 @@ class TechRules:
             return
         for door in self.doors:
             building = NAME_TO_BUILDING[door.connected_region.name]
-            self.world.set_rule(door, self.logic.can_build_building_anywhere(building))
+            self.world.set_rule(door, self.logic.can_build_structurally_anywhere(building))
         for tech in self.world.pool.techs.shuffled:
             rule = self.logic.can_research_anywhere(tech)
             if isinstance(rule, True_):

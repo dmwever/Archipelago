@@ -143,13 +143,23 @@ class ScenarioLogic:
             return authored
         return False_()
 
+    def has_building_structurally(self, building: Age2BuildingData) -> Rule:
+        name = building.location_name.removeprefix("Build ")
+        return self.named(f"has {a_or_an(name)} {name}, standing or buildable",
+                          self._has_building_structurally(building))
+
+    def _has_building_structurally(self, building: Age2BuildingData) -> Rule:
+        return (self.starting_state.starts_with_building[building]
+                | self.buildings.can_build_structurally(building))
+
     def has_building(self, building: Age2BuildingData) -> Rule:
         name = building.location_name.removeprefix("Build ")
-        return self.named(f"has {a_or_an(name)} {name}, standing or buildable", self._has_building(building))
+        return self.named(f"has {a_or_an(name)} {name}, standing or paid for",
+                          self._has_building(building))
 
     def _has_building(self, building: Age2BuildingData) -> Rule:
         return (self.starting_state.starts_with_building[building]
-                | self.buildings.can_build_building(building))
+                | self.buildings.can_build(building))
 
     def is_unlocked(self) -> Rule:
         return self.starting_state.is_unlocked

@@ -31,13 +31,13 @@ class TestStandingBuildingsCount(bases.Age2RuleTestBase):
                                      for building in DARK_AGE_BUILDINGS])
         for building in DARK_AGE_BUILDINGS:
             with self.subTest(building.name):
-                self.assertFalse(scenario.buildings.can_build_building(building)
+                self.assertFalse(scenario.buildings.can_build_structurally(building)
                                  .resolve(self.world)(state),
                                  "the building item was not actually withheld")
         standing = [building for building in DARK_AGE_BUILDINGS
-                    if scenario.has_building(building).resolve(self.world)(state)]
+                    if scenario.has_building_structurally(building).resolve(self.world)(state)]
         self.assertGreaterEqual(len(standing), 2, "Bleda's Camp should leave buildings standing")
-        climb = scenario.ages.age_up_requirement(Age2AgeData.FEUDAL)
+        climb = scenario.ages.age_up_requirement(Age2AgeData.FEUDAL, scenario.has_building_structurally)
         self.assertTrue(climb.resolve(self.world)(state))
 
     def test_a_standing_town_centre_is_not_bought_again(self):

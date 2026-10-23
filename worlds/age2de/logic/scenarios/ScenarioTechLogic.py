@@ -19,8 +19,14 @@ class ScenarioTechLogic:
 
     def can_research(self, tech: Age2TechData) -> Rule:
         return (self.scenario.obtains_tech(tech)
-                | (self.can_research_structurally(tech)
-                   & self.scenario.economy.can_pay(tech.cost)))
+                | (self.can_research_structurally(tech) & self.can_pay_for(tech)))
+
+    def can_pay_for(self, tech: Age2TechData) -> Rule:
+        rule = self.scenario.economy.can_pay(tech.cost)
+        if tech.buildings:
+            rule = rule & Or(*[self.scenario.has_building(building)
+                               for building in tech.buildings])
+        return rule
 
     def can_research_structurally(self, tech: Age2TechData) -> Rule:
         """Everything researching it asks for except paying for it."""
@@ -58,6 +64,6 @@ class ScenarioTechLogic:
             return False_()   # the scenario forbids it
         rule = age
         if tech.buildings:
-            rule = rule & Or(*[self.scenario.has_building(building)
+            rule = rule & Or(*[self.scenario.has_building_structurally(building)
                                for building in tech.buildings])
         return rule

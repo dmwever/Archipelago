@@ -28,7 +28,7 @@ class Joan3StartingState(ScenarioStartingState):
         self.obtains_unit[Age2UnitData.TRANSPORT_SHIP] = self.has_boats
         self.obtains_unit[Age2UnitData.DEMOLITION_SHIP] = self.has_boats
         self.meets_additional_base_requirements = self.has_boats | (
-            logic.buildings.has_building(Age2BuildingData.DOCK)
+            logic.buildings.has_building_items(Age2BuildingData.DOCK)
             & logic.units.has_unit_items(Age2UnitData.TRANSPORT_SHIP))
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:

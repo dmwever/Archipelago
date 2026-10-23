@@ -1,8 +1,8 @@
-from rule_builder.rules import Has, Rule
+from rule_builder.rules import Rule
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 
-from ...items.Items import Age2ItemData
+from ...items.Items import Resource
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Players import Age2PlayerData
@@ -17,16 +17,20 @@ class Attila4Rules(ScenarioRules):
         super().set_rules()
         defeats = self.scenario_logic.player_logic.defeats
 
+        can_tribute_burgundy: Rule = (
+            self.scenario_logic.has_building(Age2BuildingData.MARKET) &
+            self.scenario_logic.economy.has_easy_source(Resource.GOLD)
+        )
         can_ally_burgundy: Rule = (
-            self.scenario_logic.has_base() &
-            self.logic.buildings.has_building(Age2BuildingData.MARKET) &
-            self.logic.buildings.has_building(Age2BuildingData.CASTLE) &
+            can_tribute_burgundy &
+            self.scenario_logic.has_building(Age2BuildingData.CASTLE) &
             self.scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
         )
         can_ally_burgundy = self.scenario_logic.named("can ally with Burgundy", can_ally_burgundy)
 
         if self.world.pool.scenarios.all_scenario_branches:
-            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_TRIBUTE_BURGUNDY_ALL], Has(Age2ItemData.MARKET.item_name))
+            self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_TRIBUTE_BURGUNDY_ALL],
+                                can_tribute_burgundy)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_CASTLE_BURGUNDY_ALL], can_ally_burgundy)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT4_DEFEAT_BURGUNDY_ALL], defeats(Age2PlayerData.ATT4_BURGUNDY))
         else:

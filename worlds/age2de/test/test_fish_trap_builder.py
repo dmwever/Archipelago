@@ -21,7 +21,7 @@ class TestFishTrapBuilder(bases.Age2RuleTestBase):
     starting_campaigns = ["Attila the Hun"]
 
     def build_fish_trap_dependencies(self) -> set[str]:
-        rule = self.world.rules.logic.can_build_location_anywhere(Age2BuildingData.FISH_TRAP)
+        rule = self.world.rules.logic.can_build_anywhere(Age2BuildingData.FISH_TRAP)
         return set(rule.resolve(self.world).item_dependencies())
 
     def test_a_fish_trap_needs_a_fishing_ship(self):
@@ -51,7 +51,7 @@ class TestFishTrapBuilder(bases.Age2RuleTestBase):
         # and chopping wood still wants a Lumber Camp, which a Builder puts up.
         self.build(shuffle_villager=ShuffleVillager.option_include_professions)
         joan_2 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_JOAN_2)
-        fish_trap = joan_2.buildings.can_build_building(Age2BuildingData.FISH_TRAP).resolve(self.world)
+        fish_trap = joan_2.buildings.can_build_structurally(Age2BuildingData.FISH_TRAP).resolve(self.world)
         self.assertTrue(fish_trap(self.state_without(BUILDER)))
         self.assertFalse(fish_trap(self.state_without(BUILDER, JOAN_2_DOCK)))
         self.assertFalse(fish_trap(self.state_without(BUILDER, FISHING_SHIP_LINE)))
@@ -62,7 +62,7 @@ class TestFishTrapBuilder(bases.Age2RuleTestBase):
             for building in Age2BuildingData:
                 if building is Age2BuildingData.FISH_TRAP:
                     continue
-                rule = scenario.buildings.can_build_building(building).resolve(self.world)
+                rule = scenario.buildings.can_build_structurally(building).resolve(self.world)
                 if rule.always_false:
                     continue
                 with self.subTest(scenario=scenario.scenario.scenario_name, building=building.name):

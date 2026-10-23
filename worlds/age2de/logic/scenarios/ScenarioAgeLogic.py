@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from rule_builder.rules import False_, Rule, True_
 
@@ -49,7 +49,8 @@ class ScenarioAgeLogic:
     def can_reach(self, age: Age2AgeData) -> Rule:
         """Advance to it here and pay for it: what a victory or an army asks of an age."""
         return self.scenario.named(f"can reach the {age.location_name.removeprefix('Reach ')}",
-                                   self.can_reach_structurally(age) & self.can_pay_for(age))
+                                   self.can_reach_structurally(age) & self.can_pay_for(age)
+                                   & self.can_pay_for_age_up_buildings(age))
 
     def can_reach_structurally(self, age: Age2AgeData) -> Rule:
         """Advance to it here, less paying for it."""
@@ -73,17 +74,23 @@ class ScenarioAgeLogic:
             return True_()
         return self.scenario.economy.can_pay(age.cost)
 
+    def can_pay_for_age_up_buildings(self, age: Age2AgeData) -> Rule:
+        if age <= self.start_age or age in self.scenario.starting_state.age_playable:
+            return True_()
+        return self.age_up_requirement(age, self.scenario.has_building)
+
     def climb(self, into: Age2AgeData) -> Rule:
         if into not in self._climb:
             self._climb[into] = self._climb_rule(into)
         return self._climb[into]
 
-    def age_up_requirement(self, into_age: Age2AgeData) -> AgeUpRequirement:
+    def age_up_requirement(self, into_age: Age2AgeData,
+                           has_building: Callable[[Age2BuildingData], Rule]) -> AgeUpRequirement:
         """What climbs into this age: two of the age before's buildings, or - into the Imperial
         Age - a Castle, which counts for both on its own."""
         single = Age2BuildingData.CASTLE if into_age is Age2AgeData.IMPERIAL else None
         return AgeUpRequirement.from_buildings(
-            self.scenario.has_building,
+            has_building,
             into_age,
             list(AGE_UP_BUILDINGS[into_age]),
             single,
@@ -131,8 +138,8 @@ class ScenarioAgeLogic:
         if into is Age2AgeData.DARK:
             return True_()   # nowhere to advance from
         rule = (self.logic.ages.has_age(into)
-                & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
-                & self.age_up_requirement(into))
+                & self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER)
+                & self.age_up_requirement(into, self.scenario.has_building_structurally))
         before = Age2AgeData(into.value - 1)
         if before is not Age2AgeData.DARK:
             rule = rule & self.has_reached(before)

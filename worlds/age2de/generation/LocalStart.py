@@ -134,7 +134,7 @@ def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
               & logic.resources.has_amounts(Age2ItemData.TOWN_CENTER.type.needed_resources)
               & logic.resources.has_amount(villager_food.type, villager_food.amount))
     if scenario_logic(world, scenario).civilization.can_build(Age2BuildingData.HOUSE):
-        target = target & logic.can_build_building_anywhere(Age2BuildingData.HOUSE)
+        target = target & logic.can_build_structurally_anywhere(Age2BuildingData.HOUSE)
     return target & scenario_base_rule(world, scenario)
 
 def base_items(

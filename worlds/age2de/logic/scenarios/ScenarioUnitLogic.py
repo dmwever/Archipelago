@@ -99,12 +99,18 @@ class ScenarioUnitLogic:
                      for resource, amount in unit.cost.items() if amount > 0}
         trained = [
             self.can_train_structurally(unit) & self.scenario.ages.can_pay_for(unit.age)
+            & self.can_pay_for_training_building(unit)
                 if paid else self.can_train_structurally(unit)
                 for unit in tiers
         ]
         return (Or(*trained)
                 & self.scenario.has_base()
                 & self.scenario.economy.can_sustain(sustained))
+
+    def can_pay_for_training_building(self, unit: Age2UnitData) -> Rule:
+        return Or(*[self.scenario.has_building(building)
+                    for building in unit.logic_buildings
+                    if self.scenario.civilization.can_build(building)])
 
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
         ways: list[Rule] = []
@@ -180,7 +186,7 @@ class ScenarioUnitLogic:
         if job.job_name == "Builder":
             return self.scenario.buildings.can_build_anything()
         if job.building is not None:
-            return self.scenario.buildings.can_build_building(job.building)
+            return self.scenario.buildings.can_build_structurally(job.building)
         if not scenario_has_job_resource(self.scenario.scenario, job):
             return False_()   # nothing on this map for the job to work
         if job.job_name == "Repairer":

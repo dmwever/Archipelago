@@ -213,7 +213,7 @@ class ScenarioResourceLogic:
             return False_()
         monk = Age2UnitData.MONK
         return (
-            self.scenario.has_building(Age2BuildingData.MONASTERY)
+            self.scenario.has_building_structurally(Age2BuildingData.MONASTERY)
             & (
                 self.logic.units.has_unit_items(monk)
                 | (self.scenario.obtains_unit(monk) & self.logic.units.survives_caveman(monk))
@@ -231,7 +231,7 @@ class ScenarioResourceLogic:
 
     def _chop_wood(self) -> Rule:
         return (self.can_chop_some() & self.scenario.has_base()
-                & (self.scenario.buildings.can_build_building(Age2BuildingData.LUMBER_CAMP)
+                & (self.scenario.buildings.can_build_structurally(Age2BuildingData.LUMBER_CAMP)
                    | self.scenario.buildings.can_build_multiple_tc()))
 
     # -- food that grows back -----------------------------------------------------------------
@@ -240,7 +240,7 @@ class ScenarioResourceLogic:
         return self.scenario.named("can farm", self._farm())
 
     def _farm(self) -> Rule:
-        return Or(*[self.scenario.has_building(building) & self.has_job(job)
+        return Or(*[self.scenario.has_building_structurally(building) & self.has_job(job)
                     for building, job in RENEWABLE_FOOD])
 
     def has_infinite_fish(self) -> Rule:
@@ -248,7 +248,7 @@ class ScenarioResourceLogic:
 
     def _work_fish_traps(self) -> Rule:
         return (self.can_crew_fishing_ships()
-                & self.scenario.has_building(Age2BuildingData.FISH_TRAP))
+                & self.scenario.has_building_structurally(Age2BuildingData.FISH_TRAP))
 
     def endless_food(self) -> Rule:
         return self.scenario.named("has endless food", self._endless_food())
@@ -275,7 +275,7 @@ class ScenarioResourceLogic:
             return False_()
         # Leaf gatherers only. has_easy_source asks the market, and easy food outside the base
         # asks for an army, which asks gold and wood, which ask the market again.
-        return (self.scenario.has_building(Age2BuildingData.MARKET)
+        return (self.scenario.has_building_structurally(Age2BuildingData.MARKET)
                 & (self._can_get_wood_easily() | self.endless_food()))
 
     def can_earn_gold_by_partner_trade(self) -> Rule:
@@ -306,7 +306,7 @@ class ScenarioResourceLogic:
         return (
             partner_market
             & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
-            & self.scenario.has_building(Age2BuildingData.MARKET)
+            & self.scenario.has_building_structurally(Age2BuildingData.MARKET)
             & self.logic.units.has_unit_items(Age2UnitData.TRADE_CART)
             & self.can_gather_wood()
         )
@@ -318,7 +318,7 @@ class ScenarioResourceLogic:
         return (
             partner_dock
             & self.scenario.ages.has_reached(Age2AgeData.FEUDAL)
-            & self.scenario.has_building(Age2BuildingData.DOCK)
+            & self.scenario.has_building_structurally(Age2BuildingData.DOCK)
             & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
             & (
                 self.can_gather_wood()

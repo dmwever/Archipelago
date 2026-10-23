@@ -76,7 +76,7 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
         world = self.build(**EVERYTHING)
         huns = [s for s in world.rules.logic.scenarios if s.scenario.name == "AP_ATTILA_1"][0]
         # The Huns build no houses, so this is False before anything else is asked.
-        resolved = huns.buildings.can_build_building(Age2BuildingData.HOUSE).resolve(world)
+        resolved = huns.buildings.can_build_structurally(Age2BuildingData.HOUSE).resolve(world)
         self.assertTrue(resolved.always_false)
 
     def test_the_cache_belongs_to_the_world(self):

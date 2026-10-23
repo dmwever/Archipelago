@@ -101,8 +101,8 @@ def _building(world: Age2World, building: Age2BuildingData) -> Route:
     prerequisite = BUILDING_PREREQUISITE.get(building)
     return Route(
         "Builds it", "can't build",
-        lambda sl: [Way(sl.buildings.can_build_building(building),
-                        sl.economy.can_pay(building.cost))],
+        lambda sl: [Way(sl.buildings.can_build_structurally(building),
+                        sl.buildings.can_pay_for(building))],
         requires=(
             logic.buildings.has_building_item(building),
             logic.buildings.has_building_item(prerequisite) if prerequisite else True_(),
@@ -118,8 +118,7 @@ def _tech(world: Age2World, tech: Age2TechData) -> Route:
     logic = world.rules.logic
     return Route(
         "Researches it", "can't research",
-        lambda sl: [Way(sl.techs.can_research_structurally(tech),
-                        sl.economy.can_pay(tech.cost))],
+        lambda sl: [Way(sl.techs.can_research_structurally(tech), sl.techs.can_pay_for(tech))],
         requires=(any_building_item(world, tech.buildings), logic.ages.has_age(tech.age)),
         at=tuple(tech.buildings),
         age=tech.age,
@@ -130,7 +129,8 @@ def _age(world: Age2World, age: Age2AgeData) -> Route:
     logic = world.rules.logic
     return Route(
         "Reaches it", "can't reach",
-        lambda sl: [Way(sl.ages.can_research(age), sl.economy.can_pay(age.cost))],
+        lambda sl: [Way(sl.ages.can_research(age),
+                        sl.economy.can_pay(age.cost) & sl.ages.can_pay_for_age_up_buildings(age))],
         requires=(logic.ages.has_age(age),
                   logic.buildings.has_building_item(Age2BuildingData.TOWN_CENTER)),
     )

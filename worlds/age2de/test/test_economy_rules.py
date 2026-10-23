@@ -191,7 +191,7 @@ class TestDropsites(EconomyTestBase):
         logic = self.world.rules.logic.for_scenario(scenario)
         def has_building(building):
             return True_() if building is Age2BuildingData.MULE_CART else False_()
-        return mock.patch.object(logic, "has_building", side_effect=has_building), logic.buildings
+        return mock.patch.object(logic, "has_building_structurally", side_effect=has_building), logic.buildings
 
     def test_a_mule_cart_takes_wood_gold_stone_and_meat(self):
         self.build()
@@ -211,13 +211,13 @@ class TestDropsites(EconomyTestBase):
 
     def test_no_shipped_civilisation_can_build_one(self):
         """Why the two tests above have to force it: the Huns and the Franks have no mule cart,
-        so can_build_building answers False before any of this is reached."""
+        so can_build_structurally answers False before any of this is reached."""
         self.build()
         for scenario in Age2ScenarioData:
             with self.subTest(scenario.name):
                 logic = self.world.rules.logic.for_scenario(scenario)
                 self.assertTrue(self.is_false(
-                    logic.buildings.can_build_building(Age2BuildingData.MULE_CART)))
+                    logic.buildings.can_build_structurally(Age2BuildingData.MULE_CART)))
 
 
 class TestEndlessFood(EconomyTestBase):
