@@ -25,7 +25,6 @@ class Joan2StartingState(ScenarioStartingState):
         has_carts = Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
         has_orleans = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
 
-        self.has_base = has_orleans
         self.has_vils = has_orleans
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = has_orleans
         self.starts_with_building[Age2BuildingData.MILL] = has_orleans

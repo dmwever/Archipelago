@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-20, playtesting
 
-**Status:** ready-for-agent (folded into [#05](05-attila1-forging-without-town-center.md); done when #05 lands)
+**Status:** done (landed with [#05](05-attila1-forging-without-town-center.md))
 
 ## Report
 

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-19, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Folds in:** [#13](13-easy-resources-no-base-no-villager-line.md)
 
@@ -160,29 +160,29 @@ Center" rule asks for villagers but not for the Builder profession.
   "can raise a Town Center".
 
 **Acceptance criteria:**
-- [ ] Attila 1, all items but Bleda's Camp and both Town Center items: the paid Feudal climb
+- [x] Attila 1, all items but Bleda's Camp and both Town Center items: the paid Feudal climb
       (`ages.can_research(FEUDAL) & economy.can_pay(FEUDAL.cost)`) and `techs.can_research(FORGING)`
       are false. Adding the two Town Center items back makes both true.
-- [ ] With `shuffle_villager: yes` (and again with `include_professions`), Attila 3 (Town Center and villagers
+- [x] With `shuffle_villager: yes` (and again with `include_professions`), Attila 3 (Town Center and villagers
       standing) has no base before the Villager Line arrives, and has one after.
-- [ ] With the Villager Line withheld, easy food is false in a scenario that would otherwise gather
+- [x] With the Villager Line withheld, easy food is false in a scenario that would otherwise gather
       food raw; endless food behaviour is unchanged.
-- [ ] Joan 3 without the transport item, and without a Dock plus Transport Ship: the paid Feudal
+- [x] Joan 3 without the transport item, and without a Dock plus Transport Ship: the paid Feudal
       climb is false.
-- [ ] With professions shuffled, Attila 2's "Build a Town Center" needs the Builder item and both
+- [x] With professions shuffled, Attila 2's "Build a Town Center" needs the Builder item and both
       Town Center items, and no longer needs easy wood or stone.
-- [ ] No reference to `has_tc` remains.
-- [ ] Every economy question still terminates (the existing termination tests pass).
-- [ ] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes. If an existing test
+- [x] No reference to `has_tc` remains.
+- [x] Every economy question still terminates (the existing termination tests pass).
+- [x] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes. If an existing test
       asserted the old behaviour, change it to the new behaviour and list each such test in the
       issue.
-- [ ] **Fill gate.** Before editing, replay every generation in
+- [x] **Fill gate.** Before editing, replay every generation in
       `worlds/age2de/fuzz/fuzz_output_lock_items/error/age2de/` (each folder holds its player YAMLs
       and a log carrying `Seed: <n>`; generate each with those YAMLs and that seed) and record how
       many fail. After the change, replay the same set. The failure count must not rise. If it
       rises, stop: record which generations newly fail and the fill error, and hand back. Do not
       loosen any rule to make the fill pass.
-- [ ] Before/after replay counts recorded in this issue.
+- [x] Before/after replay counts recorded in this issue.
 
 **Out of scope:**
 - Paying for buildings on the buildable path of `has_building` (age-up buildings, tech buildings,
@@ -195,3 +195,25 @@ Center" rule asks for villagers but not for the Builder profession.
 - Scenario `easy_resource_sources` overrides (Attila 3's gold lumps).
 - Any XS (game-side) change.
 - Committing: leave the changes uncommitted.
+
+### Implementation (2026-10-22)
+
+- Climb asks `scenario.has_building(TOWN_CENTER)`; `has_tc` / `_has_tc` deleted. /explain now
+  reads "has a Town Center, standing or buildable" where it read "has a Town Center to work from".
+- `_has_base` asks `logic.units.has_villager_item()`; raw food asks `scenario.has_base()`.
+- Attila 2's "can raise a Town Center" is `buildings.can_build_tc()` and both Town Center items.
+- Tests: `worlds/age2de/test/test_base_through_price.py`. No existing test asserted the old
+  behaviour; none changed. Full suite: 1040 passed (with `AGEIPELAGO_PATH`).
+- The Joan 3 test is a guard: Joan 3 without boats was already closed before this change.
+- **Fill gate:** 63 generations in `fuzz_output_lock_items/error/age2de/`, each replayed with its
+  YAMLs and logged seed (`PYTHONHASHSEED=0`, `--skip_output`): **0/63 failed before, 0/63 after.**
+- Side effect: with `shuffle_villager` on, local start (`scenario_base_rule` asks `has_base()`)
+  now places the Villager Line in the local-start pile. Follows from "the base always asks the
+  Villager Line".
+- Follow-up (asked during review): Genghis 2, 4, 5 and 6 set `starts_with_building[TOWN_CENTER]`
+  but not `starting_state.has_base`, so their base still asked `can_build_base()` (TC item if
+  shuffled, Builders, House) though a Town Center stands. Fixed by dropping the
+  `starting_state.has_base` field: `can_have_base` and `_has_base` read the standing Town Center.
+  `TestABaseStandsATownCenter` now checks the other direction: with base buildings and
+  professions shuffled, every standing Town Center is a base without building one (it failed for
+  Genghis 2, 4, 5 and 6 before the fix). Fill gate re-run: 0/63.

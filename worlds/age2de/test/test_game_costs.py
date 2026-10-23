@@ -148,7 +148,8 @@ class TestABaseNeedsVillagers(bases.Age2RuleTestBase):
         is not a base, so the food is asked outside the granted-or-built choice."""
         self.build()
         scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
-        self.assertTrue(scenario.starting_state.has_base.resolve(self.world).always_true)
+        town_center = scenario.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER]
+        self.assertTrue(town_center.resolve(self.world).always_true)
         wanted = set(scenario.has_base().resolve(self.world).item_dependencies())
         self.assertIn(Age2ItemData.STARTING_VILLAGER_FOOD.item_name, wanted)
 

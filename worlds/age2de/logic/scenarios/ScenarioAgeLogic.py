@@ -131,7 +131,7 @@ class ScenarioAgeLogic:
         if into is Age2AgeData.DARK:
             return True_()   # nowhere to advance from
         rule = (self.logic.ages.has_age(into)
-                & self.scenario.buildings.has_tc()
+                & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                 & self.age_up_requirement(into))
         before = Age2AgeData(into.value - 1)
         if before is not Age2AgeData.DARK:

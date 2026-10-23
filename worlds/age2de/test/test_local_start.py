@@ -320,7 +320,7 @@ class TestBaseItemsJoan(Age2TestBase):
     }
 
     def test_joan_1_has_no_base_of_its_own(self) -> None:
-        # has_base = False_(), so it must contribute nothing rather than poison the target.
+        # No Town Center stands, so it must contribute nothing rather than poison the target.
         rule = scenario_base_rule(self.world, Age2ScenarioData.AP_JOAN_1)
         self.assertTrue(resolve(self.world, rule).always_true)
 

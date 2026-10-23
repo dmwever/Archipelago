@@ -265,8 +265,13 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
                             economy.tier_gates("afloat")),
         )
 
-        return economy.endless_food() | SufficientRawResources(
-            sources=raw_food, needed=scenario.scenario.demand.food, resource="food")
+        return economy.endless_food() | (
+            SufficientRawResources(
+                sources=raw_food,
+                needed=scenario.scenario.demand.food,
+                resource="food",
+            )
+            & scenario.has_base())
 
     def _gold_easily(self, scenario: 'ScenarioLogic') -> Rule:
         economy = scenario.economy
