@@ -164,3 +164,49 @@ has the job's profession item:
 - Paying for the Farm or other buildings on the buildable path (#17).
 - Builder, Farmer, Herder and Oyster Gatherer rules.
 - Any XS change: the game already checks job ownership by unit type.
+
+### Implementation (2026-10-23)
+
+- `ScenarioUnitLogic.job_requirement` now answers per scenario: Builder and the building jobs
+  (Farmer's Farm, Herder's Pasture) as before; otherwise `False_()` where the scan says the
+  scenario holds nothing the job works, `has_vils()` where it does, and for the Repairer
+  `has_vils()` with `scenario.starts_with_any_building() | buildings.can_build_anything()`.
+  It asks no economy question, so `ScenarioResourceLogic.has_job` keeps calling it and the rule
+  stays acyclic.
+- `ScenarioLogic.starts_with_any_building()` is new: the other `starting_state` accessors live
+  there, so the unit module does not reach into the dict itself.
+- `VillagerJobResources` gained `JOB_TO_RESOURCE` (the scan count a job works, and the tiers it
+  counts in - sheep base-or-open, everything else any tier) and `scenario_has_job_resource`,
+  which is `False` for a fixed force whatever the map holds. `JOB_TO_SCENARIOS` is still
+  hand-written: Joan 2 dropped from Shepherd, Joan 5 from the miners, Genghis added throughout,
+  Fisherman added. Gold Miner, Stone Miner and Fisherman come out as every non-fixed-force
+  scenario. (Hunter never listed Joan 1, so there was nothing to drop there.)
+- Tests: `TestAJobNeedsItsResourceWhereItsVillagersAre`, `TestARepairerNeedsSomethingToMend` and
+  `TestWhichTiersCountForAJob` in `test_unit_rules.py`; `TestTheJobTableMatchesTheScan` in
+  `test_scenario_resources.py`. `bases.Age2RuleTestBase.state_with` is new - the precollected
+  items plus named ones, no sweep, counting event items so a scenario unlock can be named.
+  Two names in `TestVillagerJobs` said the resource jobs were "free"; they are not any more.
+- The reported state (Bleda's Camp + the Shepherd profession, Attila 1 the only unlock) now
+  fails to reach Own Shepherd; adding Attila 3's unlock puts it back.
+- /explain needed no change: the job route already asks `can_do_job`, so Own Shepherd now lists
+  only Attila 3-6 and Joan 3-4 as chapters that offer it.
+- `has_something_to_mend` is deliberately unnamed: where nothing stands it is one line, and a
+  name over one line is over-nesting.
+- Knock-on inside the economy: `can_herd` in Joan 2 is now `False_` (its only sheep are English),
+  because `has_job` runs through `can_do_job`. That is a tightening in the same direction and no
+  test asserted otherwise.
+- **Deviation from the brief:** Oyster Gatherer is in `JOB_TO_RESOURCE` with the rest rather than
+  left "unchanged", so it resolves to `False_` everywhere instead of `True_()`. Unobservable
+  today - no map holds an oyster, so `job_possible` never creates the location - and it keeps one
+  table behind both the rule and the pool, so a future oyster map cannot reintroduce this bug.
+  Say the word and it goes back to a special case.
+- Full suite: 1017 passed under `pytest -n 6`; the 6 reported failures in `test_defeat_rules.py`
+  are an xdist artifact (`execnet DumpError: can't serialize <enum 'Age2PlayerData'>`) and the
+  file passes 11/11 serially.
+- **Fill gate:** `bench/replay.py` over the 100 stored full-shuffle seeds (which set
+  `include_professions`): **100/100 ok**, stored as
+  `fuzz_output_6f09d7ec6/replay_issue07-job-resource.jsonl`. The stored baselines are all 100/100
+  too. `compare.py` against `replay_c6ca31822.jsonl` raises `KeyError: 'order_kept'` - that
+  baseline is from 2026-10-09 and `replay_one.py` no longer emits the field. Pre-existing tooling
+  drift, not this change.
+- Left uncommitted.
