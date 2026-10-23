@@ -174,6 +174,14 @@ class TestAttila4AlliesWithBurgundyAtAPaidCastle(BuildingsPaidTestBase):
             self.build(scenario_branching=ScenarioBranching.option_all)
             self.assertFalse(self.ally(self.state_without()))
 
+    def test_the_tribute_needs_no_castle_and_no_easy_stone(self):
+        attila_4 = Age2ScenarioData.AP_ATTILA_4
+        excluded = [*attila_4.excluded_buildings, Age2BuildingData.CASTLE]
+        with mock.patch.object(attila_4, "excluded_buildings", excluded):
+            self.build_starving(Resource.STONE, scenario_branching=ScenarioBranching.option_all)
+            self.assertFalse(self.ally(self.state_without()))
+            self.assertTrue(self.tribute(self.state_without()))
+
     def test_the_alliance_asks_no_base_directly(self):
         self.assertNotIn("has_base", inspect.getsource(Attila4Rules.set_rules))
 
