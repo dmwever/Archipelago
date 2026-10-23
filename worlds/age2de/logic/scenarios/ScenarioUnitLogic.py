@@ -23,6 +23,7 @@ from ...locations.connections.UnitRoles import (
     SIEGE_ALWAYS_COUNTERS,
     UnitRole,
 )
+from ...locations.connections.VillagerJobResources import scenario_has_job_resource
 from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
 
 MONKS_CAN_COUNTER = OptionFilter(MonksCanCounter, MonksCanCounter.option_true)
@@ -178,6 +179,14 @@ class ScenarioUnitLogic:
     def job_requirement(self, job: Age2VillagerJobData) -> Rule:
         if job.job_name == "Builder":
             return self.scenario.buildings.can_build_anything()
-        if job.building is None:
-            return True_()
-        return self.scenario.buildings.can_build_building(job.building)
+        if job.building is not None:
+            return self.scenario.buildings.can_build_building(job.building)
+        if not scenario_has_job_resource(self.scenario.scenario, job):
+            return False_()   # nothing on this map for the job to work
+        if job.job_name == "Repairer":
+            return self.scenario.has_vils() & self.has_something_to_mend()
+        return self.scenario.has_vils()
+
+    def has_something_to_mend(self) -> Rule:
+        return (self.scenario.starts_with_any_building()
+                | self.scenario.buildings.can_build_anything())

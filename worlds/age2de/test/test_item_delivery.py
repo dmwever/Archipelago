@@ -58,7 +58,7 @@ class FakeGame:
         self.applied_item_count += len(entries)
 
 
-class TestItemDelivery(unittest.TestCase):
+class ItemDeliveryTestBase(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
@@ -92,16 +92,8 @@ class TestItemDelivery(unittest.TestCase):
             self.game.read_items(self.folder)
 
     def sync(self, applied: int = 0) -> None:
-        """One delivery pass, gated and recorded the way status_loop does it."""
-        record = self.ctx.storage_handler
-        if not record.is_up_to_date():
-            return
-        record.try_flush()
-        delivered = self.ctx.item_handler.try_sync_delivered(
-            self.ctx.client_status.unlocked_items, applied)
-        if record.mark_spent(delivered):
-            self.ctx.client_interface.on_item_spent(record.spent_mask())
-        self.ctx.item_handler.try_write_to_file(self.ctx.spent_items())
+        """One delivery pass: the same call status_tick makes."""
+        self.ctx.sync_delivery(applied)
 
     def send(self, applied: int = 0) -> None:
         self.sync(applied)
@@ -118,8 +110,8 @@ class TestItemDelivery(unittest.TestCase):
         """The entries, without the base that addresses them."""
         return self.sent_items()[1:]
 
-    # -- tests -----------------------------------------------------------
 
+class TestItemDelivery(ItemDeliveryTestBase):
     def test_the_window_carries_the_cursor_it_was_written_for(self) -> None:
         items = list(Age2ItemData)[:100]
         self.unlock(*items)
@@ -256,7 +248,7 @@ class TestItemDelivery(unittest.TestCase):
         self.assertEqual(2, self.sent_items()[0], "the window lost the cursor over the resync")
 
 
-class TestOneShotSkipping(TestItemDelivery):
+class TestOneShotSkipping(ItemDeliveryTestBase):
     """Filler resources and traps add rather than set, so a replayed stream must not re-send them.
 
     The window is positional, so they are replaced in place by SKIP_ITEM_ID, not dropped.
@@ -330,7 +322,7 @@ class TestOneShotSkipping(TestItemDelivery):
         self.assertEqual([], reported, "nothing was spent, so nothing to report")
 
 
-class TestStartingResources(TestItemDelivery):
+class TestStartingResources(ItemDeliveryTestBase):
     """Starting resources pay out once per scenario run, and the window is the only path.
 
     The cursor starts at 0 in every new scenario, so the window replays the whole stream there:
@@ -399,7 +391,7 @@ class TestStartingResources(TestItemDelivery):
         self.assertEqual(0, self.ctx.storage_handler.spent_mask())
 
 
-class TestDecodingTheSpentRecord(TestItemDelivery):
+class TestDecodingTheSpentRecord(ItemDeliveryTestBase):
     """spent_indices turns the record back into stream positions, the one decode of the mask.
 
     Everything downstream -- the mercenary handler in particular -- is handed items, not bits.
@@ -434,7 +426,7 @@ class TestDecodingTheSpentRecord(TestItemDelivery):
         self.assertEqual({0, 2}, self.ctx.spent_items())
 
 
-class TestReconcilingTheSpentRecord(TestItemDelivery):
+class TestReconcilingTheSpentRecord(ItemDeliveryTestBase):
     """The local record is authoritative for *spent*, the server for *unlocked*.
 
     A spend the server never stored must not be handed back, so a local record overrules it even
@@ -499,7 +491,7 @@ class TestReconcilingTheSpentRecord(TestItemDelivery):
         self.assertTrue(self.ctx.storage_handler.is_up_to_date())
 
 
-class TestFlushingWhatWasSent(TestItemDelivery):
+class TestFlushingWhatWasSent(ItemDeliveryTestBase):
     """flush_files deletes items.xsdat on every scenario switch, and on every save/load.
 
     The handler suppresses a rewrite when what it is about to write is what it already sent. A
@@ -550,7 +542,7 @@ class TestFlushingWhatWasSent(TestItemDelivery):
                          "the scenario switched to was never handed its items")
 
 
-class TestNamingACopyToSpend(TestItemDelivery):
+class TestNamingACopyToSpend(ItemDeliveryTestBase):
     """The record is positional, so spending an item by identity has to pick a copy.
 
     Mercenaries happen to be unique in the pool, but the mask they write is the one the items
@@ -612,7 +604,7 @@ class TestNamingACopyToSpend(TestItemDelivery):
                          "a cleared record still skipped items as though they were paid for")
 
 
-class TestMarkingInOnePass(TestItemDelivery):
+class TestMarkingInOnePass(ItemDeliveryTestBase):
     """The pass that sees the game take a one-shot marks it and writes the next window.
 
     Delivered entries sit below the cursor and the window starts at it, so a mark can never change

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-19, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -144,18 +144,18 @@ has the job's profession item:
   conditions and the drift test read.
 
 **Acceptance criteria:**
-- [ ] Regression test: Attila and Joan enabled, Attila starting, `include_professions`. A state with
+- [x] Regression test: Attila and Joan enabled, Attila starting, `include_professions`. A state with
       only the precollected items, Attila 1's Bleda's Camp and the Shepherd profession cannot reach
       Own Shepherd (Male or Female). Adding Attila 3's unlock makes it reachable.
-- [ ] A scenario with villagers but only enemy-tier sheep (Joan 2) never puts Own Shepherd in logic.
-- [ ] A Hunter test: a scenario with villagers and enemy-tier hunt only (Joan 3) does put Own Hunter
+- [x] A scenario with villagers but only enemy-tier sheep (Joan 2) never puts Own Shepherd in logic.
+- [x] A Hunter test: a scenario with villagers and enemy-tier hunt only (Joan 3) does put Own Hunter
       in logic.
-- [ ] A Repairer test: a scenario with villagers but no standing building and nothing buildable does
+- [x] A Repairer test: a scenario with villagers but no standing building and nothing buildable does
       not put Own Repairer in logic.
-- [ ] Exact-match test: for every job in `JOB_TO_SCENARIOS`, its scenarios equal the non-fixed-force
+- [x] Exact-match test: for every job in `JOB_TO_SCENARIOS`, its scenarios equal the non-fixed-force
       scenarios whose scan has the resource (Shepherd: base or open; others: any tier).
-- [ ] No fixed-force scenario appears in `JOB_TO_SCENARIOS`.
-- [ ] Existing age2de tests pass (`AGEIPELAGO_PATH` set), and a fuzz run of the committed meta yaml
+- [x] No fixed-force scenario appears in `JOB_TO_SCENARIOS`.
+- [x] Existing age2de tests pass (`AGEIPELAGO_PATH` set), and a fuzz run of the committed meta yaml
       shows no new fill failures with `include_professions`.
 
 **Out of scope:**

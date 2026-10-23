@@ -61,6 +61,25 @@ class Age2RuleTestBase(unittest.TestCase):
         state.sweep_for_advancements()
         return state
 
+    def state_with(self, *item_names: str) -> CollectionState:
+        """The opposite of state_without: the precollected items and nothing but the ones named.
+        A name repeated collects that many copies, for progressive items. It does not sweep -
+        this is for asking what one short state reaches, not what a playthrough does.
+
+        A scenario unlock is an event item sitting on the previous chapter's victory rather than
+        anything in the pool, so the events count as available too."""
+        state = CollectionState(self.multiworld)
+        wanted = list(item_names)
+        events = [location.item for location
+                  in self.multiworld.get_filled_locations(self.world.player)]
+        for item in list(self.multiworld.itempool) + events:
+            if item.name in wanted:
+                wanted.remove(item.name)
+                state.collect(item, prevent_sweep=True)
+        if wanted:
+            raise AssertionError(f"no such item to collect: {wanted}")
+        return state
+
     def can_reach(self, location_name: str, state: CollectionState = None) -> bool:
         if state is None:
             state = self.state_without()

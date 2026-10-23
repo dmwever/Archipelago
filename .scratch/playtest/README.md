@@ -10,7 +10,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 04 | [Reach Feudal / Castle sent at scenario start (Joan 1)](issues/04-age-checks-sent-at-start.md) | ready-for-human (awaiting playtest) |
 | 05 | [Attila 1 Forging in logic without an affordable Town Center](issues/05-attila1-forging-without-town-center.md) | done (folds in #13) |
 | 06 | [Loading a mid-scenario save misses scenario items received since](issues/06-reload-misses-scenario-items.md) | done |
-| 07 | [Own Shepherd in logic where no scenario with villagers has sheep](issues/07-own-shepherd-without-sheep.md) | ready-for-agent |
+| 07 | [Own Shepherd in logic where no scenario with villagers has sheep](issues/07-own-shepherd-without-sheep.md) | done |
 | 08 | [Traps fire again after reconnecting to the server](issues/08-traps-resent-on-server-reconnect.md) | done |
 | 09 | [Castle Age received before reaching Feudal covers the Feudal button](issues/09-castle-age-covers-feudal-button.md) | done |
 | 10 | [Caveman knockdowns and unit checks are starved while the unit count keeps moving](issues/10-caveman-sweep-delayed.md) | ready-for-agent |

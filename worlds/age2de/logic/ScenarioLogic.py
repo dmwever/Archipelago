@@ -8,7 +8,7 @@ from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import False_, Has, Or, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
@@ -119,6 +119,9 @@ class ScenarioLogic:
 
     def has_water_access(self) -> Rule:
         return self.starting_state.has_water_access
+
+    def starts_with_any_building(self) -> Rule:
+        return Or(*self.starting_state.starts_with_building.values())
 
     def job_available(self, job: Age2VillagerJobData) -> Rule:
         return self.starting_state.job_available[job]

@@ -3,6 +3,7 @@ from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
+from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
@@ -171,11 +172,13 @@ class TestVillagerJobs(Age2RuleTestBase):
         self.assertFalse(self.can_reach(Age2VillagerJobData.FARMER_MALE.location_name, without))
         self.assertTrue(self.can_reach(Age2VillagerJobData.FARMER_MALE.location_name))
 
-    def test_a_repairer_is_free(self):
+    def test_a_repairer_asks_for_no_item_of_its_own(self):
+        """It needs a building to mend, and every scenario that opens with one supplies that
+        itself - so with the pool collected there is nothing left to withhold."""
         self.assertTrue(self.can_reach(Age2VillagerJobData.REPAIRER_FEMALE.location_name))
 
-    def test_the_resource_jobs_are_free_unless_a_scenario_says_otherwise(self):
-        """A gold miner needs gold on the map, not a building anyone can withhold."""
+    def test_the_resource_jobs_ask_the_map_and_not_an_item(self):
+        """A gold miner needs gold where his villagers are, not a building anyone can withhold."""
         for job in (Age2VillagerJobData.GOLD_MINER_MALE, Age2VillagerJobData.HUNTER_FEMALE,
                     Age2VillagerJobData.LUMBERJACK_MALE, Age2VillagerJobData.SHEPHERD_FEMALE,
                     Age2VillagerJobData.FISHERMAN_MALE):
@@ -185,3 +188,100 @@ class TestVillagerJobs(Age2RuleTestBase):
         without = self.state_without(Age2BuildingData.FARM.item.item_name)
         for job in (Age2VillagerJobData.FARMER_MALE, Age2VillagerJobData.FARMER_FEMALE):
             self.assertFalse(self.can_reach(job.location_name, without), job.name)
+
+
+class TestAJobNeedsItsResourceWhereItsVillagersAre(Age2RuleTestBase):
+    """Owning a job is a villager in some scenario taking that work up there, so the villagers
+    and the thing worked have to belong to the same scenario. Bleda's Camp staffs Attila 1,
+    which has no sheep in any tier; the Shepherd is somebody else's chapter."""
+
+    JOB = Age2VillagerJobData.SHEPHERD_MALE
+    CAMP = Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name
+    SHEPHERD = Age2ItemData.PROFESSION_SHEPHERD.item_name
+    ATTILA_3 = ("The Great Ride: Unlock Next Scenario",
+                "Progressive Attila Scenario", "Progressive Attila Scenario")
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+
+    def test_villagers_where_no_sheep_graze_are_no_shepherd(self):
+        state = self.state_with(self.CAMP, self.SHEPHERD)
+        for job in (Age2VillagerJobData.SHEPHERD_MALE, Age2VillagerJobData.SHEPHERD_FEMALE):
+            self.assertFalse(self.can_reach(job.location_name, state), job.name)
+
+    def test_the_scenario_that_does_have_sheep_puts_it_back_in_logic(self):
+        """Attila 3 opens with a flock in its own base and villagers of its own."""
+        state = self.state_with(self.CAMP, self.SHEPHERD, *self.ATTILA_3)
+        for job in (Age2VillagerJobData.SHEPHERD_MALE, Age2VillagerJobData.SHEPHERD_FEMALE):
+            self.assertTrue(self.can_reach(job.location_name, state), job.name)
+
+
+class TestARepairerNeedsSomethingToMend(Age2RuleTestBase):
+    """Nothing the scan counts is what a Repairer works - a building is. Attila 1 opened with the
+    Roman villagers alone has people and not one wall to patch."""
+
+    VILLAGERS = Age2ItemData.AP_ATTILA_1_ROMAN_VILLAGERS.item_name
+    REPAIRER = Age2ItemData.PROFESSION_REPAIRER.item_name
+    BUILDER = Age2ItemData.PROFESSION_BUILDER.item_name
+    JOB = Age2VillagerJobData.REPAIRER_MALE
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+
+    def test_villagers_with_nothing_standing_and_nothing_buildable_mend_nothing(self):
+        state = self.state_with(self.VILLAGERS, self.REPAIRER)
+        self.assertFalse(self.can_reach(self.JOB.location_name, state))
+
+    def test_the_builder_gives_them_something_to_mend(self):
+        state = self.state_with(self.VILLAGERS, self.REPAIRER, self.BUILDER)
+        self.assertTrue(self.can_reach(self.JOB.location_name, state))
+
+    def test_a_building_standing_at_the_start_is_enough_on_its_own(self):
+        """Bleda's Camp opens with a Town Center and six more buildings, no Builder needed."""
+        state = self.state_with(Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name, self.REPAIRER)
+        self.assertTrue(self.can_reach(self.JOB.location_name, state))
+
+
+class TestWhichTiersCountForAJob(Age2RuleTestBase):
+    """Sheep are the one resource a tier puts out of reach: an ally's cannot be taken and an
+    enemy's cannot be targeted. Everything else is worked wherever it lies, because owning a job
+    is a villager starting the work, not holding the ground long enough to finish it."""
+
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+
+    def offers(self, scenario: Age2ScenarioData, job: Age2VillagerJobData) -> bool:
+        rule = self.world.rules.logic.for_scenario(scenario).units.can_do_job(job)
+        return not rule.resolve(self.world).always_false
+
+    def test_a_flock_inside_an_enemy_base_is_no_flock(self):
+        """Joan 2 has villagers and 1500 food of sheep, all of it English."""
+        self.assertFalse(self.offers(Age2ScenarioData.AP_JOAN_2,
+                                     Age2VillagerJobData.SHEPHERD_MALE))
+
+    def test_a_flock_in_the_open_counts(self):
+        self.assertTrue(self.offers(Age2ScenarioData.AP_GENGHIS_2,
+                                    Age2VillagerJobData.SHEPHERD_MALE))
+
+    def test_hunt_inside_an_enemy_base_still_counts(self):
+        """Joan 3's only game is in a hostile camp, and a hunter who walks in is a hunter."""
+        self.assertTrue(self.offers(Age2ScenarioData.AP_JOAN_3,
+                                    Age2VillagerJobData.HUNTER_MALE))
+
+    def test_a_scenario_with_none_of_the_resource_offers_nothing(self):
+        self.assertFalse(self.offers(Age2ScenarioData.AP_ATTILA_1,
+                                     Age2VillagerJobData.SHEPHERD_MALE))
+        self.assertFalse(self.offers(Age2ScenarioData.AP_JOAN_4,
+                                     Age2VillagerJobData.HUNTER_MALE))
+
+    def test_a_fixed_force_takes_no_job_at_all(self):
+        for scenario in (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5,
+                         Age2ScenarioData.AP_GENGHIS_1):
+            for job in Age2VillagerJobData:
+                with self.subTest(f"{scenario.name}.{job.name}"):
+                    self.assertFalse(self.offers(scenario, job))
