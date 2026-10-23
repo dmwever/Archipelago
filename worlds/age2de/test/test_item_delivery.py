@@ -121,13 +121,15 @@ class TestItemDelivery(unittest.TestCase):
     # -- tests -----------------------------------------------------------
 
     def test_the_window_carries_the_cursor_it_was_written_for(self) -> None:
-        self.unlock(*list(Age2ItemData)[:100])
+        items = list(Age2ItemData)[:100]
+        self.unlock(*items)
 
-        self.send()
+        self.send(40)
 
         written = self.sent_items()
-        self.assertEqual(0, written[0], "the window is addressed to the cursor it starts at")
-        self.assertEqual(Items.ITEM_WINDOW, len(written) - 1)
+        self.assertEqual(40, written[0], "the window is addressed to the cursor it starts at")
+        self.assertEqual([item.id for item in items[40:]], written[1:],
+                         "the window is everything from the cursor on, uncapped")
 
     def test_a_window_for_another_cursor_applies_nothing(self) -> None:
         """A leftover file, or one written before a save was loaded, must not be replayed."""
