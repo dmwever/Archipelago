@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from rule_builder.rules import False_, Or, Rule
 
+from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.connections.UnitRoles import ROLE_TO_LINES, UnitRole
@@ -39,16 +40,23 @@ class ScenarioMilitaryLogic:
         return self.scenario.named(f"has a navy{_past_dark(age)}",
                                    self.can_field_role(UnitRole.navy, age) & self.scenario.has_water_access())
 
-    def can_protect_boats(self) -> Rule:
-        """A navy to guard boats, named, as every source in open water asks it."""
-        return self.scenario.named("can protect its boats", self._protecting_boats())
-
-    def _protecting_boats(self) -> Rule:
-        # Structural: the fishing tiers ask this, and the easy sources read them.
-        ways = [self.scenario.units.can_field_structurally(line)
-                for line in ROLE_TO_LINES[UnitRole.navy]]
-        return (Or(*[way for way in ways if not isinstance(way, False_)])
-                & self.scenario.has_water_access())
+    def can_guard_boats(self) -> dict[frozenset[Resource], Rule]:
+        ways_by_cost: dict[frozenset[Resource], list[Rule]] = {}
+        for line in ROLE_TO_LINES[UnitRole.navy]:
+            way = self.scenario.units.can_field_structurally(line)
+            if isinstance(way, False_):
+                continue
+            costs = frozenset(self.scenario.units.resources_to_sustain(line))
+            if costs not in ways_by_cost:
+                ways_by_cost[costs] = []
+            ways_by_cost[costs].append(way)
+        return {
+            costs: self.scenario.named(
+                "can protect its boats",
+                Or(*ways) & self.scenario.has_water_access(),
+            )
+            for costs, ways in ways_by_cost.items()
+        }
 
     def has_naval_bombardment(self) -> Rule:
         return self.scenario.named("has naval bombardment",

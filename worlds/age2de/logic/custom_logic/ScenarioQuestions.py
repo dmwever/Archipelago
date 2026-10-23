@@ -8,7 +8,7 @@ from NetUtils import JSONMessagePart
 
 from rule_builder.rules import Or, Rule
 
-from .SufficientRawResources import SufficientRawResources
+from .EconomyRoutes import EconomyRoutesYield, Strength
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -242,6 +242,22 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
 
 
 @dataclass
+class ScenarioHasEconomyRoutes(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        return scenario.economy.economy_routes()
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        return scenario.scenario_name
+
+    @override
+    def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
+        return self.answered(world)
+
+
+@dataclass
 class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
     """Whether this scenario can bring a resource in freely: enough of it to keep paying."""
 
@@ -253,71 +269,37 @@ class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definit
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return (self._GATHERED_EASILY[self.resource](self, scenario)
-                | scenario.starting_state.easy_resource_sources[self.resource]
-                | scenario.economy.can_trade_at_market())
-
-    def _food_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy = scenario.economy
-        land = economy.tier_gates()
-        raw_food = (
-            *economy.tiered(economy.can_hunt(), "hunt_count", land),
-            *economy.tiered(economy.can_herd(), "herd_count", land),
-            *economy.tiered(economy.can_forage(), "bush_count", land),
-            *economy.tiered(economy.can_fish_some(), "shore_fish_count",
-                            economy.tier_gates("shoreline")),
-            *economy.tiered(economy.can_fish_by_boat(), "deep_fish_count",
-                            economy.tier_gates("afloat")),
+        return EconomyRoutesYield(
+            economy=scenario.economy.has_economy_routes(),
+            resource=self.resource,
+            strength=Strength.AT_SCALE,
         )
-
-        return economy.endless_food() | (
-            SufficientRawResources(
-                sources=raw_food,
-                needed=scenario.scenario.demand.food,
-                resource="food",
-            )
-            & scenario.has_base())
-
-    def _gold_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy = scenario.economy
-        land, afloat = economy.tier_gates(), economy.tier_gates("afloat")
-        raw_gold = (
-            *economy.tiered(economy.can_mine_some(), "gold_count", land),
-            *economy.tiered(economy.can_gather_oysters(), "oyster_count",
-                            economy.tier_gates("shoreline")),
-            *economy.tiered(economy.can_hunt_whales(), "whale_count", afloat),
-        )
-
-        return economy.can_earn_gold_by_partner_trade() | (
-            SufficientRawResources(sources=raw_gold, needed=scenario.scenario.demand.gold, resource="gold")
-            & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
-
-    def _stone_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        economy = scenario.economy
-        raw_stone = economy.tiered(economy.can_quarry_some(), "stone_count",
-                                   economy.tier_gates())
-
-        return (SufficientRawResources(sources=raw_stone,
-                                       needed=scenario.scenario.demand.stone, resource="stone")
-                & scenario.has_base() & self._at_scale(scenario, Age2BuildingData.MINING_CAMP))
-
-    def _wood_easily(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy._can_get_wood_easily()
-
-    def _at_scale(self, scenario: 'ScenarioLogic', camp: Age2BuildingData) -> Rule:
-        return (scenario.buildings.can_build_structurally(camp)
-                | scenario.buildings.can_build_multiple_tc())
-
-    _GATHERED_EASILY = {
-        Resource.WOOD: _wood_easily,
-        Resource.FOOD: _food_easily,
-        Resource.GOLD: _gold_easily,
-        Resource.STONE: _stone_easily,
-    }
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
         return f"{scenario.scenario_name} can easily gather {self.resource.name.lower()}"
+
+
+@dataclass
+class ScenarioHasSomeResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+
+    resource: Resource
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.resource)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        return EconomyRoutesYield(
+            economy=scenario.economy.has_economy_routes(),
+            resource=self.resource,
+            strength=Strength.SOME,
+        )
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        return f"{scenario.scenario_name} can gather some {self.resource.name.lower()}"
 
 
 def _question_identity(self: ScenarioQuestion.Resolved) -> int:

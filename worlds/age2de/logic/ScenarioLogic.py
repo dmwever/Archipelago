@@ -48,6 +48,9 @@ class ScenarioStartingState:
     starting_relics: Rule = field(default_factory=lambda: True_())
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
+    some_resource_sources: dict[Resource, Rule] = field(
+        default_factory=lambda: {resource: False_() for resource in Resource},
+    )
 
     def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
         from ..items.Items import Mercenary, SCENARIO_TO_ITEMS

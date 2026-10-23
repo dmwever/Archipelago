@@ -6,6 +6,7 @@ from rule_builder.options import OptionFilter
 from rule_builder.rules import False_, Has, Or, Rule, True_
 
 from ...Options import MonksCanCounter, SiegeCanCounter
+from ...items.Items import Resource
 
 from ...locations.Ages import Age2AgeData
 from ...locations.EscortUnits import Age2EscortUnitData
@@ -92,18 +93,38 @@ class ScenarioUnitLogic:
         return self._field(line, age, paid=False)
 
     def _field(self, line: Age2UnitLineData, age: Age2AgeData | None, paid: bool) -> Rule:
-        tiers = self.fieldable_tiers(line, age) if age is not None else self.starting_unit(line)
+        tiers = self._fielded_tiers(line, age)
         if not tiers:
             return False_()
-        sustained = {resource for unit in tiers
-                     for resource, amount in unit.cost.items() if amount > 0}
+        if not paid:
+            return Or(*[self.can_train_structurally(unit) for unit in tiers])
         trained = [
             self.can_train_structurally(unit) & self.scenario.ages.can_pay_for(unit.age)
             & self.can_pay_for_training_building(unit)
-                if paid else self.can_train_structurally(unit)
-                for unit in tiers
+            for unit in tiers
         ]
+        sustained = self.resources_to_sustain(line, age)
         return Or(*trained) & self.scenario.economy.can_sustain(sustained)
+
+    def resources_to_sustain(
+        self,
+        line: Age2UnitLineData,
+        age: Age2AgeData | None = None,
+    ) -> set[Resource]:
+        return {
+            resource for unit in self._fielded_tiers(line, age)
+            for resource, amount in unit.cost.items()
+            if amount > 0
+        }
+
+    def _fielded_tiers(
+        self,
+        line: Age2UnitLineData,
+        age: Age2AgeData | None,
+    ) -> list[Age2UnitData]:
+        if age is None:
+            return self.starting_unit(line)
+        return self.fieldable_tiers(line, age)
 
     def can_pay_for_training_building(self, unit: Age2UnitData) -> Rule:
         return Or(*[self.scenario.has_building(building)

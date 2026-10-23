@@ -14,6 +14,7 @@ from ..items.Items import Age2ItemData, Campaign, Resource
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
+from ..logic.custom_logic.EconomyRoutes import EconomyRouteRunning
 from ..logic.custom_logic.Named import Named
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
@@ -41,8 +42,9 @@ _SOURCE_NAMES = {
 }
 """What a source that is more than one question is called, by the map count it gathers."""
 
-_NAMED = (ScenarioQuestion.Resolved, Named.Resolved)
-"""What /explain shows by name, one line with its rule behind a marker: questions, and named rules."""
+_NAMED = (ScenarioQuestion.Resolved, Named.Resolved, EconomyRouteRunning.Resolved)
+"""What /explain shows by name, one line with its rule behind a marker: questions, named rules, and
+economy routes."""
 
 OPENED = 1
 """How deep a breakdown opens in place: the question being explained, with every question beneath

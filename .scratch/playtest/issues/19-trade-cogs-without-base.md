@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-22, split from [#05](05-attila1-forging-without-town-center.md) during triage
 
-**Status:** ready-for-agent
+**Status:** needs-info
 
 **Blocked by:** #05
 
@@ -131,27 +131,49 @@ included.
   alongside `easy_resource_sources`.
 
 **Acceptance criteria:**
-- [ ] A test builds a scenario whose routes form a cycle (a route whose economy seed needs a resource
+- [x] A test builds a scenario whose routes form a cycle (a route whose economy seed needs a resource
       only it yields at scale, plus a second route that can seed it) and shows it resolves: running
       when the second route runs, not running otherwise, and no `RecursionError`.
-- [ ] A test shows a route whose economy seed needs only its own yield never runs.
-- [ ] Equivalence: for every scenario and every resource, the new easy-source answer equals the old
+      *Red:* `TestRoutesSeedingOneAnotherResolve` (both tests); without the fix the module fails to
+      import (`EconomyRoutes` does not exist).
+- [x] A test shows a route whose economy seed needs only its own yield never runs.
+      *Red:* `TestARouteNeverSeedsItself`, same import failure without the fix.
+- [x] Equivalence: for every scenario and every resource, the new easy-source answer equals the old
       one across a set of states (at least: empty state, all items, and a few hundred random item
       subsets per scenario, with fixed RNG seeds). Capture the old answers before editing.
-- [ ] Every economy question still terminates (the existing termination tests pass).
-- [ ] `ScenarioUnitLogic._field` asks `can_sustain` only in its paid form; the structural form pays
+      *Held before:* `TestEveryEasySourceAnswersAsBefore` reads `test/easy_source_answers.json`,
+      captured from HEAD before any logic edit (7 option configs x 302 states x 72 questions,
+      seeds 19; identical across two captures and across `PYTHONHASHSEED`). Green on HEAD and after.
+- [x] Every economy question still terminates (the existing termination tests pass).
+      *Held before:* `TestMarketTrade::test_the_market_rule_terminates_when_switched_on`,
+      `TestPartnerTrade::test_every_economy_question_terminates_with_partner_trade`, and
+      `test_custom_rules` open-question checks, green before and after.
+- [x] `ScenarioUnitLogic._field` asks `can_sustain` only in its paid form; the structural form pays
       for nothing (ADR-0002).
+      *Red:* `TestStructuralFieldingPaysForNothing`; a copy run against HEAD fails `0 != 2316`
+      (`can_sustain` calls from the structural form).
 - [ ] A test enables a scenario with oysters (Barbarossa or Saladin) with water access and a
       fieldable navy, and shows its easy gold builds and resolves with no `RecursionError`.
-- [ ] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes with no existing
+      *Open, see Implementation.* `TestOystersGuardedByTheirOwnGold` goes red on HEAD with
+      `RecursionError: ('ScenarioHasEasyResource', AP_ATTILA_6, GOLD) asks itself`, but it is
+      Attila 6 with oysters patched in, not Barbarossa or Saladin.
+- [x] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes with no existing
       test's assertion changed. If one must change, stop and hand back: that means an answer moved.
-- [ ] **Fill gate.** Before editing, replay every generation in
+      *Held:* 1060 passed on HEAD; 1067 passed after. No assertion changed. Two helpers changed
+      their call path only (`test_economy_rules.easy`, `test_base_through_price.raw_or_endless_food`
+      now ask `has_own_easy_source`), and the `tier_gates` mock lambda gained the `boat_guard`
+      parameter.
+- [x] **Fill gate.** Before editing, replay every generation in
       `worlds/age2de/fuzz/fuzz_output_lock_items/error/age2de/` (63 folders; each holds its player
       YAMLs and a log carrying `Seed: <n>`) and record which fail. After the change, replay the same
       set: exactly the same generations fail, and for each that passes, the spoiler's item placement
       is identical. Record both runs here.
-- [ ] Generation wall time for the replay set recorded before and after. If it rises by more than
+      *Held:* before, 0/63 fail (two runs, identical placement). After, 0/63 fail (two runs), and
+      every location's item and owner is identical to before in all 63.
+- [x] Generation wall time for the replay set recorded before and after. If it rises by more than
       25%, record where the time goes and hand back rather than land it.
+      *Recorded:* summed generation time 116.6s / 120.3s before, 134.1s / 134.5s after (+13%);
+      replay wall time at 4 jobs 73.5s / 75.2s before, 77.9s / 77.7s after (+4.5%).
 
 **Out of scope:**
 - Any change to what a route yields or what its economy seed asks: that is #22.
@@ -161,3 +183,29 @@ included.
 - Setting the new *some* hook in any scenario.
 - Any XS (game-side) change.
 - Committing: leave the changes uncommitted.
+
+## Implementation (2026-10-23)
+
+> *This was generated by AI during implementation.*
+
+- `logic/custom_logic/EconomyRoutes.py`: `EconomyRoute` (name, yields, strength per resource, a `leaf`
+  part and route `needs`), the resolver `EconomyRoutes` (least fixpoint per state, shared by every
+  resource: one resolution per state, its siblings written to the rule cache), and
+  `EconomyRoutesYield`. `ScenarioEconomy` caches one resolver per scenario; `ScenarioHasEasyResource`
+  and the new `ScenarioHasSomeResource` read it.
+- The catalog lives in `ScenarioResourceLogic.economy_routes()`: P1's own routes (Lumberjacks, Trade
+  Cogs, Trade Carts, Farms and Fish Traps, Food Gatherers, Gold Miners, Stone Miners), Market Trade,
+  and the scenario's own (`easy_resource_sources` at scale, new `some_resource_sources` of some).
+- The naval guard is a route need: `ScenarioMilitaryLogic.boat_guards()` groups the navy lines by
+  cost; each group adds a "... with Guarded Boats" route whose leaf uses that group's structural
+  guard and whose needs are the group's costs at scale. The unguarded route keeps the old answer when
+  the guard is unpaid. `tier_gates` takes the guard as a parameter.
+- `/explain`: an easy source still reads one line; opening it lists the routes, each green when
+  running and openable into its leaf.
+
+**Question for the maintainer (criterion 6).** Barbarossa and Saladin are not connected here (no
+`Age2CampaignData`, no `Age2ScenarioData` members). Their oysters also sit in `Tier.BASE`, whose gate
+is `True_`, so even connected they would never ask the guard and never loop. The test instead puts
+Barbarossa 3's 1400 oysters in Attila 6's open tier (water, a fieldable navy), which reproduces the
+`RecursionError` on HEAD and resolves after. Accept that as meeting the criterion, or rewrite it?
+

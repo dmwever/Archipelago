@@ -13,7 +13,6 @@ from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.VillagerJobs import Age2VillagerJobData
-from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
 
 TOWN_CENTER_ITEMS = (
@@ -95,8 +94,7 @@ class TestAStandingTownCenterIsABase(BaseThroughPriceTestBase):
 
 class TestEasyFoodNeedsABase(BaseThroughPriceTestBase):
     def raw_or_endless_food(self, scenario: Age2ScenarioData):
-        question = ScenarioHasEasyResource(scenario=scenario, resource=Resource.FOOD)
-        return question._food_easily(self.scenario_logic(scenario))
+        return self.scenario_logic(scenario).economy.has_own_easy_source(Resource.FOOD)
 
     def test_no_raw_food_without_the_villager_line(self):
         self.build(shuffle_villager=ShuffleVillager.option_yes)

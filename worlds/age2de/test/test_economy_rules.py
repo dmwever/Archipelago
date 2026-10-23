@@ -32,10 +32,8 @@ class EconomyTestBase(bases.Age2RuleTestBase):
         return self.resolved(rule).always_false
 
     def easy(self, scenario: Age2ScenarioData, resource: Resource):
-        """The gathering half of has_easy_source, without the scenario's declared sources."""
-        question = ScenarioHasEasyResource(scenario=scenario, resource=resource)
-        return question._GATHERED_EASILY[resource](
-            question, self.world.rules.logic.for_scenario(scenario))
+        """has_easy_source less the market and the scenario's declared sources."""
+        return self.world.rules.logic.for_scenario(scenario).economy.has_own_easy_source(resource)
 
 
 class TestSourcesPerScenario(EconomyTestBase):
@@ -573,7 +571,7 @@ class TestEveryScenarioCanLive(EconomyTestBase):
 
         base_only = {tier: (True_() if tier is Tier.BASE else False_()) for tier in Tier}
         with mock.patch.object(economy_module.ScenarioResourceLogic, "tier_gates",
-                               lambda self, kind="land": base_only):
+                               lambda self, kind="land", boat_guard=None: base_only):
             self.world.rules.logic.scenario_answers.clear()
             after = {(scenario, resource)
                      for scenario in self.playable() for resource in Resource
