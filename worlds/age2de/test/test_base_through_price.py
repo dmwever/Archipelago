@@ -102,10 +102,13 @@ class TestEasyFoodNeedsABase(BaseThroughPriceTestBase):
         self.assertFalse(self.holds(food, self.state_without(VILLAGER_LINE)))
         self.assertTrue(self.holds(food, self.state_without()))
 
-    def test_endless_food_asks_no_base_of_its_own(self):
+    def test_fish_traps_ask_no_base_of_their_own(self):
         self.build(shuffle_villager=ShuffleVillager.option_yes)
-        with mock.patch.object(economy_module.ScenarioResourceLogic, "endless_food",
-                               return_value=True_()):
+        resource_logic = economy_module.ScenarioResourceLogic
+        with (
+            mock.patch.object(resource_logic, "can_work_fish_traps", return_value=True_()),
+            mock.patch.object(resource_logic, "can_run_trade_cogs", return_value=True_()),
+        ):
             food = self.raw_or_endless_food(Age2ScenarioData.AP_ATTILA_3)
         self.assertTrue(self.holds(food, self.state_without(VILLAGER_LINE)))
 

@@ -111,6 +111,28 @@ class ScenarioBuildingLogic:
     def has_hunt_dropsite(self) -> Rule:
         return self._any_of(HUNT_DROPSITES)
 
+    def has_wood_camp(self) -> Rule:
+        return self._camp_among(WOOD_DROPSITES)
+
+    def has_gold_camp(self) -> Rule:
+        return self._camp_among(GOLD_DROPSITES)
+
+    def has_stone_camp(self) -> Rule:
+        return self._camp_among(STONE_DROPSITES)
+
+    def has_hunt_camp(self) -> Rule:
+        return self._camp_among(HUNT_DROPSITES)
+
+    def has_food_camp(self) -> Rule:
+        return self._camp_among(FOOD_DROPSITES)
+
+    def has_fisherman_camp(self) -> Rule:
+        return self._camp_among(FISHERMAN_DROPSITES)
+
+    def _camp_among(self, dropsites: list[Age2BuildingData]) -> Rule:
+        camps = [building for building in dropsites if building is not B.TOWN_CENTER]
+        return self._any_of(camps) | self.can_build_multiple_tc()
+
     def _any_of(self, buildings: list[Age2BuildingData]) -> Rule:
         return Or(*[self.scenario.has_building_structurally(building) for building in buildings])
 

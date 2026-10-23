@@ -2,8 +2,8 @@
 
 **Reported:** 2026-10-22, split from [#18](18-military-base-through-price.md) during triage
 
-**Status:** ready-for-agent (folded into [#19](19-trade-cogs-without-base.md) and
-[#22](22-economy-route-catalog.md); done when both land)
+**Status:** done (folds into [#19](19-trade-cogs-without-base.md) and
+[#22](22-economy-route-catalog.md))
 
 ## Report
 
@@ -56,3 +56,9 @@ asks for easy wood and gold. It holds together today only because those sources 
   never from banked resources (`HasResourceAmount`). So the guard has no authored bank amount,
   unlike the Fishing Ship (75 wood) or cog (400 wood, 100 gold) seeds.
 
+### Closed (2026-10-23)
+
+No code here. #19 landed the structural form that pays for nothing (`TestStructuralFieldingPaysForNothing`)
+and the guard as route needs at scale (`TestOystersGuardedByTheirOwnGold`). The rest, lowering
+the guard to *some* with no bank, is #22's, whose catalog and criteria were revised by a second
+grilling (see #22's Comments). [#24](24-building-seed-items.md) was spun off from it.

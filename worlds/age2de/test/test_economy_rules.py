@@ -16,6 +16,7 @@ from ..locations.Players import Age2PlayerData, TradeAccess
 from ..locations.connections.ScenarioResources import Tier, total
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
+from ..logic.custom_logic.EconomyRoutes import Strength
 from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 
@@ -45,7 +46,7 @@ class TestSourcesPerScenario(EconomyTestBase):
     def test_attila_4_cannot_live_on_fish(self):
         """A dozen fish against Attila 4's demand; Attila 3 has eleven thousand within reach
         against a smaller one. Farms are mocked away too: a farm is endless food on either map,
-        which is the point of endless_food.
+        which is the point of farming.
 
         Attila 3 rather than Attila 1 is the map that can, which is the tiering showing through.
         Attila 1 holds the most fish of anywhere - twenty thousand - but 8700 of it lies inside
@@ -57,7 +58,8 @@ class TestSourcesPerScenario(EconomyTestBase):
                                  can_hunt=mock.Mock(return_value=False_()),
                                  can_herd=mock.Mock(return_value=False_()),
                                  can_forage=mock.Mock(return_value=False_()),
-                                 endless_food=mock.Mock(return_value=False_())):
+                                 can_farm=mock.Mock(return_value=False_()),
+                                 can_work_fish_traps=mock.Mock(return_value=False_())):
             self.assertTrue(self.is_false(
                 self.easy(Age2ScenarioData.AP_ATTILA_4, Resource.FOOD)))
             self.assertTrue(self.is_false(
@@ -110,8 +112,7 @@ class TestSourcesPerScenario(EconomyTestBase):
         self.build()
         with_relics = {scenario for scenario in Age2ScenarioData
                        if not self.is_false(self.economy(scenario).can_collect_relics())}
-        self.assertEqual(with_relics, {Age2ScenarioData.AP_ATTILA_3, Age2ScenarioData.AP_ATTILA_4,
-                                       Age2ScenarioData.AP_GENGHIS_5})
+        self.assertEqual(with_relics, {Age2ScenarioData.AP_ATTILA_3, Age2ScenarioData.AP_GENGHIS_5})
 
 
 class TestRelicsUnderCaveman(EconomyTestBase):
@@ -223,9 +224,14 @@ class TestEndlessFood(EconomyTestBase):
         """A farm is 60 wood and a fish trap 100, forever."""
         self.build()
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        with mock.patch.object(type(attila_1), "_can_get_wood_easily", return_value=False_()):
-            # endless_food is a shared question answered once at set_rules; ask the rule it answers with
-            self.assertTrue(self.is_false(attila_1._endless_food()))
+        endless = [
+            route for route in attila_1.own_routes()
+            if route.name in ("Farmers", "Fish Traps")
+        ]
+        self.assertEqual(2, len(endless))
+        for route in endless:
+            with self.subTest(route.name):
+                self.assertEqual({Resource.WOOD: Strength.AT_SCALE}, route.needs)
 
 
 class TestMarketTrade(EconomyTestBase):
@@ -248,26 +254,20 @@ class TestMarketTrade(EconomyTestBase):
         self.assertIn(Age2BuildingData.MARKET.item.item_name, dependencies)
 
     def test_on_market_trade_needs_something_to_sell(self):
-        """Wood or endless food is what the market turns into everything else."""
+        """Any resource at scale is what the market turns into everything else."""
         self.build(market_trade=True)
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        resource_logic = economy_module.ScenarioResourceLogic
-        with (
-            mock.patch.object(resource_logic, "_can_get_wood_easily", return_value=False_()),
-            mock.patch.object(resource_logic, "endless_food", return_value=False_()),
-        ):
-            self.assertTrue(self.is_false(attila_1.can_trade_at_market()))
+        needs = [route.needs for route in attila_1.market_routes()]
+        self.assertEqual([{sold: Strength.AT_SCALE} for sold in Resource], needs)
 
-    def test_on_market_trade_is_satisfiable_with_a_market_and_wood(self):
+    def test_on_market_trade_is_satisfiable_with_a_market(self):
         self.build(market_trade=True)
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        with mock.patch.object(economy_module.ScenarioResourceLogic, "_can_get_wood_easily",
-                               return_value=True_()):
-            self.assertFalse(self.is_false(attila_1.can_trade_at_market()))
+        self.assertFalse(self.is_false(attila_1.can_trade_at_market()))
 
     def test_the_market_rule_terminates_when_switched_on(self):
-        """Written against the leaf gatherers, so the wood aggregate cannot ask the market
-        which asks the wood aggregate."""
+        """The market routes are resolved with every other route, so asking easy wood never
+        asks the market asking easy wood."""
         self.build(market_trade=True)
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
         for resource in Resource:
