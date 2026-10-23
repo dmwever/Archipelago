@@ -307,6 +307,22 @@ class Age2GameContext:
         return self.storage_handler.reconcile(
             server, len(self.client_status.unlocked_items))
 
+    def sync_delivery(self, applied: int) -> None:
+        """Marks what the game has applied, pushes the spend, then writes the window, in one tick.
+
+        Held back until the record has been reconciled: writing before the stored spends come
+        back is exactly the reconnect trap bug.
+        """
+        if not self.storage_handler.is_up_to_date():
+            return
+        unlocked = self.client_status.unlocked_items
+        self.storage_handler.try_flush()
+        self.mercenary_handler.try_sync_mercenaries(unlocked, self.spent_mercenaries())
+        delivered = self.item_handler.try_sync_delivered(unlocked, applied)
+        if self.storage_handler.mark_spent(delivered):
+            self.client_interface.on_item_spent(self.storage_handler.spent_mask())
+        self.item_handler.try_write_to_file(self.spent_items())
+
     def profile_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
 
@@ -508,15 +524,8 @@ async def status_tick(ctx: Age2GameContext) -> None:
     if packetStatus == PacketStatus.ACTIVE:
         pass
     
-    if ctx.storage_handler.is_up_to_date():
-        unlocked = ctx.client_status.unlocked_items
-        ctx.storage_handler.try_flush()
-        ctx.mercenary_handler.try_sync_mercenaries(unlocked, ctx.spent_mercenaries())
-        delivered = ctx.item_handler.try_sync_delivered(unlocked, packet.applied_item_count)
-        if ctx.storage_handler.mark_spent(delivered):
-            ctx.client_interface.on_item_spent(ctx.storage_handler.spent_mask())
-        ctx.item_handler.try_write_to_file(ctx.spent_items())
-    
+    ctx.sync_delivery(packet.applied_item_count)
+
     if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
         ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
     

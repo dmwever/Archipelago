@@ -1,0 +1,11 @@
+#!/bin/sh
+# Runs the fast age2de client tests when a commit touches the world; the full suite stays manual.
+# Tests run against the working tree, not just the staged files. Bypass with --no-verify.
+
+git diff --cached --name-only | grep -q '^worlds/age2de/' || exit 0
+
+echo "pre-commit: age2de client tests"
+exec python -m pytest -q -x -p no:cacheprovider \
+    worlds/age2de/test/test_item_delivery.py \
+    worlds/age2de/test/test_storage_handler.py \
+    worlds/age2de/test/test_client_shutdown.py
