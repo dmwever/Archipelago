@@ -106,8 +106,8 @@ class ItemHandler(FolderHandler):
 
     def _try_write_to_file(self) -> None:
         start = self._current_item
-        window = self._items[start:start + Items.ITEM_WINDOW]
-        item_ids = [self._id_for_game(managed) for managed in window]
+        unsent = self._items[start:]
+        item_ids = [self._id_for_game(managed) for managed in unsent]
         if start == self._sent_base and item_ids == self._in_flight:
             return
         try:

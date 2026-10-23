@@ -13,7 +13,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Retire `startup.xsdat`,
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The client writes no `startup.xsdat`; `sync_starting_resources` and its removal in
       `flush_files` are gone
@@ -22,9 +22,9 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Retire `startup.xsdat`,
 - [x] The packet is unchanged
 - [x] Tests: no pile is written, a scenario start pays each once, mid-scenario lands immediately,
       the next scenario pays the whole pile again, a loaded save gets only the gap
-- [ ] In game: receive a starting resource in the menu, start a scenario — granted once
-- [ ] In game: receive one mid-scenario — it lands immediately
-- [ ] In game: start the next scenario — the full pile applies again
+- [x] In game: receive a starting resource in the menu, start a scenario — granted once
+- [x] In game: receive one mid-scenario — it lands immediately
+- [x] In game: start the next scenario — the full pile applies again
 
 ## Amendment
 
