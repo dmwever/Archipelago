@@ -254,11 +254,11 @@ class TestMarketTrade(EconomyTestBase):
         self.assertIn(Age2BuildingData.MARKET.item.item_name, dependencies)
 
     def test_on_market_trade_needs_something_to_sell(self):
-        """Any resource at scale is what the market turns into everything else."""
+        """Wood at scale is what the market turns into everything else."""
         self.build(market_trade=True)
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
         needs = [route.needs for route in attila_1.market_routes()]
-        self.assertEqual([{sold: Strength.AT_SCALE} for sold in Resource], needs)
+        self.assertEqual([{Resource.WOOD: Strength.AT_SCALE}], needs)
 
     def test_on_market_trade_is_satisfiable_with_a_market(self):
         self.build(market_trade=True)

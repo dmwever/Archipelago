@@ -226,14 +226,21 @@ class TestFarmingNeedsABase(ToyScenarioBase):
         self.assertTrue(self.easy(Resource.FOOD, state))
 
 
-class TestMarketTradeSeededByEasyGold(ToyScenarioBase):
+class TestMarketTradeSeededByWoodAtScale(ToyScenarioBase):
+    MAP = {Tier.BASE: tier(gold_count=2000, hunt_count=2000)}
+    FINITE_SOURCES = (*BASE_SWITCHES, *GOLD_MINERS, job(Job.HUNTER_MALE), building(B.MILL))
 
-    def test_easy_gold_alone_seeds_market_trade(self):
-        self.toy({Tier.BASE: tier(gold_count=2000)}, market_trade=MarketTrade.option_true)
-        state = self.state(*BASE_SWITCHES, *GOLD_MINERS, building(B.MARKET))
-        self.assertTrue(self.easy(Resource.GOLD, state))
-        self.assertFalse(self.easy(Resource.WOOD, self.state(*BASE_SWITCHES, *GOLD_MINERS)))
+    def test_wood_at_scale_seeds_market_trade(self):
+        self.toy(self.MAP, market_trade=MarketTrade.option_true)
+        state = self.state(SCENARIO_WOOD, building(B.MARKET))
         self.assertTrue(self.easy(Resource.STONE, state))
+
+    def test_easy_gold_and_raw_food_alone_do_not(self):
+        self.toy(self.MAP, market_trade=MarketTrade.option_true)
+        state = self.state(*self.FINITE_SOURCES, building(B.MARKET))
+        self.assertTrue(self.easy(Resource.GOLD, state))
+        self.assertTrue(self.easy(Resource.FOOD, state))
+        self.assertFalse(self.easy(Resource.STONE, state))
 
 
 class TestFishingShipGold(ToyScenarioBase):

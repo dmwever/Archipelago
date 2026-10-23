@@ -493,12 +493,11 @@ class ScenarioResourceLogic:
     def market_routes(self) -> list[EconomyRoute]:
         return [
             EconomyRoute(
-                name=f"Market Trade selling {sold.name.lower()}",
+                name="Market Trade",
                 yields={resource: Strength.AT_SCALE for resource in Resource},
                 leaf=self.can_trade_at_market(),
-                needs={sold: Strength.AT_SCALE},
-            )
-            for sold in Resource
+                needs={Resource.WOOD: Strength.AT_SCALE},
+            ),
         ]
 
     def scenario_routes(self) -> list[EconomyRoute]:
