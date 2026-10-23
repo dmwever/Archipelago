@@ -14,8 +14,13 @@ class Joan2Rules(ScenarioRules):
     def set_rules(self):
         super().set_rules()
         can_cross: Rule = HasAny(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name, Age2ItemData.AP_JOAN_2_DOCK.item_name)
-        can_conquer_bridge: Rule = (Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
-                                    | self.scenario_logic.military.has_military())
+        can_conquer_bridge: Rule = (
+            Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
+            | (
+                Has(Age2ItemData.AP_JOAN_2_DOCK.item_name)
+                & self.scenario_logic.military.has_military()
+            )
+        )
         can_conquer_bridge = self.scenario_logic.named("can take the bridge", can_conquer_bridge)
         can_defeat_northern_english: Rule = self.scenario_logic.player_logic.defeats(Age2PlayerData.JOAN2_NORTHERN_ENGLISH)
         can_defeat_southern_english: Rule = self.scenario_logic.player_logic.defeats(Age2PlayerData.JOAN2_SOUTHERN_ENGLISH)

@@ -18,7 +18,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 12 | [Build Fish Trap doesn't require a Fishing Ship](issues/12-fish-trap-without-fishing-ship.md) | done |
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | done (with #05) |
 | 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |
-| 15 | [Joan 2 bridge accepts a military that needs Orleans first](issues/15-joan2-bridge-military-needs-orleans.md) | ready-for-agent |
+| 15 | [Joan 2 bridge accepts a military that needs Orleans first](issues/15-joan2-bridge-military-needs-orleans.md) | done |
 | 16 | [Under caveman, are scenario-granted ships and carts knocked down?](issues/16-caveman-scenario-ships-and-carts.md) | needs-info |
 | 17 | [Buildings "standing or buildable" are never paid for](issues/17-buildable-buildings-unpaid.md) | ready-for-agent |
 | 18 | [Military asks for a base directly instead of through its price](issues/18-military-base-through-price.md) | ready-for-agent |

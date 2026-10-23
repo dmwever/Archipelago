@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-20, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -110,14 +110,14 @@ The army route is only real for a player who crossed by Dock, but the rule doesn
 
 **Acceptance criteria** (Attila and Joan enabled, Attila starting, default options, as
 `Age2RuleTestBase` builds):
-- [ ] Without `Trade Carts` and `Dock`: *Defeat Burgundians at the Bridge*, *Victory* and
+- [x] Without `Trade Carts` and `Dock`: *Defeat Burgundians at the Bridge*, *Victory* and
       *Complete The Maid of Orleans* are unreachable.
-- [ ] Without `Trade Carts` only: the bridge and Victory are reachable.
-- [ ] Without `Dock` and `Orleans`: the bridge is reachable (the escort route).
-- [ ] Without `Orleans`: Victory is unreachable (unchanged).
-- [ ] The full pool reaches every Joan 2 location.
-- [ ] The bridge's item dependencies name both `Trade Carts` and `Dock`.
-- [ ] Existing age2de tests pass (`AGEIPELAGO_PATH` set), and a fuzz run of the committed meta yaml
+- [x] Without `Trade Carts` only: the bridge and Victory are reachable.
+- [x] Without `Dock` and `Orleans`: the bridge is reachable (the escort route).
+- [x] Without `Orleans`: Victory is unreachable (unchanged).
+- [x] The full pool reaches every Joan 2 location.
+- [x] The bridge's item dependencies name both `Trade Carts` and `Dock`.
+- [x] Existing age2de tests pass (`AGEIPELAGO_PATH` set), and a fuzz run of the committed meta yaml
       shows no new fill failures.
 
 **Out of scope:**
@@ -125,3 +125,19 @@ The army route is only real for a player who crossed by Dock, but the rule doesn
 - Rules for *Reach Blois*, *Find Dock for Crossing* and *Defeat Burgundians at Blois*.
 - Counting the starting force as a military.
 - Any XS or scenario trigger change.
+
+### Resolution (2026-10-23)
+
+Each box, with the test that holds it. "Red" means the test fails with the fix reverted
+(`worlds/age2de/tools/red_check.py`); "held before" means the criterion already held on HEAD.
+
+- No crossing: `test_without_a_crossing_nothing_past_the_river_is_reachable` (red) and
+  `test_orleans_hands_over_nothing_until_joan_crosses` (red: Town Center and villagers need a crossing).
+- Dock only: `test_the_dock_alone_is_a_crossing` (held before).
+- Escort without Dock and Orleans: `test_the_escort_takes_the_bridge_without_orleans` (held before).
+- No Orleans: `test_victory_still_wants_orleans` (held before, as the brief says).
+- Full pool: `test_the_full_pool_reaches_every_joan_2_location` (held before).
+- Bridge dependencies: `test_the_bridge_names_both_routes` (held before: the Dock already reached the
+  old rule through `has_military`'s Dock building). The rule now names `Dock & has_military` outright;
+  no reachability test can tell it apart, since the Orleans change makes plain `has_military` equivalent.
+- Suite: 1035 passed with `AGEIPELAGO_PATH` set; fuzz of `age2de.yaml`, 300 runs, 0 failures, 0 timeouts.
