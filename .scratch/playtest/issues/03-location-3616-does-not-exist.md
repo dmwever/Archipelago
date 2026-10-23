@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-19, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -99,15 +99,15 @@ This repeats on every checked-locations update.
   Each reported id costs one ledger scan, as today.
 
 **Acceptance criteria:**
-- [ ] `FindLocationById` exists, prints nothing, and is the only ledger scan loop;
+- [x] `FindLocationById` exists, prints nothing, and is the only ledger scan loop;
       `GetLocationById` is built on it.
-- [ ] In `MarkServerLocations`, an unregistered global id produces no chat output and is skipped.
-- [ ] A registered global id still ends up with `serverComplete` true.
-- [ ] An unregistered id for this scenario's objectives still prints
+- [x] In `MarkServerLocations`, an unregistered global id produces no chat output and is skipped.
+- [x] A registered global id still ends up with `serverComplete` true.
+- [x] An unregistered id for this scenario's objectives still prints
       `SetServerLocationComplete: Location does not exist`.
-- [ ] `xs-check` passes on the XS folder (run it with `-I . --`, or it only prints usage).
-- [ ] Manual (maintainer, in game): a Feudal-start scenario under `existing_techs` with Loom already
-      checked on the server prints nothing for 3616.
+- [x] `xs-check` passes on the XS folder (run it with `-I . --`, or it only prints usage).
+- [x] Manual (maintainer, in game): a Feudal-start scenario under `existing_techs` with Loom already
+      checked on the server prints nothing for 3616. Confirmed in game 2026-10-22.
 
 **Out of scope:**
 - Changing which techs, buildings, units or ages get registered.
@@ -115,3 +115,52 @@ This repeats on every checked-locations update.
 - A tech that reads `cTechStateInvalid` at init but becomes researchable later (it would hit a loud
   `AP_Check_Location` and lose the check); not believed to happen, not addressed here.
 - Any apworld (Python) change.
+
+### Implementation (2026-10-22)
+
+Game side only (Ageipelago, branch `0.3.0`); no apworld change.
+
+- `ScenarioLocations.xs`: new quiet `FindLocationById(int id)` holding the ledger's only
+  lookup-by-id scan — returns `cInvalidVector` for a miss and for `id == -1`, printing nothing.
+  `GetLocationById` keeps `GetLocationById: No Id Set` and `Location Not Found: %d` and now finds
+  the location through it; same signature and return contract. `FilterCompletedNotSent` is the
+  ledger's other loop and is untouched — it filters by flags, not by id.
+- `AP.xs`, `rule MarkServerLocations`: the three cases are now separate branches, in the old
+  condition's order -- global first, then this scenario's own ids -- because `scenarioId` is `0`
+  until `SetScenarioId` runs, and testing `== scenarioId` first would have changed how a global
+  id in the `0-99` band is handled before then. A global id is looked up with `FindLocationById`
+  and gets `serverComplete` set when found; when the scenario never registered it, the loop
+  continues silently. This scenario's own ids still go through `SetServerLocationComplete`, so an
+  unregistered objective id still prints. Ids belonging to another scenario are skipped, as
+  before. One ledger scan per reported id, as before.
+- `AP.xs` now names the `"serverComplete"` field directly, the only use of a `Location` field
+  outside `ScenarioLocations.xs`. That is the shape the brief specifies; a ledger-side
+  `MarkServerCompleteIfRegistered(id)` would keep every field name in one file if that is
+  preferred later.
+- Lint: `./xs-check.exe -I . -- <entry>.xs` over all 18 entry points — 0 errors, and no warning in
+  either changed file. The pre-existing `DiscardedFn` / `FirstOprArith` warnings elsewhere are
+  unchanged.
+- Verified in game by the maintainer on 2026-10-22: no 3616 output. All acceptance criteria met.
+- Changes left uncommitted in the working tree.
+
+### Review note (2026-10-22) -- not actioned
+
+Code review confirmed the restructured branch is logically equivalent to the old
+`locationScenarioId < MIN_SCENARIO_ID || locationScenarioId == scenarioId` test for every input
+class, that `FindLocationById` is defined before use and reachable from `AP.xs`
+(`AP.xs` -> `ItemHandler.xs` -> `Buildsanity.xs` -> `AP_Headers.xs` -> `ScenarioLocations.xs`),
+that the id partition has no collisions (ages 2-4, buildings 200-234, units 300-605, techs
+3600-3893, all far below `MIN_SCENARIO_ID * 100`), and that `GetLocationById(-1)` still prints
+only `No Id Set`.
+
+One finding, left unactioned because the grilling decided the global branch is quiet:
+
+> Silencing the unregistered-global case also silences a genuine id mismatch. If the apworld's
+> global id space and the mod's ever drift apart -- a `TechData.xs` row whose `itemId` falls
+> outside `[TECH_ITEM_OFFSET, TECH_ITEM_OFFSET + TECH_CAPACITY)` and is dropped by the `addTech`
+> guard (`Techsanity.xs:25`), or a `Unitsanity`/`Buildsanity` id renumbered on one side only --
+> the server checks a location the mod never registered, `serverComplete` never becomes true, and
+> there is now no diagnostic at all. The scenario branch keeps its warning for exactly this case.
+
+If that is worth guarding, the shape would be a one-shot warning (not one per update) or skipping
+only ids that fall inside a known global range. Worth its own ticket rather than reopening this one.
