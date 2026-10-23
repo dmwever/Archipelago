@@ -82,8 +82,7 @@ class ScenarioResourceLogic:
         if not self.counts.gold_count:
             return False_()
         return (self.scenario.buildings.has_gold_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.GOLD_MINER_MALE)
-                & self.scenario.starting_state.starting_gold_mine)
+                & self.has_job(Job.GOLD_MINER_MALE))
 
     def can_quarry_some(self) -> Rule:
         return self.scenario.named("can quarry stone", self._quarry_stone())
@@ -92,13 +91,11 @@ class ScenarioResourceLogic:
         if not self.counts.stone_count:
             return False_()
         return (self.scenario.buildings.has_stone_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.STONE_MINER_MALE)
-                & self.scenario.starting_state.starting_stone_mine)
+                & self.has_job(Job.STONE_MINER_MALE))
 
     def can_chop_some(self) -> Rule:
         return (self.scenario.buildings.has_wood_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.LUMBERJACK_MALE)
-                & self.scenario.starting_state.starting_trees)
+                & self.has_job(Job.LUMBERJACK_MALE))
 
     def can_hunt(self) -> Rule:
         return self.scenario.named("can hunt", self._hunt())
@@ -107,8 +104,7 @@ class ScenarioResourceLogic:
         if not self.counts.hunt_count:
             return False_()
         return (self.scenario.buildings.has_hunt_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.HUNTER_MALE)
-                & self.scenario.starting_state.starting_hunting)
+                & self.has_job(Job.HUNTER_MALE))
 
     def can_herd(self) -> Rule:
         return self.scenario.named("can herd sheep", self._herd())
@@ -117,8 +113,7 @@ class ScenarioResourceLogic:
         if not self.counts.herd_count:
             return False_()
         return (self.scenario.buildings.has_food_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.SHEPHERD_MALE)
-                & self.scenario.starting_state.starting_sheep)
+                & self.has_job(Job.SHEPHERD_MALE))
 
     def can_forage(self) -> Rule:
         return self.scenario.named("can forage berries", self._forage())
@@ -127,8 +122,7 @@ class ScenarioResourceLogic:
         if not self.counts.bush_count:
             return False_()
         return (self.scenario.buildings.has_food_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.FORAGER_MALE)
-                & self.scenario.starting_state.starting_bushes)
+                & self.has_job(Job.FORAGER_MALE))
 
     def can_fish_from_shore(self) -> Rule:
         return self.scenario.named("can fish from the shore", self._fish_from_shore())
@@ -137,8 +131,7 @@ class ScenarioResourceLogic:
         if not self.counts.shore_fish_count:
             return False_()
         return (self.scenario.buildings.has_fisherman_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.FISHERMAN_MALE)
-                & self.scenario.starting_state.starting_fish)
+                & self.has_job(Job.FISHERMAN_MALE))
 
     def has_fishing_ships(self) -> Rule:
         """Fishing Ships to put to sea, less paying for one."""
@@ -163,8 +156,7 @@ class ScenarioResourceLogic:
         if not self.counts.deep_fish_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.can_crew_fishing_ships()
-                & self.scenario.starting_state.starting_fish)
+                & self.can_crew_fishing_ships())
 
     def can_fish_some(self) -> Rule:
         return self.can_fish_from_shore() | self.can_fish_by_boat()
@@ -176,8 +168,7 @@ class ScenarioResourceLogic:
         if not self.counts.oyster_count:
             return False_()
         return (self.scenario.buildings.has_fisherman_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.OYSTER_GATHERER_MALE)
-                & self.scenario.starting_state.starting_oysters)
+                & self.has_job(Job.OYSTER_GATHERER_MALE))
 
     def can_gather_oysters_by_boat(self) -> Rule:
         return self.scenario.named("can gather oysters by boat", self._oysters_by_boat())
@@ -186,8 +177,7 @@ class ScenarioResourceLogic:
         if not self.counts.oyster_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.can_crew_fishing_ships()
-                & self.scenario.starting_state.starting_oysters)
+                & self.can_crew_fishing_ships())
 
     def can_gather_oysters(self) -> Rule:
         return self.can_gather_oysters_from_shore() | self.can_gather_oysters_by_boat()
@@ -199,8 +189,7 @@ class ScenarioResourceLogic:
         if not self.counts.whale_count:
             return False_()
         return (self.scenario.buildings.has_fishing_boat_dropsite()
-                & self.can_crew_fishing_ships()
-                & self.scenario.starting_state.starting_whales)
+                & self.can_crew_fishing_ships())
 
     def can_collect_relics(self) -> Rule:
         return self.scenario.named("can collect relics", self._collect_relics())
@@ -217,7 +206,7 @@ class ScenarioResourceLogic:
             )
             & self.scenario.ages.has_reached(Age2UnitData.MONK.age)
             & self.can_mine_some()
-        ) & self.scenario.starting_state.starting_relics
+        )
 
     def can_gather_gold(self) -> Rule:
         return (self.can_mine_some() | self.can_gather_oysters() | self.can_hunt_whales()

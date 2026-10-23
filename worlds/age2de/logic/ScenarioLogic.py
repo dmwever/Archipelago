@@ -36,16 +36,6 @@ class ScenarioStartingState:
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
     has_water_access: Rule = field(default_factory=lambda: True_())
     must_steal_base: Rule = field(default_factory=lambda: False_())
-    starting_gold_mine: Rule = field(default_factory=lambda: True_())
-    starting_stone_mine: Rule = field(default_factory=lambda: True_())
-    starting_trees: Rule = field(default_factory=lambda: True_())
-    starting_bushes: Rule = field(default_factory=lambda: True_())
-    starting_hunting: Rule = field(default_factory=lambda: True_())
-    starting_fish: Rule = field(default_factory=lambda: True_())
-    starting_sheep: Rule = field(default_factory=lambda: True_())
-    starting_oysters: Rule = field(default_factory=lambda: False_())
-    starting_whales: Rule = field(default_factory=lambda: False_())
-    starting_relics: Rule = field(default_factory=lambda: True_())
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
     some_resource_sources: dict[Resource, Rule] = field(

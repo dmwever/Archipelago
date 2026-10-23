@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-22, split off from [#07](07-own-shepherd-without-sheep.md) during triage
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -99,16 +99,22 @@ This is a behavior-preserving removal against the scan as it stands:
 
 **Acceptance criteria:**
 
-- [ ] No `starting_*` resource field remains on `ScenarioStartingState`, and no rule reads one.
-- [ ] Every gathering question that had a scan-count guard still has it; the wood question still has
-      none.
-- [ ] No-op proof: with the scan unchanged, the set of reachable locations is identical before and
+- [x] No `starting_*` resource field remains on `ScenarioStartingState`, and no rule reads one.
+      *Red:* `test_scan_decides_resources.py::TestNoStartingResourceFlagRemains` (both tests).
+- [x] Every gathering question that had a scan-count guard still has it; the wood question still has
+      none. *Held before:* `test_scan_decides_resources.py::TestEveryGuardedQuestionKeepsItsScanGuard` (both tests).
+- [x] No-op proof: with the scan unchanged, the set of reachable locations is identical before and
       after. Existing age2de tests pass with `AGEIPELAGO_PATH` set, and a fuzz run of the committed
-      meta yaml shows no new fill failures.
-- [ ] Oyster and whale gathering are still statically unreachable in every scenario, following from
-      the scan's zero counts alone.
-- [ ] The absence of a tree count — and that wood is therefore assumed available in every scenario —
-      is written down where the wood question lives.
+      meta yaml shows no new fill failures. *Held before:* `test_economy_routes.py::TestEveryEasySourceAnswersAsBefore`;
+      a one-off dump of every location's reachability over 302 states in 7 option configs was
+      byte-identical before and after; full suite 1073 passed, 0 skipped with `AGEIPELAGO_PATH` set;
+      fuzz `-r 1000 -n 1-3 -m age2de.yaml -t 90`: 0 failures, 0 timeouts.
+- [x] Oyster and whale gathering are still statically unreachable in every scenario, following from
+      the scan's zero counts alone. *Held before:* `test_scan_decides_resources.py::...::test_oysters_and_whales_are_unreachable_in_every_scenario`;
+      *red:* `test_scan_decides_resources.py::...::test_a_scanned_oyster_or_whale_opens_its_gathering`.
+- [x] The absence of a tree count — and that wood is therefore assumed available in every scenario —
+      is written down where the wood question lives. *Doc:* **Resource scan** entry in
+      `worlds/age2de/CONTEXT.md` (user chose CONTEXT.md over a code comment, 2026-10-23).
 
 **Out of scope:**
 
@@ -120,3 +126,9 @@ This is a behavior-preserving removal against the scan as it stands:
 - The tier gates (`can_defend_resources`, `must_steal_base`) and the drop-off and base requirements
   on the gathering questions.
 - Changing any scan count.
+
+### Implementation (2026-10-23)
+
+Ten fields deleted from `ScenarioStartingState`; eleven `& starting_*` clauses dropped from
+`ScenarioResourceLogic`. `TestOystersGuardedByTheirOwnGold` no longer forces `starting_oysters`, and
+its stale `military.boat_guards()` call (already broken at HEAD) now reads `can_guard_boats()`.

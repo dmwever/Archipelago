@@ -243,13 +243,12 @@ class TestOystersGuardedByTheirOwnGold(EconomyRoutesTestBase):
         self.build()
         scenario = self.world.rules.logic.for_scenario(self.SCENARIO)
         self.assertFalse(self.world.rules.logic.is_impossible(scenario.has_water_access()))
-        self.assertTrue(scenario.military.boat_guards())
+        self.assertTrue(scenario.military.can_guard_boats())
         with self.with_open_oysters():
             scenario.economy.counts = dataclasses.replace(
                 scenario.economy.counts,
                 oyster_count=self.BARBAROSSA_3_OYSTERS,
             )
-            scenario.starting_state.starting_oysters = True_()
             self.world.rules.logic.scenario_answers.clear()
             easy_gold = scenario.economy.has_easy_source(Resource.GOLD).resolve(self.world)
             self.assertFalse(easy_gold.always_false)

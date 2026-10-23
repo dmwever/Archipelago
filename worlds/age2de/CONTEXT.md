@@ -30,6 +30,13 @@ thing worked in that same scenario. Sheep count only in the base or the open; ev
 resource counts wherever it is. The item that permits a job is its **profession**.
 _Avoid_: profession (when the job or its location is meant), gatherer type
 
+**Resource scan**:
+The count of each resource a scenario's map holds, by area: gold, stone, hunt, sheep, berry
+bushes, shore fish, deep fish, oysters, whales and relics. It alone says whether a scenario has a
+resource. It counts no trees, so every scenario is taken to have wood; a per-scenario wood limit
+means adding a tree count to the scan.
+_Avoid_: resource flags, starting resource flags
+
 **Economy route**:
 One way P1 brings a resource in: a **producer** (villagers on a job, Fishing Ships, Trade Cogs,
 Trade Carts, or something a scenario provides) that **yields** one or more resources once its
