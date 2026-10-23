@@ -11,7 +11,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Window base).
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `itemArray` and the `FreeItems` rule are gone from `AP.xs`, along with the `Free Items` read
       in `AP_Read`

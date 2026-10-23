@@ -24,7 +24,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md`.
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `ItemHandler(FolderHandler)` owns `items.xsdat`, with its own `try_flush_from_folder`, and
       `flush_files` defers to it. `startup.xsdat` stays with `Age2GameContext`

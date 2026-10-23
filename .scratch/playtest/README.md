@@ -15,7 +15,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 09 | [Castle Age received before reaching Feudal covers the Feudal button](issues/09-castle-age-covers-feudal-button.md) | done |
 | 10 | [Caveman knockdowns and unit checks are starved while the unit count keeps moving](issues/10-caveman-sweep-delayed.md) | ready-for-agent |
 | 11 | [Khan shows up as trainable at the Castle](issues/11-khan-trainable-at-castle.md) | ready-for-agent |
-| 12 | [Build Fish Trap doesn't require a Fishing Ship](issues/12-fish-trap-without-fishing-ship.md) | ready-for-agent |
+| 12 | [Build Fish Trap doesn't require a Fishing Ship](issues/12-fish-trap-without-fishing-ship.md) | done |
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | done (with #05) |
 | 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |
 | 15 | [Joan 2 bridge accepts a military that needs Orleans first](issues/15-joan2-bridge-military-needs-orleans.md) | ready-for-agent |

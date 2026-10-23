@@ -27,7 +27,7 @@ Spec: `worlds/age2de/docs/spec-item-delivery-cursor.md` (Persistence).
 
 **Blocked by:** 07 (it also edits `ItemHandler`; it lands first and this builds on it)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `ClientStatus.spent_mask` is gone; every read and write of the spent record goes through
       `StorageHandler`

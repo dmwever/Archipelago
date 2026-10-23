@@ -153,7 +153,7 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
         buildings = scenario.logic.buildings
         rule = (buildings.has_building_item(self.building)
-                & scenario.has_builders()
+                & self._has_builders(scenario)
                 & scenario.ages.has_reached(self.building.age))
         prerequisite = buildings.prerequisite(self.building)
         if prerequisite is not None:
@@ -161,6 +161,11 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
         if self.building in self._WATER_BUILDINGS:
             rule = rule & scenario.has_water_access()
         return rule
+
+    def _has_builders(self, scenario: 'ScenarioLogic') -> Rule:
+        if self.building is Age2BuildingData.FISH_TRAP:
+            return scenario.economy.has_fishing_ships()
+        return scenario.has_builders()
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:

@@ -24,6 +24,7 @@ class Joan2StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has(Age2ItemData.PROGRESSIVE_JOAN_SCENARIO.item_name)
         has_carts = Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
         has_orleans = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
+        has_dock = Has(Age2ItemData.AP_JOAN_2_DOCK.item_name)
 
         self.has_vils = has_orleans
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = has_orleans
@@ -33,13 +34,14 @@ class Joan2StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.STABLE] = has_orleans
         self.starts_with_building[Age2BuildingData.BLACKSMITH] = has_orleans
         self.starts_with_building[Age2BuildingData.MARKET] = has_orleans
+        self.starts_with_building[Age2BuildingData.DOCK] = has_dock
 
         self.obtains_unit[U.CROSSBOWMAN] = has_carts
         self.obtains_unit[U.KNIGHT] = has_carts
         self.obtains_unit[U.TRADE_CART] = has_carts
         self.obtains_unit[U.VILLAGER_MALE] = has_orleans
         self.obtains_unit[U.VILLAGER_FEMALE] = has_orleans
-        self.obtains_unit[U.TRANSPORT_SHIP] = Has(Age2ItemData.AP_JOAN_2_DOCK.item_name)
+        self.obtains_unit[U.TRANSPORT_SHIP] = has_dock
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
