@@ -215,7 +215,8 @@ Tests in `worlds/age2de/test/test_buildings_paid.py`, red-checked with `tools/re
   `test_defeat_rules.py::TestDefeatAndTradeTerminate` (held before).
 - Criterion 7: grep of `worlds/age2de` for the four old names finds nothing.
 - Attila 4 gold: `TestAttila4AlliesWithBurgundyAtAPaidCastle::test_no_easy_gold_is_no_alliance`,
-  `::test_no_easy_gold_is_no_tribute` (**red**). Triggers read from the loose
+  `::test_no_easy_gold_is_no_tribute` (**red**); `::test_the_tribute_needs_no_castle_and_no_easy_stone`
+  (guard: tribute holds with no Castle and no easy stone while the alliance does not). Triggers read from the loose
   `AP_Attila_4.aoe2scenario`; no `.aoe2campaign` bundle is in the checkout.
 - Town Center never asks easy stone: `TestATownCenterIsPaidByItsItems::test_a_town_center_never_asks_easy_stone`
   (**red**: at HEAD the Build Town Center location paid `can_pay(275 wood, 100 stone)`).
