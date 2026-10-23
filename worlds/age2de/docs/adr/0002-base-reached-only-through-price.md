@@ -28,8 +28,13 @@ would have to be unpicked one rule at a time.
 - Buildings have the same paid and structural pair as ages, techs and units (#17):
   `has_building_structurally` (standing or buildable) never pays, and `has_building` (standing or
   paid for) does. A paid form pays for every building it leans on. A structural form, and every
-  question inside the economy (dropsites, fortification, market, dock), pays for nothing. That keeps
-  the easy sources from asking themselves.
+  question inside the economy (dropsites, market), pays for nothing. That keeps the easy sources
+  from asking themselves.
+- A defence is part of an economy seed, never free (#23). A standing defence opens no gate: what it
+  guards is already the base tier. A built defence (a wall with a tower, a strongpoint, a Dock
+  holding a shoreline, more Town Centers) costs route needs of *some*, from a running route, never
+  a bank. More Town Centers cost *some* wood and *some* stone wherever they are asked, camps
+  included. The base's own Town Center is no strongpoint.
 - Guarding boats is part of an economy seed, not a price and not free (#21). The structural form
   of fielding pays for nothing, so the navy that guards the afloat and shoreline tiers is fielded
   structurally, and its wood and gold are route needs of the routes working those tiers

@@ -58,6 +58,13 @@ already yielding them, at either strength, so one route can seed the next.
 _Avoid_: seed (alone: it is the Archipelago generation seed), seed resources, starting resources
 (when the whole bundle is meant)
 
+**Defence**:
+A building P1 puts up to hold resources out on the map: a wall with a tower, a strongpoint
+(Castle, Fortified Church, Krepost, Donjon, or a second Town Center), or a Dock on a shoreline.
+Part of an economy seed, paid once by routes of some, never by a bank. One standing at the start
+is no defence: what it guards is already the base's ground.
+_Avoid_: fortification (when the paid build is meant), the base's Town Center as a strongpoint
+
 **Base**:
 A Town Center P1 can turn out villagers from: one standing at the start, or one P1 puts up, paid
 for by the starting Town Center resources and stood on ground P1 can reach. It also takes the food
