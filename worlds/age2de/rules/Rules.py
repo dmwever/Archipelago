@@ -49,6 +49,7 @@ class Rules:
         for scenario in self.scenario_rules:
             scenario.set_rules()
             scenario.set_defeat_event_rules()
+            scenario.set_guard_event_rules()
                 
         self.age_rules.set_rules()
         self.building_rules.set_rules()

@@ -11,6 +11,9 @@ class TradeAccess(enum.Enum):
     CLOSED = "closed"
     OPEN = "open"
     ONCE_DEFEATED = "once defeated"
+    GUARDED = "once defeated, or guarded"
+
+TRADE_BUILDINGS = (Age2BuildingData.MARKET, Age2BuildingData.DOCK)
 
 @enum.unique
 class Age2PlayerData(enum.IntEnum):
@@ -47,10 +50,14 @@ class Age2PlayerData(enum.IntEnum):
 
     @property
     def can_trade_once_defeated(self) -> bool:
-        return TradeAccess.ONCE_DEFEATED in (self.market, self.dock)
+        return bool({TradeAccess.ONCE_DEFEATED, TradeAccess.GUARDED}
+                    & {self.market, self.dock})
 
     def defeat_event(self, scenario_name: str) -> str:
         return f"{scenario_name}: Can Defeat {self.player_name}"
+
+    def guard_event(self, scenario_name: str, building: Age2BuildingData) -> str:
+        return f"{scenario_name}: Guard {self.player_name}'s {building.building_name.lower()}"
 
     # Attila 1. Bleda (P2) is ignored. Ruled: the Scythians are an ally.
     ATT1_SCYTHIANS =            1013, "the Scythians",              3, Side.ALLY,  False, TradeAccess.OPEN,          TradeAccess.CLOSED

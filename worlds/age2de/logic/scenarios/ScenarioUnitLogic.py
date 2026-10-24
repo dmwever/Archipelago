@@ -132,14 +132,23 @@ class ScenarioUnitLogic:
                     if self.scenario.civilization.can_build(building)])
 
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
+        return self._counter(target, age, paid=True)
+
+    def can_counter_structurally(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
+        return self._counter(target, age, paid=False)
+
+    def _counter(self, target: Age2UnitLineData, age: Age2AgeData, paid: bool) -> Rule:
+        field = self.can_field if paid else self.can_field_structurally
+        researched = (self.scenario.techs.has_researched if paid
+                      else self.scenario.techs.has_researched_structurally)
         ways: list[Rule] = []
         for line in target.countered_by:
-            way = self.can_field(line, age)
+            way = field(line, age)
             if line in target.counter_techs:
-                way = way & self.scenario.techs.has_researched(target.counter_techs[line])
+                way = way & researched(target.counter_techs[line])
             ways.append(self._with_counter_options(way, line, target))
         if target in RAM_COUNTER_TARGETS:
-            ways.append(self.can_sponge_for_military(age))
+            ways.append(self._sponge(age, paid))
         return Or(*ways)
 
     def _with_counter_options(
@@ -155,10 +164,14 @@ class ScenarioUnitLogic:
         return way
 
     def can_sponge_for_military(self, age: Age2AgeData) -> Rule:
-        rams = [self.can_field(line, age) for line in RAM_LINES]
+        return self._sponge(age, paid=True)
+
+    def _sponge(self, age: Age2AgeData, paid: bool) -> Rule:
+        field = self.can_field if paid else self.can_field_structurally
+        rams = [field(line, age) for line in RAM_LINES]
         escorts: list[Rule] = []
         for line in ROLE_TO_LINES[UnitRole.military]:
-            escort = self.can_field(line, age)
+            escort = field(line, age)
             if isinstance(escort, False_):
                 continue
             escorts.append(self._with_escort_options(escort, line))

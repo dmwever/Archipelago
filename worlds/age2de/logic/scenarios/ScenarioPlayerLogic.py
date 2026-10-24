@@ -19,6 +19,7 @@ class ScenarioPlayerLogic:
         self.logic = scenario.logic
         self.world = scenario.logic.world
         self._defeats: dict[Age2PlayerData, Rule] | None = None
+        self._guards: dict[tuple[Age2PlayerData, Age2BuildingData], Rule] | None = None
 
     # -- defeat -------------------------------------------------------------------------------
 
@@ -33,6 +34,21 @@ class ScenarioPlayerLogic:
 
     def has_defeated(self, player: Age2PlayerData) -> Rule:
         return Has(player.defeat_event(self.scenario.scenario.scenario_name))
+
+    # -- guarding a trade route ---------------------------------------------------------------
+
+    def guards(self, player: Age2PlayerData, building: Age2BuildingData) -> Rule:
+        if self._guards is None:
+            guard_rules = self.scenario.starting_state.trade_guard_rules(self.scenario)
+            self._guards = {}
+            for (owner, guarded), rule in guard_rules.items():
+                self._guards[(owner, guarded)] = self.scenario.named(
+                    f"can guard the route to {owner.player_name}'s "
+                    f"{guarded.building_name.lower()}", rule)
+        return self._guards[(player, building)]
+
+    def has_guarded(self, player: Age2PlayerData, building: Age2BuildingData) -> Rule:
+        return Has(player.guard_event(self.scenario.scenario.scenario_name, building))
 
     # -- trade --------------------------------------------------------------------------------
 
@@ -58,4 +74,6 @@ class ScenarioPlayerLogic:
             return True_()
         if access is TradeAccess.ONCE_DEFEATED:
             return self.has_defeated(player)
+        if access is TradeAccess.GUARDED:
+            return self.has_defeated(player) | self.has_guarded(player, building)
         return False_()

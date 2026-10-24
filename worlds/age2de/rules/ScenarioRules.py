@@ -5,6 +5,7 @@ from BaseClasses import Entrance, Location
 from rule_builder.rules import Rule
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Locations import SCENARIO_TO_SCENARIO_LOCATIONS, Age2ScenarioLocationData
+from ..locations.Players import TRADE_BUILDINGS
 from ..logic.ScenarioLogic import ScenarioLogic
 
 if TYPE_CHECKING:
@@ -44,6 +45,16 @@ class ScenarioRules:
             event_name = player.defeat_event(self.scenario.scenario_name)
             event = self.world.get_location(event_name)
             self.world.set_rule(event, self.scenario_logic.player_logic.defeats(player))
+
+    def set_guard_event_rules(self):
+        for player in self.scenario.players:
+            for building in TRADE_BUILDINGS:
+                if not self.world.options.partner_trade.needs_guard_event(player, building):
+                    continue
+                event_name = player.guard_event(self.scenario.scenario_name, building)
+                event = self.world.get_location(event_name)
+                self.world.set_rule(
+                    event, self.scenario_logic.player_logic.guards(player, building))
 
     def set_rules(self):
         self.world.set_rule(self.entrance, self.scenario_logic.is_unlocked())

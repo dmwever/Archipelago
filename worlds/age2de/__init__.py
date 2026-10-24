@@ -22,6 +22,7 @@ from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching, 
 from .items import Items
 from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
                         UnitLines, Units, VillagerJobs)
+from .locations.Players import TRADE_BUILDINGS
 from .locations.Techs import Age2TechData
 from .locations.VillagerJobs import Age2VillagerJobData
 from .locations.connections import (CivilizationBuildings, CivilizationTechs,
@@ -218,6 +219,12 @@ class Age2World(CachedRuleBuilderWorld):
                     player.defeat_event(scenario.scenario_name),
                     show_in_spoiler=False,
                 )
+            for building in TRADE_BUILDINGS:
+                if self.options.partner_trade.needs_guard_event(player, building):
+                    new_region.add_event(
+                        player.guard_event(scenario.scenario_name, building),
+                        show_in_spoiler=False,
+                    )
         return new_region
         
     

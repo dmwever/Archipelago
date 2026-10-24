@@ -43,13 +43,20 @@ class ScenarioTechLogic:
                 and not self.world.pool.techs.locked_at_start(tech))
 
     def has_researched(self, tech: Age2TechData) -> Rule:
+        return self._has_researched(tech, paid=True)
+
+    def has_researched_structurally(self, tech: Age2TechData) -> Rule:
+        return self._has_researched(tech, paid=False)
+
+    def _has_researched(self, tech: Age2TechData, paid: bool) -> Rule:
         if not self.scenario.civilization.researches(tech):
             return False_()
         if tech in self.scenario.scenario.excluded_techs:
             return False_()   # the scenario forbids it
         if self.researched_at_start(tech):
             return True_()
-        rule = self.can_research(tech)
+        rule = (self.can_research(tech) if paid
+                else self.scenario.obtains_tech(tech) | self.can_research_structurally(tech))
         if self.world.pool.techs.includes(tech):
             rule = rule & Has(tech.item.item_name)
         return rule

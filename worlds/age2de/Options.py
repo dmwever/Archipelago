@@ -4,8 +4,8 @@ import typing
 from Options import (Choice, DefaultOnToggle, OptionCounter, OptionError, OptionList, OptionSet, PerGameCommonOptions,
                      Range, StartInventoryPool, Toggle)
 from worlds.age2de.locations.Campaigns import Age2CampaignData
-from .locations.Buildings import NAME_TO_BUILDING, BuildingOption
-from .locations.Players import Age2PlayerData
+from .locations.Buildings import NAME_TO_BUILDING, Age2BuildingData, BuildingOption
+from .locations.Players import Age2PlayerData, TradeAccess
 from .items.Items import TRAP_NAMES
 
 class Goal(Choice):
@@ -310,6 +310,10 @@ class PartnerTrade(Choice):
 
     def needs_defeat_event(self, player: Age2PlayerData) -> bool:
         return self.value == self.option_allies_and_enemies and player.can_trade_once_defeated
+
+    def needs_guard_event(self, player: Age2PlayerData, building: Age2BuildingData) -> bool:
+        return (self.value == self.option_allies_and_enemies
+                and player.trade_access(building) is TradeAccess.GUARDED)
 
 class TrapDifficulty(Choice):
     """

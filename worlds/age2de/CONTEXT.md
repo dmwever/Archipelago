@@ -75,9 +75,16 @@ _Avoid_: Town Center (when the base is meant), camp, having villagers, economy
 
 **Trade partner**:
 A player whose market or dock P1 can actually trade with: an ally, or an opponent whose market or
-dock is left standing and is either undefended or belongs to an opponent P1 can defeat. A market
-that exists but is out of practical reach is not a trade partner's.
+dock is left standing and is either undefended, guarded by ruling, or belongs to an opponent P1 can
+defeat. A market that exists but is out of practical reach is not a trade partner's.
 _Avoid_: trading ally (when an opponent may be meant)
+
+**Guard**:
+Holding the trade route to one opponent's market or dock open against its owner, instead of
+defeating the owner first. Ruled per player and building, hand-written per scenario, and paid in
+routes of *some*: a guard is never paid at scale, so it can open a route that has no base behind
+it. A guarded building opens on its guard or on its owner's defeat, whichever comes first.
+_Avoid_: escort, protect, defend (when the trade route is meant)
 
 **Partner trade**:
 Gold or wood earned by sending trade carts to a trade partner's market or trade cogs to its dock.
@@ -97,8 +104,8 @@ _Avoid_: enemy faction
 
 **Main opponent**:
 An opponent significantly more powerful than the rest of the scenario's opponents. Its market and
-dock are not a trade partner's unless one is undefended. Not necessarily the opponent whose defeat
-wins the scenario.
+dock are not a trade partner's unless one is undefended or guarded by ruling. Not necessarily the
+opponent whose defeat wins the scenario.
 _Avoid_: boss, final enemy, victory target
 
 **Defeat**:

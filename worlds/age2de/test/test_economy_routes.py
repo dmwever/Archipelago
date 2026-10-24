@@ -227,6 +227,46 @@ class TestStructuralFieldingPaysForNothing(EconomyRoutesTestBase):
             self.assertGreater(asked.call_count, 0)
 
 
+class TestStructuralCounteringPaysForNothing(EconomyRoutesTestBase):
+    """A guard rule states its own costs as routes of *some*, so the counter behind it must pay
+    for nothing: `can_counter_structurally` is to `can_counter` what structural fielding is to
+    fielding."""
+
+    def test_only_the_paid_form_asks_can_sustain(self):
+        self.build()
+        sustain = economy_module.ScenarioResourceLogic.can_sustain
+        with mock.patch.object(
+            economy_module.ScenarioResourceLogic,
+            "can_sustain",
+            autospec=True,
+            side_effect=sustain,
+        ) as asked:
+            for scenario in self.world.rules.logic.scenarios:
+                for target in Age2UnitLineData:
+                    for age in Age2AgeData:
+                        scenario.units.can_counter_structurally(target, age)
+            self.assertEqual(0, asked.call_count)
+            attila_1 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+            attila_1.units.can_counter(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
+            self.assertGreater(asked.call_count, 0)
+
+    def test_the_structural_counter_answers_wherever_the_paid_one_does(self):
+        """Dropping the price never drops a way to counter: anything the paid counter offers the
+        structural one offers too."""
+        self.build()
+        for scenario in self.world.rules.logic.scenarios:
+            for target in Age2UnitLineData:
+                for age in Age2AgeData:
+                    paid = scenario.units.can_counter(target, age).resolve(self.world)
+                    if paid.always_false:
+                        continue
+                    structural = scenario.units.can_counter_structurally(
+                        target, age).resolve(self.world)
+                    with self.subTest(scenario=scenario.scenario.name, target=target.name,
+                                      age=age.name):
+                        self.assertFalse(structural.always_false)
+
+
 class TestOystersGuardedByTheirOwnGold(EconomyRoutesTestBase):
     SCENARIO = Age2ScenarioData.AP_ATTILA_6
     BARBAROSSA_3_OYSTERS = 1400

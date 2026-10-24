@@ -227,7 +227,7 @@ def any_building_item(world: Age2World, buildings) -> Rule:
 
 def building_names(buildings) -> str:
     """"Barracks", "Castle or Krepost"."""
-    return " or ".join(building.location_name.removeprefix("Build ") for building in buildings)
+    return " or ".join(building.building_name for building in buildings)
 
 
 def age_name(age: Age2AgeData) -> str:

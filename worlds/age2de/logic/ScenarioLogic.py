@@ -54,6 +54,12 @@ class ScenarioStartingState:
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         return {}
 
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        return {}
+
 class ScenarioLogic:
     starting_state: ScenarioStartingState
 
@@ -137,8 +143,8 @@ class ScenarioLogic:
         return False_()
 
     def has_building_structurally(self, building: Age2BuildingData) -> Rule:
-        name = building.location_name.removeprefix("Build ")
-        return self.named(f"has {a_or_an(name)} {name}, standing or buildable",
+        return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
+                          "standing or buildable",
                           self._has_building_structurally(building))
 
     def _has_building_structurally(self, building: Age2BuildingData) -> Rule:
@@ -146,8 +152,8 @@ class ScenarioLogic:
                 | self.buildings.can_build_structurally(building))
 
     def has_building(self, building: Age2BuildingData) -> Rule:
-        name = building.location_name.removeprefix("Build ")
-        return self.named(f"has {a_or_an(name)} {name}, standing or paid for",
+        return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
+                          "standing or paid for",
                           self._has_building(building))
 
     def _has_building(self, building: Age2BuildingData) -> Rule:

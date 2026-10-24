@@ -32,7 +32,13 @@ class Age2BuildingData(enum.IntEnum):
         self.age = age
         self.building_options = building_options
         self.cost: dict = {}
-        
+
+    @property
+    def building_name(self) -> str:
+        """"Lumber Camp": the building itself, without the location's "Build "."""
+        return self.location_name.removeprefix("Build ")
+
+
     WONDER =                200, "Build Wonder", Age2ItemData.WONDER, Age2AgeData.IMPERIAL, [BuildingOption.wonder]
     OUTPOST =               201, "Build Outpost", Age2ItemData.OUTPOST, Age2AgeData.DARK, [BuildingOption.defense]
     TOWN_CENTER =           202, "Build Town Center", Age2ItemData.TOWN_CENTER, Age2AgeData.DARK, [BuildingOption.base]

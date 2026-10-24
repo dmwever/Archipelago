@@ -169,7 +169,7 @@ class ScenarioCanBuild(ScenarioQuestion, game="Age Of Empires II: Definitive Edi
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
-        building = self.building.location_name.removeprefix("Build ")
+        building = self.building.building_name
         return f"{scenario.scenario_name} can build {a_or_an(building)} {building}"
 
 

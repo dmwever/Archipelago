@@ -669,19 +669,104 @@ class TestNamingACopyToSpend(ItemDeliveryTestBase):
 
         self.assertFalse(self.ctx.storage_handler.mark_spent(set()))
 
-    def test_clearing_the_record_unpays_every_item(self) -> None:
-        """/install full clears both halves: reset_used for mercenaries, the record here."""
-        items = [Age2ItemData.FILLER_WOOD_SMALL] * 3
+
+class TestInstallRefetchesTheRecord(ItemDeliveryTestBase):
+    """/install clears the local record, then asks the server for it again.
+
+    The clear returns the record to unknown, so delivery waits for the reply the way it waits on
+    connect. Without that, the next tick reads an empty mask as "nothing was spent" and replays
+    every one-shot below the game's cursor.
+    """
+
+    FILLER = Age2ItemData.FILLER_WOOD_SMALL
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.fetches = 0
+        self.pushes: list[int] = []
+        self.ctx.client_interface.fetch_spent = self.count_fetch
+        self.ctx.client_interface.on_item_spent = self.pushes.append
+
+    def count_fetch(self) -> None:
+        self.fetches += 1
+
+    def pay_for(self, *items: Age2ItemData) -> int:
+        """Deliver every item, so each one-shot is spent; returns the mask the server holds."""
         self.unlock(*items)
         for _ in range(10):
             self.full_tick()
-        self.assertNotEqual(0, self.ctx.storage_handler.spent_mask(),
-                            "the fixture never paid for anything")
+        server = self.ctx.storage_handler.spent_mask()
+        self.assertNotEqual(0, server, "the fixture never paid for anything")
+        self.pushes.clear()
+        return server
+
+    def restart_scenario(self) -> None:
+        """The scenario starts over with its cursor at zero, as it does after an install."""
+        self.ctx.item_handler.try_flush_from_folder()
+        self.game = FakeGame()
+
+    def test_a_clear_asks_the_server_for_the_record_again(self) -> None:
+        self.pay_for(self.FILLER)
 
         self.assertTrue(self.ctx.clear_spent_state())
 
-        self.assertEqual(0, self.ctx.storage_handler.spent_mask())
-        self.send()   # the scenario restarts, so the same items go out again
+        self.assertFalse(self.ctx.storage_handler.is_up_to_date())
+        self.assertEqual(1, self.fetches)
+
+    def test_a_clear_with_no_local_record_still_asks_again(self) -> None:
+        """Delivery pauses either way, so the reply has to be asked for either way."""
+        self.reconnect()
+
+        self.assertFalse(self.ctx.clear_spent_state())
+
+        self.assertEqual(1, self.fetches)
+
+    def test_a_tick_between_the_clear_and_the_reply_writes_nothing(self) -> None:
+        self.pay_for(self.FILLER, self.FILLER, self.FILLER)
+        self.ctx.clear_spent_state()
+        self.restart_scenario()
+
+        for _ in range(3):
+            self.full_tick()
+
+        self.assertEqual([], self.sent_items(), "a window went out before the record came back")
+        self.assertEqual([], self.game.granted)
+
+    def test_the_reply_restores_the_server_mask(self) -> None:
+        items = [self.FILLER] * 3
+        server = self.pay_for(*items)
+        self.ctx.clear_spent_state()
+        self.restart_scenario()
+
+        self.assertIsNone(self.ctx.reconcile_spent(server), "the server already holds every bit")
+        for _ in range(3):
+            self.full_tick()
+
+        self.assertEqual(server, self.ctx.storage_handler.spent_mask())
+        self.assertEqual([Items.SKIP_ITEM_ID] * len(items), self.game.granted,
+                         "a one-shot the server had recorded was paid out again")
+
+    def test_a_clear_pushes_nothing_to_the_server(self) -> None:
+        server = self.pay_for(self.FILLER, self.FILLER)
+
+        self.ctx.clear_spent_state()
+        self.full_tick()
+        reply = self.ctx.reconcile_spent(server)
+        self.full_tick()
+
+        self.assertIsNone(reply, "the reply to the fetch pushed the server's own bits back")
+        self.assertEqual([], self.pushes)
+
+    def test_a_server_with_no_spends_lets_the_items_out_again(self) -> None:
+        """Only bits the server never heard of are dropped by the clear."""
+        items = [self.FILLER] * 3
+        self.pay_for(*items)
+        self.ctx.clear_spent_state()
+        self.restart_scenario()
+
+        self.ctx.reconcile_spent(0)
+        self.sync()
+
         self.assertEqual([item.id for item in items], self.sent_window(),
                          "a cleared record still skipped items as though they were paid for")
 
