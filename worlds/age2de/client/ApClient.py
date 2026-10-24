@@ -216,20 +216,25 @@ class Age2Context(CommonContext):
             "operations": [
                 {"operation": "default", "value": 0}
             ]
-        },
-        {
-            "cmd": "Set",
-            "key": self.spent_key,
-            "default": 0,
-            "want_reply": True,
-            "operations": [
-                {"operation": "default", "value": 0}
-            ]
         }
         ]))
+        self.fetch_spent()
 
         self.set_notify(self.scenario_completion_key)
         self.set_notify(self.spent_key)
+
+    def fetch_spent(self) -> None:
+        Utils.async_start(self.send_msgs([
+            {
+                "cmd": "Set",
+                "key": self.spent_key,
+                "default": 0,
+                "want_reply": True,
+                "operations": [
+                    {"operation": "default", "value": 0}
+                ]
+            }
+        ]))
 
     def seed_is_compatible(self) -> bool:
         return WorldVersion.compatible(self.seed_world_version, Age2World.world_version)

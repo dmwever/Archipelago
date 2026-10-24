@@ -95,6 +95,7 @@ class StorageHandler(FolderHandler):
 
     def try_clear(self) -> bool:
         self._ensure_loaded()
+        self._up_to_date = False
         if self._spent is None:
             return False
         self._spent = None

@@ -22,12 +22,12 @@ window is written.
 
 **Status:** ready-for-agent
 
-- [ ] The clear sets `record_known` to False and requests the spent key with `default` and
+- [x] The clear sets `record_known` to False and requests the spent key with `default` and
       `want_reply`
-- [ ] No window is written and no mercenary is synced between the clear and the reply
-- [ ] The reply reconciles, and the server's bits come back
-- [ ] The clear still pushes nothing to the server
-- [ ] Tests: a clear followed by a reply restores the server mask; a tick between the two writes
+- [x] No window is written and no mercenary is synced between the clear and the reply
+- [x] The reply reconciles, and the server's bits come back
+- [x] The clear still pushes nothing to the server
+- [x] Tests: a clear followed by a reply restores the server mask; a tick between the two writes
       nothing
 - [ ] In game: spend a mercenary, run `/install` with the scenario attached, and confirm the
       mercenary stays out of the pavilion and spent traps don't re-fire

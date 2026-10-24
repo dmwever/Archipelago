@@ -60,6 +60,10 @@ class APClientInterface(Protocol):
         """Called when the spent record has moved past what the server has been told"""
         pass
 
+    def fetch_spent(self):
+        """Called when the spent record is unknown again; the reply goes to reconcile_spent"""
+        pass
+
 
 class DefaultClientInterface:
     def on_scenario_completion(self, scenario_id: Age2ScenarioData) -> None:
@@ -77,6 +81,9 @@ class DefaultClientInterface:
             location_status[k] = 0
 
     def on_item_spent(self, spent: int) -> None:
+        pass
+
+    def fetch_spent(self) -> None:
         pass
 
 
@@ -280,10 +287,11 @@ class Age2GameContext:
             print(ex)
 
     def clear_spent_state(self) -> bool:
-        if not self.storage_handler.try_clear():
-            return False
-        self.mercenary_handler.reset_used()
-        return True
+        cleared = self.storage_handler.try_clear()
+        self.client_interface.fetch_spent()
+        if cleared:
+            self.mercenary_handler.reset_used()
+        return cleared
 
     def spent_items(self) -> set[int]:
         return self.storage_handler.spent_indices(len(self.client_status.unlocked_items))
