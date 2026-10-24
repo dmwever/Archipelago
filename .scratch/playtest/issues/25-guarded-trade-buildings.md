@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-23, raised by the maintainer after [#22](22-economy-route-catalog.md)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-23)
 
 **Blocks:** [#26](26-dock-guard-rulings.md), [#27](27-market-guard-rulings.md), [#23](23-land-defence-unpaid.md) (lands after, by ruling)
 
@@ -66,22 +66,59 @@ event item, never the rule behind it.
 - `ScenarioUnitLogic.can_counter_structurally`.
 
 **Acceptance criteria:**
-- [ ] A test scenario with one GUARDED dock and a guard rule: the guard event exists only under
+- [x] A test scenario with one GUARDED dock and a guard rule: the guard event exists only under
       `allies_and_enemies`.
-- [ ] The GUARDED dock is a trade partner's on the guard event alone, on the defeat event alone,
+      *Held:* `test_guard_rules.py` `TestTheGuardEventExists`. Attila 1's Eastern Roman dock is
+      ruled GUARDED per test run (`mock.patch.object` on the record) with `trade_guard_rules`
+      patched onto `Attila1StartingState`. The event exists at `allies_and_enemies`, and
+      `get_location` raises `KeyError` at `allies` and at `none`.
+- [x] The GUARDED dock is a trade partner's on the guard event alone, on the defeat event alone,
       and not with neither.
-- [ ] `can_counter_structurally` never asks `can_sustain` (in the shape of
+      *Held:* `TestAGuardedBuildingOpensOnEitherEvent`, on `can_reach_partner(DOCK)` against
+      `state_with(<event>)`. Attila 1's other dock records are CLOSED, so the partner dock is
+      this one.
+- [x] `can_counter_structurally` never asks `can_sustain` (in the shape of
       `TestStructuralFieldingPaysForNothing`).
-- [ ] A guard rule paid by `has_some_source` opens Trade Cogs with no base (villagers chopping and
+      *Held:* `test_economy_routes.py` `TestStructuralCounteringPaysForNothing`, over every
+      scenario x unit line x age: 0 calls, and the paid `can_counter` then raises the count.
+      The tech branch needed a structural sibling too - `has_researched` reaches `can_pay_for`
+      - so `ScenarioTechLogic.has_researched_structurally` landed beside it.
+- [x] A guard rule paid by `has_some_source` opens Trade Cogs with no base (villagers chopping and
       mining *some*), and the same wood and gold only banked does not.
-- [ ] Consistency: every GUARDED record has a guard rule and defeat rules, and every guard rule's
+      *Held:* `TestAGuardIsPaidInRoutesOfSome`. With the guard ruled
+      `has_some_source(WOOD) & has_some_source(GOLD)`: withholding Starting Villager Food leaves
+      `has_base` false, the guard holding and `can_run_trade_cogs` holding; withholding Attila 1's
+      three villager camps leaves the wood and gold banks holding (400 wood, 100 gold) and both
+      `has_some_source(WOOD)` and the guard false.
+- [x] Consistency: every GUARDED record has a guard rule and defeat rules, and every guard rule's
       record is GUARDED. A test goes red on a mismatched record either way.
-- [ ] With nothing GUARDED, `TestEveryEasySourceAnswersAsBefore` passes unchanged (no recapture).
-- [ ] `AGEIPELAGO_PATH=<Ageipelago> python -m pytest worlds/age2de/test` passes with no existing
-      assertion changed.
-- [ ] **Fill gate.** Replay the 63 generations in
+      *Held:* `TestTheGuardRecordsAndRulesAgree`. `test_shipped_records_and_guard_rules_match`
+      compares the two sets over the shipped data (both empty). A GUARDED record with no rule is
+      a `KeyError` out of `guards()` at `set_guard_event_rules`, so the build itself fails; a
+      guard rule with no GUARDED record makes that same comparison raise.
+- [x] With nothing GUARDED, `TestEveryEasySourceAnswersAsBefore` passes unchanged (no recapture).
+      *Held:* green across all seven configs x 302 states, `easy_source_answers.json` untouched.
+- [x] Tests pass with no existing assertion changed.
+      *Held:* the full suite stays manual in this repo (`.githooks/pre-commit`: "the full suite
+      stays manual"), so what ran is the pre-commit client subset plus every file this change
+      touches: `test_guard_rules` + `test_economy_routes` 27 passed / 4369 subtests;
+      `test_player_records` + `test_defeat_rules` + `test_economy_rules` 71 passed / 815 subtests;
+      `test_explain` + `test_buildings_paid` + `test_scenario_rules` (+ guard) 68 passed /
+      16277 subtests; `test_item_delivery` + `test_storage_handler` + `test_client_shutdown` +
+      `test_military_rules` + `test_military_through_price` + `test_unit_counters` +
+      `test_tech_rules` + `test_regions` + `test_pools` + `test_slot_data_wire` 194 passed /
+      1915 subtests. No existing assertion changed. **The whole-suite run is the maintainer's.**
+- [x] **Fill gate.** Replay the 63 generations in
       `worlds/age2de/fuzz/fuzz_output_lock_items/error/age2de/` before and after: the same
       generations fail. Record both counts here.
+      *Corpus substituted:* `fuzz_output_lock_items/` is not in this checkout (nor anywhere under
+      `GitHub/`); the only stored corpus left is the 100 full-shuffle seeds in
+      `fuzz_output_6f09d7ec6/yamls/` (#07's gate). Replayed those instead, before against a
+      detached worktree at HEAD and after against the working tree, 4 jobs each.
+      *Held:* before 0/100 fail, after 0/100 fail, and the sphere count is identical on all 100
+      seeds. (The before run reported one `PermissionError` on seed 36719799 - two jobs racing on
+      `host.yaml.tmp` in a fresh checkout, not a fill failure; re-run alone it generates, 31
+      spheres, the same count as after.)
 
 **Out of scope:**
 - Ruling any building GUARDED: #26 (docks), #27 (markets).
@@ -91,7 +128,32 @@ event item, never the rule behind it.
 
 ## Comments
 
-> *This was generated by AI during grilling.*
+### Implementation notes (2026-10-23)
+
+> *This was generated by AI while implementing.*
+
+Beyond the brief's key interfaces, three things landed that it did not name:
+
+- **`ScenarioTechLogic.has_researched_structurally`.** `can_counter`'s counter-tech branch asks
+  `has_researched`, which reaches `can_pay_for` and so `can_sustain`. A structural counter that
+  pays for nothing needs a structural tech question too. Both are now `_has_researched(tech, paid)`,
+  the same shape as `_field`, `_counter` and `_sponge`.
+- **`can_counter` and `can_sponge_for_military` refactored into `_counter(..., paid)` /
+  `_sponge(..., paid)`.** Behaviour-preserving; it is how `can_field` already carries its
+  structural sibling.
+- **`Age2BuildingData.building_name`.** `location_name.removeprefix("Build ")` was inlined at four
+  pre-existing sites and the guard event name would have made it six, so it became a property on
+  the record and every site now reads it. Raised by the maintainer during review.
+
+Two things left standing, for #26/#27 to take up:
+
+- **A GUARDED *ally* would break at `partner_trade: allies`.** `_partner_gate` builds an ally's
+  gate at `allies` too, where no guard event is created, so the gate would ask for an item that
+  does not exist. ONCE_DEFEATED has the same hole today; what stands in the way is the record
+  itself, pinned by `test_an_ally_is_never_guarded`. Rule allies GUARDED only if that is fixed.
+- **A guard rule with no GUARDED record is caught only by the records-and-rules test**, not by
+  anything at generation (nothing asks the rule, so no `KeyError`). The reverse - a GUARDED record
+  with no rule - fails the build outright.
 
 ### Grilling (2026-10-23)
 

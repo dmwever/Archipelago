@@ -28,7 +28,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 22 | [The economy route catalog](issues/22-economy-route-catalog.md) | done (folds in #21) |
 | 23 | [Defending open ground is free](issues/23-land-defence-unpaid.md) | ready-for-agent |
 | 24 | [Items that seed the economy's buildings and units](issues/24-building-seed-items.md) | needs-triage |
-| 25 | [Guarded trade buildings (no behaviour change)](issues/25-guarded-trade-buildings.md) | ready-for-agent |
+| 25 | [Guarded trade buildings (no behaviour change)](issues/25-guarded-trade-buildings.md) | done (unblocks #26, #27) |
 | 26 | [Dock guard rulings](issues/26-dock-guard-rulings.md) | needs-triage |
 | 27 | [Market guard rulings](issues/27-market-guard-rulings.md) | needs-triage |
 | 28 | [Joan 4's French Camp base is not recorded as standing](issues/28-joan4-french-camp-base-unrecorded.md) | needs-triage |
