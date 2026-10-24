@@ -32,7 +32,7 @@ section to match.
 
 **Blocked by:** 08
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 - [x] Reconcile yields `(local | server)` cut to the stream length; a null local contributes nothing
 - [x] Pushes use the `or` operation; `replace` is sent only when the cut cleared bits
