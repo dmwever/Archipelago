@@ -173,6 +173,30 @@ sentinel'd, flags re-applied. The trap at index 50 fires once in B, mark = 51. R
 or a reconnect re-fires traps in the gap. Gate it on a `storage_ready` flag set in
 `_handle_set_reply`.
 
+#### Merge policy (ticket 09)
+
+Ticket 03 made the spent bitmask (`{team}_{slot}_spent`) one record merged by `replace`, with the
+local file authoritative. **That rule is superseded.** Every serious failure under it was a local
+mask missing bits overwriting a server mask that had them: a stale file on a second machine, the
+empty mask `/install` leaves behind, a mercenary marked before the server's record arrived.
+
+The rule now: **the server's item stream says what exists, and the union of every copy says what
+has been used, limited to what exists.**
+
+- **Received:** `ReceivedItems` decides which indices exist. Bits past its end are cut away, as in
+  ticket 03's amendment.
+- **Used:** no copy is authoritative. The local file, the server record and every other machine that
+  has pushed are witnesses; if any says an index was spent, it was spent. A witness can add bits,
+  never remove them. A null local record is no copy and contributes nothing.
+
+Reconcile computes `(local | server)` cut to the stream length. When that equals the server's value,
+nothing is pushed, so a reply to the client's own push ends the exchange. Otherwise the push is `or`
+and the server does the union. `replace` is sent only when the cut cleared bits the server holds,
+after a reset or rollback left a shorter stream.
+
+The only thing that un-spends an item is the stream getting shorter; there is no player-facing reset.
+Two clients on one slot converge: each pushes at most once, and both settle on the union.
+
 ### Version
 
 Stays **0.3.0**; this is in-development, so a stale install is fixed by rerunning `/install` rather

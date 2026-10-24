@@ -1,7 +1,9 @@
 import json
 import logging
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from .FolderHandler import FolderHandler
 
@@ -11,6 +13,13 @@ logger = logging.getLogger("Client")
 
 APDATA_SUBPATH = "APData"
 STATE_STEM = "state"
+
+
+@dataclass(frozen=True)
+class SpentPush:
+    operation: Literal["or", "replace"]
+    value: int
+
 
 class StorageHandler(FolderHandler):
     _tag: str
@@ -73,13 +82,16 @@ class StorageHandler(FolderHandler):
         self._flush()
         return True
 
-    def reconcile(self, server: int, received: int) -> int:
-        local = self.try_load()
-        spent = server if local is None else local
+    def reconcile(self, server: int, received: int) -> SpentPush | None:
+        spent = self.spent_mask() | server
         spent &= (1 << received) - 1
         self.try_save(spent)
         self._up_to_date = True
-        return spent
+        if spent == server:
+            return None
+        if server & ~spent:
+            return SpentPush("replace", spent)
+        return SpentPush("or", spent)
 
     def try_clear(self) -> bool:
         self._ensure_loaded()

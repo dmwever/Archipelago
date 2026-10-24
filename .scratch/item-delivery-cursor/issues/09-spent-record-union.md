@@ -34,11 +34,11 @@ section to match.
 
 **Status:** ready-for-agent
 
-- [ ] Reconcile yields `(local | server)` cut to the stream length; a null local contributes nothing
-- [ ] Pushes use the `or` operation; `replace` is sent only when the cut cleared bits
-- [ ] A reply that changes nothing locally pushes nothing
-- [ ] The spec's merge-policy text is updated; ticket 03's `replace` rule is marked superseded there
-- [ ] Tests: a stale local loses no server bits; a server missing bits gets them back; a shorter
+- [x] Reconcile yields `(local | server)` cut to the stream length; a null local contributes nothing
+- [x] Pushes use the `or` operation; `replace` is sent only when the cut cleared bits
+- [x] A reply that changes nothing locally pushes nothing
+- [x] The spec's merge-policy text is updated; ticket 03's `replace` rule is marked superseded there
+- [x] Tests: a stale local loses no server bits; a server missing bits gets them back; a shorter
       stream cuts bits and sends `replace`; two clients with different masks converge in one
       exchange each
 - [ ] In game: spend a trap on one machine, connect from a second machine with an older state file,

@@ -25,7 +25,7 @@ from ..client.GameClient import (
     Age2GameContext,
     DefaultClientInterface,
 )
-from ..client.handlers.StorageHandler import StorageHandler
+from ..client.handlers.StorageHandler import SpentPush, StorageHandler
 from ..items import Items
 from ..items.Items import Age2ItemData
 
@@ -427,11 +427,11 @@ class TestDecodingTheSpentRecord(ItemDeliveryTestBase):
 
 
 class TestReconcilingTheSpentRecord(ItemDeliveryTestBase):
-    """The local record is authoritative for *spent*, the server for *unlocked*.
+    """The server's stream says what exists; the union of every copy says what has been used.
 
-    A spend the server never stored must not be handed back, so a local record overrules it even
-    when it knows less. A union would make "the server is behind" indistinguishable from "the
-    server is ahead", and would mean nothing could ever be un-spent.
+    No copy is authoritative for *spent*. The local file, the server and every other machine that
+    has pushed are all witnesses: any one of them saying an index was spent makes it spent. Only
+    the stream getting shorter un-spends anything.
     """
 
     def saved(self, spent: int) -> None:
@@ -442,46 +442,65 @@ class TestReconcilingTheSpentRecord(ItemDeliveryTestBase):
     def test_no_local_record_adopts_the_server(self) -> None:
         self.reconnect()
         self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 16
-        self.assertEqual(0b101, self.ctx.reconcile_spent(0b101))
+        self.assertIsNone(self.ctx.reconcile_spent(0b101))
         self.assertEqual(0b101, self.ctx.storage_handler.spent_mask())
 
-    def test_the_local_record_wins_over_a_server_that_is_behind(self) -> None:
-        self.saved(0b101)
-        self.assertEqual(0b101, self.ctx.reconcile_spent(0b001),
-                         "a spend the server never stored must not be handed back")
-
-    def test_the_local_record_wins_even_when_it_knows_less(self) -> None:
+    def test_a_stale_local_record_loses_no_server_bits(self) -> None:
+        """A second machine's old state file must not wipe the first machine's spends."""
         self.saved(0b001)
-        self.assertEqual(0b001, self.ctx.reconcile_spent(0b101))
+        self.assertIsNone(self.ctx.reconcile_spent(0b101), "the server already holds the union")
+        self.assertEqual(0b101, self.ctx.storage_handler.spent_mask())
 
-    def test_an_empty_record_is_not_a_missing_record(self) -> None:
-        """Both are falsy, and confusing them would silently restore every spend."""
+    def test_a_server_missing_bits_gets_them_back(self) -> None:
+        """A spend whose push never landed is still a spend, and the server is told with `or`."""
+        self.saved(0b101)
+        self.assertEqual(SpentPush("or", 0b101), self.ctx.reconcile_spent(0b001))
+        self.assertEqual(0b101, self.ctx.storage_handler.spent_mask())
+
+    def test_an_empty_record_adds_nothing_to_the_server(self) -> None:
+        """An empty local copy is a witness to nothing; it cannot un-spend the server's bits."""
         self.saved(0)
-        self.assertEqual(0, self.ctx.reconcile_spent(0b101),
-                         "a playthrough that has spent nothing still wins")
+        self.assertIsNone(self.ctx.reconcile_spent(0b101))
+        self.assertEqual(0b101, self.ctx.storage_handler.spent_mask())
 
-    def test_bits_past_the_received_stream_are_dropped(self) -> None:
+    def test_a_reply_that_changes_nothing_pushes_nothing(self) -> None:
+        self.saved(0b101)
+        self.assertIsNone(self.ctx.reconcile_spent(0b101))
+
+    def test_a_shorter_stream_cuts_the_server_with_replace(self) -> None:
         """A reset or rolled-back server leaves a record describing a playthrough that is gone.
 
         The stream is append-only, so a bit still inside it really was spent and is kept; a bit
         past the end names nothing now and would name the wrong entry once the stream refilled.
+        `or` can only add, so cutting the server's copy takes the one `replace`.
         """
+        self.saved(1 << 1)
+        self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 3
+
+        self.assertEqual(SpentPush("replace", 1 << 1), self.ctx.reconcile_spent((1 << 1) | (1 << 7)),
+                         "the surviving prefix was discarded, or the stale bit was kept")
+        self.assertEqual(1 << 1, self.ctx.storage_handler.spent_mask())
+
+    def test_a_cut_of_local_bits_alone_needs_no_replace(self) -> None:
+        """The server never held the stale bit, so there is nothing on it to cut."""
         self.saved((1 << 1) | (1 << 7))
         self.ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 3
 
-        self.assertEqual(1 << 1, self.ctx.reconcile_spent(0),
-                         "the surviving prefix was discarded, or the stale bit was kept")
+        self.assertEqual(SpentPush("or", 1 << 1), self.ctx.reconcile_spent(0))
+        self.assertEqual(1 << 1, self.ctx.storage_handler.spent_mask())
 
     def test_a_reset_to_an_empty_stream_clears_the_record(self) -> None:
         self.saved((1 << 2) | (1 << 9))
         self.ctx.client_status.unlocked_items.clear()
 
-        self.assertEqual(0, self.ctx.reconcile_spent(0))
+        self.assertEqual(SpentPush("replace", 0), self.ctx.reconcile_spent(1 << 2))
+        self.assertEqual(0, self.ctx.storage_handler.spent_mask())
 
     def test_a_full_stream_truncates_nothing(self) -> None:
         self.saved((1 << 2) | (1 << 9))
 
-        self.assertEqual((1 << 2) | (1 << 9), self.ctx.reconcile_spent(0))
+        self.assertIsNone(self.ctx.reconcile_spent((1 << 2) | (1 << 9)))
+        self.assertEqual((1 << 2) | (1 << 9), self.ctx.storage_handler.spent_mask())
 
     def test_reconciling_opens_the_gate_on_sending(self) -> None:
         self.reconnect()
@@ -489,6 +508,69 @@ class TestReconcilingTheSpentRecord(ItemDeliveryTestBase):
         self.assertFalse(self.ctx.storage_handler.is_up_to_date())
         self.ctx.reconcile_spent(0)
         self.assertTrue(self.ctx.storage_handler.is_up_to_date())
+
+
+class FakeSpentKey:
+    """The server's `{team}_{slot}_spent` key, applying pushes the way data storage does.
+
+    Every push is answered to every client: a SetReply to the one that sent it, a SetNotify to the
+    rest. Each answer is a reconcile, which may push again.
+    """
+
+    def __init__(self, value: int = 0) -> None:
+        self.value = value
+        self.pushes: list[tuple[Age2GameContext, SpentPush]] = []
+
+    def settle(self, *clients: Age2GameContext) -> None:
+        waiting = list(clients)
+        while waiting:
+            client = waiting.pop(0)
+            push = client.reconcile_spent(self.value)
+            if push is None:
+                continue
+            if len(self.pushes) > 10:
+                raise AssertionError("the clients never stop pushing")
+            self.pushes.append((client, push))
+            self.value = push.value if push.operation == "replace" else self.value | push.value
+            waiting = list(clients)
+
+
+class TestTwoClientsOnOneSlot(unittest.TestCase):
+    """Two machines with different records settle on the same value and stop pushing."""
+
+    def client(self, spent: int) -> Age2GameContext:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        ctx = Age2GameContext(DefaultClientInterface())
+        ctx.update_game_user_folder(tmp.name)
+        ctx.client_status.unlocked_items[:] = [Age2ItemData.TRAP_WOLOLO] * 8
+        ctx.storage_handler.try_save(spent)
+        return ctx
+
+    def test_two_different_masks_converge_in_one_exchange_each(self) -> None:
+        first, second = self.client(0b0011), self.client(0b0110)
+        server = FakeSpentKey()
+
+        server.settle(first, second)
+
+        self.assertEqual(0b0111, server.value)
+        self.assertEqual(0b0111, first.storage_handler.spent_mask())
+        self.assertEqual(0b0111, second.storage_handler.spent_mask())
+        self.assertEqual([first, second], [client for client, _ in server.pushes])
+
+    def test_a_trap_spent_on_one_machine_stays_spent_on_a_stale_one(self) -> None:
+        """The in-game check, in miniature: the older state file must not un-spend the trap."""
+        first = self.client(0)
+        server = FakeSpentKey()
+        server.settle(first)
+        first.storage_handler.mark_spent({3})
+        server.value |= first.storage_handler.spent_mask()
+
+        stale = self.client(0)
+        server.settle(stale)
+
+        self.assertIn(3, stale.spent_items())
+        self.assertEqual([], server.pushes, "nobody had anything to add")
 
 
 class TestFlushingWhatWasSent(ItemDeliveryTestBase):

@@ -4,9 +4,9 @@ An entry is spent when it has been paid out and must not be paid again: a trap o
 the moment it is delivered, a mercenary when the pavilion finishes spawning it. Both are facts about
 the same received-item stream, so both are one bit in one mask, indexed by stream position.
 
-The Set that records a spend can be lost -- and on disconnect every handler is rebuilt, so the
-server's copy used to be the only survivor. Assigning from it handed spends back. So the local file
-is authoritative for *spent* and the server for *unlocked*. These pin that rule and the file
+The Set that records a spend can be lost, and the local file can be stale, so neither copy is
+authoritative for *spent*: the record is the union of both, cut to the stream the server says
+exists (TestReconcilingTheSpentRecord in test_item_delivery pins that). These pin the file
 behaviour underneath it.
 """
 

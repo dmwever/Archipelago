@@ -3,8 +3,11 @@ import unittest
 from ..Options import Techsanity, Unitsanity, UnitsanityItems
 from ..client.handlers.install.UnitData import UnitData
 from ..locations.Civilizations import Age2CivData
+from ..locations.EscortUnits import Age2EscortUnitData
+from ..locations.Heroes import Age2HeroData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
+from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
 
 TAG = "a1b2c3d4"
@@ -141,7 +144,7 @@ class TestRender(unittest.TestCase):
         [row] = table([Age2UnitData.MANGUDAI]).rows()
         self.assertEqual(row.items, ())
         self.assertEqual(row.line_id, UnitData.NO_LINE)
-        self.assertEqual(row.untrainable_civs, ())
+        self.assertEqual(row.untrainable_civs, (Age2CivData.FRANKS.game_id,))
         self.assertTrue(row.caveman_exempt)
         self.assertEqual(row.location_id, Age2UnitData.MANGUDAI.id)
 
@@ -151,6 +154,39 @@ class TestRender(unittest.TestCase):
         [row] = table([Age2UnitData.MANGUDAI], caveman=True).rows()
         self.assertEqual(row.items, (Age2UnitLineData.MANGUDAI_LINE.item.id,))
         self.assertFalse(row.caveman_exempt)
+
+    def test_a_unit_no_civilisation_trains_is_untrainable_for_every_civilisation(self):
+        """Such a row carries no items, so it unlocks on the first refresh. Left trainable the
+        mod enables the unit, and anything with a train button then takes that button's slot
+        from whatever was in it."""
+        both = (Age2CivData.HUNS, Age2CivData.FRANKS)
+        rendered = table([Age2UnitData.MANGUDAI], civs=both).render()
+        for civ in both:
+            self.assertIn(f"addUnitUntrainable({Age2UnitData.MANGUDAI.game_id}, "
+                          f"{civ.game_id});", rendered)
+
+    def test_a_hero_is_untrainable_for_every_civilisation(self):
+        """The Khan is a hero with a real Castle button in the game data, and the Castle's
+        first slot is where every civilisation keeps its unique unit. No civilisation trains a
+        hero, so every one of them has to say so."""
+        both = (Age2CivData.HUNS, Age2CivData.FRANKS)
+        rendered = table([Age2HeroData.KHAN], civs=both).render()
+        for civ in both:
+            self.assertIn(f"addUnitUntrainable({Age2HeroData.KHAN.game_id}, {civ.game_id});",
+                          rendered)
+
+    def test_an_escort_is_untrainable_for_every_civilisation(self):
+        """An escort arrives the same way a hero does, and gets the same answer."""
+        rendered = table([Age2EscortUnitData.CART]).render()
+        self.assertIn(f"addUnitUntrainable({Age2EscortUnitData.CART.game_id}, "
+                      f"{Age2CivData.FRANKS.game_id});", rendered)
+
+    def test_a_villager_job_is_not_marked(self):
+        """A profession is driven through the villager swap groups and never reads the
+        trainable flag, so marking it would be noise."""
+        job = Age2VillagerJobData.BUILDER_MALE
+        rendered = table([job]).render()
+        self.assertNotIn(f"addUnitUntrainable({job.game_id},", rendered)
 
     def test_a_unit_the_civilisation_trains_is_not_marked(self):
         rendered = table([Age2UnitData.THROWING_AXEMAN]).render()

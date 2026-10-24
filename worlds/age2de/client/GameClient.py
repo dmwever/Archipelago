@@ -18,7 +18,7 @@ from .handlers.InstallHandler import InstallHandler
 from .handlers.ItemHandler import ItemHandler
 from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
-from .handlers.StorageHandler import StorageHandler
+from .handlers.StorageHandler import SpentPush, StorageHandler
 from .handlers.TechHandler import TechHandler
 from .handlers.UnitHandler import UnitHandler
 
@@ -303,7 +303,7 @@ class Age2GameContext:
                 return index
         return -1
 
-    def reconcile_spent(self, server: int) -> int:
+    def reconcile_spent(self, server: int) -> SpentPush | None:
         return self.storage_handler.reconcile(
             server, len(self.client_status.unlocked_items))
 

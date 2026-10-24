@@ -9,6 +9,7 @@ from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkIte
 import Utils
 from ..generation import Identity, WorldVersion
 from .handlers.InstallHandler import InstallError
+from .handlers.StorageHandler import SpentPush
 from ..items import Items
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Campaigns import Age2CampaignData
@@ -268,11 +269,11 @@ class Age2Context(CommonContext):
     def _try_reconcile_spent(self) -> None:
         if not self.items_loaded or self.pending_spent is None:
             return
-        spent_item_count = self.pending_spent
+        server = self.pending_spent
         self.pending_spent = None
-        spent = self.game_ctx.reconcile_spent(spent_item_count)
-        if spent != spent_item_count:
-            self._push_spent(spent)
+        push = self.game_ctx.reconcile_spent(server)
+        if push is not None:
+            self._push_spent(push)
 
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([
@@ -288,10 +289,10 @@ class Age2Context(CommonContext):
         ]))
 
     def on_item_spent(self, spent: int) -> None:
-        self._push_spent(spent)
+        self._push_spent(SpentPush("or", spent))
 
-    def _push_spent(self, spent: int) -> None:
-        """replace, not a merge: the local record is authoritative for what is spent."""
+    def _push_spent(self, push: SpentPush) -> None:
+        """`or` lets the server do the union; `replace` only ever cuts a shorter stream."""
         Utils.async_start(self.send_msgs([
             {
                 "cmd": "Set",
@@ -299,7 +300,7 @@ class Age2Context(CommonContext):
                 "default": 0,
                 "want_reply": True,
                 "operations": [
-                    {"operation": "replace", "value": spent}
+                    {"operation": push.operation, "value": push.value}
                 ]
             }
         ]))

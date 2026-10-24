@@ -137,9 +137,9 @@ class TestSeating(MercenaryHandlerTestBase):
         """The mechanism, not the policy: set_used(x, False) still has to re-offer.
 
         It used to be driven by the SetReply assigning from the server, which meant a spend the
-        server never stored came back. That rule is now inverted -- the local file decides, see
-        reconcile_spent in test_storage_handler -- but the hand-back path still runs, because a
-        cold start adopts the server wholesale and anything absent from it is un-spent.
+        server never stored came back. The record is now the union of every copy, see
+        TestReconcilingTheSpentRecord in test_item_delivery -- but the hand-back path still runs,
+        because a stream that gets shorter cuts the record and un-spends whatever it cut.
         """
         handler = self.handler()
         granted = self.roster()
