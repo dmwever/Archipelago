@@ -20,7 +20,7 @@ window is written.
 
 **Blocked by:** 08, 09
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 - [x] The clear sets `record_known` to False and requests the spent key with `default` and
       `want_reply`
