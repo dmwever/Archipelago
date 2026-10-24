@@ -413,6 +413,7 @@ class Age2GameContext:
                                      != self.current_packet.acked_queue_serial) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
+                XsdatFile.write_int(fp, self.mercenary_handler.ack()) # Ack mercenary
         except Exception as ex:
             print(ex)
 
