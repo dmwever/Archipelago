@@ -51,8 +51,9 @@ class TestMercenaryStatuses(unittest.TestCase):
 
     def test_every_mercenary_reports_exactly_one_status(self) -> None:
         self.handler.try_sync_mercenaries(self.roster)
-        self.handler.use_mercenary(self.handler.seated()[0])
-        self.handler.try_sync_mercenaries(self.roster)
+        spent = self.handler.seated()[0]
+        self.handler.use_mercenary(spent)
+        self.handler.try_sync_mercenaries(self.roster, spent=[spent])
         counted = [self.handler.status(mercenary) for mercenary in self.roster]
         self.assertEqual(len(self.roster), len(counted))
         self.assertEqual(SEAT_COUNT, counted.count("In-Pavilion"),

@@ -15,6 +15,7 @@ logger = logging.getLogger("Client")
 SEAT_COUNT = 4
 NO_SEAT = -1
 EMPTY_SEAT = -1
+NO_MERCENARY = -1
 
 @dataclass
 class ManagedMercenary:
@@ -25,20 +26,48 @@ class ManagedMercenary:
 
 class MercenaryHandler(FolderHandler):
     _mercenaries: dict[Age2ItemData, ManagedMercenary]
+    _by_id: dict[int, Age2ItemData]
     _seats: list[Age2ItemData]
     _queue: list[Age2ItemData]
     _queue_serial: int
     _queue_bytes: bytes
+    _ack: int
+    _last_head: int
 
     def __init__(self, data: list[Age2ItemData]):
         self._mercenaries = {}
         for mercenary in data:
             self._mercenaries[mercenary] = ManagedMercenary(mercenary)
+        self._by_id = {mercenary.id: mercenary for mercenary in data}
         self._seats = [None] * SEAT_COUNT
         self._queue = []
         self._queue_serial = 0
         self._queue_bytes = b""
+        self._ack = NO_MERCENARY
+        self._last_head = NO_MERCENARY
         super().__init__()
+
+    def read_completion(self, completed: int, record_known: bool) -> Age2ItemData | None:
+        self._ack = NO_MERCENARY
+        if completed == NO_MERCENARY:
+            self._last_head = NO_MERCENARY
+            return None
+        mercenary = self._by_id.get(completed)
+        if mercenary is None:
+            logger.warning("The scenario acked mercenary id %s, which this apworld does not "
+                           "know. Reinstall the Ageipelago files for this slot.", completed)
+            self._ack = completed
+            return None
+        if not record_known:
+            return None
+        self._ack = completed
+        if completed == self._last_head:
+            return None
+        self._last_head = completed
+        return mercenary
+
+    def ack(self) -> int:
+        return self._ack
 
     def use_mercenary(self, mercenary: Age2ItemData) -> None:
         self.set_used(mercenary, True)
@@ -98,8 +127,9 @@ class MercenaryHandler(FolderHandler):
     def try_sync_mercenaries(self, unlocked_items: list[Age2ItemData],
                              spent: Iterable[Age2ItemData] = ()) -> None:
         try:
-            for item in set(spent).intersection(self._mercenaries):
-                self.set_used(item, True)
+            spent = set(spent)
+            for item in set(unlocked_items).intersection(self._mercenaries):
+                self.set_used(item, item in spent)
             self._enqueue_unlocked(unlocked_items)
             self._fill_seats()
             self._write_queue()

@@ -323,6 +323,16 @@ class Age2GameContext:
             self.client_interface.on_item_spent(self.storage_handler.spent_mask())
         self.item_handler.try_write_to_file(self.spent_items())
 
+    def sync_mercenary_completion(self, completed: int) -> None:
+        mercenary = self.mercenary_handler.read_completion(
+            completed, self.storage_handler.is_up_to_date())
+        if mercenary is None:
+            return
+        index = self.unspent_index(mercenary)
+        if index != -1 and self.storage_handler.mark_spent({index}):
+            self.mercenary_handler.use_mercenary(mercenary)
+            self.client_interface.on_item_spent(self.storage_handler.spent_mask())
+
     def profile_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
 
@@ -403,7 +413,6 @@ class Age2GameContext:
                                      != self.current_packet.acked_queue_serial) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
-                XsdatFile.write_int(fp, self.current_packet.completed_mercenary_id) # Ack mercenary
         except Exception as ex:
             print(ex)
 
@@ -534,18 +543,8 @@ async def status_tick(ctx: Age2GameContext) -> None:
         ctx.client_interface.on_scenario_completion(
             ctx.campaign_handler.active_file.current_scenario.data)
 
-    if packet.completed_mercenary_id != -1:
-        mercenary_item = Items.ID_TO_ITEM.get(packet.completed_mercenary_id)
-        if mercenary_item is None:
-            logger.warning("The scenario acked mercenary id %s, which this apworld does not "
-                           "know. Reinstall the Ageipelago files for this slot.",
-                           packet.completed_mercenary_id)
-        elif mercenary_item in Items.SPENT_ON_USE_ITEMS:
-            index = ctx.unspent_index(mercenary_item)
-            if index != -1 and ctx.storage_handler.mark_spent({index}):
-                ctx.mercenary_handler.use_mercenary(mercenary_item)
-                ctx.client_interface.on_item_spent(ctx.storage_handler.spent_mask())
-    
+    ctx.sync_mercenary_completion(packet.completed_mercenary_id)
+
     ctx.ping_game()
     if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
         ctx.client_interface.on_goal()

@@ -30,14 +30,14 @@ pavilion until the client reconnects. Set `used` from the mask in both direction
 
 **Blocked by:** 08, 09
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
-- [ ] A known completion is acked only after its bit is in the in-memory record
-- [ ] Before `record_known`, a completion is neither marked nor acked
-- [ ] An unknown id is acked with the existing warning
-- [ ] A repeated head re-sends the ack and marks nothing; a new head marks once
-- [ ] `used` follows the mask both ways; a cleared bit returns the mercenary to the queue
-- [ ] Tests: a completion arriving before `ReceivedItems` is held, then recorded and acked; a
+- [x] A known completion is acked only after its bit is in the in-memory record
+- [x] Before `record_known`, a completion is neither marked nor acked
+- [x] An unknown id is acked with the existing warning
+- [x] A repeated head re-sends the ack and marks nothing; a new head marks once
+- [x] `used` follows the mask both ways; a cleared bit returns the mercenary to the queue
+- [x] Tests: a completion arriving before `ReceivedItems` is held, then recorded and acked; a
       repeated head marks once with two copies in the stream; an unknown id is acked; a cleared bit
       releases the mercenary
 - [ ] In game: finish a mercenary while reconnecting, and confirm it stays spent and out of the

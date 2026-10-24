@@ -115,7 +115,7 @@ class TestSeating(MercenaryHandlerTestBase):
 
         handler.use_mercenary(spent)
         for _ in range(3):
-            handler.try_sync_mercenaries(found)
+            handler.try_sync_mercenaries(found, spent=[spent])
 
         self.assertNotIn(spent, handler.seated(), "a spent mercenary was seated again")
         self.assertNotIn(spent, handler.queued(), "a spent mercenary went back into the queue")
@@ -134,12 +134,11 @@ class TestSeating(MercenaryHandlerTestBase):
                           f"{mercenary.item_name} was queued but never granted")
 
     def test_handing_a_mercenary_back_returns_it_to_the_queue(self) -> None:
-        """The mechanism, not the policy: set_used(x, False) still has to re-offer.
+        """`used` follows the spent record both ways.
 
-        It used to be driven by the SetReply assigning from the server, which meant a spend the
-        server never stored came back. The record is now the union of every copy, see
-        TestReconcilingTheSpentRecord in test_item_delivery -- but the hand-back path still runs,
-        because a stream that gets shorter cuts the record and un-spends whatever it cut.
+        The record is the union of every copy, see TestReconcilingTheSpentRecord in
+        test_item_delivery -- but a stream that gets shorter cuts the record and un-spends whatever
+        it cut, and the pavilion has to offer that mercenary again without a reconnect.
         """
         handler = self.handler()
         granted = self.roster()
@@ -147,12 +146,11 @@ class TestSeating(MercenaryHandlerTestBase):
         spent = handler.seated()[0]
 
         handler.use_mercenary(spent)
-        handler.try_sync_mercenaries(granted)
+        handler.try_sync_mercenaries(granted, spent=[spent])
         self.assertTrue(handler.is_used(spent))
         self.assertNotIn(spent, handler.seated() + handler.queued())
 
-        handler.set_used(spent, False)
-        handler.try_sync_mercenaries(granted)
+        handler.try_sync_mercenaries(granted, spent=[])
         self.assertFalse(handler.is_used(spent))
         self.assertIn(spent, handler.seated() + handler.queued(),
                       "a mercenary the server never recorded as spent must be offered again")
