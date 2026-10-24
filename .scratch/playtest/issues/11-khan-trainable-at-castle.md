@@ -110,16 +110,16 @@ anywhere, and no existing button is displaced.
 
 **Acceptance criteria:**
 
-- [ ] A seed with unitsanity `all` renders an `addUnitUntrainable` line, for every civilisation in
+- [x] A seed with unitsanity `all` renders an `addUnitUntrainable` line, for every civilisation in
       the seed, after every hero and escort row
-- [ ] The same holds for rows produced by the granted-only branch under unitsanity `all` with
+- [x] The same holds for rows produced by the granted-only branch under unitsanity `all` with
       caveman off
-- [ ] Villager job rows render no `addUnitUntrainable` lines
-- [ ] A test covers the hero/escort case and a test covers the granted-only case, alongside the
+- [x] Villager job rows render no `addUnitUntrainable` lines
+- [x] A test covers the hero/escort case and a test covers the granted-only case, alongside the
       existing per-civ untrainable tests
-- [ ] The existing test asserting that a granted-only row holds no items and no line still passes;
+- [x] The existing test asserting that a granted-only row holds no items and no line still passes;
       only its untrainable expectation changes
-- [ ] The full world test suite passes
+- [x] The full world test suite passes
 - [ ] **Not verifiable by the agent:** after regenerating and installing, Genghis 6 shows the
       Mangudai in Castle slot 1 and no Khan anywhere in the train menu. A human confirms this in
       game before the ticket closes

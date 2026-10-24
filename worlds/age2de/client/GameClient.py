@@ -196,9 +196,6 @@ class Age2GameContext:
         self.running = False
         if self.game_loop != None:
             try:
-                # Bounded: status_loop can block on a file the game is holding, and without a
-                # timeout that stalls disconnect and everything queued behind it, reconnect
-                # included.
                 await asyncio.wait_for(self.game_loop, GAME_LOOP_SHUTDOWN_SECONDS)
             except asyncio.TimeoutError:
                 logger.warning("Game loop did not stop within %s seconds; cancelling it.",
@@ -308,11 +305,6 @@ class Age2GameContext:
             server, len(self.client_status.unlocked_items))
 
     def sync_delivery(self, applied: int) -> None:
-        """Marks what the game has applied, pushes the spend, then writes the window, in one tick.
-
-        Held back until the record has been reconciled: writing before the stored spends come
-        back is exactly the reconnect trap bug.
-        """
         if not self.storage_handler.is_up_to_date():
             return
         unlocked = self.client_status.unlocked_items
