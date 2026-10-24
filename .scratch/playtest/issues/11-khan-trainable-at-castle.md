@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-20, playtesting
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 ## Report
 
