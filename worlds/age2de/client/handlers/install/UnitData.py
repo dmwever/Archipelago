@@ -81,6 +81,9 @@ class UnitData:
     def untrainable_civs(self, unit: Age2UnitData) -> tuple[int, ...]:
         return tuple(civ.game_id for civ in self._civs if not self.civ_trains(civ, unit))
 
+    def all_civs_untrainable(self) -> tuple[int, ...]:
+        return tuple(civ.game_id for civ in self._civs)
+
     def upgrade_item_for(self, unit: Age2UnitData) -> int:
         tech = unit.upgrade_tech
         if tech is None or tech.item is None:
@@ -112,7 +115,8 @@ class UnitData:
     def unit_row(self, unit: Age2UnitData, location_id: int) -> Row:
         if self.is_granted_only(unit):
             return Row(unit, location_id, self.NO_LINE, Age2AgeData.DARK.value, 0,
-                       self.NO_UPGRADE_ITEM, True, (), (), tuple(unit.variant_game_ids or ()))
+                       self.NO_UPGRADE_ITEM, True, self.all_civs_untrainable(), (),
+                       tuple(unit.variant_game_ids or ()))
         items = self.items_for(unit)
         if len(items) > self.MAX_ITEMS:
             raise ValueError(
@@ -129,7 +133,7 @@ class UnitData:
                        self.NO_UPGRADE_ITEM, True, (), (place.item.id,), ())
 
         return Row(place, place.id, self.NO_LINE, Age2AgeData.DARK.value, 0,
-                   self.NO_UPGRADE_ITEM, True, (), (), ())
+                   self.NO_UPGRADE_ITEM, True, self.all_civs_untrainable(), (), ())
 
     def rows_for(self, place: UnitLocation) -> list[Row]:
         if isinstance(place, Age2UnitLineData):
