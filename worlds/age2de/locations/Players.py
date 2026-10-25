@@ -122,14 +122,6 @@ class Age2PlayerData(enum.IntEnum):
     JOAN6_ENGLISH =             2063, "the English",                3, Side.ENEMY, True,  TradeAccess.CLOSED,        TradeAccess.CLOSED
     JOAN6_SHREWSBURY =          2064, "Shrewsbury",                 4, Side.ENEMY, False, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
 
-    # Genghis 1. No one to defeat: victory is the Kereyid monk. The Kara-Khitai (P2) stay neutral.
-    GEN1_GENGHIS_KHAN =         3013, "Genghis Khan",               3, Side.ALLY,  False, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    GEN1_KEREYIDS =             3014, "the Kereyids",               4, Side.ALLY,  False, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    GEN1_TAYICHIUDS =           3015, "the Tayichi'uds",            5, Side.ALLY,  False, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    GEN1_UIGHURS =              3016, "the Uighurs",                6, Side.ALLY,  False, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    GEN1_NAIMAN =               3017, "the Naiman",                 7, Side.ALLY,  False, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    GEN1_UNGIRRADS =            3018, "the Ungirrads",              8, Side.ALLY,  False, TradeAccess.CLOSED,        TradeAccess.CLOSED
-
     # Genghis 2. The Tayichi'uds (P4) stay neutral.
     GEN2_KARA_KHITAI =          3022, "the Kara-Khitai",            2, Side.ENEMY, False, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
     GEN2_KUSHLUK =              3023, "Kushluk",                    3, Side.ENEMY, True,  TradeAccess.CLOSED,        TradeAccess.CLOSED
