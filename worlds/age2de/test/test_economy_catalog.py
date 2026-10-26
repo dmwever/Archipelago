@@ -16,6 +16,7 @@ from ..locations.connections.ScenarioResources import (
     Tier,
 )
 from ..locations.Scenarios import Age2ScenarioData
+from ..locations.UnitLines import Age2UnitLineData as Line
 from ..locations.Units import Age2UnitData as U
 from ..locations.VillagerJobs import Age2VillagerJobData as Job
 
@@ -24,7 +25,6 @@ VILLAGERS = "switch: villagers"
 MORE_TCS = "switch: more Town Centers"
 SHORELINE_HELD = "switch: shoreline held"
 FORTIFIED = "switch: fortified"
-NAVY = "switch: navy"
 ENEMY_CAMP_TAKEN = "switch: enemy camp taken"
 SCENARIO_WOOD = "switch: scenario wood"
 
@@ -32,7 +32,18 @@ DEMAND = ScenarioResourceDemand(gold=1000, stone=1000, food=1000)
 
 
 def building(which: B) -> str:
+    """This building is P1's to put up - the buildable half of "standing or buildable"."""
     return f"switch: building {which.name}"
+
+
+def standing(which: B) -> str:
+    """This building is on the map at the start. A defence standing opens no gate, so the two
+    halves are separate switches here."""
+    return f"switch: standing {which.name}"
+
+
+def navy(which: Line) -> str:
+    return f"switch: navy {which.line_name}"
 
 
 def job(which: Job) -> str:
@@ -45,6 +56,9 @@ def unit(which: U) -> str:
 
 def partner(which: B) -> str:
     return f"switch: partner {which.name}"
+
+
+NAVY = navy(Line.GALLEY_LINE)
 
 
 def tier(**counts: int) -> ScenarioResourceCount:
@@ -67,6 +81,9 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
     campaigns = ["Attila the Hun"]
     starting_campaigns = ["Attila the Hun"]
     SCENARIO = Age2ScenarioData.AP_ATTILA_6
+    NAVY_LINES: dict[Line, set[Resource]] = {Line.GALLEY_LINE: {Resource.WOOD, Resource.GOLD}}
+    """The navy lines this toy can field, and what each one costs to keep coming. One line by
+    default, so `NAVY` is the single switch that puts warships on the water."""
 
     def toy(self, resources: dict[Tier, ScenarioResourceCount], **options) -> None:
         self.build(**options)
@@ -83,21 +100,20 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
 
         switch(scenario, "has_base", lambda: Has(BASE))
         switch(scenario, "has_vils", lambda: Has(VILLAGERS))
-        switch(scenario, "has_building_structurally", lambda which: Has(building(which)))
+        switch(scenario, "has_building_structurally",
+               lambda which: Has(building(which)) | Has(standing(which)))
         switch(scenario, "obtains_unit", lambda which: False_())
         switch(scenario, "has_water_access", lambda: True_())
         switch(scenario.buildings, "can_build_structurally", lambda which: Has(building(which)))
-        switch(scenario.buildings, "can_build_multiple_tc", lambda: Has(MORE_TCS))
-        switch(scenario.buildings, "can_hold_a_shoreline", lambda: Has(SHORELINE_HELD))
-        switch(scenario.buildings, "_fortified", lambda: Has(FORTIFIED))
+        switch(scenario.buildings, "can_build_tc", lambda: Has(building(B.TOWN_CENTER)))
         switch(scenario.ages, "has_reached", lambda age: True_())
         switch(scenario.player_logic, "can_reach_partner", lambda which: Has(partner(which)))
-        switch(
-            scenario.military,
-            "can_guard_boats",
-            lambda: {frozenset({Resource.WOOD, Resource.GOLD}): Has(NAVY)},
-        )
+        switch(scenario.units, "can_field_structurally",
+               lambda line: Has(navy(line)) if line in self.NAVY_LINES else False_())
+        switch(scenario.units, "resources_to_sustain",
+               lambda line: self.NAVY_LINES.get(line, set()))
         switch(economy, "has_job", lambda which: Has(job(which)))
+        self.switch_defences(switch)
         switch(scenario.logic.units, "has_unit_items", lambda which: Has(unit(which)))
         stack.enter_context(mock.patch.object(
             starting_state,
@@ -129,6 +145,14 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
             }),
         ))
         self.world.rules.logic.scenario_answers.clear()
+
+    def switch_defences(self, switch) -> None:
+        """The defence layer as three switches, so a test about gathering says what it holds
+        without building anything. `test_defence_pays.py` leaves these real: there the defences
+        themselves are what is under test."""
+        switch(self.scenario.buildings, "can_build_multiple_tc", lambda: Has(MORE_TCS))
+        switch(self.scenario.buildings, "can_hold_a_shoreline", lambda: Has(SHORELINE_HELD))
+        switch(self.scenario.buildings, "_fortified", lambda: Has(FORTIFIED))
 
     def state(self, *switches: str, wood: int = 0, gold: int = 0) -> CollectionState:
         state = CollectionState(self.multiworld)
@@ -278,9 +302,11 @@ class TestRelics(ToyScenarioBase):
         self.assertFalse(self.easy(Resource.GOLD, state))
 
     def test_relics_yield_some_gold_with_no_villagers_or_gold_dropsite(self):
+        """And none of a defence either: relics are a route of *some*, so the open ground they
+        lie on is free."""
         self.toy({Tier.OPEN: tier(relic_count=5)})
-        self.assertFalse(self.some(Resource.GOLD, self.state(*RELICS)))
-        self.assertTrue(self.some(Resource.GOLD, self.state(*RELICS, FORTIFIED)))
+        self.assertFalse(self.some(Resource.GOLD, self.state(building(B.MONASTERY))))
+        self.assertTrue(self.some(Resource.GOLD, self.state(*RELICS)))
 
 
 class TestNavalGuardOverDeepFish(ToyScenarioBase):
@@ -370,7 +396,9 @@ class TestHerdGround(ToyScenarioBase):
         self.assertFalse(self.easy(Resource.FOOD, state))
 
 
-class TestRoutesOfSomeAskTheTierGates(ToyScenarioBase):
+class TestRoutesOfSomeStillWaitOnAnEnemyCamp(ToyScenarioBase):
+    """Open ground is free to a route of *some*, but an enemy's camp is not: nobody walks in and
+    takes what they need while it is still theirs."""
 
     def test_gold_inside_an_enemy_camp_waits_for_its_gate(self):
         self.toy({Tier.ENEMY: tier(gold_count=500)})

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Callable, Collection, Mapping
+from typing import TYPE_CHECKING, Collection, Mapping
 
 from rule_builder.rules import And, False_, Or, Rule, True_
 
@@ -13,7 +13,12 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Units import Age2UnitData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
 from ..custom_logic.EconomyRoutes import EconomyRoute, EconomyRoutes, EconomyRoutesYield, Strength
-from ..custom_logic.ScenarioQuestions import ScenarioHasEconomyRoutes, ScenarioHasEasyResource, ScenarioHasSomeResource
+from ..custom_logic.ScenarioQuestions import (
+    ScenarioHasEasyResource,
+    ScenarioHasEconomyRoutes,
+    ScenarioHasSomeResource,
+    ScenarioHasUngatedRoutes,
+)
 from ..custom_logic.SufficientRawResources import SufficientRawResources
 
 if TYPE_CHECKING:
@@ -41,15 +46,15 @@ class ScenarioResourceLogic:
 
     # -- what each tier costs to reach ---------------------------------------------------------
 
-    def tier_gates(self, kind: str = "land", boat_guard: Rule = False_()) -> dict[Tier, Rule]:
+    def tier_gates(self, kind: str = "land") -> dict[Tier, Rule]:
         return {
             Tier.BASE: True_(),
-            Tier.OPEN: self._open_gate(kind, boat_guard),
+            Tier.OPEN: self._open_gate(kind),
             Tier.ALLY: False_(),
             Tier.ENEMY: self.scenario.starting_state.must_steal_base,
         }
 
-    def herd_gates(self) -> dict[Tier, Rule]:
+    def some_resource_gates(self) -> dict[Tier, Rule]:
         return {
             Tier.BASE: True_(),
             Tier.OPEN: True_(),
@@ -57,15 +62,16 @@ class ScenarioResourceLogic:
             Tier.ENEMY: self.scenario.starting_state.must_steal_base,
         }
 
-    def _open_gate(self, kind: str, boat_guard: Rule) -> Rule:
+    def _open_gate(self, kind: str) -> Rule:
         if kind == "afloat":
-            return boat_guard
+            return self.scenario.military.can_guard_boats()
         if kind == "shoreline":
-            return self.scenario.named("can hold a shoreline", self._hold_shoreline(boat_guard))
+            return self.scenario.named("can hold a shoreline", self._hold_shoreline())
         return self.can_defend_resources()
 
-    def _hold_shoreline(self, boat_guard: Rule) -> Rule:
-        return self.scenario.buildings.can_hold_a_shoreline() | boat_guard
+    def _hold_shoreline(self) -> Rule:
+        return (self.scenario.buildings.can_hold_a_shoreline()
+                | self.scenario.military.can_guard_boats())
 
     def can_defend_resources(self) -> Rule:
         return self.scenario.named("can defend resources", self._defend_open_ground())
@@ -211,7 +217,9 @@ class ScenarioResourceLogic:
                 | (self.scenario.obtains_unit(monk) & self.logic.units.survives_caveman(monk))
             )
             & self.scenario.ages.has_reached(Age2UnitData.MONK.age)
-            & self._in_any_tier(self.tiered(True_(), "relic_count", self.tier_gates()))
+            & self._in_any_tier(
+                self.tiered(True_(), "relic_count", self.some_resource_gates()),
+            )
         )
 
     # -- food that grows back -----------------------------------------------------------------
@@ -278,20 +286,51 @@ class ScenarioResourceLogic:
 
     def economy_routes(self) -> EconomyRoutes:
         return EconomyRoutes(
-            routes=(
-                *self.own_routes(),
-                *self.market_routes(),
-                *self.scenario_routes(),
-            ),
+            routes=(*self.ungated_routes(), *self.gated_routes()),
             label=self.scenario.scenario.scenario_name,
         )
 
-    def own_routes(self) -> list[EconomyRoute]:
+    def ungated_economy_routes(self) -> EconomyRoutes:
+        """The ungated routes worked out on their own. A gate asks this and never the whole
+        economy, which would be the gate asking itself (ADR-0003)."""
+        return EconomyRoutes(
+            routes=tuple(self.ungated_routes()),
+            label=f"{self.scenario.scenario.scenario_name}, ungated",
+        )
+
+    def ungated_routes(self) -> list[EconomyRoute]:
+        """Every route whose leaf reads no gate, and so the layer a defence is paid out of.
+        Moving a route between here and `gated_routes` is the whole edit for regrouping one;
+        `test_defence_pays.py` is what catches one filed in the wrong group."""
         return [
             *self.villager_routes_of_some(),
+            *self.relic_routes(),
+            *self.renewable_routes(),
+            *self.trade_routes(),
+            *self.market_routes(),
+            *self.scenario_routes(),
+        ]
+
+    def gated_routes(self) -> list[EconomyRoute]:
+        """The routes that work the map at scale, and so have to hold the ground they work."""
+        return [
             *self.villager_routes_at_scale(),
             *self.boat_routes(),
+        ]
+
+    def own_routes(self) -> list[EconomyRoute]:
+        """What the scenario brings in by itself: not P1's own market, and not what it is
+        handed."""
+        return [
+            *self.villager_routes_of_some(),
+            *self.relic_routes(),
+            *self.renewable_routes(),
             *self.trade_routes(),
+            *self.gated_routes(),
+        ]
+
+    def relic_routes(self) -> list[EconomyRoute]:
+        return [
             EconomyRoute(
                 name="Relics",
                 yields={Resource.GOLD: Strength.SOME},
@@ -300,7 +339,7 @@ class ScenarioResourceLogic:
         ]
 
     def villager_routes_of_some(self) -> list[EconomyRoute]:
-        land = self.tier_gates()
+        gates = self.some_resource_gates()
         return [
             EconomyRoute(
                 name="Lumberjacks",
@@ -310,47 +349,43 @@ class ScenarioResourceLogic:
             EconomyRoute(
                 name="Gold Miners",
                 yields={Resource.GOLD: Strength.SOME},
-                leaf=self._in_any_tier(self.tiered(self.can_mine_some(), "gold_count", land)),
+                leaf=self._in_any_tier(self.tiered(self.can_mine_some(), "gold_count", gates)),
             ),
             EconomyRoute(
                 name="Stone Miners",
                 yields={Resource.STONE: Strength.SOME},
-                leaf=self._in_any_tier(self.tiered(self.can_quarry_some(), "stone_count", land)),
+                leaf=self._in_any_tier(
+                    self.tiered(self.can_quarry_some(), "stone_count", gates),
+                ),
             ),
             EconomyRoute(
                 name="Hunters",
                 yields={Resource.FOOD: Strength.SOME},
-                leaf=self._in_any_tier(self.tiered(self.can_hunt(), "hunt_count", land)),
+                leaf=self._in_any_tier(self.tiered(self.can_hunt(), "hunt_count", gates)),
             ),
             EconomyRoute(
                 name="Shepherds",
                 yields={Resource.FOOD: Strength.SOME},
-                leaf=self._in_any_tier(
-                    self.tiered(self.can_herd(), "herd_count", self.herd_gates()),
-                ),
+                leaf=self._in_any_tier(self.tiered(self.can_herd(), "herd_count", gates)),
             ),
             EconomyRoute(
                 name="Foragers",
                 yields={Resource.FOOD: Strength.SOME},
-                leaf=self._in_any_tier(self.tiered(self.can_forage(), "bush_count", land)),
+                leaf=self._in_any_tier(self.tiered(self.can_forage(), "bush_count", gates)),
             ),
-            *self._guarded_routes(
-                "Fishermen",
-                {Resource.FOOD: Strength.SOME},
-                lambda boat_guard: self._in_any_tier(self.tiered(
-                    self.can_fish_from_shore(),
-                    "shore_fish_count",
-                    self.tier_gates("shoreline", boat_guard),
-                )),
+            EconomyRoute(
+                name="Fishermen",
+                yields={Resource.FOOD: Strength.SOME},
+                leaf=self._in_any_tier(
+                    self.tiered(self.can_fish_from_shore(), "shore_fish_count", gates),
+                ),
             ),
-            *self._guarded_routes(
-                "Oyster Gatherers",
-                {Resource.GOLD: Strength.SOME},
-                lambda boat_guard: self._in_any_tier(self.tiered(
-                    self.can_gather_oysters_from_shore(),
-                    "oyster_count",
-                    self.tier_gates("shoreline", boat_guard),
-                )),
+            EconomyRoute(
+                name="Oyster Gatherers",
+                yields={Resource.GOLD: Strength.SOME},
+                leaf=self._in_any_tier(
+                    self.tiered(self.can_gather_oysters_from_shore(), "oyster_count", gates),
+                ),
             ),
         ]
 
@@ -365,24 +400,24 @@ class ScenarioResourceLogic:
                     & self.scenario.buildings.has_wood_camp()
                 ),
             ),
-            *self._guarded_routes(
-                "Villagers gathering food with a Base",
-                {Resource.FOOD: Strength.AT_SCALE},
-                lambda boat_guard: (
+            EconomyRoute(
+                name="Villagers gathering food with a Base",
+                yields={Resource.FOOD: Strength.AT_SCALE},
+                leaf=(
                     SufficientRawResources(
-                        sources=self._villager_food(boat_guard),
+                        sources=self._villager_food(),
                         needed=self.demand.food,
                         resource="food",
                     )
                     & self.scenario.has_base()
                 ),
             ),
-            *self._guarded_routes(
-                "Villagers gathering gold with a Base",
-                {Resource.GOLD: Strength.AT_SCALE},
-                lambda boat_guard: (
+            EconomyRoute(
+                name="Villagers gathering gold with a Base",
+                yields={Resource.GOLD: Strength.AT_SCALE},
+                leaf=(
                     SufficientRawResources(
-                        sources=self._villager_gold(boat_guard),
+                        sources=self._villager_gold(),
                         needed=self.demand.gold,
                         resource="gold",
                     )
@@ -401,62 +436,68 @@ class ScenarioResourceLogic:
                     & self.scenario.has_base()
                 ),
             ),
-            EconomyRoute(
-                name="Farmers",
-                yields={Resource.FOOD: Strength.AT_SCALE},
-                leaf=self.can_farm(),
-                needs={Resource.WOOD: Strength.AT_SCALE},
-            ),
         ]
 
     def boat_routes(self) -> list[EconomyRoute]:
         wood_at_scale = {Resource.WOOD: Strength.AT_SCALE}
         return [
-            *self._guarded_routes(
-                "Fishing Ships gathering food",
-                {Resource.FOOD: Strength.AT_SCALE},
-                lambda boat_guard: SufficientRawResources(
-                    sources=self._boat_food(boat_guard),
+            EconomyRoute(
+                name="Fishing Ships gathering food",
+                yields={Resource.FOOD: Strength.AT_SCALE},
+                leaf=SufficientRawResources(
+                    sources=self._boat_food(),
                     needed=self.demand.food,
                     resource="food",
                 ),
-                wood_at_scale,
+                needs=wood_at_scale,
             ),
-            *self._guarded_routes(
-                "Fishing Ships gathering gold",
-                {Resource.GOLD: Strength.AT_SCALE},
-                lambda boat_guard: SufficientRawResources(
-                    sources=self._boat_gold(boat_guard),
+            EconomyRoute(
+                name="Fishing Ships gathering gold",
+                yields={Resource.GOLD: Strength.AT_SCALE},
+                leaf=SufficientRawResources(
+                    sources=self._boat_gold(),
                     needed=self.demand.gold,
                     resource="gold",
                 ),
-                wood_at_scale,
+                needs=wood_at_scale,
             ),
-            *self._guarded_routes(
-                "Villagers and Fishing Ships gathering food",
-                {Resource.FOOD: Strength.AT_SCALE},
-                lambda boat_guard: (
+            EconomyRoute(
+                name="Villagers and Fishing Ships gathering food",
+                yields={Resource.FOOD: Strength.AT_SCALE},
+                leaf=(
                     SufficientRawResources(
-                        sources=self._villager_and_boat_food(boat_guard),
+                        sources=self._villager_and_boat_food(),
                         needed=self.demand.food,
                         resource="food",
                     )
                     & self.scenario.has_base()
                 ),
-                wood_at_scale,
+                needs=wood_at_scale,
             ),
-            *self._guarded_routes(
-                "Villagers and Fishing Ships gathering gold",
-                {Resource.GOLD: Strength.AT_SCALE},
-                lambda boat_guard: (
+            EconomyRoute(
+                name="Villagers and Fishing Ships gathering gold",
+                yields={Resource.GOLD: Strength.AT_SCALE},
+                leaf=(
                     SufficientRawResources(
-                        sources=self._villager_and_boat_gold(boat_guard),
+                        sources=self._villager_and_boat_gold(),
                         needed=self.demand.gold,
                         resource="gold",
                     )
                     & self.scenario.has_base()
                 ),
-                wood_at_scale,
+                needs=wood_at_scale,
+            ),
+        ]
+
+    def renewable_routes(self) -> list[EconomyRoute]:
+        """Food that grows back. Neither works ground the map holds, so neither reads a gate."""
+        wood_at_scale = {Resource.WOOD: Strength.AT_SCALE}
+        return [
+            EconomyRoute(
+                name="Farmers",
+                yields={Resource.FOOD: Strength.AT_SCALE},
+                leaf=self.can_farm(),
+                needs=wood_at_scale,
             ),
             EconomyRoute(
                 name="Fish Traps",
@@ -521,35 +562,6 @@ class ScenarioResourceLogic:
             ],
         ]
 
-    def _guarded_routes(
-        self,
-        name: str,
-        yields: Mapping[Resource, Strength],
-        gathers: Callable[[Rule], Rule],
-        needs: Mapping[Resource, Strength] | None = None,
-    ) -> list[EconomyRoute]:
-        routes = [
-            EconomyRoute(
-                name=name,
-                yields=yields,
-                leaf=gathers(False_()),
-                needs=needs or {},
-            ),
-        ]
-        for costs, boat_guard in self.scenario.military.can_guard_boats().items():
-            guarded_needs = dict(needs or {})
-            for cost in costs:
-                guarded_needs.setdefault(cost, Strength.SOME)
-            routes.append(
-                EconomyRoute(
-                    name=f"{name} with Guarded Boats",
-                    yields=yields,
-                    leaf=gathers(boat_guard),
-                    needs=guarded_needs,
-                ),
-            )
-        return routes
-
     def _banked_routes(
         self,
         route: EconomyRoute,
@@ -571,35 +583,35 @@ class ScenarioResourceLogic:
                 )
         return routes
 
-    def _villager_food(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _villager_food(self) -> tuple[Term, ...]:
         return (
             *self._land_food(),
             *self.tiered(
                 self._fish_the_shore_from_a_camp(),
                 "shore_fish_count",
-                self.tier_gates("shoreline", boat_guard),
+                self.tier_gates("shoreline"),
             ),
         )
 
-    def _boat_food(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _boat_food(self) -> tuple[Term, ...]:
         return (
-            *self._deep_fish(boat_guard),
+            *self._deep_fish(),
             *self.tiered(
                 self.can_fish_the_shore_by_boat(),
                 "shore_fish_count",
-                self.tier_gates("shoreline", boat_guard),
+                self.tier_gates("shoreline"),
             ),
         )
 
-    def _villager_and_boat_food(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _villager_and_boat_food(self) -> tuple[Term, ...]:
         return (
             *self._land_food(),
             *self.tiered(
                 self._fish_the_shore_from_a_camp() | self.can_fish_the_shore_by_boat(),
                 "shore_fish_count",
-                self.tier_gates("shoreline", boat_guard),
+                self.tier_gates("shoreline"),
             ),
-            *self._deep_fish(boat_guard),
+            *self._deep_fish(),
         )
 
     def _land_food(self) -> tuple[Term, ...]:
@@ -607,49 +619,49 @@ class ScenarioResourceLogic:
         land = self.tier_gates()
         return (
             *self.tiered(self.can_hunt() & buildings.has_hunt_camp(), "hunt_count", land),
-            *self.tiered(self.can_herd(), "herd_count", self.herd_gates()),
+            *self.tiered(self.can_herd(), "herd_count", self.some_resource_gates()),
             *self.tiered(self.can_forage() & buildings.has_food_camp(), "bush_count", land),
         )
 
     def _fish_the_shore_from_a_camp(self) -> Rule:
         return self.can_fish_from_shore() & self.scenario.buildings.has_fisherman_camp()
 
-    def _deep_fish(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _deep_fish(self) -> tuple[Term, ...]:
         return self.tiered(
             self.can_fish_by_boat(),
             "deep_fish_count",
-            self.tier_gates("afloat", boat_guard),
+            self.tier_gates("afloat"),
         )
 
-    def _villager_gold(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _villager_gold(self) -> tuple[Term, ...]:
         return (
             *self._mined_gold(),
             *self.tiered(
                 self._gather_shore_oysters_from_a_camp(),
                 "oyster_count",
-                self.tier_gates("shoreline", boat_guard),
+                self.tier_gates("shoreline"),
             ),
         )
 
-    def _boat_gold(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _boat_gold(self) -> tuple[Term, ...]:
         return (
             *self.tiered(
                 self.can_gather_oysters_by_boat(),
                 "oyster_count",
-                self.tier_gates("shoreline", boat_guard),
+                self.tier_gates("shoreline"),
             ),
-            *self._whales(boat_guard),
+            *self._whales(),
         )
 
-    def _villager_and_boat_gold(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _villager_and_boat_gold(self) -> tuple[Term, ...]:
         return (
             *self._mined_gold(),
             *self.tiered(
                 self._gather_shore_oysters_from_a_camp() | self.can_gather_oysters_by_boat(),
                 "oyster_count",
-                self.tier_gates("shoreline", boat_guard),
+                self.tier_gates("shoreline"),
             ),
-            *self._whales(boat_guard),
+            *self._whales(),
         )
 
     def _mined_gold(self) -> tuple[Term, ...]:
@@ -662,11 +674,11 @@ class ScenarioResourceLogic:
     def _gather_shore_oysters_from_a_camp(self) -> Rule:
         return self.can_gather_oysters_from_shore() & self.scenario.buildings.has_fisherman_camp()
 
-    def _whales(self, boat_guard: Rule) -> tuple[Term, ...]:
+    def _whales(self) -> tuple[Term, ...]:
         return self.tiered(
             self.can_hunt_whales(),
             "whale_count",
-            self.tier_gates("afloat", boat_guard),
+            self.tier_gates("afloat"),
         )
 
     def _villager_stone(self) -> tuple[Term, ...]:
@@ -679,6 +691,9 @@ class ScenarioResourceLogic:
     # -- aggregates ---------------------------------------------------------------------------
     def has_economy_routes(self) -> Rule:
         return ScenarioHasEconomyRoutes(scenario=self.scenario.scenario)
+
+    def has_ungated_routes(self) -> Rule:
+        return ScenarioHasUngatedRoutes(scenario=self.scenario.scenario)
 
     def has_easy_source(self, resource: Resource) -> Rule:
         return ScenarioHasEasyResource(scenario=self.scenario.scenario, resource=resource)
@@ -705,3 +720,12 @@ class ScenarioResourceLogic:
         """What a location asks of its price: an easy source of everything it costs. Nothing at
         all if it is free."""
         return self.can_sustain([resource for resource, amount in costs.items() if amount > 0])
+
+    def can_sustain_some(self, resources: Collection[Resource]) -> Rule:
+        if not resources:
+            return True_()
+        return And(*[self.has_some_source(resource) for resource in resources])
+
+    def can_pay_some(self, costs: Mapping[Resource, float]) -> Rule:
+        return self.can_sustain_some([resource for resource, amount in costs.items()
+                                      if amount > 0])

@@ -258,6 +258,21 @@ class ScenarioHasEconomyRoutes(ScenarioQuestion, game="Age Of Empires II: Defini
 
 
 @dataclass
+class ScenarioHasUngatedRoutes(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        return scenario.economy.ungated_economy_routes()
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        return f"{scenario.scenario_name}, ungated"
+
+    @override
+    def _instantiate(self, world: 'Age2World') -> Rule.Resolved:
+        return self.answered(world)
+
+
+@dataclass
 class ScenarioHasEasyResource(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
     """Whether this scenario can bring a resource in freely: enough of it to keep paying."""
 
@@ -292,7 +307,7 @@ class ScenarioHasSomeResource(ScenarioQuestion, game="Age Of Empires II: Definit
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
         return EconomyRoutesYield(
-            economy=scenario.economy.has_economy_routes(),
+            economy=scenario.economy.has_ungated_routes(),
             resource=self.resource,
             strength=Strength.SOME,
         )

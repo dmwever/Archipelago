@@ -26,6 +26,9 @@ FISHERMAN_DROPSITES = FOOD_DROPSITES + [B.DOCK]
 FISHING_BOAT_DROPSITES = [B.DOCK, B.HARBOR]
 """Where each kind of gatherer can drop off."""
 
+STRONGPOINTS = [B.CASTLE, B.FORTIFIED_CHURCH, B.KREPOST, B.DONJON]
+WALLS = [B.STONE_WALL, B.PALISADE_WALL]
+TOWERS = [B.WATCH_TOWER, B.BOMBARD_TOWER]
 
 class ScenarioBuildingLogic:
     def __init__(self, scenario: 'ScenarioLogic'):
@@ -70,7 +73,9 @@ class ScenarioBuildingLogic:
         return self.scenario.named("can build more Town Centers", self._multiple_tc())
 
     def _multiple_tc(self) -> Rule:
-        return self.can_build_tc() & self.scenario.ages.has_reached(Age2AgeData.CASTLE)
+        return (self.can_build_tc()
+                & self.scenario.ages.has_reached(Age2AgeData.CASTLE)
+                & self.scenario.economy.can_pay_some(B.TOWN_CENTER.cost))
 
     def is_fortified(self) -> Rule:
         """Somewhere to fall back to: one shared question - "can defend resources" - as gathering in
@@ -78,23 +83,23 @@ class ScenarioBuildingLogic:
         return self.scenario.economy.can_defend_resources()
 
     def _fortified(self) -> Rule:
-        strongpoint = Or(*[self.scenario.has_building_structurally(building) for building in
-                           (Age2BuildingData.TOWN_CENTER, Age2BuildingData.CASTLE,
-                            Age2BuildingData.FORTIFIED_CHURCH, Age2BuildingData.KREPOST,
-                            Age2BuildingData.DONJON)
-                           if self.scenario.civilization.can_build(building)])
-        wall = Or(*[self.scenario.has_building_structurally(building) for building in
-                    (Age2BuildingData.STONE_WALL, Age2BuildingData.PALISADE_WALL)
-                    if self.scenario.civilization.can_build(building)])
-        tower = Or(*[self.scenario.has_building_structurally(building) for building in
-                     (Age2BuildingData.WATCH_TOWER, Age2BuildingData.BOMBARD_TOWER)
-                     if self.scenario.civilization.can_build(building)])
-        return strongpoint | (wall & tower)
+        strongpoint = self.can_build_multiple_tc() | self._can_put_up_one_of(STRONGPOINTS)
+        return strongpoint | (self._can_put_up_one_of(WALLS) & self._can_put_up_one_of(TOWERS))
+
+    def _can_put_up_one_of(self, buildings: list[Age2BuildingData]) -> Rule:
+        return Or(*[self._can_put_up(building) for building in buildings])
+
+    def _can_put_up(self, building: Age2BuildingData) -> Rule:
+        buildable = self.can_build_structurally(building)
+        if isinstance(buildable, False_):
+            return False_()
+        return buildable & self.scenario.economy.can_pay_some(building.cost)
 
     def can_hold_a_shoreline(self) -> Rule:
-        return ((self.scenario.has_building_structurally(Age2BuildingData.MILL) & self.is_fortified())
+        return ((self.scenario.has_building_structurally(Age2BuildingData.MILL)
+                 & self.is_fortified())
                 | self.can_build_multiple_tc()
-                | self.scenario.has_building_structurally(Age2BuildingData.DOCK))
+                | self._can_put_up(Age2BuildingData.DOCK))
 
     def has_gold_dropsite(self) -> Rule:
         return self._any_of(GOLD_DROPSITES)

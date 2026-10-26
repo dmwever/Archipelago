@@ -283,7 +283,8 @@ class TestOystersGuardedByTheirOwnGold(EconomyRoutesTestBase):
         self.build()
         scenario = self.world.rules.logic.for_scenario(self.SCENARIO)
         self.assertFalse(self.world.rules.logic.is_impossible(scenario.has_water_access()))
-        self.assertTrue(scenario.military.can_guard_boats())
+        guard = scenario.military.can_guard_boats()
+        self.assertFalse(self.world.rules.logic.is_impossible(guard))
         with self.with_open_oysters():
             scenario.economy.counts = dataclasses.replace(
                 scenario.economy.counts,
