@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-23, found while grilling [#23](23-land-defence-unpaid.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -114,28 +114,56 @@ before*; record the evidence under each. Red-check in a detached worktree at `HE
 test file copied in, not with `tools/red_check.py`, which stashes the maintainer's uncommitted
 changes.
 
-- [ ] Joan 4 reports all four as standing on the French Camp item, and none of them without it.
+- [x] Joan 4 reports all four as standing on the French Camp item, and none of them without it.
       `test_standing_buildings.py` is the natural home.
-- [ ] The base no longer asks for the Town Center items: with the French Camp item and neither
+      *`TestJoan4FrenchCampStands::test_the_camp_stands_all_four_buildings_and_nothing_stands_without_it`.
+      Red at `5e262a4db`: all four subtests failed on "the French Camp should stand it"; the
+      without-camp half already passed, as it should. Green with the fix.*
+- [x] The base no longer asks for the Town Center items: with the French Camp item and neither
       `TOWN_CENTER_WOOD` nor `TOWN_CENTER_STONE`, Joan 4's `has_base()` holds.
-- [ ] The Lumber Camp needs no seed item: with the French Camp item and no `LUMBER_CAMP_WOOD`,
+      *`::test_the_base_no_longer_asks_for_the_town_center_items`. Red at `5e262a4db`, green with
+      the fix.*
+- [x] The Lumber Camp needs no seed item: with the French Camp item and no `LUMBER_CAMP_WOOD`,
       Joan 4's "Lumberjacks at a Lumber Camp" route runs.
-- [ ] *Held before:* the item pool is unchanged - `LUMBER_CAMP_WOOD` is still pooled, since
+      *`::test_the_lumber_camp_needs_no_seed_item`. Red at `5e262a4db` - the route was absent from
+      the 18 running; green with the fix.*
+- [x] *Held before:* the item pool is unchanged - `LUMBER_CAMP_WOOD` is still pooled, since
       `ResourcePool.seeds` filters on options, not on whether a scenario can use it.
-- [ ] *Held before:* the route catalog is unchanged (`tools/route_catalog.py`). This ticket adds
+      *`test_item_pool.py`, `test_pools.py`, `test_seed_items.py` all green, and
+      `generation/` is untouched by the diff. `ResourcePool.seeds` reads only
+      `is_economy_route_shuffled`, which branches on the Dock and the Market alone and returns
+      `True` for every other building - it never reads `starts_with_building`.*
+- [x] *Held before:* the route catalog is unchanged (`tools/route_catalog.py`). This ticket adds
       no routes; it only satisfies existing ones.
-- [ ] `test/easy_source_answers.json` recaptured (`tools/recapture_easy_sources.py`; check it
+      *`test_route_catalog.py` green and `test/route_catalog.md` has no diff.*
+- [x] `test/easy_source_answers.json` recaptured (`tools/recapture_easy_sources.py`; check it
       reproduces the committed file at `HEAD` first). **Every move must be `0 -> 1`**; report any
       `1 -> 0`, which would mean something was taken away and needs explaining before the
       recapture is committed.
-- [ ] `test_determinism.py::TestCampaignOrder` passes, and
+      *Writer checked first in a detached worktree at `5e262a4db`: recapture left
+      `git diff --quiet` clean, so the diff below is behaviour, not formatting.
+      **1007 answers moved, all `0 -> 1`, none `1 -> 0`.** Every one of them is Joan 4 -
+      `AP_JOAN_4.WOOD` 280, `AP_JOAN_4.GOLD` 252, `AP_JOAN_4.STONE` 252, `AP_JOAN_4.FOOD` 223 -
+      spread across all seven option sets. No other scenario moved a single answer.
+      `test_economy_routes.py` green against the recapture (10 passed, 4344 subtests).*
+- [x] `test_determinism.py::TestCampaignOrder` passes, and
       `TestEveryScenarioCanLive::test_every_scenario_can_qualify_for_every_resource` stays green
       with an empty list.
-- [ ] What `.githooks/pre-commit` runs for this change, plus the logic canaries and every test file
+      *Both green in the run below.*
+- [x] What `.githooks/pre-commit` runs for this change, plus the logic canaries and every test file
       touched, passes. The full `worlds/age2de` suite stays the maintainer's.
-- [ ] **Fill gate**, as `worlds/age2de/fuzz/bench/README.md` describes, against the stored
+      *`test_item_delivery.py test_storage_handler.py test_client_shutdown.py
+      test_economy_rules.py::TestEveryScenarioCanLive test_determinism.py::TestCampaignOrder
+      test_route_catalog.py test_standing_buildings.py` - 99 passed, 294 subtests, 0 failures.
+      Plus `test_economy_routes.py`, `test_item_pool.py`, `test_pools.py`, `test_seed_items.py`,
+      all green. The full suite was not run.*
+- [x] **Fill gate**, as `worlds/age2de/fuzz/bench/README.md` describes, against the stored
       `replay_issue24-seed-items.jsonl`. The failure count must not rise. If it does, stop, record
       which generations newly fail and the fill error, and hand back. Do not loosen any rule.
+      *`replay_issue28-joan4-french-camp.jsonl`, stored beside the others and listed in the bench
+      README. **100/100 ok on both sides - the failure count did not rise.** Spheres unchanged on
+      99 of 100 seeds (one up); sphere 1 identical on all 100. Times void: the replay shared the
+      laptop with two pytest batches, so the 4.2s -> 22.0s median is contention, not the branch.*
 
 **Out of scope:**
 - The walls, towers and gates standing in Attila 1, Joan 2 and Genghis 6. Nothing reads a standing
@@ -147,3 +175,24 @@ changes.
   as unsound; nothing has been verified beyond Joan 4.
 - Any XS (game-side) change. The scenario file is correct; the logic is what is wrong.
 - Committing: leave the changes uncommitted.
+
+## Comments
+
+### Implementation notes (2026-10-26)
+
+> *This was generated by AI while implementing.*
+
+Four `starts_with_building` lines in `Joan4StartingState.__init__`, all gated on the `camp` local
+already in scope, for `TOWN_CENTER`, `MILL`, `LUMBER_CAMP` and `MINING_CAMP`, under a three-line
+comment saying what the camp hands over. Nothing else in `logic/joan/joan_4.py` changed, and no
+other logic file was touched. The rest of the diff is `test_standing_buildings.py`'s three new
+tests, the recaptured `easy_source_answers.json`, the stored `replay_issue28-joan4-french-camp.jsonl`
+and its row in `fuzz/bench/README.md`, and this ticket plus the tracker index row.
+
+Two things the brief's precedents do that this does not, both left alone as out of scope here:
+`attila_1.py` and `genghis_2.py` hoist the camp item to a class-level `Rule` and build `has_vils`
+from it, where `joan_4.py` still writes `Has(...AP_JOAN_4_FRENCH_CAMP...)` twice; and the test's
+one-line walk of a resolved economy's running routes duplicates `test_economy_catalog.py`'s, which
+would sit better as a helper on `bases.Age2RuleTestBase`.
+
+Left uncommitted, as the ticket asks.

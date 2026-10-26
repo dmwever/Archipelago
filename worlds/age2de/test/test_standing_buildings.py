@@ -118,3 +118,48 @@ class TestTheBaseIsPaidByItsItems(bases.Age2RuleTestBase):
         self.assertIn(self.FOOD, wanted)
         self.assertNotIn(self.WOOD, wanted)
         self.assertNotIn(self.STONE, wanted)
+
+
+class TestJoan4FrenchCampStands(bases.Age2RuleTestBase):
+    """Joan 4's "AP Give Base" trigger hands P1 the French Camp from Gaia: a Town Center, a Mill,
+    a Lumber Camp and a Mining Camp. The logic recorded none of them, so the base was bought a
+    second time and the Lumber Camp asked for a seed item the map had already paid."""
+
+    campaigns = ["Attila the Hun", "Joan of Arc"]
+    starting_campaigns = ["Attila the Hun"]
+
+    CAMP = Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name
+    CAMP_BUILDINGS = (Age2BuildingData.TOWN_CENTER, Age2BuildingData.MILL,
+              Age2BuildingData.LUMBER_CAMP, Age2BuildingData.MINING_CAMP)
+
+    def joan_4(self):
+        return self.world.rules.logic.for_scenario(Age2ScenarioData.AP_JOAN_4)
+
+    def test_the_camp_stands_all_four_buildings_and_nothing_stands_without_it(self):
+        self.build()
+        standing = self.joan_4().starting_state.starts_with_building
+        with_camp = self.state_with(self.CAMP)
+        without_camp = self.state_with()
+        for building in self.CAMP_BUILDINGS:
+            with self.subTest(building.name):
+                rule = standing[building].resolve(self.world)
+                self.assertTrue(rule(with_camp), "the French Camp should stand it")
+                self.assertFalse(rule(without_camp), "nothing stands before the camp arrives")
+
+    def test_the_base_no_longer_asks_for_the_town_center_items(self):
+        """The camp's Town Center is already up, so the 275 wood and 100 stone that putting one
+        up would cost are not Joan 4's to find."""
+        self.build()
+        state = self.state_without(Age2ItemData.TOWN_CENTER_WOOD.item_name,
+                                   Age2ItemData.TOWN_CENTER_STONE.item_name)
+        self.assertTrue(self.joan_4().has_base().resolve(self.world)(state))
+
+    def test_the_lumber_camp_needs_no_seed_item(self):
+        """A building standing at the start asks for no seed item, so the Lumber Camp route runs
+        with Starting Lumber Camp Wood withheld."""
+        self.build()
+        scenario = self.joan_4()
+        economy = scenario.economy.has_economy_routes().resolve(self.world)
+        state = self.state_without(Age2ItemData.LUMBER_CAMP_WOOD.item_name)
+        running = {economy.routes[index].name for index in economy.running(state)}
+        self.assertIn("Lumberjacks at a Lumber Camp", running)

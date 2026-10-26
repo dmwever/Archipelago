@@ -25,6 +25,14 @@ class Joan4StartingState(ScenarioStartingState):
         self.has_vils = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
 
         camp = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
+        # The French Camp comes over from Gaia whole: a Town Center, a Mill, a Lumber Camp and a
+        # Mining Camp, all standing. The Lumber Camp is the one that moves answers - a building
+        # already up asks for no seed item.
+        self.starts_with_building[Age2BuildingData.TOWN_CENTER] = camp
+        self.starts_with_building[Age2BuildingData.MILL] = camp
+        self.starts_with_building[Age2BuildingData.LUMBER_CAMP] = camp
+        self.starts_with_building[Age2BuildingData.MINING_CAMP] = camp
+
         self.obtains_unit[U.CROSSBOWMAN] = camp
         self.obtains_unit[U.VILLAGER_MALE] = camp
         self.obtains_unit[U.VILLAGER_FEMALE] = camp
