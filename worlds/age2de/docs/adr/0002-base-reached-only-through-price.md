@@ -30,15 +30,20 @@ would have to be unpicked one rule at a time.
   paid for) does. A paid form pays for every building it leans on. A structural form, and every
   question inside the economy (dropsites, market), pays for nothing. That keeps the easy sources
   from asking themselves.
-- A defence is part of an economy seed, never free (#23). A standing defence opens no gate: what it
-  guards is already the base tier. A built defence (a wall with a tower, a strongpoint, a Dock
-  holding a shoreline, more Town Centers) costs route needs of *some*, from a running route, never
-  a bank. More Town Centers cost *some* wood and *some* stone wherever they are asked, camps
-  included. The base's own Town Center is no strongpoint.
-- Guarding boats is part of an economy seed, not a price and not free (#21). The structural form
+- A defence is never free, and pays for itself where it is asked (#23). A standing defence opens no
+  gate: what it guards is already the base tier. A built defence (a wall with a tower, a
+  strongpoint, a Dock holding a shoreline, more Town Centers) asks for *some* of each resource it
+  costs, read off `Age2BuildingData.cost`, in the same expression that asks whether P1 can build it
+  at all. That is not a price in ADR-0002's sense — a price is an easy source — and it is not a
+  bank. More Town Centers pay inside `can_build_multiple_tc`, so the strongpoint, the shoreline and
+  the camps all inherit it. The base's own Town Center is no strongpoint.
+- **Only ground worked at scale has to be held** (#23). A route of *some* takes what it needs off
+  open ground and comes home, so it asks no gate; a route at scale has to hold the ground, so it
+  does. This is what lets a resource pay for its own defence — *some* stone off open ground buys
+  the wall that holds the same ground at scale — and it is why the gates need no parameter.
+- Guarding boats is the same, not a price and not free (#21, amended by #23). The structural form
   of fielding pays for nothing, so the navy that guards the afloat and shoreline tiers is fielded
-  structurally, and its wood and gold are route needs of the routes working those tiers
-  (ADR-0003): *some*, from a running route, never from a bank.
+  structurally and pays for *some* of each line's own wood and gold in the same expression.
 - The Town Center is paid for by the base, never by an easy source. A standing one is free; a built
   one is paid for by the Town Center items, which the location reaches through its own price.
 - A banked pile (`HasResourceAmount`) never pays for a building. It counts the Town Center items,

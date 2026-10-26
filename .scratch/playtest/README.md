@@ -22,9 +22,9 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 16 | [Under caveman, are scenario-granted ships and carts knocked down?](issues/16-caveman-scenario-ships-and-carts.md) | needs-info |
 | 17 | [Buildings "standing or buildable" are never paid for](issues/17-buildable-buildings-unpaid.md) | done |
 | 18 | [Military asks for a base directly instead of through its price](issues/18-military-base-through-price.md) | done |
-| 19 | [Economy routes, resolved together (no behaviour change)](issues/19-trade-cogs-without-base.md) | done (folds in #21) |
+| 19 | [Economy routes, resolved together (no behaviour change)](issues/19-trade-cogs-without-base.md) | done (folds in #21; naval guard unwound by #23) |
 | 20 | [Retire the `starting_*` resource flags in favour of the scan](issues/20-retire-starting-resource-flags.md) | done |
-| 21 | [Structural fielding still asks for a price](issues/21-structural-field-asks-price.md) | done (folds into #19 / #22) |
+| 21 | [Structural fielding still asks for a price](issues/21-structural-field-asks-price.md) | done (folds into #19 / #22; naval guard unwound by #23) |
 | 22 | [The economy route catalog](issues/22-economy-route-catalog.md) | done (folds in #21) |
 | 23 | [Defending open ground is free](issues/23-land-defence-unpaid.md) | ready-for-agent |
 | 24 | [Items that seed the economy's buildings and units](issues/24-building-seed-items.md) | needs-triage |

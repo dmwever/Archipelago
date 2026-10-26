@@ -2,8 +2,7 @@
 
 **Reported:** 2026-10-22, split from [#18](18-military-base-through-price.md) during triage
 
-**Status:** done (folds into [#19](19-trade-cogs-without-base.md) and
-[#22](22-economy-route-catalog.md))
+**Status:** done (folds into [#19](19-trade-cogs-without-base.md) and [#22](22-economy-route-catalog.md); its naval-guard pricing unwound by [#23](23-land-defence-unpaid.md), 2026-10-25 - `can_guard_boats()` is a plain rule again and pays `can_pay_some` of each line's own cost. Structural fielding still pays no price.)
 
 ## Report
 

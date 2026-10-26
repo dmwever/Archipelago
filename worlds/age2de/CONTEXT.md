@@ -61,9 +61,12 @@ _Avoid_: seed (alone: it is the Archipelago generation seed), seed resources, st
 **Defence**:
 A building P1 puts up to hold resources out on the map: a wall with a tower, a strongpoint
 (Castle, Fortified Church, Krepost, Donjon, or a second Town Center), or a Dock on a shoreline.
-Part of an economy seed, paid once by routes of some, never by a bank. One standing at the start
-is no defence: what it guards is already the base's ground.
-_Avoid_: fortification (when the paid build is meant), the base's Town Center as a strongpoint
+A route needs one only to work ground **at scale**; a route of *some* walks out, takes what it
+needs and comes home, so open ground costs it nothing. A defence pays for itself where it is
+asked, out of *some* of what it costs, so the stone on open ground can buy the wall that then
+holds it. One standing at the start is no defence: what it guards is already the base's ground.
+_Avoid_: fortification (when the paid build is meant), the base's Town Center as a strongpoint,
+guard (that is the trade sense, below)
 
 **Base**:
 A Town Center P1 can turn out villagers from: one standing at the start, or one P1 puts up, paid

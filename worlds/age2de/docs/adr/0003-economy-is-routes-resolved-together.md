@@ -38,3 +38,18 @@ whose economy seed the running routes cover, until nothing changes.
 - Relics yield only *some* gold.
 - The villager count never matters: any villagers gather *some*; scale is the base's job.
 - Local start still aims for a base.
+- **A tier gate is the one place the rejected "authored layers" option is used** (#23). A gate
+  cannot ask the economy it sits inside: `_fortified` asking `has_some_source` resolves back into
+  `ScenarioHasEconomyRoutes`, which fails loudly, exactly as this ADR describes. So a defence pays
+  out of the **ungated routes** — every route whose leaf reads no gate: the routes of *some*,
+  Farmers and Fish Traps, trade, the market, and what a scenario grants. One layer, hand-listed as
+  its own composition of the route builders, memoised behind its own question. It is acyclic by
+  construction, and a test pins that nothing in it reaches a gate, because the authored order this
+  ADR rejected is only safe while someone keeps it. Everything above that layer still resolves
+  together, as above.
+- **Route needs stay for economy seeds, not for defences** (#23). `EconomyRoute.needs` is how a
+  route says what must already be yielding before it starts - Farmers and Fish Traps want wood at
+  scale, Trade Cogs want some wood and some gold. #19 and #21 also used it to price the naval
+  guard, which multiplied each route into one copy per cost group; #23 took that back out. A
+  defence is not an economy seed: it is a condition on reaching a tier, and it pays where it is
+  asked.

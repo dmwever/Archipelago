@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-22, split from [#05](05-attila1-forging-without-town-center.md) during triage
 
-**Status:** done
+**Status:** done (its naval-guard mechanism unwound by [#23](23-land-defence-unpaid.md), 2026-10-25: `boat_guard`, the "... with Guarded Boats" route copies and the guard's use of `EconomyRoute.needs` are gone; a defence now pays for itself where it is asked. The route resolver and `needs` itself stand.)
 
 **Blocked by:** #05
 
