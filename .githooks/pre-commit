@@ -1,11 +1,25 @@
 #!/bin/sh
-# Runs the fast age2de client tests when a commit touches the world; the full suite stays manual.
+# Runs the fast age2de checks when a commit touches the world; the full suite stays manual.
 # Tests run against the working tree, not just the staged files. Bypass with --no-verify.
 
-git diff --cached --name-only | grep -q '^worlds/age2de/' || exit 0
+staged=$(git diff --cached --name-only)
+echo "$staged" | grep -q '^worlds/age2de/' || exit 0
 
-echo "pre-commit: age2de client tests"
-exec python -m pytest -q -x -p no:cacheprovider \
-    worlds/age2de/test/test_item_delivery.py \
-    worlds/age2de/test/test_storage_handler.py \
-    worlds/age2de/test/test_client_shutdown.py
+tests="worlds/age2de/test/test_item_delivery.py
+worlds/age2de/test/test_storage_handler.py
+worlds/age2de/test/test_client_shutdown.py"
+label="client tests"
+
+# A rules change can leave a scenario with no route to a resource, or a seed unwinnable with
+# every item in hand, and the client tests cannot see either. These three take about a minute
+# between them and are the only automatic cover logic/ and locations/ have.
+if echo "$staged" | grep -qE '^worlds/age2de/(logic|locations)/'; then
+    tests="$tests
+worlds/age2de/test/test_economy_rules.py::TestEveryScenarioCanLive
+worlds/age2de/test/test_determinism.py::TestCampaignOrder
+worlds/age2de/test/test_route_catalog.py"
+    label="client tests and logic canaries"
+fi
+
+echo "pre-commit: age2de $label"
+exec python -m pytest -q -x -p no:cacheprovider $tests
