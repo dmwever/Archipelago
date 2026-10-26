@@ -31,5 +31,6 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 25 | [Guarded trade buildings (no behaviour change)](issues/25-guarded-trade-buildings.md) | done (unblocks #26, #27) |
 | 26 | [Dock guard rulings](issues/26-dock-guard-rulings.md) | needs-triage |
 | 27 | [Market guard rulings](issues/27-market-guard-rulings.md) | needs-triage |
-| 28 | [Joan 4's French Camp base is not recorded as standing](issues/28-joan4-french-camp-base-unrecorded.md) | needs-triage |
+| 28 | [Joan 4's French Camp base is not recorded as standing](issues/28-joan4-french-camp-base-unrecorded.md) | ready-for-agent |
 | 29 | [Military can defend their own resources](issues/29-military-can-defend-their-own-resources.md) | done |
+| 30 | [A standing Mill, Mining Camp or Folwark is still charged *some* wood](issues/30-standing-dropsite-charged-wood.md) | needs-triage |

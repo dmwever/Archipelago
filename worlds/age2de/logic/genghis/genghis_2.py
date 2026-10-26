@@ -31,7 +31,6 @@ class Genghis2StartingState(ScenarioStartingState):
         self.obtains_unit[Age2UnitData.VILLAGER_FEMALE] = self.tayichiud_base
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = self.tayichiud_base
         self.starts_with_building[Age2BuildingData.BARRACKS] = self.tayichiud_base
-        self.starts_with_building[Age2BuildingData.MILL] = self.tayichiud_base
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
