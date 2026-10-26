@@ -137,7 +137,7 @@ class ScenarioBuildingLogic:
         return Or(*camps) | self.can_build_multiple_tc()
 
     def _camp(self, building: Age2BuildingData) -> Rule:
-        if building.seed_item is None:
+        if not self.scenario.is_seeded(building):
             return self.scenario.has_building_structurally(building)
         return self.scenario.has_seeded_building(building)
 

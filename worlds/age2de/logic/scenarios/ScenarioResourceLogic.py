@@ -343,11 +343,16 @@ class ScenarioResourceLogic:
         town_center = self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER)
         lumber_camp = self.scenario.has_seeded_building(Age2BuildingData.LUMBER_CAMP)
         mule_cart = self.scenario.has_seeded_building(Age2BuildingData.MULE_CART)
-        dock = self.scenario.has_seeded_building(Age2BuildingData.DOCK)
         mining_camp = self.scenario.has_building_structurally(Age2BuildingData.MINING_CAMP)
         mill = self.scenario.has_building_structurally(Age2BuildingData.MILL)
         folwark = self.scenario.has_building_structurally(Age2BuildingData.FOLWARK)
         wood_of_some = {Resource.WOOD: Strength.SOME}
+        if self.scenario.is_seeded(Age2BuildingData.DOCK):
+            dock = self.scenario.has_seeded_building(Age2BuildingData.DOCK)
+            dock_needs = {}
+        else:
+            dock = self.scenario.has_building_structurally(Age2BuildingData.DOCK)
+            dock_needs = wood_of_some
         return [
             EconomyRoute(
                 name="Lumberjacks at a Town Center",
@@ -473,6 +478,7 @@ class ScenarioResourceLogic:
                 name="Fishermen at a Dock",
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=self._gathers_some_at(dock, Job.FISHERMAN_MALE, "shore_fish_count"),
+                needs=dock_needs,
             ),
             EconomyRoute(
                 name="Oyster Gatherers at a Town Center",
@@ -495,6 +501,7 @@ class ScenarioResourceLogic:
                 name="Oyster Gatherers at a Dock",
                 yields={Resource.GOLD: Strength.SOME},
                 leaf=self._gathers_some_at(dock, Job.OYSTER_GATHERER_MALE, "oyster_count"),
+                needs=dock_needs,
             ),
         ]
 

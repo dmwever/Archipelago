@@ -57,6 +57,7 @@ Their records stand, and the 100 seeds here are what to use now.
 | `replay_b9dd362.jsonl` | commit `b9dd362` | 100/100 ok. **Times void** - the laptop slept, and it ran at `-j 4`. Logic results stand. |
 | `replay_issue23-defence-pays.jsonl` | #23, on top of `39d7c603` | 100/100 ok - the #23 fill gate, against `b9dd362`. **Times void** - the machine was shared. |
 | `replay_issue29-army-open-ground.jsonl` | #29, on top of `3c0136c3` | 100/100 ok - the #29 fill gate, against `replay_issue23-defence-pays`. **Times void** - the machine was shared; for the record the branch was slower on 91 of 100 seeds (13.6s -> 17.4s median), which one more Or'd term on every open-ground question would explain. Spheres flat, 79 of 100 unchanged. |
+| `replay_issue24-seed-items.jsonl` | #24, on top of `e7547828` with the Dock fallback uncommitted | 100/100 ok - the #24 fill gate, against `replay_issue29-army-open-ground`. Times recorded (4.2s median) but not comparable: the baseline's are void. Sphere 1 median 7.5 -> 6, mean flat at 9.2; spheres 25 -> 26 median. |
 
 A new seed set (new fuzz run) uses `timing_hook.py` with `../fuzz.py`, which saves every YAML for
 reuse; `summarize.py` reads that run's `timings.jsonl`:

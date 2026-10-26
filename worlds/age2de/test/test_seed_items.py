@@ -9,6 +9,7 @@ from ..locations.connections.ScenarioResources import Tier
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from .test_economy_catalog import (
+    BASE_SWITCHES,
     DOCK_SEED,
     GOLD_MINERS,
     LUMBER_CAMP_SEED,
@@ -16,6 +17,7 @@ from .test_economy_catalog import (
     MARKET_SEED,
     MULE_CART_SEED,
     RELICS,
+    SCENARIO_WOOD,
     TRADE_COGS,
     VILLAGERS,
     ToyScenarioBase,
@@ -169,6 +171,41 @@ class TestAStandingBuildingIsFree(ToyScenarioBase):
         self.assertFalse(self.easy(Resource.WOOD, unseeded))
         seeded = self.state(*self.COGS, dock, DOCK_SEED, wood=400, gold=100)
         self.assertTrue(self.easy(Resource.WOOD, seeded))
+
+class TestWithNoPartnerTradeTheDockIsFundedLikeAMill(ToyScenarioBase):
+    NO_PARTNER_TRADE = {"partner_trade": PartnerTrade.option_none}
+    DOCK = building(Age2BuildingData.DOCK)
+    FISHERMEN = (VILLAGERS, job(Age2VillagerJobData.FISHERMAN_MALE), DOCK)
+    OYSTER_GATHERERS = (VILLAGERS, job(Age2VillagerJobData.OYSTER_GATHERER_MALE), DOCK)
+
+    def test_fishermen_at_an_unseeded_dock_yield_some_food_beside_some_wood(self):
+        self.toy({Tier.BASE: tier(shore_fish_count=500)}, **self.NO_PARTNER_TRADE)
+        self.assertTrue(self.some(Resource.FOOD, self.state(*self.FISHERMEN, *LUMBERJACKS)))
+
+    def test_fishermen_at_an_unseeded_dock_yield_nothing_with_no_wood_route(self):
+        self.toy({Tier.BASE: tier(shore_fish_count=500)}, **self.NO_PARTNER_TRADE)
+        self.assertFalse(self.some(Resource.FOOD, self.state(*self.FISHERMEN)))
+
+    def test_oyster_gatherers_at_an_unseeded_dock_yield_some_gold_beside_some_wood(self):
+        self.toy({Tier.BASE: tier(oyster_count=500)}, **self.NO_PARTNER_TRADE)
+        state = self.state(*self.OYSTER_GATHERERS, *LUMBERJACKS)
+        self.assertTrue(self.some(Resource.GOLD, state))
+
+    def test_an_unseeded_dock_is_a_camp_at_scale(self):
+        self.toy({Tier.BASE: tier(oyster_count=2000)}, **self.NO_PARTNER_TRADE)
+        state = self.state(*BASE_SWITCHES, *self.OYSTER_GATHERERS)
+        self.assertTrue(self.easy(Resource.GOLD, state))
+
+    def test_fishing_ships_drop_at_an_unseeded_dock(self):
+        self.toy({Tier.BASE: tier(deep_fish_count=2000)}, **self.NO_PARTNER_TRADE)
+        state = self.state(unit(Age2UnitData.FISHING_SHIP), self.DOCK, SCENARIO_WOOD)
+        self.assertTrue(self.easy(Resource.FOOD, state))
+
+    def test_with_partner_trade_fishermen_still_ask_for_the_dock_seed(self):
+        self.toy({Tier.BASE: tier(shore_fish_count=500)})
+        self.assertFalse(self.some(Resource.FOOD, self.state(*self.FISHERMEN, *LUMBERJACKS)))
+        seeded = self.state(*self.FISHERMEN, *LUMBERJACKS, DOCK_SEED)
+        self.assertTrue(self.some(Resource.FOOD, seeded))
 
 class SeedPoolBase(bases.Age2RuleTestBase):
     campaigns = ["Attila the Hun"]

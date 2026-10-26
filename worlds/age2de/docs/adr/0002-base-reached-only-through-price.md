@@ -54,7 +54,9 @@ would have to be unpicked one rule at a time.
   shape of the Town Center items. One which cannot - the Mining Camp, Mill, Folwark and Monastery -
   is funded by *some* of its cost: its route needs *some* wood, which the fixpoint takes from a
   different route. A standing one is free, and the Town Center branch of a dropsite carries no
-  funding, so each villager route of *some* is one route per dropsite.
+  funding, so each villager route of *some* is one route per dropsite. A seed item is pooled only
+  where a route that would otherwise fund itself needs it; where it is not, the building falls
+  back to the second kind, so a Dock with partner trade off is funded like a Mill.
 - The Town Center is paid for by the base, never by an easy source. A standing one is free; a built
   one is paid for by the Town Center items, which the location reaches through its own price.
 - A banked pile (`HasResourceAmount`) never pays for a building. It counts the Town Center items,

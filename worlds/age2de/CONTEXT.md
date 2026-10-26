@@ -77,7 +77,8 @@ each for the Lumber Camp, Mule Cart, Dock and Market - the buildings that can op
 nothing. A building that only opens a resource inside an economy already running (Mining Camp,
 Mill, Folwark, Monastery) has none; its route needs *some* wood instead. A building standing at
 the start asks for no seed item, and one is pooled only where a route under the seed's options can
-use it.
+use it. A building whose seed item is not pooled is funded like a Mill: a Dock with partner trade
+off is a plain dropsite whose villager routes need *some* wood.
 _Avoid_: Town Center resources (when every seed item is meant), starting resources, seed (alone)
 
 **Defence**:

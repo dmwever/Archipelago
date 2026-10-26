@@ -151,6 +151,9 @@ class ScenarioLogic:
         return (self.starting_state.starts_with_building[building]
                 | self.buildings.can_build_structurally(building))
 
+    def is_seeded(self, building: Age2BuildingData) -> bool:
+        return building.seed_item in self.logic.world.pool.resources.seeds
+
     def has_seeded_building(self, building: Age2BuildingData) -> Rule:
         return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
                           "standing or seeded",

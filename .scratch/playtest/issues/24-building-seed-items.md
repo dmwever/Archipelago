@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-23, raised by the maintainer while grilling [#22](22-economy-route-catalog.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Related:** [#17](17-buildable-buildings-unpaid.md), [#19](19-trade-cogs-without-base.md), [#22](22-economy-route-catalog.md), [#23](23-land-defence-unpaid.md)
 
@@ -141,37 +141,72 @@ The food target is unchanged: the Mule Cart's food is a bank, not an item.
 
 **Acceptance criteria**
 
-- [ ] With no Town Center standing, no Lumber Camp seed item and no Mule Cart seed item, a
+- [x] With no Town Center standing, no Lumber Camp seed item and no Mule Cart seed item, a
       scenario with villagers and the Lumberjack profession yields no wood at any strength -
       and yields *some* wood once either seed item is held.
-- [ ] The same scenario, given *some* wood from elsewhere, yields *some* gold with a Mining Camp
+      *Red:* `test_seed_items.py::TestWoodWithNoTownCenterNeedsASeedItem`.
+- [x] The same scenario, given *some* wood from elsewhere, yields *some* gold with a Mining Camp
       and no seed item of its own; with no wood route running at all, it does not.
-- [ ] A scenario whose Town Center is the dropsite yields *some* of every resource it has with no
+      *Red:* `test_seed_items.py::TestAMiningCampIsFundedBySomeWood`.
+- [x] A scenario whose Town Center is the dropsite yields *some* of every resource it has with no
       seed item and no wood route - the Town Center variant charges nothing.
-- [ ] Trade Cogs do not run on the Dock's own seed item plus one more wood item: the cog wood bank
+      *Held before:* `test_seed_items.py::TestTheTownCenterVariantChargesNothing`, every gatherer.
+- [x] Trade Cogs do not run on the Dock's own seed item plus one more wood item: the cog wood bank
       excludes the Dock seed. Cogs still run where the same amount of wood comes from any other
       banked item.
-- [ ] Relics yield *some* gold only where another route already yields *some* wood. The Monk has no
+      *Red:* `test_seed_items.py::TestTheCogWoodBankExcludesTheDockSeed` (Dock seed + Town Center wood
+      clears a plain 400 bank but runs no cogs; starting wood or the Market seed in its place
+      does).
+- [x] Relics yield *some* gold only where another route already yields *some* wood. The Monk has no
       seed item and no bank; its unit item remains its only gate.
-- [ ] A Mule Cart funds its wood from its seed item and its food from a bank; a scenario holding
+      *Red:* `test_seed_items.py::TestRelicsAreFundedBySomeWood`, `test_seed_items.py::TestTheMonkHasNoSeedItem`.
+- [x] A Mule Cart funds its wood from its seed item and its food from a bank; a scenario holding
       the Mule Cart seed item but no food at all does not get a Mule Cart.
-- [ ] A building that starts standing is free: a scenario starting with a Dock runs cogs without
+      *Red:* `test_seed_items.py::TestTheMuleCartSeedsItsWoodAndBanksItsFood`. Per the maintainer, the
+      item (renamed `MULE_CART_RESOURCES`) also grants the 20 food in game; the logic still
+      banks it.
+- [x] A building that starts standing is free: a scenario starting with a Dock runs cogs without
       the Dock seed item.
-- [ ] With `partner_trade: none` and `market_trade` off, neither the Dock nor the Market seed item
+      *Red:* `test_seed_items.py::TestAStandingBuildingIsFree` (standing Dock free; built Dock asks).
+- [x] With `partner_trade: none` and `market_trade` off, neither the Dock nor the Market seed item
       is in the pool, and the rolled starting-wood target is 545.
-- [ ] Starting wood - seed items plus rolled items - sums to 1000 under every combination of those
+      *Red:* `test_seed_items.py::TestSeedItemsArePooledOnlyWhereTheyFundSomething`.
+- [x] Starting wood - seed items plus rolled items - sums to 1000 under every combination of those
       two options.
-- [ ] The pinned route catalog is regenerated and committed; its route count reflects the split
+      *Red:* `test_seed_items.py::TestStartingWoodSumsToAThousand`, all six subtests `SUBFAILED` against
+      the old code. `red_check.py` reports it GREEN because it reads only `FAILED` lines and this
+      test's assertions sit in subtests - a tool gap, not a pass.
+- [x] The pinned route catalog is regenerated and committed; its route count reflects the split
       variants and the hand-written trade routes.
-- [ ] The pinned easy-source answers are recaptured and committed, with the diff explained rather
+      *Red:* `test_route_catalog.py`. 34 -> 53 routes per scenario (+19: the eight villager routes
+      of *some* split one per dropsite; the six trade routes keep their count and gain names).
+      Left uncommitted for the maintainer.
+- [x] The pinned easy-source answers are recaptured and committed, with the diff explained rather
       than merely accepted.
-- [ ] The fill gate holds against the stored run for #23 on the 100-seed set: the failure count
+      *Red:* `test_economy_routes.py::TestEveryEasySourceAnswersAsBefore`. Left uncommitted. The
+      writer reproduced the HEAD file byte for byte in a HEAD worktree first. The raw diff is not
+      readable index by index: the pool gained four items and the wood target fell, so the
+      random states themselves changed. A paired run evaluated the *same* item-name states under
+      HEAD and the new code: **every answer that moved tightened, none loosened** - defaults 70,
+      market trade 114, allies and enemies 189, no partner trade 32, professions and caveman 46,
+      dark age everything shuffled 183, nothing shuffled 71. Every tightened answer sits in a
+      state missing at least one pooled seed item; with every pooled seed held, nothing moved.
+      Most are the Dock seed (cog wood and gold) and the Lumber Camp seed (no-Town-Center wood).
+- [x] The fill gate holds against the stored run for #23 on the 100-seed set: the failure count
       does not rise. Timings are reported alongside, since the per-scenario route count grows by
       roughly half and the economy is resolved per state.
-- [ ] The glossary gains **Seed item** and the entry for **Economy seed** says that a route's needs
+      Before: `replay_issue29-army-open-ground.jsonl`, the newest stored run predating #24 (itself
+      100/100 against the #23 run). After: `replay_issue24-seed-items.jsonl`, this checkout with
+      the Dock fallback and villager-food fix. **100/100 ok on both sides; the failure count did
+      not rise.** Times: 4.2s median here, but the baseline's are void (shared machine), so no
+      comparison is claimed. Spheres 25 -> 26 median; sphere 1 median 7.5 -> 6, mean flat at 9.2
+      - fewer locations open at the start, the expected direction for pricing free buildings.
+- [x] The glossary gains **Seed item** and the entry for **Economy seed** says that a route's needs
       are its operating input and never its capital. ADR-0002's consequences gain the rule that a
       building which can open an economy from nothing is funded by an item, and one that cannot is
       funded by *some* of its cost.
+      Docs, no test: `CONTEXT.md` (**Seed item**, **Economy seed**), ADR-0002 consequences (plus
+      the Mule Cart food and cog-bank exclusion beside the banked-pile rule).
 
 **Out of scope**
 
@@ -214,3 +249,31 @@ Rulings worth keeping, because each reversed a plausible-looking alternative:
   routes - are written out rather than generated, so one can be changed by editing it.
 - **The Mule Cart's food is a bank, not a need.** A need would make its hunt variant need what it
   yields and go permanently false.
+
+> *This was generated by AI during implementation.* 2026-10-26.
+
+Implemented in both repos. The fill gate ran once the bench and the fixed seeds were in the repo
+(see the criterion above).
+
+Ruled by the maintainer after implementation:
+
+- **With `partner_trade: none` the Dock is any other dropsite.** "The seed is asked wherever the
+  building is built" met "Dock pooled when `partner_trade` is not `none`", leaving a built Dock
+  unfundable for fishermen and oyster gatherers. Ruling: no pooling - a seed item stays pooled
+  only for the routes that would otherwise fund themselves - and the Dock falls back to the Mill's
+  funding. "Fishermen at a Dock" and "Oyster Gatherers at a Dock" need *some* wood, the at-scale
+  fisherman camp asks for the Dock structurally, and fishing boats drop there freely as before.
+  Red: `test_seed_items.py::TestWithNoPartnerTradeTheDockIsFundedLikeAMill` (three red, three
+  held before, including that with partner trade on fishermen still ask for the Dock seed). The
+  pinned easy-source answers did not move.
+- **`STARTING_VILLAGER_FOOD` (1024) now grants its food in game.** It had no case in
+  `GiveProgressionItem`, whose switch has no default, so it granted nothing. 1024 once held
+  Genghis 1's Blue Force before that moved to 1025; villager food never had a case.
+  `StartingVillagerFood()` adds the 150 food.
+
+Also noted, not changed:
+
+- The house style memory says "seed" means only the generation seed, and `CONTEXT.md` lists
+  *seed resources* under Avoid; the ticket's `SeedResources` and **Seed item** naming was kept as
+  briefed.
+- No test couples the XS grant amounts (100, 80 + 20 food, 150, 175) to `Items.py`.
