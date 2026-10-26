@@ -114,6 +114,11 @@ routes of *some*: a guard is never paid at scale, so it can open a route that ha
 it. A guarded building opens on its guard or on its owner's defeat, whichever comes first.
 _Avoid_: escort, protect, defend (when the trade route is meant)
 
+**Basic guard**:
+The guard for a dock whose owner has no warships: P1 can keep some navy on the water, paid in
+routes of *some*. The same ability that protects P1's own boats at sea.
+_Avoid_: naval guard (when counters to the owner's navy are meant)
+
 **Partner trade**:
 Gold or wood earned by sending trade carts to a trade partner's market or trade cogs to its dock.
 One thing whichever route it takes. Trade is not gathering and asks no base itself: cogs bring
@@ -129,12 +134,6 @@ _Avoid_: ally trade, bartering
 **Opponent**:
 A player who is an enemy of P1.
 _Avoid_: enemy faction
-
-**Main opponent**:
-An opponent significantly more powerful than the rest of the scenario's opponents. Its market and
-dock are not a trade partner's unless one is undefended or guarded by ruling. Not necessarily the
-opponent whose defeat wins the scenario.
-_Avoid_: boss, final enemy, victory target
 
 **Defeat**:
 P1 can overcome an opponent's army and take its ground. A defeated opponent's buildings may still
