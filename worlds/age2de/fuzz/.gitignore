@@ -1,11 +1,24 @@
-# The fuzzer itself is a vendored third-party tool, and its output is per-run noise.
-# What is worth keeping is age2de.yaml and this file.
+# The fuzzer itself is a vendored third-party tool.
+# What is worth keeping is age2de.yaml, bench/ and this file.
 fuzz.py
-fuzz_output*/
 __pycache__/
 
 # Throwaway experiment metas: targeted profiles, A/B overrides. Prefix new ones with _.
+# _full_shuffle.yaml is the exception: it is the meta the fixed seed set was fuzzed with, and
+# bench/README.md cites it, so it is not throwaway.
 _*.yaml
+!_full_shuffle.yaml
 
-# Benchmark scripts: local tooling, kept out of the repo like fuzz.py.
-bench/
+# A fuzz run's output is per-run noise, except the benchmark results stored out of it. The fill
+# gate in bench/README.md compares a new run against ones recorded here, so those have to
+# survive - a run nobody can read is a run the next ticket has to repeat.
+# It is `fuzz_output*/*`, not `fuzz_output*/`: git never descends into an ignored directory, and
+# the negations below would never be read. The seed YAMLs stay out - add `!fuzz_output*/yamls/`
+# to keep a fixed seed set in the repo as well.
+fuzz_output*/*
+!fuzz_output*/replay_*.jsonl
+!fuzz_output*/timings*.jsonl
+!fuzz_output*/report.json
+
+# A scratch log from one run, not a stored result.
+bench/replay_items.log
