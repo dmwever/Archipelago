@@ -203,15 +203,17 @@ class ScenarioResourceLogic:
             return False_()
         return self.scenario.buildings.has_fishing_boat_dropsite() & self.has_fishing_ships()
 
-    def can_collect_relics(self) -> Rule:
-        return self.scenario.named("can collect relics", self._collect_relics())
+    def can_collect_relics(self, monastery: Rule | None = None) -> Rule:
+        return self.scenario.named("can collect relics", self._collect_relics(monastery))
 
-    def _collect_relics(self) -> Rule:
+    def _collect_relics(self, monastery: Rule | None = None) -> Rule:
         if not self.counts.relic_count:
             return False_()
         monk = Age2UnitData.MONK
+        if monastery is None:
+            monastery = self.scenario.has_building_structurally(Age2BuildingData.MONASTERY)
         return (
-            self.scenario.has_building_structurally(Age2BuildingData.MONASTERY)
+            monastery
             & (
                 self.logic.units.has_unit_items(monk)
                 | (self.scenario.obtains_unit(monk) & self.logic.units.survives_caveman(monk))
@@ -330,11 +332,19 @@ class ScenarioResourceLogic:
         ]
 
     def relic_routes(self) -> list[EconomyRoute]:
+        monastery = Age2BuildingData.MONASTERY
         return [
             EconomyRoute(
-                name="Relics",
+                name="Relics at a standing Monastery",
                 yields={Resource.GOLD: Strength.SOME},
-                leaf=self.can_collect_relics(),
+                leaf=self.can_collect_relics(
+                    self.scenario.starting_state.starts_with_building[monastery]),
+            ),
+            EconomyRoute(
+                name="Relics at a built Monastery",
+                yields={Resource.GOLD: Strength.SOME},
+                leaf=self.can_collect_relics(
+                    self.scenario.buildings.can_build_structurally(monastery)),
                 needs={Resource.WOOD: Strength.SOME},
             ),
         ]
@@ -343,16 +353,9 @@ class ScenarioResourceLogic:
         town_center = self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER)
         lumber_camp = self.scenario.has_seeded_building(Age2BuildingData.LUMBER_CAMP)
         mule_cart = self.scenario.has_seeded_building(Age2BuildingData.MULE_CART)
-        mining_camp = self.scenario.has_building_structurally(Age2BuildingData.MINING_CAMP)
-        mill = self.scenario.has_building_structurally(Age2BuildingData.MILL)
-        folwark = self.scenario.has_building_structurally(Age2BuildingData.FOLWARK)
-        wood_of_some = {Resource.WOOD: Strength.SOME}
-        if self.scenario.is_seeded(Age2BuildingData.DOCK):
-            dock = self.scenario.has_seeded_building(Age2BuildingData.DOCK)
-            dock_needs = {}
-        else:
-            dock = self.scenario.has_building_structurally(Age2BuildingData.DOCK)
-            dock_needs = wood_of_some
+        mining_camp = Age2BuildingData.MINING_CAMP
+        mill = Age2BuildingData.MILL
+        folwark = Age2BuildingData.FOLWARK
         return [
             EconomyRoute(
                 name="Lumberjacks at a Town Center",
@@ -374,12 +377,8 @@ class ScenarioResourceLogic:
                 yields={Resource.GOLD: Strength.SOME},
                 leaf=self._gathers_some_at(town_center, Job.GOLD_MINER_MALE, "gold_count"),
             ),
-            EconomyRoute(
-                name="Gold Miners at a Mining Camp",
-                yields={Resource.GOLD: Strength.SOME},
-                leaf=self._gathers_some_at(mining_camp, Job.GOLD_MINER_MALE, "gold_count"),
-                needs=wood_of_some,
-            ),
+            *self._at_a_funded_camp("Gold Miners", mining_camp,
+                                    Job.GOLD_MINER_MALE, "gold_count", Resource.GOLD),
             EconomyRoute(
                 name="Gold Miners at a Mule Cart",
                 yields={Resource.GOLD: Strength.SOME},
@@ -390,12 +389,8 @@ class ScenarioResourceLogic:
                 yields={Resource.STONE: Strength.SOME},
                 leaf=self._gathers_some_at(town_center, Job.STONE_MINER_MALE, "stone_count"),
             ),
-            EconomyRoute(
-                name="Stone Miners at a Mining Camp",
-                yields={Resource.STONE: Strength.SOME},
-                leaf=self._gathers_some_at(mining_camp, Job.STONE_MINER_MALE, "stone_count"),
-                needs=wood_of_some,
-            ),
+            *self._at_a_funded_camp("Stone Miners", mining_camp,
+                                    Job.STONE_MINER_MALE, "stone_count", Resource.STONE),
             EconomyRoute(
                 name="Stone Miners at a Mule Cart",
                 yields={Resource.STONE: Strength.SOME},
@@ -406,18 +401,10 @@ class ScenarioResourceLogic:
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=self._gathers_some_at(town_center, Job.HUNTER_MALE, "hunt_count"),
             ),
-            EconomyRoute(
-                name="Hunters at a Mill",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(mill, Job.HUNTER_MALE, "hunt_count"),
-                needs=wood_of_some,
-            ),
-            EconomyRoute(
-                name="Hunters at a Folwark",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(folwark, Job.HUNTER_MALE, "hunt_count"),
-                needs=wood_of_some,
-            ),
+            *self._at_a_funded_camp("Hunters", mill,
+                                    Job.HUNTER_MALE, "hunt_count", Resource.FOOD),
+            *self._at_a_funded_camp("Hunters", folwark,
+                                    Job.HUNTER_MALE, "hunt_count", Resource.FOOD),
             EconomyRoute(
                 name="Hunters at a Mule Cart",
                 yields={Resource.FOOD: Strength.SOME},
@@ -428,80 +415,72 @@ class ScenarioResourceLogic:
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=self._gathers_some_at(town_center, Job.SHEPHERD_MALE, "herd_count"),
             ),
-            EconomyRoute(
-                name="Shepherds at a Mill",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(mill, Job.SHEPHERD_MALE, "herd_count"),
-                needs=wood_of_some,
-            ),
-            EconomyRoute(
-                name="Shepherds at a Folwark",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(folwark, Job.SHEPHERD_MALE, "herd_count"),
-                needs=wood_of_some,
-            ),
+            *self._at_a_funded_camp("Shepherds", mill,
+                                    Job.SHEPHERD_MALE, "herd_count", Resource.FOOD),
+            *self._at_a_funded_camp("Shepherds", folwark,
+                                    Job.SHEPHERD_MALE, "herd_count", Resource.FOOD),
             EconomyRoute(
                 name="Foragers at a Town Center",
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=self._gathers_some_at(town_center, Job.FORAGER_MALE, "bush_count"),
             ),
-            EconomyRoute(
-                name="Foragers at a Mill",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(mill, Job.FORAGER_MALE, "bush_count"),
-                needs=wood_of_some,
-            ),
-            EconomyRoute(
-                name="Foragers at a Folwark",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(folwark, Job.FORAGER_MALE, "bush_count"),
-                needs=wood_of_some,
-            ),
+            *self._at_a_funded_camp("Foragers", mill,
+                                    Job.FORAGER_MALE, "bush_count", Resource.FOOD),
+            *self._at_a_funded_camp("Foragers", folwark,
+                                    Job.FORAGER_MALE, "bush_count", Resource.FOOD),
             EconomyRoute(
                 name="Fishermen at a Town Center",
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=self._gathers_some_at(town_center, Job.FISHERMAN_MALE, "shore_fish_count"),
             ),
-            EconomyRoute(
-                name="Fishermen at a Mill",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(mill, Job.FISHERMAN_MALE, "shore_fish_count"),
-                needs=wood_of_some,
-            ),
-            EconomyRoute(
-                name="Fishermen at a Folwark",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(folwark, Job.FISHERMAN_MALE, "shore_fish_count"),
-                needs=wood_of_some,
-            ),
-            EconomyRoute(
-                name="Fishermen at a Dock",
-                yields={Resource.FOOD: Strength.SOME},
-                leaf=self._gathers_some_at(dock, Job.FISHERMAN_MALE, "shore_fish_count"),
-                needs=dock_needs,
-            ),
+            *self._at_a_funded_camp("Fishermen", mill,
+                                    Job.FISHERMAN_MALE, "shore_fish_count", Resource.FOOD),
+            *self._at_a_funded_camp("Fishermen", folwark,
+                                    Job.FISHERMAN_MALE, "shore_fish_count", Resource.FOOD),
+            *self._at_a_dock("Fishermen",
+                             Job.FISHERMAN_MALE, "shore_fish_count", Resource.FOOD),
             EconomyRoute(
                 name="Oyster Gatherers at a Town Center",
                 yields={Resource.GOLD: Strength.SOME},
                 leaf=self._gathers_some_at(town_center, Job.OYSTER_GATHERER_MALE, "oyster_count"),
             ),
+            *self._at_a_funded_camp("Oyster Gatherers", mill,
+                                    Job.OYSTER_GATHERER_MALE, "oyster_count", Resource.GOLD),
+            *self._at_a_funded_camp("Oyster Gatherers", folwark,
+                                    Job.OYSTER_GATHERER_MALE, "oyster_count", Resource.GOLD),
+            *self._at_a_dock("Oyster Gatherers",
+                             Job.OYSTER_GATHERER_MALE, "oyster_count", Resource.GOLD),
+        ]
+
+    def _at_a_funded_camp(self, who: str, camp: Age2BuildingData, job: Job, field: str,
+                          resource: Resource) -> list[EconomyRoute]:
+        return [
             EconomyRoute(
-                name="Oyster Gatherers at a Mill",
-                yields={Resource.GOLD: Strength.SOME},
-                leaf=self._gathers_some_at(mill, Job.OYSTER_GATHERER_MALE, "oyster_count"),
-                needs=wood_of_some,
+                name=f"{who} at a standing {camp.building_name}",
+                yields={resource: Strength.SOME},
+                leaf=self._gathers_some_at(
+                    self.scenario.starting_state.starts_with_building[camp], job, field),
             ),
             EconomyRoute(
-                name="Oyster Gatherers at a Folwark",
-                yields={Resource.GOLD: Strength.SOME},
-                leaf=self._gathers_some_at(folwark, Job.OYSTER_GATHERER_MALE, "oyster_count"),
-                needs=wood_of_some,
+                name=f"{who} at a built {camp.building_name}",
+                yields={resource: Strength.SOME},
+                leaf=self._gathers_some_at(
+                    self.scenario.buildings.can_build_structurally(camp), job, field),
+                needs={Resource.WOOD: Strength.SOME},
             ),
+        ]
+
+    def _at_a_dock(self, who: str, job: Job, field: str,
+                   resource: Resource) -> list[EconomyRoute]:
+        dock = Age2BuildingData.DOCK
+        if not self.scenario.is_seeded(dock):
+            return self._at_a_funded_camp(who, dock, job, field, resource)
+        return [
             EconomyRoute(
-                name="Oyster Gatherers at a Dock",
-                yields={Resource.GOLD: Strength.SOME},
-                leaf=self._gathers_some_at(dock, Job.OYSTER_GATHERER_MALE, "oyster_count"),
-                needs=dock_needs,
+                name=f"{who} at a Dock",
+                yields={resource: Strength.SOME},
+                leaf=self._gathers_some_at(
+                    self.scenario.has_seeded_building(dock), job, field),
             ),
         ]
 
