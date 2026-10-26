@@ -112,12 +112,16 @@ Holding the trade route to one opponent's market or dock open against its owner,
 defeating the owner first. Ruled per player and building, hand-written per scenario, and paid in
 routes of *some*: a guard is never paid at scale, so it can open a route that has no base behind
 it. A guarded building opens on its guard or on its owner's defeat, whichever comes first.
+By ruling, a guard may instead be another way its owner lets P1 trade, such as an alliance; that
+asks whatever the alliance costs, not routes of *some*.
 _Avoid_: escort, protect, defend (when the trade route is meant)
 
 **Basic guard**:
-The guard for a dock whose owner has no warships: P1 can keep some navy on the water, paid in
-routes of *some*. The same ability that protects P1's own boats at sea.
-_Avoid_: naval guard (when counters to the owner's navy are meant)
+The guard that asks no counters to the owner's forces. For a dock, P1 can keep some navy on the
+water, the same ability that protects P1's own boats at sea. For a market, P1 can hold open ground
+with some army; fortifications do not count, since the carts' route moves. Either is paid in routes
+of *some*.
+_Avoid_: naval guard (when counters to the owner's navy are meant), escort
 
 **Partner trade**:
 Gold or wood earned by sending trade carts to a trade partner's market or trade cogs to its dock.

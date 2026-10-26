@@ -60,3 +60,12 @@ class Attila6StartingState(ScenarioStartingState):
                 military.has_long_range_siege()
             ),
         }
+
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        military = scenario_logic.military
+        return {
+            (Age2PlayerData.ATT6_AQUILEIA, Age2BuildingData.DOCK): military.can_guard_boats(),
+        }

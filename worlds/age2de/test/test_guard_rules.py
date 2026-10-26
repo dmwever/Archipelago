@@ -1,7 +1,7 @@
 """Guard rules: "can P1 hold the trade route to this player's market or dock open" (ADR 0001).
 
-Nothing is ruled GUARDED yet, so every test here rules one building GUARDED for its own run: the
-Eastern Roman Empire's dock in Attila 1, whose owner Attila 1 already writes defeat rules for.
+Most tests here swap one shipped guard rule for their own: the Eastern Roman Empire's dock in
+Attila 1, ruled GUARDED, whose owner Attila 1 already writes defeat rules for.
 """
 
 from unittest import mock
@@ -51,16 +51,19 @@ class GuardedDockTestBase(bases.Age2RuleTestBase):
     starting_campaigns = ["Attila the Hun"]
 
     def build_guarded(self, guard=costs_of_some, **options):
-        """Attila 1 with the Eastern Roman dock ruled GUARDED and `guard` its guard rule.
+        """Attila 1 with `guard` the Eastern Roman dock's guard rule.
 
-        The patches outlive the build: the partner gate and the player logic both read the record
-        again whenever a rule is asked for after it.
+        The patch outlives the build: the player logic reads the rules again whenever a rule is
+        asked for after it.
         """
-        self.enterContext(mock.patch.object(OWNER, "dock", TradeAccess.GUARDED))
+        shipped = Attila1StartingState.trade_guard_rules
         self.enterContext(mock.patch.object(
             Attila1StartingState,
             "trade_guard_rules",
-            lambda _self, scenario_logic: {(OWNER, DOCK): guard(scenario_logic)},
+            lambda _self, scenario_logic: {
+                **shipped(_self, scenario_logic),
+                (OWNER, DOCK): guard(scenario_logic),
+            },
         ))
         options.setdefault("partner_trade", PartnerTrade.option_allies_and_enemies)
         return self.build(**options)
@@ -102,7 +105,7 @@ class TestTheGuardEventExists(GuardedDockTestBase):
 
 class TestAGuardedBuildingOpensOnEitherEvent(GuardedDockTestBase):
     """GUARDED means "once defeated, or guarded": either event opens the dock, neither leaves it
-    shut. Attila 1's only other dock records are closed, so the partner dock is this one."""
+    shut. The Persians' dock is guarded too, but neither of their events is ever held here."""
 
     def partner_dock(self):
         return self.scenario_logic().player_logic.can_reach_partner(DOCK)
@@ -179,22 +182,26 @@ class TestTheGuardRecordsAndRulesAgree(GuardedDockTestBase):
 
     def test_the_ruled_records_match_when_one_is_guarded(self):
         self.build_guarded()
-        self.assertEqual({(OWNER, DOCK)}, self.guarded_records())
+        self.assertIn((OWNER, DOCK), self.guarded_records())
         self.assertEqual(self.guarded_records(), self.ruled_records())
 
     def test_a_guarded_record_with_no_guard_rule_is_an_error(self):
-        self.enterContext(mock.patch.object(OWNER, "dock", TradeAccess.GUARDED))
+        self.enterContext(mock.patch.object(OWNER, "market", TradeAccess.GUARDED))
         with self.assertRaises(KeyError):
             self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
 
     def test_a_guard_rule_with_no_guarded_record_goes_red(self):
-        """The dock stays ONCE_DEFEATED, so no event is created and nothing asks the rule. What
+        """The market stays ONCE_DEFEATED, so no event is created and nothing asks the rule. What
         catches the stray rule is the shipped-records check above: the same assertion that passes
         there fails here."""
+        shipped = Attila1StartingState.trade_guard_rules
         self.enterContext(mock.patch.object(
             Attila1StartingState,
             "trade_guard_rules",
-            lambda _self, scenario_logic: {(OWNER, DOCK): True_()},
+            lambda _self, scenario_logic: {
+                **shipped(_self, scenario_logic),
+                (OWNER, Age2BuildingData.MARKET): True_(),
+            },
         ))
         self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
         with self.assertRaises(AssertionError):
@@ -221,3 +228,45 @@ class TestTheGuardRecordsAndRulesAgree(GuardedDockTestBase):
                          OWNER.guard_event(SCENARIO.scenario_name, DOCK))
         self.assertEqual(f"{SCENARIO.scenario_name}: Guard {OWNER.player_name}'s market",
                          OWNER.guard_event(SCENARIO.scenario_name, Age2BuildingData.MARKET))
+
+
+DOCK_RULINGS: dict[Age2PlayerData, TradeAccess] = {
+    Age2PlayerData.ATT1_PERSIANS: TradeAccess.GUARDED,
+    Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE: TradeAccess.GUARDED,
+    Age2PlayerData.ATT2_THESSALONICA: TradeAccess.OPEN,
+    Age2PlayerData.ATT3_CONSTANTINOPLE: TradeAccess.GUARDED,
+    Age2PlayerData.ATT3_MARCIANOPOLIS: TradeAccess.OPEN,
+    Age2PlayerData.ATT3_PHILIPPOPOLIS: TradeAccess.OPEN,
+    Age2PlayerData.ATT6_AQUILEIA: TradeAccess.GUARDED,
+    Age2PlayerData.ATT6_MEDIOLANUM: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN3_JIN: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.JOAN2_BURGUNDY: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN3_ENGLISH: TradeAccess.GUARDED,
+    Age2PlayerData.JOAN4_TROYES: TradeAccess.GUARDED,
+    Age2PlayerData.JOAN4_CHALONS: TradeAccess.GUARDED,
+    Age2PlayerData.JOAN6_BURGUNDY: TradeAccess.OPEN,
+    Age2PlayerData.JOAN6_ENGLISH: TradeAccess.CLOSED,
+}
+
+
+class TestTheEnemyDocksAreAsRuled(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+    starting_campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+
+    def test_every_enemy_dock_is_as_ruled(self):
+        for player, access in DOCK_RULINGS.items():
+            with self.subTest(player=player.name):
+                self.assertIs(access, player.dock)
+
+    def test_every_guarded_dock_has_the_basic_guard(self):
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        for player, access in DOCK_RULINGS.items():
+            if access is not TradeAccess.GUARDED:
+                continue
+            with self.subTest(player=player.name):
+                scenario = scenario_of(player)
+                scenario_logic = self.world.rules.logic.for_scenario(scenario)
+                event = self.world.get_location(player.guard_event(scenario.scenario_name, DOCK))
+                guard = scenario_logic.player_logic.guards(player, DOCK)
+                self.assertEqual(scenario_logic.military.can_guard_boats(), guard.child)
+                self.assertEqual(guard.resolve(self.world), event.access_rule)

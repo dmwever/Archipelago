@@ -66,3 +66,12 @@ class Joan3StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
             ),
         }
+
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        military = scenario_logic.military
+        return {
+            (Age2PlayerData.JOAN3_ENGLISH, Age2BuildingData.DOCK): military.can_guard_boats(),
+        }

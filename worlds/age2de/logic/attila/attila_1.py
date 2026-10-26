@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, HasAny, Rule, True_
+from rule_builder.rules import Has, HasAny, Rule, True_
 from ...locations.Buildings import Age2BuildingData
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
@@ -61,5 +61,17 @@ class Attila1StartingState(ScenarioStartingState):
                 military.has_siege() &
                 military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MANGUDAI_LINE, Age2AgeData.CASTLE)
+            ),
+        }
+
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        military = scenario_logic.military
+        return {
+            (Age2PlayerData.ATT1_PERSIANS, Age2BuildingData.DOCK): military.can_guard_boats(),
+            (Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE, Age2BuildingData.DOCK): (
+                military.can_guard_boats()
             ),
         }

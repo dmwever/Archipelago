@@ -299,7 +299,7 @@ class PartnerTrade(Choice):
     Whether the logic may expect you to run trade carts and trade cogs to another player's market or dock, and to whose.
     None: Trade with other players is never needed to afford anything.
     Allies: Only an ally's market or dock, and only where the scenario's ally keeps one usable.
-    Allies And Enemies: An enemy's too, once you can defeat its owner, or straight away if it is undefended. A main opponent's only if undefended.
+    Allies And Enemies: An enemy's too, once you can defeat its owner, straight away if it is undefended, or once you can guard the route to it.
     """
     internal_name = "partner_trade"
     display_name = "Partner Trade"

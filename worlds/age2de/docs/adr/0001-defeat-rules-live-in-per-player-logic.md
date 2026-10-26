@@ -8,8 +8,8 @@ Partner trade needs to know when P1 can defeat one specific opponent, but "can P
 existed only as local variables inside each scenario's rules, named `can_beat_*`, `can_kill_*` or
 `can_defeat_*` and keyed by colour or faction. So every player of every connected scenario is a member
 of `Age2PlayerData`, with its data hard-coded inline (slot, readable name, a fixed ally or enemy side,
-main-opponent flag, and a trade access for its market and its dock: closed, open, or open once
-defeated), routed to its scenario by `connections/ScenarioPlayers`. Each scenario's starting state
+and a trade access for its market and its dock: closed, open, or open once defeated), routed to
+its scenario by `connections/ScenarioPlayers`. Each scenario's starting state
 builds one defeat rule per opponent, keyed by those members, and the scenario's player logic
 (`ScenarioPlayerLogic`, `scenario_logic.player_logic`) serves them through a cached `defeats(player)`
 that both the victory rules and the trade logic read.

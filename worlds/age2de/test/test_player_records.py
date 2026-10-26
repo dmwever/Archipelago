@@ -18,31 +18,19 @@ JUDGED_FLAGS: dict[Age2ScenarioData, tuple[bool, bool, bool, bool]] = {
     Age2ScenarioData.AP_ATTILA_3: (False, True, False, True),
     Age2ScenarioData.AP_ATTILA_4: (False, True, False, False),
     Age2ScenarioData.AP_ATTILA_5: (True, True, False, False),
-    Age2ScenarioData.AP_ATTILA_6: (False, False, True, False),
+    Age2ScenarioData.AP_ATTILA_6: (False, False, True, True),
     Age2ScenarioData.AP_JOAN_1: (False, False, False, False),
     Age2ScenarioData.AP_JOAN_2: (True, False, False, False),
     Age2ScenarioData.AP_JOAN_3: (False, True, False, True),
-    Age2ScenarioData.AP_JOAN_4: (False, False, False, False),
+    Age2ScenarioData.AP_JOAN_4: (False, False, False, True),
     Age2ScenarioData.AP_JOAN_5: (False, False, False, False),
     Age2ScenarioData.AP_JOAN_6: (False, True, False, True),
     Age2ScenarioData.AP_GENGHIS_1: (False, False, False, False),
     Age2ScenarioData.AP_GENGHIS_2: (False, True, False, False),
-    Age2ScenarioData.AP_GENGHIS_3: (False, False, False, False),
+    Age2ScenarioData.AP_GENGHIS_3: (False, False, False, True),
     Age2ScenarioData.AP_GENGHIS_4: (False, True, False, False),
     Age2ScenarioData.AP_GENGHIS_5: (False, True, False, False),
     Age2ScenarioData.AP_GENGHIS_6: (False, False, False, False),
-}
-
-MAIN_OPPONENTS: set[Age2PlayerData] = {
-    Age2PlayerData.ATT1_PERSIANS,
-    Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE,
-    Age2PlayerData.ATT3_CONSTANTINOPLE,
-    Age2PlayerData.ATT4_ORLEANS,
-    Age2PlayerData.ATT5_WESTERN_ROMAN_EMPIRE,
-    Age2PlayerData.JOAN3_ENGLISH,
-    Age2PlayerData.JOAN6_ENGLISH,
-    Age2PlayerData.GEN2_KUSHLUK,
-    Age2PlayerData.GEN4_KHWARAZM,
 }
 
 class TestPlayersFollowTheRulings(unittest.TestCase):
@@ -100,24 +88,6 @@ class TestPlayersFollowTheRulings(unittest.TestCase):
         for player, side in sides.items():
             with self.subTest(player=player.name):
                 self.assertIs(player.side, side)
-
-    def test_the_main_opponents_are_as_ruled(self):
-        for player in Age2PlayerData:
-            with self.subTest(player=player.name):
-                self.assertEqual(player.is_main_opponent, player in MAIN_OPPONENTS)
-                if player.is_main_opponent:
-                    self.assertIs(player.side, Side.ENEMY)
-
-    def test_a_main_opponents_buildings_are_closed_unless_undefended(self):
-        for player in MAIN_OPPONENTS:
-            for building in (MARKET, DOCK):
-                with self.subTest(player=player.name, building=building.name):
-                    self.assertIsNot(player.trade_access(building), TradeAccess.ONCE_DEFEATED)
-
-    def test_the_english_dock_at_joan_3_is_undefended(self):
-        english = Age2PlayerData.JOAN3_ENGLISH
-        self.assertIs(english.dock, TradeAccess.OPEN)
-        self.assertIs(english.market, TradeAccess.CLOSED)
 
     def test_an_ally_never_waits_on_its_own_defeat(self):
         for player in Age2PlayerData:

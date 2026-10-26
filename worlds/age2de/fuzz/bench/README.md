@@ -59,6 +59,8 @@ Their records stand, and the 100 seeds here are what to use now.
 | `replay_issue29-army-open-ground.jsonl` | #29, on top of `3c0136c3` | 100/100 ok - the #29 fill gate, against `replay_issue23-defence-pays`. **Times void** - the machine was shared; for the record the branch was slower on 91 of 100 seeds (13.6s -> 17.4s median), which one more Or'd term on every open-ground question would explain. Spheres flat, 79 of 100 unchanged. |
 | `replay_issue24-seed-items.jsonl` | #24, on top of `e7547828` with the Dock fallback uncommitted | 100/100 ok - the #24 fill gate, against `replay_issue29-army-open-ground`. Times recorded (4.2s median) but not comparable: the baseline's are void. Sphere 1 median 7.5 -> 6, mean flat at 9.2; spheres 25 -> 26 median. |
 | `replay_issue28-joan4-french-camp.jsonl` | #28, on top of `5e262a4db` | 100/100 ok - the #28 fill gate, against `replay_issue24-seed-items`. **Times void** - the replay ran alongside two pytest batches on the same laptop, so the 4.2s -> 22.0s median is contention, not the branch. Spheres 99 of 100 unchanged (1 up); sphere 1 identical on all 100. |
+| `replay_3b376244.jsonl` | commit `3b376244` | 100/100 ok - the #26 baseline, measured in a detached worktree. **Times void** - ran alongside a recapture and pytest. |
+| `replay_issue26-dock-guards.jsonl` | #26, on top of `3b376244` | 100/100 ok - the #26 fill gate, against `replay_3b376244`. **Times void** - ran alongside pytest. Spheres and sphere 1 identical on all 100. |
 
 A new seed set (new fuzz run) uses `timing_hook.py` with `../fuzz.py`, which saves every YAML for
 reuse; `summarize.py` reads that run's `timings.jsonl`:
