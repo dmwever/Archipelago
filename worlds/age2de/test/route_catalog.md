@@ -10,9 +10,20 @@ Regenerate with that and commit the diff. `test_route_catalog.py` pins it.
 
 Rendered at **default options**, so a route gated behind an option (Market Trade) or absent from every map (oysters, whales) reads as unreachable here and is not necessarily a fault. A fixed-force scenario runs no routes at all, by design.
 
+- **Fishermen at a Folwark** is reachable in no scenario.
 - **Fishing Ships gathering gold** is reachable in no scenario.
+- **Foragers at a Folwark** is reachable in no scenario.
+- **Gold Miners at a Mule Cart** is reachable in no scenario.
+- **Hunters at a Folwark** is reachable in no scenario.
+- **Hunters at a Mule Cart** is reachable in no scenario.
+- **Lumberjacks at a Mule Cart** is reachable in no scenario.
 - **Market Trade** is reachable in no scenario.
-- **Oyster Gatherers** is reachable in no scenario.
+- **Oyster Gatherers at a Dock** is reachable in no scenario.
+- **Oyster Gatherers at a Folwark** is reachable in no scenario.
+- **Oyster Gatherers at a Mill** is reachable in no scenario.
+- **Oyster Gatherers at a Town Center** is reachable in no scenario.
+- **Shepherds at a Folwark** is reachable in no scenario.
+- **Stone Miners at a Mule Cart** is reachable in no scenario.
 - **a little of its own food** is reachable in no scenario.
 - **a little of its own gold** is reachable in no scenario.
 - **a little of its own stone** is reachable in no scenario.
@@ -22,27 +33,46 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 - **its own wood** is reachable in no scenario.
 
 
-## 34 routes - every scenario
+## 53 routes - every scenario
 
 | route | yields | needs | possible in |
 | --- | --- | --- | --- |
-| Lumberjacks | wood some | - | 15/18 |
-| Gold Miners | gold some | - | 15/18 |
-| Stone Miners | stone some | - | 15/18 |
-| Hunters | food some | - | 12/18 |
-| Shepherds | food some | - | 10/18 |
-| Foragers | food some | - | 8/18 |
-| Fishermen | food some | - | 13/18 |
-| Oyster Gatherers | gold some | - | 0/18 |
-| Relics | gold some | - | 2/18 |
+| Lumberjacks at a Town Center | wood some | - | 15/18 |
+| Lumberjacks at a Lumber Camp | wood some | - | 15/18 |
+| Lumberjacks at a Mule Cart | wood some | - | 0/18 |
+| Gold Miners at a Town Center | gold some | - | 15/18 |
+| Gold Miners at a Mining Camp | gold some | wood some | 15/18 |
+| Gold Miners at a Mule Cart | gold some | - | 0/18 |
+| Stone Miners at a Town Center | stone some | - | 15/18 |
+| Stone Miners at a Mining Camp | stone some | wood some | 15/18 |
+| Stone Miners at a Mule Cart | stone some | - | 0/18 |
+| Hunters at a Town Center | food some | - | 12/18 |
+| Hunters at a Mill | food some | wood some | 12/18 |
+| Hunters at a Folwark | food some | wood some | 0/18 |
+| Hunters at a Mule Cart | food some | - | 0/18 |
+| Shepherds at a Town Center | food some | - | 10/18 |
+| Shepherds at a Mill | food some | wood some | 10/18 |
+| Shepherds at a Folwark | food some | wood some | 0/18 |
+| Foragers at a Town Center | food some | - | 8/18 |
+| Foragers at a Mill | food some | wood some | 8/18 |
+| Foragers at a Folwark | food some | wood some | 0/18 |
+| Fishermen at a Town Center | food some | - | 13/18 |
+| Fishermen at a Mill | food some | wood some | 13/18 |
+| Fishermen at a Folwark | food some | wood some | 0/18 |
+| Fishermen at a Dock | food some | - | 12/18 |
+| Oyster Gatherers at a Town Center | gold some | - | 0/18 |
+| Oyster Gatherers at a Mill | gold some | wood some | 0/18 |
+| Oyster Gatherers at a Folwark | gold some | wood some | 0/18 |
+| Oyster Gatherers at a Dock | gold some | - | 0/18 |
+| Relics | gold some | wood some | 2/18 |
 | Farmers | food at scale | wood at scale | 15/18 |
 | Fish Traps | food at scale | wood at scale | 12/18 |
 | Trade Cogs | wood at scale, gold at scale | wood some, gold some | 1/18 |
-| Trade Cogs | wood at scale, gold at scale | gold some | 1/18 |
-| Trade Cogs | wood at scale, gold at scale | wood some | 1/18 |
-| Trade Cogs | wood at scale, gold at scale | - | 1/18 |
+| Trade Cogs on banked wood | wood at scale, gold at scale | gold some | 1/18 |
+| Trade Cogs on banked gold | wood at scale, gold at scale | wood some | 1/18 |
+| Trade Cogs on banked wood and gold | wood at scale, gold at scale | - | 1/18 |
 | Trade Carts | gold at scale | wood at scale, gold some | 3/18 |
-| Trade Carts | gold at scale | wood at scale | 3/18 |
+| Trade Carts on banked gold | gold at scale | wood at scale | 3/18 |
 | Market Trade | wood at scale, food at scale, gold at scale, stone at scale | wood at scale | 0/18 |
 | its own wood | wood at scale | - | 0/18 |
 | its own food | food at scale | - | 0/18 |
@@ -65,21 +95,21 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 
 | scenario | routes | possible |
 | --- | --- | --- |
-| AP_ATTILA_1 | 34 | 16 |
-| AP_ATTILA_2 | 34 | 11 |
-| AP_ATTILA_3 | 34 | 17 |
-| AP_ATTILA_4 | 34 | 11 |
-| AP_ATTILA_5 | 34 | 15 |
-| AP_ATTILA_6 | 34 | 17 |
-| AP_GENGHIS_1 | 34 | 0 |
-| AP_GENGHIS_2 | 34 | 10 |
-| AP_GENGHIS_3 | 34 | 13 |
-| AP_GENGHIS_4 | 34 | 13 |
-| AP_GENGHIS_5 | 34 | 12 |
-| AP_GENGHIS_6 | 34 | 10 |
-| AP_JOAN_1 | 34 | 0 |
-| AP_JOAN_2 | 34 | 13 |
-| AP_JOAN_3 | 34 | 13 |
-| AP_JOAN_4 | 34 | 12 |
-| AP_JOAN_5 | 34 | 0 |
-| AP_JOAN_6 | 34 | 11 |
+| AP_ATTILA_1 | 53 | 23 |
+| AP_ATTILA_2 | 53 | 17 |
+| AP_ATTILA_3 | 53 | 24 |
+| AP_ATTILA_4 | 53 | 17 |
+| AP_ATTILA_5 | 53 | 23 |
+| AP_ATTILA_6 | 53 | 25 |
+| AP_GENGHIS_1 | 53 | 0 |
+| AP_GENGHIS_2 | 53 | 15 |
+| AP_GENGHIS_3 | 53 | 21 |
+| AP_GENGHIS_4 | 53 | 21 |
+| AP_GENGHIS_5 | 53 | 18 |
+| AP_GENGHIS_6 | 53 | 15 |
+| AP_JOAN_1 | 53 | 0 |
+| AP_JOAN_2 | 53 | 19 |
+| AP_JOAN_3 | 53 | 20 |
+| AP_JOAN_4 | 53 | 19 |
+| AP_JOAN_5 | 53 | 0 |
+| AP_JOAN_6 | 53 | 17 |

@@ -27,10 +27,10 @@ TRAP_NAMES = set(Items.TRAP_NAMES)
 
 # Mirrors the targets in _build_starting_resources. Duplicated deliberately: a test that read them
 # from the implementation could not catch the implementation lowering them. They came down when the
-# three town-centre items started counting toward the same totals - 275 wood, 150 food and 100
-# stone are guaranteed in every pool, so the rolled band no longer has to supply them.
+# seed items started counting toward the same totals - at default options 780 wood, 150 food and
+# 100 stone are guaranteed in every pool, so the rolled band no longer has to supply them.
 TARGETS = {
-    Items.Resource.WOOD: 725,
+    Items.Resource.WOOD: 220,
     Items.Resource.FOOD: 850,
     Items.Resource.GOLD: 750,
     Items.Resource.STONE: 400,

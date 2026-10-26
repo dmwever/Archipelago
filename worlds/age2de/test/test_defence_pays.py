@@ -19,6 +19,7 @@ from ..logic.scenarios.ScenarioResourceLogic import ScenarioResourceLogic
 from .test_economy_catalog import (
     BASE,
     BASE_SWITCHES,
+    LUMBERJACKS,
     SCENARIO_WOOD,
     VILLAGERS,
     ToyScenarioBase,
@@ -51,7 +52,7 @@ class TestOpenGroundIsFreeOfSomeAndHeldAtScale(DefenceToyBase):
 
     def test_villagers_mine_open_gold_of_some_with_no_base_and_no_defence(self):
         self.toy({Tier.OPEN: tier(gold_count=500)})
-        self.assertTrue(self.some(Resource.GOLD, self.state(*self.MINERS)))
+        self.assertTrue(self.some(Resource.GOLD, self.state(*self.MINERS, *LUMBERJACKS)))
 
     def test_the_same_ground_at_scale_yields_nothing_until_it_is_held(self):
         self.toy({Tier.OPEN: tier(gold_count=2000)})

@@ -28,7 +28,7 @@ from ..generation.LocalStart import (
     scenario_base_rule,
     win_items,
 )
-from ..items.Items import Age2ItemData, NAME_TO_ITEM, Resource, StartingResources, TCResources
+from ..items.Items import Age2ItemData, NAME_TO_ITEM, Resource, StartingResources, SeedResources
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..locations.Campaigns import NAME_TO_CAMPAIGN, Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
@@ -44,7 +44,7 @@ def resources_in(names) -> dict[Resource, int]:
     totals = {resource: 0 for resource in Resource}
     for name in names:
         payload = NAME_TO_ITEM[name].type
-        if isinstance(payload, (StartingResources, TCResources)):
+        if isinstance(payload, (StartingResources, SeedResources)):
             totals[payload.type] += payload.amount
     return totals
 

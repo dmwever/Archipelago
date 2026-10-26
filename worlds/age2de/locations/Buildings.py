@@ -32,6 +32,7 @@ class Age2BuildingData(enum.IntEnum):
         self.age = age
         self.building_options = building_options
         self.cost: dict = {}
+        self.seed_item: Age2ItemData | None = None
 
     @property
     def building_name(self) -> str:

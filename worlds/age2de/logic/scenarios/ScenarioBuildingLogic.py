@@ -135,8 +135,13 @@ class ScenarioBuildingLogic:
         return self._camp_among(FISHERMAN_DROPSITES)
 
     def _camp_among(self, dropsites: list[Age2BuildingData]) -> Rule:
-        camps = [building for building in dropsites if building is not B.TOWN_CENTER]
-        return self._any_of(camps) | self.can_build_multiple_tc()
+        camps = [self._camp(building) for building in dropsites if building is not B.TOWN_CENTER]
+        return Or(*camps) | self.can_build_multiple_tc()
+
+    def _camp(self, building: Age2BuildingData) -> Rule:
+        if building.seed_item is None:
+            return self.scenario.has_building_structurally(building)
+        return self.scenario.has_seeded_building(building)
 
     def _any_of(self, buildings: list[Age2BuildingData]) -> Rule:
         return Or(*[self.scenario.has_building_structurally(building) for building in buildings])

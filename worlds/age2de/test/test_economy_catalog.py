@@ -28,6 +28,11 @@ FORTIFIED = "switch: fortified"
 ENEMY_CAMP_TAKEN = "switch: enemy camp taken"
 SCENARIO_WOOD = "switch: scenario wood"
 
+LUMBER_CAMP_SEED = "Starting Lumber Camp Wood"
+MULE_CART_SEED = "Starting Mule Cart Resources"
+DOCK_SEED = "Starting Dock Wood"
+MARKET_SEED = "Starting Market Wood"
+
 DEMAND = ScenarioResourceDemand(gold=1000, stone=1000, food=1000)
 
 
@@ -69,10 +74,10 @@ def tier(**counts: int) -> ScenarioResourceCount:
 
 
 BASE_SWITCHES = (BASE, building(B.TOWN_CENTER))
-LUMBERJACKS = (VILLAGERS, job(Job.LUMBERJACK_MALE), building(B.LUMBER_CAMP))
+LUMBERJACKS = (VILLAGERS, job(Job.LUMBERJACK_MALE), building(B.LUMBER_CAMP), LUMBER_CAMP_SEED)
 GOLD_MINERS = (VILLAGERS, job(Job.GOLD_MINER_MALE), building(B.MINING_CAMP))
-TRADE_COGS = (unit(U.TRADE_COG), partner(B.DOCK), building(B.DOCK))
-TRADE_CARTS = (unit(U.TRADE_CART), partner(B.MARKET), building(B.MARKET))
+TRADE_COGS = (unit(U.TRADE_COG), partner(B.DOCK), building(B.DOCK), DOCK_SEED)
+TRADE_CARTS = (unit(U.TRADE_CART), partner(B.MARKET), building(B.MARKET), MARKET_SEED)
 FISHING_SHIPS = (unit(U.FISHING_SHIP), building(B.DOCK))
 RELICS = (building(B.MONASTERY), unit(U.MONK))
 
@@ -115,6 +120,10 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
         switch(economy, "has_job", lambda which: Has(job(which)))
         self.switch_defences(switch)
         switch(scenario.logic.units, "has_unit_items", lambda which: Has(unit(which)))
+        stack.enter_context(mock.patch.dict(
+            starting_state.starts_with_building,
+            {which: Has(standing(which)) for which in B},
+        ))
         stack.enter_context(mock.patch.object(
             starting_state,
             "must_steal_base",
@@ -154,13 +163,14 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
         switch(self.scenario.buildings, "can_hold_a_shoreline", lambda: Has(SHORELINE_HELD))
         switch(self.scenario.buildings, "_fortified", lambda: Has(FORTIFIED))
 
-    def state(self, *switches: str, wood: int = 0, gold: int = 0) -> CollectionState:
+    def state(self, *switches: str, wood: int = 0, gold: int = 0, food: int = 0) -> CollectionState:
         state = CollectionState(self.multiworld)
         held = state.prog_items[self.world.player]
         for name in switches:
             held[name] = 1
         held["+50 Starting Wood"] += wood // 50
         held["+50 Starting Gold"] += gold // 50
+        held["+50 Starting Food"] += food // 50
         return state
 
     def easy(self, resource: Resource, state: CollectionState) -> bool:
@@ -256,7 +266,7 @@ class TestMarketTradeSeededByWoodAtScale(ToyScenarioBase):
 
     def test_wood_at_scale_seeds_market_trade(self):
         self.toy(self.MAP, market_trade=MarketTrade.option_true)
-        state = self.state(SCENARIO_WOOD, building(B.MARKET))
+        state = self.state(SCENARIO_WOOD, building(B.MARKET), MARKET_SEED)
         self.assertTrue(self.easy(Resource.STONE, state))
 
     def test_easy_gold_and_raw_food_alone_do_not(self):
@@ -306,7 +316,7 @@ class TestRelics(ToyScenarioBase):
         lie on is free."""
         self.toy({Tier.OPEN: tier(relic_count=5)})
         self.assertFalse(self.some(Resource.GOLD, self.state(building(B.MONASTERY))))
-        self.assertTrue(self.some(Resource.GOLD, self.state(*RELICS)))
+        self.assertTrue(self.some(Resource.GOLD, self.state(*RELICS, SCENARIO_WOOD)))
 
 
 class TestNavalGuardOverDeepFish(ToyScenarioBase):
@@ -330,7 +340,7 @@ class TestNavalGuardOverTheShoreline(ToyScenarioBase):
 
     def shore(self, field: str, gatherer: Job, resource: Resource) -> None:
         self.toy({Tier.OPEN: tier(**{field: 2000}), Tier.BASE: tier(gold_count=100)})
-        workers = (*BASE_SWITCHES, VILLAGERS, job(gatherer), building(B.DOCK), NAVY)
+        workers = (*BASE_SWITCHES, VILLAGERS, job(gatherer), building(B.DOCK), DOCK_SEED, NAVY)
         guarded = self.state(*workers, *self.FEW_LUMBERJACKS, *self.LITTLE_MINING)
         self.assertFalse(self.easy(Resource.WOOD, guarded))
         self.assertTrue(self.easy(resource, guarded))
@@ -352,10 +362,11 @@ class TestPerSourceCamps(ToyScenarioBase):
         self.assertFalse(self.easy(Resource.FOOD, self.state(*self.HUNTERS)))
 
     def test_hunt_counts_with_each_of_its_camps(self):
-        for camp in (building(B.MILL), building(B.FOLWARK), building(B.MULE_CART), MORE_TCS):
+        for camp in ((building(B.MILL),), (building(B.FOLWARK),),
+                     (building(B.MULE_CART), MULE_CART_SEED), (MORE_TCS,)):
             with self.subTest(camp=camp):
                 self.toy({Tier.BASE: tier(hunt_count=2000)})
-                self.assertTrue(self.easy(Resource.FOOD, self.state(*self.HUNTERS, camp)))
+                self.assertTrue(self.easy(Resource.FOOD, self.state(*self.HUNTERS, *camp, food=50)))
 
     def test_herding_counts_with_the_bases_town_center_alone(self):
         self.toy({Tier.BASE: tier(herd_count=2000)})
@@ -379,7 +390,7 @@ class TestACampGatesItsOwnTerm(ToyScenarioBase):
 
     def test_their_own_camp_does(self):
         self.toy({Tier.BASE: tier(oyster_count=2000)})
-        state = self.state(*self.OYSTER_GATHERERS, building(B.DOCK))
+        state = self.state(*self.OYSTER_GATHERERS, building(B.DOCK), DOCK_SEED)
         self.assertTrue(self.easy(Resource.GOLD, state))
 
 
@@ -402,8 +413,9 @@ class TestRoutesOfSomeStillWaitOnAnEnemyCamp(ToyScenarioBase):
 
     def test_gold_inside_an_enemy_camp_waits_for_its_gate(self):
         self.toy({Tier.ENEMY: tier(gold_count=500)})
-        self.assertFalse(self.some(Resource.GOLD, self.state(*GOLD_MINERS)))
-        self.assertTrue(self.some(Resource.GOLD, self.state(*GOLD_MINERS, ENEMY_CAMP_TAKEN)))
+        miners = (*GOLD_MINERS, *LUMBERJACKS)
+        self.assertFalse(self.some(Resource.GOLD, self.state(*miners)))
+        self.assertTrue(self.some(Resource.GOLD, self.state(*miners, ENEMY_CAMP_TAKEN)))
 
 
 class TestVillagersAndFishingShipsSumTogether(ToyScenarioBase):

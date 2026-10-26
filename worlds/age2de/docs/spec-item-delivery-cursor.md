@@ -23,7 +23,7 @@ is kept in client memory instead.
   whole recovery window, and the real identity checks never run at all.
 
 A fourth problem was found while auditing the above and is fixed here too: `StartingResources`
-and `TCResources` go out through both `startup.xsdat` and the item window, so the first
+and `SeedResources` go out through both `startup.xsdat` and the item window, so the first
 scenario of a session can be paid its starting pile twice.
 
 ## Solution
@@ -73,7 +73,7 @@ The exceptions are additive, and they split into **two kinds with two different 
 | Kind | Categories | Ids | Rule |
 |---|---|---|---|
 | Fires once, ever | `Resources` (filler), `Trap` | 1-12, 5000-5008 | skip if index < the global spent mark |
-| Fires once per scenario run | `StartingResources`, `TCResources` | 13-24, 1000/1001/1024 | never skipped; the window is their only path |
+| Fires once per scenario run | `StartingResources`, `SeedResources` | 13-24, 1000/1001/1024, 1032-1035 | never skipped; the window is their only path |
 
 Mercenaries are *not* in either list despite being single-use. `GiveMercenary` only sets a
 per-scenario flag; "spent" is a pavilion concept the client already tracks in `MercenaryHandler` /

@@ -151,6 +151,23 @@ class ScenarioLogic:
         return (self.starting_state.starts_with_building[building]
                 | self.buildings.can_build_structurally(building))
 
+    def has_seeded_building(self, building: Age2BuildingData) -> Rule:
+        return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
+                          "standing or seeded",
+                          self._has_seeded_building(building))
+
+    def _has_seeded_building(self, building: Age2BuildingData) -> Rule:
+        seed = building.seed_item
+        banked = {
+            resource: amount for resource, amount in building.cost.items()
+            if resource is not seed.type.type
+        }
+        seeded = Has(seed.item_name) & self.logic.resources.has_amounts(banked)
+        return (
+            self.starting_state.starts_with_building[building]
+            | (self.buildings.can_build_structurally(building) & seeded)
+        )
+
     def has_building(self, building: Age2BuildingData) -> Rule:
         return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
                           "standing or paid for",

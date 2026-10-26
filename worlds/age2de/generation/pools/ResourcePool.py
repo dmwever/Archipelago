@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 
 from ...items import Items
 from ...items.Items import Age2ItemData, Resource
+from ...locations.Buildings import Age2BuildingData
+from ...Options import PartnerTrade
 
 if TYPE_CHECKING:
     from ... import Age2World
@@ -18,8 +20,9 @@ LARGEST = {
     Resource.STONE: Age2ItemData.STARTING_STONE_LARGE,
 }
 
+STARTING_WOOD = 1000
+
 TARGETS = {
-    Resource.WOOD: 725,   # 1000, less the Starting Town Center Wood every pool has
     Resource.FOOD: 850,
     Resource.GOLD: 750,
     Resource.STONE: 400,
@@ -33,6 +36,24 @@ class ResourcePool:
     def __init__(self, options: 'Age2Options', world: 'Age2World') -> None:
         self._world = world
         self.totals: dict[Resource, int] = {resource: 0 for resource in Resource}
+        self.seeds: list[Age2ItemData] = [
+            item for item in Items.CATEGORY_TO_ITEMS[Items.SeedResources]
+            if self.is_economy_route_shuffled(item.type.seeds, options)
+        ]
+        seed_wood = sum(
+            item.type.amount for item in self.seeds
+            if item.type.type is Resource.WOOD
+        )
+        self.targets: dict[Resource, int] = {Resource.WOOD: STARTING_WOOD - seed_wood, **TARGETS}
+
+    @staticmethod
+    def is_economy_route_shuffled(building: Age2BuildingData, options: 'Age2Options') -> bool:
+        partner_trade = options.partner_trade.value != PartnerTrade.option_none
+        if building is Age2BuildingData.DOCK:
+            return partner_trade
+        if building is Age2BuildingData.MARKET:
+            return bool(options.market_trade) or partner_trade
+        return True
 
     def plan(self, locations_to_fill: int) -> list[Age2ItemData]:
         """The starting resources for this seed, out of at most its share of the open locations,
@@ -49,7 +70,7 @@ class ResourcePool:
         if locations_to_fill <= 0:
             return items
 
-        amounts = dict(TARGETS)
+        amounts = dict(self.targets)
         choices = Items.CATEGORY_TO_ITEMS[Items.StartingResources]
 
         while locations_to_fill > 0:
@@ -83,10 +104,10 @@ class ResourcePool:
         tallied = {resource: 0 for resource in Resource}
         precollected = [Items.NAME_TO_ITEM[item.name]
                         for item in self._world.multiworld.precollected_items[self._world.player]]
-        pooled = items + Items.CATEGORY_TO_ITEMS[Items.TCResources]
+        pooled = items + self.seeds
         for item in pooled + precollected:
             payload = item.type
-            if isinstance(payload, (Items.StartingResources, Items.TCResources)):
+            if isinstance(payload, (Items.StartingResources, Items.SeedResources)):
                 tallied[payload.type] += payload.amount
         self.totals.clear()
         self.totals.update(tallied)

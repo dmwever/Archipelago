@@ -54,9 +54,22 @@ _Avoid_: income, steady supply
 Everything a route's producer needs before it starts yielding: resources gathered or banked,
 buildings, access such as water or a trade partner's dock, villagers (any number), or a scenario's own
 grant. A bundle, not a pile, and particular to its route. Its resources may come from any route
-already yielding them, at either strength, so one route can seed the next.
+already yielding them, at either strength, so one route can seed the next. A route's needs are its
+operating input and never its capital: they say what must already be yielding before the producer
+runs, and never buy the building it stands in, which does not exist yet. That building is capital,
+funded from outside the economy by a **seed item** or by *some* wood.
 _Avoid_: seed (alone: it is the Archipelago generation seed), seed resources, starting resources
 (when the whole bundle is meant)
+
+**Seed item**:
+An item granting the starting resources one building costs, so a built one is paid for from
+outside the economy: the Town Center items and the villagers' food for the base, and one wood item
+each for the Lumber Camp, Mule Cart, Dock and Market - the buildings that can open an economy from
+nothing. A building that only opens a resource inside an economy already running (Mining Camp,
+Mill, Folwark, Monastery) has none; its route needs *some* wood instead. A building standing at
+the start asks for no seed item, and one is pooled only where a route under the seed's options can
+use it.
+_Avoid_: Town Center resources (when every seed item is meant), starting resources, seed (alone)
 
 **Defence**:
 What P1 builds or trains to hold resources out on the map: a wall with a tower, a strongpoint

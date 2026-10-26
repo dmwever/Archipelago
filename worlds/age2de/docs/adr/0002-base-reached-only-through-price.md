@@ -48,11 +48,20 @@ would have to be unpicked one rule at a time.
   open ground at scale, for every resource there, beside a built defence, paying *some* of the
   line's own cost in the same expression. The base is still asked. A starting or granted army
   holds nothing: it is the scenario's own plan, not a garrison. An army does not hold a shoreline.
+- The buildings an economy route stands on are funded from outside the economy (#24), because a
+  route's needs are its operating input, never its capital. A building which can open an economy
+  from nothing - the Lumber Camp, Mule Cart, Dock and Market - is funded by a seed item, in the
+  shape of the Town Center items. One which cannot - the Mining Camp, Mill, Folwark and Monastery -
+  is funded by *some* of its cost: its route needs *some* wood, which the fixpoint takes from a
+  different route. A standing one is free, and the Town Center branch of a dropsite carries no
+  funding, so each villager route of *some* is one route per dropsite.
 - The Town Center is paid for by the base, never by an easy source. A standing one is free; a built
   one is paid for by the Town Center items, which the location reaches through its own price.
 - A banked pile (`HasResourceAmount`) never pays for a building. It counts the Town Center items,
   which the base has already spent, and it can't add up two buildings. Banks pay only for one-off
-  seeds such as a Fishing Ship or a trade seed.
+  seeds such as a Fishing Ship or a trade seed. The one exception is the Mule Cart's food (#24):
+  its seed item carries the wood, and a food need would make its hunt route need what it yields.
+  The cog route's wood bank excludes the Dock's seed item, which is already buying that Dock.
 - The structural climb asks for a Town Center structurally, because an age is researched there. The
   base arrives through the age's food cost.
 - Trade Cogs are a deliberate non-base economy (#19): cogs to a trade partner's dock bring in easy

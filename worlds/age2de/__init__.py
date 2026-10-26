@@ -25,7 +25,7 @@ from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
 from .locations.Players import TRADE_BUILDINGS
 from .locations.Techs import Age2TechData
 from .locations.VillagerJobs import Age2VillagerJobData
-from .locations.connections import (CivilizationBuildings, CivilizationTechs,
+from .locations.connections import (BuildingSeeds, CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, GameCosts,
                                     ScenarioExclusions, ScenarioPlayers, ScenarioResources,
                                     ScenarioStartupUnits,
@@ -251,8 +251,9 @@ class Age2World(CachedRuleBuilderWorld):
                 continue
             elif isinstance(item.type, Items.StartingResources):
                 continue
-            elif isinstance(item.type, Items.TCResources):
-                items.append(self.create_item(item.item_name))
+            elif isinstance(item.type, Items.SeedResources):
+                if item in self.pool.resources.seeds:
+                    items.append(self.create_item(item.item_name))
             elif isinstance(item.type, Items.Age2AgeData):
                 age_item = self.create_item(item.item_name)
                 if item.type in self.pool.ages.locations:
