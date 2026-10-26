@@ -42,9 +42,9 @@ Tickets #05, #17, #18, #19 and #22 record this gate against 63 generations in
 `fuzz_output_lock_items/error/age2de/`. Those runs happened; the directory did not survive, because
 the whole of `fuzz_output_*` was gitignored then. It no longer is: `fuzz/.gitignore` now tracks
 every `replay_*.jsonl`, `timings*.jsonl` and `report.json` stored under one, so step 3 above is a
-real commit. The seed YAMLs beside them are still ignored - add `!fuzz_output*/yamls/` to that file
-if the fixed seed set should travel with the repo too. Their records stand, and the 100 seeds here
-are what to use now.
+real commit. The fixed seed set in `yamls/` is tracked too, so a stored run can always be
+reproduced and compared against from a fresh clone; everything else a run drops stays ignored.
+Their records stand, and the 100 seeds here are what to use now.
 
 ## Stored runs
 

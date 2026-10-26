@@ -13,9 +13,11 @@ _*.yaml
 # gate in bench/README.md compares a new run against ones recorded here, so those have to
 # survive - a run nobody can read is a run the next ticket has to repeat.
 # It is `fuzz_output*/*`, not `fuzz_output*/`: git never descends into an ignored directory, and
-# the negations below would never be read. The seed YAMLs stay out - add `!fuzz_output*/yamls/`
-# to keep a fixed seed set in the repo as well.
+# the negations below would never be read. `yamls/` is the fixed seed set those results were
+# measured on - without it a stored run cannot be reproduced or compared against, which is how
+# the `fuzz_output_lock_items` gate was lost. Everything else a run drops is noise.
 fuzz_output*/*
+!fuzz_output*/yamls/
 !fuzz_output*/replay_*.jsonl
 !fuzz_output*/timings*.jsonl
 !fuzz_output*/report.json
