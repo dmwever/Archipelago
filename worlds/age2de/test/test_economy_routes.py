@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import json
 import random
@@ -66,6 +67,23 @@ EQUIVALENCE_CONFIGS: dict[str, dict] = {
 RANDOM_STATES = 300
 
 
+def sampled_states(names: list[str]) -> list[set[tuple[str, int]]]:
+    keys: list[tuple[str, int]] = []
+    copies: collections.Counter[str] = collections.Counter()
+    for name in names:
+        keys.append((name, copies[name]))
+        copies[name] += 1
+    rng = random.Random(19)
+    states = [set(), set(keys)]
+    for index in range(RANDOM_STATES):
+        keep = rng.random()
+        states.append({
+            (name, copy) for name, copy in keys
+                if random.Random(f"{index}:{name}:{copy}").random() < keep
+        })
+    return states
+
+
 class EasySourceEquivalenceBase(bases.Age2RuleTestBase):
     campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
     starting_campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
@@ -90,16 +108,16 @@ class EasySourceEquivalenceBase(bases.Age2RuleTestBase):
 
     def states(self) -> list[CollectionState]:
         items = self.collectable_items()
-        rng = random.Random(19)
-        picks: list[list] = [[], items]
-        for _ in range(RANDOM_STATES):
-            keep = rng.random()
-            picks.append([item for item in items if rng.random() < keep])
+        by_key: dict[tuple[str, int], object] = {}
+        copies: collections.Counter[str] = collections.Counter()
+        for item in items:
+            by_key[(item.name, copies[item.name])] = item
+            copies[item.name] += 1
         states = []
-        for pick in picks:
+        for pick in sampled_states([item.name for item in items]):
             state = CollectionState(self.multiworld)
-            for item in pick:
-                state.collect(item, prevent_sweep=True)
+            for key in sorted(pick):
+                state.collect(by_key[key], prevent_sweep=True)
             states.append(state)
         return states
 
@@ -146,6 +164,29 @@ class TestEveryEasySourceAnswersAsBefore(EasySourceEquivalenceBase):
                 ]
                 self.assertEqual(len(before[name]["states"]), len(now["states"]))
                 self.assertEqual([], moved)
+
+
+class TestTheSampledStatesIgnoreOtherItems(unittest.TestCase):
+    NAMES = ["Castle Age", "Dock", "Dock", "Feudal Age", "Trade Cog Line"]
+
+    def test_a_new_item_moves_no_other_pick(self):
+        before = sampled_states(self.NAMES)
+        after = sampled_states(sorted(["A New Event"] + self.NAMES))
+        self.assertEqual(
+            before,
+            [{key for key in state if key[0] != "A New Event"} for state in after],
+        )
+
+    def test_a_copy_is_picked_on_its_own(self):
+        picks = sampled_states(self.NAMES)
+        self.assertTrue(any(
+            ("Dock", 0) in state and ("Dock", 1) not in state for state in picks
+        ))
+
+    def test_the_first_state_holds_nothing_and_the_second_everything(self):
+        picks = sampled_states(self.NAMES)
+        self.assertEqual(set(), picks[0])
+        self.assertEqual({(name, 0) for name in self.NAMES} | {("Dock", 1)}, picks[1])
 
 
 class EconomyRoutesTestBase(bases.Age2RuleTestBase):

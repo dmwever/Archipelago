@@ -224,10 +224,26 @@ class TestTheGuardRecordsAndRulesAgree(GuardedDockTestBase):
                     self.assertIsNot(player.trade_access(building), TradeAccess.GUARDED)
 
     def test_a_guard_event_names_the_building_it_guards(self):
-        self.assertEqual(f"{SCENARIO.scenario_name}: Guard {OWNER.player_name}'s dock",
+        self.assertEqual(f"{SCENARIO.scenario_name}: Can Guard {OWNER.player_name}'s dock",
                          OWNER.guard_event(SCENARIO.scenario_name, DOCK))
-        self.assertEqual(f"{SCENARIO.scenario_name}: Guard {OWNER.player_name}'s market",
+        self.assertEqual(f"{SCENARIO.scenario_name}: Can Guard {OWNER.player_name}'s market",
                          OWNER.guard_event(SCENARIO.scenario_name, Age2BuildingData.MARKET))
+
+    def test_a_name_ending_in_s_takes_a_bare_apostrophe(self):
+        persians = Age2PlayerData.ATT1_PERSIANS
+        self.assertEqual(f"{SCENARIO.scenario_name}: Can Guard the Persians' dock",
+                         persians.guard_event(SCENARIO.scenario_name, DOCK))
+        self.assertEqual("Chalons' dock",
+                         f"{Age2PlayerData.JOAN4_CHALONS.name_as_owner} dock")
+        self.assertEqual("the English's dock",
+                         f"{Age2PlayerData.JOAN3_ENGLISH.name_as_owner} dock")
+
+    def test_the_guard_rule_reads_with_the_same_name_as_owner(self):
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        persians = Age2PlayerData.ATT1_PERSIANS
+        guard = self.world.rules.logic.for_scenario(SCENARIO).player_logic.guards(persians, DOCK)
+        self.assertTrue(guard.label.endswith("can guard the route to the Persians' dock"),
+                        guard.label)
 
 
 DOCK_RULINGS: dict[Age2PlayerData, TradeAccess] = {

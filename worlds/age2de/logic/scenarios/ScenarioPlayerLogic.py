@@ -43,7 +43,7 @@ class ScenarioPlayerLogic:
             self._guards = {}
             for (owner, guarded), rule in guard_rules.items():
                 self._guards[(owner, guarded)] = self.scenario.named(
-                    f"can guard the route to {owner.player_name}'s "
+                    f"can guard the route to {owner.name_as_owner} "
                     f"{guarded.building_name.lower()}", rule)
         return self._guards[(player, building)]
 

@@ -54,8 +54,14 @@ class Age2PlayerData(enum.IntEnum):
     def defeat_event(self, scenario_name: str) -> str:
         return f"{scenario_name}: Can Defeat {self.player_name}"
 
+    @property
+    def name_as_owner(self) -> str:
+        if self.player_name.endswith("s"):
+            return f"{self.player_name}'"
+        return f"{self.player_name}'s"
+
     def guard_event(self, scenario_name: str, building: Age2BuildingData) -> str:
-        return f"{scenario_name}: Guard {self.player_name}'s {building.building_name.lower()}"
+        return f"{scenario_name}: Can Guard {self.name_as_owner} {building.building_name.lower()}"
 
     # Attila 1. Bleda (P2) is ignored. Ruled: the Scythians are an ally.
     ATT1_SCYTHIANS =            1013, "the Scythians",              3, Side.ALLY,  TradeAccess.OPEN,          TradeAccess.CLOSED
