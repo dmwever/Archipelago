@@ -5,6 +5,15 @@ reasons about a scenario: what P1 can field, what beats what, and what the map y
 
 ## Language
 
+### Logic
+
+**Rule**:
+One condition the logic asks, and the `Rule` object that holds it: a leaf such as `Has`, or a tree
+of them joined by `&` and `|`, usually under a `Named` label. Where several are Or'd together each
+one is a rule - in prose, in docstrings, and in the identifiers holding them (`rules`, never
+`ways`). /explain shows them as the lines a question opens to.
+_Avoid_: way, ways
+
 ### Scenario
 
 **P1**:
@@ -38,7 +47,7 @@ means adding a tree count to the scan.
 _Avoid_: resource flags, starting resource flags
 
 **Economy route**:
-One way P1 brings a resource in: a **producer** (villagers on a job, Fishing Ships, Trade Cogs,
+One route by which P1 brings a resource in: a **producer** (villagers on a job, Fishing Ships, Trade Cogs,
 Trade Carts, or something a scenario provides) that **yields** one or more resources once its
 **economy seed** is met. A route yields at one of two strengths: **some** (enough to pay an
 economy seed once, such as a few villagers chopping with no base) or **at scale** (enough to keep

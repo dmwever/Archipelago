@@ -32,4 +32,4 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 26 | [Dock guard rulings](issues/26-dock-guard-rulings.md) | needs-triage |
 | 27 | [Market guard rulings](issues/27-market-guard-rulings.md) | needs-triage |
 | 28 | [Joan 4's French Camp base is not recorded as standing](issues/28-joan4-french-camp-base-unrecorded.md) | needs-triage |
-| 29 | [Military can defend their own resources](issues/29-military-can-defend-their-own-resources.md) | needs-triage |
+| 29 | [Military can defend their own resources](issues/29-military-can-defend-their-own-resources.md) | done |

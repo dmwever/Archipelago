@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-23, raised by the maintainer after grilling [#23](23-land-defence-unpaid.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Related:** [#23](23-land-defence-unpaid.md) (built defences), [#25](25-guarded-trade-buildings.md)
 (structural counters)
@@ -105,33 +105,81 @@ before*; record the evidence under each. Red-check in a detached worktree at `HE
 test file copied in, not with `tools/red_check.py`, which stashes the maintainer's uncommitted
 changes.
 
-- [ ] An army holds open ground at scale: open-tier gold, a base, no buildable defence, a land
+All of it lives in `test/test_army_holds_open_ground.py`. The red-check ran in a detached worktree
+at `3c0136c34` with that file, the edited `test_economy_catalog.py` and the recaptured
+`easy_source_answers.json` copied in and `git diff -- worlds/age2de/logic` empty: **6 tests red
+there, 26 green**, and `test_defence_pays.py` green throughout.
+
+- [x] An army holds open ground at scale: open-tier gold, a base, no buildable defence, a land
       military line P1 can train and *some* of its cost available: gold at scale holds. Without
       the line, or without *some* of its cost, it does not.
-- [ ] Every resource: the same army opens open-tier stone as well as gold, though the line costs
+      - `TestAnArmyHoldsOpenGround::test_open_gold_at_scale_holds_on_the_army_with_nothing_built`
+        is red at HEAD. `test_an_army_it_cannot_feed_holds_nothing` is green on both sides, as the
+        shut half of the criterion must be: at HEAD nothing holds open ground at all.
+- [x] Every resource: the same army opens open-tier stone as well as gold, though the line costs
       no stone.
-- [ ] The army is paid per line: a line costing food and gold asks for both; a line costing only
+      - `TestTheArmyHoldsEveryResourceOutThere`, red at HEAD.
+- [x] The army is paid per line: a line costing food and gold asks for both; a line costing only
       food is not taxed for gold.
-- [ ] *Held before:* a bank never pays: the line's cost only banked opens nothing.
-- [ ] A granted army holds nothing: units only through `obtains_unit`, not trainable, open nothing.
-- [ ] *Held before:* the base is still asked: an army and no base give nothing at scale from open
+      - `TestTheArmyPaysPerLine`. `test_a_line_costing_only_food_is_not_taxed_for_gold` and
+        `test_the_dearer_line_holds_once_its_gold_is_in` are red at HEAD;
+        `test_a_line_costing_food_and_gold_asks_for_both` is the shut half and holds on both sides.
+- [x] *Held before:* a bank never pays: the line's cost only banked opens nothing.
+      - `TestTheArmyPaysPerLine::test_a_bank_never_pays_the_army`, green on both sides.
+- [x] A granted army holds nothing: units only through `obtains_unit`, not trainable, open nothing.
+      - The toy gained a `granted(unit)` switch (`obtains_unit` was hard-wired to `False_`), so
+        `TestAGrantedArmyHoldsNothing` hands P1 every tier of both lines and the gate stays shut.
+        Its control, `test_the_same_lines_trained_do`, is red at HEAD.
+- [x] *Held before:* the base is still asked: an army and no base give nothing at scale from open
       ground.
-- [ ] Open ground only: shore fish with a Mill and an army but no built defence, no Dock, no more
+      - `TestTheBaseIsStillAsked`, green on both sides.
+- [x] Open ground only: shore fish with a Mill and an army but no built defence, no Dock, no more
       Town Centers and no navy are not worked at scale; the afloat gate ignores a land army.
-- [ ] *Held before:* the route catalog is unchanged (`tools/route_catalog.py`).
-- [ ] *Held before:* no cycle: every shipped scenario answers every economy question with no
+      - `TestTheShorelineTakesNoArmy` and `TestTheAfloatGateIgnoresALandArmy`, green on both sides:
+        this one is a must-not-regress. Each class carries a positive control - a Dock the same map
+        can pay for, and warships - so neither can pass by holding nothing at all.
+- [x] *Held before:* the route catalog is unchanged (`tools/route_catalog.py`).
+      - `test_route_catalog.py` green.
+- [x] *Held before:* no cycle: every shipped scenario answers every economy question with no
       `RecursionError`, and `logic.scenario_answers_open` is empty afterwards.
-- [ ] `test_determinism.py::TestCampaignOrder` passes, and
+      - `test_defence_pays.py::TestTheUngatedRoutesReachNoGate`, green. The army reads only
+        `can_pay_some`, which resolves against the ungated routes, so it stays inside ADR-0003.
+- [x] `test_determinism.py::TestCampaignOrder` passes, and
       `TestEveryScenarioCanLive::test_every_scenario_can_qualify_for_every_resource` stays green
       with an empty list.
-- [ ] `test/easy_source_answers.json` recaptured (`tools/recapture_easy_sources.py`; check it
+      - Both green.
+- [x] `test/easy_source_answers.json` recaptured (`tools/recapture_easy_sources.py`; check it
       reproduces the committed file at `HEAD` first); `TestEveryEasySourceAnswersAsBefore` goes red
       with the fix reverted. Every move should be 0 -> 1; report any 1 -> 0.
-- [ ] What `.githooks/pre-commit` runs for this change, plus the logic canaries and every test file
+      - The writer reproduces `HEAD` exactly (`git diff --quiet` clean in the detached worktree
+        before anything there was changed). Recaptured here: **284 answers moved, every one
+        0 -> 1, none 1 -> 0**, over 38 scenario/resource pairs - mostly open-ground stone and gold
+        (Attila 1 and 3, Genghis 2, 3 and 5, Joan 2 and 4) with a little Attila 1 and 3 food.
+        `TestEveryEasySourceAnswersAsBefore` is red at HEAD with the new file, in all six configs
+        that moved.
+- [x] What `.githooks/pre-commit` runs for this change, plus the logic canaries and every test file
       touched, passes. The full `worlds/age2de` suite stays the maintainer's.
-- [ ] **Fill gate**, as `worlds/age2de/fuzz/bench/README.md` describes: the failure count must not
+      - `test_item_delivery`, `test_storage_handler`, `test_client_shutdown`,
+        `test_economy_rules::TestEveryScenarioCanLive`, `test_determinism::TestCampaignOrder`,
+        `test_route_catalog`, `test_economy_routes`: 100 passed. Touched and neighbouring files
+        (`test_army_holds_open_ground`, `test_defence_pays`, `test_economy_catalog`,
+        `test_explain`): 85 passed. `ruff check --select F,E9` clean on all five changed files.
+- [x] **Fill gate**, as `worlds/age2de/fuzz/bench/README.md` describes: the failure count must not
       rise. If it does, stop, record which generations newly fail and the fill error, and hand
       back. Do not loosen any rule.
+      - `fuzz_output_6f09d7ec6/replay_issue29-army-open-ground.jsonl`, the 100 fixed seeds at
+        `-j 6`, compared against `replay_issue23-defence-pays.jsonl`: **ok baseline 100, ok branch
+        100**. No new failures. Times are not comparable (the #23 row is already marked void, and
+        this run shared the machine), but for the record the branch ran slower on 91 of 100 seeds
+        (13.6s -> 17.4s median), which an extra Or'd term on every open-ground question would
+        explain. Spheres are flat: 79 of 100 unchanged.
+      - Step 3 of that README - commit the `.jsonl` - could not be followed when this ran: both
+        `worlds/age2de/fuzz/.gitignore` and the repo root ignored `fuzz_output*/` and `bench/`
+        outright, so every stored run, and the README defining the gate, were untracked. The
+        maintainer said to unignore the bench, so both files now track `bench/`, `_full_shuffle.yaml`
+        and each run's `replay_*.jsonl`, `timings*.jsonl` and `report.json` - 22 files, ~220 KB.
+        The seed YAMLs stay out; one negation adds them. The run is recorded in the README's
+        stored-runs table.
 
 **Out of scope:**
 - Threat-specific counters or per-scenario army rulings.
@@ -142,3 +190,25 @@ changes.
 - Any XS (game-side) change.
 - Committing: leave the changes uncommitted.
 
+
+### Done (2026-10-26)
+
+- **`ScenarioMilitaryLogic.can_hold_open_ground()`** is the new rule: each `UnitRole.military` line
+  `can_field_structurally(line) & can_pay_some(resources_to_sustain(line))`, Or'd, named
+  "can hold open ground with an army". `can_guard_boats()` now shares that body through
+  `_can_field_and_sustain(role)`; the navy keeps its own name and its water access.
+- **`ScenarioResourceLogic._defend_open_ground()`** is `buildings.is_fortified() |
+  military.can_hold_open_ground()`. No gate took a parameter, no route moved, no name was
+  generated, and the catalog is the size `tools/route_catalog.py` pins.
+- **`ScenarioBuildingLogic.is_fortified()`** stopped round-tripping through
+  `economy.can_defend_resources()` - that is what would have leaked the army onto the shoreline -
+  and names `_fortified()` itself. The label is **"has a built defence"**, not "is fortified":
+  CONTEXT.md's _Defence_ entry avoids "fortification" for the paid build, and `named()` labels are
+  what /explain shows. The method name is untouched, which leaves it the one `is_x` in a file of
+  `has_x`/`can_x` - worth a rename in some later ticket, not this one.
+- `/explain`'s "can defend resources" now opens to two lines, "has a built defence" and "can hold
+  open ground with an army", pinned by `TestExplainShowsTheArmyBesideTheBuildings` (red at HEAD)
+  and still passing `test_explain.py::TestNoMarkerOpensToOneLine`.
+- Nothing is committed, per `CLAUDE.md`. The change is in the working tree: three files under
+  `logic/scenarios/`, `test/test_economy_catalog.py`, the new `test/test_army_holds_open_ground.py`,
+  and the recaptured `test/easy_source_answers.json`.

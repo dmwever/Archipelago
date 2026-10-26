@@ -78,9 +78,7 @@ class ScenarioBuildingLogic:
                 & self.scenario.economy.can_pay_some(B.TOWN_CENTER.cost))
 
     def is_fortified(self) -> Rule:
-        """Somewhere to fall back to: one shared question - "can defend resources" - as gathering in
-        the open and holding a shoreline both ask it."""
-        return self.scenario.economy.can_defend_resources()
+        return self.scenario.named("has a built defence", self._fortified())
 
     def _fortified(self) -> Rule:
         strongpoint = self.can_build_multiple_tc() | self._can_defend_with_any_of(STRONGPOINTS)

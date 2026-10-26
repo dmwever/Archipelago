@@ -76,7 +76,8 @@ class ScenarioResourceLogic:
         return self.scenario.named("can defend resources", self._defend_open_ground())
 
     def _defend_open_ground(self) -> Rule:
-        return self.scenario.buildings._fortified()
+        return (self.scenario.buildings.is_fortified()
+                | self.scenario.military.can_hold_open_ground())
 
     def tiered(self, gathers: Rule, field: str,
                gates: Mapping[Tier, Rule]) -> tuple[Term, ...]:

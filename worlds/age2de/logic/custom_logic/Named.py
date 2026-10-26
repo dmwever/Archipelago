@@ -50,12 +50,12 @@ class Named(WrapperRule["Age2World"], game="Age Of Empires II: Definitive Editio
 
         @property
         def description(self) -> str:
-            """The label, read the way a scenario question's description is."""
+            """The label, read as a scenario question's description is."""
             return self.label
 
         @property
         def answer(self) -> Rule.Resolved:
-            """The rule it names, read the way a scenario question's answer is."""
+            """The rule it names, read as a scenario question's answer is."""
             return self.child
 
         @override

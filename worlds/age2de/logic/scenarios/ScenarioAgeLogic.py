@@ -60,8 +60,8 @@ class ScenarioAgeLogic:
 
     @functools.cached_property
     def start_age(self) -> Age2AgeData:
-        """The age the scenario pays its way up from: the Dark Age when every scenario starts
-        there."""
+        """The age the scenario starts paying its climb from: the Dark Age when every scenario
+        starts there."""
         ages = self.world.pool.ages
         return Age2AgeData.DARK if ages.dark_start else ages.starts_in(self.scenario.scenario)
 

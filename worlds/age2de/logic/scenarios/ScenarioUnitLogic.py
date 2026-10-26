@@ -103,14 +103,16 @@ class ScenarioUnitLogic:
             & self.can_pay_for_training_building(unit)
             for unit in tiers
         ]
-        sustained = self.resources_to_sustain(line, age)
-        return Or(*trained) & self.scenario.economy.can_sustain(sustained)
+        to_train = self.resources_to_train(line, age)
+        return Or(*trained) & self.scenario.economy.can_sustain(to_train)
 
-    def resources_to_sustain(
+    def resources_to_train(
         self,
         line: Age2UnitLineData,
         age: Age2AgeData | None = None,
     ) -> set[Resource]:
+        """Every resource some fieldable tier of the line costs to train. What the caller then
+        asks of it says the strength: the paid form wants easy sources, a defence wants *some*."""
         return {
             resource for unit in self._fielded_tiers(line, age)
             for resource, amount in unit.cost.items()
@@ -141,27 +143,27 @@ class ScenarioUnitLogic:
         field = self.can_field if paid else self.can_field_structurally
         researched = (self.scenario.techs.has_researched if paid
                       else self.scenario.techs.has_researched_structurally)
-        ways: list[Rule] = []
+        rules: list[Rule] = []
         for line in target.countered_by:
-            way = field(line, age)
+            rule = field(line, age)
             if line in target.counter_techs:
-                way = way & researched(target.counter_techs[line])
-            ways.append(self._with_counter_options(way, line, target))
+                rule = rule & researched(target.counter_techs[line])
+            rules.append(self._with_counter_options(rule, line, target))
         if target in RAM_COUNTER_TARGETS:
-            ways.append(self._sponge(age, paid))
-        return Or(*ways)
+            rules.append(self._sponge(age, paid))
+        return Or(*rules)
 
     def _with_counter_options(
         self,
-        way: Rule,
+        rule: Rule,
         line: Age2UnitLineData,
         target: Age2UnitLineData,
     ) -> Rule:
         if line in FAITH_LINES and target not in MONKS_ALWAYS_COUNTER:
-            return way & MONKS_CAN_COUNTER
+            return rule & MONKS_CAN_COUNTER
         if line in ANTI_UNIT_SIEGE and target not in SIEGE_ALWAYS_COUNTERS:
-            return way & SIEGE_CAN_COUNTER
-        return way
+            return rule & SIEGE_CAN_COUNTER
+        return rule
 
     def can_sponge_for_military(self, age: Age2AgeData) -> Rule:
         return self._sponge(age, paid=True)
@@ -201,13 +203,13 @@ class ScenarioUnitLogic:
     # -- being handed one --------------------------------------------------------------------
 
     def is_granted(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
-        ways: list[Rule] = []
+        rules: list[Rule] = []
         data = self.scenario.scenario
         if self.world.pool.units.startup_grants(data, target):
-            ways.append(True_())   # it is standing there when the scenario opens
+            rules.append(True_())   # it is standing there when the scenario opens
         if self.world.pool.units.trigger_grants(data, target):
-            ways.append(self.scenario.obtains_unit(target))
-        return Or(*ways)
+            rules.append(self.scenario.obtains_unit(target))
+        return Or(*rules)
 
     # -- villagers ---------------------------------------------------------------------------
 

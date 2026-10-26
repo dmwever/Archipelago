@@ -40,17 +40,29 @@ class ScenarioMilitaryLogic:
                                    self.can_field_role(UnitRole.navy, age) & self.scenario.has_water_access())
 
     def can_guard_boats(self) -> Rule:
-        ways = []
-        for line in ROLE_TO_LINES[UnitRole.navy]:
-            way = self.scenario.units.can_field_structurally(line)
-            if isinstance(way, False_):
-                continue
-            ways.append(way & self.scenario.economy.can_pay_some(
-                self.scenario.units.resources_to_sustain(line)))
-        if not ways:
-            return False_()
+        force = self._can_field_some(UnitRole.navy)
+        if isinstance(force, False_):
+            return force
         return self.scenario.named("can protect its boats",
-                                   Or(*ways) & self.scenario.has_water_access())
+                                   force & self.scenario.has_water_access())
+
+    def can_hold_open_ground(self) -> Rule:
+        force = self._can_field_some(UnitRole.military)
+        if isinstance(force, False_):
+            return force
+        return self.scenario.named("can hold open ground with an army", force)
+
+    def _can_field_some(self, role: str) -> Rule:
+        rules = []
+        for line in ROLE_TO_LINES[role]:
+            rule = self.scenario.units.can_field_structurally(line)
+            if isinstance(rule, False_):
+                continue
+            rules.append(rule & self.scenario.economy.can_pay_some(
+                self.scenario.units.resources_to_train(line)))
+        if not rules:
+            return False_()
+        return Or(*rules)
 
     def has_naval_bombardment(self) -> Rule:
         return self.scenario.named("has naval bombardment",
@@ -65,6 +77,6 @@ class ScenarioMilitaryLogic:
         return self.scenario.named("counters buildings", self.can_field_role(UnitRole.building_counter))
 
     def can_field_role(self, role: str, age: Age2AgeData = Age2AgeData.DARK) -> Rule:
-        ways = [self.scenario.units.can_field(line, age)
-                for line in ROLE_TO_LINES[role]]
-        return Or(*[way for way in ways if not isinstance(way, False_)])
+        rules = [self.scenario.units.can_field(line, age)
+                 for line in ROLE_TO_LINES[role]]
+        return Or(*[rule for rule in rules if not isinstance(rule, False_)])

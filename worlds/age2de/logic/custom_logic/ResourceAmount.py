@@ -65,7 +65,7 @@ class HasResourceAmount(Rule["Age2World"], game="Age Of Empires II: Definitive E
 
         skip_cache: ClassVar[bool] = True
         """Cheaper to evaluate than to cache, and why item_dependencies hands back empty id sets
-        the way Has.Resolved does."""
+        as Has.Resolved does."""
 
         @override
         def _evaluate(self, state: CollectionState) -> bool:

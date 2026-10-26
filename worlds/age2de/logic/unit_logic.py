@@ -53,38 +53,38 @@ class UnitLogic:
         return False_()
 
     def is_granted_anywhere(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
-        ways: list[Rule] = []
+        rules: list[Rule] = []
         for scenario in self.logic.scenarios:
             answer = scenario.units.is_granted(target)
             if isinstance(answer, False_):
                 continue
-            ways.append(scenario.is_unlocked() & answer)
-        return Or(*ways)
+            rules.append(scenario.is_unlocked() & answer)
+        return Or(*rules)
 
     # -- training ----------------------------------------------------------------------------
 
     def can_train_anywhere(self, unit: Age2UnitData) -> Rule:
         if not self.world.pool.units.is_trainable_unit(unit) or not unit.logic_buildings:
             return False_()
-        ways: list[Rule] = []
+        rules: list[Rule] = []
         for scenario in self.logic.scenarios:
             answer = scenario.units.can_train_structurally(unit)
             if isinstance(answer, False_):
                 continue
-            ways.append(scenario.is_unlocked() & answer
-                        & scenario.economy.can_pay(unit.cost))
-        return Or(*ways)
+            rules.append(scenario.is_unlocked() & answer
+                         & scenario.economy.can_pay(unit.cost))
+        return Or(*rules)
 
     def can_get_villager_anywhere(self) -> Rule:
         villager, food = Age2UnitData.VILLAGER_MALE, Age2ItemData.STARTING_VILLAGER_FOOD.type
-        ways: list[Rule] = []
+        rules: list[Rule] = []
         for scenario in self.logic.scenarios:
             answer = scenario.units.can_train_structurally(villager)
             if isinstance(answer, False_):
                 continue
-            ways.append(scenario.is_unlocked() & answer
-                        & scenario.economy.can_pay({food.type: food.amount}))
-        return Or(*ways)
+            rules.append(scenario.is_unlocked() & answer
+                         & scenario.economy.can_pay({food.type: food.amount}))
+        return Or(*rules)
 
 
     def has_profession_item(self, job: Age2VillagerJobData) -> Rule:
@@ -93,13 +93,13 @@ class UnitLogic:
         return Has(job.item.item_name)
 
     def can_do_job_anywhere(self, job: Age2VillagerJobData) -> Rule:
-        ways: list[Rule] = []
+        rules: list[Rule] = []
         for scenario in self.logic.scenarios:
             answer = scenario.units.can_do_job(job)
             if isinstance(answer, False_):
                 continue
-            ways.append(scenario.is_unlocked() & answer)
-        return Or(*ways) & self.has_profession_item(job)
+            rules.append(scenario.is_unlocked() & answer)
+        return Or(*rules) & self.has_profession_item(job)
 
     # -- items -------------------------------------------------------------------------------
 

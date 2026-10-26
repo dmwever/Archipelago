@@ -51,12 +51,22 @@ def navy(which: Line) -> str:
     return f"switch: navy {which.line_name}"
 
 
+def army(which: Line) -> str:
+    return f"switch: army {which.line_name}"
+
+
 def job(which: Job) -> str:
     return f"switch: job {which.name}"
 
 
 def unit(which: U) -> str:
     return f"switch: unit {which.name}"
+
+
+def granted(which: U) -> str:
+    """The scenario hands this unit over. Training it is `unit`, a separate switch: what P1 is
+    given is never what P1 can train."""
+    return f"switch: granted {which.name}"
 
 
 def partner(which: B) -> str:
@@ -89,6 +99,15 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
     NAVY_LINES: dict[Line, set[Resource]] = {Line.GALLEY_LINE: {Resource.WOOD, Resource.GOLD}}
     """The navy lines this toy can field, and what each one costs to keep coming. One line by
     default, so `NAVY` is the single switch that puts warships on the water."""
+    ARMY_LINES: dict[Line, set[Resource]] = {}
+    """The land military lines, under the same reading. Empty by default: no toy map has
+    soldiers on it unless the test is about holding open ground with an army."""
+
+    def fieldable_lines(self) -> dict[Line, set[Resource]]:
+        return {**self.NAVY_LINES, **self.ARMY_LINES}
+
+    def line_switch(self, line: Line) -> str:
+        return navy(line) if line in self.NAVY_LINES else army(line)
 
     def toy(self, resources: dict[Tier, ScenarioResourceCount], **options) -> None:
         self.build(**options)
@@ -107,16 +126,17 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
         switch(scenario, "has_vils", lambda: Has(VILLAGERS))
         switch(scenario, "has_building_structurally",
                lambda which: Has(building(which)) | Has(standing(which)))
-        switch(scenario, "obtains_unit", lambda which: False_())
+        switch(scenario, "obtains_unit", lambda which: Has(granted(which)))
         switch(scenario, "has_water_access", lambda: True_())
         switch(scenario.buildings, "can_build_structurally", lambda which: Has(building(which)))
         switch(scenario.buildings, "can_build_tc", lambda: Has(building(B.TOWN_CENTER)))
         switch(scenario.ages, "has_reached", lambda age: True_())
         switch(scenario.player_logic, "can_reach_partner", lambda which: Has(partner(which)))
         switch(scenario.units, "can_field_structurally",
-               lambda line: Has(navy(line)) if line in self.NAVY_LINES else False_())
-        switch(scenario.units, "resources_to_sustain",
-               lambda line: self.NAVY_LINES.get(line, set()))
+               lambda line: (Has(self.line_switch(line)) if line in self.fieldable_lines()
+                             else False_()))
+        switch(scenario.units, "resources_to_train",
+               lambda line: self.fieldable_lines().get(line, set()))
         switch(economy, "has_job", lambda which: Has(job(which)))
         self.switch_defences(switch)
         switch(scenario.logic.units, "has_unit_items", lambda which: Has(unit(which)))

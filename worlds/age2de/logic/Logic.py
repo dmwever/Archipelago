@@ -38,7 +38,7 @@ class Logic:
         self.scenario_answers: dict[tuple, Rule.Resolved] = {}
         """Resolved answers to the scenario questions, one per seed. See logic/custom_logic."""
         self.scenario_answers_open: set[tuple] = set()
-        """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
+        """Questions still being answered, so a cycle fails loudly rather than hanging."""
 
         self._can_build: dict[Age2BuildingData, Or] = {building: Or()
                                                        for building in Age2BuildingData}
