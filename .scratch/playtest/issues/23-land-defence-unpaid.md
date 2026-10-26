@@ -251,11 +251,9 @@ maintainer's.
 - [ ] The age2de subset passes: the economy, resource, guard, building, explain, scenario,
       determinism and scan files, plus the client subset the pre-commit hook runs. The full suite
       stays the maintainer's.
-- [ ] **Fill gate.** The corpus this ticket originally named (`fuzz_output_lock_items`) does not
-      exist; replay the 100 full-shuffle seeds in `worlds/age2de/fuzz/fuzz_output_6f09d7ec6/yamls`
-      before and after instead, and say in the ticket that the corpus was substituted. The failure
-      count must not rise. Do not loosen any rule to make it pass. Report wall times only if the
-      machine stayed awake for both runs.
+- [ ] **Fill gate**, run as `worlds/age2de/fuzz/bench/README.md` describes - the before side is
+      the stored `replay_b9dd362.jsonl`, the after side is this checkout stored beside it. The
+      failure count must not rise.
 
 **Out of scope:**
 - `starts_with_building` data fixes: [#28](28-joan4-french-camp-base-unrecorded.md).
