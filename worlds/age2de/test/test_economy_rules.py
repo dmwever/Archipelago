@@ -225,7 +225,7 @@ class TestEndlessFood(EconomyTestBase):
         self.build()
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
         endless = [
-            route for route in attila_1.own_routes()
+            route for route in attila_1.scenario_specific_routes()
             if route.name in ("Farmers", "Fish Traps")
         ]
         self.assertEqual(2, len(endless))

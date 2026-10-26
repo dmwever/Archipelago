@@ -175,7 +175,7 @@ class TestTheGatesTakeNoGuard(unittest.TestCase):
                          list(inspect.signature(ScenarioResourceLogic.tier_gates).parameters))
 
     def test_the_gates_of_some_take_nothing(self):
-        gates = ScenarioResourceLogic.some_resource_gates
+        gates = ScenarioResourceLogic.open_resource_gates
         self.assertEqual(["self"], list(inspect.signature(gates).parameters))
 
 

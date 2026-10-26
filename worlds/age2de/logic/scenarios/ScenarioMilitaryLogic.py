@@ -45,7 +45,7 @@ class ScenarioMilitaryLogic:
             way = self.scenario.units.can_field_structurally(line)
             if isinstance(way, False_):
                 continue
-            ways.append(way & self.scenario.economy.can_sustain_some(
+            ways.append(way & self.scenario.economy.can_pay_some(
                 self.scenario.units.resources_to_sustain(line)))
         if not ways:
             return False_()

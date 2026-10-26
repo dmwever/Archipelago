@@ -83,13 +83,14 @@ class ScenarioBuildingLogic:
         return self.scenario.economy.can_defend_resources()
 
     def _fortified(self) -> Rule:
-        strongpoint = self.can_build_multiple_tc() | self._can_put_up_one_of(STRONGPOINTS)
-        return strongpoint | (self._can_put_up_one_of(WALLS) & self._can_put_up_one_of(TOWERS))
+        strongpoint = self.can_build_multiple_tc() | self._can_defend_with_any_of(STRONGPOINTS)
+        return strongpoint | (self._can_defend_with_any_of(WALLS) & self._can_defend_with_any_of(TOWERS))
 
-    def _can_put_up_one_of(self, buildings: list[Age2BuildingData]) -> Rule:
-        return Or(*[self._can_put_up(building) for building in buildings])
+    def _can_defend_with_any_of(self, buildings: list[Age2BuildingData]) -> Rule:
+        return Or(*[self._can_defend_with(building) for building in buildings])
 
     def _can_put_up(self, building: Age2BuildingData) -> Rule:
+    def _can_defend_with(self, building: Age2BuildingData) -> Rule:
         buildable = self.can_build_structurally(building)
         if isinstance(buildable, False_):
             return False_()
@@ -99,7 +100,7 @@ class ScenarioBuildingLogic:
         return ((self.scenario.has_building_structurally(Age2BuildingData.MILL)
                  & self.is_fortified())
                 | self.can_build_multiple_tc()
-                | self._can_put_up(Age2BuildingData.DOCK))
+                | self._can_defend_with(Age2BuildingData.DOCK))
 
     def has_gold_dropsite(self) -> Rule:
         return self._any_of(GOLD_DROPSITES)

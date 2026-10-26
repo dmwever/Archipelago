@@ -54,7 +54,7 @@ class ScenarioResourceLogic:
             Tier.ENEMY: self.scenario.starting_state.must_steal_base,
         }
 
-    def some_resource_gates(self) -> dict[Tier, Rule]:
+    def open_resource_gates(self) -> dict[Tier, Rule]:
         return {
             Tier.BASE: True_(),
             Tier.OPEN: True_(),
@@ -218,7 +218,7 @@ class ScenarioResourceLogic:
             )
             & self.scenario.ages.has_reached(Age2UnitData.MONK.age)
             & self._in_any_tier(
-                self.tiered(True_(), "relic_count", self.some_resource_gates()),
+                self.tiered(True_(), "relic_count", self.open_resource_gates()),
             )
         )
 
@@ -318,7 +318,7 @@ class ScenarioResourceLogic:
             *self.boat_routes(),
         ]
 
-    def own_routes(self) -> list[EconomyRoute]:
+    def scenario_specific_routes(self) -> list[EconomyRoute]:
         """What the scenario brings in by itself: not P1's own market, and not what it is
         handed."""
         return [
@@ -339,7 +339,7 @@ class ScenarioResourceLogic:
         ]
 
     def villager_routes_of_some(self) -> list[EconomyRoute]:
-        gates = self.some_resource_gates()
+        gates = self.open_resource_gates()
         return [
             EconomyRoute(
                 name="Lumberjacks",
@@ -619,7 +619,7 @@ class ScenarioResourceLogic:
         land = self.tier_gates()
         return (
             *self.tiered(self.can_hunt() & buildings.has_hunt_camp(), "hunt_count", land),
-            *self.tiered(self.can_herd(), "herd_count", self.some_resource_gates()),
+            *self.tiered(self.can_herd(), "herd_count", self.open_resource_gates()),
             *self.tiered(self.can_forage() & buildings.has_food_camp(), "bush_count", land),
         )
 
@@ -706,7 +706,7 @@ class ScenarioResourceLogic:
             economy=self.economy_routes(),
             resource=resource,
             strength=Strength.AT_SCALE,
-            among=frozenset(route.name for route in self.own_routes()),
+            among=frozenset(route.name for route in self.scenario_specific_routes()),
         )
 
     # -- what units and techs ask -------------------------------------------------------------
@@ -721,11 +721,7 @@ class ScenarioResourceLogic:
         all if it is free."""
         return self.can_sustain([resource for resource, amount in costs.items() if amount > 0])
 
-    def can_sustain_some(self, resources: Collection[Resource]) -> Rule:
-        if not resources:
+    def can_pay_some(self, costs: Collection[Resource]) -> Rule:
+        if not costs:
             return True_()
-        return And(*[self.has_some_source(resource) for resource in resources])
-
-    def can_pay_some(self, costs: Mapping[Resource, float]) -> Rule:
-        return self.can_sustain_some([resource for resource, amount in costs.items()
-                                      if amount > 0])
+        return And(*[self.has_some_source(resource) for resource in costs])
