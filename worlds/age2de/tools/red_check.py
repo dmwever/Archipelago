@@ -50,12 +50,15 @@ def verdict(test_id: str, output: str) -> str:
     Three ways this has read a failure as a pass. pytest colours its summary, which puts an
     escape before FAILED *and inside the test id*, so the output is stripped before
     matching as well as asked for uncoloured. Subtest failures print as SUBFAILED[...] and
-    SUBFAILED(...), so match both. A test whose module will not import at HEAD is named by
+    SUBFAILED(...), whose parameters carry spaces and nested brackets, so anything may sit
+    between the marker and the id. A test whose module will not import at HEAD is named by
     file alone, which reads as GREEN unless it is looked for.
     """
     output = ANSI.sub("", output)
-    failed = re.compile(r"^(FAILED|ERROR|SUBFAILED[\[(])\S*\s*" + re.escape(test_id),
-                        re.MULTILINE)
+    failed = re.compile(
+        r"^(?:(?:FAILED|ERROR)\s+|SUBFAILED[\[(].*?\s)" + re.escape(test_id),
+        re.MULTILINE,
+    )
     if failed.search(output):
         return "red"
     collection = re.compile(r"^ERROR\s+" + re.escape(test_id.split("::")[0]) + r"\s*$",
