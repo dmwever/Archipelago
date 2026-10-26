@@ -44,6 +44,10 @@ would have to be unpicked one rule at a time.
 - Guarding boats is the same, not a price and not free (#21, amended by #23). The structural form
   of fielding pays for nothing, so the navy that guards the afloat and shoreline tiers is fielded
   structurally and pays for *some* of each line's own wood and gold in the same expression.
+- Holding open ground with an army is the same (#29). Any land military line P1 can train holds
+  open ground at scale, for every resource there, beside a built defence, paying *some* of the
+  line's own cost in the same expression. The base is still asked. A starting or granted army
+  holds nothing: it is the scenario's own plan, not a garrison. An army does not hold a shoreline.
 - The Town Center is paid for by the base, never by an easy source. A standing one is free; a built
   one is paid for by the Town Center items, which the location reaches through its own price.
 - A banked pile (`HasResourceAmount`) never pays for a building. It counts the Town Center items,

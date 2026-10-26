@@ -59,12 +59,14 @@ _Avoid_: seed (alone: it is the Archipelago generation seed), seed resources, st
 (when the whole bundle is meant)
 
 **Defence**:
-A building P1 puts up to hold resources out on the map: a wall with a tower, a strongpoint
-(Castle, Fortified Church, Krepost, Donjon, or a second Town Center), or a Dock on a shoreline.
+What P1 builds or trains to hold resources out on the map: a wall with a tower, a strongpoint
+(Castle, Fortified Church, Krepost, Donjon, or a second Town Center), a Dock on a shoreline, or,
+on open ground only, an army of any land military line.
 A route needs one only to work ground **at scale**; a route of *some* walks out, takes what it
 needs and comes home, so open ground costs it nothing. A defence pays for itself where it is
 asked, out of *some* of what it costs, so the stone on open ground can buy the wall that then
 holds it. One standing at the start is no defence: what it guards is already the base's ground.
+Nor is an army P1 starts with or is granted: that is the scenario's plan, not a garrison.
 _Avoid_: fortification (when the paid build is meant), the base's Town Center as a strongpoint,
 guard (that is the trade sense, below)
 
