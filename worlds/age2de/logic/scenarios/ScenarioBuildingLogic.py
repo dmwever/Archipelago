@@ -89,7 +89,6 @@ class ScenarioBuildingLogic:
     def _can_defend_with_any_of(self, buildings: list[Age2BuildingData]) -> Rule:
         return Or(*[self._can_defend_with(building) for building in buildings])
 
-    def _can_put_up(self, building: Age2BuildingData) -> Rule:
     def _can_defend_with(self, building: Age2BuildingData) -> Rule:
         buildable = self.can_build_structurally(building)
         if isinstance(buildable, False_):

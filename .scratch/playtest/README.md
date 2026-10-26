@@ -26,7 +26,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 20 | [Retire the `starting_*` resource flags in favour of the scan](issues/20-retire-starting-resource-flags.md) | done |
 | 21 | [Structural fielding still asks for a price](issues/21-structural-field-asks-price.md) | done (folds into #19 / #22; naval guard unwound by #23) |
 | 22 | [The economy route catalog](issues/22-economy-route-catalog.md) | done (folds in #21) |
-| 23 | [Defending open ground is free](issues/23-land-defence-unpaid.md) | ready-for-agent |
+| 23 | [Defending open ground is free](issues/23-land-defence-unpaid.md) | done |
 | 24 | [Items that seed the economy's buildings and units](issues/24-building-seed-items.md) | needs-triage |
 | 25 | [Guarded trade buildings (no behaviour change)](issues/25-guarded-trade-buildings.md) | done (unblocks #26, #27) |
 | 26 | [Dock guard rulings](issues/26-dock-guard-rulings.md) | needs-triage |
