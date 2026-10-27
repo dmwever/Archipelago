@@ -193,3 +193,16 @@ owning one is still its own check. Heroes and escorts are always granted-only. B
 says nothing about whether the game has a train button for the unit, and a granted-only unit is
 never one the player may train.
 _Avoid_: hero row, untrainable row (that is the per-civ flag, a different thing)
+
+**Cavemanify**:
+What caveman does to a unit P1 owns: replace it with the best tier of its own line P1 has
+unlocked, or a Militia if none is. Items for the line raise it again, but never past its
+**original unit**. Every unit of P1's is subject to it, trained or not; a trained unit stays as it
+is only because its items had to arrive before it could be trained. Which granted units are exempt
+is ruled unit by unit.
+_Avoid_: knockdown, downgrade
+
+**Original unit**:
+The unit a cavemanified unit was before caveman replaced it. Items for its line raise it back up
+to its original unit, never past it.
+_Avoid_: ceiling
