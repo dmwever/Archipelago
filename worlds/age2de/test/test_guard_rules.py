@@ -293,14 +293,19 @@ class TestTheEnemyDocksAreAsRuled(bases.Age2RuleTestBase):
 MARKET_RULINGS: dict[Age2PlayerData, TradeAccess] = {
     Age2PlayerData.ATT1_PERSIANS: TradeAccess.CLOSED,
     Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.ATT2_SOFIA: TradeAccess.CLOSED,
+    Age2PlayerData.ATT2_NAISSUS: TradeAccess.CLOSED,
+    Age2PlayerData.ATT2_ADRIANOPLE: TradeAccess.CLOSED,
     Age2PlayerData.ATT2_DYRRHACHIUM: TradeAccess.OPEN,
     Age2PlayerData.ATT2_THESSALONICA: TradeAccess.OPEN,
     Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE: TradeAccess.CLOSED,
     Age2PlayerData.ATT3_CONSTANTINOPLE: TradeAccess.CLOSED,
+    Age2PlayerData.ATT3_MARCIANOPOLIS: TradeAccess.CLOSED,
     Age2PlayerData.ATT3_PHILIPPOPOLIS: TradeAccess.ONCE_DEFEATED,
     Age2PlayerData.ATT4_BURGUNDY: TradeAccess.GUARDED,
     Age2PlayerData.ATT4_METZ: TradeAccess.ONCE_DEFEATED,
     Age2PlayerData.ATT4_ORLEANS: TradeAccess.CLOSED,
+    Age2PlayerData.ATT4_WESTERN_ROMAN_EMPIRE: TradeAccess.CLOSED,
     Age2PlayerData.ATT5_WESTERN_ROMAN_EMPIRE: TradeAccess.CLOSED,
     Age2PlayerData.ATT5_VISIGOTHS: TradeAccess.CLOSED,
     Age2PlayerData.ATT5_ALANS: TradeAccess.CLOSED,
@@ -317,6 +322,7 @@ MARKET_RULINGS: dict[Age2PlayerData, TradeAccess] = {
     Age2PlayerData.JOAN4_TROYES: TradeAccess.ONCE_DEFEATED,
     Age2PlayerData.JOAN4_CHALONS: TradeAccess.ONCE_DEFEATED,
     Age2PlayerData.JOAN4_RHEIMS: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN4_ENGLISH_GUARDS: TradeAccess.CLOSED,
     Age2PlayerData.JOAN6_BURGUNDY: TradeAccess.ONCE_DEFEATED,
     Age2PlayerData.JOAN6_ENGLISH: TradeAccess.CLOSED,
     Age2PlayerData.JOAN6_SHREWSBURY: TradeAccess.ONCE_DEFEATED,
@@ -330,6 +336,7 @@ MARKET_RULINGS: dict[Age2PlayerData, TradeAccess] = {
     Age2PlayerData.GEN4_RUSSIANS: TradeAccess.ONCE_DEFEATED,
     Age2PlayerData.GEN4_KHWARAZM: TradeAccess.CLOSED,
     Age2PlayerData.GEN5_POLISH: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN5_BOHEMIANS: TradeAccess.CLOSED,
     Age2PlayerData.GEN5_GERMANS: TradeAccess.ONCE_DEFEATED,
     Age2PlayerData.GEN6_HUNGARY: TradeAccess.CLOSED,
 }
@@ -346,6 +353,11 @@ class TestTheEnemyMarketsAreAsRuled(bases.Age2RuleTestBase):
         for player, access in MARKET_RULINGS.items():
             with self.subTest(player=player.name):
                 self.assertIs(access, player.market)
+
+    def test_every_enemy_market_is_ruled_on(self):
+        unruled = [player.name for player in Age2PlayerData
+                   if player.side is Side.ENEMY and player not in MARKET_RULINGS]
+        self.assertEqual([], unruled)
 
     def test_burgundy_keeps_the_only_guarded_market(self):
         guarded = [player for player in Age2PlayerData

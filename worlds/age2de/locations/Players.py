@@ -98,7 +98,7 @@ class Age2PlayerData(enum.IntEnum):
 
     # Joan 1 and Joan 5 are fixed force: no economy, so no one recorded.
 
-    # Joan 2. Ruled: no enemy market is usable - the scenario ends on a partial defeat. Burgundy's
+    # Joan 2. Ruled: no enemy market is usable - the scenario ends on a partial defeat.
     JOAN2_BURGUNDY =            2022, "Burgundy",                   2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     JOAN2_NORTHERN_ENGLISH =    2023, "the Northern English",       3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     JOAN2_ORLEANS =             2024, "Orléans",                    4, Side.ALLY,  TradeAccess.CLOSED,        TradeAccess.CLOSED
@@ -139,7 +139,7 @@ class Age2PlayerData(enum.IntEnum):
     GEN3_JIN =                  3034, "the Jin",                    4, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.ONCE_DEFEATED
     GEN3_SONG =                 3035, "the Song",                   5, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
 
-    # Genghis 4. Ruled: Khwarazm is an enemy; no ally market is usable. The Kipchaks are never a
+    # Genghis 4. Ruled: Khwarazm is an enemy; no ally market is usable.
     GEN4_KIPCHAKS =             3042, "the Kipchaks",               2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     GEN4_RUSSIANS =             3043, "the Russians",               3, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
     GEN4_KHWARAZM =             3044, "Khwarazm",                   4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED

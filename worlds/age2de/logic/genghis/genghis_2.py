@@ -55,6 +55,6 @@ class Genghis2StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.CASTLE) &
                 military.counters_building() &
                 scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
-                can_defeat_kara_khitai
+                scenario_logic.named("can get past the Kara-Khitai", can_defeat_kara_khitai)
             ),
         }

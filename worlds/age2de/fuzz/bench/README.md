@@ -64,6 +64,8 @@ All on the current set, `../fuzz_output_3b3762449/yamls/`.
 | --- | --- | --- |
 | `replay_cd39b473f.jsonl` | commit `cd39b473f` | 100/100 ok - the set's baseline, the parent of #30, measured in a detached worktree. First attempt scored 95/100; those 5 were the `host.yaml` race described above, dropped and rerun. |
 | `replay_issue30-standing-camp-free.jsonl` | #30, commit `11c1dd008` | 100/100 ok - the #30 fill gate, against `replay_cd39b473f`. Spheres 93 of 100 unchanged (5 up, 2 down), sphere 1 94 unchanged (3 up, 3 down). **Slower on 93 of 100 seeds** (24.8s -> 29.6s median), which 53 -> 66 routes per scenario through the same fixpoint would explain; the baseline ran while the laptop was busy, so if anything that understates it. |
+| `replay_d311c37f7.jsonl` | commit `d311c37f7` | 100/100 ok - the #27 baseline, measured in a detached worktree. `replay_issue30-standing-camp-free` was not usable: #26's dock rulings (`223061da3`) and `d311c37f7` both land between it and #27. |
+| `replay_issue27-market-guards.jsonl` | #27, on `d311c37f7` | 100/100 ok - the #27 fill gate, against `replay_d311c37f7`. **Spheres and sphere 1 identical on all 100 seeds.** Times void: the run shared the laptop with the pre-commit test subset, which reads as all 100 seeds slower (32.1s -> 45.8s median) with every fill unchanged. |
 
 ## Retired sets
 

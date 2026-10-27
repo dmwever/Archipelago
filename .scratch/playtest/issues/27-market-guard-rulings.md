@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-23, split from [#25](25-guarded-trade-buildings.md) during grilling
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-26)
 
 **Blocked by:** [#26](26-dock-guard-rulings.md) (#25 and #23 done)
 
@@ -111,27 +111,60 @@ locations. The Song's and Kushluk's defeat rules stand alone.
 - `Genghis2StartingState.defeat_rules`, `Genghis3StartingState.defeat_rules`.
 
 **Acceptance criteria:**
-- [ ] A new test pins every row of the rulings table, and under `allies_and_enemies` that Attila 4
+- [x] A new test pins every row of the rulings table, and under `allies_and_enemies` that Attila 4
       Burgundy's market guard event exists and its rule is `can_ally_burgundy`. Prove it red at HEAD
       with `tools/red_check.py`.
-- [ ] A test that the Song cannot be defeated while neither the Tanguts nor Xi Xia can be, even with
+      *Red:* `test_guard_rules.py::TestTheEnemyMarketsAreAsRuled` - `test_every_enemy_market_is_as_ruled`
+      (41 rows in `MARKET_RULINGS`: every row of the table plus every record the brief confirms
+      unchanged), `test_burgundy_keeps_the_only_guarded_market`,
+      `test_burgundys_market_is_guarded_by_the_alliance` (the event exists, `guard.child` equals
+      `starting_state.can_ally_burgundy(scenario_logic)`, and the event's rule is the guard) and
+      `test_the_locations_ask_the_same_alliance_rule`: all four `red` under `red_check.py` at
+      `d311c37f7`.
+- [x] A test that the Song cannot be defeated while neither the Tanguts nor Xi Xia can be, even with
       the Song's own rule held, and Kushluk likewise without the Kara-Khitai; red at HEAD.
-- [ ] The Attila 4 location rules and Victory use the moved `can_ally_burgundy` with unchanged
+      *Red, but the Song's half could only be written structurally - see Comments, "The Song's
+      conjunct changes no answer".* `test_defeat_rules.py::TestACityBehindAnotherWaitsForIt`:
+      `test_the_song_wait_on_the_tanguts_or_xi_xia`, `test_kushluk_waits_on_the_kara_khitai` and the
+      state test `test_kushluks_own_army_is_not_enough` all `red`; the control
+      `test_both_can_still_be_defeated` GREEN, as a control should be.
+- [x] The Attila 4 location rules and Victory use the moved `can_ally_burgundy` with unchanged
       answers.
-- [ ] `TestTheGuardRecordsAndRulesAgree` and `test_every_defended_trade_partner_has_a_rule` stay
+      *Held:* `test_the_locations_ask_the_same_alliance_rule` pins
+      `ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY` as `defeats | can_ally_burgundy` against the moved rule;
+      the rules class now reads both rules off the starting state and builds nothing of its own.
+- [x] `TestTheGuardRecordsAndRulesAgree` and `test_every_defended_trade_partner_has_a_rule` stay
       green.
-- [ ] **Easy-source recapture** (`tools/recapture_easy_sources.py`, following its docstring's writer
+      *Held:* green with nine GUARDED records (eight docks, Burgundy's market).
+- [x] **Easy-source recapture** (`tools/recapture_easy_sources.py`, following its docstring's writer
       check). Accepted only if loosenings (0 -> 1) appear only in `allies_and_enemies` configs and
       tightenings (1 -> 0) only in Attila 5, Genghis 2 and Genghis 3. List the moves per scenario
       here. Anything else: stop and report.
-- [ ] `test_determinism.py::TestCampaignOrder` stays green.
-- [ ] **Fill gate**, as #25/#26: replay the 100 seeds before and after; no new failing seed. Record
+      ***No answer moves at all.*** The working tree's capture is byte-identical to a capture taken
+      on a clean worktree at `d311c37f7`: 0 loosenings, 0 tightenings, in every one of the seven
+      configs. **The writer check fails, and not because of this ticket** - see Comments,
+      "The committed easy-source answers are stale at HEAD". The recaptured file is parked in the
+      working tree; all three of its moved lines are that pre-existing drift.
+- [x] `test_determinism.py::TestCampaignOrder` stays green.
+- [x] **Fill gate**, as #25/#26: replay the 100 seeds before and after; no new failing seed. Record
       both counts. Mind which set: #26 ran on `fuzz_output_6f09d7ec6`, since renamed
       `fuzz_output_6f09d7ec6_enemy_trade` and retired - #30 replaced the current set with one that
       includes Genghis Khan. Gate this on the current set named at the top of
       `worlds/age2de/fuzz/bench/README.md`, and measure its own baseline if no stored row predates
       the change; #26's rows are not a baseline for it.
-- [ ] The pre-commit checks and every touched test file pass. Ruff F,E9 on changed files.
+      *Held, on the current set `fuzz_output_3b3762449`.* **Before 100/100 ok, after 100/100 ok.**
+      No stored row was a fair baseline - `replay_issue30-standing-camp-free` predates both #26's
+      committed dock rulings and `d311c37f7` - so HEAD was measured and stored as
+      `replay_d311c37f7.jsonl`; after is `replay_issue27-market-guards.jsonl`. **Spheres and
+      sphere 1 identical on all 100 seeds.** Times void: the after run shared the laptop with the
+      test subset, which shows as all 100 seeds slower (32.1s -> 45.8s median) with every fill
+      identical.
+- [x] The pre-commit checks and every touched test file pass. Ruff F,E9 on changed files.
+      *Held:* client tests, `TestCampaignOrder` and `test_route_catalog.py` 90 passed / 270
+      subtests; `test_economy_rules.py`, `test_player_records.py`, `test_guard_rules.py` and
+      `test_defeat_rules.py` 95 passed / 830 subtests. Ruff F,E9 clean on all seven changed `.py`
+      files, after dropping unused imports already there in `attila_4` (logic and rules),
+      `genghis_2` and `genghis_3`.
 
 **Out of scope:**
 - Markets handed to P1 by AP triggers: Joan 2 Burgundy's (Orléans), Attila 1 Bleda's, the
@@ -172,3 +205,99 @@ locations. The Song's and Kushluk's defeat rules stand alone.
   and the market survives it (Attila 6, Genghis 3, Joan 4 Troyes and Chalons, whose pacified AI
   keeps its market).
 - The Song sit behind Xi Xia and the Tanguts; Kushluk behind the Kara-Khitai (maintainer).
+
+### Implementation notes (2026-10-26)
+
+> *This was generated by AI while implementing.*
+
+#### The Song's conjunct changes no answer
+
+`& (can_defeat_tanguts | can_defeat_xi_xia)` is a no-op in logic: **the Song's own rule already
+implies the Tanguts'**. Their requirements differ by two counters each - the Tanguts ask for the
+Battering Ram and Mounted Trebuchet lines, the Song for the Skirmisher and Militia lines - and
+anything that answers Skirmishers and Militia already answers rams and mounted trebuchets. Two
+searches found no state that separates them:
+
+- 200 sampled states at every density: the Song defeatable in 33, the Tanguts in 33, Xi Xia in 34,
+  and **not one state** with the Song and neither city in front.
+- 40 greedy minimisations from the full item pool, each shuffled differently, paring items away
+  while the Song's rule still held: every one of the 40 minimal states still defeated the Tanguts.
+
+So the brief's state test cannot be written for the Song - it would be green at HEAD and prove
+nothing, which is exactly what `red_check.py` warns about. `test_the_song_wait_on_the_tanguts_or_xi_xia`
+pins the structure instead: the `Or` of the two front cities' rules is a child of the Song's `And`.
+Kushluk is a real tightening, and carries the state test
+(`test_kushluks_own_army_is_not_enough`): an army of Mangudai, Steppe Lancers and Pikemen out of
+the Tayichi'ud base beats Kushluk at HEAD and does not touch the Kara-Khitai.
+
+The ruling is still worth recording - it is the map, and a later counter change could make it
+bite - but it buys nothing today.
+
+#### The committed easy-source answers are stale at HEAD
+
+The writer check in `recapture_easy_sources.py`'s docstring **fails on an unmodified tree**. On a
+detached worktree at `d311c37f7` with nothing of this ticket in it, recapturing moves three lines,
+and moves the same three on a second run, so it is drift and not noise:
+
+```
+allies and enemies state  95: AP_JOAN_3.WOOD 1->0, AP_JOAN_3.FOOD 1->0, AP_JOAN_3.GOLD 1->0
+allies and enemies state 118: AP_JOAN_3.WOOD 0->1, AP_JOAN_3.GOLD 0->1
+allies and enemies state 169: AP_JOAN_3.WOOD 0->1, AP_JOAN_3.GOLD 0->1
+```
+
+`d311c37f7` ("Add SKIP item") is the cause: a new item shifts `create_items`' RNG stream, so the
+pool those sampled states draw from is not the pool the committed file was captured against.
+`TestEveryEasySourceAnswersAsBefore` has been red since that commit.
+
+This ticket adds **nothing** to that diff: the working tree's capture is byte-identical to the
+HEAD worktree's. The recaptured file is left in the working tree so the test is green, but every
+line of its diff belongs to `d311c37f7`, not here. Revert it if you would rather recapture that
+drift on its own.
+
+#### Beyond the brief
+
+- **`JUDGED_FLAGS`** (`test/test_player_records.py`) follows the rulings: enemy market now True for
+  Attila 6, Joan 4 and Genghis 3, and False for Attila 5.
+- **`And & And` merges children.** `rule_builder`'s `__and__` splices two `And`s into one, so
+  Kushluk's rule does not carry the Kara-Khitai's as a single child - it carries its clauses.
+  `test_kushluk_waits_on_the_kara_khitai` checks the clauses; the Song's test can use `in` because
+  an `Or` anded onto an `And` stays one child.
+- **No market needs the basic guard.** `can_hold_open_ground()` is the market basic guard in
+  `CONTEXT.md`, but the only guarded market is Burgundy's and its guard is the alliance, so nothing
+  here calls it. `CONTEXT.md` already allows an alliance as a guard by ruling; no glossary change.
+- **ADR 0001** still lists trade access as "closed, open, or open once defeated". `GUARDED` has
+  been missing from it since #25; left alone as out of scope.
+- **The guard reads** "A Barbarian Betrothal can guard the route to Burgundy's market"
+  over "... can ally with Burgundy". That is a name wrapping a single named line, which
+  `CONTEXT.md` would rather avoid, but it is #25's guard machinery and every dock reads the same
+  way. Left as is.
+
+### Review pass (2026-10-26)
+
+> *This was generated by AI while implementing.*
+
+`/code-review` over `295ea8fe6`. Three findings acted on; none changes an answer (the recapture
+after the fixes is byte-identical to the one before them).
+
+- **Kushluk's rule carried seven duplicated clauses.** `Rule.__and__` splices `And & And` into one
+  `And`, so anding the Kara-Khitai's unnamed rule onto Kushluk's own spliced its clauses in
+  alongside the seven Kushluk already shared: 16 children where 9 were meant. The brief's "build
+  each as a **named** local" is what prevents this, and naming it only where Kushluk uses it -
+  `named("can get past the Kara-Khitai", ...)` - keeps `defeats()` from naming the Kara-Khitai's
+  own entry twice. 16 clauses -> 9, and /explain now reads one line instead of seven repeats.
+  `test_kushluks_rule_carries_no_duplicate_clauses` pins it. Genghis 3 needs nothing: an `Or`
+  anded onto an `And` is already a single child.
+- **`MARKET_RULINGS` missed six enemy markets** (`ATT2_SOFIA`, `ATT2_NAISSUS`, `ATT2_ADRIANOPLE`,
+  `ATT3_MARCIANOPOLIS`, `ATT4_WESTERN_ROMAN_EMPIRE`, `JOAN4_ENGLISH_GUARDS`, plus `GEN5_BOHEMIANS`
+  which only `test_genghis_5_trades_with_both_the_polish_and_the_germans` held). Flipping any of
+  them to OPEN would have added a trade partner with the suite green - and at Attila 3, a defeat
+  event with no defeat rule behind it. All are pinned now, and
+  `test_every_enemy_market_is_ruled_on` fails if a future enemy is added without a ruling. 41 rows
+  -> 48.
+- **Two comments left dangling mid-sentence** at `Players.py:101` and `:142`, where `295ea8fe6`
+  kept a comment's first line and dropped its second. Trimmed to complete sentences rather than
+  restored: the maintainer deletes these deliberately.
+
+Not acted on: `easy_source_answers.json` and the bench README rows are uncommitted by design, and
+`ADR 0001` still predates `GUARDED` (since #25, out of scope here).
+

@@ -157,14 +157,21 @@ class TestACityBehindAnotherWaitsForIt(bases.Age2RuleTestBase):
                         "the Song's rule does not ask for the Tanguts or Xi Xia")
 
     def test_kushluk_waits_on_the_kara_khitai(self):
-        """Anded with another And, `&` merges the two: what to look for is the clauses, not the
-        Kara-Khitai's rule as one child."""
         self.build()
+        scenario_logic = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_GENGHIS_2)
         rules = self.defeat_rules(Age2ScenarioData.AP_GENGHIS_2)
-        kushluk = rules[Age2PlayerData.GEN2_KUSHLUK].children
-        unasked = [str(clause) for clause in rules[Age2PlayerData.GEN2_KARA_KHITAI].children
-                   if clause not in kushluk]
-        self.assertEqual([], unasked, "Kushluk's rule skips what the Kara-Khitai's asks")
+        in_front = scenario_logic.named("can get past the Kara-Khitai",
+                                        rules[Age2PlayerData.GEN2_KARA_KHITAI])
+        self.assertTrue(in_front in rules[Age2PlayerData.GEN2_KUSHLUK].children,
+                        "Kushluk's rule does not ask for the Kara-Khitai")
+
+    def test_kushluks_rule_carries_no_duplicate_clauses(self):
+        """`&` splices two Ands together, so an unnamed rule anded in brings its clauses twice."""
+        self.build()
+        clauses = [str(clause)
+                   for clause in self.defeat_rules(
+                       Age2ScenarioData.AP_GENGHIS_2)[Age2PlayerData.GEN2_KUSHLUK].children]
+        self.assertEqual(len(clauses), len(set(clauses)))
 
     def test_kushluks_own_army_is_not_enough(self):
         """Mangudai, Steppe Lancers and Pikemen out of the Tayichi'ud base answer everything
