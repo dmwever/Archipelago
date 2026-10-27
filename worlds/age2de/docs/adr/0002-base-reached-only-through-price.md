@@ -8,8 +8,9 @@ Playtest #05 found ages in logic with an unpaid Town Center. The obvious fix was
 advance ask `has_base()` directly. Instead, no location (age, tech, unit, building) and no
 prerequisite asks for a base itself. A location pays its price through the easy sources
 (`economy.can_pay`), and the base sits on the gathering side of those sources, so a location reaches
-the base only by paying for something gathered. The reason is direction: the base (a Town Center,
-villagers to train, Houses) is to stop being the only way to have an economy. Later work adds routes
+the base only by paying for something gathered. The reason is direction: the base (a Town Center
+and villagers to train; the Houses left it for housing in #43) is to stop being the only way to have
+an economy. Later work adds routes
 to the easy sources that don't go through a base, and a location gated directly on `has_base()`
 would have to be unpicked one rule at a time.
 

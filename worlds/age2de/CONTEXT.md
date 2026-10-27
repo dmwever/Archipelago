@@ -109,9 +109,19 @@ A Town Center P1 can turn out villagers from: one standing at the start, or one 
 for by the starting Town Center resources and stood on ground P1 can reach. It also takes the food
 to train the first villagers and the Villager Line, even where villagers already stand. The base
 is the economy seed of villagers gathering at scale: one route's economy seed, not the economy
-itself. The base buys the first villagers only; training more, and the Houses they live in, is
-*some* food and *some* wood that every route standing on the base needs.
+itself. The base buys the first villagers only; training more is *some* food that every route
+standing on the base needs, and the room for them is **housing**.
 _Avoid_: Town Center (when the base is meant), camp, having villagers, economy
+
+**Housing**:
+The room P1 has to field units past those already standing. It is a resource of the economy
+routes, but never an item resource. *Some* housing is room for a unit or a few, and only a
+scenario grants it. Housing at scale comes from a Houses route, paying for buildable Houses with
+*some* wood, from a civilisation that builds no Houses, for nothing, or from a scenario grant that
+fills the population limit. A fixed-force scenario trains nothing and asks none. A unit P1 trains needs
+*some* housing; units at scale need it at scale: a route whose producer is trained, and every
+force P1 fields. A unit already standing needs none.
+_Avoid_: House (when the room is meant), population, pop cap
 
 **Trade partner**:
 A player whose market or dock P1 can actually trade with: an ally, or an opponent whose market or
