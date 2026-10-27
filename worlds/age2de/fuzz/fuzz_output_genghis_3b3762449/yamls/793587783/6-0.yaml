@@ -1,0 +1,50 @@
+description: 'Age Of Empires II: Definitive Edition Template, generated with https://github.com/Eijebong/Archipelago-fuzzer/tree/0.6.2'
+game: 'Age Of Empires II: Definitive Edition'
+requires:
+  version: 0.6.7
+'Age Of Empires II: Definitive Edition':
+  progression_balancing: 84
+  accessibility: full
+  scenario_branching: any
+  shuffle_buildings:
+  - Economy
+  - Tech
+  - Military
+  - Defense
+  - Unique
+  - Wonder
+  enabled_campaigns:
+  - Attila the Hun
+  - Genghis Khan
+  starting_campaigns:
+  - Attila the Hun
+  shuffle_ages: 'true'
+  techsanity: all
+  tech_behavior: must_research
+  shuffle_unique_techs: unshuffled
+  existing_techs: only_find_units
+  unitsanity: all
+  unitsanity_items: buildings
+  shuffle_villager: include_professions
+  include_unique_units: regional
+  caveman: 'false'
+  monks_can_counter: 'false'
+  siege_can_counter: 'true'
+  market_trade: 'true'
+  partner_trade: none
+  goal: campaign_completion
+  local_start: base
+  trap_difficulty: legendary
+  trap_percentage: 18
+  trap_distribution:
+    Give Me Your Extra Resources Trap: 462
+  local_items: []
+  non_local_items: []
+  start_inventory: {}
+  startInventoryPool: {}
+  start_hints: []
+  start_location_hints: []
+  exclude_locations: []
+  priority_locations: []
+  item_links: []
+  plando_items: []

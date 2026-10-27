@@ -33,6 +33,6 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 27 | [Market guard rulings](issues/27-market-guard-rulings.md) | ready-for-agent (after #26) |
 | 28 | [Joan 4's French Camp base is not recorded as standing](issues/28-joan4-french-camp-base-unrecorded.md) | done |
 | 29 | [Military can defend their own resources](issues/29-military-can-defend-their-own-resources.md) | done |
-| 30 | [A standing Mill, Mining Camp or Folwark is still charged *some* wood](issues/30-standing-dropsite-charged-wood.md) | needs-triage |
+| 30 | [A standing Mill, Mining Camp or Folwark is still charged *some* wood](issues/30-standing-dropsite-charged-wood.md) | done |
 | 31 | [Units handed to P1 by AP triggers start as Gaia, never capturable](issues/31-ap-granted-units-start-as-gaia.md) | needs-triage |
 | 32 | [Nothing may be unpaid: ages, buildings and units the logic asks without a price](issues/32-feudal-prerequisite-unpaid.md) | needs-triage |

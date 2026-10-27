@@ -54,7 +54,11 @@ would have to be unpicked one rule at a time.
   shape of the Town Center items. One which cannot - the Mining Camp, Mill, Folwark and Monastery -
   is funded by *some* of its cost: its route needs *some* wood, which the fixpoint takes from a
   different route. A standing one is free, and the Town Center branch of a dropsite carries no
-  funding, so each villager route of *some* is one route per dropsite. A seed item is pooled only
+  funding, so each villager route of *some* is one route per dropsite, and one per funding state
+  of that dropsite (#30): a route's needs are flat and the fixpoint reads them without a state, so
+  "free where it stands, charged where it is built" cannot be one route with a conditional need.
+  A funded camp is therefore two routes, standing and built, whose leaves are the two halves of
+  `has_building_structurally`. A seed item is pooled only
   where a route that would otherwise fund itself needs it; where it is not, the building falls
   back to the second kind, so a Dock with partner trade off is funded like a Mill.
 - The Town Center is paid for by the base, never by an easy source. A standing one is free; a built
@@ -71,4 +75,5 @@ would have to be unpicked one rule at a time.
   gap. ADR-0003 generalises this: the base is one economy route's economy seed, not the gathering
   side as a whole.
 - Follow-ups that apply this: #17 (paying for the buildings a location leans on), #18 (the direct
-  `has_base()` left in military and in the defeat rules), #19 (cog trade).
+  `has_base()` left in military and in the defeat rules), #19 (cog trade), #30 (the funded camps
+  that went on charging for a standing one).

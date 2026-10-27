@@ -254,5 +254,45 @@ class TestStartingWoodSumsToAThousand(SeedPoolBase):
                 self.assertEqual(seed_wood, pooled)
                 self.assertEqual(1000, pooled + target)
 
+class TestAStandingFundedCampIsFree(ToyScenarioBase):
+    """A camp funded by *some* wood is charged only where P1 puts one up.
+
+    ADR-0002 has said a standing building is free since #24, and the seeded buildings honour it.
+    The camps funded by *some* wood went on asking for wood nobody spends (#30)."""
+
+    CAMPS = (
+        (Age2BuildingData.MINING_CAMP, Age2VillagerJobData.GOLD_MINER_MALE,
+         "gold_count", Resource.GOLD),
+        (Age2BuildingData.MINING_CAMP, Age2VillagerJobData.STONE_MINER_MALE,
+         "stone_count", Resource.STONE),
+        (Age2BuildingData.MILL, Age2VillagerJobData.HUNTER_MALE,
+         "hunt_count", Resource.FOOD),
+        (Age2BuildingData.MILL, Age2VillagerJobData.SHEPHERD_MALE,
+         "herd_count", Resource.FOOD),
+        (Age2BuildingData.FOLWARK, Age2VillagerJobData.FORAGER_MALE,
+         "bush_count", Resource.FOOD),
+    )
+
+    def test_a_standing_camp_yields_some_with_no_wood_route_running(self):
+        for camp, gatherer, field, resource in self.CAMPS:
+            with self.subTest(camp=camp.name, gatherer=gatherer.name):
+                self.toy({Tier.BASE: tier(**{field: 500})})
+                state = self.state(VILLAGERS, job(gatherer), standing(camp))
+                self.assertFalse(self.some(Resource.WOOD, state))
+                self.assertTrue(self.some(resource, state))
+
+    def test_a_built_camp_still_asks_for_some_wood(self):
+        for camp, gatherer, field, resource in self.CAMPS:
+            with self.subTest(camp=camp.name, gatherer=gatherer.name):
+                self.toy({Tier.BASE: tier(**{field: 500})})
+                state = self.state(VILLAGERS, job(gatherer), building(camp))
+                self.assertFalse(self.some(resource, state))
+
+    def test_a_standing_monastery_collects_relics_with_no_wood_route(self):
+        self.toy({Tier.OPEN: tier(relic_count=5)})
+        state = self.state(standing(Age2BuildingData.MONASTERY), unit(Age2UnitData.MONK))
+        self.assertFalse(self.some(Resource.WOOD, state))
+        self.assertTrue(self.some(Resource.GOLD, state))
+
 if __name__ == "__main__":
     unittest.main()

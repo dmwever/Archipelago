@@ -1,0 +1,59 @@
+description: 'Age Of Empires II: Definitive Edition Template, generated with https://github.com/Eijebong/Archipelago-fuzzer/tree/0.6.2'
+game: 'Age Of Empires II: Definitive Edition'
+requires:
+  version: 0.6.7
+'Age Of Empires II: Definitive Edition':
+  progression_balancing: 94
+  accessibility: minimal
+  scenario_branching: any
+  shuffle_buildings:
+  - Economy
+  - Tech
+  - Military
+  - Defense
+  - Unique
+  - Wonder
+  enabled_campaigns:
+  - Joan of Arc
+  - Attila the Hun
+  - Genghis Khan
+  starting_campaigns:
+  - Attila the Hun
+  - Joan of Arc
+  - Genghis Khan
+  shuffle_ages: 'true'
+  techsanity: all
+  tech_behavior: must_research
+  shuffle_unique_techs: unshuffled
+  existing_techs: find_items
+  unitsanity: all
+  unitsanity_items: buildings
+  shuffle_villager: include_professions
+  include_unique_units: none
+  caveman: 'false'
+  monks_can_counter: 'false'
+  siege_can_counter: 'false'
+  market_trade: 'false'
+  partner_trade: none
+  goal: campaign_completion
+  local_start: both
+  trap_difficulty: easiest
+  trap_percentage: 30
+  trap_distribution:
+    Wololo Trap: 604
+    I'd Really Like To See That Trap: 394
+    Nobody Expects the Spanish Inquisition Trap: 880
+    Ooh Ahh Trap: 340
+    Raiding Party Trap: 765
+    Long Time, No Siege Trap: 232
+    Flemish Revolution Trap: 510
+  local_items: []
+  non_local_items: []
+  start_inventory: {}
+  startInventoryPool: {}
+  start_hints: []
+  start_location_hints: []
+  exclude_locations: []
+  priority_locations: []
+  item_links: []
+  plando_items: []
