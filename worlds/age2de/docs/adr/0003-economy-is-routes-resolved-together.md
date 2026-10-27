@@ -38,7 +38,19 @@ whose economy seed the running routes cover, until nothing changes.
 - Relics yield only *some* gold.
 - The villager count never matters: any villagers gather *some*; scale is the base's job. The base
   buys only the first villagers (#32): every route that asks for a base needs *some* food to keep
-  training them, and *some* wood for Houses where the civilisation builds them.
+  training them. ~~And *some* wood for Houses where the civilisation builds them.~~ Replaced by
+  #43: the room for them is housing, below.
+- **Housing is a route resource, never an item resource** (#43). Every trained unit takes room, so
+  a route whose producer is trained needs housing, at the two usual strengths: *some* for a few
+  (Relics with no Monk standing), at scale for many (the villager routes at scale, Farmers, Fishing
+  Ships, Fish Traps, Trade Carts, Trade Cogs). A producer already standing needs none. *Some*
+  housing comes only from what a scenario grants. Housing at scale comes from a **Houses** route,
+  which asks for the House as buildable and needs *some* wood, or from a civilisation that builds
+  no Houses, for nothing. No item, bank or Market yields housing. The alternative was asking for a
+  House and *some* wood inline on each route that trains, which is the same payment written once
+  per route. It also left the House out of logic wherever a Town Center stood, because it only
+  rode on building the base's Town Center. The Houses route reads no gate, so it is an ungated
+  route: Farmers and the lumberjacks at scale stay ungated only if their housing does.
 - Local start still aims for a base.
 - **A tier gate is the one place the rejected "authored layers" option is used** (#23). A gate
   cannot ask the economy it sits inside: `_fortified` asking `has_some_source` resolves back into
