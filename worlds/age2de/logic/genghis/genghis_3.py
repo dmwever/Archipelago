@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import Has, Rule
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Units import Age2UnitData
@@ -55,29 +55,32 @@ class Genghis3StartingState(ScenarioStartingState):
         )
         can_force_landing = scenario_logic.named("can force a landing", can_force_landing)
 
+        can_defeat_tanguts: Rule = (
+            can_invade_china &
+            military.has_military(Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.ROCKET_CART_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.FIRE_LANCER_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.MOUNTED_TREBUCHET_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
+            military.counters_building() &
+            scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+        )
+        can_defeat_xi_xia: Rule = (
+            can_invade_china &
+            military.has_military(Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.CHU_KO_NU_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.CASTLE) &
+            has_siege &
+            scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+        )
+
         return {
-            Age2PlayerData.GEN3_TANGUTS: (
-                can_invade_china &
-                military.has_military(Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.ROCKET_CART_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.FIRE_LANCER_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.MOUNTED_TREBUCHET_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
-                military.counters_building() &
-                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
-            ),
-            Age2PlayerData.GEN3_XI_XIA: (
-                can_invade_china &
-                military.has_military(Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.CHU_KO_NU_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.CASTLE) &
-                has_siege &
-                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
-            ),
+            Age2PlayerData.GEN3_TANGUTS: can_defeat_tanguts,
+            Age2PlayerData.GEN3_XI_XIA: can_defeat_xi_xia,
             Age2PlayerData.GEN3_JIN: (
                 can_force_landing &
                 military.has_military(Age2AgeData.IMPERIAL) &
@@ -100,6 +103,7 @@ class Genghis3StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.FIRE_LANCER_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE) &
                 military.counters_building() &
-                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+                scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
+                (can_defeat_tanguts | can_defeat_xi_xia)
             ),
         }

@@ -12,6 +12,7 @@ from . import bases
 from ..Options import PartnerTrade
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
+from ..locations.Locations import Age2ScenarioLocationData
 from ..locations.Players import TRADE_BUILDINGS, Age2PlayerData, Side, TradeAccess
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.connections.ScenarioPlayers import SCENARIO_TO_PLAYERS
@@ -22,6 +23,7 @@ from ..logic.custom_logic.Named import Named
 SCENARIO = Age2ScenarioData.AP_ATTILA_1
 OWNER = Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE
 DOCK = Age2BuildingData.DOCK
+MARKET = Age2BuildingData.MARKET
 GUARD_EVENT = OWNER.guard_event(SCENARIO.scenario_name, DOCK)
 DEFEAT_EVENT = OWNER.defeat_event(SCENARIO.scenario_name)
 
@@ -286,3 +288,90 @@ class TestTheEnemyDocksAreAsRuled(bases.Age2RuleTestBase):
                 guard = scenario_logic.player_logic.guards(player, DOCK)
                 self.assertEqual(scenario_logic.military.can_guard_boats(), guard.child)
                 self.assertEqual(guard.resolve(self.world), event.access_rule)
+
+
+MARKET_RULINGS: dict[Age2PlayerData, TradeAccess] = {
+    Age2PlayerData.ATT1_PERSIANS: TradeAccess.CLOSED,
+    Age2PlayerData.ATT1_EASTERN_ROMAN_EMPIRE: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.ATT2_DYRRHACHIUM: TradeAccess.OPEN,
+    Age2PlayerData.ATT2_THESSALONICA: TradeAccess.OPEN,
+    Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE: TradeAccess.CLOSED,
+    Age2PlayerData.ATT3_CONSTANTINOPLE: TradeAccess.CLOSED,
+    Age2PlayerData.ATT3_PHILIPPOPOLIS: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.ATT4_BURGUNDY: TradeAccess.GUARDED,
+    Age2PlayerData.ATT4_METZ: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.ATT4_ORLEANS: TradeAccess.CLOSED,
+    Age2PlayerData.ATT5_WESTERN_ROMAN_EMPIRE: TradeAccess.CLOSED,
+    Age2PlayerData.ATT5_VISIGOTHS: TradeAccess.CLOSED,
+    Age2PlayerData.ATT5_ALANS: TradeAccess.CLOSED,
+    Age2PlayerData.ATT6_AQUILEIA: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.ATT6_MEDIOLANUM: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.ATT6_VERONA: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.ATT6_PATAVIUM: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.JOAN2_BURGUNDY: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN2_NORTHERN_ENGLISH: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN2_SOUTHERN_ENGLISH: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN3_BURGUNDY: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.JOAN3_ENGLISH: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN3_FASTOLF: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.JOAN4_TROYES: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.JOAN4_CHALONS: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.JOAN4_RHEIMS: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN6_BURGUNDY: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.JOAN6_ENGLISH: TradeAccess.CLOSED,
+    Age2PlayerData.JOAN6_SHREWSBURY: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN2_KARA_KHITAI: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN2_KUSHLUK: TradeAccess.CLOSED,
+    Age2PlayerData.GEN3_TANGUTS: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN3_XI_XIA: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN3_JIN: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN3_SONG: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN4_KIPCHAKS: TradeAccess.CLOSED,
+    Age2PlayerData.GEN4_RUSSIANS: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN4_KHWARAZM: TradeAccess.CLOSED,
+    Age2PlayerData.GEN5_POLISH: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN5_GERMANS: TradeAccess.ONCE_DEFEATED,
+    Age2PlayerData.GEN6_HUNGARY: TradeAccess.CLOSED,
+}
+
+
+class TestTheEnemyMarketsAreAsRuled(bases.Age2RuleTestBase):
+    """Every enemy market the design ruled on, and the one guard among them: Burgundy's at
+    Attila 4, which opens on the alliance rather than on a army holding the carts' road."""
+
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+    starting_campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+
+    def test_every_enemy_market_is_as_ruled(self):
+        for player, access in MARKET_RULINGS.items():
+            with self.subTest(player=player.name):
+                self.assertIs(access, player.market)
+
+    def test_burgundy_keeps_the_only_guarded_market(self):
+        guarded = [player for player in Age2PlayerData
+                   if player.market is TradeAccess.GUARDED]
+        self.assertEqual([Age2PlayerData.ATT4_BURGUNDY], guarded)
+
+    def test_burgundys_market_is_guarded_by_the_alliance(self):
+        """Burgundy allies on a tribute and stays allied on a castle, and the castle is what
+        makes its market dependable: the alliance *is* the guard."""
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        burgundy = Age2PlayerData.ATT4_BURGUNDY
+        scenario = scenario_of(burgundy)
+        scenario_logic = self.world.rules.logic.for_scenario(scenario)
+        event = self.world.get_location(burgundy.guard_event(scenario.scenario_name, MARKET))
+        guard = scenario_logic.player_logic.guards(burgundy, MARKET)
+        self.assertEqual(scenario_logic.starting_state.can_ally_burgundy(scenario_logic),
+                         guard.child)
+        self.assertEqual(guard.resolve(self.world), event.access_rule)
+
+    def test_the_locations_ask_the_same_alliance_rule(self):
+        """One definition, so a location and the market's guard can never drift apart."""
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        scenario = scenario_of(Age2PlayerData.ATT4_BURGUNDY)
+        scenario_logic = self.world.rules.logic.for_scenario(scenario)
+        can_ally = scenario_logic.starting_state.can_ally_burgundy(scenario_logic)
+        defeats = scenario_logic.player_logic.defeats(Age2PlayerData.ATT4_BURGUNDY)
+        location = self.world.get_location(
+            Age2ScenarioLocationData.ATT4_DEFEAT_OR_ALLY_BURGUNDY_ANY.global_name())
+        self.assertEqual((defeats | can_ally).resolve(self.world), location.access_rule)

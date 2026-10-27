@@ -2,6 +2,7 @@
 
 from . import bases
 from ..Options import PartnerTrade
+from ..items.Items import Age2ItemData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Players import Age2PlayerData, Side
 from ..locations.connections.ScenarioPlayers import SCENARIO_TO_PLAYERS
@@ -112,3 +113,73 @@ class TestDefeatAndTradeTerminate(bases.Age2RuleTestBase):
                 scenario_logic.economy.can_earn_gold_by_partner_trade().resolve(self.world)
                 scenario_logic.economy.can_earn_wood_by_partner_trade().resolve(self.world)
         self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
+
+
+class TestACityBehindAnotherWaitsForIt(bases.Age2RuleTestBase):
+    """Two opponents sit behind the cities in front of them: Genghis 3's Song, behind the Tanguts
+    and Xi Xia, and Genghis 2's Kushluk, behind the Kara-Khitai. Their own defence is not the
+    whole price of reaching them."""
+
+    campaigns = ["Genghis Khan"]
+    starting_campaigns = ["Genghis Khan"]
+
+    KUSHLUKS_OWN_ARMY = (
+        Age2ItemData.AP_GENGHIS_2_TAYICHIUD_BASE.item_name,
+        Age2ItemData.STARTING_VILLAGER_FOOD.item_name,
+        Age2ItemData.MILL.item_name,
+        Age2ItemData.FARM.item_name,
+        Age2ItemData.MARKET.item_name,
+        Age2ItemData.STABLE.item_name,
+        Age2ItemData.FEUDAL_AGE.item_name,
+        Age2ItemData.CASTLE_AGE.item_name,
+        Age2ItemData.UNIT_LINE_SPEARMAN.item_name,
+        Age2ItemData.TECH_PIKEMAN.item_name,
+        Age2ItemData.UNIT_LINE_MANGUDAI.item_name,
+        Age2ItemData.UNIT_LINE_STEPPE_LANCER.item_name,
+    )
+    """Everything Kushluk's own defence asks for and nothing else, found by paring the whole item
+    pool back while his defeat rule still held."""
+
+    def defeat_rules(self, scenario: Age2ScenarioData) -> dict:
+        scenario_logic = self.world.rules.logic.for_scenario(scenario)
+        return scenario_logic.starting_state.defeat_rules(scenario_logic)
+
+    def holds(self, scenario: Age2ScenarioData, player: Age2PlayerData, state) -> bool:
+        scenario_logic = self.world.rules.logic.for_scenario(scenario)
+        return bool(scenario_logic.player_logic.defeats(player).resolve(self.world)(state))
+
+    def test_the_song_wait_on_the_tanguts_or_xi_xia(self):
+        """The Song are the last city in, reached over one of the two in front of them."""
+        self.build()
+        rules = self.defeat_rules(Age2ScenarioData.AP_GENGHIS_3)
+        in_front = rules[Age2PlayerData.GEN3_TANGUTS] | rules[Age2PlayerData.GEN3_XI_XIA]
+        self.assertTrue(in_front in rules[Age2PlayerData.GEN3_SONG].children,
+                        "the Song's rule does not ask for the Tanguts or Xi Xia")
+
+    def test_kushluk_waits_on_the_kara_khitai(self):
+        """Anded with another And, `&` merges the two: what to look for is the clauses, not the
+        Kara-Khitai's rule as one child."""
+        self.build()
+        rules = self.defeat_rules(Age2ScenarioData.AP_GENGHIS_2)
+        kushluk = rules[Age2PlayerData.GEN2_KUSHLUK].children
+        unasked = [str(clause) for clause in rules[Age2PlayerData.GEN2_KARA_KHITAI].children
+                   if clause not in kushluk]
+        self.assertEqual([], unasked, "Kushluk's rule skips what the Kara-Khitai's asks")
+
+    def test_kushluks_own_army_is_not_enough(self):
+        """Mangudai, Steppe Lancers and Pikemen out of the Tayichi'ud base answer everything
+        Kushluk fields, and are still no answer to the Kara-Khitai standing in the way."""
+        self.build()
+        state = self.state_with(*self.KUSHLUKS_OWN_ARMY)
+        genghis_2 = Age2ScenarioData.AP_GENGHIS_2
+        self.assertFalse(self.holds(genghis_2, Age2PlayerData.GEN2_KARA_KHITAI, state))
+        self.assertFalse(self.holds(genghis_2, Age2PlayerData.GEN2_KUSHLUK, state))
+
+    def test_both_can_still_be_defeated(self):
+        """A rule nothing can satisfy would pass the two above and break the scenario."""
+        self.build()
+        everything = self.state_without()
+        self.assertTrue(self.holds(Age2ScenarioData.AP_GENGHIS_3,
+                                   Age2PlayerData.GEN3_SONG, everything))
+        self.assertTrue(self.holds(Age2ScenarioData.AP_GENGHIS_2,
+                                   Age2PlayerData.GEN2_KUSHLUK, everything))

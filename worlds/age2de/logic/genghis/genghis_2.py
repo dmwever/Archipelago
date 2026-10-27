@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import False_, Has, Rule
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Units import Age2UnitData
@@ -34,17 +34,18 @@ class Genghis2StartingState(ScenarioStartingState):
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
+        can_defeat_kara_khitai: Rule = (
+            military.has_military(Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.CASTLE) &
+            military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
+            military.counters_building() &
+            scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+        )
         return {
-            Age2PlayerData.GEN2_KARA_KHITAI: (
-                military.has_military(Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.CASTLE) &
-                military.counters(Age2UnitLineData.ARCHER_LINE, Age2AgeData.CASTLE) &
-                military.counters_building() &
-                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
-            ),
+            Age2PlayerData.GEN2_KARA_KHITAI: can_defeat_kara_khitai,
             Age2PlayerData.GEN2_KUSHLUK: (
                 military.has_military(Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.CAVALRY_ARCHER_LINE, Age2AgeData.CASTLE) &
@@ -53,6 +54,7 @@ class Genghis2StartingState(ScenarioStartingState):
                 military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.CASTLE) &
                 military.counters(Age2UnitLineData.SKIRMISHER_LINE, Age2AgeData.CASTLE) &
                 military.counters_building() &
-                scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+                scenario_logic.ages.can_reach(Age2AgeData.CASTLE) &
+                can_defeat_kara_khitai
             ),
         }

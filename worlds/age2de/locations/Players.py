@@ -68,12 +68,11 @@ class Age2PlayerData(enum.IntEnum):
     ATT1_PERSIANS =             1014, "the Persians",               4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.GUARDED
     ATT1_EASTERN_ROMAN_EMPIRE = 1015, "the Eastern Roman Empire",   5, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.GUARDED
 
-    # Attila 2. The Scythians (P8) stay neutral. Ruled: Thessalonica's dock is usable.
     ATT2_SOFIA =                1022, "Sofia",                      2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     ATT2_NAISSUS =              1023, "Naissus",                    3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     ATT2_ADRIANOPLE =           1024, "Adrianople",                 4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    ATT2_DYRRHACHIUM =          1025, "Dyrrhachium",                5, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
-    ATT2_THESSALONICA =         1026, "Thessalonica",               6, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.OPEN
+    ATT2_DYRRHACHIUM =          1025, "Dyrrhachium",                5, Side.ENEMY, TradeAccess.OPEN,          TradeAccess.CLOSED
+    ATT2_THESSALONICA =         1026, "Thessalonica",               6, Side.ENEMY, TradeAccess.OPEN,          TradeAccess.OPEN
     ATT2_EASTERN_ROMAN_EMPIRE = 1027, "the Eastern Roman Empire",   7, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
 
     # Attila 3.
@@ -81,29 +80,25 @@ class Age2PlayerData(enum.IntEnum):
     ATT3_MARCIANOPOLIS =        1033, "Marcianopolis",              3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.OPEN
     ATT3_PHILIPPOPOLIS =        1034, "Philippopolis",              4, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.OPEN
 
-    # Attila 4. Ruled: Burgundy is an enemy, and no enemy dock is usable.
-    ATT4_BURGUNDY =             1042, "Burgundy",                   2, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
+    ATT4_BURGUNDY =             1042, "Burgundy",                   2, Side.ENEMY, TradeAccess.GUARDED,       TradeAccess.CLOSED
     ATT4_METZ =                 1043, "Metz",                       3, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
     ATT4_ORLEANS =              1044, "Orléans",                    4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     ATT4_WESTERN_ROMAN_EMPIRE = 1045, "the Western Roman Empire",   5, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
 
-    # Attila 5. The Franks (P6) stay neutral.
     ATT5_OSTROGOTHS =           1052, "the Ostrogoths",             2, Side.ALLY,  TradeAccess.OPEN,          TradeAccess.CLOSED
     ATT5_WESTERN_ROMAN_EMPIRE = 1053, "the Western Roman Empire",   3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    ATT5_VISIGOTHS =            1054, "the Visigoths",              4, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
-    ATT5_ALANS =                1055, "the Alans",                  5, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
+    ATT5_VISIGOTHS =            1054, "the Visigoths",              4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
+    ATT5_ALANS =                1055, "the Alans",                  5, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
 
-    # Attila 6.
-    ATT6_AQUILEIA =             1062, "Aquileia",                   2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.GUARDED
-    ATT6_MEDIOLANUM =           1063, "Mediolanum",                 3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.ONCE_DEFEATED
-    ATT6_VERONA =               1064, "Verona",                     4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    ATT6_PATAVIUM =             1065, "Patavium",                   5, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
+    ATT6_AQUILEIA =             1062, "Aquileia",                   2, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.GUARDED
+    ATT6_MEDIOLANUM =           1063, "Mediolanum",                 3, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.ONCE_DEFEATED
+    ATT6_VERONA =               1064, "Verona",                     4, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
+    ATT6_PATAVIUM =             1065, "Patavium",                   5, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
     ATT6_WESTERN_ROMAN_EMPIRE = 1066, "the Western Roman Empire",   6, Side.ALLY,  TradeAccess.CLOSED,        TradeAccess.OPEN
 
     # Joan 1 and Joan 5 are fixed force: no economy, so no one recorded.
 
     # Joan 2. Ruled: no enemy market is usable - the scenario ends on a partial defeat. Burgundy's
-    # dock is P1's: the AP Give Dock trigger hands it over.
     JOAN2_BURGUNDY =            2022, "Burgundy",                   2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     JOAN2_NORTHERN_ENGLISH =    2023, "the Northern English",       3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     JOAN2_ORLEANS =             2024, "Orléans",                    4, Side.ALLY,  TradeAccess.CLOSED,        TradeAccess.CLOSED
@@ -116,9 +111,8 @@ class Age2PlayerData(enum.IntEnum):
     JOAN3_ENGLISH =             2033, "the English",                3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.GUARDED
     JOAN3_FASTOLF =             2034, "Fastolf",                    4, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
 
-    # Joan 4. Ruled: Troyes, Chalons and Rheims are enemies.
-    JOAN4_TROYES =              2042, "Troyes",                     2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.GUARDED
-    JOAN4_CHALONS =             2043, "Chalons",                    3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.GUARDED
+    JOAN4_TROYES =              2042, "Troyes",                     2, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.GUARDED
+    JOAN4_CHALONS =             2043, "Chalons",                    3, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.GUARDED
     JOAN4_RHEIMS =              2044, "Rheims",                     4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     JOAN4_ENGLISH_GUARDS =      2045, "the English Guards",         5, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
 
@@ -140,13 +134,12 @@ class Age2PlayerData(enum.IntEnum):
     GEN2_KUSHLUK =              3023, "Kushluk",                    3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
 
     # Genghis 3. The Engineers (P6) are ignored: they resign the moment the other four are gone.
-    GEN3_TANGUTS =              3032, "the Tanguts",                2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    GEN3_XI_XIA =               3033, "Xi Xia",                     3, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
-    GEN3_JIN =                  3034, "the Jin",                    4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.ONCE_DEFEATED
-    GEN3_SONG =                 3035, "the Song",                   5, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
+    GEN3_TANGUTS =              3032, "the Tanguts",                2, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
+    GEN3_XI_XIA =               3033, "Xi Xia",                     3, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
+    GEN3_JIN =                  3034, "the Jin",                    4, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.ONCE_DEFEATED
+    GEN3_SONG =                 3035, "the Song",                   5, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
 
     # Genghis 4. Ruled: Khwarazm is an enemy; no ally market is usable. The Kipchaks are never a
-    # trade partner: they surrender their camp, market and all, to P1.
     GEN4_KIPCHAKS =             3042, "the Kipchaks",               2, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED
     GEN4_RUSSIANS =             3043, "the Russians",               3, Side.ENEMY, TradeAccess.ONCE_DEFEATED, TradeAccess.CLOSED
     GEN4_KHWARAZM =             3044, "Khwarazm",                   4, Side.ENEMY, TradeAccess.CLOSED,        TradeAccess.CLOSED

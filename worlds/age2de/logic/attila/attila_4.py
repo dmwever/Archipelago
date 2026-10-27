@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import False_, Has, Rule
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
-from ...items.Items import Age2ItemData
+from ...items.Items import Resource
 from ...locations.UnitLines import Age2UnitLineData
 
 from ..ScenarioLogic import ScenarioStartingState
@@ -23,6 +23,18 @@ class Attila4StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT3_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 3)
         # No water the logic counts on: no Dock, so no ships and no deep fish.
         self.has_water_access = False_()
+
+    def can_tribute_burgundy(self, scenario_logic: 'ScenarioLogic') -> Rule:
+        return (scenario_logic.has_building(Age2BuildingData.MARKET) &
+                scenario_logic.economy.has_easy_source(Resource.GOLD))
+
+    def can_ally_burgundy(self, scenario_logic: 'ScenarioLogic') -> Rule:
+        can_ally: Rule = (
+            self.can_tribute_burgundy(scenario_logic) &
+            scenario_logic.has_building(Age2BuildingData.CASTLE) &
+            scenario_logic.ages.can_reach(Age2AgeData.CASTLE)
+        )
+        return scenario_logic.named("can ally with Burgundy", can_ally)
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
@@ -53,4 +65,14 @@ class Attila4StartingState(ScenarioStartingState):
             ),
             Age2PlayerData.ATT4_ORLEANS: can_defeat_orleans,
             Age2PlayerData.ATT4_WESTERN_ROMAN_EMPIRE: can_defeat_orleans,
+        }
+
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        return {
+            (Age2PlayerData.ATT4_BURGUNDY, Age2BuildingData.MARKET): (
+                self.can_ally_burgundy(scenario_logic)
+            ),
         }

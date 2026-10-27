@@ -125,8 +125,12 @@ locations. The Song's and Kushluk's defeat rules stand alone.
       tightenings (1 -> 0) only in Attila 5, Genghis 2 and Genghis 3. List the moves per scenario
       here. Anything else: stop and report.
 - [ ] `test_determinism.py::TestCampaignOrder` stays green.
-- [ ] **Fill gate**, as #25/#26: replay the 100 seeds in `fuzz_output_6f09d7ec6/yamls/` before and
-      after; no new failing seed. Record both counts.
+- [ ] **Fill gate**, as #25/#26: replay the 100 seeds before and after; no new failing seed. Record
+      both counts. Mind which set: #26 ran on `fuzz_output_6f09d7ec6`, since renamed
+      `fuzz_output_6f09d7ec6_enemy_trade` and retired - #30 replaced the current set with one that
+      includes Genghis Khan. Gate this on the current set named at the top of
+      `worlds/age2de/fuzz/bench/README.md`, and measure its own baseline if no stored row predates
+      the change; #26's rows are not a baseline for it.
 - [ ] The pre-commit checks and every touched test file pass. Ruff F,E9 on changed files.
 
 **Out of scope:**

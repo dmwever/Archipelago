@@ -1,0 +1,62 @@
+# 34: Without caveman, unit location checks wait for a quiet second
+
+**Reported:** 2026-10-26, split from [#10](10-caveman-sweep-delayed.md)
+
+**Status:** needs-triage
+
+**Blocked by:** #33 (the cost of `checkOwnedUnits` per tick)
+
+## Problem
+
+`UnitsanityChecks` (`Unitsanity.xs:323-366`) sends unit location checks through `checkOwnedUnits`
+(`:365`). That call sits behind the same two early returns as the caveman sweep (`:336-347`), so it
+only runs on a tick where neither P1's unit count nor research count changed since the tick before.
+
+While the roster changes every second, no check is sent. That happens in a fight, a training queue,
+or a pavilion muster that places one soldier a second. A one-for-one swap leaves the count unchanged,
+so it never even marks the list dirty, and its check waits for some later, unrelated change.
+
+This happens with caveman mode off. #10 covers the same gate with caveman mode on.
+
+## Why caveman off is split from #10
+
+**Maintainer ruling (2026-10-26):** location checks stay after the caveman knockdown. A unit P1 owns
+for a moment before its knockdown does not check its location. Two reasons:
+
+- **The wrong check:** a converted Knight with no Knight items would check the Knight location
+  before it became a Militia.
+- **A stale snapshot:** `transformUnit` (`Caveman.xs:184-197`) removes the unit and creates a new
+  one with a new id. The `units` array fetched at the top of the tick still holds the removed id,
+  which is why the rule returns on `unitsTransformed` (`:360`).
+
+So with caveman on, the checks are tied to the sweep and belong to #10.
+
+With caveman off (`cavemanReady` false), nothing is knocked down and nothing transforms. Moving
+`checkOwnedUnits` out from behind the early returns would only change when a check is sent, not
+which check is sent.
+
+## Why it is not ready for an agent yet
+
+#10's brief called `checkOwnedUnits` cheap ("O(1) lookups"). That is not true:
+
+- Each unit with a unit row costs up to two struct reads.
+- Each struct read is a linear string comparison over 13 attribute names. See #33.
+
+Running it every tick is probably affordable, but it hasn't been measured. Re-triage once #33
+records the number.
+
+## Likely shape, once #33 confirms it is cheap
+
+- With caveman off, `checkOwnedUnits` runs on every tick, on the roster fetched that tick, whatever
+  the two counts did.
+- With caveman on, behaviour stays exactly as it is today. #10 owns that path.
+- `unitsDirty` keeps its role for the profession and caveman paths.
+
+## Acceptance criteria (draft, to confirm in re-triage)
+
+- [ ] With caveman off, during a pavilion muster of a multi-soldier mercenary (e.g. Kereyid Tribe), a
+      unit P1 gains has its location checked within about one second
+- [ ] With caveman off, a unit gained in the same second another is lost is checked within the same
+      bound
+- [ ] With caveman on, the order is unchanged: checks only after a sweep that transformed nothing
+- [ ] `./xs-check.exe -I . -- AP_<Scenario>.xs` is clean for the scenario entry points
