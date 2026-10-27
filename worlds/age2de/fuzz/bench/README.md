@@ -4,7 +4,8 @@ Measure each code version **once**, store its results, compare against what is s
 an old version to get a baseline.
 
 The fixed seed set is the 100 YAMLs in `../fuzz_output_3b3762449/yamls/` (full shuffle, all
-three campaigns; see `../_full_shuffle.yaml`). Always run at `-j 6`. This is a laptop and it may
+three campaigns; see `../_full_shuffle.yaml`). It rolls `partner_trade` too - 34 seeds `none`, 38
+`allies`, 28 `allies_and_enemies` - so a trade ruling needs no separate set. Always run at `-j 6`. This is a laptop and it may
 sleep mid-run: if it did, ignore that run's times (spheres, sphere 1 and order sizes are still
 valid).
 

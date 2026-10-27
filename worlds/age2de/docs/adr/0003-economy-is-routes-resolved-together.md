@@ -36,7 +36,9 @@ whose economy seed the running routes cover, until nothing changes.
 - A banked pile is *some* only for an economy seed whose authored amount it covers
   (`TRADE_SEED_*`).
 - Relics yield only *some* gold.
-- The villager count never matters: any villagers gather *some*; scale is the base's job.
+- The villager count never matters: any villagers gather *some*; scale is the base's job. The base
+  buys only the first villagers (#32): every route that asks for a base needs *some* food to keep
+  training them, and *some* wood for Houses where the civilisation builds them.
 - Local start still aims for a base.
 - **A tier gate is the one place the rejected "authored layers" option is used** (#23). A gate
   cannot ask the economy it sits inside: `_fortified` asking `has_some_source` resolves back into
@@ -46,7 +48,11 @@ whose economy seed the running routes cover, until nothing changes.
   its own composition of the route builders, memoised behind its own question. It is acyclic by
   construction, and a test pins that nothing in it reaches a gate, because the authored order this
   ADR rejected is only safe while someone keeps it. Everything above that layer still resolves
-  together, as above.
+  together, as above. #32 moves "Lumberjacks with a Base" into the ungated routes: it was gated
+  only because its camp could be a second Town Center, read through the defence rule. A second
+  Town Center now has a camp rule paid through the route's needs and a defence rule paid from the
+  ungated routes, so the lumberjacks read no gate. Ungated Farmers then have wood at scale wherever
+  there is a base, which is what lets a second Town Center pay the Castle Age's food as a defence.
 - **Route needs stay for economy seeds, not for defences** (#23). `EconomyRoute.needs` is how a
   route says what must already be yielding before it starts - Farmers and Fish Traps want wood at
   scale, Trade Cogs want some wood and some gold. #19 and #21 also used it to price the naval

@@ -23,13 +23,19 @@ would have to be unpicked one rule at a time.
 
 ## Consequences
 
-- Prerequisites stay structural. `has_reached` (an age as a prerequisite) never pays. What depends
-  on it pays its own price.
+- ~~Prerequisites stay structural.~~ Reversed by #32: nothing is ever asked unpaid. `has_reached`
+  is still the structural question, but no rule asks it without the age's price beside it. An age
+  has one **age price**, the same as a location and as a prerequisite: Feudal is *some* food or the
+  Feudal Age Food seed item, Castle is food at scale and *some* gold, Imperial is food and gold at
+  scale. An age the scenario starts in or past is free. Inside the economy the price is paid
+  through a route's needs or a bank, never through an easy source, so the economy still never asks
+  itself. A test walks every rule of two maximal worlds and fails on a structural form with no
+  payment beside it.
 - Buildings have the same paid and structural pair as ages, techs and units (#17):
   `has_building_structurally` (standing or buildable) never pays, and `has_building` (standing or
   paid for) does. A paid form pays for every building it leans on. A structural form, and every
-  question inside the economy (dropsites, market), pays for nothing. That keeps the easy sources
-  from asking themselves.
+  question inside the economy (dropsites, market), pays for nothing by itself, which keeps the easy
+  sources from asking themselves; since #32 each one is paired with a payment where it is asked.
 - A defence is never free, and pays for itself where it is asked (#23). A standing defence opens no
   gate: what it guards is already the base tier. A built defence (a wall with a tower, a
   strongpoint, a Dock holding a shoreline, more Town Centers) asks for *some* of each resource it

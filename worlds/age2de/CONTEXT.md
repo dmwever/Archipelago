@@ -66,15 +66,23 @@ grant. A bundle, not a pile, and particular to its route. Its resources may come
 already yielding them, at either strength, so one route can seed the next. A route's needs are its
 operating input and never its capital: they say what must already be yielding before the producer
 runs, and never buy the building it stands in, which does not exist yet. That building is capital,
-funded from outside the economy by a **seed item** or by *some* wood.
+funded from outside the economy by a **seed item** or by *some* wood. An age the producer waits on is
+capital the same way, at the age's one price (see **Age price**).
 _Avoid_: seed (alone: it is the Archipelago generation seed), seed resources, starting resources
 (when the whole bundle is meant)
 
+**Age price**:
+What reaching an age costs P1, the same wherever the age is asked, whether as a location or as
+something another rule stands on: Feudal is *some* food or its seed item, Castle is food at scale
+and *some* gold, Imperial is food and gold at scale. An age the scenario starts in or past costs
+nothing, which is where a Castle Age economy opens. Nothing may ask an age without its price.
+_Avoid_: age cost (the in-game numbers), age-up requirement (the two buildings)
+
 **Seed item**:
-An item granting the starting resources one building costs, so a built one is paid for from
-outside the economy: the Town Center items and the villagers' food for the base, and one wood item
+An item granting the starting resources one building or age costs, so it is paid for from
+outside the economy: the Town Center items and the villagers' food for the base, one wood item
 each for the Lumber Camp, Mule Cart, Dock and Market - the buildings that can open an economy from
-nothing. A building that only opens a resource inside an economy already running (Mining Camp,
+nothing - and the Feudal Age Food for the age trade and Fish Traps wait on. A building that only opens a resource inside an economy already running (Mining Camp,
 Mill, Folwark, Monastery) has none; its route needs *some* wood instead. A building standing at
 the start asks for no seed item, and one is pooled only where a route under the seed's options can
 use it. A building whose seed item is not pooled is funded like a Mill: a Dock with partner trade
@@ -98,7 +106,8 @@ A Town Center P1 can turn out villagers from: one standing at the start, or one 
 for by the starting Town Center resources and stood on ground P1 can reach. It also takes the food
 to train the first villagers and the Villager Line, even where villagers already stand. The base
 is the economy seed of villagers gathering at scale: one route's economy seed, not the economy
-itself.
+itself. The base buys the first villagers only; training more, and the Houses they live in, is
+*some* food and *some* wood that every route standing on the base needs.
 _Avoid_: Town Center (when the base is meant), camp, having villagers, economy
 
 **Trade partner**:
