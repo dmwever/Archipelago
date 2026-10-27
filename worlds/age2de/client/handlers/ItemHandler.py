@@ -104,4 +104,4 @@ class ItemHandler(FolderHandler):
             managed.delivered = index < self._current_item
 
     def _id_for_game(self, managed: ManagedItem) -> int:
-        return Items.SKIP_ITEM_ID if managed.spent else managed.data.id
+        return Age2ItemData.SKIP.id if managed.spent else managed.data.id

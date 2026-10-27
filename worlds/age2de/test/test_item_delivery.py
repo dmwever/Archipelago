@@ -167,9 +167,9 @@ class TestItemDelivery(ItemDeliveryTestBase):
         for _ in range(10):
             self.full_tick()
 
-        expected = [Items.SKIP_ITEM_ID if item in Items.ONE_SHOT_ITEMS else item.id
+        expected = [Age2ItemData.SKIP.id if item in Items.ONE_SHOT_ITEMS else item.id
                     for item in items[5:]]
-        self.assertIn(Items.SKIP_ITEM_ID, expected,
+        self.assertIn(Age2ItemData.SKIP.id, expected,
                       "this fixture proves nothing unless the replayed range holds a one-shot")
         self.assertEqual(expected, self.game.granted,
                          "the gap was not replayed, or a one-shot was paid out a second time")
@@ -201,8 +201,8 @@ class TestItemDelivery(ItemDeliveryTestBase):
         self.assertEqual(self.game.granted, [wood.id] * 5)
         self.assertEqual(self.game.applied_item_count, 5)
 
-    def test_an_unknown_item_id_is_skipped_not_raised(self) -> None:
-        """An id this world does not know must not take the connection down with it."""
+    def test_an_unknown_item_id_holds_its_stream_index(self) -> None:
+        """An id this world does not know keeps its place, so later indices match the server's."""
         from NetUtils import NetworkItem
 
         from ..client.ApClient import Age2Context
@@ -210,17 +210,51 @@ class TestItemDelivery(ItemDeliveryTestBase):
         ap = Age2Context.__new__(Age2Context)
         ap.game_ctx = self.ctx
 
-        known = list(Age2ItemData)[1:3]
-        packet = {"index": 0, "items": [NetworkItem(999999, 0, 0, 0)]
-                  + [NetworkItem(item.id, 0, 0, 0) for item in known]}
+        first, second = list(Age2ItemData)[1:3]
+        packet = {"index": 0, "items": [NetworkItem(first.id, 0, 0, 0),
+                                        NetworkItem(999999, 0, 0, 0),
+                                        NetworkItem(second.id, 0, 0, 0)]}
 
         ap._handle_received_items(packet)
 
         self.assertEqual(
             self.ctx.client_status.unlocked_items,
-            known,
-            "an id the world does not know killed the ReceivedItems handler",
+            [first, Age2ItemData.SKIP, second],
+            "dropping the unknown id shifted every later item one index down",
         )
+
+    def test_an_unknown_item_id_is_warned_about_once(self) -> None:
+        """Every reconnect resends the whole stream; the warning should not repeat with it."""
+        from NetUtils import NetworkItem
+
+        from ..client.ApClient import Age2Context
+
+        ap = Age2Context.__new__(Age2Context)
+        ap.game_ctx = self.ctx
+
+        packet = {"index": 0, "items": [NetworkItem(999999, 0, 0, 0)]}
+
+        with self.assertLogs("Client", "WARNING") as logs:
+            ap._handle_received_items(packet)
+            ap._handle_received_items(packet)
+
+        self.assertEqual(len([line for line in logs.output if "999999" in line]), 1)
+
+    def test_an_unknown_item_goes_to_the_game_as_skip(self) -> None:
+        wood = Age2ItemData.FILLER_WOOD_SMALL
+        self.unlock(wood, Age2ItemData.SKIP, wood)
+
+        self.send(0)
+
+        self.assertEqual(self.sent_window(), [wood.id, Age2ItemData.SKIP.id, wood.id])
+
+    def test_an_unknown_item_never_sets_a_spent_bit(self) -> None:
+        wood = Age2ItemData.FILLER_WOOD_SMALL
+        self.unlock(wood, Age2ItemData.SKIP, wood)
+
+        self.send(3)
+
+        self.assertEqual(self.ctx.storage_handler.spent_mask(), 0b101)
 
     def test_index_zero_resync_does_not_duplicate_the_item_list(self) -> None:
         """A mid-session resend replaces the list; the cursor stays valid over it."""
@@ -251,7 +285,7 @@ class TestItemDelivery(ItemDeliveryTestBase):
 class TestOneShotSkipping(ItemDeliveryTestBase):
     """Filler resources and traps add rather than set, so a replayed stream must not re-send them.
 
-    The window is positional, so they are replaced in place by SKIP_ITEM_ID, not dropped.
+    The window is positional, so they are replaced in place by Age2ItemData.SKIP, not dropped.
     """
 
     FILLER = Age2ItemData.FILLER_WOOD_SMALL
@@ -277,7 +311,7 @@ class TestOneShotSkipping(ItemDeliveryTestBase):
         self.send()
 
         self.assertEqual(
-            [Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID, self.FLAG.id, Items.SKIP_ITEM_ID,
+            [Age2ItemData.SKIP.id, self.FLAG.id, Age2ItemData.SKIP.id, self.FLAG.id, Age2ItemData.SKIP.id,
              self.TRAP.id, self.FLAG.id],
             self.sent_window(),
             "one-shots below the mark skip, flags resend, and anything above the mark is real")
@@ -290,7 +324,7 @@ class TestOneShotSkipping(ItemDeliveryTestBase):
 
         self.send()
 
-        self.assertEqual([Items.SKIP_ITEM_ID] * 7, self.sent_window())
+        self.assertEqual([Age2ItemData.SKIP.id] * 7, self.sent_window())
 
     def test_forward_delivery_never_skips_anything(self) -> None:
         """The mark only ever reaches the cursor, so a window is always entirely unpaid."""
@@ -743,7 +777,7 @@ class TestInstallRefetchesTheRecord(ItemDeliveryTestBase):
             self.full_tick()
 
         self.assertEqual(server, self.ctx.storage_handler.spent_mask())
-        self.assertEqual([Items.SKIP_ITEM_ID] * len(items), self.game.granted,
+        self.assertEqual([Age2ItemData.SKIP.id] * len(items), self.game.granted,
                          "a one-shot the server had recorded was paid out again")
 
     def test_a_clear_pushes_nothing_to_the_server(self) -> None:

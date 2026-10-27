@@ -157,6 +157,7 @@ class Age2Context(CommonContext):
     data_storage: DataStorage = None
     installed_seed_name: str = ''
     seed_world_version = WorldVersion.UNKNOWN
+    reported_unknown_items: frozenset[int] = frozenset()
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
@@ -245,7 +246,10 @@ class Age2Context(CommonContext):
             self.game_ctx.client_status.unlocked_items.clear()
         for received_item in received_items:
             if received_item.item not in Items.ID_TO_ITEM:
-                logger.warning("Ignoring unknown item id %s from the server.", received_item.item)
+                if received_item.item not in self.reported_unknown_items:
+                    logger.warning("Ignoring unknown item id %s from the server.", received_item.item)
+                    self.reported_unknown_items |= {received_item.item}
+                self.game_ctx.client_status.unlocked_items.append(Items.Age2ItemData.SKIP)
                 continue
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.item_name == "Victory":

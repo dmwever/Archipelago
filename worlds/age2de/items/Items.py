@@ -38,6 +38,10 @@ class Trap:
     pass
 
 @dataclass
+class Skip:
+    pass
+
+@dataclass
 class Building:
     game_id: int
     total_cost: float
@@ -847,6 +851,10 @@ class Age2ItemData(enum.IntEnum):
     TRAP_FLEMISH_REVOLUTION =           5006, "Flemish Revolution Trap",                      Trap()
     TRAP_RAIDING_PARTY =                5007, "Raiding Party Trap",                           Trap()
     TRAP_TRIBUTE =                      5008, "Give Me Your Extra Resources Trap",            Trap()
+
+    #-2 = Skip: what the game is sent in place of an entry it must not apply, a one-shot already
+    #spent or an id this world does not know. Never registered, so it is in no pool or datapackage.
+    SKIP =                              -2, "Skip",                                         Skip()
     
 
         
@@ -858,6 +866,8 @@ filler_items: list[Age2ItemData] = []
 item_id_to_name: dict[int, str] = {}
 item_name_to_id: dict[str, int] = {}
 for item in Age2ItemData:
+    if item is Age2ItemData.SKIP:
+        continue
     assert item.item_name not in item_name_to_id, f"Duplicate item name: {item.item_name}"
     assert item.id not in item_id_to_name, f"Duplicate item ID: {item.id}"
     NAME_TO_ITEM[item.item_name] = item
@@ -871,8 +881,6 @@ for item in Age2ItemData:
         SCENARIO_TO_ITEMS[item.type.vanilla_scenario].append(item)
 
 TRAP_NAMES: list[str] = [_trap.item_name for _trap in CATEGORY_TO_ITEMS[Trap]]
-
-SKIP_ITEM_ID: int = -2
 
 ONE_SHOT_ITEMS: frozenset[Age2ItemData] = frozenset(
     CATEGORY_TO_ITEMS[Resources] + CATEGORY_TO_ITEMS[Trap])

@@ -67,16 +67,18 @@ All on the current set, `../fuzz_output_3b3762449/yamls/`.
 
 ## Retired sets
 
-Runs stored against a retired set are gone from the tree with it. They are in git history, and
-nothing new can be compared against them, so what is worth keeping is why each set went.
+A retired set is one nothing new should be gated against: its runs are only comparable with each
+other. Kept on disk where its runs still back an open ticket, in git history otherwise. What is
+worth keeping either way is why it went.
 
-- **`fuzz_output_6f09d7ec6`** - 100 seeds, full shuffle, **Genghis Khan held out** so that runs
-  compared like with like. Carried the gates for #23, #24, #26, #28, #29 and #30's first pass, all
-  100/100 ok. Retired 2026-10-26: holding Genghis out meant Genghis 4 never generated, and #30 -
-  which frees a standing Mining Camp and Monastery, both of them Genghis 4's - came out flat on all
-  100 seeds. A gate blind to the scenario a ticket touches is not a gate. Last commit holding it is
-  the one before the Genghis set lands; `git log -- worlds/age2de/fuzz/fuzz_output_6f09d7ec6` finds
-  it.
+- **`fuzz_output_6f09d7ec6_enemy_trade`** - 100 seeds, full shuffle, **Genghis Khan held out** so
+  that runs compared like with like. Carried the gates for #23, #24, #26, #28, #29 and #30's first
+  pass, all 100/100 ok. Retired 2026-10-26: holding Genghis out meant Genghis 4 never generated,
+  and #30 - which frees a standing Mining Camp and Monastery, both of them Genghis 4's - came out
+  flat on all 100 seeds. A gate blind to the scenario a ticket touches is not a gate. Kept rather
+  than dropped, under its enemy-trade name, because `replay_3b376244.jsonl` and
+  `replay_issue26-dock-guards.jsonl` are #26's gate and #27 still leans on that work. Do not
+  baseline new work against it.
 - **`fuzz_output_lock_items`** - 63 generations behind the gates for #05, #17, #18, #19 and #22.
   Not retired on purpose: the whole of `fuzz_output_*` was gitignored then, so it was never
   committed and did not survive. That is what `fuzz/.gitignore` now prevents, tracking every

@@ -196,29 +196,23 @@ standing, so no rule-identity inspection decides route shape and the catalog sta
       `test_seed_items`, `test_scan_decides_resources`, `test_defence_pays`, `test_resource_rules`,
       `test_standing_buildings` - **168 passed, 5376 subtests**. The full `worlds/age2de` suite
       stays the maintainer's.
-- [x] **Fill gate**, as `worlds/age2de/fuzz/bench/README.md` describes: the failure count must not
-      rise.
-      - `fuzz_output_6f09d7ec6/replay_issue30-standing-camp-free.jsonl`, the 100 fixed seeds at
-        `-j 6`, against the stored `replay_issue28-joan4-french-camp.jsonl`: **ok baseline 100, ok
-        branch 100**. No new failures.
-      - **Spheres and sphere 1 are identical on all 100 seeds** - and that result is an artifact of
-        the corpus, not a reading of the change. The old set excludes Genghis Khan, so Genghis 4 -
-        the one scenario with a standing Mining Camp *and* Monastery - never generates; and in the
-        other four affected scenarios the Town Center is standing behind the same rule as the camp
-        (`has_bledas_camp`, `True_()`, `can_reach_orleans`, `camp`), so its free dropsite branch
-        already covered those resources. The set could not see what the ticket changed.
-      - Times are not comparable: the baseline is marked **Times void** (it ran beside two pytest
-        batches). The 22.0s -> 19.4s median is that contention lifting, not this branch.
-- [x] **Fill gate, rerun on a corpus that includes Genghis Khan.** The flat result above is what
-      prompted it: a gate blind to the scenario a ticket touches is not a gate.
+- [x] **The seed set was replaced before this gate could mean anything.** Run first on the old set
+      (Genghis Khan held out), the gate passed 100/100 but moved nothing at all: spheres and sphere
+      1 identical on every seed. That was the corpus, not the change - Genghis 4 is the one scenario
+      with a standing Mining Camp *and* Monastery and never generated, and in the other four the
+      Town Center stands behind the same rule as the camp (`has_bledas_camp`, `True_()`,
+      `can_reach_orleans`, `camp`), so its free dropsite branch already covered those resources. A
+      gate blind to the scenario a ticket touches is not a gate, so the set was refuzzed with all
+      three campaigns and the old one retired (`bench/README.md`, *Retired sets*).
       - `_full_shuffle.yaml` no longer holds Genghis out. Because `if_value` matches the whole list
         and `if_selected` cannot reach another option, the "start must be enabled" rule is spelt
         out for every ordering of every non-empty subset: 3 singletons, 6 ordered pairs, 6 ordered
         triples. New set fuzzed to `fuzz_output_3b3762449/`: 100/100 generated, 0 failures,
         0 timeouts; 76 of 100 seeds enable Genghis; no seed starts outside its enabled set.
-      - Baseline `replay_cd39b473f-genghis.jsonl` at `cd39b473f` (the #30 parent), branch
-        `replay_issue30-genghis.jsonl` at `11c1dd008`: **ok baseline 100, ok branch 100.** Gate
-        passes.
+- [x] **Fill gate**, as `worlds/age2de/fuzz/bench/README.md` describes: the failure count must not
+      rise. Baseline `replay_cd39b473f.jsonl` at `cd39b473f` (the #30 parent, and the new set's
+      first measurement), branch `replay_issue30-standing-camp-free.jsonl` at `11c1dd008`:
+      **ok baseline 100, ok branch 100.** Gate passes.
       - This corpus does move: spheres 93 of 100 unchanged (5 up, 2 down), sphere 1 94 unchanged
         (3 up, 3 down). Fill is randomised and a logic change perturbs its stream, so the direction
         of the seven is not evidence either way - what matters is that the set can now register the

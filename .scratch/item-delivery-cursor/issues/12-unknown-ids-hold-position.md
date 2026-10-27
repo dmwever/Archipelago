@@ -10,10 +10,10 @@ Keep a placeholder entry at that position instead. The placeholder goes to the g
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] An unknown id occupies its stream index; local indices match the server's
-- [ ] The placeholder is sent as `ITEM_SKIP` and never sets a spent bit
-- [ ] The warning still fires, once per unknown id
-- [ ] Tests: a stream with an unknown id in the middle keeps later indices aligned, and the window
+- [x] An unknown id occupies its stream index; local indices match the server's
+- [x] The placeholder is sent as `ITEM_SKIP` and never sets a spent bit
+- [x] The warning still fires, once per unknown id
+- [x] Tests: a stream with an unknown id in the middle keeps later indices aligned, and the window
       sends SKIP at that position

@@ -65,7 +65,7 @@ class Age2World(CachedRuleBuilderWorld):
     options: Age2Options  # typing hints for option results
     topology_present = True  # show path to required location checks in spoiler
 
-    item_names = set(item.item_name for item in Items.Age2ItemData)
+    item_names = set(Items.item_name_to_id)
     location_names = set(LocationMapping.location_name_list)
     item_name_to_id = Items.item_name_to_id
     item_id_to_name = Items.item_id_to_name
@@ -273,6 +273,8 @@ class Age2World(CachedRuleBuilderWorld):
             elif isinstance(item.type, Items.VillagerProfession):
                 continue
             elif isinstance(item.type, Items.Trap):
+                continue
+            elif isinstance(item.type, Items.Skip):
                 continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")
