@@ -1,6 +1,7 @@
 from rule_builder.rules import Rule
 
 from ...items.Items import Resource
+from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
@@ -34,6 +35,7 @@ class Genghis5Rules(ScenarioRules):
         can_raise_castles: Rule = (
             self.scenario_logic.buildings.can_build_structurally(Age2BuildingData.CASTLE) &
             self.scenario_logic.economy.has_easy_source(Resource.STONE) &
+            self.scenario_logic.ages.can_pay_for(Age2AgeData.CASTLE) &
             defeats(Age2PlayerData.GEN5_GERMANS)
         )
         can_raise_castles = self.scenario_logic.named("can raise castles", can_raise_castles)

@@ -22,7 +22,7 @@ class ScenarioTechLogic:
                 | (self.can_research_structurally(tech) & self.can_pay_for(tech)))
 
     def can_pay_for(self, tech: Age2TechData) -> Rule:
-        rule = self.scenario.economy.can_pay(tech.cost)
+        rule = self.scenario.economy.can_pay(tech.cost) & self.scenario.ages.can_pay_for(tech.age)
         if tech.buildings:
             rule = rule & Or(*[self.scenario.has_building(building)
                                for building in tech.buildings])

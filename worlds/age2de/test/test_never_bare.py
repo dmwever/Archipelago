@@ -254,11 +254,8 @@ class TestNothingIsAskedBare(unittest.TestCase):
 
     maxDiff = None
 
-    ATTILA_3_BUILD_CASTLE = "The Walls of Constantinople: Build a Castle"
-    ATTILA_3_CASTLE = (
-        f"{ATTILA_3_BUILD_CASTLE}: "
-        "The Walls of Constantinople can build a Castle (unpaid: stone)"
-    )
+    OWN_FARMER = "Own Farmer (Male)"
+    SCOURGE_FARM = f"{OWN_FARMER}: The Scourge of God can build a Farm (unpaid: wood)"
 
     def test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare(self):
         unlisted, stale = unlisted_and_stale(allowlist(), findings())
@@ -282,21 +279,23 @@ class TestNothingIsAskedBare(unittest.TestCase):
 
     def test_a_still_bare_site_taken_off_the_allowlist_fails(self):
         unlisted, stale = unlisted_and_stale(
-            allowlist() - {self.ATTILA_3_CASTLE},
+            allowlist() - {self.SCOURGE_FARM},
             findings(),
         )
-        self.assertEqual(([self.ATTILA_3_CASTLE], []), (unlisted, stale))
+        self.assertEqual(([self.SCOURGE_FARM], []), (unlisted, stale))
 
     def test_an_entry_whose_site_is_now_paid_fails(self):
         with contextlib.ExitStack() as paid:
             for existing_techs in EXISTING_TECHS:
                 world = maximal_world(existing_techs)
-                location = world.get_location(self.ATTILA_3_BUILD_CASTLE)
-                walls = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
-                stone = walls.economy.has_easy_source(Resource.STONE)
-                paid.enter_context(self.rule_added(location, stone.resolve(world), world))
+                location = world.get_location(self.OWN_FARMER)
+                scourge = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+                wood = scourge.economy.has_easy_source(Resource.WOOD)
+                paid.enter_context(self.rule_added(location, wood.resolve(world), world))
             unlisted, stale = unlisted_and_stale(allowlist(), findings())
-        self.assertEqual(([], [self.ATTILA_3_CASTLE]), (unlisted, stale))
+        farms = sorted(entry for entry in allowlist() if entry.startswith(f"{self.OWN_FARMER}: "))
+        self.assertIn(self.SCOURGE_FARM, farms)
+        self.assertEqual(([], farms), (unlisted, stale))
 
     @staticmethod
     @contextlib.contextmanager

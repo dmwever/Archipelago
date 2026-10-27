@@ -51,14 +51,15 @@ class ScenarioBuildingLogic:
         if building is Age2BuildingData.TOWN_CENTER:
             return (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
                     & Has(Age2ItemData.TOWN_CENTER_STONE.item_name))
-        rule = self.scenario.economy.can_pay(building.cost)
+        rule = self.scenario.economy.can_pay(building.cost) & self.scenario.ages.can_pay_for(building.age)
         prerequisite = self.buildings.prerequisite(building)
         if prerequisite is not None:
             rule = rule & self.scenario.has_building(prerequisite)
         return rule
 
     def can_build_anything(self) -> Rule:
-        return Or(*[self.can_build_structurally(building) for building in Age2BuildingData
+        return Or(*[self.can_build_structurally(building) & self.scenario.economy.can_pay_some(building.cost)
+                    for building in Age2BuildingData
                     if self.scenario.civilization.can_build(building)])
 
     def can_build_tc(self) -> Rule:

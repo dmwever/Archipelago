@@ -23,7 +23,7 @@ class Attila3Rules(ScenarioRules):
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_RED_MARKET], self.has_military)
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BUILD_CASTLE],
-                            self.scenario_logic.buildings.can_build_structurally(Age2BuildingData.CASTLE))
+                            self.scenario_logic.buildings.can_build(Age2BuildingData.CASTLE))
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_COGS], self.has_navy)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCK_NORTH], self.has_navy)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT3_BLUE_DOCKS_SOUTH], self.has_navy)

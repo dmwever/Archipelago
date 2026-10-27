@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Callable
 
 from rule_builder.rules import False_, Rule, True_
 
+from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...generation.pools.AgePool import DARK_START, VANILLA_AGE_START
@@ -72,7 +73,12 @@ class ScenarioAgeLogic:
             return False_()
         if age <= self.start_age or age in state.age_playable:
             return True_()
-        return self.scenario.economy.can_pay(age.cost)
+        economy = self.scenario.economy
+        if age is Age2AgeData.FEUDAL:
+            return economy.can_pay_some([Resource.FOOD])
+        if age is Age2AgeData.CASTLE:
+            return economy.can_sustain([Resource.FOOD]) & economy.can_pay_some([Resource.GOLD])
+        return economy.can_pay(age.cost)
 
     def can_pay_for_age_up_buildings(self, age: Age2AgeData) -> Rule:
         if age <= self.start_age or age in self.scenario.starting_state.age_playable:

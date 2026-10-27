@@ -224,6 +224,7 @@ class TestARepairerNeedsSomethingToMend(Age2RuleTestBase):
     VILLAGERS = Age2ItemData.AP_ATTILA_1_ROMAN_VILLAGERS.item_name
     REPAIRER = Age2ItemData.PROFESSION_REPAIRER.item_name
     BUILDER = Age2ItemData.PROFESSION_BUILDER.item_name
+    LUMBERJACK = Age2ItemData.PROFESSION_LUMBERJACK.item_name
     JOB = Age2VillagerJobData.REPAIRER_MALE
 
     def setUp(self) -> None:
@@ -235,8 +236,12 @@ class TestARepairerNeedsSomethingToMend(Age2RuleTestBase):
         self.assertFalse(self.can_reach(self.JOB.location_name, state))
 
     def test_the_builder_gives_them_something_to_mend(self):
-        state = self.state_with(self.VILLAGERS, self.REPAIRER, self.BUILDER)
+        state = self.state_with(self.VILLAGERS, self.REPAIRER, self.BUILDER, self.LUMBERJACK)
         self.assertTrue(self.can_reach(self.JOB.location_name, state))
+
+    def test_the_builder_mends_nothing_with_nothing_to_build_it_from(self):
+        state = self.state_with(self.VILLAGERS, self.REPAIRER, self.BUILDER)
+        self.assertFalse(self.can_reach(self.JOB.location_name, state))
 
     def test_a_building_standing_at_the_start_is_enough_on_its_own(self):
         """Bleda's Camp opens with a Town Center and six more buildings, no Builder needed."""

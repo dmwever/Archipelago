@@ -68,11 +68,10 @@ class UnitLogic:
             return False_()
         rules: list[Rule] = []
         for scenario in self.logic.scenarios:
-            answer = scenario.units.can_train_structurally(unit)
+            answer = scenario.units.can_train(unit)
             if isinstance(answer, False_):
                 continue
-            rules.append(scenario.is_unlocked() & answer
-                         & scenario.economy.can_pay(unit.cost))
+            rules.append(scenario.is_unlocked() & answer)
         return Or(*rules)
 
     def can_get_villager_anywhere(self) -> Rule:

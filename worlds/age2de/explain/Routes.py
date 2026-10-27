@@ -130,7 +130,7 @@ def _age(world: Age2World, age: Age2AgeData) -> Route:
     return Route(
         "Reaches it", "can't reach",
         lambda sl: [Way(sl.ages.can_research(age),
-                        sl.economy.can_pay(age.cost) & sl.ages.can_pay_for_age_up_buildings(age))],
+                        sl.ages.can_pay_for(age) & sl.ages.can_pay_for_age_up_buildings(age))],
         requires=(logic.ages.has_age(age),
                   logic.buildings.has_building_item(Age2BuildingData.TOWN_CENTER)),
     )

@@ -34,7 +34,7 @@ class BaseThroughPriceTestBase(bases.Age2RuleTestBase):
 
     def paid_climb(self, scenario: Age2ScenarioData, age: Age2AgeData):
         scenario_logic = self.scenario_logic(scenario)
-        return scenario_logic.ages.can_research(age) & scenario_logic.economy.can_pay(age.cost)
+        return scenario_logic.ages.can_research(age) & scenario_logic.ages.can_pay_for(age)
 
 
 class TestAttila1PaysForItsTownCenter(BaseThroughPriceTestBase):
