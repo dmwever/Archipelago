@@ -88,8 +88,6 @@ class TestAttila1PaysForItsAgeUpBuildings(BuildingsPaidTestBase):
         self.assertFalse(self.holds(forging, self.state))
 
     def test_the_structural_advance_is_unchanged(self):
-        structural = self.attila_1.ages.can_research_structurally(Age2AgeData.FEUDAL)
-        self.assertTrue(self.holds(structural, self.state))
         self.assertTrue(self.holds(self.attila_1.ages.can_reach_structurally(Age2AgeData.FEUDAL),
                                    self.state))
 
@@ -249,8 +247,6 @@ class TestNothingUnpaidAsksEasyStone(BuildingsPaidTestBase):
             "can_have_base": scenario.can_have_base(),
         }
         for age in Age2AgeData:
-            rules[f"can_research_structurally {age.name}"] = (
-                scenario.ages.can_research_structurally(age))
             rules[f"can_reach_structurally {age.name}"] = scenario.ages.can_reach_structurally(age)
         for building in Age2BuildingData:
             rules[f"can_build_structurally {building.name}"] = scenario.buildings.can_build_structurally(building)

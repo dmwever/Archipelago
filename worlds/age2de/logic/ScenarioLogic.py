@@ -14,7 +14,6 @@ from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
 from .custom_logic.ScenarioQuestions import a_or_an
 from ..locations.Players import Age2PlayerData
-from ..locations.Ages import Age2AgeData
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -28,7 +27,6 @@ class ScenarioStartingState:
     # A base is no use where you cannot stand: some scenarios must first reach the ground
     # they are meant to settle. Kept free of the economy, since has_base feeds it.
     meets_additional_base_requirements: Rule = field(default_factory=lambda: True_())
-    age_playable: dict[Age2AgeData, Rule] = field(default_factory=dict)
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
     obtains_tech: dict[Age2TechData, Rule] = field(default_factory=dict)

@@ -193,8 +193,9 @@ its evidence.
       recorded under Stored runs.
       *100/100 ok on both sides:* `replay_issue42-paid-advance.jsonl` against `replay_45bd16a3e`.
       Spheres 42 up, 31 down, 27 same; sphere 1 10 up, 30 down, 60 same. Times are void because the
-      laptop was shared, but **every seed was slower** (8.8s -> 21.6s median). Remeasure on an idle
-      laptop before trusting or dismissing that.
+      laptop was shared, but **every seed was slower** (8.8s -> 21.6s median). Remeasured idle
+      (`replay_issue42-paid-advance-idle.jsonl`): spheres identical, **still slower on all 100
+      seeds, 8.8s -> 15.9s median, 8.4s -> 22.6s mean**. The slowdown is real and not yet diagnosed.
 - [x] ADR-0002 and the glossary entries drafted during triage still match what was built.
       *Checked by reading. The maintainer's word "advance" replaced "climb" in both; the content is
       unchanged.*
@@ -250,10 +251,20 @@ Rulings worth keeping:
   "unchanged".
 - **Paid and structural forms are split, not parametrised.** Earlier drafts passed a rule into a
   shared gate, or a `has_building` function into `age_up_requirement`. Now each form stands alone:
-  `can_reach` / `can_reach_structurally`, `can_research` / `can_research_structurally`,
-  `age_up_requirement` / `age_up_requirement_structurally`. The paid forms decide the dark start in
-  Python (`pool.ages.dark_start`). Only the structural forms carry the `DARK_START` /
+  `can_reach` / `can_reach_structurally`, and private `_age_up_requirement` /
+  `_age_up_requirement_structurally`. The paid forms decide the dark start in Python
+  (`pool.ages.dark_start`). Only the structural form carries the `DARK_START` /
   `VANILLA_AGE_START` filters.
+- **Cuts after a review of every function.**
+  - `age_playable` is deleted, field and all four branches. No scenario or test ever set it.
+  - `can_research_structurally` is dropped. Its only user was /explain's Reach route, which is now
+    `Way(can_research)`, so an unaffordable age reads "can't reach", not "can't afford".
+  - The separate structural-advance memo is dropped: only `can_reach_structurally` (itself
+    memoised) uses it now.
+  - `_can_reach_paid` is inlined into `can_reach`.
+  - The age-up requirements are private.
+  - `can_pay_for` stays public for `ScenarioUnitLogic._field` and the pinned
+    `test_base_through_price.py` helper.
 - **Own Builder and Own Repairer pay the advance.** `can_build_anything` asks
   `can_advance(building.age)` beside *some* of the cost. Without it the wider walk added 608 lines
   there: under `start_in_dark_age`, a Market branch asked the Feudal price (food) and a Town Center

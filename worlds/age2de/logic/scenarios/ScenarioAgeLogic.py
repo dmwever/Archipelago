@@ -46,22 +46,16 @@ class ScenarioAgeLogic:
         self.world = scenario.logic.world
         self._reach: dict[Age2AgeData, Rule] = {}
         self._advance: dict[Age2AgeData, Rule] = {}
-        self._structural_advance: dict[Age2AgeData, Rule] = {}
 
     def can_reach(self, age: Age2AgeData) -> Rule:
         """Advance to it here and pay for it: what a victory or an army asks of an age."""
-        return self.scenario.named(f"can reach the {age.location_name.removeprefix('Reach ')}",
-                                   self._can_reach_paid(age))
-
-    def _can_reach_paid(self, age: Age2AgeData) -> Rule:
+        label = f"can reach the {age.location_name.removeprefix('Reach ')}"
         if self.scenario.scenario.fixed_force or age > self.scenario.scenario.max_age:
-            return False_()
-        if age in self.scenario.starting_state.age_playable:
-            return self.scenario.starting_state.age_playable[age]
+            return self.scenario.named(label, False_())
         ages = self.world.pool.ages
         if age < ages.starts_in(self.scenario.scenario) and not ages.dark_start:
-            return False_()
-        return self.can_advance(age)
+            return self.scenario.named(label, False_())
+        return self.scenario.named(label, self.can_advance(age))
 
     def can_reach_structurally(self, age: Age2AgeData) -> Rule:
         """Advance to it here, less paying for it."""
@@ -78,10 +72,9 @@ class ScenarioAgeLogic:
 
     def can_pay_for(self, age: Age2AgeData) -> Rule:
         """Can the scenario pay for the age. Returns True if starting after it."""
-        state = self.scenario.starting_state
         if self.scenario.scenario.fixed_force:
             return False_()
-        if age <= self.start_age or age in state.age_playable:
+        if age <= self.start_age:
             return True_()
         economy = self.scenario.economy
         if age is Age2AgeData.FEUDAL:
@@ -94,26 +87,6 @@ class ScenarioAgeLogic:
         if age not in self._advance:
             self._advance[age] = self._paid_advance_rule(age)
         return self._advance[age]
-
-    def age_up_requirement(self, age: Age2AgeData) -> AgeUpRequirement:
-        """What advances into this age: two of the age before's buildings, or - into the Imperial
-        Age - a Castle, which counts for both on its own."""
-        single = Age2BuildingData.CASTLE if age is Age2AgeData.IMPERIAL else None
-        return AgeUpRequirement.from_buildings(
-            self.scenario.has_building,
-            age,
-            list(AGE_UP_BUILDINGS[age]),
-            single,
-        )
-
-    def age_up_requirement_structurally(self, age: Age2AgeData) -> AgeUpRequirement:
-        single = Age2BuildingData.CASTLE if age is Age2AgeData.IMPERIAL else None
-        return AgeUpRequirement.from_buildings(
-            self.scenario.has_building_structurally,
-            age,
-            list(AGE_UP_BUILDINGS[age]),
-            single,
-        )
 
     def has_reached(self, age: Age2AgeData) -> Rule:
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)
@@ -133,37 +106,36 @@ class ScenarioAgeLogic:
             return False_()
         return self.can_advance(age)
 
-    def can_research_structurally(self, age: Age2AgeData) -> Rule:
-        if self.scenario.scenario.fixed_force or age > self.scenario.scenario.max_age:
-            return False_()
-        advance = self._can_advance_structurally(age)
-        if age <= self.world.pool.ages.starts_in(self.scenario.scenario):
-            return advance & DARK_START
-        return advance
-
     def _paid_advance_rule(self, age: Age2AgeData) -> Rule:
         if self.scenario.scenario.fixed_force:
             return False_()
-        if age <= self.start_age or age in self.scenario.starting_state.age_playable:
+        if age <= self.start_age:
             return True_()
         before = Age2AgeData(age.value - 1)
         return (self.logic.ages.has_age(age)
                 & self.can_pay_for(age)
                 & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
-                & self.age_up_requirement(age)
+                & self._age_up_requirement(age)
                 & self.can_advance(before))
+
+    def _age_up_requirement(self, age: Age2AgeData) -> AgeUpRequirement:
+        """What advances into this age: two of the age before's buildings, or - into the Imperial
+        Age - a Castle, which counts for both on its own."""
+        single = Age2BuildingData.CASTLE if age is Age2AgeData.IMPERIAL else None
+        return AgeUpRequirement.from_buildings(
+            self.scenario.has_building,
+            age,
+            list(AGE_UP_BUILDINGS[age]),
+            single,
+        )
 
     # -- what the scenario questions resolve to, and the memo behind can_reach_structurally
 
     def _can_reach_structurally(self, age: Age2AgeData) -> Rule:
-        state = self.scenario.starting_state
         if self.scenario.scenario.fixed_force or age > self.scenario.scenario.max_age:
             return False_()
-        override = state.age_playable.get(age)
-        if override is not None:
-            return override
         opens_at = self.world.pool.ages.starts_in(self.scenario.scenario)
-        advance = self._can_advance_structurally(age)
+        advance = self._structural_advance_rule(age)
         if age < opens_at:
             # Below the age it opens in, so it is only advanced into when the start is pulled back.
             return advance & DARK_START
@@ -173,18 +145,22 @@ class ScenarioAgeLogic:
             return advance | VANILLA_AGE_START
         return advance
 
-    def _can_advance_structurally(self, age: Age2AgeData) -> Rule:
-        if age not in self._structural_advance:
-            self._structural_advance[age] = self._structural_advance_rule(age)
-        return self._structural_advance[age]
-
     def _structural_advance_rule(self, age: Age2AgeData) -> Rule:
         if age is Age2AgeData.DARK:
             return True_()   # nowhere to advance from
         rule = (self.logic.ages.has_age(age)
                 & self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER)
-                & self.age_up_requirement_structurally(age))
+                & self._age_up_requirement_structurally(age))
         before = Age2AgeData(age.value - 1)
         if before is not Age2AgeData.DARK:
             rule = rule & self.has_reached(before)
         return rule
+
+    def _age_up_requirement_structurally(self, age: Age2AgeData) -> AgeUpRequirement:
+        single = Age2BuildingData.CASTLE if age is Age2AgeData.IMPERIAL else None
+        return AgeUpRequirement.from_buildings(
+            self.scenario.has_building_structurally,
+            age,
+            list(AGE_UP_BUILDINGS[age]),
+            single,
+        )
