@@ -76,6 +76,8 @@ What reaching an age costs P1, the same wherever the age is asked, whether as a 
 something another rule stands on: Feudal is *some* food or its seed item, Castle is food at scale
 and *some* gold, Imperial is food and gold at scale. An age the scenario starts in or past costs
 nothing, which is where a Castle Age economy opens. Nothing may ask an age without its price.
+Reaching an age also pays for the climb into it: a Town Center, and the age-up requirement of the
+age before, each standing or paid for. An age started in or past needs no climb.
 _Avoid_: age cost (the in-game numbers), age-up requirement (the two buildings)
 
 **Seed item**:
@@ -96,7 +98,8 @@ on open ground only, an army of any land military line.
 A route needs one only to work ground **at scale**; a route of *some* walks out, takes what it
 needs and comes home, so open ground costs it nothing. A defence pays for itself where it is
 asked, out of *some* of what it costs, so the stone on open ground can buy the wall that then
-holds it. One standing at the start is no defence: what it guards is already the base's ground.
+holds it. The Castle is the exception: it always needs easy stone, except where it holds stone,
+which *some* stone still buys. One standing at the start is no defence: what it guards is already the base's ground.
 Nor is an army P1 starts with or is granted: that is the scenario's plan, not a garrison.
 _Avoid_: fortification (when the paid build is meant), the base's Town Center as a strongpoint,
 guard (that is the trade sense, below)

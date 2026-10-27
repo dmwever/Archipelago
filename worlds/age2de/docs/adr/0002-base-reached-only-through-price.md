@@ -18,8 +18,11 @@ would have to be unpicked one rule at a time.
 - **`has_base()` in the age climb.** This was chosen first during #05's grilling and then reversed.
   It closed the gap just as well (every climbable age costs food), but it tied ages to the base for
   good.
-- **A paid Town Center (`has_tc`) in the climb.** Rejected: it paid for the Town Center but skipped
-  the base's other requirements, such as Joan 3's ground across the water.
+- ~~**A paid Town Center (`has_tc`) in the climb.** Rejected: it paid for the Town Center but skipped
+  the base's other requirements, such as Joan 3's ground across the water.~~ Reversed by #42: the
+  climb asks for a Town Center standing or paid for by the Town Center items, and nothing of the
+  ground. A Town Center goes up on home ground even where the base needs ground across the water,
+  so Joan 3's ground is not the climb's to ask. `has_base()` in the climb stays rejected.
 
 ## Consequences
 
@@ -42,7 +45,11 @@ would have to be unpicked one rule at a time.
   costs, read off `Age2BuildingData.cost`, in the same expression that asks whether P1 can build it
   at all. That is not a price in ADR-0002's sense — a price is an easy source — and it is not a
   bank. More Town Centers pay inside `can_build_multiple_tc`, so the strongpoint, the shoreline and
-  the camps all inherit it. The base's own Town Center is no strongpoint.
+  the camps all inherit it. The base's own Town Center is no strongpoint. The Castle is the
+  exception (#42): as a defence it asks easy stone, read from the ungated routes, so it no longer
+  opens wood, gold or food at scale off *some* stone. The stone routes at scale alone also take a
+  Castle paid for by *some* stone, so stone still buys the Castle that holds it. The gate keeps
+  no parameter: the exception sits on the stone routes, not in the defence.
 - **Only ground worked at scale has to be held** (#23). A route of *some* takes what it needs off
   open ground and comes home, so it asks no gate; a route at scale has to hold the ground, so it
   does. This is what lets a resource pay for its own defence — *some* stone off open ground buys
@@ -74,8 +81,16 @@ would have to be unpicked one rule at a time.
   seeds such as a Fishing Ship or a trade seed. The one exception is the Mule Cart's food (#24):
   its seed item carries the wood, and a food need would make its hunt route need what it yields.
   The cog route's wood bank excludes the Dock's seed item, which is already buying that Dock.
-- The structural climb asks for a Town Center structurally, because an age is researched there. The
-  base arrives through the age's food cost.
+- ~~The structural climb asks for a Town Center structurally, because an age is researched there. The
+  base arrives through the age's food cost.~~ Reversed by #42: since #38 Feudal costs *some* food,
+  which reaches no base. Reaching an age pays for the climb into it: a Town Center and the age-up
+  requirement of the age before, each standing or paid for, and the climb into the age before.
+  Every rule that asks an age asks this paid climb; the structural climb is left only as the
+  scenario questions' answer. Inside the economy the climb is capital, funded from outside it: a
+  standing building is free, a Town Center is paid for by the Town Center items, an age-up building
+  by its seed item where one is pooled or else by a `wood: some` need, and a Castle by easy stone.
+  The never-bare walk counts the climb as part of what an age, and a question standing on one,
+  costs.
 - Trade Cogs are a deliberate non-base economy (#19): cogs to a trade partner's dock bring in easy
   wood and gold with no base. A route to an easy source that reaches no base is not automatically a
   gap. ADR-0003 generalises this: the base is one economy route's economy seed, not the gathering
