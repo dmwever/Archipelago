@@ -17,12 +17,11 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..logic.Logic import Logic
-from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
+from ..logic.custom_logic.AgeUpRequirement import AGE_UP_BUILDINGS, AgeUpRequirement
 from ..logic.custom_logic.EconomyRoutes import EconomyRouteRunning, EconomyRoutes
 from ..logic.custom_logic.Named import Named
 from ..logic.custom_logic.ResourceAmount import HasResourceAmount
 from ..logic.ScenarioLogic import ScenarioLogic
-from ..logic.scenarios.ScenarioAgeLogic import AGE_UP_BUILDINGS
 from ..logic.custom_logic.ScenarioQuestions import (
     ScenarioCanBuild,
     ScenarioCanResearch,
@@ -149,12 +148,13 @@ class BareAsks:
             return frozenset.intersection(*[self.pays_for(child) for child in rule.children])
         if isinstance(rule, (And.Resolved, AgeUpRequirement.Resolved)):
             return frozenset().union(*[self.pays_for(child) for child in rule.children])
-        if isinstance(rule, Named.Resolved):
-            if rule.label.endswith(STANDING_OR_PAID_FOR):
-                buildable = self.buildable_in(rule.child)
+        unasked_question = isinstance(rule, ScenarioQuestion.Resolved) and not question
+        if isinstance(rule, Named.Resolved) or unasked_question:
+            if rule.description.endswith(STANDING_OR_PAID_FOR):
+                buildable = self.buildable_in(rule.answer)
                 if buildable is not None:
-                    return self.pays_for(rule.child) | own_cost(self.asks(buildable)[1])
-            return self.pays_for(rule.child)
+                    return self.pays_for(rule.answer) | own_cost(self.asks(buildable)[1])
+            return self.pays_for(rule.answer)
         return frozenset()
 
     def paid_by_seed_items(self, item_names: Iterable[str]) -> frozenset[Resource]:

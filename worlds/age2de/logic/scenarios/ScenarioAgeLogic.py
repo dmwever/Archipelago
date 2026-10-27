@@ -9,34 +9,11 @@ from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...generation.pools.AgePool import DARK_START, VANILLA_AGE_START
-from ..custom_logic.ScenarioQuestions import ScenarioHasReached
-from ..custom_logic.AgeUpRequirement import AgeUpRequirement
+from ..custom_logic.ScenarioQuestions import ScenarioCanAdvance, ScenarioHasReached
+from ..custom_logic.AgeUpRequirement import AGE_UP_BUILDINGS, AgeUpRequirement
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
-
-
-AGE_UP_BUILDINGS: dict[Age2AgeData, tuple[Age2BuildingData, ...]] = {
-    Age2AgeData.FEUDAL: (
-        Age2BuildingData.MILL,
-        Age2BuildingData.LUMBER_CAMP,
-        Age2BuildingData.MINING_CAMP,
-        Age2BuildingData.DOCK,
-        Age2BuildingData.BARRACKS,
-    ),
-    Age2AgeData.CASTLE: (
-        Age2BuildingData.ARCHERY_RANGE,
-        Age2BuildingData.STABLE,
-        Age2BuildingData.MARKET,
-        Age2BuildingData.BLACKSMITH,
-    ),
-    Age2AgeData.IMPERIAL: (
-        Age2BuildingData.MONASTERY,
-        Age2BuildingData.UNIVERSITY,
-        Age2BuildingData.SIEGE_WORKSHOP,
-    ),
-}
-"""Two of these, from the age before, have to be standing before you can advance into that age."""
 
 
 class ScenarioAgeLogic:
@@ -45,7 +22,6 @@ class ScenarioAgeLogic:
         self.logic = scenario.logic
         self.world = scenario.logic.world
         self._reach: dict[Age2AgeData, Rule] = {}
-        self._advance: dict[Age2AgeData, Rule] = {}
 
     def can_reach(self, age: Age2AgeData) -> Rule:
         """Advance to it here and pay for it: what a victory or an army asks of an age."""
@@ -84,9 +60,11 @@ class ScenarioAgeLogic:
         return economy.can_pay(age.cost)
 
     def can_advance(self, age: Age2AgeData) -> Rule:
-        if age not in self._advance:
-            self._advance[age] = self._paid_advance_rule(age)
-        return self._advance[age]
+        if self.scenario.scenario.fixed_force:
+            return False_()
+        if age <= self.start_age:
+            return True_()
+        return ScenarioCanAdvance(scenario=self.scenario.scenario, age=age)
 
     def has_reached(self, age: Age2AgeData) -> Rule:
         return ScenarioHasReached(scenario=self.scenario.scenario, age=age)
@@ -105,29 +83,6 @@ class ScenarioAgeLogic:
         if age <= ages.starts_in(self.scenario.scenario) and not ages.dark_start:
             return False_()
         return self.can_advance(age)
-
-    def _paid_advance_rule(self, age: Age2AgeData) -> Rule:
-        if self.scenario.scenario.fixed_force:
-            return False_()
-        if age <= self.start_age:
-            return True_()
-        before = Age2AgeData(age.value - 1)
-        return (self.logic.ages.has_age(age)
-                & self.can_pay_for(age)
-                & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
-                & self._age_up_requirement(age)
-                & self.can_advance(before))
-
-    def _age_up_requirement(self, age: Age2AgeData) -> AgeUpRequirement:
-        """What advances into this age: two of the age before's buildings, or - into the Imperial
-        Age - a Castle, which counts for both on its own."""
-        single = Age2BuildingData.CASTLE if age is Age2AgeData.IMPERIAL else None
-        return AgeUpRequirement.from_buildings(
-            self.scenario.has_building,
-            age,
-            list(AGE_UP_BUILDINGS[age]),
-            single,
-        )
 
     # -- what the scenario questions resolve to, and the memo behind can_reach_structurally
 

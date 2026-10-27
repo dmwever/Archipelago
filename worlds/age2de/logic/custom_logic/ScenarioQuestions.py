@@ -8,6 +8,7 @@ from NetUtils import JSONMessagePart
 
 from rule_builder.rules import Or, Rule
 
+from .AgeUpRequirement import AGE_UP_BUILDINGS, AgeUpRequirement
 from .EconomyRoutes import EconomyRoutesYield, Strength
 
 from ...items.Items import Resource
@@ -239,6 +240,61 @@ class ScenarioHasReached(ScenarioQuestion, game="Age Of Empires II: Definitive E
     def describe(self, scenario: Age2ScenarioData) -> str:
         age = self.age.location_name.removeprefix("Reach ")
         return f"{scenario.scenario_name} has reached the {age}"
+
+
+@dataclass
+class ScenarioCanAdvance(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+
+    age: Age2AgeData
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.age)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        castle = Age2BuildingData.CASTLE if self.age is Age2AgeData.IMPERIAL else None
+        age_up = AgeUpRequirement.from_buildings(
+            scenario.has_building,
+            self.age,
+            list(AGE_UP_BUILDINGS[self.age]),
+            castle,
+        )
+        before = Age2AgeData(self.age.value - 1)
+        return (
+            scenario.logic.ages.has_age(self.age)
+            & scenario.ages.can_pay_for(self.age)
+            & scenario.has_building(Age2BuildingData.TOWN_CENTER)
+            & age_up
+            & scenario.ages.can_advance(before)
+        )
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        age = self.age.location_name.removeprefix("Reach ")
+        return f"{scenario.scenario_name} can advance to the {age}"
+
+
+@dataclass
+class ScenarioHasBuilding(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+
+    building: Age2BuildingData
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.building)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        return (
+            scenario.starting_state.starts_with_building[self.building]
+            | scenario.buildings.can_build(self.building)
+        )
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        building = self.building.building_name
+        return f"{scenario.scenario_name} has {a_or_an(building)} {building}, standing or paid for"
 
 
 @dataclass

@@ -12,7 +12,7 @@ from rule_builder.rules import False_, Has, Or, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
 from .custom_logic.Named import Named
-from .custom_logic.ScenarioQuestions import a_or_an
+from .custom_logic.ScenarioQuestions import ScenarioHasBuilding, a_or_an
 from ..locations.Players import Age2PlayerData
 
 if TYPE_CHECKING:
@@ -170,13 +170,7 @@ class ScenarioLogic:
         )
 
     def has_building(self, building: Age2BuildingData) -> Rule:
-        return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
-                          "standing or paid for",
-                          self._has_building(building))
-
-    def _has_building(self, building: Age2BuildingData) -> Rule:
-        return (self.starting_state.starts_with_building[building]
-                | self.buildings.can_build(building))
+        return ScenarioHasBuilding(scenario=self.scenario, building=building)
 
     def is_unlocked(self) -> Rule:
         return self.starting_state.is_unlocked

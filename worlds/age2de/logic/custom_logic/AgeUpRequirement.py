@@ -12,6 +12,29 @@ from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 
 
+AGE_UP_BUILDINGS: dict[Age2AgeData, tuple[Age2BuildingData, ...]] = {
+    Age2AgeData.FEUDAL: (
+        Age2BuildingData.MILL,
+        Age2BuildingData.LUMBER_CAMP,
+        Age2BuildingData.MINING_CAMP,
+        Age2BuildingData.DOCK,
+        Age2BuildingData.BARRACKS,
+    ),
+    Age2AgeData.CASTLE: (
+        Age2BuildingData.ARCHERY_RANGE,
+        Age2BuildingData.STABLE,
+        Age2BuildingData.MARKET,
+        Age2BuildingData.BLACKSMITH,
+    ),
+    Age2AgeData.IMPERIAL: (
+        Age2BuildingData.MONASTERY,
+        Age2BuildingData.UNIVERSITY,
+        Age2BuildingData.SIEGE_WORKSHOP,
+    ),
+}
+"""Two of these, from the age before, have to be standing before you can advance into that age."""
+
+
 if TYPE_CHECKING:
     from ... import Age2World
 
