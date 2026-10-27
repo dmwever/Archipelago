@@ -3,24 +3,23 @@
 Measure each code version **once**, store its results, compare against what is stored. Never re-run
 an old version to get a baseline.
 
-The fixed seed set is the 100 YAMLs in `../fuzz_output_genghis_3b3762449/yamls/` (full shuffle, all
+The fixed seed set is the 100 YAMLs in `../fuzz_output_3b3762449/yamls/` (full shuffle, all
 three campaigns; see `../_full_shuffle.yaml`). Always run at `-j 6`. This is a laptop and it may
 sleep mid-run: if it did, ignore that run's times (spheres, sphere 1 and order sizes are still
 valid).
 
-**Two corpora, two lineages.** `fuzz_output_6f09d7ec6` holds the older set, fuzzed with Genghis Khan
-held out. A run on one is **not** comparable with a run on the other, so a stored run's baseline has
-to come from its own set. The Genghis set replaced it after #30, whose gate came out flat on all 100
-of the old seeds for a structural reason: Genghis 4 is the one scenario with a standing Mining Camp
-and Monastery, and the old set could never generate it. Rows below say which set each run used.
+**Changing the seed set retires every run stored against it.** A run is only comparable with runs
+on the same seeds, so a new set starts the table from nothing and needs its own baseline measured
+before anything can be gated against it. Do it rarely, and only when the set cannot see something
+it has to: #30 is the case that forced this one, and `## Retired sets` below records what went.
 
 From `worlds/age2de/fuzz/bench/`:
 
     # 1. Measure the current checkout on the fixed seeds. Resumable: rerun to finish a stopped run.
-    python replay.py ../../../.. ../fuzz_output_genghis_3b3762449/yamls ../fuzz_output_genghis_3b3762449/replay_<commit>.jsonl 6
+    python replay.py ../../../.. ../fuzz_output_3b3762449/yamls ../fuzz_output_3b3762449/replay_<commit>.jsonl 6
 
     # 2. Compare against any stored run.
-    python compare.py ../fuzz_output_genghis_3b3762449/replay_<old>.jsonl ../fuzz_output_genghis_3b3762449/replay_<new>.jsonl ../fuzz_output_genghis_3b3762449/timings.jsonl
+    python compare.py ../fuzz_output_3b3762449/replay_<old>.jsonl ../fuzz_output_3b3762449/replay_<new>.jsonl ../fuzz_output_3b3762449/timings.jsonl
 
 **Measuring an old commit in a worktree: copy `host.yaml` in first.**
 
@@ -57,38 +56,32 @@ Run it here, not from a path copied into the ticket.
    generation had already succeeded. Read `ok`. Those runs also lack `order_kept` / `order_pruned`,
    which `compare.py` now reports as "not recorded on both sides" rather than dying on.
 
-Tickets #05, #17, #18, #19 and #22 record this gate against 63 generations in
-`fuzz_output_lock_items/error/age2de/`. Those runs happened; the directory did not survive, because
-the whole of `fuzz_output_*` was gitignored then. It no longer is: `fuzz/.gitignore` now tracks
-every `replay_*.jsonl`, `timings*.jsonl` and `report.json` stored under one, so step 3 above is a
-real commit. The fixed seed set in `yamls/` is tracked too, so a stored run can always be
-reproduced and compared against from a fresh clone; everything else a run drops stays ignored.
-Their records stand, and the 100 seeds here are what to use now.
-
 ## Stored runs
 
-| file | code | notes |
-| --- | --- | --- |
-| `replay_c6ca31822.jsonl` | commit `c6ca31822` | |
-| `replay_issue07-job-resource.jsonl` | branch | |
-| `replay_per-resource-wip.jsonl` | branch | |
-| `replay_per-resource-items-wip.jsonl` | branch | |
-| `replay_b9dd362.jsonl` | commit `b9dd362` | 100/100 ok. **Times void** - the laptop slept, and it ran at `-j 4`. Logic results stand. |
-| `replay_issue23-defence-pays.jsonl` | #23, on top of `39d7c603` | 100/100 ok - the #23 fill gate, against `b9dd362`. **Times void** - the machine was shared. |
-| `replay_issue29-army-open-ground.jsonl` | #29, on top of `3c0136c3` | 100/100 ok - the #29 fill gate, against `replay_issue23-defence-pays`. **Times void** - the machine was shared; for the record the branch was slower on 91 of 100 seeds (13.6s -> 17.4s median), which one more Or'd term on every open-ground question would explain. Spheres flat, 79 of 100 unchanged. |
-| `replay_issue24-seed-items.jsonl` | #24, on top of `e7547828` with the Dock fallback uncommitted | 100/100 ok - the #24 fill gate, against `replay_issue29-army-open-ground`. Times recorded (4.2s median) but not comparable: the baseline's are void. Sphere 1 median 7.5 -> 6, mean flat at 9.2; spheres 25 -> 26 median. |
-| `replay_issue28-joan4-french-camp.jsonl` | #28, on top of `5e262a4db` | 100/100 ok - the #28 fill gate, against `replay_issue24-seed-items`. **Times void** - the replay ran alongside two pytest batches on the same laptop, so the 4.2s -> 22.0s median is contention, not the branch. Spheres 99 of 100 unchanged (1 up); sphere 1 identical on all 100. |
-| `replay_issue30-standing-camp-free.jsonl` | #30, commit `11c1dd008` | 100/100 ok - the #30 fill gate, against `replay_issue28-joan4-french-camp`. **Spheres and sphere 1 identical on all 100 seeds**, which is expected: this seed set excludes Genghis Khan, and in each of the other four scenarios with a standing camp the Town Center is standing behind the same rule, so its free dropsite route already covered those resources. The ticket's loosening is real but invisible to this corpus - which is what prompted the Genghis set below. **Times not comparable** - the baseline's are void, and the 22.0s -> 19.4s median (96 of 100 down) is that contention lifting, not this branch running faster. |
-| `replay_3b376244.jsonl` | commit `3b376244` | 100/100 ok - the #26 baseline, measured in a detached worktree. **Times void** - ran alongside a recapture and pytest. |
-| `replay_issue26-dock-guards.jsonl` | #26, on top of `3b376244` | 100/100 ok - the #26 fill gate, against `replay_3b376244`. **Times void** - ran alongside pytest. Spheres and sphere 1 identical on all 100. |
-
-Runs on the **Genghis** set, `fuzz_output_genghis_3b3762449/` - a separate lineage, never compared
-against the rows above:
+All on the current set, `../fuzz_output_3b3762449/yamls/`.
 
 | file | code | notes |
 | --- | --- | --- |
-| `replay_cd39b473f-genghis.jsonl` | commit `cd39b473f` | 100/100 ok - the base of the Genghis set, measured in a detached worktree so the set has a baseline predating #30. First attempt scored 95/100; those 5 were the `host.yaml` race described above, dropped and rerun. |
-| `replay_issue30-genghis.jsonl` | #30, commit `11c1dd008` | 100/100 ok - the #30 fill gate rerun on the Genghis set, against `replay_cd39b473f-genghis`. Unlike the old set, this one moves: spheres 93 of 100 unchanged (5 up, 2 down), sphere 1 94 unchanged (3 up, 3 down). **Slower on 93 of 100 seeds** (24.8s -> 29.6s median), which 53 -> 66 routes per scenario through the same fixpoint would explain; the baseline ran while the laptop was busy, so if anything that understates it. |
+| `replay_cd39b473f.jsonl` | commit `cd39b473f` | 100/100 ok - the set's baseline, the parent of #30, measured in a detached worktree. First attempt scored 95/100; those 5 were the `host.yaml` race described above, dropped and rerun. |
+| `replay_issue30-standing-camp-free.jsonl` | #30, commit `11c1dd008` | 100/100 ok - the #30 fill gate, against `replay_cd39b473f`. Spheres 93 of 100 unchanged (5 up, 2 down), sphere 1 94 unchanged (3 up, 3 down). **Slower on 93 of 100 seeds** (24.8s -> 29.6s median), which 53 -> 66 routes per scenario through the same fixpoint would explain; the baseline ran while the laptop was busy, so if anything that understates it. |
+
+## Retired sets
+
+Runs stored against a retired set are gone from the tree with it. They are in git history, and
+nothing new can be compared against them, so what is worth keeping is why each set went.
+
+- **`fuzz_output_6f09d7ec6`** - 100 seeds, full shuffle, **Genghis Khan held out** so that runs
+  compared like with like. Carried the gates for #23, #24, #26, #28, #29 and #30's first pass, all
+  100/100 ok. Retired 2026-10-26: holding Genghis out meant Genghis 4 never generated, and #30 -
+  which frees a standing Mining Camp and Monastery, both of them Genghis 4's - came out flat on all
+  100 seeds. A gate blind to the scenario a ticket touches is not a gate. Last commit holding it is
+  the one before the Genghis set lands; `git log -- worlds/age2de/fuzz/fuzz_output_6f09d7ec6` finds
+  it.
+- **`fuzz_output_lock_items`** - 63 generations behind the gates for #05, #17, #18, #19 and #22.
+  Not retired on purpose: the whole of `fuzz_output_*` was gitignored then, so it was never
+  committed and did not survive. That is what `fuzz/.gitignore` now prevents, tracking every
+  `replay_*.jsonl`, `timings*.jsonl`, `report.json` and the `yamls/` a run was measured on, so a
+  retired set is recoverable rather than lost.
 
 A new seed set (new fuzz run) uses `timing_hook.py` with `../fuzz.py`, which saves every YAML for
 reuse; `summarize.py` reads that run's `timings.jsonl`:

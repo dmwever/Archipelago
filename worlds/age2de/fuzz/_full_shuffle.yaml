@@ -11,11 +11,11 @@
   unitsanity: all
   shuffle_villager: include_professions
   fuzz_constraints:
-    # All three campaigns are in. Genghis Khan was held out of the first seed set so that runs
+    # All three campaigns are in. Genghis Khan was held out of the retired seed set so that runs
     # compared like with like; #30's fill gate is what showed the cost - Genghis 4 is the one
     # scenario with a standing Mining Camp and Monastery, so the set could not see the very
-    # thing the ticket changed. Seeds fuzzed with this meta are a new corpus: a run measured on
-    # them is not comparable with one measured on fuzz_output_6f09d7ec6.
+    # thing the ticket changed. Refuzzing this meta makes a new set, which retires every run
+    # stored against the old one: see bench/README.md.
 
     # "starting_campaigns must include at least one enabled campaign."
     #

@@ -214,7 +214,7 @@ standing, so no rule-identity inspection decides route shape and the catalog sta
       - `_full_shuffle.yaml` no longer holds Genghis out. Because `if_value` matches the whole list
         and `if_selected` cannot reach another option, the "start must be enabled" rule is spelt
         out for every ordering of every non-empty subset: 3 singletons, 6 ordered pairs, 6 ordered
-        triples. New set fuzzed to `fuzz_output_genghis_3b3762449/`: 100/100 generated, 0 failures,
+        triples. New set fuzzed to `fuzz_output_3b3762449/`: 100/100 generated, 0 failures,
         0 timeouts; 76 of 100 seeds enable Genghis; no seed starts outside its enabled set.
       - Baseline `replay_cd39b473f-genghis.jsonl` at `cd39b473f` (the #30 parent), branch
         `replay_issue30-genghis.jsonl` at `11c1dd008`: **ok baseline 100, ok branch 100.** Gate
