@@ -1,6 +1,6 @@
 import contextlib
 import unittest
-from typing import Iterator
+from typing import Callable, Iterator
 from unittest import mock
 
 from BaseClasses import CollectionState
@@ -99,22 +99,62 @@ class TestReachingAnAgePaysTheAgePrice(AgePriceTestBase):
 
 
 class TestACastleStartPaysNoFeudalOrCastlePrice(AgePriceTestBase):
-    def answers(self, **options) -> dict[str, bool]:
-        self.build_starving(some=(Resource.FOOD, Resource.GOLD), **options)
+    def attila_3_holds(
+        self,
+        site: Callable[[ScenarioLogic], Rule],
+        easy: tuple[Resource, ...] = (),
+        some: tuple[Resource, ...] = (),
+        **options,
+    ) -> bool:
+        self.build_starving(easy, some, **options)
         attila_3 = self.scenario_logic(Age2ScenarioData.AP_ATTILA_3)
-        state = self.state_without()
+        return self.holds(site(attila_3), self.state_without())
+
+    def answers(self, **options) -> dict[str, bool]:
         return {
-            "build": self.holds(attila_3.buildings.can_build(Age2BuildingData.UNIVERSITY), state),
-            "research": self.holds(attila_3.techs.can_research(Age2TechData.HUSBANDRY), state),
-            "train": self.holds(attila_3.units.can_train(Age2UnitData.CAVALRY_ARCHER), state),
+            "build": self.attila_3_holds(
+                lambda attila_3: attila_3.buildings.can_build(Age2BuildingData.UNIVERSITY),
+                some=(Resource.FOOD, Resource.GOLD),
+                **options,
+            ),
+            "research": self.attila_3_holds(
+                lambda attila_3: attila_3.techs.can_research(Age2TechData.HUSBANDRY),
+                some=(Resource.FOOD, Resource.GOLD),
+                **options,
+            ),
+            "train past the Feudal price": self.attila_3_holds(
+                lambda attila_3: attila_3.units.can_train(Age2UnitData.ARCHER),
+                some=(Resource.FOOD,),
+                **options,
+            ),
+            "train past the Castle price": self.attila_3_holds(
+                lambda attila_3: attila_3.units.can_train(Age2UnitData.CAVALRY_ARCHER),
+                easy=(Resource.FOOD,),
+                **options,
+            ),
         }
 
     def test_build_tech_and_unit_ask_no_age_price_where_the_scenario_starts_past_it(self):
-        self.assertEqual({"build": True, "research": True, "train": True}, self.answers())
+        self.assertEqual(
+            {
+                "build": True,
+                "research": True,
+                "train past the Feudal price": True,
+                "train past the Castle price": True,
+            },
+            self.answers(),
+        )
 
     def test_the_same_advanced_from_the_dark_age_pays_the_price(self):
-        self.assertEqual({"build": False, "research": False, "train": False},
-                         self.answers(**START_IN_DARK_AGE))
+        self.assertEqual(
+            {
+                "build": False,
+                "research": False,
+                "train past the Feudal price": False,
+                "train past the Castle price": False,
+            },
+            self.answers(**START_IN_DARK_AGE),
+        )
 
 
 class TestTheCastleLocationsPayForTheCastle(AgePriceTestBase):
