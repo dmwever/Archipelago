@@ -20,7 +20,7 @@ class AgeLogic:
         self.can_reach_age: dict[Age2AgeData, Or] = {age: Or() for age in Age2AgeData}
 
     def set_can_reach_age(self, scenarios: list[ScenarioLogic]):
-        """What the age advancement events ask: somewhere you climb into this age.
+        """What the age advancement events ask: somewhere you advance into this age.
 
         Not can_reach, which counts a scenario that opens at or above the age. Neither researches
         the age, and the location can only be sent by researching it, so counting them let a seed
@@ -29,7 +29,6 @@ class AgeLogic:
         for age in Age2AgeData:
             self.can_reach_age[age].children = tuple(
                 scenario.is_unlocked() & scenario.ages.can_research(age)
-                & scenario.ages.can_pay_for(age) & scenario.ages.can_pay_for_age_up_buildings(age)
                 for scenario in scenarios)
     
     def has_age(self, age: Age2AgeData) -> Rule:

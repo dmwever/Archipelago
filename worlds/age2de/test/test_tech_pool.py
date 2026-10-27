@@ -34,7 +34,7 @@ class TechPoolTestBase(unittest.TestCase):
 
 class TestOnlyWhatAScenarioCanResearch(TechPoolTestBase):
     """Sappers was a location in a Joan-only seed that nothing could reach: The Rising and A Perfect
-    Martyr withhold it, Joan 2 and 3 never climb past the Castle Age, and Joan 1 and 5 are fixed
+    Martyr withhold it, Joan 2 and 3 never advance past the Castle Age, and Joan 1 and 5 are fixed
     forces."""
 
     def test_joan_alone_has_no_sappers(self):

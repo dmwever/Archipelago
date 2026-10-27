@@ -112,7 +112,7 @@ class TestACastleStartPaysNoFeudalOrCastlePrice(AgePriceTestBase):
     def test_build_tech_and_unit_ask_no_age_price_where_the_scenario_starts_past_it(self):
         self.assertEqual({"build": True, "research": True, "train": True}, self.answers())
 
-    def test_the_same_climbed_from_the_dark_age_pays_the_price(self):
+    def test_the_same_advanced_from_the_dark_age_pays_the_price(self):
         self.assertEqual({"build": False, "research": False, "train": False},
                          self.answers(**START_IN_DARK_AGE))
 

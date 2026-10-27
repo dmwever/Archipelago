@@ -5,7 +5,7 @@ status: accepted
 # A location reaches the base only through its price
 
 Playtest #05 found ages in logic with an unpaid Town Center. The obvious fix was to make the age
-climb ask `has_base()` directly. Instead, no location (age, tech, unit, building) and no
+advance ask `has_base()` directly. Instead, no location (age, tech, unit, building) and no
 prerequisite asks for a base itself. A location pays its price through the easy sources
 (`economy.can_pay`), and the base sits on the gathering side of those sources, so a location reaches
 the base only by paying for something gathered. The reason is direction: the base (a Town Center,
@@ -15,14 +15,14 @@ would have to be unpicked one rule at a time.
 
 ## Considered Options
 
-- **`has_base()` in the age climb.** This was chosen first during #05's grilling and then reversed.
-  It closed the gap just as well (every climbable age costs food), but it tied ages to the base for
+- **`has_base()` in the age advance.** This was chosen first during #05's grilling and then reversed.
+  It closed the gap just as well (every age to advance into costs food), but it tied ages to the base for
   good.
-- ~~**A paid Town Center (`has_tc`) in the climb.** Rejected: it paid for the Town Center but skipped
+- ~~**A paid Town Center (`has_tc`) in the advance.** Rejected: it paid for the Town Center but skipped
   the base's other requirements, such as Joan 3's ground across the water.~~ Reversed by #42: the
-  climb asks for a Town Center standing or paid for by the Town Center items, and nothing of the
+  advance asks for a Town Center standing or paid for by the Town Center items, and nothing of the
   ground. A Town Center goes up on home ground even where the base needs ground across the water,
-  so Joan 3's ground is not the climb's to ask. `has_base()` in the climb stays rejected.
+  so Joan 3's ground is not the advance's to ask. `has_base()` in the advance stays rejected.
 
 ## Consequences
 
@@ -81,15 +81,15 @@ would have to be unpicked one rule at a time.
   seeds such as a Fishing Ship or a trade seed. The one exception is the Mule Cart's food (#24):
   its seed item carries the wood, and a food need would make its hunt route need what it yields.
   The cog route's wood bank excludes the Dock's seed item, which is already buying that Dock.
-- ~~The structural climb asks for a Town Center structurally, because an age is researched there. The
+- ~~The structural advance asks for a Town Center structurally, because an age is researched there. The
   base arrives through the age's food cost.~~ Reversed by #42: since #38 Feudal costs *some* food,
-  which reaches no base. Reaching an age pays for the climb into it: a Town Center and the age-up
-  requirement of the age before, each standing or paid for, and the climb into the age before.
-  Every rule that asks an age asks this paid climb; the structural climb is left only as the
-  scenario questions' answer. Inside the economy the climb is capital, funded from outside it: a
+  which reaches no base. Reaching an age pays for the advance into it: a Town Center and the age-up
+  requirement of the age before, each standing or paid for, and the advance into the age before.
+  Every rule that asks an age asks this paid advance (`can_advance`); the structural advance is
+  left only as the scenario questions' answer. Inside the economy the advance is capital, funded from outside it: a
   standing building is free, a Town Center is paid for by the Town Center items, an age-up building
   by its seed item where one is pooled or else by a `wood: some` need, and a Castle by easy stone.
-  The never-bare walk counts the climb as part of what an age, and a question standing on one,
+  The never-bare walk counts the advance as part of what an age, and a question standing on one,
   costs.
 - Trade Cogs are a deliberate non-base economy (#19): cogs to a trade partner's dock bring in easy
   wood and gold with no base. A route to an easy source that reaches no base is not automatically a

@@ -5,7 +5,7 @@
 **Reported:** 2026-10-27, split out of [#38](38-age-price-outside-economy.md) during
 implementation, from the first group in [#32](32-feudal-prerequisite-unpaid.md)'s last Comment
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Blocked by:** none
 
@@ -162,21 +162,46 @@ changed or were added.
 Prove each new test red at HEAD with `worlds/age2de/tools/red_check.py`, and tick each box with
 its evidence.
 
-- [ ] The two `test_base_through_price.py` tests above pass against #38's age prices, unchanged.
-- [ ] The walk counts the climb: at HEAD it reports Attila 1's Archer, Fletching and a Feudal Build
+- [x] The two `test_base_through_price.py` tests above pass against #38's age prices, unchanged.
+      *Red at HEAD, green now, file untouched:*
+      `TestAttila1PaysForItsTownCenter::test_no_feudal_climb_without_the_town_center_items`,
+      `TestJoan3ClimbsOnlyAcrossTheWater::test_no_feudal_climb_without_boats`.
+- [x] The walk counts the climb: at HEAD it reports Attila 1's Archer, Fletching and a Feudal Build
       location (for example the Archery Range) as unpaid; after the change they are paid.
-- [ ] Every allowlist line starting `Reach ` is gone, and no Build, Tech or Unit location line names
+      *Red at HEAD:* `test_never_bare.py::TestTheWalkCountsTheAdvance::test_attila_1_pays_the_advance_for_its_archer`,
+      `::test_attila_1_pays_the_advance_for_fletching`, `::test_attila_1_pays_the_advance_for_its_archery_range`.
+      Walk self-tests (green on both sides, they test the walk itself):
+      `::test_a_bare_age_costs_its_price_and_its_advance`, `::test_an_age_the_scenario_starts_in_costs_nothing`.
+- [x] Every allowlist line starting `Reach ` is gone, and no Build, Tech or Unit location line names
       a climb resource as unpaid.
-- [ ] Out-of-scope allowlist lines that changed or were added are listed in this ticket by group
+      *Red at HEAD:* `TestNothingIsAskedBare::test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare`
+      (all 185 `Reach ` lines are stale there). *Held before* (it reads the allowlist file):
+      `TestNothingIsAskedBare::test_no_entry_is_at_a_reach_build_tech_or_unit_location`.
+- [x] Out-of-scope allowlist lines that changed or were added are listed in this ticket by group
       (#39, #40, each untriaged group of #32), and `test_never_bare.py` is green.
-- [ ] A scenario that starts in the Castle Age asks no Feudal or Castle climb at its Build, Tech and
+      *Listed under Comments, "Allowlist by group". `test_never_bare.py` green.*
+- [x] A scenario that starts in the Castle Age asks no Feudal or Castle climb at its Build, Tech and
       Unit locations; under `start_in_dark_age` the same locations ask the climb.
-- [ ] A climb with the Town Center items, but no Villager Line and no Starting Villager Food, holds
+      *Held before:* `test_age_advance.py::TestACastleStartAsksNoAdvance::test_build_tech_and_unit_ask_no_advance_where_the_scenario_starts_in_the_castle_age`.
+      *Red at HEAD:* `::test_under_start_in_dark_age_they_ask_the_feudal_advance` (Attila 3, easy wood
+      starved: Castle, Husbandry, Cavalry Archer).
+- [x] A climb with the Town Center items, but no Villager Line and no Starting Villager Food, holds
       (Attila 1, given *some* food and the age-up buildings paid).
-- [ ] The fill gate (`fuzz/bench/README.md`) passes with #38's work in the tree, and its row is
+      *Held before:* `test_age_advance.py::TestAnAdvanceAsksNoVillagersBeyondBuilders::test_the_town_center_items_advance_with_no_villager_line_and_no_villager_food`.
+      Its control is *red at HEAD:* `::test_without_the_town_center_items_there_is_no_advance`.
+- [x] The fill gate (`fuzz/bench/README.md`) passes with #38's work in the tree, and its row is
       recorded under Stored runs.
-- [ ] ADR-0002 and the glossary entries drafted during triage still match what was built.
-- [ ] #38's evidence table is rerun and its boxes ticked, or the ticket says which still fail.
+      *100/100 ok on both sides:* `replay_issue42-paid-advance.jsonl` against `replay_45bd16a3e`.
+      Spheres 42 up, 31 down, 27 same; sphere 1 10 up, 30 down, 60 same. Times are void because the
+      laptop was shared, but **every seed was slower** (8.8s -> 21.6s median). Remeasure on an idle
+      laptop before trusting or dismissing that.
+- [x] ADR-0002 and the glossary entries drafted during triage still match what was built.
+      *Checked by reading. The maintainer's word "advance" replaced "climb" in both; the content is
+      unchanged.*
+- [x] #38's evidence table is rerun and its boxes ticked, or the ticket says which still fail.
+      *Rerun; six of seven ticked.* `TestACastleStartPaysNoFeudalOrCastlePrice::test_build_tech_and_unit_ask_no_age_price_where_the_scenario_starts_past_it`
+      still fails. It is red at HEAD too: the test starves the Cavalry Archer's own gold. Details
+      in #38's last Comment.
 
 **Out of scope**
 
@@ -214,3 +239,76 @@ Rulings worth keeping:
   alone: "If the tests are bad, they don't deserve to be kept" (maintainer).
 - Triage claimed the walk never reached the House. Wrong: 9 allowlist lines name it, all in economy
   routes. Moved to #43.
+
+> *This was generated by AI while implementing, 2026-10-27.*
+
+**Rulings during implementation (maintainer):**
+
+- **"Advance", never "climb".** The paid rule is `ScenarioAgeLogic.can_advance(age)`. Code, tests,
+  ADR-0002 and the glossary now say "advance". `CONTEXT.md` lists "climb" under _Avoid_. The two
+  pinned test names in `test_base_through_price.py` keep the old word, because criterion 1 says
+  "unchanged".
+- **Paid and structural forms are split, not parametrised.** Earlier drafts passed a rule into a
+  shared gate, or a `has_building` function into `age_up_requirement`. Now each form stands alone:
+  `can_reach` / `can_reach_structurally`, `can_research` / `can_research_structurally`,
+  `age_up_requirement` / `age_up_requirement_structurally`. The paid forms decide the dark start in
+  Python (`pool.ages.dark_start`). Only the structural forms carry the `DARK_START` /
+  `VANILLA_AGE_START` filters.
+- **Own Builder and Own Repairer pay the advance.** `can_build_anything` asks
+  `can_advance(building.age)` beside *some* of the cost. Without it the wider walk added 608 lines
+  there: under `start_in_dark_age`, a Market branch asked the Feudal price (food) and a Town Center
+  (stone) unpaid.
+
+**What changed:**
+
+- `ScenarioAgeLogic.can_advance(age)` is the one paid requirement: the age item, the age price, a
+  Town Center `has_building` (standing, or the Town Center items and builders), the paid age-up
+  requirement, and `can_advance` of the age before. It is True at or below `start_age`, and False
+  for a fixed force. `can_reach`, `can_research` (the Reach locations), building, tech and unit
+  payment, and Genghis 5's castles ask it. `can_pay_for_age_up_buildings` is gone. `can_pay_for`
+  (the price alone) stays for the advance itself, for `test_base_through_price.py`'s helper, and for
+  `ScenarioUnitLogic._field`.
+- **Not done:** paid `can_field` (`_field`) still asks `ages.can_pay_for(unit.age)` and not the
+  advance. It feeds the economy's army holds (#39/#40) and military victory rules (#32's defeat
+  group), so it stays with those tickets. Its gaps show in the walk as the defeat-group lines below.
+- The walk (`test_never_bare.py`):
+  - `ScenarioHasReached` costs `advance_cost`: for each age advanced through above `start_age`, its
+    price, plus a Town Center (wood, stone) unless one always stands, plus the age-up buildings
+    (wood; stone into Imperial) unless two of them, or a Castle into Imperial, always stand.
+  - `ScenarioCanBuild`, `ScenarioCanResearch` and `ScenarioCanTrain` add `advance_cost` of their
+    subject's age.
+  - Payment is now read through `And` (union), `Named` and `AgeUpRequirement` (union of children).
+  - A building "standing or paid for" counts as paying its own cost. That covers a Town Center that
+    stands through an item, like Bleda's Camp. It does not pay the building's advance: the advance
+    must be paid where it is asked. Without that limit, Fletching passed at HEAD.
+
+**Allowlist by group** (871 -> 1030 lines). Removed and added count whole lines. Changed means the
+same site now names a different unpaid set.
+
+| Group | Removed | Added | Changed | Now |
+|---|---|---|---|---|
+| Reach (this ticket) | 185 | 0 | 0 | 0 |
+| #32: defeat, guard and goal rules | 136 | 251 | 0 | 251 |
+| #32: Complete and Victory | 104 | 44 | 0 | 44 |
+| #32: Own Farmer | 0 | 0 | 0 | 30 |
+| Economy (#39/#40): Villagers gathering gold with a Base | 12 | 75 | 15 | 106 |
+| Economy: Villagers gathering stone with a Base | 12 | 69 | 15 | 100 |
+| Economy: Villagers and Fishing Ships gathering gold | 6 | 57 | 15 | 76 |
+| Economy: Trade Carts | 0 | 26 | 20 | 52 |
+| Economy: Trade Carts on banked gold | 0 | 26 | 20 | 52 |
+| Economy: Market Trade | 0 | 28 | 0 | 28 |
+| Economy: Fish Traps | 0 | 24 | 0 | 24 |
+| Economy: Villagers gathering food with a Base | 0 | 18 | 2 | 23 |
+| Economy: Villagers and Fishing Ships gathering food | 1 | 16 | 3 | 20 |
+| Economy: Trade Cogs (4 routes: plain, on banked gold, wood, wood and gold) | 0 | 0 | 48 | 64 |
+| Economy: Lumberjacks with a Base (#40) | 16 | 0 | 17 | 22 |
+| Economy: Fishing Ships gathering food | 0 | 5 | 0 | 6 |
+| Economy: Relics at a built Monastery | 0 | 4 | 0 | 8 |
+| Economy: Farmers | 12 | 0 | 0 | 8 |
+| Economy: the "... at a Town Center" routes (#40) | 0 | 0 | 0 | 116 |
+
+In the #32 defeat and Complete/Victory groups, the removed lines are the structural advance's
+"has a <building>, standing or buildable" asks. They went when `can_reach` became the paid
+advance. The added lines are units, buildings and `has reached the <age>` asked by defeat, guard
+and goal rules through `has_reached` and paid `can_field`. These now name the advance's
+resources, mostly stone (the Town Center) and food (the Feudal price).

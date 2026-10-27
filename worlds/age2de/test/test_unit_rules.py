@@ -71,7 +71,7 @@ class TestOwningAUnit(Age2RuleTestBase):
 
     def test_being_given_a_higher_tier_does_not_hand_you_the_lower_one(self):
         """An Attila 2 mercenary muster spawns an Onager, which makes the Mangonel line's region
-        reachable. Owning a Mangonel is a different question - a granted unit never climbs or
+        reachable. Owning a Mangonel is a different question - a granted unit never advances or
         descends its line - and the location rule is what asks it."""
         self.build(**EVERYTHING)
         without = self.state_without(Age2UnitLineData.MANGONEL_LINE.item.item_name)

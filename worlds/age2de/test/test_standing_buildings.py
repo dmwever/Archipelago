@@ -21,8 +21,8 @@ class TestStandingBuildingsCount(bases.Age2RuleTestBase):
     def deps(self, rule) -> set[str]:
         return set(rule.resolve(self.world).item_dependencies())
 
-    def test_the_two_buildings_for_a_climb_can_be_ones_already_standing(self):
-        """Attila 1's Bleda's Camp puts a Mill, Lumber Camp and Barracks on the map. The climb out
+    def test_the_two_buildings_for_an_advance_can_be_ones_already_standing(self):
+        """Attila 1's Bleda's Camp puts a Mill, Lumber Camp and Barracks on the map. Advancing out
         of the Dark Age asks for two buildings, and those three are two of them - without the camp
         the player would also need the building items, and this is the difference."""
         self.build(techsanity=3, unitsanity=2, shuffle_ages=1)
@@ -37,15 +37,15 @@ class TestStandingBuildingsCount(bases.Age2RuleTestBase):
         standing = [building for building in DARK_AGE_BUILDINGS
                     if scenario.has_building_structurally(building).resolve(self.world)(state)]
         self.assertGreaterEqual(len(standing), 2, "Bleda's Camp should leave buildings standing")
-        climb = scenario.ages.age_up_requirement(Age2AgeData.FEUDAL, scenario.has_building_structurally)
-        self.assertTrue(climb.resolve(self.world)(state))
+        age_up = scenario.ages.age_up_requirement_structurally(Age2AgeData.FEUDAL)
+        self.assertTrue(age_up.resolve(self.world)(state))
 
     def test_a_standing_town_centre_is_not_bought_again(self):
-        """Attila 3 opens with a Town Centre, so its climb wants neither the item nor the 275 wood
+        """Attila 3 opens with a Town Centre, so advancing wants neither the item nor the 275 wood
         and 100 stone that putting one up would cost."""
         self.build(techsanity=3, unitsanity=2, shuffle_ages=1)
         scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
-        wanted = self.deps(scenario.ages.climb(Age2AgeData.CASTLE))
+        wanted = self.deps(scenario.ages.can_reach_structurally(Age2AgeData.CASTLE))
         self.assertNotIn(Age2BuildingData.TOWN_CENTER.item.item_name, wanted)
         self.assertFalse([name for name in wanted if "Stone" in name])
 

@@ -226,7 +226,7 @@ class TestMultipleSlots(Age2RuleTestBase):
             set(alone.get_entrance("Mill").access_rule.item_dependencies()))
 
 
-class TestAgeEventsNeedAClimb(Age2RuleTestBase):
+class TestAgeEventsNeedAnAdvance(Age2RuleTestBase):
     """An age advancement location can only be sent by researching the age in game. A scenario
     that opens at or above it hands it to you instead, and counting that let a seed place
     progression behind an age the player never has to reach.
@@ -273,10 +273,10 @@ class TestAgeEventsNeedAClimb(Age2RuleTestBase):
                 self.assertTrue(rule(state))
 
 
-class TestAnAgeClimbsFromTheOneBefore(Age2RuleTestBase):
+class TestAnAgeAdvancesFromTheOneBefore(Age2RuleTestBase):
     """The Castle Age is researched in the Feudal Age. Its age-up buildings usually imply that, but
     a building standing at the start - Bleda's Camp's Archery Range and Blacksmith - does not, so
-    the climb asks for the age before itself."""
+    the advance asks for the age before itself."""
 
     def test_no_castle_age_without_the_feudal_age(self):
         world = self.build(shuffle_ages=True)

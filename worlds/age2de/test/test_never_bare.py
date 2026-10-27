@@ -10,13 +10,19 @@ from test.general import setup_solo_multiworld
 
 from .. import Age2World
 from ..items.Items import Age2ItemData, Resource, SeedResources
+from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
+from ..locations.Techs import Age2TechData
+from ..locations.Units import Age2UnitData
 from ..logic.Logic import Logic
+from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..logic.custom_logic.EconomyRoutes import EconomyRouteRunning, EconomyRoutes
 from ..logic.custom_logic.Named import Named
 from ..logic.custom_logic.ResourceAmount import HasResourceAmount
+from ..logic.ScenarioLogic import ScenarioLogic
+from ..logic.scenarios.ScenarioAgeLogic import AGE_UP_BUILDINGS
 from ..logic.custom_logic.ScenarioQuestions import (
     ScenarioCanBuild,
     ScenarioCanResearch,
@@ -50,7 +56,9 @@ QUESTIONS = {
     )
 }
 RESOURCE_QUESTIONS = {ScenarioHasEasyResource.__name__, ScenarioHasSomeResource.__name__}
+TOWN_CENTER = frozenset({Resource.WOOD, Resource.STONE})
 STANDING_OR_BUILDABLE = ", standing or buildable"
+STANDING_OR_PAID_FOR = ", standing or paid for"
 SEED_ITEMS = {
     item.item_name: item.type.type
     for item in Age2ItemData
@@ -82,25 +90,25 @@ EXISTING_TECHS = (ExistingTechs.option_vanilla, ExistingTechs.option_start_in_da
 
 type Spot = Location | Entrance
 
+type Subject = tuple[str, object, frozenset[Resource]]
+
 class BareAsks:
 
-    def __init__(self, subjects: dict[str, tuple[str, object]]) -> None:
+    def __init__(self, subjects: dict[str, Subject]) -> None:
         self.subjects = subjects
         self.bare_asks_by_rule: dict[tuple[int, frozenset[Resource]], frozenset[str]] = {}
+        self.paid_by_rule: dict[int, frozenset[Resource]] = {}
         self.economies: dict[int, EconomyRoutes.Resolved] = {}
 
-    def asks(self, rule: Rule.Resolved) -> tuple[str, object]:
+    def asks(self, rule: Rule.Resolved) -> Subject:
         if not isinstance(rule, ScenarioQuestion.Resolved) or rule.description not in self.subjects:
-            return "", None
+            return "", None, frozenset()
         return self.subjects[rule.description]
 
     def cost(self, rule: Rule.Resolved) -> frozenset[Resource] | None:
-        question, subject = self.asks(rule)
+        question, _, cost = self.asks(rule)
         if question in QUESTIONS and question not in RESOURCE_QUESTIONS:
-            return frozenset(
-                resource for resource, amount in subject.cost.items()
-                    if amount > 0
-            )
+            return cost
         if isinstance(rule, Named.Resolved) and rule.label.endswith(STANDING_OR_BUILDABLE):
             buildable = self.buildable_in(rule.child)
             if buildable is None:
@@ -111,7 +119,7 @@ class BareAsks:
     def buildable_in(self, rule: Rule.Resolved) -> Rule.Resolved | None:
         if self.asks(rule)[0] == ScenarioCanBuild.__name__:
             return rule
-        if isinstance(rule, Or.Resolved):
+        if isinstance(rule, (Or.Resolved, And.Resolved)):
             for child in rule.children:
                 found = self.buildable_in(child)
                 if found is not None:
@@ -119,7 +127,12 @@ class BareAsks:
         return None
 
     def pays_for(self, rule: Rule.Resolved) -> frozenset[Resource]:
-        question, subject = self.asks(rule)
+        if id(rule) not in self.paid_by_rule:
+            self.paid_by_rule[id(rule)] = self._pays_for(rule)
+        return self.paid_by_rule[id(rule)]
+
+    def _pays_for(self, rule: Rule.Resolved) -> frozenset[Resource]:
+        question, subject, _ = self.asks(rule)
         if question in RESOURCE_QUESTIONS:
             return frozenset({subject})
         if isinstance(rule, HasResourceAmount.Resolved):
@@ -134,6 +147,14 @@ class BareAsks:
             return self.paid_by_seed_items([name for name, _ in rule.item_counts])
         if isinstance(rule, Or.Resolved):
             return frozenset.intersection(*[self.pays_for(child) for child in rule.children])
+        if isinstance(rule, (And.Resolved, AgeUpRequirement.Resolved)):
+            return frozenset().union(*[self.pays_for(child) for child in rule.children])
+        if isinstance(rule, Named.Resolved):
+            if rule.label.endswith(STANDING_OR_PAID_FOR):
+                buildable = self.buildable_in(rule.child)
+                if buildable is not None:
+                    return self.pays_for(rule.child) | own_cost(self.asks(buildable)[1])
+            return self.pays_for(rule.child)
         return frozenset()
 
     def paid_by_seed_items(self, item_names: Iterable[str]) -> frozenset[Resource]:
@@ -209,15 +230,56 @@ def bare_asks(world: Age2World) -> set[str]:
         )
     return found | walk.bare_asks_in_economies()
 
-def subjects(logic: Logic) -> dict[str, tuple[str, object]]:
-    found: dict[str, tuple[str, object]] = {}
+def subjects(logic: Logic) -> dict[str, Subject]:
+    found: dict[str, Subject] = {}
     for name, scenario, *asked in logic.scenario_answers:
         if name not in QUESTIONS:
             continue
         question, subject = QUESTIONS[name]
         description = question(scenario=scenario, **{subject: asked[0]}).describe(scenario)
-        found[description] = (name, asked[0])
+        found[description] = (name, asked[0], cost_of(logic.for_scenario(scenario), asked[0]))
     return found
+
+def cost_of(scenario: ScenarioLogic, subject: object) -> frozenset[Resource]:
+    if isinstance(subject, Resource):
+        return frozenset()
+    if isinstance(subject, Age2AgeData):
+        return advance_cost(scenario, subject)
+    return own_cost(subject) | advance_cost(scenario, subject.age)
+
+def own_cost(
+    subject: Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData,
+) -> frozenset[Resource]:
+    return frozenset(
+        resource for resource, amount in subject.cost.items()
+            if amount > 0
+    )
+
+def advance_cost(scenario: ScenarioLogic, age: Age2AgeData) -> frozenset[Resource]:
+    return frozenset().union(*[
+        advance_cost_into(scenario, advanced)
+        for advanced in Age2AgeData
+            if scenario.ages.start_age < advanced <= age
+    ])
+
+def advance_cost_into(scenario: ScenarioLogic, age: Age2AgeData) -> frozenset[Resource]:
+    cost = set(own_cost(age))
+    if not is_standing(scenario, Age2BuildingData.TOWN_CENTER):
+        cost |= TOWN_CENTER
+    standing = [
+        building for building in AGE_UP_BUILDINGS[age]
+            if is_standing(scenario, building)
+    ]
+    castle = age is Age2AgeData.IMPERIAL and is_standing(scenario, Age2BuildingData.CASTLE)
+    if len(standing) < 2 and not castle:
+        cost.add(Resource.WOOD)
+        if age is Age2AgeData.IMPERIAL:
+            cost.add(Resource.STONE)
+    return frozenset(cost)
+
+def is_standing(scenario: ScenarioLogic, building: Age2BuildingData) -> bool:
+    standing = scenario.starting_state.starts_with_building[building]
+    return standing.resolve(scenario.logic.world).always_true
 
 def spots_with_rules(world: Age2World) -> list[Spot]:
     doors = paid_where_they_lead(world)
@@ -238,6 +300,10 @@ def paid_where_they_lead(world: Age2World) -> set[str]:
             if entrance.kind == UnitEntranceKind.train
     }
     return tech_doors | unit_doors
+
+def bare_asks_at(world: Age2World, location: Location) -> set[str]:
+    walk = BareAsks(subjects(world.rules.logic))
+    return set(walk.bare_asks_under(location.access_rule, frozenset()))
 
 def findings() -> set[str]:
     return set().union(*[
@@ -272,7 +338,10 @@ class TestNothingIsAskedBare(unittest.TestCase):
         location = world.get_location(Age2BuildingData.BARRACKS.location_name)
         scourge = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
         bare = scourge.buildings.can_build_structurally(Age2BuildingData.UNIVERSITY)
-        added = f"{location.name}: The Scourge of God can build a University (unpaid: wood)"
+        added = (
+            f"{location.name}: The Scourge of God can build a University "
+            "(unpaid: food, gold, stone)"
+        )
         with self.rule_added(location, bare.resolve(world), world):
             unlisted, _ = unlisted_and_stale(allowlist(), findings())
         self.assertEqual([added], unlisted)
@@ -297,6 +366,18 @@ class TestNothingIsAskedBare(unittest.TestCase):
         self.assertIn(self.SCOURGE_FARM, farms)
         self.assertEqual(([], farms), (unlisted, stale))
 
+    def test_no_entry_is_at_a_reach_build_tech_or_unit_location(self):
+        located = {
+            location.location_name
+            for data in (Age2BuildingData, Age2TechData, Age2UnitData)
+            for location in data
+        }
+        at_them = sorted(
+            entry for entry in allowlist()
+                if entry.startswith("Reach ") or entry.split(": ")[0] in located
+        )
+        self.assertEqual([], at_them)
+
     @staticmethod
     @contextlib.contextmanager
     def rule_added(location: Location, rule: Rule.Resolved, world: Age2World) -> Iterator[None]:
@@ -306,6 +387,46 @@ class TestNothingIsAskedBare(unittest.TestCase):
             yield
         finally:
             location.access_rule = original
+
+class TestTheWalkCountsTheAdvance(unittest.TestCase):
+
+    SCOURGE = "The Scourge of God"
+
+    def scourge_asks_bare_at(self, location_name: str) -> list[str]:
+        found: set[str] = set()
+        for existing_techs in EXISTING_TECHS:
+            world = maximal_world(existing_techs)
+            found |= bare_asks_at(world, world.get_location(location_name))
+        return sorted(description for description in found if description.startswith(self.SCOURGE))
+
+    def test_attila_1_pays_the_advance_for_its_archer(self):
+        self.assertEqual([], self.scourge_asks_bare_at(Age2UnitData.ARCHER.location_name))
+
+    def test_attila_1_pays_the_advance_for_fletching(self):
+        self.assertEqual([], self.scourge_asks_bare_at(Age2TechData.FLETCHING.location_name))
+
+    def test_attila_1_pays_the_advance_for_its_archery_range(self):
+        archery_range = Age2BuildingData.ARCHERY_RANGE.location_name
+        self.assertEqual([], self.scourge_asks_bare_at(archery_range))
+
+    def test_a_bare_age_costs_its_price_and_its_advance(self):
+        world = maximal_world(ExistingTechs.option_vanilla)
+        location = world.get_location(Age2BuildingData.BARRACKS.location_name)
+        scourge = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+        bare = scourge.ages.has_reached(Age2AgeData.FEUDAL)
+        with TestNothingIsAskedBare.rule_added(location, bare.resolve(world), world):
+            found = bare_asks_at(world, location)
+        self.assertIn("The Scourge of God has reached the Feudal Age (unpaid: food, stone)", found)
+
+    def test_an_age_the_scenario_starts_in_costs_nothing(self):
+        world = maximal_world(ExistingTechs.option_vanilla)
+        location = world.get_location(Age2BuildingData.BARRACKS.location_name)
+        walls = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
+        bare = walls.ages.has_reached(Age2AgeData.CASTLE)
+        with TestNothingIsAskedBare.rule_added(location, bare.resolve(world), world):
+            found = bare_asks_at(world, location)
+        asked = {description.split(" (unpaid")[0] for description in found}
+        self.assertNotIn("The Walls of Constantinople has reached the Castle Age", asked)
 
 if __name__ == "__main__":
     unittest.main()

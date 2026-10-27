@@ -30,7 +30,7 @@ class AgeUpRequirement(NestedRule["Age2World"], game="Age Of Empires II: Definit
     single_building: Age2BuildingData | None = None
     """One that counts for two on its own - a Castle - and the last child when there is one."""
     into_age: Age2AgeData | None = None
-    """The age these buildings climb into."""
+    """The age these buildings advance into."""
 
     @classmethod
     def from_buildings(

@@ -25,7 +25,7 @@ TOWN_CENTER_ITEMS = (
     Age2ItemData.TOWN_CENTER_STONE.item_name,
 )
 BLEDAS_CAMP = Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name
-CLIMBED_AGES = (Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL)
+ADVANCED_AGES = (Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL)
 
 
 def starving(*resources: Resource) -> mock._patch:
@@ -78,7 +78,7 @@ class TestAttila1PaysForItsAgeUpBuildings(BuildingsPaidTestBase):
         self.attila_1 = self.scenario_logic(Age2ScenarioData.AP_ATTILA_1)
         self.state = self.state_without(BLEDAS_CAMP)
 
-    def test_no_wood_is_no_paid_feudal_climb(self):
+    def test_no_wood_is_no_paid_feudal_advance(self):
         self.assertFalse(self.easy(Age2ScenarioData.AP_ATTILA_1, Resource.WOOD, self.state))
         self.assertTrue(self.easy(Age2ScenarioData.AP_ATTILA_1, Resource.FOOD, self.state))
         self.assertFalse(self.holds(self.attila_1.ages.can_reach(Age2AgeData.FEUDAL), self.state))
@@ -87,14 +87,15 @@ class TestAttila1PaysForItsAgeUpBuildings(BuildingsPaidTestBase):
         forging = self.attila_1.techs.can_research(Age2TechData.FORGING)
         self.assertFalse(self.holds(forging, self.state))
 
-    def test_the_structural_climb_is_unchanged(self):
-        self.assertTrue(self.holds(self.attila_1.ages.climb(Age2AgeData.FEUDAL), self.state))
+    def test_the_structural_advance_is_unchanged(self):
+        structural = self.attila_1.ages.can_research_structurally(Age2AgeData.FEUDAL)
+        self.assertTrue(self.holds(structural, self.state))
         self.assertTrue(self.holds(self.attila_1.ages.can_reach_structurally(Age2AgeData.FEUDAL),
                                    self.state))
 
 
-class TestBledasCampClimbsWithoutATownCenter(BuildingsPaidTestBase):
-    def test_the_paid_climb_needs_no_town_center_items_and_no_easy_stone(self):
+class TestBledasCampAdvancesWithoutATownCenter(BuildingsPaidTestBase):
+    def test_the_paid_advance_needs_no_town_center_items_and_no_easy_stone(self):
         self.build_starving(Resource.STONE)
         attila_1 = self.scenario_logic(Age2ScenarioData.AP_ATTILA_1)
         state = self.state_without(*TOWN_CENTER_ITEMS)
@@ -111,7 +112,7 @@ class TestNoPaidAgeAsksStoneForATownCenter(BuildingsPaidTestBase):
         return {
             (scenario.scenario, age): self.holds(scenario.ages.can_reach(age), state)
             for scenario in self.world.rules.logic.scenarios
-            for age in CLIMBED_AGES
+            for age in ADVANCED_AGES
         }
 
     def test_starving_stone_moves_no_paid_age(self):
@@ -248,7 +249,8 @@ class TestNothingUnpaidAsksEasyStone(BuildingsPaidTestBase):
             "can_have_base": scenario.can_have_base(),
         }
         for age in Age2AgeData:
-            rules[f"climb {age.name}"] = scenario.ages.climb(age)
+            rules[f"can_research_structurally {age.name}"] = (
+                scenario.ages.can_research_structurally(age))
             rules[f"can_reach_structurally {age.name}"] = scenario.ages.can_reach_structurally(age)
         for building in Age2BuildingData:
             rules[f"can_build_structurally {building.name}"] = scenario.buildings.can_build_structurally(building)

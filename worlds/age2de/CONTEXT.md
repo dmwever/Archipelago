@@ -27,7 +27,7 @@ _Avoid_: faction, side, player number or colour (as an identity), AP slot (the A
 
 **Fixed-force scenario**:
 A scenario fought only with what it hands P1: no base, no villagers, no economy and no age to
-climb. A villager job never counts one.
+advance to. A villager job never counts one.
 _Avoid_: no-economy scenario, army scenario
 
 ### Economy
@@ -76,9 +76,9 @@ What reaching an age costs P1, the same wherever the age is asked, whether as a 
 something another rule stands on: Feudal is *some* food or its seed item, Castle is food at scale
 and *some* gold, Imperial is food and gold at scale. An age the scenario starts in or past costs
 nothing, which is where a Castle Age economy opens. Nothing may ask an age without its price.
-Reaching an age also pays for the climb into it: a Town Center, and the age-up requirement of the
-age before, each standing or paid for. An age started in or past needs no climb.
-_Avoid_: age cost (the in-game numbers), age-up requirement (the two buildings)
+Reaching an age also pays for the advance into it: a Town Center, and the age-up requirement of the
+age before, each standing or paid for. An age started in or past needs no advance.
+_Avoid_: age cost (the in-game numbers), age-up requirement (the two buildings), climb (say advance)
 
 **Seed item**:
 An item granting the starting resources one building or age costs, so it is paid for from

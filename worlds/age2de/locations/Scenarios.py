@@ -40,7 +40,7 @@ class Age2ScenarioData(enum.IntEnum):
         self.max_age = max_age
         """The last age the scenario can reach."""
         self.fixed_force = fixed_force
-        """Fought with what it hands you: no base, no economy and no age to climb."""
+        """Fought with what it hands you: no base, no economy and no age to advance to."""
         self.rules: 'ScenarioRules' = None
         self.logic: 'ScenarioStartingState' = None
         self.startup_units: list[ScenarioUnit] = []

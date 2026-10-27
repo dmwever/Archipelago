@@ -64,7 +64,7 @@ class TestSpotChecks(unittest.TestCase):
 
 
 class TestAgeAndBuildingCosts(unittest.TestCase):
-    """Ages and buildings were never priced: climbing an age and putting a building up both read
+    """Ages and buildings were never priced: advancing an age and putting a building up both read
     as free, so logic could ask for every one of them out of a single opening pile."""
 
     def test_every_age_past_the_dark_age_costs_something(self):

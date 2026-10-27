@@ -58,7 +58,8 @@ class ScenarioUnitLogic:
 
     def can_train(self, unit: Age2UnitData) -> Rule:
         return (self.can_train_structurally(unit) & self.scenario.economy.can_pay_some(unit.cost)
-                & self.scenario.ages.can_pay_for(unit.age) & self.can_pay_for_training_building(unit))
+                & self.scenario.ages.can_advance(unit.age)
+                & self.can_pay_for_training_building(unit))
 
     def upgraded_away(self, unit: Age2UnitData) -> bool:
         for successor in unit.line.units:
