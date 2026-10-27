@@ -142,3 +142,9 @@ price. Build (University) and research (Husbandry) hold. The criterion itself ap
 #42's `test_age_advance.py::TestACastleStartAsksNoAdvance` checks the same three sites with easy
 wood starved, and is green. The test needs a unit that costs neither food nor gold, or a different
 starvation. That is for the maintainer to choose, so the box stays open, and so does this ticket.
+
+**Generation time.** #38's commit made generation about five times slower: seed 448174193 went
+from 13.7s to 67.5s, because `has_building` was rebuilt for every ask. #42 fixed it by making
+`has_building` and the paid advance into scenario questions. The fill gate of record,
+`replay_issue42-questions.jsonl`, runs 7.3s median against `replay_45bd16a3e`'s 8.8s. See #42's
+last Comment.
