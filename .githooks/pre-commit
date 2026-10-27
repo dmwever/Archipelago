@@ -10,14 +10,16 @@ worlds/age2de/test/test_storage_handler.py
 worlds/age2de/test/test_client_shutdown.py"
 label="client tests"
 
-# A rules change can leave a scenario with no route to a resource, or a seed unwinnable with
-# every item in hand, and the client tests cannot see either. These three take about a minute
-# between them and are the only automatic cover logic/ and locations/ have.
+# A rules change can leave a scenario with no route to a resource, a seed unwinnable with
+# every item in hand, or a building or age asked with nothing paying for it, and the client
+# tests cannot see any of them. These four take about a minute between them and are the only
+# automatic cover logic/ and locations/ have.
 if echo "$staged" | grep -qE '^worlds/age2de/(logic|locations)/'; then
     tests="$tests
 worlds/age2de/test/test_economy_rules.py::TestEveryScenarioCanLive
 worlds/age2de/test/test_determinism.py::TestCampaignOrder
-worlds/age2de/test/test_route_catalog.py"
+worlds/age2de/test/test_route_catalog.py
+worlds/age2de/test/test_never_bare.py"
     label="client tests and logic canaries"
 fi
 

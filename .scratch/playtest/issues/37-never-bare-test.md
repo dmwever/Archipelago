@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-27, split out of [#32](32-feudal-prerequisite-unpaid.md) during triage
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Related:** [#32](32-feudal-prerequisite-unpaid.md) (parent: rulings, facts and the full brief), [#38](38-age-price-outside-economy.md), [#39](39-economy-capital-paid.md), [#40](40-second-tc-defence-and-camp.md)
 
@@ -47,19 +47,83 @@ test).
 
 **Acceptance criteria**
 
-- [ ] With the allowlist emptied, the test is red at HEAD, and its findings include Attila 3's
+- [x] With the allowlist emptied, the test is red at HEAD, and its findings include Attila 3's
       Build Castle and Trade Cogs asking Feudal. Show this with `red_check.py` or an equivalent
       run, and quote the findings.
-- [ ] With the full allowlist, the test is green.
-- [ ] Adding a bare `can_build_structurally` to any location rule turns it red with a readable
+      *Red, equivalent run.* `red_check.py` refuses ("No uncommitted changes under worlds/age2de
+      outside worlds/age2de/test/"): no logic changed, so HEAD's logic is the tree's. Emptied the
+      allowlist and ran `test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare`:
+      `1 failed`, 2000 findings, including
+      `The Walls of Constantinople: Build a Castle: The Walls of Constantinople can build a Castle (unpaid: stone)`
+      and `The Scourge of God runs Trade Cogs: The Scourge of God has reached the Feudal Age (unpaid: food)`.
+- [x] With the full allowlist, the test is green.
+      `test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare`, passing.
+- [x] Adding a bare `can_build_structurally` to any location rule turns it red with a readable
       finding. Removing a still-bare site from the allowlist turns it red; leaving an entry whose
       site is now paid also turns it red.
-- [ ] Every finding #32's Facts section names appears in the allowlist, or the ticket says why
-      not (a fact #32 got wrong, or an exemption).
-- [ ] The test runs in the pre-commit logic canaries, and the hook's timing comment is correct.
-- [ ] The ticket records the test's wall time.
+      `test_a_bare_build_added_to_a_location_is_named` (Build a Barracks gains
+      `The Scourge of God can build a University (unpaid: wood)`),
+      `test_a_still_bare_site_taken_off_the_allowlist_fails`,
+      `test_an_entry_whose_site_is_now_paid_fails` (Attila 3's Castle paid with easy stone). New
+      tests of the new test, so there is no HEAD to be red against; each asserts the failing
+      comparison directly.
+- [x] Every finding #32's Facts section names appears in the allowlist, or the ticket says why
+      not (a fact #32 got wrong, or an exemption). See *Facts against the allowlist* below.
+- [x] The test runs in the pre-commit logic canaries, and the hook's timing comment is correct.
+      `.githooks/pre-commit` lists `test_never_bare.py`; the comment says the four take about a
+      minute (54 to 65 s measured together, 2026-10-27).
+- [x] The ticket records the test's wall time. See *Wall time* below.
 
 **Out of scope**
 
 - Paying for any site. That is #38, #39 and #40.
 - Any other pre-commit change ([#36](36-pre-commit-test-curation.md)).
+
+> *Implementation notes, 2026-10-27.*
+
+**Payment is matched by resource.** Ruled by the maintainer during implementation. #32's
+definition counts any payment beside a structural node, so Trade Cogs' `wood: some, gold: some`
+needs hid its Feudal (food), and the first criterion could not hold. A node is now paid only when
+the payments beside it (enclosing Ands, a route's needs, banks, seed items) cover every resource in
+its cost: the building's, the age's, the unit's or the tech's. *Some* still counts as paid. Each
+finding names what is unpaid: `(unpaid: food)`.
+
+**The allowlist is 2000 lines**, mostly one site repeated per scenario and building:
+
+| Group | Lines | Paid by |
+|---|---|---|
+| Own Builder | 678 | #38 item 13 |
+| Own Repairer | 450 | #38 item 13 |
+| Economy routes (trade and relics asking ages, camps, dropsites, the base's House) | 416 | #39, #40 |
+| Reach an age: its two age-up buildings (wood) | 185 | **none yet** |
+| Defeat, guard and goal rules: military buildings (wood, stone) | 136 | **none yet** |
+| Complete <scenario> and Victory | 104 | **none yet** |
+| Own Farmer: the Farm (wood) | 30 | **none yet** |
+| Attila 3's Build Castle | 1 | #38 item 12 |
+
+The maintainer confirmed the four **none yet** rows are real: each needs paying, and none of #38,
+#39 or #40 covers them. #32 cannot close by emptying the list until a ticket takes them.
+
+**Facts against the allowlist.**
+- Item 1: Trade Carts and Trade Cogs (Feudal), relics at a built Monastery (Castle) and
+  `_multiple_tc` (Castle, through the camp routes) are listed. Fish Traps' Feudal, and the ages
+  inside `ScenarioCanBuild`, `ScenarioCanResearch`, `ScenarioCanTrain` and `has_tech` (asked only
+  from `ScenarioCanTrain`'s upgrade tech), are inside a structural question's own answer: exempt,
+  and the question is paired where it is asked. The age climb's `has_reached(before)` is paid by
+  the age being reached, whose price covers the age below (#32's nesting ruling).
+- Item 2: Attila 3's Build Castle is listed. Genghis 5's Castle Age is inside its
+  `ScenarioCanBuild`, which easy stone pays: exempt.
+- Item 3: a unit's age is inside `ScenarioCanTrain`, and its training building is behind a Unit
+  door, which is exempt.
+- Item 4: the Castle Age for relics is listed. The Monk's 100 gold is asked as the Monk item, not
+  as a structural question, so the walk cannot see it.
+- Items 5 and 6: camps and plain dropsites in the routes with no needs are listed.
+- Item 7: the shoreline Mill is listed (`The Scourge of God runs Villagers gathering food with a
+  Base: ... has a Mill, standing or buildable (unpaid: wood)`); a probe showed the gate reached with
+  nothing paid in that scenario only.
+- Triage's extras: Own Builder and Own Repairer are listed.
+
+**Wall time.** `test_never_bare.py` alone: 19 to 32 s for its four tests (the two worlds are built
+once and shared). With the other three canaries: 54 to 65 s. Measured 2026-10-27 on the
+maintainer's machine, under load from other sessions; the canaries alone took 35 s against the 24 s
+measured at triage.
