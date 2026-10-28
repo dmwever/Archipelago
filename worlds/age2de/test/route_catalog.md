@@ -1,6 +1,10 @@
 # Economy route catalog
 
-Every economy route the logic builds, and how many of the 18 scenarios can run each one.
+Every economy route the logic builds, and how many of the 18 scenarios can run each one under some combination of these options:
+
+- `market_trade`: 0, 1
+- `partner_trade`: 0, 1, 2
+- `existing_techs`: 0, 3
 
     python -m worlds.age2de.tools.route_catalog
 
@@ -8,9 +12,8 @@ Regenerate with that and commit the diff. `test_route_catalog.py` pins it.
 
 ## Worth a look
 
-Rendered at **default options**, so a route gated behind an option (Market Trade) or absent from every map (oysters, whales) reads as unreachable here and is not necessarily a fault. A fixed-force scenario runs no routes at all, by design.
+A route absent from every map (oysters, whales) or built by no civilisation in these campaigns (Folwark) reads as unreachable here and is not necessarily a fault. A fixed-force scenario runs no routes at all, by design.
 
-- **Fishermen at a built Dock** is reachable in no scenario.
 - **Fishermen at a built Folwark** is reachable in no scenario.
 - **Fishermen at a standing Folwark** is reachable in no scenario.
 - **Fishing Ships gathering gold** is reachable in no scenario.
@@ -21,9 +24,6 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 - **Hunters at a built Folwark** is reachable in no scenario.
 - **Hunters at a standing Folwark** is reachable in no scenario.
 - **Lumberjacks at a Mule Cart** is reachable in no scenario.
-- **Market Trade, advanced to Feudal** is reachable in no scenario.
-- **Market Trade, on Feudal Age Food** is reachable in no scenario.
-- **Market Trade, started in Feudal** is reachable in no scenario.
 - **Oyster Gatherers at a Dock** is reachable in no scenario.
 - **Oyster Gatherers at a Town Center** is reachable in no scenario.
 - **Oyster Gatherers at a built Dock** is reachable in no scenario.
@@ -95,7 +95,7 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Fishermen at a standing Folwark | food some | - | 0/18 |
 | Fishermen at a built Folwark | food some | wood some | 0/18 |
 | Fishermen at a Dock | food some | - | 12/18 |
-| Fishermen at a built Dock | food some | wood some | 0/18 |
+| Fishermen at a built Dock | food some | wood some | 12/18 |
 | Oyster Gatherers at a Town Center | gold some | - | 0/18 |
 | Oyster Gatherers at a standing Mill | gold some | - | 0/18 |
 | Oyster Gatherers at a built Mill | gold some | wood some | 0/18 |
@@ -114,27 +114,27 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Fish Traps, started in Feudal | food at scale | wood at scale | 11/18 |
 | Fish Traps, advanced to Feudal | food at scale | wood at scale, food some | 12/18 |
 | Fish Traps, on Feudal Age Food | food at scale | wood at scale | 12/18 |
-| Trade Cogs, started in Feudal | wood at scale, gold at scale | wood some, gold some | 1/18 |
-| Trade Cogs, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some | 1/18 |
-| Trade Cogs, on Feudal Age Food | wood at scale, gold at scale | wood some, gold some | 1/18 |
-| Trade Cogs on banked wood, started in Feudal | wood at scale, gold at scale | gold some | 1/18 |
-| Trade Cogs on banked wood, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some | 1/18 |
-| Trade Cogs on banked wood, on Feudal Age Food | wood at scale, gold at scale | gold some | 1/18 |
-| Trade Cogs on banked gold, started in Feudal | wood at scale, gold at scale | wood some | 1/18 |
-| Trade Cogs on banked gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some | 1/18 |
-| Trade Cogs on banked gold, on Feudal Age Food | wood at scale, gold at scale | wood some | 1/18 |
-| Trade Cogs on banked wood and gold, started in Feudal | wood at scale, gold at scale | - | 1/18 |
-| Trade Cogs on banked wood and gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some | 1/18 |
-| Trade Cogs on banked wood and gold, on Feudal Age Food | wood at scale, gold at scale | - | 1/18 |
-| Trade Carts, started in Feudal | gold at scale | wood at scale, gold some | 2/18 |
-| Trade Carts, advanced to Feudal | gold at scale | wood at scale, food some, gold some | 3/18 |
-| Trade Carts, on Feudal Age Food | gold at scale | wood at scale, gold some | 3/18 |
-| Trade Carts on banked gold, started in Feudal | gold at scale | wood at scale | 2/18 |
-| Trade Carts on banked gold, advanced to Feudal | gold at scale | wood at scale, food some | 3/18 |
-| Trade Carts on banked gold, on Feudal Age Food | gold at scale | wood at scale | 3/18 |
-| Market Trade, started in Feudal | wood at scale, food at scale, gold at scale, stone at scale | wood at scale | 0/18 |
-| Market Trade, advanced to Feudal | wood at scale, food at scale, gold at scale, stone at scale | wood at scale, food some | 0/18 |
-| Market Trade, on Feudal Age Food | wood at scale, food at scale, gold at scale, stone at scale | wood at scale | 0/18 |
+| Trade Cogs, started in Feudal | wood at scale, gold at scale | wood some, gold some | 7/18 |
+| Trade Cogs, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some | 8/18 |
+| Trade Cogs, on Feudal Age Food | wood at scale, gold at scale | wood some, gold some | 8/18 |
+| Trade Cogs on banked wood, started in Feudal | wood at scale, gold at scale | gold some | 7/18 |
+| Trade Cogs on banked wood, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some | 8/18 |
+| Trade Cogs on banked wood, on Feudal Age Food | wood at scale, gold at scale | gold some | 8/18 |
+| Trade Cogs on banked gold, started in Feudal | wood at scale, gold at scale | wood some | 7/18 |
+| Trade Cogs on banked gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some | 8/18 |
+| Trade Cogs on banked gold, on Feudal Age Food | wood at scale, gold at scale | wood some | 8/18 |
+| Trade Cogs on banked wood and gold, started in Feudal | wood at scale, gold at scale | - | 7/18 |
+| Trade Cogs on banked wood and gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some | 8/18 |
+| Trade Cogs on banked wood and gold, on Feudal Age Food | wood at scale, gold at scale | - | 8/18 |
+| Trade Carts, started in Feudal | gold at scale | wood at scale, gold some | 11/18 |
+| Trade Carts, advanced to Feudal | gold at scale | wood at scale, food some, gold some | 13/18 |
+| Trade Carts, on Feudal Age Food | gold at scale | wood at scale, gold some | 13/18 |
+| Trade Carts on banked gold, started in Feudal | gold at scale | wood at scale | 11/18 |
+| Trade Carts on banked gold, advanced to Feudal | gold at scale | wood at scale, food some | 13/18 |
+| Trade Carts on banked gold, on Feudal Age Food | gold at scale | wood at scale | 13/18 |
+| Market Trade, started in Feudal | wood at scale, food at scale, gold at scale, stone at scale | wood at scale | 12/18 |
+| Market Trade, advanced to Feudal | wood at scale, food at scale, gold at scale, stone at scale | wood at scale, food some | 14/18 |
+| Market Trade, on Feudal Age Food | wood at scale, food at scale, gold at scale, stone at scale | wood at scale | 14/18 |
 | its own wood | wood at scale | - | 0/18 |
 | its own food | food at scale | - | 0/18 |
 | its own gold | gold at scale | - | 1/18 |
@@ -181,21 +181,21 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 
 | scenario | routes | possible |
 | --- | --- | --- |
-| AP_ATTILA_1 | 114 | 36 |
-| AP_ATTILA_2 | 114 | 27 |
-| AP_ATTILA_3 | 114 | 43 |
-| AP_ATTILA_4 | 114 | 25 |
-| AP_ATTILA_5 | 114 | 37 |
-| AP_ATTILA_6 | 114 | 43 |
+| AP_ATTILA_1 | 114 | 47 |
+| AP_ATTILA_2 | 114 | 49 |
+| AP_ATTILA_3 | 114 | 56 |
+| AP_ATTILA_4 | 114 | 34 |
+| AP_ATTILA_5 | 114 | 41 |
+| AP_ATTILA_6 | 114 | 53 |
 | AP_GENGHIS_1 | 114 | 0 |
-| AP_GENGHIS_2 | 114 | 19 |
-| AP_GENGHIS_3 | 114 | 27 |
-| AP_GENGHIS_4 | 114 | 39 |
-| AP_GENGHIS_5 | 114 | 29 |
-| AP_GENGHIS_6 | 114 | 23 |
+| AP_GENGHIS_2 | 114 | 25 |
+| AP_GENGHIS_3 | 114 | 49 |
+| AP_GENGHIS_4 | 114 | 49 |
+| AP_GENGHIS_5 | 114 | 39 |
+| AP_GENGHIS_6 | 114 | 26 |
 | AP_JOAN_1 | 114 | 0 |
-| AP_JOAN_2 | 114 | 31 |
-| AP_JOAN_3 | 114 | 27 |
-| AP_JOAN_4 | 114 | 36 |
+| AP_JOAN_2 | 114 | 35 |
+| AP_JOAN_3 | 114 | 49 |
+| AP_JOAN_4 | 114 | 58 |
 | AP_JOAN_5 | 114 | 0 |
-| AP_JOAN_6 | 114 | 27 |
+| AP_JOAN_6 | 114 | 49 |

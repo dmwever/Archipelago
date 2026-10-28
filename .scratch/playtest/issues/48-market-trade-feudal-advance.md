@@ -83,8 +83,8 @@ evidence.
 - [x] `test/route_catalog.md` is regenerated with `tools/route_catalog.py`; the ticket lists the
       routes added.
       *112 -> 114 routes. "Market Trade" replaced by "Market Trade, started in Feudal", "Market Trade,
-      advanced to Feudal" and "Market Trade, on Feudal Age Food". All 0/18 at default options
-      (`market_trade` off), as the single route was. `test_route_catalog.py` green.*
+      advanced to Feudal" and "Market Trade, on Feudal Age Food". 0/18 at default options
+      (`market_trade` off); 12/18, 14/18 and 14/18 once the catalog unions its option grid. `test_route_catalog.py` green.*
 - [x] The fill gate (`fuzz/bench/README.md`) passes on the current seed set, and its row is recorded
       under Stored runs.
       *`replay_issue48-market-feudal.jsonl`: 100/100 ok against `replay_issue47-town-center-paid`

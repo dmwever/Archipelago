@@ -6,7 +6,7 @@ catalog from 42 routes per scenario to 85 and nothing said so.
 """
 import unittest
 
-from ..tools.route_catalog import CATALOG, build_world, render
+from ..tools.route_catalog import CATALOG, build_worlds, render
 
 
 class TestRouteCatalogIsPinned(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestRouteCatalogIsPinned(unittest.TestCase):
 
     def test_the_committed_catalog_matches_the_rules(self):
         committed = CATALOG.read_text(encoding="utf-8").splitlines()
-        rendered = render(build_world()).splitlines()
+        rendered = render(build_worlds()).splitlines()
         self.assertEqual(
             committed,
             rendered,
