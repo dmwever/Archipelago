@@ -505,3 +505,153 @@ rule could withhold a cavemanify indefinitely.
 So the question is not whether the redesign is better — runs A to C settle that — but whether 8%
 of the `highFrequency` tick rate at 205 units is a price worth paying, or whether the criterion
 should be reworded against #33's 44% rather than against baseline noise.
+
+### Correction: the 44% comparison was the wrong benchmark
+
+The first write-up of run D compared its 8% against "#33's 44%". That figure is real but it is
+the wrong thing to compare against.
+
+- **44% is #33's row 2**: `ApplyCaveman` alone, 200 units, **empty ledger**, on every tick
+  (56.4% retained). Nobody proposed shipping that. It was a design option, and it was rejected.
+- **The old design's real cost** is #33's rows 7 and 8: the same work once a second. #33 says
+  those two phases **sit at the noise floor** and run 2 even ranked them the wrong way round, so
+  the 92.7% and 89.1% in its table are not reliable. #33 derives the cost from the per-call
+  figures instead: 11 calls of ~130 ms per 10 game seconds is **~14% of game time** for a
+  full-ledger sweep, plus **~2%** for the checks.
+- **At a realistic ledger** the old cost is lower. The maintainer ruled 400 entries out of reach;
+  at 200 entries a call is ~49-55 ms, so 11 calls is **~5.5%**, plus ~2% for the checks — call it
+  **7 to 8% of game time**.
+
+**So the old and the new designs cost about the same.** The old one paid it as a stall once a
+second. The new one spreads it over every tick. The new one is never starved.
+
+Two cautions on reading the two runs together:
+
+- **The units differ.** #33 measures extra game milliseconds per call, then converts to a share
+  of game time. Run D measures a drop in firings per game second. Both are proxies for sim-thread
+  cost, and they are close enough to compare at one significant figure, but they are not the same
+  measurement.
+- **Run D's caveman ledger was near empty.** Its churn units are Militia, which never
+  cavemanify, so nothing is recorded. That matters much less than it did for the old design: on
+  a normal tick the new rule searches the ledger only for the new units, two a tick, not for all
+  205. Ledger size drives the old design's cost and barely touches the new one's. That is the
+  real improvement, and run D does not measure it — #33's row 4 against row 2 is where it shows.
+
+**Revised ruling for the maintainer.** The question is not "is 8% worth paying for the fix". The
+old design cost about the same when it ran. The question is whether a steady 8% every tick is
+preferable to an equal total paid as a ~130 ms stall once a second, with starvation when the
+game is busy. On the evidence, it is.
+
+## Run E — what is worth splitting up
+
+A spike, not an acceptance run. It answers one question: **which parts of the rule are a
+single-tick stall, and how big are they?** That decides whether sharding the work beats
+throttling the rule.
+
+Run D showed the rule adds about 3.5 ms to a 40 ms tick. That is too small to be worth smoothing.
+The suspected stalls are elsewhere: a **full pass**, and `CheckProfessionLocations` sweeping every
+unit on its 2 s timer. Neither has ever been measured.
+
+`python decode.py runE.xsdat E`. About 228 game seconds. Run at a fast game speed.
+
+### Method
+
+#33's unit: **extra game milliseconds for each firing**. Slow work advances more game time per
+firing, so the difference between a phase and its neighbouring baselines is the cost of one call.
+
+A full pass normally happens once, when an item arrives. To put it on the tick-rate meter it has
+to repeat, so `AP10Meter` sets `unitsDirty = true` on every tick of a FULL PASS window. The rule
+then does a full pass every tick, and the per-firing difference is the cost of one.
+
+Windows are 15 s, interleaved against `normal` windows in the same group, as in run D.
+
+### Window plan
+
+| Windows | Rule | Mode | Ledger | Measures |
+| --- | --- | --- | --- | --- |
+| 1, 3 | on | normal | empty | baseline |
+| 2, 4 | on | **FULL PASS** | empty | one full pass, empty ledger |
+| 5 | on | fill | — | swaps 150 Villagers for 150 Knights; they cavemanify to Militia and fill the ledger. The unit count stays at about 205, so ledger size is the only thing that changes |
+| 6, 8 | on | normal | ~150 | baseline |
+| 7, 9 | on | **FULL PASS** | ~150 | one full pass at a realistic ledger |
+| 10, 12, 14 | off | normal | ~150 | baseline |
+| 11 | off | **list fetch** | ~150 | `xsGetPlayerUnitIds` alone — the part of the per-tick cost that **cannot** be split |
+| 13 | off | **prof sweep** | ~150 | `CheckProfessionLocations` over 205 units — the part that can |
+
+### What each answer means
+
+- **Full pass, empty against ~150 ledger.** The difference is the ledger scan. #33 measured that
+  as ~85% of the old design's cost. Under the new design only new units search the ledger on a
+  normal tick, so this shows what is left of that problem on the one path that still walks
+  everything.
+- **List fetch against prof sweep.** This is the decision. The fetch cannot be sharded — the call
+  returns the whole list or nothing. The profession sweep can be, trivially, because its contract
+  is already "within 2 seconds" and spreading 205 units over the ~50 ticks in that window changes
+  no semantics. If the fetch is most of the per-tick floor, sharding buys little. If the sweep is
+  large, it is the best target in the rule.
+
+Verified against simulated data before the run: with 35 ms, 65 ms, 2 ms and 12 ms injected, the
+summary recovered 34.3/33.9, 63.6/64.3, 1.9 and 11.3.
+
+## Run E results
+
+> From one in-game run on 2026-10-27 (`runE.xsdat`, 9605 of 9605 ledger checks, footer present,
+> 477 records). Baselines ran 40 to 48 firings a game second.
+
+| What | Measured | Repeat |
+| --- | --- | --- |
+| **Full pass**, empty ledger | 40.6 ms | 52.0 ms |
+| **Full pass**, ~150-entry ledger | 85.0 ms | 64.9 ms |
+| `xsGetPlayerUnitIds` alone, 205 units | **2.06 ms** | — |
+| `CheckProfessionLocations`, 205 units | **0.65 ms** | — |
+
+### The sharding target does not exist
+
+`CheckProfessionLocations` over 205 units costs **0.65 ms**. The rule-off baselines either side of
+it scatter by 3.8 firings a second, about 8%, so 0.65 ms is **below the noise floor**. There is
+nothing there to split up.
+
+Worse for the idea: the one part that **cannot** be sharded, the `xsGetPlayerUnitIds` call, costs
+**2.06 ms** — three times more than the part that can. Sharding the per-tick work cannot reach
+the majority of the per-tick cost. A throttle can, because skipping a tick skips the fetch too.
+
+**Caveat on the 0.65 ms.** `CheckProfessionLocations` tests `isProfessionType(typeId)` for each
+unit and does nothing more unless it matches. P1's units in this run are Villagers and Militia.
+A base Villager is tier 0, so it is **not** a profession type, and no unit matched. The function
+took its cheap path on all 205. In a real game the villagers in jobs would match and would each
+cost a struct read. That is tens of units, not 205, so it stays small — but this run measures
+the floor, not the real figure.
+
+### The real stall is the full pass
+
+A full pass costs **40 to 52 ms with an empty ledger and 65 to 85 ms at ~150 entries.** The two
+repeats of each disagree by about 30%, so treat the magnitude as solid and the precision as poor.
+Taking means, that is **~46 ms empty and ~75 ms at ~150 entries**.
+
+That is twenty times the ~3.5 ms the rule costs on a normal tick, dropped into one tick, every
+time an item arrives or a research finishes.
+
+**The ledger is ~29 ms of it** (75 minus 46). #33 predicted 30 ms for the same step — ~20 ms per
+call at an empty ledger against ~50 ms at 200 entries. Two independent runs, two harnesses, one
+answer.
+
+**The residual points at a cost this ticket added.** #33 puts `ApplyCaveman` at ~20 ms and
+`checkOwnedUnits` at ~15 ms, so ~35 ms of the ~46 ms is accounted for. The remaining ~11 ms is
+most likely `anyUnitWithLockedProfession`, which on a full pass walks all 205 units to answer a
+yes or no question. It is new in this ticket and it is only ever asked so the rule can decide
+whether to call `EvictProfessions`.
+
+### What to do instead of sharding
+
+1. **Short-circuit `anyUnitWithLockedProfession`.** If no profession unit row is locked, no unit
+   can be in a locked job, so the walk can be skipped outright. A flag kept by `refreshUnitLocks`
+   would do it. Removes ~11 ms from every full pass, and most of that cost is paid in games where
+   the answer is always no. Smallest change, clear win.
+2. **Make `originalTypeOf` O(1).** Removes the ~29 ms ledger scan from the full pass. #33 named
+   this and #10's brief puts it out of scope, so it is its own ticket.
+3. **Shard the full pass across ticks** — the idea that started this, applied to the one place it
+   pays. Harder than it looks: the stop-after-cavemanify guard has to stop the tick and resume at
+   the right shard. Only worth it if 1 and 2 leave the stall too large.
+4. **Drop the throttle.** It was already the weaker idea, and these numbers confirm it: it would
+   trade a 3.5 ms per-tick cost for the same cost less often, and leave the 46 to 85 ms stall
+   untouched.

@@ -417,9 +417,13 @@ live scenario. The agent's job is the code and the XS check.
       > **5.4%** idle with no new units at all (5.2%, 5.6%). A calibration workload of 200
       > struct reads a tick was measured at 37.9% and 38.6%, so the meter resolves cost and
       > reproduces it. Of the 8%, 5.4 points are the fixed per-tick walk and only 2.6 are the
-      > new-unit work this ticket added. For comparison, #33 measured a full pass every tick at
-      > a 44% cost. **Maintainer call:** accept 8%, or reword the criterion against #33's 44%
-      > rather than against baseline noise. See *Run D results* in `spikes/10/README.md`.
+      > new-unit work this ticket added. **The old design cost about the same**: #33's rows 7
+      > and 8 sit at its noise floor, so its own derivation from per-call figures applies -
+      > ~5.5% for a once-a-second sweep at a realistic 200-entry ledger, plus ~2% for the
+      > checks. (#33's 44% is its row 2, a sweep of every unit every tick, which was never a
+      > shipping candidate.) **Maintainer call:** a steady 8% every tick against an equal total
+      > paid as a ~130 ms stall once a second, with starvation when the game is busy. Reword
+      > the criterion to say which. See *Run D results* in `spikes/10/README.md`.
 - [x] `./xs-check.exe -I . -- AP_<Scenario>.xs` is clean for every scenario entry point (run from
       the xs folder; needs v0.2.30 or later).
 

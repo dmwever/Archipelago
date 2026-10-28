@@ -9,13 +9,14 @@ HERE = Path(__file__).resolve().parent
 REC = {1: "STAGE", 2: "WATCH", 3: "ROW", 4: "RATE", 5: "EVENT", 6: "GATE", 7: "COUNT",
        8: "PHASE"}
 EV = {1: "create", 2: "convert", 3: "remove", 4: "item", 5: "research",
-      6: "immune", 7: "clear-row", 8: "tech", 9: "caveman-on", 10: "bulk"}
+      6: "immune", 7: "clear-row", 8: "tech", 9: "caveman-on", 10: "bulk", 11: "swap"}
 SLOT = {
     "A": {0: "Knight 38", 1: "Spearman 93", 2: "Scout 448", 3: "Skirmisher 7",
           4: "Mangonel 280 (immune)"},
     "B": {0: "Shepherd 592 (locked)", 1: "LongSwordsman 77", 2: "Shepherd 592 (held)"},
     "C": {},
     "D": {},
+    "E": {},
 }
 TYPE = {38: "Knight", 93: "Spearman", 448: "Scout", 7: "Skirmisher", 280: "Mangonel",
         74: "Militia", 75: "ManAtArms", 77: "LongSword", 4: "Archer", 83: "Villager",
@@ -78,7 +79,7 @@ def main():
         elif kind == 3:
             print("%s %-10s owned=%d locationSent=%d location=%d locked=%d"
                   % (head, TYPE.get(a, a), b, c, d, e))
-        elif kind == 4 and run in ("C", "D"):
+        elif kind == 4 and run in ("C", "D", "E"):
             print("%s %3d ticks in that second  p1Units=%3d rule=%d churn=%d load=%d"
                   % (head, a, b, c, d, e))
         elif kind == 4:
@@ -100,6 +101,58 @@ def main():
         phase_summary(body, written)
     if run == "D":
         interleaved_summary(body, written)
+    if run == "E":
+        cost_summary(body, written)
+
+
+MODE = {0: "normal", 1: "FULL PASS", 2: "list fetch", 3: "prof sweep", 4: "fill"}
+
+
+def cost_summary(body, written):
+    phases, current = [], None
+    for n in range(written):
+        kind, tick, gtime, a, b, c, d, e = body[n * 8:(n + 1) * 8]
+        if kind == 8:
+            current = {"id": a, "rule": b, "mode": c, "start": gtime,
+                       "rates": [], "units": [], "era": 1 if e else 0}
+            phases.append(current)
+        elif kind == 4 and current is not None and gtime > current["start"] + 1:
+            current["rates"].append(a)
+            current["units"].append(b)
+    phases = [p for p in phases if p["rates"]]
+    if not phases:
+        return
+
+    def rate(p):
+        return sum(p["rates"]) / float(len(p["rates"]))
+
+    print()
+    print("window rule mode         ledger  n  per-s   ms/firing  units")
+    for p in phases:
+        r = rate(p)
+        print("  %2d     %d   %-11s  %4s  %2d  %5.2f  %8.2f   %3d-%3d"
+              % (p["id"], p["rule"], MODE.get(p["mode"], p["mode"]),
+                 "~150" if p["era"] else "0", len(p["rates"]), r, 1000.0 / r,
+                 min(p["units"]), max(p["units"])))
+
+    print()
+    print("extra game-ms for each firing, against neighbouring 'normal' windows")
+    print("in the same rule/ledger group - this is #33's unit")
+    for p in phases:
+        if p["mode"] in (0, 4):
+            continue
+        group = [q for q in phases
+                 if q["mode"] == 0 and q["rule"] == p["rule"] and q["era"] == p["era"]]
+        before = [q for q in group if q["id"] < p["id"]]
+        after = [q for q in group if q["id"] > p["id"]]
+        nb = ([before[-1]] if before else []) + ([after[0]] if after else [])
+        if not nb:
+            continue
+        base = sum(rate(q) for q in nb) / len(nb)
+        extra = 1000.0 / rate(p) - 1000.0 / base
+        print("  window %2d  %-11s ledger %-4s: %6.2f ms   (%5.2f/s -> %5.2f/s, %.1f%% of rate)"
+              % (p["id"], MODE.get(p["mode"], p["mode"]), "~150" if p["era"] else "0",
+                 extra, base, rate(p), 100.0 - 100.0 * rate(p) / base))
 
 
 def interleaved_summary(body, written):

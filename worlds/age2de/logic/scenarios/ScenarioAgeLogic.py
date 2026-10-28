@@ -3,11 +3,12 @@ from __future__ import annotations
 import functools
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Rule, True_
+from rule_builder.rules import False_, Has, Rule, True_
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
+from ...locations.connections.BuildingSeeds import SEEDED_AGES
 from ...generation.pools.AgePool import DARK_START, VANILLA_AGE_START
 from ..custom_logic.ScenarioQuestions import ScenarioCanAdvance, ScenarioHasReached
 from ..custom_logic.AgeUpRequirement import AGE_UP_BUILDINGS, AgeUpRequirement
@@ -54,10 +55,28 @@ class ScenarioAgeLogic:
             return True_()
         economy = self.scenario.economy
         if age is Age2AgeData.FEUDAL:
-            return economy.can_pay_some([Resource.FOOD])
+            return economy.can_pay_some([Resource.FOOD]) | self.has_seed_item(age)
         if age is Age2AgeData.CASTLE:
             return economy.can_sustain([Resource.FOOD]) & economy.can_pay_some([Resource.GOLD])
         return economy.can_pay(age.cost)
+
+    def has_started_in(self, age: Age2AgeData) -> Rule:
+        if self.scenario.scenario.fixed_force or age > self.start_age:
+            return False_()
+        return True_()
+
+    def has_standing_or_seeded_age_up_buildings(self, age: Age2AgeData) -> Rule:
+        return AgeUpRequirement.from_buildings(
+            self.scenario.buildings.has_standing_or_seeded,
+            age,
+            list(AGE_UP_BUILDINGS[age]),
+        )
+
+    def has_seed_item(self, age: Age2AgeData) -> Rule:
+        seed = SEEDED_AGES.get(age)
+        if seed is None or seed not in self.world.pool.resources.seeds:
+            return False_()
+        return Has(seed.item_name)
 
     def can_advance(self, age: Age2AgeData) -> Rule:
         if self.scenario.scenario.fixed_force:
