@@ -40,7 +40,9 @@ class EconomyTestBase(bases.Age2RuleTestBase):
 class TestSourcesPerScenario(EconomyTestBase):
     def test_a_scenario_with_no_gold_on_the_map_has_no_mining(self):
         self.build()
-        self.assertTrue(self.is_false(self.economy(Age2ScenarioData.AP_JOAN_1).can_mine_some()))
+        joan_1 = self.economy(Age2ScenarioData.AP_JOAN_1)
+        self.assertTrue(self.is_false(
+            joan_1.can_mine_some(joan_1.scenario.buildings.has_gold_dropsite())))
         self.assertEqual(total(Age2ScenarioData.AP_JOAN_1).gold_count, 0)
 
     def test_attila_4_cannot_live_on_fish(self):
@@ -88,10 +90,10 @@ class TestSourcesPerScenario(EconomyTestBase):
             economy = self.economy(scenario)
             for count, threshold, some, easily in (
                     (counts.gold_count, scenario.demand.gold,
-                     economy.can_mine_some,
+                     lambda: economy.can_mine_some(economy.scenario.buildings.has_gold_dropsite()),
                      lambda: self.easy(scenario, Resource.GOLD)),
                     (counts.stone_count, scenario.demand.stone,
-                     economy.can_quarry_some,
+                     lambda: economy.can_quarry_some(economy.scenario.buildings.has_stone_dropsite()),
                      lambda: self.easy(scenario, Resource.STONE))):
                 with self.subTest(f"{scenario.name}:{count}/{threshold}"):
                     # Only the threshold direction belongs here. Whether a map that clears it is

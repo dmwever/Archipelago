@@ -138,9 +138,10 @@ class TestNamedRules(Age2RuleTestBase):
         from ..logic.custom_logic.Named import Named
         world = self.build()
         sl = world.rules.logic.for_scenario(world.pool.scenarios.included[0])
-        named = sl.economy.can_hunt().resolve(world)
+        dropsite = sl.buildings.has_hunt_dropsite()
+        named = sl.economy.can_hunt(dropsite).resolve(world)
         self.assertIsInstance(named, Named.Resolved)
-        self.assertIs(named.child, sl.economy._hunt().resolve(world))
+        self.assertIs(named.child, sl.economy._hunt(dropsite).resolve(world))
         self.assertEqual(set(named.child.item_dependencies()), set(named.item_dependencies()))
         state = self.multiworld.get_all_state(False)
         self.assertEqual(named.child(state), named(state))
