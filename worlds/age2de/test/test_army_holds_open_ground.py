@@ -8,7 +8,7 @@ toy can field, read exactly as the navy's lines are.
 import unittest
 
 from . import bases
-from ..Options import ExistingTechs
+from ..Options import ExistingTechs, MarketTrade
 from ..items.Items import Resource
 from ..locations.Buildings import Age2BuildingData as B
 from ..locations.connections.ScenarioResources import Tier
@@ -27,6 +27,7 @@ from .test_economy_catalog import (
     BASE,
     BASE_SWITCHES,
     FISHING_SHIPS,
+    MARKET_SEED,
     SCENARIO_WOOD,
     VILLAGERS,
     army,
@@ -201,26 +202,34 @@ class TestTheAfloatGateIgnoresALandArmy(ArmyToyBase):
 class TestACastleAgeArmyPaysItsAdvanceAndItsCastle(ArmyToyBase):
     ARMY_LINES = {Line.TARKAN_LINE: {Resource.FOOD, Resource.GOLD}}
     TARKANS = army(Line.TARKAN_LINE)
+    EASY_STONE = (SCENARIO_WOOD, building(B.MARKET), MARKET_SEED)
     PAID = (
         *CASTLE_ADVANCE_WORKERS,
         *FARMERS,
+        *EASY_STONE,
         building(B.CASTLE),
         TARKANS,
     )
 
     def holds(self, *switches: str) -> bool:
-        self.toy(OPEN_GOLD_MAP, existing_techs=ExistingTechs.option_start_in_dark_age)
+        self.toy(
+            OPEN_GOLD_MAP,
+            existing_techs=ExistingTechs.option_start_in_dark_age,
+            market_trade=MarketTrade.option_true,
+        )
         held = self.scenario.military.can_hold_open_ground().resolve(self.world)
         return bool(held(self.state(*switches)))
 
-    def test_with_the_town_center_and_some_stone_the_army_holds(self):
+    def test_with_the_town_center_and_easy_stone_the_army_holds(self):
         self.assertTrue(self.holds(*self.PAID))
 
     def test_without_the_paid_town_center_it_does_not(self):
         self.assertFalse(self.holds(*[name for name in self.PAID if name not in BASE_TOWN_CENTER]))
 
-    def test_without_some_of_the_castles_stone_it_does_not(self):
-        self.assertFalse(self.holds(*[name for name in self.PAID if name != STONE_OF_SOME]))
+    def test_some_stone_does_not_pay_for_its_castle(self):
+        some_stone = [name for name in self.PAID if name not in self.EASY_STONE]
+        self.assertIn(STONE_OF_SOME, some_stone)
+        self.assertFalse(self.holds(*some_stone))
 
 
 class TestExplainShowsTheArmyBesideTheBuildings(bases.Age2RuleTestBase):

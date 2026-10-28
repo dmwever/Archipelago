@@ -161,9 +161,13 @@ Sites the wider walk added, and how each was fixed under items 3 and 6:
 
 - **Imperial age-up stone (1 line: The Fall of Rome, Can Guard Aquileia's dock, Dromon).** The walk
   charges an Imperial advance stone for its age-up buildings (a Castle, or two Castle-age buildings),
-  and item 3 names only wood. The ungated rule now asks *some* stone as well when it advances into
-  Imperial. That is *some* inside the economy, which is item 6's ruling, but item 3 did not name
-  stone. **The maintainer should confirm this.**
+  and item 3 names only wood. Ruled by the maintainer, 2026-10-28: the Imperial Age is outside the
+  economy. `can_advance_in_economy(IMPERIAL)` is False wherever the scenario starts below Imperial,
+  so an Imperial building (the Bombard Tower) or a line whose first tier is Imperial (the Dromon
+  here) holds no ground there. Proved by
+  `test_defence_pays.py::TestTheEconomyNeverAdvancesToImperial` (red at HEAD; the
+  started-in-Imperial case held before). Fill gate `replay_issue49-no-imperial-in-economy`: 100/100,
+  spheres identical on every seed.
 - **Villager locations (20 lines: Own Villager (Male/Female) in ten scenarios).** These paid the
   Villager's food but not the Town Center it is trained at. They sit outside the economy, so
   `can_get_villager_anywhere` now asks the paid form, `can_pay_for_training_building`.

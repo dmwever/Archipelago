@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import And, False_, Has, Rule, True_
+from rule_builder.rules import False_, Has, Rule, True_
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -49,6 +49,8 @@ class ScenarioAgeLogic:
     def can_advance_in_economy(self, age: Age2AgeData) -> Rule:
         if age <= self.start_age:
             return True_()
+        if age is Age2AgeData.IMPERIAL:
+            return False_()
         economy = self.scenario.economy
         rule = (
             economy.can_pay_some([Resource.WOOD])
@@ -65,13 +67,6 @@ class ScenarioAgeLogic:
                     & economy.has_ungated_easy_source(Resource.FOOD)
                     & economy.can_pay_some([Resource.GOLD])
                 )
-            else:
-                costs = [
-                    resource for resource, amount in advanced.cost.items()
-                        if amount > 0
-                ]
-                price = And(*[economy.has_ungated_easy_source(resource) for resource in costs])
-                rule = rule & economy.can_pay_some([Resource.STONE]) & price
         return rule
 
     def has_started_in(self, age: Age2AgeData) -> Rule:

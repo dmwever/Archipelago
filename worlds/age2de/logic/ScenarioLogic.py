@@ -181,11 +181,14 @@ class ScenarioLogic:
         )
 
     def _has_building_paid_for_some(self, building: Age2BuildingData) -> Rule:
-        paid_for_some = (
-            self.buildings.can_build_structurally(building)
-            & self.economy.can_pay_some(building.cost)
+        if building is Age2BuildingData.CASTLE:
+            paid = self.economy.has_ungated_easy_source(Resource.STONE)
+        else:
+            paid = self.economy.can_pay_some(building.cost)
+        return (
+            self.starting_state.starts_with_building[building]
+            | (self.buildings.can_build_structurally(building) & paid)
         )
-        return self.starting_state.starts_with_building[building] | paid_for_some
 
     def is_unlocked(self) -> Rule:
         return self.starting_state.is_unlocked

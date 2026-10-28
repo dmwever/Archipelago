@@ -9,13 +9,15 @@ import inspect
 import unittest
 from unittest import mock
 
-from rule_builder.rules import False_
+from rule_builder.rules import False_, Rule
 
 from . import bases
 from ..Options import ExistingTechs, MarketTrade
 from ..items.Items import Age2ItemData, Resource
+from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData as B
 from ..locations.connections.ScenarioResources import Tier
+from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData as Line
 from ..locations.Units import Age2UnitData as U
 from ..locations.VillagerJobs import Age2VillagerJobData as Job
@@ -23,6 +25,7 @@ from ..logic.scenarios.ScenarioResourceLogic import ScenarioResourceLogic
 from .test_economy_catalog import (
     BASE,
     BASE_SWITCHES,
+    BASE_TOWN_CENTER,
     LUMBERJACKS,
     MARKET_SEED,
     SCENARIO_WOOD,
@@ -40,10 +43,6 @@ from .test_economy_catalog import (
 WOOD_OF_SOME = job(Job.LUMBERJACK_MALE)
 """A lumberjack and the base's Town Center to drop at: the cheapest *some* on the map."""
 STONE_OF_SOME = job(Job.STONE_MINER_MALE)
-BASE_TOWN_CENTER = (
-    Age2ItemData.TOWN_CENTER_WOOD.item_name,
-    Age2ItemData.TOWN_CENTER_STONE.item_name,
-)
 
 
 class DefenceToyBase(ToyScenarioBase):
@@ -329,6 +328,25 @@ class TestTheGatesTakeNoGuard(unittest.TestCase):
     def test_the_gates_of_some_take_nothing(self):
         gates = ScenarioResourceLogic.open_resource_gates
         self.assertEqual(["self"], list(inspect.signature(gates).parameters))
+
+
+class TestTheEconomyNeverAdvancesToImperial(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def advances_to_imperial(self, scenario: Age2ScenarioData) -> Rule.Resolved:
+        scenario_logic = self.world.rules.logic.for_scenario(scenario)
+        return scenario_logic.ages.can_advance_in_economy(Age2AgeData.IMPERIAL).resolve(self.world)
+
+    def test_no_scenario_started_below_imperial_advances_to_it_in_the_economy(self):
+        self.build(existing_techs=ExistingTechs.option_start_in_dark_age)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                self.assertTrue(self.advances_to_imperial(scenario.scenario).always_false)
+
+    def test_a_scenario_started_in_imperial_is_already_there(self):
+        self.build()
+        self.assertTrue(self.advances_to_imperial(Age2ScenarioData.AP_ATTILA_6).always_true)
 
 
 class TestTheUngatedRoutesReachNoGate(bases.Age2RuleTestBase):
