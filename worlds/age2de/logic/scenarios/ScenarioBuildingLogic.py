@@ -129,14 +129,9 @@ class ScenarioBuildingLogic:
         return buildable & self.scenario.economy.can_pay_some(building.cost) & advance
 
     def can_hold_a_shoreline(self) -> Rule:
-        return ((self._has_mill_paid_for_some() & self.is_fortified())
+        return ((self.scenario.has_building_paid_for_some(B.MILL) & self.is_fortified())
                 | self.can_build_tc_as_defence()
                 | self._can_defend_with(Age2BuildingData.DOCK))
-
-    def _has_mill_paid_for_some(self) -> Rule:
-        return (self.scenario.starting_state.starts_with_building[B.MILL]
-                | (self.can_build_structurally(B.MILL)
-                   & self.scenario.economy.can_pay_some(B.MILL.cost)))
 
     def has_gold_dropsite(self) -> Rule:
         return self._any_of(GOLD_DROPSITES)

@@ -173,5 +173,19 @@ class ScenarioLogic:
     def has_building(self, building: Age2BuildingData) -> Rule:
         return ScenarioHasBuilding(scenario=self.scenario, building=building)
 
+    def has_building_paid_for_some(self, building: Age2BuildingData) -> Rule:
+        return self.named(
+            f"has {a_or_an(building.building_name)} {building.building_name}, "
+            "standing or paid for some",
+            self._has_building_paid_for_some(building),
+        )
+
+    def _has_building_paid_for_some(self, building: Age2BuildingData) -> Rule:
+        paid_for_some = (
+            self.buildings.can_build_structurally(building)
+            & self.economy.can_pay_some(building.cost)
+        )
+        return self.starting_state.starts_with_building[building] | paid_for_some
+
     def is_unlocked(self) -> Rule:
         return self.starting_state.is_unlocked

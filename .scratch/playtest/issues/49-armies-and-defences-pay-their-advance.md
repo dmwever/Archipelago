@@ -169,8 +169,9 @@ Sites the wider walk added, and how each was fixed under items 3 and 6:
   `can_get_villager_anywhere` now asks the paid form, `can_pay_for_training_building`.
 - **The Scourge of God's Militia, inside the food route at a standing Mill (1 line).** The army
   defence's training-building term is an Or of "standing, or buildable and *some* of its cost". The
-  walk only credited "standing or paid for", so each branch is now named "…, standing or partly paid
-  for" and the walk credits that label the same way.
+  walk only credited "standing or paid for", so each branch is `ScenarioLogic.has_building_paid_for_some`,
+  named "…, standing or paid for some", and the walk credits that label the same way. The Mill that
+  holds a shoreline uses the same rule (it was `_has_mill_paid_for_some`).
 
 The Burgundy test mocks every resource question to True and stands every building except the Town
 Center. A scan of all 45 defeat rules under start_in_dark_age, at HEAD and after, found none that

@@ -59,7 +59,7 @@ RESOURCE_QUESTIONS = {ScenarioHasEasyResource.__name__, ScenarioHasSomeResource.
 TOWN_CENTER = frozenset({Resource.WOOD, Resource.STONE})
 STANDING_OR_BUILDABLE = ", standing or buildable"
 STANDING_OR_PAID_FOR = ", standing or paid for"
-STANDING_OR_PARTLY_PAID_FOR = ", standing or partly paid for"
+STANDING_OR_PAID_FOR_SOME = ", standing or paid for some"
 SEED_ITEMS = {
     item.item_name: item.type.type
     for item in Age2ItemData
@@ -152,7 +152,7 @@ class BareAsks:
             return frozenset().union(*[self.pays_for(child) for child in rule.children])
         unasked_question = isinstance(rule, ScenarioQuestion.Resolved) and not question
         if isinstance(rule, Named.Resolved) or unasked_question:
-            if rule.description.endswith((STANDING_OR_PAID_FOR, STANDING_OR_PARTLY_PAID_FOR)):
+            if rule.description.endswith((STANDING_OR_PAID_FOR, STANDING_OR_PAID_FOR_SOME)):
                 buildable = self.buildable_in(rule.answer)
                 if buildable is not None:
                     return self.pays_for(rule.answer) | own_cost(self.asks(buildable)[1])
