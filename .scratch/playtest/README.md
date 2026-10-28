@@ -34,7 +34,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 28 | [Joan 4's French Camp base is not recorded as standing](issues/28-joan4-french-camp-base-unrecorded.md) | done |
 | 29 | [Military can defend their own resources](issues/29-military-can-defend-their-own-resources.md) | done |
 | 30 | [A standing Mill, Mining Camp or Folwark is still charged *some* wood](issues/30-standing-dropsite-charged-wood.md) | done |
-| 31 | [Units handed to P1 by AP triggers start as Gaia, never capturable](issues/31-ap-granted-units-start-as-gaia.md) | needs-triage |
+| 31 | [Units handed to P1 by AP triggers start as Gaia, never capturable](issues/31-ap-granted-units-start-as-gaia.md) | done |
 | 32 | [Nothing may be unpaid: ages, buildings and units the logic asks without a price](issues/32-feudal-prerequisite-unpaid.md) | needs-triage |
 | 33 | [Spike: what do the caveman sweep and the unit checks cost per tick?](issues/33-unitsanity-sweep-cost-spike.md) | done |
 | 34 | [Without caveman, unit location checks wait for a quiet second](issues/34-unit-checks-starved-caveman-off.md) | done (folds into #10) |

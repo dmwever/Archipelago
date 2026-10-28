@@ -1,0 +1,199 @@
+AP_Attila_1
+  AP map v1.59, vanilla v1.57
+ before:
+  vanilla diff: 5410 matched, 12 owner, 21 missing, 6 added (0 Scythian troop), 40 terrain
+    owner P0 vanilla, P5 AP: 7 VILLAGER_MALE, 5 VILLAGER_FEMALE
+    missing from AP: 7 TREE_OAK, 5 TREE_PINE_FOREST, 4 TREE_SNOW_PINE, 1 TREE_DEAD, 1 BUSH_A, 1 BUSH_C, 1 GRASS_DRY, 1 TREE_OAK_FOREST
+    added in AP, P1: 6 FLAG_H
+    terrain 1 tiles: vanilla (21, 2) AP (32, 2)
+    terrain 17 tiles: vanilla (0, 2) AP (32, 2)
+    terrain 1 tiles: vanilla (20, 2) AP (0, 2)
+    terrain 2 tiles: vanilla (20, 2) AP (32, 2)
+    terrain 2 tiles: vanilla (106, 2) AP (0, 2)
+    terrain 1 tiles: vanilla (20, 2) AP (3, 2)
+    terrain 8 tiles: vanilla (32, 2) AP (0, 2)
+    terrain 1 tiles: vanilla (3, 2) AP (32, 2)
+    terrain 2 tiles: vanilla (0, 2) AP (3, 2)
+    terrain 1 tiles: vanilla (21, 2) AP (0, 2)
+    terrain 2 tiles: vanilla (3, 2) AP (0, 2)
+    terrain 2 tiles: vanilla (19, 2) AP (0, 2)
+  moved to Gaia, capture Never: 7 VILLAGER_MALE, 5 VILLAGER_FEMALE (12)
+  deleted staging effect in 'AP Startup': P5->P0 area (0,127)-(3,131)
+  'AP Give Roman Camp Vils': already Gaia, P0->P1 area (1,127)-(3,131); hands 12
+  removed 6 added P1 FLAG_H: [(52445, 107.5, 9.5), (52446, 105.5, 11.5), (52447, 106.5, 9.5), (52448, 105.5, 10.5), (52449, 107.5, 10.5), (52450, 106.5, 11.5)]
+ after (AP_Attila_1_31.aoe2scenario):
+  vanilla diff: 5410 matched, 0 owner, 21 missing, 0 added (0 Scythian troop), 40 terrain
+    missing from AP: 7 TREE_OAK, 5 TREE_PINE_FOREST, 4 TREE_SNOW_PINE, 1 TREE_DEAD, 1 BUSH_A, 1 BUSH_C, 1 GRASS_DRY, 1 TREE_OAK_FOREST
+    terrain 1 tiles: vanilla (21, 2) AP (32, 2)
+    terrain 17 tiles: vanilla (0, 2) AP (32, 2)
+    terrain 1 tiles: vanilla (20, 2) AP (0, 2)
+    terrain 2 tiles: vanilla (20, 2) AP (32, 2)
+    terrain 2 tiles: vanilla (106, 2) AP (0, 2)
+    terrain 1 tiles: vanilla (20, 2) AP (3, 2)
+    terrain 8 tiles: vanilla (32, 2) AP (0, 2)
+    terrain 1 tiles: vanilla (3, 2) AP (32, 2)
+    terrain 2 tiles: vanilla (0, 2) AP (3, 2)
+    terrain 1 tiles: vanilla (21, 2) AP (0, 2)
+    terrain 2 tiles: vanilla (3, 2) AP (0, 2)
+    terrain 2 tiles: vanilla (19, 2) AP (0, 2)
+  verify: ok
+AP_Attila_2
+  AP map v1.59, vanilla v1.58
+ before:
+  vanilla diff: 11454 matched, 7 owner, 59 missing, 13 added (13 Scythian troop), 53 terrain
+    owner P0 vanilla, P5 AP: 5 TARKAN, 2 HUSSAR
+    missing from AP: 40 GRASS_DRY, 19 BAMBOO_STUMP
+    terrain 18 tiles: vanilla (46, 2) AP (3, 2)
+    terrain 35 tiles: vanilla (46, 1) AP (5, 1)
+  moved to Gaia, capture Never: 5 TARKAN, 2 HUSSAR (7)
+  deleted staging effect in 'AP Set Scene': P5->P0 area (18,30)-(20,35)
+  deleted empty trigger 'AP Set Scene'
+  'AP Give Dyrrhachium Prisoners': already Gaia, P0->P1 area (18,30)-(20,35); hands 7
+  put back 59 decorations: 40 GRASS_DRY, 19 BAMBOO_STUMP (0 under a new reference id)
+  restored 53 terrain tiles: [((46, 1), 35), ((46, 2), 18)]
+ after (AP_Attila_2_31.aoe2scenario):
+  vanilla diff: 11513 matched, 0 owner, 0 missing, 13 added (13 Scythian troop), 0 terrain
+  verify: ok
+AP_Attila_3
+  AP map v1.59, vanilla v1.51
+ before:
+  vanilla diff: 3116 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Attila_4
+  AP map v1.59, vanilla v1.53
+ before:
+  vanilla diff: 7578 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Attila_5
+  AP map v1.59, vanilla v1.49
+ before:
+  vanilla diff: 18867 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Attila_6
+  AP map v1.59, vanilla v1.51
+ before:
+  vanilla diff: 7024 matched, 0 owner, 1 missing, 0 added (0 Scythian troop), 0 terrain
+    missing from AP: 1 GRASS_GREEN
+  unchanged, not written
+AP_Joan_1
+  AP map v1.59, vanilla v1.55
+ before:
+  vanilla diff: 7578 matched, 0 owner, 1 missing, 0 added (0 Scythian troop), 0 terrain
+    missing from AP: 1 PAVILION_A
+  unchanged, not written
+AP_Joan_2
+  AP map v1.59, vanilla v1.55
+ before:
+  vanilla diff: 10895 matched, 247 owner, 4 missing, 0 added (0 Scythian troop), 0 terrain
+    owner P0 vanilla, P2 AP: 153 STONE_WALL, 45 HOUSE, 6 FLAG_B, 3 OUTPOST, 2 STABLE, 2 BLACKSMITH, 2 GATE_NORTHWEST_TO_SOUTHEAST, 1 TOWN_CENTER, 1 MARKET, 1 BARRACKS, 1 MILL, 1 DOCK, 1 ARCHERY_RANGE, 1 GATE_SOUTHWEST_TO_NORTHEAST, 1 GOODS
+    owner P0 vanilla, P5 AP: 12 CROSSBOWMAN, 8 KNIGHT, 6 TRADE_CART_EMPTY
+    missing from AP: 2 GRASS_GREEN, 1 TREE_OAK, 1 GRASS_DRY
+  moved to Gaia, capture Never: 153 STONE_WALL, 45 HOUSE, 12 CROSSBOWMAN, 8 KNIGHT, 6 FLAG_B, 6 TRADE_CART_EMPTY, 3 OUTPOST, 2 STABLE, 2 BLACKSMITH, 2 GATE_NORTHWEST_TO_SOUTHEAST, 1 TOWN_CENTER, 1 MARKET, 1 BARRACKS, 1 MILL, 1 DOCK, 1 ARCHERY_RANGE, 1 GATE_SOUTHWEST_TO_NORTHEAST, 1 GOODS (247)
+  deleted staging effect in 'AP Setup': P5->P0 area (16,89)-(23,96) [type 4]
+  deleted staging effect in 'AP Setup': P2->P0 area (92,43)-(146,91)
+  deleted staging effect in 'AP Setup': P2->P0 ids [94]
+  deleted staging effect in 'AP Setup': P5->P0 area (10,91)-(15,92)
+  deleted empty trigger 'AP Setup'
+  'AP Give Trade Carts': already Gaia, P0->P1 area (9,89)-(23,96); hands 26
+  'AP Give Orleans': already Gaia, P0->P1 ids [22713]; hands 1
+  'AP Give Dock': already Gaia, P0->P1 ids [94]; hands 1
+  'AP Give Orleans 2': already Gaia, P0->P1 ids [22713]; hands 1
+ after (AP_Joan_2_31.aoe2scenario):
+  vanilla diff: 10895 matched, 0 owner, 4 missing, 0 added (0 Scythian troop), 0 terrain
+    missing from AP: 2 GRASS_GREEN, 1 TREE_OAK, 1 GRASS_DRY
+  verify: ok
+AP_Joan_3
+  AP map v1.59, vanilla v1.55
+ before:
+  vanilla diff: 5991 matched, 2 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+    owner P0 vanilla, P4 AP: 2 DEMOLITION_SHIP
+  moved to Gaia, capture Never: 2 DEMOLITION_SHIP (2)
+  deleted staging effect in 'AP Set Stage': P4->P0 area (13,87)-(17,89)
+  deleted empty trigger 'AP Set Stage'
+  'AP Give Boats': already Gaia, P0->P1 area (14,87)-(17,89); hands 2
+ after (AP_Joan_3_31.aoe2scenario):
+  vanilla diff: 5991 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  verify: ok
+AP_Joan_4
+  AP map v1.59, vanilla v1.49
+ before:
+  vanilla diff: 4402 matched, 16 owner, 2 missing, 0 added (0 Scythian troop), 0 terrain
+    owner P0 vanilla, P5 AP: 4 VILLAGER_MALE, 2 VILLAGER_FEMALE, 2 CROSSBOWMAN, 2 PAVILION_C, 1 MINING_CAMP, 1 LUMBER_CAMP, 1 PAVILION_B, 1 FLAG_D, 1 TOWN_CENTER, 1 MILL
+    missing from AP: 1 PAVILION_A, 1 GRASS_GREEN
+  moved to Gaia, capture Never: 4 VILLAGER_MALE, 2 VILLAGER_FEMALE, 2 CROSSBOWMAN, 2 PAVILION_C, 1 MINING_CAMP, 1 LUMBER_CAMP, 1 PAVILION_B, 1 FLAG_D, 1 TOWN_CENTER, 1 MILL (16)
+  deleted staging effect in 'AP Set Scene': P5->P0 area (9,48)-(30,77)
+  deleted empty trigger 'AP Set Scene'
+  'AP Give Base': already Gaia, P0->P1 area (9,48)-(30,77); hands 16
+ after (AP_Joan_4_31.aoe2scenario):
+  vanilla diff: 4402 matched, 0 owner, 2 missing, 0 added (0 Scythian troop), 0 terrain
+    missing from AP: 1 PAVILION_A, 1 GRASS_GREEN
+  verify: ok
+AP_Joan_5
+  AP map v1.59, vanilla v1.55
+ before:
+  vanilla diff: 8912 matched, 32 owner, 4 missing, 0 added (0 Scythian troop), 0 terrain
+    owner P0 vanilla, P2 AP: 16 MILITIA, 6 VILLAGER_MALE, 4 VILLAGER_FEMALE, 2 THROWING_AXEMAN, 2 KNIGHT, 2 HEAVY_SCORPION
+    missing from AP: 2 PAVILION_A, 1 TREE_PINE_FOREST, 1 BARRELS
+  moved to Gaia, capture Never: 16 MILITIA, 6 VILLAGER_MALE, 4 VILLAGER_FEMALE, 2 THROWING_AXEMAN, 2 KNIGHT, 2 HEAVY_SCORPION (32)
+  deleted staging effect in 'AP Set Scene': P2->P0 area (53,46)-(129,121)
+  deleted empty trigger 'AP Set Scene'
+  'AP Give Refugee 1': already Gaia, P0->P1 ids [18125]; hands 1
+  'AP Give Refugee 2': already Gaia, P0->P1 ids [18117]; hands 1
+  'AP Give Refugee 3': already Gaia, P0->P1 ids [18121]; hands 1
+  'AP Give Refugee 4': already Gaia, P0->P1 ids [18120]; hands 1
+  'AP Give Refugee 5': already Gaia, P0->P1 ids [18116]; hands 1
+  'AP Give Refugee 6': already Gaia, P0->P1 ids [18122]; hands 1
+  'AP Give Refugee 7': already Gaia, P0->P1 ids [18118]; hands 1
+  'AP Give Refugee 8': already Gaia, P0->P1 ids [18123]; hands 1
+  'AP Give Refugee 9': already Gaia, P0->P1 ids [18124]; hands 1
+  'AP Give Refugee 10': already Gaia, P0->P1 ids [18119]; hands 1
+  'AP Give Loyalists': already Gaia, P0->P1 area (114,94)-(120,99); hands 22
+ after (AP_Joan_5_31.aoe2scenario):
+  vanilla diff: 8912 matched, 0 owner, 4 missing, 0 added (0 Scythian troop), 0 terrain
+    missing from AP: 2 PAVILION_A, 1 TREE_PINE_FOREST, 1 BARRELS
+  verify: ok
+AP_Joan_6
+  AP map v1.59, vanilla v1.58
+ before:
+  vanilla diff: 5386 matched, 60 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+    owner P0 vanilla, P2 AP: 16 ARCHER, 9 MILITIA, 8 HAND_CANNONEER, 8 SCOUT_CAVALRY, 6 KNIGHT, 3 BOMBARD_CANNON, 3 VILLAGER_FEMALE, 3 VILLAGER_MALE, 1 JEAN_BUREAU, 1 CONSTABLE_RICHEMONT, 1 LA_HIRE, 1 TREBUCHET_PACKED
+  moved to Gaia, capture Never: 16 ARCHER, 9 MILITIA, 8 HAND_CANNONEER, 8 SCOUT_CAVALRY, 6 KNIGHT, 3 BOMBARD_CANNON, 3 VILLAGER_FEMALE, 3 VILLAGER_MALE, 1 JEAN_BUREAU, 1 CONSTABLE_RICHEMONT, 1 LA_HIRE, 1 TREBUCHET_PACKED (60)
+  deleted staging effect in 'AP Set Scene': P2->P0 area (100,115)-(143,129)
+  deleted staging effect in 'AP Set Scene': P2->P0 ids [13263]
+  deleted empty trigger 'AP Set Scene'
+  'AP Give La Hire': already Gaia, P0->P1 ids [13263]; hands 1
+  'AP Give Army': already Gaia, P0->P1 area (126,114)-(143,129); hands 47
+  'AP Give Artillery': already Gaia, P0->P1 area (99,114)-(113,123); hands 12
+ after (AP_Joan_6_31.aoe2scenario):
+  vanilla diff: 5386 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  verify: ok
+AP_Genghis_1
+  AP map v1.59, vanilla v1.54
+ before:
+  vanilla diff: 3542 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Genghis_2
+  AP map v1.59, vanilla v1.55
+ before:
+  vanilla diff: 3481 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Genghis_3
+  AP map v1.59, vanilla v1.54
+ before:
+  vanilla diff: 8339 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Genghis_4
+  AP map v1.59, vanilla v1.54
+ before:
+  vanilla diff: 9272 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Genghis_5
+  AP map v1.59, vanilla v1.55
+ before:
+  vanilla diff: 4030 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written
+AP_Genghis_6
+  AP map v1.59, vanilla v1.55
+ before:
+  vanilla diff: 4471 matched, 0 owner, 0 missing, 0 added (0 Scythian troop), 0 terrain
+  unchanged, not written

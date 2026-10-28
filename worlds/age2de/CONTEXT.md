@@ -30,6 +30,12 @@ A scenario fought only with what it hands P1: no base, no villagers, no economy 
 advance to. A villager job never counts one.
 _Avoid_: no-economy scenario, army scenario
 
+**Scenario item**:
+An item that hands P1 objects already placed on the scenario's map. Objects the original campaign
+leaves to Gaia stay Gaia's until it arrives, cannot be captured, and are never counted as any
+**player**'s.
+_Avoid_: grant, gift, reinforcement, granted (in this sense)
+
 ### Economy
 
 **Villager job**:
@@ -220,11 +226,25 @@ _Avoid_: hero row, untrainable row (that is the per-civ flag, a different thing)
 What caveman does to a unit P1 owns: replace it with the best tier of its own line P1 has
 unlocked, or a Militia if none is. Items for the line raise it again, but never past its
 **original unit**. Every unit of P1's is subject to it, trained or not; a trained unit stays as it
-is only because its items had to arrive before it could be trained. Which granted units are exempt
-is ruled unit by unit.
+is only because its items had to arrive before it could be trained. Which units are exempt is
+**caveman-exempt**, below.
 _Avoid_: knockdown, downgrade
 
 **Original unit**:
 The unit a cavemanified unit was before caveman replaced it. Items for its line raise it back up
 to its original unit, never past it.
 _Avoid_: ceiling
+
+**Caveman-exempt**:
+A unit row cavemanify leaves alone. Two code paths set it, and only one of them is named for it:
+`UnitData.is_caveman_exempt` covers the villager lines, while `UnitData.owned_type_row` writes
+`exempt=True` outright and never consults it — which is how heroes, escorts, the villager job
+rows and the granted-only rows come to be exempt. Editing `is_caveman_exempt` therefore moves
+only part of the set.
+
+Measured, not inferred ([#46](../../.scratch/playtest/spikes/46/README.md) run 2, all 107 rows of
+one seed's table probed on land and on water): 40 rows exempt — 22 villager rows and 18
+granted-only rows — and a 41st left alone because it *is* the target, the Militia. **No ship and
+no cart is exempt.** Every other row becomes a Militia created on the tile the original stood on,
+water included; nothing is destroyed.
+_Avoid_: immune (that is the mercenary pavilion's separate protection, `MercenarySpawn.xs`)

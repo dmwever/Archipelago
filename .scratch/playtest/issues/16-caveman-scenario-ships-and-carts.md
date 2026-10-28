@@ -205,6 +205,12 @@ cost or caveman parameter to a shared helper and do not fork a route. See
 
 ### Scope (2026-10-28)
 
+**This ticket is logic rules only. No XS-side work, at all.** Caveman's in-game behaviour is
+settled and is not up for change here: ships and carts stay cavemanifiable,
+`UnitData.is_caveman_exempt` is not widened, `transformUnit` keeps its order, and a Militia
+stranded on water is acceptable. Those are inputs to the logic, not work. Anything that would
+touch Ageipelago belongs in its own ticket.
+
 The agent brief above is **withdrawn**. It inherited [#01](01-caveman-scenario-rules.md)'s
 five-row table, and that table was never an audit — it was the rows someone happened to notice.
 The real question is per scenario: **what does this scenario hand the player, and which of its
@@ -270,31 +276,25 @@ That does not leak today, because the locations inside the region carry their ow
 the region holds nothing else. It is worth a note so nobody later moves a requirement onto the
 entrance and loses the gate silently.
 
-#### So what the audit is actually looking for
+#### Ruled and free locations, counted
 
-Per scenario, the rows where a **location rule names a granted unit or its item directly**,
-rather than going through `can_own_anywhere` or a military check. Plus the scenario facts built
-from grants: `has_vils`, `must_steal_base`, `meets_additional_base_requirements`, and anything in
-`defeat_rules` or the scenario's own `*Rules.set_rules` that asks `Has(<grant item>)`.
+`ScenarioRules.set_rules` (`rules/ScenarioRules.py:58`) sets no location rules — only the
+scenario entrance — so any location its scenario's own rules file does not name is reachable the
+moment the scenario unlocks. **76 of 174 scenario locations are in that state:**
 
-### Audit: Attila 1, The Scourge of God
+| Scenario | locations | ruled | free | | Scenario | locations | ruled | free |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Attila 1 | 17 | 3 | **14** | | Joan 4 | 6 | 4 | 2 |
+| Attila 2 | 9 | 4 | 5 | | Joan 5 | 15 | 4 | **11** |
+| Attila 3 | 16 | 13 | 3 | | Joan 6 | 5 | 2 | 3 |
+| Attila 4 | 8 | 8 | 0 | | Genghis 1 | 23 | 6 | **17** |
+| Attila 5 | 4 | 4 | 0 | | Genghis 2 | 3 | 1 | 2 |
+| Attila 6 | 12 | 11 | 1 | | Genghis 3 | 8 | 7 | 1 |
+| Joan 1 | 12 | 4 | **8** | | Genghis 4 | 5 | 3 | 2 |
+| Joan 2 | 12 | 9 | 3 | | Genghis 5 | 8 | 6 | 2 |
+| Joan 3 | 9 | 8 | 1 | | Genghis 6 | 2 | 1 | 1 |
 
-**Hands over** (all by trigger; nothing on the map at open): Tarkan, Scout Cavalry, Villager male
-and female, Attila the Hun, the Horse escort, plus one mercenary muster.
-
-| Grant | Caveman | Gated by | Locations that need it |
-| --- | --- | --- | --- |
-| Tarkan | knocked down | `obtains_unit[TARKAN] = True_()` -> `can_own_anywhere` | its own unit locations only |
-| Scout Cavalry | knocked down | `obtains_unit[SCOUT_CAVALRY] = has_bledas_camp` -> `can_own_anywhere` | its own unit locations only |
-| Villager male/female | exempt | `has_bledas_camp \| alternate_vils` | `has_vils`, the villager job rows |
-| Attila the Hun | exempt (hero) | `is_granted_anywhere`, no gate needed | its hero location |
-| Horse | exempt (escort) | `is_granted_anywhere`, no gate needed | its escort location |
-
-**Its own locations** (`rules/attila_rules/attila_1.py`): `ATT1_VICTORY` and `Complete` are
-`defeats(ERE) & (defeats(Scythians) | defeats(Persians))`; `ATT1_DEFEAT_FIRST_PLAYER` is any one
-defeat; `ATT1_CAPTURE_HORSES_CAMP` is `Has(AP_ATTILA_1_BLEDAS_CAMP)`. The defeat rules
-(`logic/attila/attila_1.py:44`) are `ages.can_reach`, `has_military`, `has_siege` and `counters` —
-all training-based. `CAPTURE_HORSES_CAMP` asks for an item, not a unit.
-
-**Verdict: no exposure.** Nothing in Attila 1 needs a granted unit to still be that unit. The two
-knocked-down grants feed only their own unit locations, which `can_own_anywhere` already gates.
+Under caveman the floor a free location rests on is **Militia plus whatever heroes and villagers
+the scenario grants** — those are the only exempt things ([#46](46-caveman-catalog-spike.md) run
+2). What each location actually needs against that floor is a game-knowledge call and belongs to
+the maintainer's triage.
