@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 from math import ceil
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from ...items import Items
 from ...items.Items import Age2ItemData, Resource
+from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
+from ...locations.Players import Side, TradeAccess
+from ...locations.Units import Age2UnitData
 from ...Options import PartnerTrade
 
 if TYPE_CHECKING:
     from ... import Age2World
+    from ...locations.Scenarios import Age2ScenarioData
     from ...Options import Age2Options
+    from .AgePool import AgePool
 
 
 LARGEST = {
@@ -33,12 +38,16 @@ MAX_ITEM_POOL_PERCENT = 0.5
 
 
 class ResourcePool:
-    def __init__(self, options: 'Age2Options', world: 'Age2World') -> None:
+    def __init__(self, options: 'Age2Options', world: 'Age2World',
+                 scenarios: Iterable['Age2ScenarioData'], ages: 'AgePool') -> None:
         self._world = world
         self.totals: dict[Resource, int] = {resource: 0 for resource in Resource}
+        scenarios = list(scenarios)
         self.seeds: list[Age2ItemData] = [
             item for item in Items.CATEGORY_TO_ITEMS[Items.SeedResources]
             if self.is_economy_route_shuffled(item.type.seeds, options)
+            and (item.type.seeds is not Age2AgeData.FEUDAL
+                 or self.is_feudal_awaited(scenarios, ages, options))
         ]
         seed_wood = sum(
             item.type.amount for item in self.seeds
@@ -54,6 +63,44 @@ class ResourcePool:
         if building is Age2BuildingData.MARKET:
             return bool(options.market_trade) or partner_trade
         return True
+
+    @classmethod
+    def is_feudal_awaited(cls, scenarios: list['Age2ScenarioData'], ages: 'AgePool',
+                          options: 'Age2Options') -> bool:
+        return any(
+            not scenario.fixed_force
+            and (ages.dark_start or ages.starts_in(scenario) < Age2AgeData.FEUDAL)
+            and (cls.can_trade_with_a_partner(scenario, options) or cls.can_work_fish_traps(scenario))
+            for scenario in scenarios
+        )
+
+    @staticmethod
+    def can_trade_with_a_partner(scenario: 'Age2ScenarioData', options: 'Age2Options') -> bool:
+        partner_trade = options.partner_trade.value
+        if partner_trade == PartnerTrade.option_none:
+            return False
+        partners = [
+            player for player in scenario.players
+            if player.side is Side.ALLY or partner_trade == PartnerTrade.option_allies_and_enemies
+        ]
+        carts = (Age2BuildingData.MARKET, Age2UnitData.TRADE_CART, True)
+        cogs = (Age2BuildingData.DOCK, Age2UnitData.TRADE_COG, scenario.has_water_access)
+        return any(
+            on_water
+            and scenario.civ.builds(building)
+            and building not in scenario.excluded_buildings
+            and unit not in scenario.excluded_units
+            and any(player.trade_access(building) is not TradeAccess.CLOSED for player in partners)
+            for building, unit, on_water in (carts, cogs)
+        )
+
+    @staticmethod
+    def can_work_fish_traps(scenario: 'Age2ScenarioData') -> bool:
+        fish_trap = Age2BuildingData.FISH_TRAP
+        return (scenario.has_water_access
+                and scenario.civ.builds(fish_trap)
+                and fish_trap not in scenario.excluded_buildings
+                and Age2UnitData.FISHING_SHIP not in scenario.excluded_units)
 
     def plan(self, locations_to_fill: int) -> list[Age2ItemData]:
         """The starting resources for this seed, out of at most its share of the open locations,

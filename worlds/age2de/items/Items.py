@@ -27,7 +27,7 @@ class Resources:
 class SeedResources:
     type: Resource
     amount: int
-    seeds: 'Age2BuildingData | None' = None
+    seeds: 'Age2BuildingData | Age2AgeData | None' = None
 
 @dataclass
 class Victory:
@@ -493,6 +493,7 @@ class Age2ItemData(enum.IntEnum):
     MULE_CART_RESOURCES =       1033, "Starting Mule Cart Resources",                               SeedResources(Resource.WOOD, 80)
     DOCK_WOOD =                 1034, "Starting Dock Wood",                                         SeedResources(Resource.WOOD, 150)
     MARKET_WOOD =               1035, "Starting Market Wood",                                       SeedResources(Resource.WOOD, 175)
+    FEUDAL_AGE_FOOD =           1036, "Feudal Age Food",                                            SeedResources(Resource.FOOD, 500)
 
     #3000 - 3499 = Progressive scenarios, 3500 - 3599 = Campaign unlocks
     

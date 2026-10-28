@@ -1,4 +1,5 @@
 from ...items.Items import CATEGORY_TO_ITEMS, Age2ItemData, SeedResources
+from ..Ages import Age2AgeData
 from ..Buildings import Age2BuildingData
 
 BASE_SEEDS: tuple[Age2ItemData, ...] = (
@@ -13,6 +14,13 @@ SEEDED_BUILDINGS: dict[Age2BuildingData, Age2ItemData] = {
     Age2BuildingData.DOCK: Age2ItemData.DOCK_WOOD,
     Age2BuildingData.MARKET: Age2ItemData.MARKET_WOOD,
 }
+
+SEEDED_AGES: dict[Age2AgeData, Age2ItemData] = {
+    Age2AgeData.FEUDAL: Age2ItemData.FEUDAL_AGE_FOOD,
+}
+
+for _age, _item in SEEDED_AGES.items():
+    _item.type.seeds = _age
 
 for _item in BASE_SEEDS:
     _item.type.seeds = Age2BuildingData.TOWN_CENTER
