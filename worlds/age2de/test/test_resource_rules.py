@@ -51,7 +51,7 @@ class TestContributors(unittest.TestCase):
         self.assertEqual(
             dict(contributors(Resource.FOOD)),
             {"+50 Starting Food": 50, "+100 Starting Food": 100, "+250 Starting Food": 250,
-             "Starting Villager Food": 150})
+             "Starting Villager Food": 150, "Feudal Age Food": 500})
 
 
 class TestSummation(bases.Age2RuleTestBase):

@@ -23,6 +23,7 @@ from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource, Scen
 ALL_RESOURCES = (Resource.FOOD, Resource.WOOD, Resource.GOLD, Resource.STONE)
 BLEDAS_CAMP = Age2ItemData.AP_ATTILA_1_BLEDAS_CAMP.item_name
 ATTILAS_CAMP = Age2ItemData.AP_ATTILA_1_ATTILAS_CAMP.item_name
+FEUDAL_AGE_FOOD = Age2ItemData.FEUDAL_AGE_FOOD.item_name
 START_IN_DARK_AGE = {"existing_techs": ExistingTechs.option_start_in_dark_age}
 CASTLES = (
     Age2ScenarioLocationData.GEN5_BUILD_ONE_CASTLE,
@@ -95,7 +96,8 @@ class TestReachingAnAgePaysTheAgePrice(AgePriceTestBase):
 
     def test_no_food_at_all_reaches_no_feudal(self):
         self.build_starving(easy=(Resource.FOOD,), some=(Resource.FOOD,))
-        self.assertFalse(self.can_reach(Age2AgeData.FEUDAL.location_name, self.state_without()))
+        self.assertFalse(self.can_reach(Age2AgeData.FEUDAL.location_name,
+                                        self.state_without(FEUDAL_AGE_FOOD)))
 
 
 class TestACastleStartPaysNoFeudalOrCastlePrice(AgePriceTestBase):
@@ -108,7 +110,7 @@ class TestACastleStartPaysNoFeudalOrCastlePrice(AgePriceTestBase):
     ) -> bool:
         self.build_starving(easy, some, **options)
         attila_3 = self.scenario_logic(Age2ScenarioData.AP_ATTILA_3)
-        return self.holds(site(attila_3), self.state_without())
+        return self.holds(site(attila_3), self.state_without(FEUDAL_AGE_FOOD))
 
     def answers(self, **options) -> dict[str, bool]:
         return {
@@ -201,7 +203,7 @@ class TestAUnitLocationPaysItsAgeAndItsBuilding(AgePriceTestBase):
 
     def test_an_archer_asks_the_feudal_price(self):
         self.build_starving(some=(Resource.FOOD,), **START_IN_DARK_AGE)
-        self.assertFalse(self.can_train(Age2UnitData.ARCHER, self.state_without()))
+        self.assertFalse(self.can_train(Age2UnitData.ARCHER, self.state_without(FEUDAL_AGE_FOOD)))
 
     def test_a_militia_with_no_wood_and_no_standing_barracks_is_not_trained(self):
         self.build_starving(easy=(Resource.WOOD,))

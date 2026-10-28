@@ -144,6 +144,16 @@ class ScenarioBuildingLogic:
             return self.scenario.has_building_structurally(building)
         return self.scenario.has_seeded_building(building)
 
+    def has_standing_or_seeded(self, building: Age2BuildingData) -> Rule:
+        if not self.scenario.is_seeded(building):
+            return self.scenario.starting_state.starts_with_building[building]
+        return self.scenario.has_seeded_building(building)
+
+    def can_build_unseeded(self, building: Age2BuildingData) -> Rule:
+        if self.scenario.is_seeded(building):
+            return False_()
+        return self.can_build_structurally(building)
+
     def _any_of(self, buildings: list[Age2BuildingData]) -> Rule:
         return Or(*[self.scenario.has_building_structurally(building) for building in buildings])
 

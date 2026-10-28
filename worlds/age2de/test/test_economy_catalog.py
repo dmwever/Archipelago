@@ -27,6 +27,7 @@ SHORELINE_HELD = "switch: shoreline held"
 FORTIFIED = "switch: fortified"
 ENEMY_CAMP_TAKEN = "switch: enemy camp taken"
 SCENARIO_WOOD = "switch: scenario wood"
+SOME_FOOD = "switch: some food"
 
 LUMBER_CAMP_SEED = "Starting Lumber Camp Wood"
 MULE_CART_SEED = "Starting Mule Cart Resources"
@@ -83,7 +84,7 @@ def tier(**counts: int) -> ScenarioResourceCount:
     })
 
 
-BASE_SWITCHES = (BASE, building(B.TOWN_CENTER))
+BASE_SWITCHES = (BASE, building(B.TOWN_CENTER), SOME_FOOD)
 LUMBERJACKS = (VILLAGERS, job(Job.LUMBERJACK_MALE), building(B.LUMBER_CAMP), LUMBER_CAMP_SEED)
 GOLD_MINERS = (VILLAGERS, job(Job.GOLD_MINER_MALE), building(B.MINING_CAMP))
 TRADE_COGS = (unit(U.TRADE_COG), partner(B.DOCK), building(B.DOCK), DOCK_SEED)
@@ -160,7 +161,10 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
         stack.enter_context(mock.patch.object(
             starting_state,
             "some_resource_sources",
-            {resource: False_() for resource in Resource},
+            {
+                resource: Has(SOME_FOOD) if resource is Resource.FOOD else False_()
+                for resource in Resource
+            },
         ))
         stack.enter_context(mock.patch.dict(self.SCENARIO.resources, resources, clear=True))
         stack.enter_context(mock.patch.object(self.SCENARIO, "demand", DEMAND))
@@ -248,7 +252,7 @@ class TestTradeCartsRunOnCogWood(ToyScenarioBase):
     def test_trade_carts_run_with_no_base(self):
         self.toy({})
         state = self.state(*TRADE_COGS, *TRADE_CARTS, wood=400, gold=100)
-        self.assertIn("Trade Carts", self.running(state))
+        self.assertIn("Trade Carts, started in Feudal", self.running(state))
 
 
 class TestFishingShipsNeedWoodAtScale(ToyScenarioBase):
