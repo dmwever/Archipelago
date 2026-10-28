@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-27, split out of [#32](32-feudal-prerequisite-unpaid.md) during triage
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Blocked by:** #37, [#42](42-age-climb-buildings-paid.md)
 
@@ -49,21 +49,47 @@ item, never through `has_easy_source`, `has_some_source` or `can_pay`.
 Prove each new test red at HEAD with `worlds/age2de/tools/red_check.py`, and tick each box with its
 evidence.
 
-- [ ] Attila 1 under `allies_and_enemies`, with no food route and no Feudal Age Food, cannot run
+- [x] Attila 1 under `allies_and_enemies`, with no food route and no Feudal Age Food, cannot run
       Trade Cogs. With a forage or hunt route of *some*, or with Feudal Age Food, it can.
-- [ ] A Castle-start scenario's trade and relic routes carry no age needs.
-- [ ] Under `start_in_dark_age`, the relic routes need food at scale and *some* gold.
-- [ ] Feudal Age Food is pooled exactly when #32's #24 rule says so, and is absent from a world
+      *Red before #39* (run by hand at `f61e8ef66`, see Comments): `test_feudal_age_food.py::TestAttila1CogsWaitOnFeudal::test_with_no_food_route_and_no_banked_food_no_cogs_run`.
+      *Held before* (controls): `::test_hunters_of_some_pay_the_feudal_price`,
+      `::test_foragers_of_some_pay_the_feudal_price`, `::test_feudal_age_food_pays_the_feudal_price`.
+      The test also withholds the generic starting food items, because 500 of them banked is a
+      payment too.
+- [x] A Castle-start scenario's trade and relic routes carry no age needs.
+      *Red before #39* (run by hand at `f61e8ef66`, see Comments): `test_economy_capital.py::TestACastleStartPaysNoAgeInsideTheEconomy` (both tests).
+      Attila 3 runs "…, started in Feudal" and "…, started in Castle", which carry no food.
+- [x] Under `start_in_dark_age`, the relic routes need food at scale and *some* gold.
+      *Red before #39* (run by hand at `f61e8ef66`, see Comments): `test_economy_capital.py::TestUnderStartInDarkAgeRelicsPayTheCastlePrice::test_the_advanced_relic_routes_need_food_at_scale_and_some_gold`.
+      *Held before*: `::test_nothing_started_in_the_age_can_run`.
+- [x] Feudal Age Food is pooled exactly when #32's #24 rule says so, and is absent from a world
       where every enabled scenario starts in Feudal or later.
-- [ ] An at-scale villager route at a built Mining Camp or Mill needs `wood: some`; at a standing
+      *Red before #39* (run by hand at `f61e8ef66`, see Comments): `test_feudal_age_food.py::TestFeudalAgeFoodIsPooledOnlyWhereARouteWaitsOnFeudal`
+      (Attila 1 with a partner, Attila 1 with water and partner trade off, Genghis 2 trading with
+      the Kara Khitai, Joan under `start_in_dark_age`, one per world), and
+      `TestTheFeudalPriceTakesFeudalAgeFood::test_with_no_food_route_feudal_age_food_pays_it`.
+      *Held before*: Joan (every scenario Feudal or later) and Genghis with partner trade off (no
+      water in Genghis 2) pool none.
+- [x] An at-scale villager route at a built Mining Camp or Mill needs `wood: some`; at a standing
       one it needs nothing for the camp.
-- [ ] Every route that asks for a base needs `food: some`.
-- [ ] Ageipelago: `case 1036` grants 500 food, it lints with `xs-check`, and the cross-repo tests
+      *Red before #39* (run by hand at `f61e8ef66`, see Comments): `test_economy_capital.py::TestAtScaleVillagersPayForTheirCamp` (built and standing
+      Mining Camp for gold and stone, built and standing Mill, seeded Mule Cart).
+- [x] Every route that asks for a base needs `food: some`.
+      *Red before #39* (run by hand at `f61e8ef66`, see Comments): `test_economy_capital.py::TestEveryRouteOnABaseTrainsVillagers` (Attila 1 and 4).
+- [x] Ageipelago: `case 1036` grants 500 food, it lints with `xs-check`, and the cross-repo tests
       pass with `AGEIPELAGO_PATH` set.
-- [ ] The #37 allowlist has lost every entry for the sites above, and the test is green.
-- [ ] `test/route_catalog.md` is regenerated, and the ticket lists the routes added or split.
-- [ ] The fill gate passes on the current seed set (it rolls `partner_trade`), and its row is
+      `FeudalAgeFood()` adds 500 food and `case 1036` calls it (`ProgressionItems.xs`, a7b5534).
+      `xs-check --include-dirs "." -- AP_Attila_1.xs` reports no errors. **No cross-repo test**:
+      the maintainer does not want them, so this part is checked by reading, not by a test.
+- [x] The #37 allowlist has lost every entry for the sites above, and the test is green.
+      1030 -> 876 lines, `test_never_bare.py` green. The one camp line left (The Scourge of God's
+      standing Mill) is `can_hold_a_shoreline`'s Mill, #40's item 7. See Comments.
+- [x] `test/route_catalog.md` is regenerated, and the ticket lists the routes added or split.
+      Regenerated (66 -> 103 rows, one table); `test_route_catalog.py` green; listed under Comments.
+- [x] The fill gate passes on the current seed set (it rolls `partner_trade`), and its row is
       recorded under Stored runs.
+      `replay_issue39-economy-capital.jsonl`: 100/100 ok against `replay_issue42-questions`; row
+      recorded under Stored runs. Times void, see Comments.
 
 **Out of scope**
 
@@ -105,3 +131,71 @@ Comment plans to make that method private as `_age_price` once paid `can_field` 
 economy-route resource: a Houses route pays for the House and *some* wood once, and every route
 whose producer is trained needs housing. Item 6 keeps only `food: some` for training more
 villagers. The #37 allowlist lines for "can build a House (unpaid: wood)" are #43's to delete.
+
+> *This was generated by AI while implementing, 2026-10-28.*
+
+**Rulings during implementation (maintainer):**
+
+- **Water is scenario data.** `Age2ScenarioData.has_water_access` (set in `ScenarioExclusions.py`
+  for Attila 4 and Genghis 2) replaces the starting-state field, so the pool can read it. Reading
+  water off the fish in the scan was rejected: it would pool the item where no route can use it.
+- **Capital follows the routes of *some*.** Each funding state is its own route, always listed,
+  and the leaf decides whether it can run:
+  - an age: "…, started in Feudal" (free), "…, advanced to Feudal" (`food: some`, `wood: some` for
+    the age-up buildings, the Town Center standing or paid by its items in the leaf), "…, on
+    Feudal Age Food" (the seed item, the Town Center, and age-up buildings standing or seeded);
+    Castle: "…, started in Castle" and "…, advanced to Castle" (`food: at scale`, `gold: some`,
+    `wood: some`). There is no generic 500-food bank route.
+  - a camp at scale: standing (free), built (`wood: some`), seeded (its seed item), "at a Dock"
+    (standing or seeded) and "at a built Dock" (only where the Dock is unseeded). The second Town
+    Center is its own row with no new needs; #40 pays it.
+- **The routes are a data table.** Every route, the routes of *some* included, is a literal
+  `EconomyRoute` row in the new `logic/scenarios/ScenarioRoutesLogic.py` (`scenario.routes`): no
+  route-generating helpers, loops or merged needs. `ScenarioResourceLogic` keeps what the rows
+  call.
+- **No cross-repo tests.**
+
+**What changed beside the routes:** item 1036 and `Age2AgeData.seed_item`; the pool rule in
+`ResourcePool.is_economy_route_shuffled`; the Feudal price takes the seed item
+(`ScenarioAgeLogic.can_pay_for`); the gathering predicates (`can_mine_some`, `can_hunt` and the rest)
+take the dropsite they gather at, so a camp row asks its own camp and not the plain dropsite.
+
+**Routes added or split** (`test/route_catalog.md`, one table for every scenario, 66 -> 103 rows):
+
+| Before | After |
+|---|---|
+| Trade Cogs, on banked wood, on banked gold, on banked wood and gold; Trade Carts, on banked gold; Fish Traps | each as ", started in Feudal", ", advanced to Feudal", ", on Feudal Age Food" (21 rows) |
+| Relics at a standing / built Monastery | each as ", started in Castle", ", advanced to Castle" (4 rows) |
+| Villagers gathering food with a Base | at a second Town Center, standing / built Mill, standing / built Folwark, Mule Cart, Dock, built Dock |
+| Villagers gathering gold with a Base | at a second Town Center, standing / built Mining Camp, Mule Cart, standing / built Mill, standing / built Folwark, Dock, built Dock |
+| Villagers gathering stone with a Base | at a second Town Center, standing / built Mining Camp, Mule Cart |
+| Fishermen / Oyster Gatherers at a Dock (or at a standing / built Dock with partner trade off) | "at a Dock" and "at a built Dock" in every world |
+
+**Allowlist** (`test/never_bare_allowlist.txt`): 1030 -> 876. 449 lines removed (every Feudal line
+on the trade routes and Fish Traps, every Castle line on the relic routes, the unpaid Mining Camp,
+Mill and Dock lines of the at-scale routes, and the Town Center dropsite lines in the same routes).
+295 added: the asks already listed (Castle and defences for #40, Houses for #43, plain dropsites),
+now repeated per camp row. One camp line remains, The Scourge of God's standing Mill: it comes from
+`can_hold_a_shoreline`'s unpaid Mill, #40's item 7.
+
+**Red check.** `red_check.py` builds its worktree at HEAD, and HEAD already held most of #39 through
+the maintainer's commits, so the check ran by hand in a worktree at `f61e8ef66` (the commit before
+#39's logic). `test_economy_capital.py` reads the routes through `scenario.economy` there, so it
+fails on behaviour, not on a missing attribute. 12 behavioural tests red, 7 controls green.
+
+**Fill gate.** `replay_issue39-economy-capital.jsonl`: 100/100 ok against `replay_issue42-questions`.
+Spheres 33 up, 44 down, 23 same. Replay times are void (the machine ran about 2x slower than when the
+baseline was stored); single seeds back to back against `f61e8ef66` put #39 at about 10-15% slower.
+Recorded under Stored runs.
+
+**Tests changed for the new behaviour:** the toy economy's `BASE_SWITCHES` include *some* food;
+toy states with a built camp got a wood route, or a standing camp where wood would also pay for
+walls; three `test_age_price` states withhold Feudal Age Food; the food contributors gain its 500;
+`TestEndlessFood` checks wood at scale on the four Farmers and Fish Traps rows.
+
+**Dropped:** `test_economy_rules.py::TestTheQuestionIsShared::test_the_answers_stay_within_budget`
+(maintainer: not useful). It already failed before #39 (1277 answers at `f61e8ef66` against a
+ceiling of 1200, from #42's questions); #39 added 7.
+
+**Moved to #32 for triage:** the economy groups no ticket owns (the army holding open ground, the
+plain dropsite checks, Market Trade's Feudal advance). See #32's last Comment.
