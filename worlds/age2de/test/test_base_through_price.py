@@ -32,9 +32,9 @@ class BaseThroughPriceTestBase(bases.Age2RuleTestBase):
     def holds(self, rule, state: CollectionState) -> bool:
         return rule.resolve(self.world)(state)
 
-    def paid_climb(self, scenario: Age2ScenarioData, age: Age2AgeData):
+    def paid_advance(self, scenario: Age2ScenarioData, age: Age2AgeData):
         scenario_logic = self.scenario_logic(scenario)
-        return scenario_logic.ages.can_research(age) & scenario_logic.ages.can_pay_for(age)
+        return scenario_logic.ages.can_research(age)
 
 
 class TestAttila1PaysForItsTownCenter(BaseThroughPriceTestBase):
@@ -45,7 +45,7 @@ class TestAttila1PaysForItsTownCenter(BaseThroughPriceTestBase):
 
     def test_no_feudal_climb_without_the_town_center_items(self):
         state = self.state_without(self.bledas_camp, *TOWN_CENTER_ITEMS)
-        self.assertFalse(self.holds(self.paid_climb(self.attila_1, Age2AgeData.FEUDAL), state))
+        self.assertFalse(self.holds(self.paid_advance(self.attila_1, Age2AgeData.FEUDAL), state))
 
     def test_no_forging_without_the_town_center_items(self):
         state = self.state_without(self.bledas_camp, *TOWN_CENTER_ITEMS)
@@ -55,7 +55,7 @@ class TestAttila1PaysForItsTownCenter(BaseThroughPriceTestBase):
     def test_the_town_center_items_pay_for_the_climb_and_forging(self):
         state = self.state_without(self.bledas_camp)
         forging = self.scenario_logic(self.attila_1).techs.can_research(Age2TechData.FORGING)
-        self.assertTrue(self.holds(self.paid_climb(self.attila_1, Age2AgeData.FEUDAL), state))
+        self.assertTrue(self.holds(self.paid_advance(self.attila_1, Age2AgeData.FEUDAL), state))
         self.assertTrue(self.holds(forging, state))
 
 
@@ -123,9 +123,9 @@ class TestJoan3ClimbsOnlyAcrossTheWater(BaseThroughPriceTestBase):
             Age2ItemData.AP_JOAN_3_TRANSPORT.item_name,
             Age2ItemData.UNIT_LINE_TRANSPORT_SHIP.item_name,
         )
-        feudal_climb = self.paid_climb(Age2ScenarioData.AP_JOAN_3, Age2AgeData.FEUDAL)
-        self.assertFalse(self.holds(feudal_climb, state))
-        self.assertTrue(self.holds(feudal_climb, self.state_without()))
+        feudal_advance = self.paid_advance(Age2ScenarioData.AP_JOAN_3, Age2AgeData.FEUDAL)
+        self.assertFalse(self.holds(feudal_advance, state))
+        self.assertTrue(self.holds(feudal_advance, self.state_without()))
 
 
 class TestAttila2RaisesATownCenterWithItsItems(BaseThroughPriceTestBase):

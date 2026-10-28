@@ -82,7 +82,8 @@ class UnitLogic:
             if isinstance(answer, False_):
                 continue
             rules.append(scenario.is_unlocked() & answer
-                         & scenario.economy.can_pay({food.type: food.amount}))
+                         & scenario.economy.can_pay({food.type: food.amount})
+                         & scenario.units.can_pay_for_training_building(villager))
         return Or(*rules)
 
 

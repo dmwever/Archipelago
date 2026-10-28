@@ -4,7 +4,7 @@
 
 **Reported:** 2026-10-28, split out of [#32](32-feudal-prerequisite-unpaid.md) during triage
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Blocked by:** [#47](47-town-center-dropsite-and-farm-paid.md), [#48](48-market-trade-feudal-advance.md)
 (order: all three edit the allowlist and the route catalog, and this one uses #47's paid Town Center
@@ -101,24 +101,46 @@ pays no training building, and the walk cannot see training or research building
 Prove each new test red at HEAD with `worlds/age2de/tools/red_check.py`, and tick each box with its
 evidence.
 
-- [ ] Every allowlist line of the Report's three groups is gone; the never-bare test is red at HEAD on
+- [x] Every allowlist line of the Report's three groups is gone; the never-bare test is red at HEAD on
       the trimmed allowlist and green after.
-- [ ] Any line the wider walk adds is either fixed or listed in this ticket with the ruling it needs.
-- [ ] A test of the wider walk: an army defence asked with no training-building payment is flagged
+      *497 -> 4 lines (the four left are #43's Houses).
+      `test_never_bare.py::TestNothingIsAskedBare::test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare`
+      and `::test_an_entry_whose_site_is_now_paid_fails` (the Rising's Paladin): red at HEAD, green after.*
+- [x] Any line the wider walk adds is either fixed or listed in this ticket with the ruling it needs.
+      *21 lines, all fixed: see Comments. Nothing added to the allowlist.*
+- [x] A test of the wider walk: an army defence asked with no training-building payment is flagged
       (red at HEAD).
-- [ ] A test: a "Can Defeat" rule that a Castle unit meets, in a scenario starting below Castle with
+      *`test_never_bare.py::TestTheWalkCostsTheBuildingItIsTrainedOrResearchedAt` (Militia flagged, Loom
+      flagged, Militia paying some of a Barracks not flagged): all three red at HEAD. Proved by hand in
+      a HEAD worktree with HEAD's walk and only this class added: `red_check.py` carries
+      `test_never_bare.py` back whole, and the walk's fix lives in that file.*
+- [x] A test: a "Can Defeat" rule that a Castle unit meets, in a scenario starting below Castle with
       no standing Town Center, is out of logic without the Town Center items and in logic with them.
-- [ ] A test: in a scenario starting below Castle, a Castle-age army does not hold open ground without
+      *`test_defeat_rules.py::TestACastleArmyPaysTheTownCenterItAdvancesAt`: Burgundy, A Barbarian
+      Betrothal under start_in_dark_age. "without" red at HEAD; "with" held before. See Comments for
+      why it mocks the economy and the other buildings.*
+- [x] A test: in a scenario starting below Castle, a Castle-age army does not hold open ground without
       the paid Town Center, or without *some* of a training building's cost; it does with both.
-- [ ] A test: in a scenario starting below Feudal, a wall and tower defence needs *some* food or Feudal
+      *`test_army_holds_open_ground.py::TestACastleAgeArmyPaysItsAdvanceAndItsCastle` (Tarkans at a
+      Castle): both "without" tests red at HEAD; "with both" held before.*
+- [x] A test: in a scenario starting below Feudal, a wall and tower defence needs *some* food or Feudal
       Age Food.
-- [ ] A test: a Castle-age strongpoint as a defence needs the paid Town Center where none stands.
-- [ ] `ScenarioAgeLogic.can_pay_for` no longer exists; `test_base_through_price.py` and
+      *`test_defence_pays.py::TestFeudalWallsAndTowersPayTheirAdvance`: no food red at HEAD; some food
+      and Feudal Age Food held before.*
+- [x] A test: a Castle-age strongpoint as a defence needs the paid Town Center where none stands.
+      *`test_defence_pays.py::TestACastleAgeStrongpointPaysTheTownCenter` (Krepost): no items red at
+      HEAD; with items held before.*
+- [x] `ScenarioAgeLogic.can_pay_for` no longer exists; `test_base_through_price.py` and
       `test_feudal_age_food.py` pass as described.
-- [ ] `test_defence_pays.py` still passes its acyclicity check.
-- [ ] `test/route_catalog.md` is regenerated with `tools/route_catalog.py` if any route changed.
-- [ ] The fill gate (`fuzz/bench/README.md`) passes on the current seed set, and its row is recorded
+      *`test_age_price.py::TestThePriceIsPaidOnlyByTheAdvance` red at HEAD. Both files pass; the Feudal
+      Age Food test holds Bleda's camp and the Feudal Age item so only the price is left (held before).*
+- [x] `test_defence_pays.py` still passes its acyclicity check.
+      *`TestTheUngatedRoutesReachNoGate`: held before.*
+- [x] `test/route_catalog.md` is regenerated with `tools/route_catalog.py` if any route changed.
+      *No route changed: `test_route_catalog.py` passes against the committed catalog.*
+- [x] The fill gate (`fuzz/bench/README.md`) passes on the current seed set, and its row is recorded
       under Stored runs.
+      *`replay_issue49-armies-advance.jsonl`: 100/100 ok against `replay_issue48-market-feudal`.*
 
 **Out of scope**
 
@@ -127,3 +149,39 @@ evidence.
 - The Castle's easy stone as a defence (stays as #40 built it, beside the new rule).
 - The groups in [#47](47-town-center-dropsite-and-farm-paid.md) and [#48](48-market-trade-feudal-advance.md).
 - `test/easy_source_answers.json` ([#36](36-pre-commit-test-curation.md)).
+
+## Comments
+
+**2026-10-28, implementation (agent).**
+
+The ungated advance rule went to `ScenarioAgeLogic.can_advance_in_economy(age)`, not
+`ScenarioBuildingLogic`, because the army defence in `ScenarioMilitaryLogic` asks it too.
+
+Sites the wider walk added, and how each was fixed under items 3 and 6:
+
+- **Imperial age-up stone (1 line: The Fall of Rome, Can Guard Aquileia's dock, Dromon).** The walk
+  charges an Imperial advance stone for its age-up buildings (a Castle, or two Castle-age buildings),
+  and item 3 names only wood. The ungated rule now asks *some* stone as well when it advances into
+  Imperial. That is *some* inside the economy, which is item 6's ruling, but item 3 did not name
+  stone. **The maintainer should confirm this.**
+- **Villager locations (20 lines: Own Villager (Male/Female) in ten scenarios).** These paid the
+  Villager's food but not the Town Center it is trained at. They sit outside the economy, so
+  `can_get_villager_anywhere` now asks the paid form, `can_pay_for_training_building`.
+- **The Scourge of God's Militia, inside the food route at a standing Mill (1 line).** The army
+  defence's training-building term is an Or of "standing, or buildable and *some* of its cost". The
+  walk only credited "standing or paid for", so each branch is now named "…, standing or partly paid
+  for" and the walk credits that label the same way.
+
+The Burgundy test mocks every resource question to True and stands every building except the Town
+Center. A scan of all 45 defeat rules under start_in_dark_age, at HEAD and after, found none that
+changes when the Town Center items are removed from a full pool. Each one either asks
+`can_reach(CASTLE)`, or reaches the Town Center through an economy or a training building that
+already pays the advance. Without the mocks, the test cannot go red.
+
+Five tests fail at HEAD and still fail, none of them touched by this ticket's logic. They look like
+toy states that were never given #47's paid Town Center:
+`test_army_holds_open_ground.py::TestTheShorelineTakesNoArmy::test_a_dock_the_same_map_can_pay_for_does`,
+`test_economy_catalog.py::TestNavalGuardOverTheShoreline` (both),
+`test_economy_catalog.py::TestPerSourceCamps::test_hunt_counts_with_each_of_its_camps` (the second
+Town Center subtest), and
+`test_unit_rules.py::TestARepairerNeedsSomethingToMend::test_the_builder_gives_them_something_to_mend`.

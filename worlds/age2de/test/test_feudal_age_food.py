@@ -1,5 +1,5 @@
 from . import bases
-from .test_age_price import AgePriceTestBase
+from .test_age_price import BLEDAS_CAMP, AgePriceTestBase
 from ..Options import ExistingTechs, PartnerTrade, ShuffleVillager, Unitsanity
 from ..items.Items import CATEGORY_TO_ITEMS, Age2ItemData, Resource, StartingResources
 from ..locations.Ages import Age2AgeData
@@ -71,15 +71,17 @@ class TestFeudalAgeFoodIsPooledOnlyWhereARouteWaitsOnFeudal(FeudalAgeFoodPoolBas
 
 
 class TestTheFeudalPriceTakesFeudalAgeFood(AgePriceTestBase):
+    FEUDAL_AGE = Age2AgeData.FEUDAL.item.item_name
 
     def feudal_price_holds(self, state) -> bool:
         scourge = self.scenario_logic(Age2ScenarioData.AP_ATTILA_1)
-        return self.holds(scourge.ages.can_pay_for(Age2AgeData.FEUDAL), state)
+        return self.holds(scourge.ages.can_advance(Age2AgeData.FEUDAL), state)
 
     def test_with_no_food_route_feudal_age_food_pays_it(self):
         self.build_starving(easy=(Resource.FOOD,), some=(Resource.FOOD,),
                             partner_trade=PartnerTrade.option_allies_and_enemies)
-        self.assertTrue(self.feudal_price_holds(self.state_with(FEUDAL_AGE_FOOD)))
+        state = self.state_with(FEUDAL_AGE_FOOD, BLEDAS_CAMP, self.FEUDAL_AGE)
+        self.assertTrue(self.feudal_price_holds(state))
 
     def test_with_no_food_route_and_no_feudal_age_food_nothing_pays_it(self):
         self.build_starving(easy=(Resource.FOOD,), some=(Resource.FOOD,),

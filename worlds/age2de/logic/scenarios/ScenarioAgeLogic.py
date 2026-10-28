@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import And, False_, Has, Rule, True_
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -46,18 +46,33 @@ class ScenarioAgeLogic:
         ages = self.world.pool.ages
         return Age2AgeData.DARK if ages.dark_start else ages.starts_in(self.scenario.scenario)
 
-    def can_pay_for(self, age: Age2AgeData) -> Rule:
-        """Can the scenario pay for the age. Returns True if starting after it."""
-        if self.scenario.scenario.fixed_force:
-            return False_()
+    def can_advance_in_economy(self, age: Age2AgeData) -> Rule:
         if age <= self.start_age:
             return True_()
         economy = self.scenario.economy
-        if age is Age2AgeData.FEUDAL:
-            return economy.can_pay_some([Resource.FOOD]) | self.has_seed_item(age)
-        if age is Age2AgeData.CASTLE:
-            return economy.can_sustain([Resource.FOOD]) & economy.can_pay_some([Resource.GOLD])
-        return economy.can_pay(age.cost)
+        rule = (
+            economy.can_pay_some([Resource.WOOD])
+            & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
+        )
+        for advanced in Age2AgeData:
+            if not self.start_age < advanced <= age:
+                continue
+            if advanced is Age2AgeData.FEUDAL:
+                rule = rule & (economy.can_pay_some([Resource.FOOD]) | self.has_seed_item(advanced))
+            elif advanced is Age2AgeData.CASTLE:
+                rule = (
+                    rule
+                    & economy.has_ungated_easy_source(Resource.FOOD)
+                    & economy.can_pay_some([Resource.GOLD])
+                )
+            else:
+                costs = [
+                    resource for resource, amount in advanced.cost.items()
+                        if amount > 0
+                ]
+                price = And(*[economy.has_ungated_easy_source(resource) for resource in costs])
+                rule = rule & economy.can_pay_some([Resource.STONE]) & price
+        return rule
 
     def has_started_in(self, age: Age2AgeData) -> Rule:
         if self.scenario.scenario.fixed_force or age > self.start_age:

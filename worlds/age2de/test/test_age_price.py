@@ -18,6 +18,7 @@ from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from ..logic.ScenarioLogic import ScenarioLogic
+from ..logic.scenarios.ScenarioAgeLogic import ScenarioAgeLogic
 from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource, ScenarioHasSomeResource
 
 ALL_RESOURCES = (Resource.FOOD, Resource.WOOD, Resource.GOLD, Resource.STONE)
@@ -98,6 +99,11 @@ class TestReachingAnAgePaysTheAgePrice(AgePriceTestBase):
         self.build_starving(easy=(Resource.FOOD,), some=(Resource.FOOD,))
         self.assertFalse(self.can_reach(Age2AgeData.FEUDAL.location_name,
                                         self.state_without(FEUDAL_AGE_FOOD)))
+
+
+class TestThePriceIsPaidOnlyByTheAdvance(unittest.TestCase):
+    def test_the_age_logic_has_no_price_of_its_own(self):
+        self.assertFalse(hasattr(ScenarioAgeLogic, "can_pay_for"))
 
 
 class TestACastleStartPaysNoFeudalOrCastlePrice(AgePriceTestBase):

@@ -58,8 +58,14 @@ class ScenarioMilitaryLogic:
             rule = self.scenario.units.can_field_structurally(line)
             if isinstance(rule, False_):
                 continue
-            rules.append(rule & self.scenario.economy.can_pay_some(
-                self.scenario.units.resources_to_train(line)))
+            first_tier = self.scenario.units.starting_unit(line)[0]
+            wage = self.scenario.units.resources_to_train(line)
+            rules.append(
+                rule
+                & self.scenario.economy.can_pay_some(wage)
+                & self.scenario.ages.can_advance_in_economy(first_tier.age)
+                & self.scenario.units.can_pay_some_for_training_building(first_tier)
+            )
         if not rules:
             return False_()
         return Or(*rules)

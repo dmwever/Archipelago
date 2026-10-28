@@ -1,12 +1,19 @@
 """Defeat rules: "can P1 defeat this player", asked of a scenario's logic (ADR 0001)."""
 
+from unittest import mock
+
+from BaseClasses import CollectionState
+from rule_builder.rules import True_
+
 from . import bases
-from ..Options import PartnerTrade
+from ..Options import ExistingTechs, PartnerTrade
 from ..items.Items import Age2ItemData
+from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Players import Age2PlayerData, Side
 from ..locations.connections.ScenarioPlayers import SCENARIO_TO_PLAYERS
 from ..logic.custom_logic.Named import Named
+from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource, ScenarioHasSomeResource
 
 class TestDefeatRules(bases.Age2RuleTestBase):
     campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
@@ -190,3 +197,40 @@ class TestACityBehindAnotherWaitsForIt(bases.Age2RuleTestBase):
                                    Age2PlayerData.GEN3_SONG, everything))
         self.assertTrue(self.holds(Age2ScenarioData.AP_GENGHIS_2,
                                    Age2PlayerData.GEN2_KUSHLUK, everything))
+
+
+class TestACastleArmyPaysTheTownCenterItAdvancesAt(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    TOWN_CENTER_ITEMS = (
+        Age2ItemData.TOWN_CENTER_WOOD.item_name,
+        Age2ItemData.TOWN_CENTER_STONE.item_name,
+    )
+
+    def defeats_burgundy(self, state: CollectionState) -> bool:
+        logic = self.world.rules.logic
+        attila_4 = logic.for_scenario(Age2ScenarioData.AP_ATTILA_4)
+        standing = {
+            building: True_()
+            for building in Age2BuildingData
+                if building is not Age2BuildingData.TOWN_CENTER
+        }
+        self.addCleanup(logic.scenario_answers.clear)
+        with (
+            mock.patch.object(ScenarioHasEasyResource, "answer", lambda asked, scenario: True_()),
+            mock.patch.object(ScenarioHasSomeResource, "answer", lambda asked, scenario: True_()),
+            mock.patch.dict(attila_4.starting_state.starts_with_building, standing),
+        ):
+            logic.scenario_answers.clear()
+            burgundy = attila_4.player_logic.defeats(Age2PlayerData.ATT4_BURGUNDY)
+            defeats = burgundy.resolve(self.world)
+        return bool(defeats(state))
+
+    def test_without_the_town_center_items_burgundy_stands(self):
+        self.build(existing_techs=ExistingTechs.option_start_in_dark_age)
+        self.assertFalse(self.defeats_burgundy(self.state_without(*self.TOWN_CENTER_ITEMS)))
+
+    def test_with_them_burgundy_falls(self):
+        self.build(existing_techs=ExistingTechs.option_start_in_dark_age)
+        self.assertTrue(self.defeats_burgundy(self.state_without()))

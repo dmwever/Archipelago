@@ -8,13 +8,21 @@ toy can field, read exactly as the navy's lines are.
 import unittest
 
 from . import bases
+from ..Options import ExistingTechs
 from ..items.Items import Resource
 from ..locations.Buildings import Age2BuildingData as B
 from ..locations.connections.ScenarioResources import Tier
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData as Line
 from ..locations.VillagerJobs import Age2VillagerJobData as Job
-from .test_defence_pays import DefenceToyBase
+from .test_defence_pays import (
+    BASE_TOWN_CENTER,
+    CASTLE_ADVANCE_WORKERS,
+    FARMERS,
+    OPEN_GOLD_MAP,
+    STONE_OF_SOME,
+    DefenceToyBase,
+)
 from .test_economy_catalog import (
     BASE,
     BASE_SWITCHES,
@@ -41,6 +49,7 @@ SOME_FOOD = (VILLAGERS, job(Job.HUNTER_MALE))
 A_LITTLE_HUNT = tier(hunt_count=600)
 """Under `DEMAND.food`, so the food route of *some* it feeds never becomes an easy source and
 the army's wage is the only thing it pays."""
+TRAINING_GROUNDS = (standing(B.BARRACKS), standing(B.ARCHERY_RANGE), standing(B.STABLE))
 
 
 class ArmyToyBase(DefenceToyBase):
@@ -56,8 +65,8 @@ class TestAnArmyHoldsOpenGround(ArmyToyBase):
     works at scale, where #23 asked for a wall, a tower or a strongpoint."""
 
     MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), standing(B.MINING_CAMP),
-              *SOME_FOOD)
+    MINERS = (*TRAINING_GROUNDS, *BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE),
+              standing(B.MINING_CAMP), *SOME_FOOD)
 
     def test_open_gold_at_scale_holds_on_the_army_with_nothing_built(self):
         self.toy(self.MAP)
@@ -66,7 +75,8 @@ class TestAnArmyHoldsOpenGround(ArmyToyBase):
 
     def test_an_army_it_cannot_pay_for_holds_nothing(self):
         self.toy({Tier.OPEN: tier(gold_count=2000)})
-        no_wood = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), standing(B.MINING_CAMP))
+        no_wood = (*TRAINING_GROUNDS, *BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE),
+                   standing(B.MINING_CAMP))
         self.assertTrue(self.some(Resource.GOLD, self.state(*no_wood)))
         self.assertFalse(self.easy(Resource.GOLD, self.state(*no_wood, army(ARCHERS))))
         self.assertTrue(self.easy(Resource.GOLD, self.state(*no_wood, army(SCOUTS))))
@@ -77,8 +87,8 @@ class TestTheArmyHoldsEveryResourceOutThere(ArmyToyBase):
     holds the stone it costs nothing of as well as the gold it is paid in."""
 
     MAP = {Tier.OPEN: tier(gold_count=2000, stone_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), job(Job.STONE_MINER_MALE),
-              standing(B.MINING_CAMP), *SOME_FOOD)
+    MINERS = (*TRAINING_GROUNDS, *BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE),
+              job(Job.STONE_MINER_MALE), standing(B.MINING_CAMP), *SOME_FOOD)
 
     def test_one_army_opens_the_stone_as_well_as_the_gold(self):
         self.toy(self.MAP)
@@ -93,8 +103,8 @@ class TestTheArmyPaysPerLine(ArmyToyBase):
     sets that cost - the same ruling `TestTheNavyPaysPerLine` holds the warships to."""
 
     MAP = {Tier.OPEN: tier(stone_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    QUARRY = (*BASE_SWITCHES, VILLAGERS, job(Job.STONE_MINER_MALE), standing(B.MINING_CAMP),
-              *SOME_FOOD)
+    QUARRY = (*TRAINING_GROUNDS, *BASE_SWITCHES, VILLAGERS, job(Job.STONE_MINER_MALE),
+              standing(B.MINING_CAMP), *SOME_FOOD)
 
     def test_a_line_costing_food_and_gold_asks_for_both(self):
         self.toy(self.MAP)
@@ -123,8 +133,8 @@ class TestAGrantedArmyHoldsNothing(ArmyToyBase):
     scenario hands over are its own plan, not a garrison."""
 
     MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), standing(B.MINING_CAMP),
-              *SOME_FOOD)
+    MINERS = (*TRAINING_GROUNDS, *BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE),
+              standing(B.MINING_CAMP), *SOME_FOOD)
     HANDED_OVER = tuple(granted(soldier) for line in (SCOUTS, FOOTMEN) for soldier in line.units)
     """Every tier of both lines, standing there and P1's - and none of them trained."""
 
@@ -145,7 +155,7 @@ class TestTheBaseIsStillAsked(ArmyToyBase):
 
     def test_an_army_does_not_stand_in_for_the_base(self):
         self.toy(self.MAP)
-        baseless = (building(B.TOWN_CENTER), VILLAGERS, job(Job.GOLD_MINER_MALE),
+        baseless = (*TRAINING_GROUNDS, building(B.TOWN_CENTER), VILLAGERS, job(Job.GOLD_MINER_MALE),
                     standing(B.MINING_CAMP), *SOME_FOOD, army(SCOUTS))
         self.assertNotIn(BASE, baseless)
         self.assertFalse(self.easy(Resource.GOLD, self.state(*baseless)))
@@ -156,7 +166,8 @@ class TestTheShorelineTakesNoArmy(ArmyToyBase):
     """Open ground only. A shoreline is held by a building or by the navy, as before #29."""
 
     MAP = {Tier.OPEN: tier(shore_fish_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    FISHERMEN = (*BASE_SWITCHES, VILLAGERS, job(Job.FISHERMAN_MALE), building(B.MILL), *SOME_FOOD)
+    FISHERMEN = (*TRAINING_GROUNDS, *BASE_SWITCHES, VILLAGERS, job(Job.FISHERMAN_MALE),
+                 building(B.MILL), *SOME_FOOD)
 
     def test_soldiers_on_the_beach_hold_nothing(self):
         self.toy(self.MAP)
@@ -176,7 +187,7 @@ class TestTheAfloatGateIgnoresALandArmy(ArmyToyBase):
     """Wood alone, so this map needs no gold to put warships out."""
     WARSHIPS = navy(Line.FIRE_GALLEY_LINE)
     MAP = {Tier.OPEN: tier(deep_fish_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    BOATS = (*BASE_SWITCHES, *FISHING_SHIPS, SCENARIO_WOOD, *SOME_FOOD)
+    BOATS = (*TRAINING_GROUNDS, *BASE_SWITCHES, *FISHING_SHIPS, SCENARIO_WOOD, *SOME_FOOD)
 
     def test_an_army_does_not_escort_the_fishing_ships(self):
         self.toy(self.MAP)
@@ -185,6 +196,31 @@ class TestTheAfloatGateIgnoresALandArmy(ArmyToyBase):
     def test_warships_do(self):
         self.toy(self.MAP)
         self.assertTrue(self.easy(Resource.FOOD, self.state(*self.BOATS, self.WARSHIPS)))
+
+
+class TestACastleAgeArmyPaysItsAdvanceAndItsCastle(ArmyToyBase):
+    ARMY_LINES = {Line.TARKAN_LINE: {Resource.FOOD, Resource.GOLD}}
+    TARKANS = army(Line.TARKAN_LINE)
+    PAID = (
+        *CASTLE_ADVANCE_WORKERS,
+        *FARMERS,
+        building(B.CASTLE),
+        TARKANS,
+    )
+
+    def holds(self, *switches: str) -> bool:
+        self.toy(OPEN_GOLD_MAP, existing_techs=ExistingTechs.option_start_in_dark_age)
+        held = self.scenario.military.can_hold_open_ground().resolve(self.world)
+        return bool(held(self.state(*switches)))
+
+    def test_with_the_town_center_and_some_stone_the_army_holds(self):
+        self.assertTrue(self.holds(*self.PAID))
+
+    def test_without_the_paid_town_center_it_does_not(self):
+        self.assertFalse(self.holds(*[name for name in self.PAID if name not in BASE_TOWN_CENTER]))
+
+    def test_without_some_of_the_castles_stone_it_does_not(self):
+        self.assertFalse(self.holds(*[name for name in self.PAID if name != STONE_OF_SOME]))
 
 
 class TestExplainShowsTheArmyBesideTheBuildings(bases.Age2RuleTestBase):

@@ -15,6 +15,7 @@ from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
+from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..logic.Logic import Logic
 from ..logic.custom_logic.AgeUpRequirement import AGE_UP_BUILDINGS, AgeUpRequirement
@@ -58,6 +59,7 @@ RESOURCE_QUESTIONS = {ScenarioHasEasyResource.__name__, ScenarioHasSomeResource.
 TOWN_CENTER = frozenset({Resource.WOOD, Resource.STONE})
 STANDING_OR_BUILDABLE = ", standing or buildable"
 STANDING_OR_PAID_FOR = ", standing or paid for"
+STANDING_OR_PARTLY_PAID_FOR = ", standing or partly paid for"
 SEED_ITEMS = {
     item.item_name: item.type.type
     for item in Age2ItemData
@@ -150,7 +152,7 @@ class BareAsks:
             return frozenset().union(*[self.pays_for(child) for child in rule.children])
         unasked_question = isinstance(rule, ScenarioQuestion.Resolved) and not question
         if isinstance(rule, Named.Resolved) or unasked_question:
-            if rule.description.endswith(STANDING_OR_PAID_FOR):
+            if rule.description.endswith((STANDING_OR_PAID_FOR, STANDING_OR_PARTLY_PAID_FOR)):
                 buildable = self.buildable_in(rule.answer)
                 if buildable is not None:
                     return self.pays_for(rule.answer) | own_cost(self.asks(buildable)[1])
@@ -245,7 +247,25 @@ def cost_of(scenario: ScenarioLogic, subject: object) -> frozenset[Resource]:
         return frozenset()
     if isinstance(subject, Age2AgeData):
         return advance_cost(scenario, subject)
-    return own_cost(subject) | advance_cost(scenario, subject.age)
+    cost = own_cost(subject) | advance_cost(scenario, subject.age)
+    if isinstance(subject, Age2UnitData):
+        return cost | building_cost(scenario, subject.logic_buildings)
+    if isinstance(subject, Age2TechData):
+        return cost | building_cost(scenario, subject.buildings)
+    return cost
+
+def building_cost(
+    scenario: ScenarioLogic,
+    buildings: Iterable[Age2BuildingData],
+) -> frozenset[Resource]:
+    theirs = [
+        building for building in buildings
+            if scenario.civilization.can_build(building)
+    ]
+    if not theirs or any(is_standing(scenario, building) for building in theirs):
+        return frozenset()
+    cheapest = min(theirs, key=lambda building: sum(building.cost.values()))
+    return own_cost(cheapest)
 
 def own_cost(
     subject: Age2AgeData | Age2BuildingData | Age2TechData | Age2UnitData,
@@ -320,8 +340,10 @@ class TestNothingIsAskedBare(unittest.TestCase):
 
     maxDiff = None
 
-    COMPLETE_THE_RISING = "Complete The Rising"
-    RISING_PALADIN = f"{COMPLETE_THE_RISING}: The Rising can train a Paladin (unpaid: stone)"
+    RISING_PALADIN = "Complete The Rising: The Rising can train a Paladin (unpaid: stone)"
+    RISING_HOUSE = (
+        "The Rising runs Lumberjacks with a Base: The Rising can build a House (unpaid: wood)"
+    )
 
     def test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare(self):
         unlisted, stale = unlisted_and_stale(allowlist(), findings())
@@ -348,26 +370,17 @@ class TestNothingIsAskedBare(unittest.TestCase):
 
     def test_a_still_bare_site_taken_off_the_allowlist_fails(self):
         unlisted, stale = unlisted_and_stale(
-            allowlist() - {self.RISING_PALADIN},
+            allowlist() - {self.RISING_HOUSE},
             findings(),
         )
-        self.assertEqual(([self.RISING_PALADIN], []), (unlisted, stale))
+        self.assertEqual(([self.RISING_HOUSE], []), (unlisted, stale))
 
     def test_an_entry_whose_site_is_now_paid_fails(self):
-        with contextlib.ExitStack() as paid:
-            for existing_techs in EXISTING_TECHS:
-                world = maximal_world(existing_techs)
-                location = world.get_location(self.COMPLETE_THE_RISING)
-                rising = world.rules.logic.for_scenario(Age2ScenarioData.AP_JOAN_4)
-                stone = rising.economy.has_easy_source(Resource.STONE)
-                paid.enter_context(self.rule_added(location, stone.resolve(world), world))
-            unlisted, stale = unlisted_and_stale(allowlist(), findings())
-        trains = sorted(
-            entry for entry in allowlist()
-                if entry.startswith(f"{self.COMPLETE_THE_RISING}: ")
+        unlisted, stale = unlisted_and_stale(
+            allowlist() | {self.RISING_PALADIN},
+            findings(),
         )
-        self.assertIn(self.RISING_PALADIN, trains)
-        self.assertEqual(([], trains), (unlisted, stale))
+        self.assertEqual(([], [self.RISING_PALADIN]), (unlisted, stale))
 
     def test_no_entry_is_at_a_reach_build_tech_or_unit_location(self):
         located = {
@@ -430,6 +443,39 @@ class TestTheWalkCountsTheAdvance(unittest.TestCase):
             found = bare_asks_at(world, location)
         asked = {description.split(" (unpaid")[0] for description in found}
         self.assertNotIn("The Walls of Constantinople has reached the Castle Age", asked)
+
+class TestTheWalkCostsTheBuildingItIsTrainedOrResearchedAt(unittest.TestCase):
+    MILITIA = "The Scourge of God can train a Militia"
+
+    def bare_asks_in(self, rule: Rule) -> set[str]:
+        world = maximal_world(ExistingTechs.option_vanilla)
+        resolved = rule.resolve(world)
+        walk = BareAsks(subjects(world.rules.logic))
+        return set(walk.bare_asks_under(resolved, frozenset()))
+
+    def scourge(self) -> ScenarioLogic:
+        world = maximal_world(ExistingTechs.option_vanilla)
+        return world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+
+    def army_defence(self) -> Rule:
+        scourge = self.scourge()
+        return (scourge.units.can_field_structurally(Age2UnitLineData.MILITIA_LINE)
+                & scourge.economy.can_pay_some([Resource.FOOD, Resource.GOLD]))
+
+    def test_an_army_defence_paying_no_training_building_is_flagged(self):
+        self.assertEqual({f"{self.MILITIA} (unpaid: wood)"}, self.bare_asks_in(self.army_defence()))
+
+    def test_the_same_defence_paying_some_of_a_barracks_is_not(self):
+        paid = (self.army_defence()
+                & self.scourge().units.can_pay_some_for_training_building(Age2UnitData.MILITIA))
+        self.assertEqual(set(), self.bare_asks_in(paid))
+
+    def test_a_tech_paying_no_research_building_is_flagged(self):
+        scourge = self.scourge()
+        loom = (scourge.techs.can_research_structurally(Age2TechData.LOOM)
+                & scourge.economy.can_pay_some([Resource.GOLD]))
+        self.assertEqual({"The Scourge of God can research Loom (unpaid: stone, wood)"},
+                         self.bare_asks_in(loom))
 
 if __name__ == "__main__":
     unittest.main()

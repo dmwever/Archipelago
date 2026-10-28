@@ -263,11 +263,19 @@ class ScenarioCanAdvance(ScenarioQuestion, game="Age Of Empires II: Definitive E
         before = Age2AgeData(self.age.value - 1)
         return (
             scenario.logic.ages.has_age(self.age)
-            & scenario.ages.can_pay_for(self.age)
+            & self._price(scenario)
             & scenario.has_building(Age2BuildingData.TOWN_CENTER)
             & age_up
             & scenario.ages.can_advance(before)
         )
+
+    def _price(self, scenario: 'ScenarioLogic') -> Rule:
+        economy = scenario.economy
+        if self.age is Age2AgeData.FEUDAL:
+            return economy.can_pay_some([Resource.FOOD]) | scenario.ages.has_seed_item(self.age)
+        if self.age is Age2AgeData.CASTLE:
+            return economy.can_sustain([Resource.FOOD]) & economy.can_pay_some([Resource.GOLD])
+        return economy.can_pay(self.age.cost)
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:

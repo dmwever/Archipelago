@@ -9,6 +9,7 @@ from ...Options import MonksCanCounter, SiegeCanCounter
 from ...items.Items import Resource
 
 from ...locations.Ages import Age2AgeData
+from ...locations.Buildings import Age2BuildingData
 from ...locations.EscortUnits import Age2EscortUnitData
 from ...locations.Heroes import Age2HeroData
 from ...locations.UnitLines import Age2UnitLineData
@@ -25,7 +26,7 @@ from ...locations.connections.UnitRoles import (
     UnitRole,
 )
 from ...locations.connections.VillagerJobResources import scenario_has_job_resource
-from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
+from ..custom_logic.ScenarioQuestions import ScenarioCanTrain, a_or_an
 
 MONKS_CAN_COUNTER = OptionFilter(MonksCanCounter, MonksCanCounter.option_true)
 SIEGE_CAN_COUNTER = OptionFilter(SiegeCanCounter, SiegeCanCounter.option_true)
@@ -104,7 +105,7 @@ class ScenarioUnitLogic:
         if not paid:
             return Or(*[self.can_train_structurally(unit) for unit in tiers])
         trained = [
-            self.can_train_structurally(unit) & self.scenario.ages.can_pay_for(unit.age)
+            self.can_train_structurally(unit) & self.scenario.ages.can_advance(unit.age)
             & self.can_pay_for_training_building(unit)
             for unit in tiers
         ]
@@ -137,6 +138,23 @@ class ScenarioUnitLogic:
         return Or(*[self.scenario.has_building(building)
                     for building in unit.logic_buildings
                     if self.scenario.civilization.can_build(building)])
+
+    def can_pay_some_for_training_building(self, unit: Age2UnitData) -> Rule:
+        return Or(*[
+            self._has_building_partly_paid_for(building) for building in unit.logic_buildings
+                if self.scenario.civilization.can_build(building)
+        ])
+
+    def _has_building_partly_paid_for(self, building: Age2BuildingData) -> Rule:
+        partly_paid = (
+            self.scenario.buildings.can_build_structurally(building)
+            & self.scenario.economy.can_pay_some(building.cost)
+        )
+        return self.scenario.named(
+            f"has {a_or_an(building.building_name)} {building.building_name}, "
+            "standing or partly paid for",
+            self.scenario.starting_state.starts_with_building[building] | partly_paid,
+        )
 
     def can_counter(self, target: Age2UnitLineData, age: Age2AgeData) -> Rule:
         return self._counter(target, age, paid=True)

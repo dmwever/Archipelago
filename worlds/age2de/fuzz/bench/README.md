@@ -75,6 +75,7 @@ All on the current set, `../fuzz_output_3b3762449/yamls/`.
 | `replay_issue40-second-tc.jsonl` | #40, on `b53b749ec` (uncommitted) | 100/100 ok - #40's fill gate, against `replay_issue39-economy-capital`. Spheres 31 up, 38 down, 31 same; sphere 1 17 up, 14 down, 69 same (biggest drop 96525717, 13 -> 4). **Times void**: the baseline's own times are void (see its row), so 33.1s -> 10.6s median says nothing about #40. |
 | `replay_issue47-town-center-paid.jsonl` | #47, on `203cb8a80` (uncommitted) | 100/100 ok - #47's fill gate, against `replay_issue40-second-tc`. Spheres 5 up, 1 down, 94 same; sphere 1 1 up, 6 down, 93 same (biggest drop 79223273, 8 -> 6). Times void: the run shared the laptop with the pre-commit test subset and two review agents. |
 | `replay_issue48-market-feudal.jsonl` | #48, on `148d15caf` (uncommitted) | 100/100 ok - #48's fill gate, against `replay_issue47-town-center-paid`. Spheres 2 up, 3 down, 95 same; sphere 1 identical on all 100 seeds. Times void: the run shared the laptop with test runs, `red_check.py` and two review agents. |
+| `replay_issue49-armies-advance.jsonl` | #49, on `8aaea4c1b` (uncommitted) | 100/100 ok - #49's fill gate, against `replay_issue48-market-feudal`. Spheres 5 up, 3 down, 92 same; sphere 1 1 up, 2 down, 97 same (biggest drop 476945196, 8 -> 6). Times void: the run shared the laptop with the pre-commit test subset and touched test files. |
 
 ## Retired sets
 

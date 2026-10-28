@@ -7,6 +7,9 @@ test, so only the leaves beneath them are switched.
 """
 import inspect
 import unittest
+from unittest import mock
+
+from rule_builder.rules import False_
 
 from . import bases
 from ..Options import ExistingTechs, MarketTrade
@@ -171,37 +174,90 @@ class TestTheSecondTownCenterPays(DefenceToyBase):
                     self.assertEqual(expected, self.easy(resource, state))
 
 
+OPEN_GOLD_MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: tier(stone_count=100)}
+FARMERS = (building(B.FARM), job(Job.FARMER_MALE))
+CASTLE_ADVANCE_WORKERS = (
+    *BASE_SWITCHES,
+    *BASE_TOWN_CENTER,
+    *LUMBERJACKS,
+    *TestOpenGroundIsFreeOfSomeAndHeldAtScale.MINERS,
+    STONE_OF_SOME,
+)
+
+
 class TestASecondTownCenterDefendsOnUngatedFarmers(DefenceToyBase):
     """#32 item 4: as a defence, a second Town Center pays the Castle price out of the ungated
     routes, so the Castle's food at scale comes from Farmers, whose wood at scale comes from the
     base's lumberjacks. No trade and no market on this map."""
 
-    MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: tier(stone_count=100)}
-    FARMERS = (building(B.FARM), job(Job.FARMER_MALE))
-    WORKERS = (
-        *BASE_SWITCHES,
-        *LUMBERJACKS,
-        *TestOpenGroundIsFreeOfSomeAndHeldAtScale.MINERS,
-        STONE_OF_SOME,
-    )
-
     def toy_started_in_dark_age(self) -> None:
-        self.toy(self.MAP, existing_techs=ExistingTechs.option_start_in_dark_age)
+        self.toy(OPEN_GOLD_MAP, existing_techs=ExistingTechs.option_start_in_dark_age)
 
     def test_ungated_farmers_hold_open_gold_with_a_second_town_center(self):
         self.toy_started_in_dark_age()
-        self.assertTrue(self.easy(Resource.GOLD, self.state(*self.WORKERS, *self.FARMERS)))
+        self.assertTrue(self.easy(Resource.GOLD, self.state(*CASTLE_ADVANCE_WORKERS, *FARMERS)))
 
     def test_without_the_farmers_the_castle_age_is_unpaid(self):
         self.toy_started_in_dark_age()
-        self.assertFalse(self.easy(Resource.GOLD, self.state(*self.WORKERS)))
+        self.assertFalse(self.easy(Resource.GOLD, self.state(*CASTLE_ADVANCE_WORKERS)))
 
     def test_the_farmers_wood_is_the_lumberjacks_with_a_base(self):
         self.toy_started_in_dark_age()
         ungated = self.scenario.routes.ungated_economy_routes().resolve(self.world)
-        state = self.state(*self.WORKERS, *self.FARMERS)
+        state = self.state(*CASTLE_ADVANCE_WORKERS, *FARMERS)
         running = {ungated.routes[index].name for index in ungated.running(state)}
         self.assertLessEqual({"Farmers", "Lumberjacks with a Base"}, running)
+
+
+class TestFeudalWallsAndTowersPayTheirAdvance(DefenceToyBase):
+    MAP = {Tier.BASE: tier(stone_count=100)}
+    BUILT = (
+        standing(B.TOWN_CENTER),
+        VILLAGERS,
+        WOOD_OF_SOME,
+        STONE_OF_SOME,
+        building(B.PALISADE_WALL),
+        building(B.WATCH_TOWER),
+    )
+
+    def fortified(self, *switches: str) -> bool:
+        self.toy(self.MAP, existing_techs=ExistingTechs.option_start_in_dark_age)
+        fortified = self.scenario.buildings.is_fortified().resolve(self.world)
+        return bool(fortified(self.state(*switches)))
+
+    def test_with_no_food_the_wall_and_tower_hold_nothing(self):
+        self.assertFalse(self.fortified(*self.BUILT))
+
+    def test_some_food_pays_their_advance(self):
+        self.assertTrue(self.fortified(*self.BUILT, SOME_FOOD))
+
+    def test_feudal_age_food_pays_their_advance(self):
+        self.assertTrue(self.fortified(*self.BUILT, Age2ItemData.FEUDAL_AGE_FOOD.item_name))
+
+
+class TestACastleAgeStrongpointPaysTheTownCenter(DefenceToyBase):
+    WORKERS = (
+        *CASTLE_ADVANCE_WORKERS,
+        *FARMERS,
+        building(B.KREPOST),
+    )
+
+    def fortified(self, *switches: str) -> bool:
+        self.toy(OPEN_GOLD_MAP, existing_techs=ExistingTechs.option_start_in_dark_age)
+        with mock.patch.object(
+            self.scenario.buildings,
+            "can_build_tc_as_defence",
+            return_value=False_(),
+        ):
+            fortified = self.scenario.buildings.is_fortified().resolve(self.world)
+        return bool(fortified(self.state(*switches)))
+
+    def test_no_standing_town_center_and_no_items_is_no_defence(self):
+        workers = [name for name in self.WORKERS if name not in BASE_TOWN_CENTER]
+        self.assertFalse(self.fortified(*workers))
+
+    def test_the_town_center_items_pay_for_it(self):
+        self.assertTrue(self.fortified(*self.WORKERS))
 
 
 class TestHoldingAShorelineWithAMillPaysForIt(DefenceToyBase):
