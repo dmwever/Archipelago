@@ -36,6 +36,18 @@ leaves to Gaia stay Gaia's until it arrives, cannot be captured, and are never c
 **player**'s.
 _Avoid_: grant, gift, reinforcement, granted (in this sense)
 
+**Mercenary**:
+An item that, inside its own scenario, is a **scenario item**: it hands P1 units already in the
+scenario, and those units are cavemanified like any other P1 unit (the villagers excepted). This
+is the only sense in which a mercenary counts in logic.
+_Avoid_: muster (that is the pavilion spawn, below)
+
+**Muster**:
+The one-time spawn a mercenary's camp at the pavilion produces. It is never counted in logic, and
+the units it spawns are kept from being cavemanified.
+_Avoid_: mercenary (when the spawn is meant), mercenary units (when counting what logic can rely
+on)
+
 ### Economy
 
 **Villager job**:
@@ -234,6 +246,13 @@ _Avoid_: knockdown, downgrade
 The unit a cavemanified unit was before caveman replaced it. Items for its line raise it back up
 to its original unit, never past it.
 _Avoid_: ceiling
+
+**Restore**:
+Bring a cavemanified unit back to its **original unit**: its line's items have arrived and, when
+the seed shuffles it, so has the upgrade tech that makes it. A unit the scenario hands P1 counts
+toward a rule under caveman only once it can be restored.
+_Avoid_: un-caveman, recover, survive (the code's `survives_caveman` is "caveman is off, or it can
+be restored")
 
 **Caveman-exempt**:
 A unit row cavemanify leaves alone. Two code paths set it, and only one of them is named for it:

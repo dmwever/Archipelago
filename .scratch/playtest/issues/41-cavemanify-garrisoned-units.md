@@ -5,7 +5,7 @@
 **Reported:** 2026-10-27, split out of [#10](10-caveman-sweep-delayed.md) from
 [#35](35-unit-id-lookup-spike.md)'s follow-up
 
-**Status:** needs-triage
+**Status:** wontfix
 
 **Blocked by:** none
 
@@ -51,3 +51,7 @@ above, it puts the replacement into that container with
   Town Center. The maintainer ruled eviction out of #10. Whether this ticket covers it is undecided.
 
 ## Comments
+
+### Dropped (2026-10-28)
+
+The maintainer dropped the ticket while it was still in triage. The fix is not built.

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-27, raised by the maintainer while triaging [#32](32-feudal-prerequisite-unpaid.md)
 
-**Status:** needs-triage
+**Status:** wontfix
 
 **Related:** [#32](32-feudal-prerequisite-unpaid.md), [#22](22-economy-route-catalog.md)
 
@@ -52,3 +52,9 @@ form, and `TestEveryScenarioCanLive` catches a scenario that loses a resource en
 - The easy-source snapshot: keep it as a refactor-only check (run when a change claims no
   behaviour change, and recaptured only then), retire it, or keep it as it is?
 - Fix the hook's "about a minute" comment as part of this ticket.
+
+## Comments
+
+### Dropped (2026-10-28)
+
+The maintainer dropped the ticket while it was still in triage.
