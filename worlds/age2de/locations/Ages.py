@@ -1,4 +1,8 @@
 import enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..items.Items import Age2ItemData
 
 class Age2AgeData(enum.IntEnum):
     def __new__(cls, id: int, *args, **kwargs):
@@ -11,6 +15,7 @@ class Age2AgeData(enum.IntEnum):
         self.id = id
         self.location_name = location_name
         self.cost: dict = {}
+        self.seed_item: 'Age2ItemData | None' = None
 
     @property
     def item(self):

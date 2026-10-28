@@ -20,6 +20,7 @@ SEEDED_AGES: dict[Age2AgeData, Age2ItemData] = {
 }
 
 for _age, _item in SEEDED_AGES.items():
+    _age.seed_item = _item
     _item.type.seeds = _age
 
 for _item in BASE_SEEDS:

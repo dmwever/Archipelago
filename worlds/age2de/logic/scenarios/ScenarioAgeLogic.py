@@ -8,7 +8,6 @@ from rule_builder.rules import False_, Has, Rule, True_
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
-from ...locations.connections.BuildingSeeds import SEEDED_AGES
 from ...generation.pools.AgePool import DARK_START, VANILLA_AGE_START
 from ..custom_logic.ScenarioQuestions import ScenarioCanAdvance, ScenarioHasReached
 from ..custom_logic.AgeUpRequirement import AGE_UP_BUILDINGS, AgeUpRequirement
@@ -73,10 +72,9 @@ class ScenarioAgeLogic:
         )
 
     def has_seed_item(self, age: Age2AgeData) -> Rule:
-        seed = SEEDED_AGES.get(age)
-        if seed is None or seed not in self.world.pool.resources.seeds:
+        if age.seed_item not in self.world.pool.resources.seeds:
             return False_()
-        return Has(seed.item_name)
+        return Has(age.seed_item.item_name)
 
     def can_advance(self, age: Age2AgeData) -> Rule:
         if self.scenario.scenario.fixed_force:
