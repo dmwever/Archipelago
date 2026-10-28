@@ -7,7 +7,7 @@ from rule_builder.rules import False_, Has, True_
 
 from . import bases
 from ..Options import MarketTrade
-from ..items.Items import Resource
+from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData as B
 from ..locations.connections.ScenarioResources import (
     COUNT_FIELDS,
@@ -85,6 +85,10 @@ def tier(**counts: int) -> ScenarioResourceCount:
 
 
 BASE_SWITCHES = (BASE, building(B.TOWN_CENTER), SOME_FOOD)
+BASE_TOWN_CENTER = (
+    Age2ItemData.TOWN_CENTER_WOOD.item_name,
+    Age2ItemData.TOWN_CENTER_STONE.item_name,
+)
 LUMBERJACKS = (VILLAGERS, job(Job.LUMBERJACK_MALE), building(B.LUMBER_CAMP), LUMBER_CAMP_SEED)
 GOLD_MINERS = (VILLAGERS, job(Job.GOLD_MINER_MALE), building(B.MINING_CAMP))
 TRADE_COGS = (unit(U.TRADE_COG), partner(B.DOCK), building(B.DOCK), DOCK_SEED)
@@ -365,7 +369,8 @@ class TestNavalGuardOverTheShoreline(ToyScenarioBase):
 
     def shore(self, field: str, gatherer: Job, resource: Resource) -> None:
         self.toy({Tier.OPEN: tier(**{field: 2000}), Tier.BASE: tier(gold_count=100)})
-        workers = (*BASE_SWITCHES, VILLAGERS, job(gatherer), building(B.DOCK), DOCK_SEED, NAVY)
+        workers = (*BASE_SWITCHES, *BASE_TOWN_CENTER, VILLAGERS, job(gatherer), building(B.DOCK),
+                   DOCK_SEED, NAVY)
         guarded = self.state(*workers, *self.FEW_LUMBERJACKS, *self.LITTLE_MINING)
         self.assertFalse(self.easy(Resource.WOOD, guarded))
         self.assertTrue(self.easy(resource, guarded))
@@ -387,7 +392,7 @@ class TestPerSourceCamps(ToyScenarioBase):
         self.assertFalse(self.easy(Resource.FOOD, self.state(*self.HUNTERS)))
 
     def test_hunt_counts_with_each_of_its_camps(self):
-        second_town_center = (MORE_TCS, *LUMBERJACKS, job(Job.STONE_MINER_MALE))
+        second_town_center = (MORE_TCS, *BASE_TOWN_CENTER, *LUMBERJACKS, job(Job.STONE_MINER_MALE))
         for camp in ((building(B.MILL), *LUMBERJACKS), (building(B.FOLWARK), *LUMBERJACKS),
                      (building(B.MULE_CART), MULE_CART_SEED), second_town_center):
             with self.subTest(camp=camp):

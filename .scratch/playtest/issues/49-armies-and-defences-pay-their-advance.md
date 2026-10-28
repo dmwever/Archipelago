@@ -176,6 +176,13 @@ Sites the wider walk added, and how each was fixed under items 3 and 6:
   walk only credited "standing or paid for", so each branch is `ScenarioLogic.has_building_paid_for_some`,
   named "…, standing or paid for some", and the walk credits that label the same way. The Mill that
   holds a shoreline uses the same rule (it was `_has_mill_paid_for_some`).
+- **The Castle as a training building.** Ruled by the maintainer, 2026-10-28: a Castle that trains
+  an army defence's line (Tarkan, Mangudai and the other Castle-only lines) asks ungated easy stone,
+  the same as the Castle as a strongpoint, not *some* stone. A standing Castle still counts. The
+  rule is in `ScenarioLogic._has_building_paid_for_some`. Proved by
+  `test_army_holds_open_ground.py::TestACastleAgeArmyPaysItsAdvanceAndItsCastle::test_some_stone_does_not_pay_for_its_castle`
+  (red at HEAD); the easy-stone case held before. Fill gate
+  `replay_issue49-castle-trains-on-easy-stone`: 100/100, spheres identical on every seed.
 
 The Burgundy test mocks every resource question to True and stands every building except the Town
 Center. A scan of all 45 defeat rules under start_in_dark_age, at HEAD and after, found none that
@@ -183,8 +190,9 @@ changes when the Town Center items are removed from a full pool. Each one either
 `can_reach(CASTLE)`, or reaches the Town Center through an economy or a training building that
 already pays the advance. Without the mocks, the test cannot go red.
 
-Five tests fail at HEAD and still fail, none of them touched by this ticket's logic. They look like
-toy states that were never given #47's paid Town Center:
+Five tests failed at HEAD, none of them touched by this ticket's logic. Each was a toy or short state
+that was never given #47's paid Town Center, and each is fixed by giving it the Town Center items
+(`BASE_TOWN_CENTER`, now in `test_economy_catalog.py`):
 `test_army_holds_open_ground.py::TestTheShorelineTakesNoArmy::test_a_dock_the_same_map_can_pay_for_does`,
 `test_economy_catalog.py::TestNavalGuardOverTheShoreline` (both),
 `test_economy_catalog.py::TestPerSourceCamps::test_hunt_counts_with_each_of_its_camps` (the second

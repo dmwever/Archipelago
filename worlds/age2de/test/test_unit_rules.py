@@ -2,7 +2,6 @@ from ..Options import ExistingTechs, IncludeUniqueUnits, ShuffleVillager, Techsa
 from ..items.Items import Age2ItemData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
-from ..locations.Heroes import Age2HeroData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
@@ -85,8 +84,8 @@ class TestOwningAUnit(Age2RuleTestBase):
         self.assertTrue(self.can_reach(Age2EscortUnitData.CART.location_name))
 
     def test_a_line_is_owned_when_any_of_its_tiers_is(self):
-        world = self.build(unitsanity=Unitsanity.option_unit_line,
-                           include_unique_units=IncludeUniqueUnits.option_both)
+        self.build(unitsanity=Unitsanity.option_unit_line,
+                   include_unique_units=IncludeUniqueUnits.option_both)
         self.assertTrue(self.can_reach(Age2UnitLineData.KNIGHT_LINE.location_name))
 
 
@@ -132,7 +131,7 @@ class TestTrainingVillagers(Age2RuleTestBase):
         self.assertTrue(rule.resolve(world).always_true)
 
     def test_a_villager_location_is_out_of_logic_without_it(self):
-        world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        self.build(shuffle_villager=ShuffleVillager.option_include_professions)
         location = Age2UnitData.VILLAGER_MALE.location_name
         self.assertTrue(self.can_reach(location))
         self.assertFalse(self.can_reach(location, self.state_without(self.VILLAGER)))
@@ -225,6 +224,10 @@ class TestARepairerNeedsSomethingToMend(Age2RuleTestBase):
     REPAIRER = Age2ItemData.PROFESSION_REPAIRER.item_name
     BUILDER = Age2ItemData.PROFESSION_BUILDER.item_name
     LUMBERJACK = Age2ItemData.PROFESSION_LUMBERJACK.item_name
+    TOWN_CENTER_ITEMS = (
+        Age2ItemData.TOWN_CENTER_WOOD.item_name,
+        Age2ItemData.TOWN_CENTER_STONE.item_name,
+    )
     JOB = Age2VillagerJobData.REPAIRER_MALE
 
     def setUp(self) -> None:
@@ -236,7 +239,13 @@ class TestARepairerNeedsSomethingToMend(Age2RuleTestBase):
         self.assertFalse(self.can_reach(self.JOB.location_name, state))
 
     def test_the_builder_gives_them_something_to_mend(self):
-        state = self.state_with(self.VILLAGERS, self.REPAIRER, self.BUILDER, self.LUMBERJACK)
+        state = self.state_with(
+            self.VILLAGERS,
+            self.REPAIRER,
+            self.BUILDER,
+            self.LUMBERJACK,
+            *self.TOWN_CENTER_ITEMS,
+        )
         self.assertTrue(self.can_reach(self.JOB.location_name, state))
 
     def test_the_builder_mends_nothing_with_nothing_to_build_it_from(self):

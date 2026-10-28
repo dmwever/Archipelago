@@ -16,7 +16,6 @@ from .custom_logic.ScenarioQuestions import ScenarioHasBuilding, a_or_an
 from ..locations.Players import Age2PlayerData
 
 if TYPE_CHECKING:
-    from .. import Age2World
     from ..locations.Scenarios import Age2ScenarioData
     from .Logic import Logic
 

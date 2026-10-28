@@ -167,8 +167,8 @@ class TestTheShorelineTakesNoArmy(ArmyToyBase):
     """Open ground only. A shoreline is held by a building or by the navy, as before #29."""
 
     MAP = {Tier.OPEN: tier(shore_fish_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    FISHERMEN = (*TRAINING_GROUNDS, *BASE_SWITCHES, VILLAGERS, job(Job.FISHERMAN_MALE),
-                 building(B.MILL), *SOME_FOOD)
+    FISHERMEN = (*TRAINING_GROUNDS, *BASE_SWITCHES, *BASE_TOWN_CENTER, VILLAGERS,
+                 job(Job.FISHERMAN_MALE), building(B.MILL), *SOME_FOOD)
 
     def test_soldiers_on_the_beach_hold_nothing(self):
         self.toy(self.MAP)
