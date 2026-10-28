@@ -45,6 +45,17 @@ class TestACastleStartPaysNoAgeInsideTheEconomy(EconomyCapitalBase):
         self.assertIn("Relics at a built Monastery, started in Castle", possible)
 
 
+class TestAFeudalOrLaterStartAsksNoFoodForMarketTrade(EconomyCapitalBase):
+
+    def test_market_trade_started_in_feudal_is_possible_and_needs_no_food(self):
+        self.build(market_trade=True)
+        self.assertIn("Market Trade, started in Feudal", self.possible(Age2ScenarioData.AP_ATTILA_2))
+        self.assertEqual(
+            {Resource.WOOD: Strength.AT_SCALE},
+            self.needs(Age2ScenarioData.AP_ATTILA_2)["Market Trade, started in Feudal"],
+        )
+
+
 class TestUnderStartInDarkAgeRelicsPayTheCastlePrice(EconomyCapitalBase):
 
     def test_the_advanced_relic_routes_need_food_at_scale_and_some_gold(self):

@@ -37,6 +37,20 @@ class TestFeudalAgeFoodIsPooledOnlyWhereARouteWaitsOnFeudal(FeudalAgeFoodPoolBas
             partner_trade=PartnerTrade.option_allies_and_enemies,
         ))
 
+    def test_genghis_2_waits_on_feudal_for_market_trade(self):
+        self.assertTrue(self.pooled(
+            "Genghis Khan",
+            partner_trade=PartnerTrade.option_none,
+            market_trade=True,
+        ))
+
+    def test_genghis_2_has_nothing_waiting_on_feudal_with_market_trade_off(self):
+        self.assertFalse(self.pooled(
+            "Genghis Khan",
+            partner_trade=PartnerTrade.option_none,
+            market_trade=False,
+        ))
+
     def test_every_joan_scenario_starts_in_feudal_or_later(self):
         self.assertFalse(self.pooled(
             "Joan of Arc",
@@ -117,3 +131,50 @@ class TestAttila1CogsWaitOnFeudal(bases.Age2RuleTestBase):
 
     def test_feudal_age_food_pays_the_feudal_price(self):
         self.assertTrue(self.cogs_run(FEUDAL_AGE_FOOD))
+
+
+class TestAttila1MarketTradeWaitsOnFeudal(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    FOOD_PROFESSIONS = (
+        Age2ItemData.PROFESSION_FORAGER.item_name,
+        Age2ItemData.PROFESSION_HUNTER.item_name,
+        Age2ItemData.PROFESSION_SHEPHERD.item_name,
+        Age2ItemData.PROFESSION_HERDER.item_name,
+        Age2ItemData.PROFESSION_FISHERMAN.item_name,
+        Age2ItemData.PROFESSION_FARMER.item_name,
+    )
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.build(
+            market_trade=True,
+            partner_trade=PartnerTrade.option_allies_and_enemies,
+            shuffle_villager=ShuffleVillager.option_include_professions,
+            unitsanity=Unitsanity.option_all,
+        )
+        scourge = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
+        self.economy = scourge.economy.has_economy_routes().resolve(self.world)
+        fishing_ships = scourge.economy.has_fishing_ships().resolve(self.world)
+        banked_food = [item.item_name for item in CATEGORY_TO_ITEMS[StartingResources]
+                       if item.type.type is Resource.FOOD]
+        self.no_food = (*self.FOOD_PROFESSIONS, *fishing_ships.item_dependencies(), *banked_food,
+                        FEUDAL_AGE_FOOD)
+
+    def market_trade_runs(self, *given: str) -> bool:
+        state = self.state_without(*[name for name in self.no_food if name not in given])
+        return any(self.economy.routes[index].name.startswith("Market Trade")
+                   for index in self.economy.running(state))
+
+    def test_with_no_food_route_and_no_feudal_age_food_market_trade_does_not_run(self):
+        self.assertFalse(self.market_trade_runs())
+
+    def test_hunters_of_some_pay_the_feudal_price(self):
+        self.assertTrue(self.market_trade_runs(Age2ItemData.PROFESSION_HUNTER.item_name))
+
+    def test_foragers_of_some_pay_the_feudal_price(self):
+        self.assertTrue(self.market_trade_runs(Age2ItemData.PROFESSION_FORAGER.item_name))
+
+    def test_feudal_age_food_pays_the_feudal_price(self):
+        self.assertTrue(self.market_trade_runs(FEUDAL_AGE_FOOD))

@@ -4,7 +4,7 @@
 
 **Reported:** 2026-10-28, split out of [#32](32-feudal-prerequisite-unpaid.md) during triage
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Blocked by:** [#47](47-town-center-dropsite-and-farm-paid.md) (order only: both edit the allowlist and
 the route catalog)
@@ -65,21 +65,47 @@ Feudal whose civilisation builds a Market now counts.
 Prove each new test red at HEAD with `worlds/age2de/tools/red_check.py`, and tick each box with its
 evidence.
 
-- [ ] Every "runs Market Trade" allowlist line is gone; the never-bare test is red at HEAD on the
+- [x] Every "runs Market Trade" allowlist line is gone; the never-bare test is red at HEAD on the
       trimmed allowlist and green after. No line is added.
-- [ ] A test: in a scenario starting below Feudal with `market_trade` on, Market Trade does not run
+      *28 lines removed, 0 added; `test_never_bare.py` red at HEAD (`red_check.py`), green after.*
+- [x] A test: in a scenario starting below Feudal with `market_trade` on, Market Trade does not run
       with no food route and no Feudal Age Food, and runs with a food route of *some* or with Feudal
       Age Food.
-- [ ] A test: in a scenario starting in Feudal or later, Market Trade asks no food need.
-- [ ] A test: Feudal Age Food is pooled in a world whose only Feudal-waiting route is Market Trade,
+      *Held before, accepted by the maintainer (see Comments):
+      `test_feudal_age_food.py::TestAttila1MarketTradeWaitsOnFeudal` (4 tests) green at HEAD and after.*
+- [x] A test: in a scenario starting in Feudal or later, Market Trade asks no food need.
+      *`test_economy_capital.py::TestAFeudalOrLaterStartAsksNoFoodForMarketTrade` (Attila 2, Castle
+      start): "Market Trade, started in Feudal" is possible and needs wood at scale only. Red at HEAD.*
+- [x] A test: Feudal Age Food is pooled in a world whose only Feudal-waiting route is Market Trade,
       and absent when `market_trade` is off in that world.
-- [ ] `test/route_catalog.md` is regenerated with `tools/route_catalog.py`; the ticket lists the
+      *`test_feudal_age_food.py`: `test_genghis_2_waits_on_feudal_for_market_trade` red at HEAD;
+      `test_genghis_2_has_nothing_waiting_on_feudal_with_market_trade_off` held before.*
+- [x] `test/route_catalog.md` is regenerated with `tools/route_catalog.py`; the ticket lists the
       routes added.
-- [ ] The fill gate (`fuzz/bench/README.md`) passes on the current seed set, and its row is recorded
+      *112 -> 114 routes. "Market Trade" replaced by "Market Trade, started in Feudal", "Market Trade,
+      advanced to Feudal" and "Market Trade, on Feudal Age Food". All 0/18 at default options
+      (`market_trade` off), as the single route was. `test_route_catalog.py` green.*
+- [x] The fill gate (`fuzz/bench/README.md`) passes on the current seed set, and its row is recorded
       under Stored runs.
+      *`replay_issue48-market-feudal.jsonl`: 100/100 ok against `replay_issue47-town-center-paid`
+      (100/100). 50 of the seeds roll `market_trade` on.*
 
 **Out of scope**
 
 - Changing Feudal Age Food itself, or its XS grant.
 - The Trade Cart and Cog routes (done in #39).
 - `test/easy_source_answers.json` ([#36](36-pre-commit-test-curation.md)).
+
+## Comments
+
+**2026-10-28, implementing agent.** Criterion 2 holds but cannot go red. In every scenario of all
+three campaigns, under `start_in_dark_age` and with `partner_trade` both `none` and
+`allies_and_enemies`, no Market Trade runs with no food route and no Feudal Age Food, at HEAD and
+after. Wood at scale (Market Trade's need) comes only from routes that themselves need *some* food
+(Lumberjacks with a Base), and *some* food also pays the Feudal price, so HEAD's unpaid leaf was
+masked. The Feudal Age Food case runs because Trade Cogs on Feudal Age Food bring wood at scale with
+no food, which is why that test uses `partner_trade: allies_and_enemies`. The change is visible only
+structurally, which the never-bare test (red at HEAD) proves. Open question for the maintainer:
+accept criterion 2 as held before, or name a state that should separate the two.
+
+**2026-10-28, maintainer.** Criterion 2 accepted as held before; ticket closed.

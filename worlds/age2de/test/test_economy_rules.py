@@ -260,7 +260,14 @@ class TestMarketTrade(EconomyTestBase):
         self.build(market_trade=True)
         attila_1 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).routes
         needs = [route.needs for route in attila_1.market_routes()]
-        self.assertEqual([{Resource.WOOD: Strength.AT_SCALE}], needs)
+        self.assertEqual(
+            [
+                {Resource.WOOD: Strength.AT_SCALE},
+                {Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+                {Resource.WOOD: Strength.AT_SCALE},
+            ],
+            needs,
+        )
 
     def test_on_market_trade_is_satisfiable_with_a_market(self):
         self.build(market_trade=True)

@@ -86,6 +86,9 @@ class ResourcePool:
                         and scenario.civ.builds(Age2BuildingData.FISH_TRAP)
                         and Age2BuildingData.FISH_TRAP not in scenario.excluded_buildings
                         and Age2UnitData.FISHING_SHIP not in scenario.excluded_units)
+                    or (options.market_trade
+                        and scenario.civ.builds(Age2BuildingData.MARKET)
+                        and Age2BuildingData.MARKET not in scenario.excluded_buildings)
                 )
                 for scenario in scenarios
             )

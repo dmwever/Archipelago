@@ -1448,16 +1448,41 @@ class ScenarioRoutesLogic:
         ]
 
     def market_routes(self) -> list[EconomyRoute]:
+        every_resource_at_scale = {
+            Resource.WOOD: Strength.AT_SCALE,
+            Resource.FOOD: Strength.AT_SCALE,
+            Resource.GOLD: Strength.AT_SCALE,
+            Resource.STONE: Strength.AT_SCALE,
+        }
+        market = self.economy.can_trade_at_market()
         return [
             EconomyRoute(
-                name="Market Trade",
-                yields={
-                    Resource.WOOD: Strength.AT_SCALE,
-                    Resource.FOOD: Strength.AT_SCALE,
-                    Resource.GOLD: Strength.AT_SCALE,
-                    Resource.STONE: Strength.AT_SCALE,
-                },
-                leaf=self.economy.can_trade_at_market(),
+                name="Market Trade, started in Feudal",
+                yields=every_resource_at_scale,
+                leaf=(
+                    market
+                    & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
+                ),
+                needs={Resource.WOOD: Strength.AT_SCALE},
+            ),
+            EconomyRoute(
+                name="Market Trade, advanced to Feudal",
+                yields=every_resource_at_scale,
+                leaf=(
+                    market
+                    & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
+                ),
+                needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+            ),
+            EconomyRoute(
+                name="Market Trade, on Feudal Age Food",
+                yields=every_resource_at_scale,
+                leaf=(
+                    market
+                    & self.scenario.ages.has_seed_item(Age2AgeData.FEUDAL)
+                    & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
+                    & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
+                ),
                 needs={Resource.WOOD: Strength.AT_SCALE},
             ),
         ]

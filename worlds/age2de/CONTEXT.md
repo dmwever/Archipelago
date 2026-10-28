@@ -102,7 +102,7 @@ _Avoid_: age cost (the in-game numbers), age-up requirement (the two buildings),
 An item granting the starting resources one building or age costs, so it is paid for from
 outside the economy: the Town Center items and the villagers' food for the base, one wood item
 each for the Lumber Camp, Mule Cart, Dock and Market - the buildings that can open an economy from
-nothing - and the Feudal Age Food for the age trade and Fish Traps wait on. A building that only opens a resource inside an economy already running (Mining Camp,
+nothing - and the Feudal Age Food for the age trade, Fish Traps and market trade wait on. A building that only opens a resource inside an economy already running (Mining Camp,
 Mill, Folwark, Monastery) has none; its route needs *some* wood instead. A building standing at
 the start asks for no seed item, and one is pooled only where a route under the seed's options can
 use it. A building whose seed item is not pooled is funded like a Mill: a Dock with partner trade
