@@ -292,22 +292,21 @@ class ScenarioResourceLogic:
         gathers = dropsite & self.scenario.has_vils() & self.has_job(job)
         return self._in_any_tier(self.tiered(gathers, field, self.open_resource_gates()))
 
-    @staticmethod
-    def _dropping_at(camp: Age2BuildingData, dropsite: Rule,
-                     dropsites: list[Age2BuildingData]) -> Rule:
-        return dropsite if camp in dropsites else False_()
-
     def villager_food(self, camp: Age2BuildingData, dropsite: Rule) -> tuple[Term, ...]:
-        return (
-            *self._land_food(self._dropping_at(camp, dropsite, HUNT_DROPSITES),
-                             self._dropping_at(camp, dropsite, FOOD_DROPSITES)),
-            *self.tiered(
-                self._fish_the_shore_from_a_camp(
-                    self._dropping_at(camp, dropsite, FISHERMAN_DROPSITES)),
+        sources: list[Term] = [
+            *self.tiered(self.can_herd(), "herd_count", self.open_resource_gates()),
+        ]
+        if camp in HUNT_DROPSITES:
+            sources.extend(self.tiered(self.can_hunt(dropsite), "hunt_count", self.tier_gates()))
+        if camp in FOOD_DROPSITES:
+            sources.extend(self.tiered(self.can_forage(dropsite), "bush_count", self.tier_gates()))
+        if camp in FISHERMAN_DROPSITES:
+            sources.extend(self.tiered(
+                self._fish_the_shore_from_a_camp(dropsite),
                 "shore_fish_count",
                 self.tier_gates("shoreline"),
-            ),
-        )
+            ))
+        return tuple(sources)
 
     def boat_food(self) -> tuple[Term, ...]:
         return (
@@ -322,7 +321,13 @@ class ScenarioResourceLogic:
     def villager_and_boat_food(self) -> tuple[Term, ...]:
         buildings = self.scenario.buildings
         return (
-            *self._land_food(buildings.has_hunt_camp(), buildings.has_food_camp()),
+            *self.tiered(self.can_hunt(buildings.has_hunt_camp()), "hunt_count", self.tier_gates()),
+            *self.tiered(self.can_herd(), "herd_count", self.open_resource_gates()),
+            *self.tiered(
+                self.can_forage(buildings.has_food_camp()),
+                "bush_count",
+                self.tier_gates(),
+            ),
             *self.tiered(
                 self._fish_the_shore_from_a_camp(buildings.has_fisherman_camp())
                 | self.can_fish_the_shore_by_boat(),
@@ -332,12 +337,19 @@ class ScenarioResourceLogic:
             *self._deep_fish(),
         )
 
-    def _land_food(self, hunt_camp: Rule, food_camp: Rule) -> tuple[Term, ...]:
-        land = self.tier_gates()
+    def villager_and_boat_food_at_a_second_town_center(self) -> tuple[Term, ...]:
+        town_center = self.scenario.buildings.can_build_tc_as_camp()
         return (
-            *self.tiered(self.can_hunt(hunt_camp), "hunt_count", land),
+            *self.tiered(self.can_hunt(town_center), "hunt_count", self.tier_gates()),
             *self.tiered(self.can_herd(), "herd_count", self.open_resource_gates()),
-            *self.tiered(self.can_forage(food_camp), "bush_count", land),
+            *self.tiered(self.can_forage(town_center), "bush_count", self.tier_gates()),
+            *self.tiered(
+                self._fish_the_shore_from_a_camp(town_center)
+                | self.can_fish_the_shore_by_boat(),
+                "shore_fish_count",
+                self.tier_gates("shoreline"),
+            ),
+            *self._deep_fish(),
         )
 
     def _fish_the_shore_from_a_camp(self, fisherman_camp: Rule) -> Rule:
@@ -351,15 +363,16 @@ class ScenarioResourceLogic:
         )
 
     def villager_gold(self, camp: Age2BuildingData, dropsite: Rule) -> tuple[Term, ...]:
-        return (
-            *self._mined_gold(self._dropping_at(camp, dropsite, GOLD_DROPSITES)),
-            *self.tiered(
-                self._gather_shore_oysters_from_a_camp(
-                    self._dropping_at(camp, dropsite, FISHERMAN_DROPSITES)),
+        sources: list[Term] = []
+        if camp in GOLD_DROPSITES:
+            sources.extend(self._mined_gold(dropsite))
+        if camp in FISHERMAN_DROPSITES:
+            sources.extend(self.tiered(
+                self._gather_shore_oysters_from_a_camp(dropsite),
                 "oyster_count",
                 self.tier_gates("shoreline"),
-            ),
-        )
+            ))
+        return tuple(sources)
 
     def boat_gold(self) -> tuple[Term, ...]:
         return (
@@ -377,6 +390,19 @@ class ScenarioResourceLogic:
             *self._mined_gold(buildings.has_gold_camp()),
             *self.tiered(
                 self._gather_shore_oysters_from_a_camp(buildings.has_fisherman_camp())
+                | self.can_gather_oysters_by_boat(),
+                "oyster_count",
+                self.tier_gates("shoreline"),
+            ),
+            *self._whales(),
+        )
+
+    def villager_and_boat_gold_at_a_second_town_center(self) -> tuple[Term, ...]:
+        town_center = self.scenario.buildings.can_build_tc_as_camp()
+        return (
+            *self._mined_gold(town_center),
+            *self.tiered(
+                self._gather_shore_oysters_from_a_camp(town_center)
                 | self.can_gather_oysters_by_boat(),
                 "oyster_count",
                 self.tier_gates("shoreline"),
@@ -402,11 +428,20 @@ class ScenarioResourceLogic:
         )
 
     def villager_stone(self, camp: Age2BuildingData, dropsite: Rule) -> tuple[Term, ...]:
+        if camp not in STONE_DROPSITES:
+            return ()
         return self.tiered(
-            self.can_quarry_some(self._dropping_at(camp, dropsite, STONE_DROPSITES)),
+            self.can_quarry_some(dropsite),
             "stone_count",
-            self.tier_gates(),
+            self._stone_gates(),
         )
+
+    def _stone_gates(self) -> dict[Tier, Rule]:
+        gates = self.tier_gates()
+        return {
+            **gates,
+            Tier.OPEN: gates[Tier.OPEN] | self.scenario.buildings.can_build_castle_of_some_stone(),
+        }
 
     # -- aggregates ---------------------------------------------------------------------------
     def has_economy_routes(self) -> Rule:
@@ -420,6 +455,13 @@ class ScenarioResourceLogic:
 
     def has_some_source(self, resource: Resource) -> Rule:
         return ScenarioHasSomeResource(scenario=self.scenario.scenario, resource=resource)
+
+    def has_ungated_easy_source(self, resource: Resource) -> Rule:
+        return EconomyRoutesYield(
+            economy=self.has_ungated_routes(),
+            resource=resource,
+            strength=Strength.AT_SCALE,
+        )
 
     def has_own_easy_source(self, resource: Resource) -> Rule:
         return EconomyRoutesYield(

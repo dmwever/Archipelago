@@ -183,7 +183,7 @@ class ToyScenarioBase(bases.Age2RuleTestBase):
         """The defence layer as three switches, so a test about gathering says what it holds
         without building anything. `test_defence_pays.py` leaves these real: there the defences
         themselves are what is under test."""
-        switch(self.scenario.buildings, "can_build_multiple_tc", lambda: Has(MORE_TCS))
+        switch(self.scenario.buildings, "can_build_tc_as_camp", lambda: Has(MORE_TCS))
         switch(self.scenario.buildings, "can_hold_a_shoreline", lambda: Has(SHORELINE_HELD))
         switch(self.scenario.buildings, "_fortified", lambda: Has(FORTIFIED))
 
@@ -387,10 +387,11 @@ class TestPerSourceCamps(ToyScenarioBase):
         self.assertFalse(self.easy(Resource.FOOD, self.state(*self.HUNTERS)))
 
     def test_hunt_counts_with_each_of_its_camps(self):
+        second_town_center = (MORE_TCS, *LUMBERJACKS, job(Job.STONE_MINER_MALE))
         for camp in ((building(B.MILL), *LUMBERJACKS), (building(B.FOLWARK), *LUMBERJACKS),
-                     (building(B.MULE_CART), MULE_CART_SEED), (MORE_TCS,)):
+                     (building(B.MULE_CART), MULE_CART_SEED), second_town_center):
             with self.subTest(camp=camp):
-                self.toy({Tier.BASE: tier(hunt_count=2000)})
+                self.toy({Tier.BASE: tier(hunt_count=2000, stone_count=100)})
                 self.assertTrue(self.easy(Resource.FOOD, self.state(*self.HUNTERS, *camp, food=50)))
 
     def test_herding_counts_with_the_bases_town_center_alone(self):

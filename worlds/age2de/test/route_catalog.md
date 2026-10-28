@@ -56,7 +56,7 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 - **its own wood** is reachable in no scenario.
 
 
-## 103 routes - every scenario
+## 112 routes - every scenario
 
 | route | yields | needs | possible in |
 | --- | --- | --- | --- |
@@ -101,6 +101,9 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Oyster Gatherers at a built Folwark | gold some | wood some | 0/18 |
 | Oyster Gatherers at a Dock | gold some | - | 0/18 |
 | Oyster Gatherers at a built Dock | gold some | wood some | 0/18 |
+| Lumberjacks with a Base | wood at scale | food some | 15/18 |
+| Lumberjacks with a Base at a second Town Center, started in Castle | wood at scale | wood some, food some, stone some | 10/18 |
+| Lumberjacks with a Base at a second Town Center, advanced to Castle | wood at scale | wood some, food at scale, gold some, stone some | 15/18 |
 | Relics at a standing Monastery, started in Castle | gold some | - | 0/18 |
 | Relics at a standing Monastery, advanced to Castle | gold some | wood some, food at scale, gold some | 0/18 |
 | Relics at a built Monastery, started in Castle | gold some | wood some | 2/18 |
@@ -136,8 +139,8 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | a little of its own food | food some | - | 0/18 |
 | a little of its own gold | gold some | - | 0/18 |
 | a little of its own stone | stone some | - | 0/18 |
-| Lumberjacks with a Base | wood at scale | food some | 15/18 |
-| Villagers gathering food with a Base at a second Town Center | food at scale | food some | 2/18 |
+| Villagers gathering food with a Base at a second Town Center, started in Castle | food at scale | wood some, food some, stone some | 1/18 |
+| Villagers gathering food with a Base at a second Town Center, advanced to Castle | food at scale | wood some, food at scale, gold some, stone some | 2/18 |
 | Villagers gathering food with a Base at a standing Mill | food at scale | food some | 2/18 |
 | Villagers gathering food with a Base at a built Mill | food at scale | wood some, food some | 2/18 |
 | Villagers gathering food with a Base at a standing Folwark | food at scale | food some | 0/18 |
@@ -145,7 +148,8 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Villagers gathering food with a Base at a Mule Cart | food at scale | food some | 0/18 |
 | Villagers gathering food with a Base at a Dock | food at scale | food some | 0/18 |
 | Villagers gathering food with a Base at a built Dock | food at scale | wood some, food some | 0/18 |
-| Villagers gathering gold with a Base at a second Town Center | gold at scale | food some | 15/18 |
+| Villagers gathering gold with a Base at a second Town Center, started in Castle | gold at scale | wood some, food some, stone some | 10/18 |
+| Villagers gathering gold with a Base at a second Town Center, advanced to Castle | gold at scale | wood some, food at scale, gold some, stone some | 15/18 |
 | Villagers gathering gold with a Base at a standing Mining Camp | gold at scale | food some | 2/18 |
 | Villagers gathering gold with a Base at a built Mining Camp | gold at scale | wood some, food some | 15/18 |
 | Villagers gathering gold with a Base at a Mule Cart | gold at scale | food some | 0/18 |
@@ -155,34 +159,39 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Villagers gathering gold with a Base at a built Folwark | gold at scale | wood some, food some | 0/18 |
 | Villagers gathering gold with a Base at a Dock | gold at scale | food some | 0/18 |
 | Villagers gathering gold with a Base at a built Dock | gold at scale | wood some, food some | 0/18 |
-| Villagers gathering stone with a Base at a second Town Center | stone at scale | food some | 15/18 |
+| Villagers gathering stone with a Base at a second Town Center, started in Castle | stone at scale | wood some, food some, stone some | 10/18 |
+| Villagers gathering stone with a Base at a second Town Center, advanced to Castle | stone at scale | wood some, food at scale, gold some, stone some | 15/18 |
 | Villagers gathering stone with a Base at a standing Mining Camp | stone at scale | food some | 2/18 |
 | Villagers gathering stone with a Base at a built Mining Camp | stone at scale | wood some, food some | 15/18 |
 | Villagers gathering stone with a Base at a Mule Cart | stone at scale | food some | 0/18 |
 | Fishing Ships gathering food | food at scale | wood at scale | 1/18 |
 | Fishing Ships gathering gold | gold at scale | wood at scale | 0/18 |
 | Villagers and Fishing Ships gathering food | food at scale | wood at scale, food some | 3/18 |
+| Villagers and Fishing Ships gathering food at a second Town Center, started in Castle | food at scale | wood at scale, food some, stone some | 1/18 |
+| Villagers and Fishing Ships gathering food at a second Town Center, advanced to Castle | food at scale | wood at scale, food at scale, gold some, stone some | 3/18 |
 | Villagers and Fishing Ships gathering gold | gold at scale | wood at scale, food some | 15/18 |
+| Villagers and Fishing Ships gathering gold at a second Town Center, started in Castle | gold at scale | wood at scale, food some, stone some | 10/18 |
+| Villagers and Fishing Ships gathering gold at a second Town Center, advanced to Castle | gold at scale | wood at scale, food at scale, gold some, stone some | 15/18 |
 
 ## Per scenario
 
 | scenario | routes | possible |
 | --- | --- | --- |
-| AP_ATTILA_1 | 103 | 33 |
-| AP_ATTILA_2 | 103 | 21 |
-| AP_ATTILA_3 | 103 | 34 |
-| AP_ATTILA_4 | 103 | 19 |
-| AP_ATTILA_5 | 103 | 31 |
-| AP_ATTILA_6 | 103 | 37 |
-| AP_GENGHIS_1 | 103 | 0 |
-| AP_GENGHIS_2 | 103 | 17 |
-| AP_GENGHIS_3 | 103 | 25 |
-| AP_GENGHIS_4 | 103 | 33 |
-| AP_GENGHIS_5 | 103 | 23 |
-| AP_GENGHIS_6 | 103 | 17 |
-| AP_JOAN_1 | 103 | 0 |
-| AP_JOAN_2 | 103 | 29 |
-| AP_JOAN_3 | 103 | 24 |
-| AP_JOAN_4 | 103 | 30 |
-| AP_JOAN_5 | 103 | 0 |
-| AP_JOAN_6 | 103 | 21 |
+| AP_ATTILA_1 | 112 | 36 |
+| AP_ATTILA_2 | 112 | 27 |
+| AP_ATTILA_3 | 112 | 43 |
+| AP_ATTILA_4 | 112 | 25 |
+| AP_ATTILA_5 | 112 | 37 |
+| AP_ATTILA_6 | 112 | 43 |
+| AP_GENGHIS_1 | 112 | 0 |
+| AP_GENGHIS_2 | 112 | 19 |
+| AP_GENGHIS_3 | 112 | 27 |
+| AP_GENGHIS_4 | 112 | 39 |
+| AP_GENGHIS_5 | 112 | 29 |
+| AP_GENGHIS_6 | 112 | 23 |
+| AP_JOAN_1 | 112 | 0 |
+| AP_JOAN_2 | 112 | 31 |
+| AP_JOAN_3 | 112 | 27 |
+| AP_JOAN_4 | 112 | 36 |
+| AP_JOAN_5 | 112 | 0 |
+| AP_JOAN_6 | 112 | 27 |

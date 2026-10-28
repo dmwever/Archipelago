@@ -26,6 +26,7 @@ from .test_economy_catalog import (
     granted,
     job,
     navy,
+    standing,
     tier,
 )
 
@@ -33,6 +34,7 @@ SCOUTS = Line.SCOUT_CAVALRY_LINE
 """Food alone: the cheapest army this toy can keep in the field."""
 FOOTMEN = Line.MILITIA_LINE
 """Food and gold."""
+ARCHERS = Line.ARCHER_LINE
 
 SOME_FOOD = (VILLAGERS, job(Job.HUNTER_MALE))
 """Hunters dropping at the base's Town Center. No camp, so what they bring in is *some* food."""
@@ -42,7 +44,11 @@ the army's wage is the only thing it pays."""
 
 
 class ArmyToyBase(DefenceToyBase):
-    ARMY_LINES = {SCOUTS: {Resource.FOOD}, FOOTMEN: {Resource.FOOD, Resource.GOLD}}
+    ARMY_LINES = {
+        SCOUTS: {Resource.FOOD},
+        FOOTMEN: {Resource.FOOD, Resource.GOLD},
+        ARCHERS: {Resource.WOOD, Resource.GOLD},
+    }
 
 
 class TestAnArmyHoldsOpenGround(ArmyToyBase):
@@ -50,7 +56,7 @@ class TestAnArmyHoldsOpenGround(ArmyToyBase):
     works at scale, where #23 asked for a wall, a tower or a strongpoint."""
 
     MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), building(B.MINING_CAMP),
+    MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), standing(B.MINING_CAMP),
               *SOME_FOOD)
 
     def test_open_gold_at_scale_holds_on_the_army_with_nothing_built(self):
@@ -58,11 +64,12 @@ class TestAnArmyHoldsOpenGround(ArmyToyBase):
         self.assertFalse(self.easy(Resource.GOLD, self.state(*self.MINERS)))
         self.assertTrue(self.easy(Resource.GOLD, self.state(*self.MINERS, army(SCOUTS))))
 
-    def test_an_army_it_cannot_feed_holds_nothing(self):
+    def test_an_army_it_cannot_pay_for_holds_nothing(self):
         self.toy({Tier.OPEN: tier(gold_count=2000)})
-        hungry = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), building(B.MINING_CAMP))
-        self.assertTrue(self.some(Resource.GOLD, self.state(*hungry)))
-        self.assertFalse(self.easy(Resource.GOLD, self.state(*hungry, army(SCOUTS))))
+        no_wood = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), standing(B.MINING_CAMP))
+        self.assertTrue(self.some(Resource.GOLD, self.state(*no_wood)))
+        self.assertFalse(self.easy(Resource.GOLD, self.state(*no_wood, army(ARCHERS))))
+        self.assertTrue(self.easy(Resource.GOLD, self.state(*no_wood, army(SCOUTS))))
 
 
 class TestTheArmyHoldsEveryResourceOutThere(ArmyToyBase):
@@ -71,7 +78,7 @@ class TestTheArmyHoldsEveryResourceOutThere(ArmyToyBase):
 
     MAP = {Tier.OPEN: tier(gold_count=2000, stone_count=2000), Tier.BASE: A_LITTLE_HUNT}
     MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), job(Job.STONE_MINER_MALE),
-              building(B.MINING_CAMP), *SOME_FOOD)
+              standing(B.MINING_CAMP), *SOME_FOOD)
 
     def test_one_army_opens_the_stone_as_well_as_the_gold(self):
         self.toy(self.MAP)
@@ -86,7 +93,7 @@ class TestTheArmyPaysPerLine(ArmyToyBase):
     sets that cost - the same ruling `TestTheNavyPaysPerLine` holds the warships to."""
 
     MAP = {Tier.OPEN: tier(stone_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    QUARRY = (*BASE_SWITCHES, VILLAGERS, job(Job.STONE_MINER_MALE), building(B.MINING_CAMP),
+    QUARRY = (*BASE_SWITCHES, VILLAGERS, job(Job.STONE_MINER_MALE), standing(B.MINING_CAMP),
               *SOME_FOOD)
 
     def test_a_line_costing_food_and_gold_asks_for_both(self):
@@ -116,7 +123,7 @@ class TestAGrantedArmyHoldsNothing(ArmyToyBase):
     scenario hands over are its own plan, not a garrison."""
 
     MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: A_LITTLE_HUNT}
-    MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), building(B.MINING_CAMP),
+    MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), standing(B.MINING_CAMP),
               *SOME_FOOD)
     HANDED_OVER = tuple(granted(soldier) for line in (SCOUTS, FOOTMEN) for soldier in line.units)
     """Every tier of both lines, standing there and P1's - and none of them trained."""
@@ -139,7 +146,7 @@ class TestTheBaseIsStillAsked(ArmyToyBase):
     def test_an_army_does_not_stand_in_for_the_base(self):
         self.toy(self.MAP)
         baseless = (building(B.TOWN_CENTER), VILLAGERS, job(Job.GOLD_MINER_MALE),
-                    building(B.MINING_CAMP), *SOME_FOOD, army(SCOUTS))
+                    standing(B.MINING_CAMP), *SOME_FOOD, army(SCOUTS))
         self.assertNotIn(BASE, baseless)
         self.assertFalse(self.easy(Resource.GOLD, self.state(*baseless)))
         self.assertTrue(self.some(Resource.GOLD, self.state(*baseless)))

@@ -2,13 +2,14 @@
 
 The toy scenario of `test_economy_catalog.py`, with the defence layer left real. There every leaf
 fact is a switch and the defences are three more switches; here `_fortified`,
-`can_hold_a_shoreline`, `can_build_multiple_tc` and `can_guard_boats` are what is under test, so
-only the leaves beneath them are switched.
+`can_hold_a_shoreline`, the second Town Center's two rules and `can_guard_boats` are what is under
+test, so only the leaves beneath them are switched.
 """
 import inspect
 import unittest
 
 from . import bases
+from ..Options import ExistingTechs, MarketTrade
 from ..items.Items import Resource
 from ..locations.Buildings import Age2BuildingData as B
 from ..locations.connections.ScenarioResources import Tier
@@ -20,7 +21,9 @@ from .test_economy_catalog import (
     BASE,
     BASE_SWITCHES,
     LUMBERJACKS,
+    MARKET_SEED,
     SCENARIO_WOOD,
+    SOME_FOOD,
     VILLAGERS,
     ToyScenarioBase,
     building,
@@ -107,12 +110,38 @@ class TestAStandingDefenceOpensNoGate(DefenceToyBase):
 
     def test_one_p1_builds_and_pays_for_does(self):
         self.toy(self.MAP)
-        self.assertTrue(self.easy(Resource.GOLD, self.state(*self.MINERS, building(B.CASTLE))))
+        self.assertTrue(self.easy(Resource.GOLD, self.state(*self.MINERS, building(B.KREPOST))))
+
+
+class TestTheCastleNeedsEasyStone(DefenceToyBase):
+    """#42: a Castle as a defence asks easy stone out of the ungated routes, not *some*. The base's
+    Town Center stands here, so no second one can be built to hold the ground instead."""
+
+    MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: tier(stone_count=100)}
+    MINERS = (
+        BASE,
+        standing(B.TOWN_CENTER),
+        SOME_FOOD,
+        VILLAGERS,
+        job(Job.GOLD_MINER_MALE),
+        STONE_OF_SOME,
+        standing(B.MINING_CAMP),
+        building(B.CASTLE),
+    )
+
+    def test_some_stone_buys_no_castle_to_hold_open_gold(self):
+        self.toy(self.MAP)
+        self.assertFalse(self.easy(Resource.GOLD, self.state(*self.MINERS)))
+
+    def test_ungated_easy_stone_does(self):
+        self.toy(self.MAP, market_trade=MarketTrade.option_true)
+        market = (SCENARIO_WOOD, building(B.MARKET), MARKET_SEED)
+        self.assertTrue(self.easy(Resource.GOLD, self.state(*self.MINERS, *market)))
 
 
 class TestTheSecondTownCenterPays(DefenceToyBase):
-    """Three places ask for more Town Centers - the open-ground strongpoint, the shoreline, and a
-    camp - and all three inherit the payment from `can_build_multiple_tc` with no parameter."""
+    """Three places ask for a second Town Center - the open-ground strongpoint, the shoreline, and
+    a camp - and each pays *some* wood and *some* stone for it."""
 
     SITES = (
         ("the open-ground strongpoint",
@@ -136,6 +165,67 @@ class TestTheSecondTownCenterPays(DefenceToyBase):
                 with self.subTest(site=site, paid=paid):
                     state = self.state(*self.WORKERS, gatherer, *paid)
                     self.assertEqual(expected, self.easy(resource, state))
+
+
+class TestASecondTownCenterDefendsOnUngatedFarmers(DefenceToyBase):
+    """#32 item 4: as a defence, a second Town Center pays the Castle price out of the ungated
+    routes, so the Castle's food at scale comes from Farmers, whose wood at scale comes from the
+    base's lumberjacks. No trade and no market on this map."""
+
+    MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: tier(stone_count=100)}
+    FARMERS = (building(B.FARM), job(Job.FARMER_MALE))
+    WORKERS = (
+        *BASE_SWITCHES,
+        *LUMBERJACKS,
+        *TestOpenGroundIsFreeOfSomeAndHeldAtScale.MINERS,
+        STONE_OF_SOME,
+    )
+
+    def toy_started_in_dark_age(self) -> None:
+        self.toy(self.MAP, existing_techs=ExistingTechs.option_start_in_dark_age)
+
+    def test_ungated_farmers_hold_open_gold_with_a_second_town_center(self):
+        self.toy_started_in_dark_age()
+        self.assertTrue(self.easy(Resource.GOLD, self.state(*self.WORKERS, *self.FARMERS)))
+
+    def test_without_the_farmers_the_castle_age_is_unpaid(self):
+        self.toy_started_in_dark_age()
+        self.assertFalse(self.easy(Resource.GOLD, self.state(*self.WORKERS)))
+
+    def test_the_farmers_wood_is_the_lumberjacks_with_a_base(self):
+        self.toy_started_in_dark_age()
+        ungated = self.scenario.routes.ungated_economy_routes().resolve(self.world)
+        state = self.state(*self.WORKERS, *self.FARMERS)
+        running = {ungated.routes[index].name for index in ungated.running(state)}
+        self.assertLessEqual({"Farmers", "Lumberjacks with a Base"}, running)
+
+
+class TestHoldingAShorelineWithAMillPaysForIt(DefenceToyBase):
+    """#32 item 8: a Mill holds a shoreline beside a defence, and a built one pays *some* of its
+    own cost there, as every other built defence does. A standing one is free."""
+
+    MAP = {Tier.OPEN: tier(shore_fish_count=2000), Tier.BASE: tier(stone_count=100)}
+    FISHERMEN = (
+        *BASE_SWITCHES,
+        VILLAGERS,
+        job(Job.FISHERMAN_MALE),
+        standing(B.FOLWARK),
+        building(B.KREPOST),
+        STONE_OF_SOME,
+    )
+
+    def test_a_built_mill_with_no_wood_holds_nothing(self):
+        self.toy(self.MAP)
+        self.assertFalse(self.easy(Resource.FOOD, self.state(*self.FISHERMEN, building(B.MILL))))
+
+    def test_a_built_mill_with_some_wood_holds_it(self):
+        self.toy(self.MAP)
+        paid = self.state(*self.FISHERMEN, building(B.MILL), WOOD_OF_SOME)
+        self.assertTrue(self.easy(Resource.FOOD, paid))
+
+    def test_a_standing_mill_holds_it_for_nothing(self):
+        self.toy(self.MAP)
+        self.assertTrue(self.easy(Resource.FOOD, self.state(*self.FISHERMEN, standing(B.MILL))))
 
 
 class TestTheNavyPaysPerLine(DefenceToyBase):
@@ -199,6 +289,13 @@ class TestTheUngatedRoutesReachNoGate(bases.Age2RuleTestBase):
                     scenario.economy.has_some_source(resource).resolve(self.world)(state)
                     scenario.economy.has_easy_source(resource).resolve(self.world)(state)
         self.assertEqual(set(), logic.scenario_answers_open)
+
+    def test_the_bases_lumberjacks_are_ungated(self):
+        self.build()
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                ungated = [route.name for route in scenario.routes.ungated_routes()]
+                self.assertIn("Lumberjacks with a Base", ungated)
 
     def test_the_two_groups_partition_the_catalog(self):
         self.build()

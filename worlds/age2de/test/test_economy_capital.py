@@ -1,6 +1,8 @@
+from rule_builder.rules import Has, Rule
+
 from . import bases
 from ..Options import ExistingTechs, PartnerTrade
-from ..items.Items import Resource
+from ..items.Items import Age2ItemData, Resource
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.custom_logic.EconomyRoutes import Strength
 
@@ -110,3 +112,87 @@ class TestEveryRouteOnABaseTrainsVillagers(EconomyCapitalBase):
                 self.assertGreater(len(on_a_base), 6)
                 self.assertEqual([], [name for name, needs in on_a_base.items()
                                       if needs.get(Resource.FOOD, 0) < Strength.SOME])
+
+
+class TestASecondTownCenterAsACampPaysThroughItsNeeds(EconomyCapitalBase):
+    """#32 item 4: a second Town Center as a camp is its own route per at-scale route, paying
+    *some* wood and stone for itself and, below Castle, the Castle price, all through its needs."""
+
+    AT_SCALE = (
+        "Lumberjacks with a Base",
+        "Villagers gathering food with a Base",
+        "Villagers gathering gold with a Base",
+        "Villagers gathering stone with a Base",
+        "Villagers and Fishing Ships gathering food",
+        "Villagers and Fishing Ships gathering gold",
+    )
+    TOWN_CENTER = {Resource.WOOD: Strength.SOME, Resource.STONE: Strength.SOME}
+    TOWN_CENTER_ITEMS = {
+        Age2ItemData.TOWN_CENTER_WOOD.item_name,
+        Age2ItemData.TOWN_CENTER_STONE.item_name,
+    }
+    EXISTING_TECHS = (ExistingTechs.option_vanilla, ExistingTechs.option_start_in_dark_age)
+
+    @staticmethod
+    def boats(route: str) -> dict[Resource, Strength]:
+        if route.startswith("Villagers and Fishing Ships"):
+            return {Resource.WOOD: Strength.AT_SCALE}
+        return {}
+
+    def camp_routes(self, ending: str) -> dict[str, dict[Resource, Strength]]:
+        return {
+            name: needs for name, needs in self.needs(Age2ScenarioData.AP_ATTILA_1).items()
+                if "second Town Center" in name and name.endswith(ending)
+        }
+
+    def test_advanced_to_castle_it_needs_the_castle_price_and_some_wood_and_stone(self):
+        self.build(existing_techs=ExistingTechs.option_start_in_dark_age)
+        expected = {
+            f"{route} at a second Town Center, advanced to Castle": {
+                **self.TOWN_CENTER,
+                **self.boats(route),
+                Resource.FOOD: Strength.AT_SCALE,
+                Resource.GOLD: Strength.SOME,
+            }
+            for route in self.AT_SCALE
+        }
+        self.assertEqual(expected, self.camp_routes(", advanced to Castle"))
+
+    def test_started_in_castle_it_needs_some_wood_and_stone_and_the_villagers_food(self):
+        self.build(existing_techs=ExistingTechs.option_start_in_dark_age)
+        expected = {
+            f"{route} at a second Town Center, started in Castle": {
+                **self.TOWN_CENTER,
+                **self.boats(route),
+                Resource.FOOD: Strength.SOME,
+            }
+            for route in self.AT_SCALE
+        }
+        self.assertEqual(expected, self.camp_routes(", started in Castle"))
+
+    def test_the_camp_never_asks_the_town_center_items(self):
+        for existing_techs in self.EXISTING_TECHS:
+            with self.subTest(existing_techs=existing_techs):
+                self.build(existing_techs=existing_techs)
+                for scenario in self.world.rules.logic.scenarios:
+                    camp = scenario.buildings.can_build_tc_as_camp().resolve(self.world)
+                    self.assertEqual(set(), self.TOWN_CENTER_ITEMS & self.items_asked(camp))
+
+    def test_the_defence_never_asks_the_town_center_items(self):
+        for existing_techs in self.EXISTING_TECHS:
+            with self.subTest(existing_techs=existing_techs):
+                self.build(existing_techs=existing_techs)
+                for scenario in self.world.rules.logic.scenarios:
+                    defence = scenario.buildings.can_build_tc_as_defence().resolve(self.world)
+                    self.assertEqual(set(), self.TOWN_CENTER_ITEMS & self.items_asked(defence))
+
+    def items_asked(self, rule: Rule.Resolved) -> set[str]:
+        if isinstance(rule, Has.Resolved):
+            return {rule.item_name}
+        below = [
+            getattr(rule, name) for name in ("child", "answer")
+                if hasattr(rule, name)
+        ]
+        if hasattr(rule, "children"):
+            below += list(rule.children)
+        return set().union(*[self.items_asked(child) for child in below])

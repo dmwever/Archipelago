@@ -45,8 +45,12 @@ would have to be unpicked one rule at a time.
   strongpoint, a Dock holding a shoreline, more Town Centers) asks for *some* of each resource it
   costs, read off `Age2BuildingData.cost`, in the same expression that asks whether P1 can build it
   at all. That is not a price in ADR-0002's sense — a price is an easy source — and it is not a
-  bank. More Town Centers pay inside `can_build_multiple_tc`, so the strongpoint, the shoreline and
-  the camps all inherit it. The base's own Town Center is no strongpoint. The Castle is the
+  bank. A Mill holding a shoreline beside a defence is built the same way, free where it stands.
+  A second Town Center has two rules (#40), and neither asks the Town Center items, which paid
+  for the base's own: as a defence (the strongpoint and the shoreline) it pays *some* of its
+  cost and the Castle price out of the ungated routes; as a camp it is its own route version,
+  paid through that route's needs. A Castle-age strongpoint pays the Castle price out of the
+  ungated routes too. The base's own Town Center is no strongpoint. The Castle is the
   exception (#42): as a defence it asks easy stone, read from the ungated routes, so it no longer
   opens wood, gold or food at scale off *some* stone. The stone routes at scale alone also take a
   Castle paid for by *some* stone, so stone still buys the Castle that holds it. The gate keeps

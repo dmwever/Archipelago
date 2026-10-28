@@ -43,6 +43,7 @@ class ScenarioRoutesLogic:
         `test_defence_pays.py` is what catches one filed in the wrong group."""
         return [
             *self.villager_routes_of_some(),
+            *self.lumberjack_routes_at_scale(),
             *self.relic_routes(),
             *self.renewable_routes(),
             *self.trade_routes(),
@@ -62,6 +63,7 @@ class ScenarioRoutesLogic:
         handed."""
         return [
             *self.villager_routes_of_some(),
+            *self.lumberjack_routes_at_scale(),
             *self.relic_routes(),
             *self.renewable_routes(),
             *self.trade_routes(),
@@ -586,7 +588,7 @@ class ScenarioRoutesLogic:
             ),
         ]
 
-    def villager_routes_at_scale(self) -> list[EconomyRoute]:
+    def lumberjack_routes_at_scale(self) -> list[EconomyRoute]:
         return [
             EconomyRoute(
                 name="Lumberjacks with a Base",
@@ -599,20 +601,80 @@ class ScenarioRoutesLogic:
                 needs={Resource.FOOD: Strength.SOME},
             ),
             EconomyRoute(
-                name="Villagers gathering food with a Base at a second Town Center",
+                name="Lumberjacks with a Base at a second Town Center, started in Castle",
+                yields={Resource.WOOD: Strength.AT_SCALE},
+                leaf=(
+                    self.economy.can_chop_some()
+                    & self.scenario.has_base()
+                    & self.scenario.buildings.can_build_tc_as_camp()
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Lumberjacks with a Base at a second Town Center, advanced to Castle",
+                yields={Resource.WOOD: Strength.AT_SCALE},
+                leaf=(
+                    self.economy.can_chop_some()
+                    & self.scenario.has_base()
+                    & self.scenario.buildings.can_build_tc_as_camp()
+                ),
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+        ]
+
+    def villager_routes_at_scale(self) -> list[EconomyRoute]:
+        return [
+            EconomyRoute(
+                name="Villagers gathering food with a Base at a second Town Center, started in Castle",
                 yields={Resource.FOOD: Strength.AT_SCALE},
                 leaf=(
                     SufficientRawResources(
                         sources=self.economy.villager_food(
                             Age2BuildingData.TOWN_CENTER,
-                            self.scenario.buildings.can_build_multiple_tc(),
+                            self.scenario.buildings.can_build_tc_as_camp(),
+                        ),
+                        needed=self.economy.demand.food,
+                        resource="food",
+                    )
+                    & self.scenario.has_base()
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Villagers gathering food with a Base at a second Town Center, advanced to Castle",
+                yields={Resource.FOOD: Strength.AT_SCALE},
+                leaf=(
+                    SufficientRawResources(
+                        sources=self.economy.villager_food(
+                            Age2BuildingData.TOWN_CENTER,
+                            self.scenario.buildings.can_build_tc_as_camp(),
                         ),
                         needed=self.economy.demand.food,
                         resource="food",
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering food with a Base at a standing Mill",
@@ -727,20 +789,46 @@ class ScenarioRoutesLogic:
                 needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
             ),
             EconomyRoute(
-                name="Villagers gathering gold with a Base at a second Town Center",
+                name="Villagers gathering gold with a Base at a second Town Center, started in Castle",
                 yields={Resource.GOLD: Strength.AT_SCALE},
                 leaf=(
                     SufficientRawResources(
                         sources=self.economy.villager_gold(
                             Age2BuildingData.TOWN_CENTER,
-                            self.scenario.buildings.can_build_multiple_tc(),
+                            self.scenario.buildings.can_build_tc_as_camp(),
+                        ),
+                        needed=self.economy.demand.gold,
+                        resource="gold",
+                    )
+                    & self.scenario.has_base()
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Villagers gathering gold with a Base at a second Town Center, advanced to Castle",
+                yields={Resource.GOLD: Strength.AT_SCALE},
+                leaf=(
+                    SufficientRawResources(
+                        sources=self.economy.villager_gold(
+                            Age2BuildingData.TOWN_CENTER,
+                            self.scenario.buildings.can_build_tc_as_camp(),
                         ),
                         needed=self.economy.demand.gold,
                         resource="gold",
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a standing Mining Camp",
@@ -887,20 +975,46 @@ class ScenarioRoutesLogic:
                 needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
             ),
             EconomyRoute(
-                name="Villagers gathering stone with a Base at a second Town Center",
+                name="Villagers gathering stone with a Base at a second Town Center, started in Castle",
                 yields={Resource.STONE: Strength.AT_SCALE},
                 leaf=(
                     SufficientRawResources(
                         sources=self.economy.villager_stone(
                             Age2BuildingData.TOWN_CENTER,
-                            self.scenario.buildings.can_build_multiple_tc(),
+                            self.scenario.buildings.can_build_tc_as_camp(),
+                        ),
+                        needed=self.economy.demand.stone,
+                        resource="stone",
+                    )
+                    & self.scenario.has_base()
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Villagers gathering stone with a Base at a second Town Center, advanced to Castle",
+                yields={Resource.STONE: Strength.AT_SCALE},
+                leaf=(
+                    SufficientRawResources(
+                        sources=self.economy.villager_stone(
+                            Age2BuildingData.TOWN_CENTER,
+                            self.scenario.buildings.can_build_tc_as_camp(),
                         ),
                         needed=self.economy.demand.stone,
                         resource="stone",
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering stone with a Base at a standing Mining Camp",
@@ -992,6 +1106,42 @@ class ScenarioRoutesLogic:
                 needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
             ),
             EconomyRoute(
+                name="Villagers and Fishing Ships gathering food at a second Town Center, started in Castle",
+                yields={Resource.FOOD: Strength.AT_SCALE},
+                leaf=(
+                    SufficientRawResources(
+                        sources=self.economy.villager_and_boat_food_at_a_second_town_center(),
+                        needed=self.economy.demand.food,
+                        resource="food",
+                    )
+                    & self.scenario.has_base()
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Villagers and Fishing Ships gathering food at a second Town Center, advanced to Castle",
+                yields={Resource.FOOD: Strength.AT_SCALE},
+                leaf=(
+                    SufficientRawResources(
+                        sources=self.economy.villager_and_boat_food_at_a_second_town_center(),
+                        needed=self.economy.demand.food,
+                        resource="food",
+                    )
+                    & self.scenario.has_base()
+                ),
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
                 name="Villagers and Fishing Ships gathering gold",
                 yields={Resource.GOLD: Strength.AT_SCALE},
                 leaf=(
@@ -1003,6 +1153,42 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_base()
                 ),
                 needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+            ),
+            EconomyRoute(
+                name="Villagers and Fishing Ships gathering gold at a second Town Center, started in Castle",
+                yields={Resource.GOLD: Strength.AT_SCALE},
+                leaf=(
+                    SufficientRawResources(
+                        sources=self.economy.villager_and_boat_gold_at_a_second_town_center(),
+                        needed=self.economy.demand.gold,
+                        resource="gold",
+                    )
+                    & self.scenario.has_base()
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Villagers and Fishing Ships gathering gold at a second Town Center, advanced to Castle",
+                yields={Resource.GOLD: Strength.AT_SCALE},
+                leaf=(
+                    SufficientRawResources(
+                        sources=self.economy.villager_and_boat_gold_at_a_second_town_center(),
+                        needed=self.economy.demand.gold,
+                        resource="gold",
+                    )
+                    & self.scenario.has_base()
+                ),
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    Resource.STONE: Strength.SOME,
+                },
             ),
         ]
 

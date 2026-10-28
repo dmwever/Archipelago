@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Or, Rule
+from rule_builder.rules import False_, Has, Or, Rule, True_
 
-from ...items.Items import Age2ItemData
+from ...items.Items import Age2ItemData, Resource
 
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
@@ -72,19 +72,54 @@ class ScenarioBuildingLogic:
             return self.can_build_tc()
         return self.can_build_tc() & self.can_build_structurally(Age2BuildingData.HOUSE)
 
-    def can_build_multiple_tc(self) -> Rule:
-        return self.scenario.named("can build more Town Centers", self._multiple_tc())
+    def can_build_tc_as_defence(self) -> Rule:
+        return self.scenario.named(
+            "can build a second Town Center as a defence",
+            self._tc_as_defence(),
+        )
 
-    def _multiple_tc(self) -> Rule:
-        return (self.can_build_tc()
+    def _tc_as_defence(self) -> Rule:
+        return (self._can_defend_with(B.TOWN_CENTER)
                 & self.scenario.ages.has_reached(Age2AgeData.CASTLE)
-                & self.scenario.economy.can_pay_some(B.TOWN_CENTER.cost))
+                & self._can_advance_to_castle_on_ungated_routes())
+
+    def can_build_tc_as_camp(self) -> Rule:
+        return self.scenario.named(
+            "can build a second Town Center as a camp",
+            self._tc_as_camp(),
+        )
+
+    def _tc_as_camp(self) -> Rule:
+        return (self.can_build_structurally(B.TOWN_CENTER)
+                & self.scenario.ages.has_reached(Age2AgeData.CASTLE))
+
+    def _can_advance_to_castle_on_ungated_routes(self) -> Rule:
+        if Age2AgeData.CASTLE <= self.scenario.ages.start_age:
+            return True_()
+        economy = self.scenario.economy
+        return (economy.has_ungated_easy_source(Resource.FOOD)
+                & economy.can_pay_some([Resource.GOLD])
+                & economy.can_pay_some([Resource.WOOD]))
+
+    def can_build_castle_of_some_stone(self) -> Rule:
+        return self.scenario.named(
+            "can build a Castle out of some stone",
+            self._castle_of_some_stone(),
+        )
+
+    def _castle_of_some_stone(self) -> Rule:
+        buildable = self.can_build_structurally(B.CASTLE)
+        if isinstance(buildable, False_):
+            return False_()
+        return (buildable
+                & self.scenario.economy.can_pay_some([Resource.STONE])
+                & self._can_advance_to_castle_on_ungated_routes())
 
     def is_fortified(self) -> Rule:
         return self.scenario.named("has a built defence", self._fortified())
 
     def _fortified(self) -> Rule:
-        strongpoint = self.can_build_multiple_tc() | self._can_defend_with_any_of(STRONGPOINTS)
+        strongpoint = self.can_build_tc_as_defence() | self._can_defend_with_any_of(STRONGPOINTS)
         return strongpoint | (self._can_defend_with_any_of(WALLS) & self._can_defend_with_any_of(TOWERS))
 
     def _can_defend_with_any_of(self, buildings: list[Age2BuildingData]) -> Rule:
@@ -94,13 +129,25 @@ class ScenarioBuildingLogic:
         buildable = self.can_build_structurally(building)
         if isinstance(buildable, False_):
             return False_()
+        if building is B.CASTLE:
+            return (buildable
+                    & self.scenario.economy.has_ungated_easy_source(Resource.STONE)
+                    & self._can_advance_to_castle_on_ungated_routes())
+        if building.age is Age2AgeData.CASTLE:
+            return (buildable
+                    & self.scenario.economy.can_pay_some(building.cost)
+                    & self._can_advance_to_castle_on_ungated_routes())
         return buildable & self.scenario.economy.can_pay_some(building.cost)
 
     def can_hold_a_shoreline(self) -> Rule:
-        return ((self.scenario.has_building_structurally(Age2BuildingData.MILL)
-                 & self.is_fortified())
-                | self.can_build_multiple_tc()
+        return ((self._has_mill_paid_for_some() & self.is_fortified())
+                | self.can_build_tc_as_defence()
                 | self._can_defend_with(Age2BuildingData.DOCK))
+
+    def _has_mill_paid_for_some(self) -> Rule:
+        return (self.scenario.starting_state.starts_with_building[B.MILL]
+                | (self.can_build_structurally(B.MILL)
+                   & self.scenario.economy.can_pay_some(B.MILL.cost)))
 
     def has_gold_dropsite(self) -> Rule:
         return self._any_of(GOLD_DROPSITES)
@@ -136,8 +183,10 @@ class ScenarioBuildingLogic:
         return self._camp_among(FISHERMAN_DROPSITES)
 
     def _camp_among(self, dropsites: list[Age2BuildingData]) -> Rule:
-        camps = [self._camp(building) for building in dropsites if building is not B.TOWN_CENTER]
-        return Or(*camps) | self.can_build_multiple_tc()
+        return Or(*[
+            self._camp(building) for building in dropsites
+                if building is not B.TOWN_CENTER
+        ])
 
     def _camp(self, building: Age2BuildingData) -> Rule:
         if not self.scenario.is_seeded(building):
