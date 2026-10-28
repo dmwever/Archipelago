@@ -10,7 +10,7 @@ import unittest
 
 from . import bases
 from ..Options import ExistingTechs, MarketTrade
-from ..items.Items import Resource
+from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData as B
 from ..locations.connections.ScenarioResources import Tier
 from ..locations.UnitLines import Age2UnitLineData as Line
@@ -37,6 +37,10 @@ from .test_economy_catalog import (
 WOOD_OF_SOME = job(Job.LUMBERJACK_MALE)
 """A lumberjack and the base's Town Center to drop at: the cheapest *some* on the map."""
 STONE_OF_SOME = job(Job.STONE_MINER_MALE)
+BASE_TOWN_CENTER = (
+    Age2ItemData.TOWN_CENTER_WOOD.item_name,
+    Age2ItemData.TOWN_CENTER_STONE.item_name,
+)
 
 
 class DefenceToyBase(ToyScenarioBase):
@@ -59,7 +63,7 @@ class TestOpenGroundIsFreeOfSomeAndHeldAtScale(DefenceToyBase):
 
     def test_the_same_ground_at_scale_yields_nothing_until_it_is_held(self):
         self.toy({Tier.OPEN: tier(gold_count=2000)})
-        working = (*BASE_SWITCHES, *self.MINERS, WOOD_OF_SOME)
+        working = (*BASE_SWITCHES, *BASE_TOWN_CENTER, *self.MINERS, WOOD_OF_SOME)
         self.assertFalse(self.easy(Resource.GOLD, self.state(*working)))
         self.assertTrue(self.easy(Resource.GOLD, self.state(*working, self.CHURCH)))
 
@@ -154,7 +158,7 @@ class TestTheSecondTownCenterPays(DefenceToyBase):
          {Tier.BASE: tier(hunt_count=2000, stone_count=100)},
          job(Job.HUNTER_MALE), Resource.FOOD),
     )
-    WORKERS = (*BASE_SWITCHES, VILLAGERS, building(B.MINING_CAMP))
+    WORKERS = (*BASE_SWITCHES, *BASE_TOWN_CENTER, VILLAGERS, building(B.MINING_CAMP))
 
     def test_each_of_them_holds_only_with_some_wood_and_some_stone(self):
         for site, resources, gatherer, resource in self.SITES:
@@ -207,6 +211,7 @@ class TestHoldingAShorelineWithAMillPaysForIt(DefenceToyBase):
     MAP = {Tier.OPEN: tier(shore_fish_count=2000), Tier.BASE: tier(stone_count=100)}
     FISHERMEN = (
         *BASE_SWITCHES,
+        *BASE_TOWN_CENTER,
         VILLAGERS,
         job(Job.FISHERMAN_MALE),
         standing(B.FOLWARK),

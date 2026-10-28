@@ -74,7 +74,7 @@ class TestTheTownCenterVariantChargesNothing(ToyScenarioBase):
         (Age2VillagerJobData.FISHERMAN_MALE, "shore_fish_count", Resource.FOOD),
         (Age2VillagerJobData.OYSTER_GATHERER_MALE, "oyster_count", Resource.GOLD),
     )
-    TOWN_CENTER = building(Age2BuildingData.TOWN_CENTER)
+    TOWN_CENTER = standing(Age2BuildingData.TOWN_CENTER)
 
     def test_every_gatherer_yields_some_at_a_town_center_with_no_seed_and_no_wood(self):
         for gatherer, field, resource in self.GATHERERS:

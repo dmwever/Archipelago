@@ -97,6 +97,8 @@ class UnitLogic:
             answer = scenario.units.can_do_job(job)
             if isinstance(answer, False_):
                 continue
+            if job.building is not None:
+                answer = answer & scenario.economy.can_pay_some(job.building.cost)
             rules.append(scenario.is_unlocked() & answer)
         return Or(*rules) & self.has_profession_item(job)
 
