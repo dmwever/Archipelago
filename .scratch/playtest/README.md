@@ -13,7 +13,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 07 | [Own Shepherd in logic where no scenario with villagers has sheep](issues/07-own-shepherd-without-sheep.md) | done |
 | 08 | [Traps fire again after reconnecting to the server](issues/08-traps-resent-on-server-reconnect.md) | done |
 | 09 | [Castle Age received before reaching Feudal covers the Feudal button](issues/09-castle-age-covers-feudal-button.md) | done |
-| 10 | [Caveman knockdowns and unit checks are starved while the unit count keeps moving](issues/10-caveman-sweep-delayed.md) | ready-for-human (awaiting playtest; folds in #34) |
+| 10 | [Caveman knockdowns and unit checks are starved while the unit count keeps moving](issues/10-caveman-sweep-delayed.md) | done (folds in #34) |
 | 11 | [Khan shows up as trainable at the Castle](issues/11-khan-trainable-at-castle.md) | ready-for-human (awaiting playtest) |
 | 12 | [Build Fish Trap doesn't require a Fishing Ship](issues/12-fish-trap-without-fishing-ship.md) | done |
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | done (with #05) |
@@ -39,3 +39,13 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 33 | [Spike: what do the caveman sweep and the unit checks cost per tick?](issues/33-unitsanity-sweep-cost-spike.md) | done |
 | 34 | [Without caveman, unit location checks wait for a quiet second](issues/34-unit-checks-starved-caveman-off.md) | done (folds into #10) |
 | 35 | [Spike: can the unitsanity rule find P1's new units by id on every tick?](issues/35-unit-id-lookup-spike.md) | done |
+| 36 | [Which tests run on every commit, and what the easy-source snapshot is for](issues/36-pre-commit-test-curation.md) | needs-triage |
+| 37 | [A test that no structural form is asked bare](issues/37-never-bare-test.md) | done |
+| 38 | [The age price, and what locations pay outside the economy](issues/38-age-price-outside-economy.md) | done |
+| 39 | [Pay the economy's capital: Feudal, Castle, camps and villagers](issues/39-economy-capital-paid.md) | ready-for-agent |
+| 40 | [A second Town Center as a defence and as a camp](issues/40-second-tc-defence-and-camp.md) | ready-for-agent |
+| 41 | [Cavemanify pulls a garrisoned unit out, and its replacement can be stuck](issues/41-cavemanify-garrisoned-units.md) | needs-triage |
+| 42 | [The age climb's Town Center and age-up buildings are unpaid](issues/42-age-climb-buildings-paid.md) | done |
+| 43 | [Housing](issues/43-houses-and-the-base.md) | ready-for-agent |
+| 44 | [What the base becomes once the House leaves it](issues/44-the-base-without-houses.md) | needs-triage |
+| 45 | [The caveman ledger is scanned linearly, and it is most of what a full pass costs](issues/45-caveman-ledger-lookup.md) | needs-triage |
