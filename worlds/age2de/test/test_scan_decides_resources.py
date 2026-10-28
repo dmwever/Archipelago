@@ -1,7 +1,7 @@
 import dataclasses
 from pathlib import Path
 
-from rule_builder.rules import False_, Rule
+from rule_builder.rules import False_, Rule, True_
 
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.ScenarioLogic import ScenarioLogic, ScenarioStartingState
@@ -32,6 +32,15 @@ GUARDED_QUESTIONS = {
     "_oysters_by_boat": "oyster_count",
     "_hunt_whales": "whale_count",
     "_collect_relics": "relic_count",
+}
+
+ASKED_AT_A_DROPSITE = {
+    "_mine_gold",
+    "_quarry_stone",
+    "_hunt",
+    "_forage",
+    "_fish_from_shore",
+    "_oysters_from_shore",
 }
 
 OYSTERS_AND_WHALES = {
@@ -86,14 +95,12 @@ class TestEveryGuardedQuestionKeepsItsScanGuard(ScanDecidesResourcesTestBase):
             self.scan(scenario, **dict.fromkeys(GUARDED_QUESTIONS.values(), 0))
             for question in GUARDED_QUESTIONS:
                 with self.subTest(scenario=scenario.scenario.name, question=question):
-                    answer = getattr(scenario.economy, question)()
+                    asked = getattr(scenario.economy, question)
+                    if question in ASKED_AT_A_DROPSITE:
+                        answer = asked(True_())
+                    else:
+                        answer = asked()
                     self.assertIsInstance(answer, False_)
-
-    def test_wood_has_no_scan_guard(self):
-        self.build()
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        self.scan(scenario, **dict.fromkeys(GUARDED_QUESTIONS.values(), 0))
-        self.assertFalse(self.is_statically_false(scenario.economy.can_chop_some()))
 
 class TestOystersAndWhalesFollowTheScan(ScanDecidesResourcesTestBase):
 

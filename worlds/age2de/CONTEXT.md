@@ -117,7 +117,9 @@ A route needs one only to work ground **at scale**; a route of *some* walks out,
 needs and comes home, so open ground costs it nothing. A defence pays for itself where it is
 asked, out of *some* of what it costs, so the stone on open ground can buy the wall that then
 holds it. The Castle is the exception: it always needs easy stone, except where it holds stone,
-which *some* stone still buys. One standing at the start is no defence: what it guards is already the base's ground.
+which *some* stone still buys. A defence of an age the scenario starts below also pays the advance
+into it (see **Age price**), out of the economy that runs without a defence. An army pays *some* of
+a building to train it in, unless one stands. One standing at the start is no defence: what it guards is already the base's ground.
 Nor is an army P1 starts with or is granted: that is the scenario's plan, not a garrison.
 _Avoid_: fortification (when the paid build is meant), the base's Town Center as a strongpoint,
 guard (that is the trade sense, below)
@@ -127,7 +129,8 @@ A Town Center P1 can turn out villagers from: one standing at the start, or one 
 for by the starting Town Center resources and stood on ground P1 can reach. It also takes the food
 to train the first villagers and the Villager Line, even where villagers already stand. The base
 is the economy seed of villagers gathering at scale: one route's economy seed, not the economy
-itself. The base buys the first villagers only; training more is *some* food that every route
+itself. Its Town Center is also a dropsite, so a route on the base never asks again for a dropsite
+the Town Center already is. The base buys the first villagers only; training more is *some* food that every route
 standing on the base needs, and the room for them is **housing**.
 _Avoid_: Town Center (when the base is meant), camp, having villagers, economy
 

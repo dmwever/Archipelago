@@ -320,8 +320,8 @@ class TestNothingIsAskedBare(unittest.TestCase):
 
     maxDiff = None
 
-    OWN_FARMER = "Own Farmer (Male)"
-    SCOURGE_FARM = f"{OWN_FARMER}: The Scourge of God can build a Farm (unpaid: wood)"
+    COMPLETE_THE_RISING = "Complete The Rising"
+    RISING_PALADIN = f"{COMPLETE_THE_RISING}: The Rising can train a Paladin (unpaid: stone)"
 
     def test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare(self):
         unlisted, stale = unlisted_and_stale(allowlist(), findings())
@@ -348,23 +348,26 @@ class TestNothingIsAskedBare(unittest.TestCase):
 
     def test_a_still_bare_site_taken_off_the_allowlist_fails(self):
         unlisted, stale = unlisted_and_stale(
-            allowlist() - {self.SCOURGE_FARM},
+            allowlist() - {self.RISING_PALADIN},
             findings(),
         )
-        self.assertEqual(([self.SCOURGE_FARM], []), (unlisted, stale))
+        self.assertEqual(([self.RISING_PALADIN], []), (unlisted, stale))
 
     def test_an_entry_whose_site_is_now_paid_fails(self):
         with contextlib.ExitStack() as paid:
             for existing_techs in EXISTING_TECHS:
                 world = maximal_world(existing_techs)
-                location = world.get_location(self.OWN_FARMER)
-                scourge = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-                wood = scourge.economy.has_easy_source(Resource.WOOD)
-                paid.enter_context(self.rule_added(location, wood.resolve(world), world))
+                location = world.get_location(self.COMPLETE_THE_RISING)
+                rising = world.rules.logic.for_scenario(Age2ScenarioData.AP_JOAN_4)
+                stone = rising.economy.has_easy_source(Resource.STONE)
+                paid.enter_context(self.rule_added(location, stone.resolve(world), world))
             unlisted, stale = unlisted_and_stale(allowlist(), findings())
-        farms = sorted(entry for entry in allowlist() if entry.startswith(f"{self.OWN_FARMER}: "))
-        self.assertIn(self.SCOURGE_FARM, farms)
-        self.assertEqual(([], farms), (unlisted, stale))
+        trains = sorted(
+            entry for entry in allowlist()
+                if entry.startswith(f"{self.COMPLETE_THE_RISING}: ")
+        )
+        self.assertIn(self.RISING_PALADIN, trains)
+        self.assertEqual(([], trains), (unlisted, stale))
 
     def test_no_entry_is_at_a_reach_build_tech_or_unit_location(self):
         located = {

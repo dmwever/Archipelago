@@ -132,7 +132,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.WOOD: Strength.SOME},
                 leaf=(
                     self.economy.chops_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                     )
                 ),
             ),
@@ -159,7 +159,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.GOLD: Strength.SOME},
                 leaf=(
                     self.economy.gathers_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                         Job.GOLD_MINER_MALE,
                         "gold_count",
                     )
@@ -204,7 +204,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.STONE: Strength.SOME},
                 leaf=(
                     self.economy.gathers_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                         Job.STONE_MINER_MALE,
                         "stone_count",
                     )
@@ -249,7 +249,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=(
                     self.economy.gathers_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                         Job.HUNTER_MALE,
                         "hunt_count",
                     )
@@ -317,7 +317,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=(
                     self.economy.gathers_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                         Job.SHEPHERD_MALE,
                         "herd_count",
                     )
@@ -374,7 +374,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=(
                     self.economy.gathers_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                         Job.FORAGER_MALE,
                         "bush_count",
                     )
@@ -431,7 +431,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.FOOD: Strength.SOME},
                 leaf=(
                     self.economy.gathers_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                         Job.FISHERMAN_MALE,
                         "shore_fish_count",
                     )
@@ -511,7 +511,7 @@ class ScenarioRoutesLogic:
                 yields={Resource.GOLD: Strength.SOME},
                 leaf=(
                     self.economy.gathers_some_at(
-                        self.scenario.has_building_structurally(Age2BuildingData.TOWN_CENTER),
+                        self.scenario.has_building(Age2BuildingData.TOWN_CENTER),
                         Job.OYSTER_GATHERER_MALE,
                         "oyster_count",
                     )
@@ -594,7 +594,8 @@ class ScenarioRoutesLogic:
                 name="Lumberjacks with a Base",
                 yields={Resource.WOOD: Strength.AT_SCALE},
                 leaf=(
-                    self.economy.can_chop_some()
+                    self.scenario.has_vils()
+                    & self.economy.has_job(Job.LUMBERJACK_MALE)
                     & self.scenario.has_base()
                     & self.scenario.buildings.has_wood_camp()
                 ),
@@ -604,7 +605,8 @@ class ScenarioRoutesLogic:
                 name="Lumberjacks with a Base at a second Town Center, started in Castle",
                 yields={Resource.WOOD: Strength.AT_SCALE},
                 leaf=(
-                    self.economy.can_chop_some()
+                    self.scenario.has_vils()
+                    & self.economy.has_job(Job.LUMBERJACK_MALE)
                     & self.scenario.has_base()
                     & self.scenario.buildings.can_build_tc_as_camp()
                     & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
@@ -619,7 +621,8 @@ class ScenarioRoutesLogic:
                 name="Lumberjacks with a Base at a second Town Center, advanced to Castle",
                 yields={Resource.WOOD: Strength.AT_SCALE},
                 leaf=(
-                    self.economy.can_chop_some()
+                    self.scenario.has_vils()
+                    & self.economy.has_job(Job.LUMBERJACK_MALE)
                     & self.scenario.has_base()
                     & self.scenario.buildings.can_build_tc_as_camp()
                 ),

@@ -116,10 +116,6 @@ class ScenarioResourceLogic:
             return False_()
         return dropsite & self.scenario.has_vils() & self.has_job(Job.STONE_MINER_MALE)
 
-    def can_chop_some(self) -> Rule:
-        return (self.scenario.buildings.has_wood_dropsite() & self.scenario.has_vils()
-                & self.has_job(Job.LUMBERJACK_MALE))
-
     def can_hunt(self, dropsite: Rule) -> Rule:
         return self.scenario.named("can hunt", self._hunt(dropsite))
 
@@ -242,7 +238,6 @@ class ScenarioResourceLogic:
             self.scenario.has_base()
             & Or(*[self.scenario.has_building_structurally(building) & self.has_job(job)
                    for building, job in RENEWABLE_FOOD])
-            & self.scenario.buildings.has_food_dropsite()
         )
 
     def can_work_fish_traps(self) -> Rule:
