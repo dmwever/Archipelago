@@ -202,6 +202,15 @@ class ScenarioResourceLogic:
             return False_()
         return self.scenario.buildings.has_fishing_boat_dropsite() & self.has_fishing_ships()
 
+    def chops_some_at(self, dropsite: Rule) -> Rule:
+        return dropsite & self.scenario.has_vils() & self.has_job(Job.LUMBERJACK_MALE)
+
+    def gathers_some_at(self, dropsite: Rule, job: Job, field: str) -> Rule:
+        if not getattr(self.counts, field):
+            return False_()
+        gathers = dropsite & self.scenario.has_vils() & self.has_job(job)
+        return self._in_any_tier(self.tiered(gathers, field, self.open_resource_gates()))
+
     def can_collect_relics(self, monastery: Rule | None = None) -> Rule:
         return self.scenario.named("can collect relics", self._collect_relics(monastery))
 
@@ -283,14 +292,7 @@ class ScenarioResourceLogic:
             & self.logic.units.has_unit_items(Age2UnitData.TRADE_COG)
         )
 
-    def chops_some_at(self, dropsite: Rule) -> Rule:
-        return dropsite & self.scenario.has_vils() & self.has_job(Job.LUMBERJACK_MALE)
-
-    def gathers_some_at(self, dropsite: Rule, job: Job, field: str) -> Rule:
-        if not getattr(self.counts, field):
-            return False_()
-        gathers = dropsite & self.scenario.has_vils() & self.has_job(job)
-        return self._in_any_tier(self.tiered(gathers, field, self.open_resource_gates()))
+    # -- what a route at scale adds up --------------------------------------------------------
 
     def villager_food(self, camp: Age2BuildingData, dropsite: Rule) -> tuple[Term, ...]:
         sources: list[Term] = [
