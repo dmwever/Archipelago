@@ -193,7 +193,7 @@ class TestWithNoPartnerTradeTheDockIsFundedLikeAMill(ToyScenarioBase):
 
     def test_an_unseeded_dock_is_a_camp_at_scale(self):
         self.toy({Tier.BASE: tier(oyster_count=2000)}, **self.NO_PARTNER_TRADE)
-        state = self.state(*BASE_SWITCHES, *self.OYSTER_GATHERERS)
+        state = self.state(*BASE_SWITCHES, *self.OYSTER_GATHERERS, *LUMBERJACKS)
         self.assertTrue(self.easy(Resource.GOLD, state))
 
     def test_fishing_ships_drop_at_an_unseeded_dock(self):

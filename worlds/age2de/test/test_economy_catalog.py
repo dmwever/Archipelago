@@ -286,7 +286,8 @@ class TestFarmingNeedsABase(ToyScenarioBase):
 
 class TestMarketTradeSeededByWoodAtScale(ToyScenarioBase):
     MAP = {Tier.BASE: tier(gold_count=2000, hunt_count=2000)}
-    FINITE_SOURCES = (*BASE_SWITCHES, *GOLD_MINERS, job(Job.HUNTER_MALE), building(B.MILL))
+    FINITE_SOURCES = (*BASE_SWITCHES, *GOLD_MINERS, *LUMBERJACKS, job(Job.HUNTER_MALE),
+                      building(B.MILL))
 
     def test_wood_at_scale_seeds_market_trade(self):
         self.toy(self.MAP, market_trade=MarketTrade.option_true)
@@ -386,7 +387,7 @@ class TestPerSourceCamps(ToyScenarioBase):
         self.assertFalse(self.easy(Resource.FOOD, self.state(*self.HUNTERS)))
 
     def test_hunt_counts_with_each_of_its_camps(self):
-        for camp in ((building(B.MILL),), (building(B.FOLWARK),),
+        for camp in ((building(B.MILL), *LUMBERJACKS), (building(B.FOLWARK), *LUMBERJACKS),
                      (building(B.MULE_CART), MULE_CART_SEED), (MORE_TCS,)):
             with self.subTest(camp=camp):
                 self.toy({Tier.BASE: tier(hunt_count=2000)})

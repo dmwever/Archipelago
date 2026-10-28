@@ -73,6 +73,7 @@ class ScenarioLogic:
         from .scenarios.ScenarioPlayerLogic import ScenarioPlayerLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioResourceLogic import ScenarioResourceLogic
+        from .scenarios.ScenarioRoutesLogic import ScenarioRoutesLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
         self.civilization = ScenarioCivilizationLogic(self)
         self.ages = ScenarioAgeLogic(self)
@@ -81,6 +82,7 @@ class ScenarioLogic:
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
+        self.routes = ScenarioRoutesLogic(self)
         self.player_logic = ScenarioPlayerLogic(self)
 
     def has_vils(self) -> Rule:

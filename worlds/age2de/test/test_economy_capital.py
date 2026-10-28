@@ -13,8 +13,8 @@ class EconomyCapitalBase(bases.Age2RuleTestBase):
     starting_campaigns = ["Attila the Hun"]
 
     def needs(self, scenario: Age2ScenarioData) -> dict[str, dict[Resource, Strength]]:
-        economy = self.world.rules.logic.for_scenario(scenario).economy
-        return {route.name: dict(route.needs) for route in economy.economy_routes().routes}
+        routes = self.world.rules.logic.for_scenario(scenario).routes
+        return {route.name: dict(route.needs) for route in routes.economy_routes().routes}
 
     def possible(self, scenario: Age2ScenarioData) -> set[str]:
         economy = self.world.rules.logic.for_scenario(scenario).economy

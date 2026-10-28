@@ -1,0 +1,10 @@
+{
+  "map": [
+    {
+      "op": "set_terrain_rect",
+      "x1": 90, "y1": 90, "x2": 119, "y2": 119,
+      "terrain_id": 23,
+      "elevation": 0
+    }
+  ]
+}

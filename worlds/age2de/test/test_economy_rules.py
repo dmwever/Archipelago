@@ -223,15 +223,15 @@ class TestEndlessFood(EconomyTestBase):
     def test_endless_food_needs_wood_to_stay_endless(self):
         """A farm is 60 wood and a fish trap 100, forever."""
         self.build()
-        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        attila_1 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).routes
         endless = [
             route for route in attila_1.scenario_specific_routes()
-            if route.name in ("Farmers", "Fish Traps")
+            if route.name == "Farmers" or route.name.startswith("Fish Traps")
         ]
-        self.assertEqual(2, len(endless))
+        self.assertEqual(4, len(endless))
         for route in endless:
             with self.subTest(route.name):
-                self.assertEqual({Resource.WOOD: Strength.AT_SCALE}, route.needs)
+                self.assertEqual(Strength.AT_SCALE, route.needs[Resource.WOOD])
 
 
 class TestMarketTrade(EconomyTestBase):
@@ -256,7 +256,7 @@ class TestMarketTrade(EconomyTestBase):
     def test_on_market_trade_needs_something_to_sell(self):
         """Wood at scale is what the market turns into everything else."""
         self.build(market_trade=True)
-        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        attila_1 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).routes
         needs = [route.needs for route in attila_1.market_routes()]
         self.assertEqual([{Resource.WOOD: Strength.AT_SCALE}], needs)
 

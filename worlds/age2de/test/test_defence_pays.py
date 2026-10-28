@@ -78,7 +78,7 @@ class TestAResourcePaysForItsOwnDefence(DefenceToyBase):
     Strength is what breaks it - *some* stone off free open ground buys the Castle that then
     holds the same ground at scale."""
 
-    QUARRY = (*BASE_SWITCHES, VILLAGERS, STONE_OF_SOME, building(B.MINING_CAMP))
+    QUARRY = (*BASE_SWITCHES, VILLAGERS, STONE_OF_SOME, standing(B.MINING_CAMP))
     MAP = {Tier.OPEN: tier(stone_count=2000)}
 
     def test_the_only_stone_on_the_map_is_some_stone(self):
@@ -97,7 +97,7 @@ class TestAStandingDefenceOpensNoGate(DefenceToyBase):
 
     MAP = {Tier.OPEN: tier(gold_count=2000), Tier.BASE: tier(stone_count=100)}
     MINERS = (*BASE_SWITCHES, VILLAGERS, job(Job.GOLD_MINER_MALE), STONE_OF_SOME,
-              building(B.MINING_CAMP))
+              standing(B.MINING_CAMP))
 
     def test_a_castle_standing_at_the_start_holds_no_open_ground(self):
         self.toy(self.MAP)
@@ -203,11 +203,11 @@ class TestTheUngatedRoutesReachNoGate(bases.Age2RuleTestBase):
     def test_the_two_groups_partition_the_catalog(self):
         self.build()
         for scenario in self.world.rules.logic.scenarios:
-            economy = scenario.economy
-            ungated = [route.name for route in economy.ungated_routes()]
-            gated = [route.name for route in economy.gated_routes()]
+            routes = scenario.routes
+            ungated = [route.name for route in routes.ungated_routes()]
+            gated = [route.name for route in routes.gated_routes()]
             with self.subTest(scenario.scenario.name):
-                self.assertEqual([route.name for route in economy.economy_routes().routes],
+                self.assertEqual([route.name for route in routes.economy_routes().routes],
                                  ungated + gated)
                 self.assertEqual(set(), set(ungated) & set(gated))
 

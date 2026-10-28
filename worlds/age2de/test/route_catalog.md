@@ -10,6 +10,7 @@ Regenerate with that and commit the diff. `test_route_catalog.py` pins it.
 
 Rendered at **default options**, so a route gated behind an option (Market Trade) or absent from every map (oysters, whales) reads as unreachable here and is not necessarily a fault. A fixed-force scenario runs no routes at all, by design.
 
+- **Fishermen at a built Dock** is reachable in no scenario.
 - **Fishermen at a built Folwark** is reachable in no scenario.
 - **Fishermen at a standing Folwark** is reachable in no scenario.
 - **Fishing Ships gathering gold** is reachable in no scenario.
@@ -23,6 +24,7 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 - **Market Trade** is reachable in no scenario.
 - **Oyster Gatherers at a Dock** is reachable in no scenario.
 - **Oyster Gatherers at a Town Center** is reachable in no scenario.
+- **Oyster Gatherers at a built Dock** is reachable in no scenario.
 - **Oyster Gatherers at a built Folwark** is reachable in no scenario.
 - **Oyster Gatherers at a built Mill** is reachable in no scenario.
 - **Oyster Gatherers at a standing Folwark** is reachable in no scenario.
@@ -34,10 +36,12 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 - **Stone Miners at a Mule Cart** is reachable in no scenario.
 - **Villagers gathering food with a Base at a Dock** is reachable in no scenario.
 - **Villagers gathering food with a Base at a Mule Cart** is reachable in no scenario.
+- **Villagers gathering food with a Base at a built Dock** is reachable in no scenario.
 - **Villagers gathering food with a Base at a built Folwark** is reachable in no scenario.
 - **Villagers gathering food with a Base at a standing Folwark** is reachable in no scenario.
 - **Villagers gathering gold with a Base at a Dock** is reachable in no scenario.
 - **Villagers gathering gold with a Base at a Mule Cart** is reachable in no scenario.
+- **Villagers gathering gold with a Base at a built Dock** is reachable in no scenario.
 - **Villagers gathering gold with a Base at a built Folwark** is reachable in no scenario.
 - **Villagers gathering gold with a Base at a built Mill** is reachable in no scenario.
 - **Villagers gathering gold with a Base at a standing Folwark** is reachable in no scenario.
@@ -52,7 +56,7 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 - **its own wood** is reachable in no scenario.
 
 
-## 99 routes - every scenario
+## 103 routes - every scenario
 
 | route | yields | needs | possible in |
 | --- | --- | --- | --- |
@@ -89,12 +93,14 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Fishermen at a standing Folwark | food some | - | 0/18 |
 | Fishermen at a built Folwark | food some | wood some | 0/18 |
 | Fishermen at a Dock | food some | - | 12/18 |
+| Fishermen at a built Dock | food some | wood some | 0/18 |
 | Oyster Gatherers at a Town Center | gold some | - | 0/18 |
 | Oyster Gatherers at a standing Mill | gold some | - | 0/18 |
 | Oyster Gatherers at a built Mill | gold some | wood some | 0/18 |
 | Oyster Gatherers at a standing Folwark | gold some | - | 0/18 |
 | Oyster Gatherers at a built Folwark | gold some | wood some | 0/18 |
 | Oyster Gatherers at a Dock | gold some | - | 0/18 |
+| Oyster Gatherers at a built Dock | gold some | wood some | 0/18 |
 | Relics at a standing Monastery, started in Castle | gold some | - | 0/18 |
 | Relics at a standing Monastery, advanced to Castle | gold some | wood some, food at scale, gold some | 0/18 |
 | Relics at a built Monastery, started in Castle | gold some | wood some | 2/18 |
@@ -138,6 +144,7 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Villagers gathering food with a Base at a built Folwark | food at scale | wood some, food some | 0/18 |
 | Villagers gathering food with a Base at a Mule Cart | food at scale | food some | 0/18 |
 | Villagers gathering food with a Base at a Dock | food at scale | food some | 0/18 |
+| Villagers gathering food with a Base at a built Dock | food at scale | wood some, food some | 0/18 |
 | Villagers gathering gold with a Base at a second Town Center | gold at scale | food some | 15/18 |
 | Villagers gathering gold with a Base at a standing Mining Camp | gold at scale | food some | 2/18 |
 | Villagers gathering gold with a Base at a built Mining Camp | gold at scale | wood some, food some | 15/18 |
@@ -147,6 +154,7 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 | Villagers gathering gold with a Base at a standing Folwark | gold at scale | food some | 0/18 |
 | Villagers gathering gold with a Base at a built Folwark | gold at scale | wood some, food some | 0/18 |
 | Villagers gathering gold with a Base at a Dock | gold at scale | food some | 0/18 |
+| Villagers gathering gold with a Base at a built Dock | gold at scale | wood some, food some | 0/18 |
 | Villagers gathering stone with a Base at a second Town Center | stone at scale | food some | 15/18 |
 | Villagers gathering stone with a Base at a standing Mining Camp | stone at scale | food some | 2/18 |
 | Villagers gathering stone with a Base at a built Mining Camp | stone at scale | wood some, food some | 15/18 |
@@ -160,21 +168,21 @@ Rendered at **default options**, so a route gated behind an option (Market Trade
 
 | scenario | routes | possible |
 | --- | --- | --- |
-| AP_ATTILA_1 | 99 | 33 |
-| AP_ATTILA_2 | 99 | 21 |
-| AP_ATTILA_3 | 99 | 34 |
-| AP_ATTILA_4 | 99 | 19 |
-| AP_ATTILA_5 | 99 | 31 |
-| AP_ATTILA_6 | 99 | 37 |
-| AP_GENGHIS_1 | 99 | 0 |
-| AP_GENGHIS_2 | 99 | 17 |
-| AP_GENGHIS_3 | 99 | 25 |
-| AP_GENGHIS_4 | 99 | 33 |
-| AP_GENGHIS_5 | 99 | 23 |
-| AP_GENGHIS_6 | 99 | 17 |
-| AP_JOAN_1 | 99 | 0 |
-| AP_JOAN_2 | 99 | 29 |
-| AP_JOAN_3 | 99 | 24 |
-| AP_JOAN_4 | 99 | 30 |
-| AP_JOAN_5 | 99 | 0 |
-| AP_JOAN_6 | 99 | 21 |
+| AP_ATTILA_1 | 103 | 33 |
+| AP_ATTILA_2 | 103 | 21 |
+| AP_ATTILA_3 | 103 | 34 |
+| AP_ATTILA_4 | 103 | 19 |
+| AP_ATTILA_5 | 103 | 31 |
+| AP_ATTILA_6 | 103 | 37 |
+| AP_GENGHIS_1 | 103 | 0 |
+| AP_GENGHIS_2 | 103 | 17 |
+| AP_GENGHIS_3 | 103 | 25 |
+| AP_GENGHIS_4 | 103 | 33 |
+| AP_GENGHIS_5 | 103 | 23 |
+| AP_GENGHIS_6 | 103 | 17 |
+| AP_JOAN_1 | 103 | 0 |
+| AP_JOAN_2 | 103 | 29 |
+| AP_JOAN_3 | 103 | 24 |
+| AP_JOAN_4 | 103 | 30 |
+| AP_JOAN_5 | 103 | 0 |
+| AP_JOAN_6 | 103 | 21 |

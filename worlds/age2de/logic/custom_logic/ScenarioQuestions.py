@@ -302,7 +302,7 @@ class ScenarioHasEconomyRoutes(ScenarioQuestion, game="Age Of Empires II: Defini
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.economy_routes()
+        return scenario.routes.economy_routes()
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
@@ -317,7 +317,7 @@ class ScenarioHasEconomyRoutes(ScenarioQuestion, game="Age Of Empires II: Defini
 class ScenarioHasUngatedRoutes(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        return scenario.economy.ungated_economy_routes()
+        return scenario.routes.ungated_economy_routes()
 
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
