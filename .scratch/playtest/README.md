@@ -19,7 +19,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | done (with #05) |
 | 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |
 | 15 | [Joan 2 bridge accepts a military that needs Orleans first](issues/15-joan2-bridge-military-needs-orleans.md) | done |
-| 16 | [Under caveman, are scenario-granted ships and carts knocked down?](issues/16-caveman-scenario-ships-and-carts.md) | ready-for-agent |
+| 16 | [Under caveman, are scenario-granted ships and carts knocked down?](issues/16-caveman-scenario-ships-and-carts.md) | needs-triage |
 | 17 | [Buildings "standing or buildable" are never paid for](issues/17-buildable-buildings-unpaid.md) | done |
 | 18 | [Military asks for a base directly instead of through its price](issues/18-military-base-through-price.md) | done |
 | 19 | [Economy routes, resolved together (no behaviour change)](issues/19-trade-cogs-without-base.md) | done (folds in #21; naval guard unwound by #23) |
