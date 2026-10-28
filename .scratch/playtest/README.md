@@ -35,7 +35,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 29 | [Military can defend their own resources](issues/29-military-can-defend-their-own-resources.md) | done |
 | 30 | [A standing Mill, Mining Camp or Folwark is still charged *some* wood](issues/30-standing-dropsite-charged-wood.md) | done |
 | 31 | [Units handed to P1 by AP triggers start as Gaia, never capturable](issues/31-ap-granted-units-start-as-gaia.md) | done |
-| 32 | [Nothing may be unpaid: ages, buildings and units the logic asks without a price](issues/32-feudal-prerequisite-unpaid.md) | needs-triage |
+| 32 | [Nothing may be unpaid: ages, buildings and units the logic asks without a price](issues/32-feudal-prerequisite-unpaid.md) | done (split into #37–#40, #42, #47–#49; Houses are #43's) |
 | 33 | [Spike: what do the caveman sweep and the unit checks cost per tick?](issues/33-unitsanity-sweep-cost-spike.md) | done |
 | 34 | [Without caveman, unit location checks wait for a quiet second](issues/34-unit-checks-starved-caveman-off.md) | done (folds into #10) |
 | 35 | [Spike: can the unitsanity rule find P1's new units by id on every tick?](issues/35-unit-id-lookup-spike.md) | done |
@@ -50,4 +50,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 44 | [What the base becomes once the House leaves it](issues/44-the-base-without-houses.md) | needs-triage |
 | 45 | [The caveman ledger is scanned linearly, and it is most of what a full pass costs](issues/45-caveman-ledger-lookup.md) | needs-triage |
 | 46 | [Spike: what does caveman do to every row of the unit table?](issues/46-caveman-catalog-spike.md) | done |
+| 47 | [The Town Center as a dropsite, and Own Farmer's Farm, are unpaid](issues/47-town-center-dropsite-and-farm-paid.md) | done |
+| 48 | [Market Trade does not pay the Market's Feudal advance](issues/48-market-trade-feudal-advance.md) | done |
+| 49 | [Armies and defences pay their advance and their training building](issues/49-armies-and-defences-pay-their-advance.md) | done |
 | 50 | [Caveman playtest: does the remaining force push through?](issues/50-caveman-playtest-remaining-force.md) | ready-for-human |
