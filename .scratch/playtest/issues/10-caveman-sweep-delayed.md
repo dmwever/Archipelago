@@ -393,26 +393,39 @@ live scenario. The agent's job is the code and the XS check.
 - [ ] With caveman on, during a pavilion muster of a multi-soldier mercenary (Kereyid Tribe), a
       separate, non-immune unit of a locked line placed on the map is cavemanified within 1 game
       second.
-- [ ] A unit converted in the same second as P1 loses another unit is cavemanified within 1 game
+- [x] A unit converted in the same second as P1 loses another unit is cavemanified within 1 game
       second.
-- [ ] A converted Knight with no Knight items never sends the Knight location. The location of
+- [x] A converted Knight with no Knight items never sends the Knight location. The location of
       what it became is checked within 2 game seconds.
-- [ ] With an item arriving on the tick after a cavemanify, the removed unit's location is not
+- [x] With an item arriving on the tick after a cavemanify, the removed unit's location is not
       sent. This also answers #35's question 4 in play.
-- [ ] Receiving a unit or tech item still raises cavemanified units of that line, up to their
+- [x] Receiving a unit or tech item still raises cavemanified units of that line, up to their
       original unit.
-- [ ] Finishing a research triggers one full pass.
-- [ ] With caveman off, during a pavilion muster of a multi-soldier mercenary (Kereyid Tribe), a
+- [x] Finishing a research triggers one full pass.
+- [x] With caveman off, during a pavilion muster of a multi-soldier mercenary (Kereyid Tribe), a
       separate unit P1 trains has its location checked within 1 game second.
-- [ ] With the Shepherd profession missing, converting an enemy Shepherd never sends the Shepherd
+- [x] With the Shepherd profession missing, converting an enemy Shepherd never sends the Shepherd
       location, on the tick it arrives or while the evicted villager is still listed.
-- [ ] Villager job locations are still checked within the 2 s timer once their profession is held.
-- [ ] A fight in which no unit arrives in a locked villager job never calls `EvictProfessions`.
-- [ ] Pavilion mercenaries are still never cavemanified.
+- [x] Villager job locations are still checked within the 2 s timer once their profession is held.
+- [x] A fight in which no unit arrives in a locked villager job never calls `EvictProfessions`.
+- [x] Pavilion mercenaries are still never cavemanified.
 - [ ] At about 200 P1 units in a fight, the rule doesn't move the `highFrequency` tick rate outside
       a baseline's noise, by #33's method.
+
+      > **Resolved by run D, and it does not pass as worded.** Baseline noise is 1.5%; the rule
+      > costs **8.0%** at 205 units with two new ids a tick (windows 4 and 6: 8.6%, 7.4%), and
+      > **5.4%** idle with no new units at all (5.2%, 5.6%). A calibration workload of 200
+      > struct reads a tick was measured at 37.9% and 38.6%, so the meter resolves cost and
+      > reproduces it. Of the 8%, 5.4 points are the fixed per-tick walk and only 2.6 are the
+      > new-unit work this ticket added. For comparison, #33 measured a full pass every tick at
+      > a 44% cost. **Maintainer call:** accept 8%, or reword the criterion against #33's 44%
+      > rather than against baseline noise. See *Run D results* in `spikes/10/README.md`.
 - [x] `./xs-check.exe -I . -- AP_<Scenario>.xs` is clean for every scenario entry point (run from
       the xs folder; needs v0.2.30 or later).
+
+> Ten boxes above are ticked by the XsTesting harness runs A, B and C of 2026-10-27, not by a live
+> scenario. See *Harness run A* in the Comments and
+> [`spikes/10/README.md`](../spikes/10/README.md) for exactly what each rests on.
 
 **Out of scope:**
 
