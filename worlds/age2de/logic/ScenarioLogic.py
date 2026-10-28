@@ -32,7 +32,6 @@ class ScenarioStartingState:
     obtains_tech: dict[Age2TechData, Rule] = field(default_factory=dict)
     job_available: dict[Age2VillagerJobData, Rule] = field(
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
-    has_water_access: Rule = field(default_factory=lambda: True_())
     must_steal_base: Rule = field(default_factory=lambda: False_())
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
@@ -115,7 +114,7 @@ class ScenarioLogic:
                 & (standing | town_center))
 
     def has_water_access(self) -> Rule:
-        return self.starting_state.has_water_access
+        return True_() if self.scenario.has_water_access else False_()
 
     def starts_with_any_building(self) -> Rule:
         return Or(*self.starting_state.starts_with_building.values())

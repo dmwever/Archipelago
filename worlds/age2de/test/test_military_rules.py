@@ -68,12 +68,12 @@ class TestNavalBombardment(Age2RuleTestBase):
 
     def test_a_navy_needs_water(self):
         """has_water_access had been declared on every starting state and read by nothing."""
-        from rule_builder.rules import False_
+        from unittest import mock
         world = self.build(**EVERYTHING)
         scenario = world.rules.logic.scenarios[0]
-        scenario.starting_state.has_water_access = False_()
-        self.assertTrue(scenario.military.has_navy().resolve(world).always_false)
-        self.assertTrue(scenario.military.has_naval_bombardment().resolve(world).always_false)
+        with mock.patch.object(scenario.scenario, "has_water_access", False):
+            self.assertTrue(scenario.military.has_navy().resolve(world).always_false)
+            self.assertTrue(scenario.military.has_naval_bombardment().resolve(world).always_false)
 
 
 class TestRoles(Age2RuleTestBase):

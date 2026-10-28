@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule
+from rule_builder.rules import Has, Rule
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
@@ -21,9 +21,6 @@ class Attila4StartingState(ScenarioStartingState):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT3_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario", 3)
-        # No water the logic counts on: no Dock, so no ships and no deep fish.
-        self.has_water_access = False_()
-
     def can_tribute_burgundy(self, scenario_logic: 'ScenarioLogic') -> Rule:
         return (scenario_logic.has_building(Age2BuildingData.MARKET) &
                 scenario_logic.economy.has_easy_source(Resource.GOLD))

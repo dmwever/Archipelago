@@ -19,6 +19,9 @@ from ..Units import Age2UnitData
 # has_vils carries that. The houses the Huns cannot build, and the fast fire ships they
 # cannot launch, belong to the civilisation and are already in CivilizationUnits.
 
+Age2ScenarioData.AP_ATTILA_4.has_water_access = False
+Age2ScenarioData.AP_GENGHIS_2.has_water_access = False
+
 Age2ScenarioData.AP_ATTILA_3.excluded_buildings = [
     Age2BuildingData.MARKET,
 ]

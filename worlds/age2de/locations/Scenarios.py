@@ -48,6 +48,7 @@ class Age2ScenarioData(enum.IntEnum):
         self.excluded_buildings: list['Age2BuildingData'] = []
         self.excluded_units: list['Age2UnitData'] = []
         self.excluded_techs: list['Age2TechData'] = []
+        self.has_water_access: bool = True
         self.resources: dict['Tier', 'ScenarioResourceCount'] = {}
         self.demand: 'ScenarioResourceDemand' = None
         self.players: list['Age2PlayerData'] = []
