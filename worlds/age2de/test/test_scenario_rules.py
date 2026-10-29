@@ -11,6 +11,8 @@ from ..locations.Buildings import Age2BuildingData
 from ..locations.Locations import Age2ScenarioLocationData as L
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
+from ..locations.Units import Age2UnitData
+from ..locations.connections.ScenarioCavemanExemptions import SCENARIO_TO_CAVEMAN_EXEMPTIONS
 from .bases import Age2RuleTestBase
 
 MONK_LINE = Age2UnitLineData.MONK_LINE.item.item_name
@@ -140,3 +142,246 @@ class TestJoan2Crossing(Age2RuleTestBase):
 
     def test_the_bridge_names_both_routes(self):
         self.assertTrue({CARTS, DOCK} <= self.item_requirements(BRIDGE))
+
+
+TRANSPORTS = Age2UnitLineData.TRANSPORT_SHIP_LINE.item.item_name
+TRADE_CART_LINE = Age2UnitLineData.TRADE_CART_LINE.item.item_name
+BOMBARDS = Age2UnitLineData.BOMBARD_CANNON_LINE.item.item_name
+TREBUCHETS = Age2UnitLineData.TREBUCHET_LINE.item.item_name
+RAMS = Age2UnitLineData.BATTERING_RAM_LINE.item.item_name
+
+CAVEMAN_ON = dict(caveman=Caveman.option_true, **UNITSANITY)
+CAVEMAN_OFF = dict(caveman=Caveman.option_false, **UNITSANITY)
+
+JOAN_1_TRANSPORT = Age2ItemData.AP_JOAN_1_TRANSPORT.item_name
+JOAN_1_CROSSING = [location.global_name() for location in
+                   (L.JOAN1_RECRUITS, L.JOAN1_RIVER_BURGUNDIANS,
+                    L.JOAN1_RIVER_HIGHWAYMEN, L.JOAN1_VICTORY)]
+JOAN_1_CROSSING.append("Complete " + L.JOAN1_VICTORY.scenario.scenario_name)
+
+JOAN_2_CROSSING = [L.JOAN2_BRING_JOAN_TO_ORLEANS.global_name(),
+                   L.JOAN2_FIND_FARMING_VILLAGE.global_name(), BRIDGE]
+
+JOAN_5_SIEGE = [location.global_name() for location in
+                (L.JOAN5_REFUGEE_1, L.JOAN5_REFUGEE_10, L.JOAN5_LOYALISTS,
+                 L.JOAN5_RENDEZVOUS, L.JOAN5_ESCORT_JOAN, L.JOAN5_ESCORT_REFUGEES,
+                 L.JOAN5_VICTORY)]
+JOAN_5_SIEGE.append("Complete " + L.JOAN5_VICTORY.scenario.scenario_name)
+
+GENGHIS_3_TRANSPORT = Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name
+GENGHIS_3_FINDS = [L.GEN3_FIND_ENGINEERS.global_name(), L.GEN3_FIND_BOMBARDS.global_name()]
+
+
+class TestJoan1Transports(Age2RuleTestBase):
+    """The transports Joan 1 hands over are the only way across the river, and caveman turns
+    them into a Militia that cannot swim."""
+
+    campaigns = ["Joan of Arc"]
+    starting_campaigns = ["Joan of Arc"]
+
+    def test_caveman_asks_for_the_transport_line_on_top_of_the_item(self):
+        self.build(**CAVEMAN_ON)
+        stranded = self.state_without(TRANSPORTS)
+        for name in JOAN_1_CROSSING:
+            with self.subTest(location=name):
+                self.assertFalse(self.can_reach(name, stranded))
+                self.assertTrue(self.can_reach(name))
+
+    def test_the_gate_still_wants_the_scenario_item(self):
+        self.build(**CAVEMAN_ON)
+        without_ships = self.state_without(JOAN_1_TRANSPORT)
+        for name in JOAN_1_CROSSING:
+            with self.subTest(location=name):
+                self.assertFalse(self.can_reach(name, without_ships))
+
+    def test_without_caveman_the_item_is_the_whole_requirement(self):
+        self.build(**CAVEMAN_OFF)
+        for name in JOAN_1_CROSSING:
+            with self.subTest(location=name):
+                self.assertEqual(self.item_requirements(name), {JOAN_1_TRANSPORT})
+
+    def test_caveman_without_unitsanity_leaves_the_transports_alone(self):
+        self.build(caveman=Caveman.option_true, unitsanity=Unitsanity.option_none)
+        for name in JOAN_1_CROSSING:
+            with self.subTest(location=name):
+                self.assertEqual(self.item_requirements(name), {JOAN_1_TRANSPORT})
+
+
+class TestJoan2Dock(Age2RuleTestBase):
+    """The Dock half of Joan 2's crossing is a Transport Ship. The Trade Cart half is not
+    gated: Joan 2 exempts its carts from caveman."""
+
+    campaigns = ["Joan of Arc"]
+    starting_campaigns = ["Joan of Arc"]
+
+    def test_caveman_sinks_the_dock_route_without_the_transport_line(self):
+        self.build(**CAVEMAN_ON)
+        by_sea = self.state_without(CARTS)
+        afloat = self.state_without(CARTS, TRANSPORTS)
+        for name in JOAN_2_CROSSING:
+            with self.subTest(location=name):
+                self.assertTrue(self.can_reach(name, by_sea))
+                self.assertFalse(self.can_reach(name, afloat))
+
+    def test_the_carts_still_cross_without_the_transport_line(self):
+        self.build(**CAVEMAN_ON)
+        by_land = self.state_without(DOCK, TRANSPORTS)
+        for name in JOAN_2_CROSSING:
+            with self.subTest(location=name):
+                self.assertTrue(self.can_reach(name, by_land))
+
+    def test_bringing_the_carts_to_orleans_is_still_the_item_alone(self):
+        self.build(**CAVEMAN_ON)
+        name = L.JOAN2_BRING_CARTS_TO_ORLEANS.global_name()
+        self.assertEqual(self.item_requirements(name), {CARTS})
+        self.assertTrue(self.can_reach(name, self.state_without(TRADE_CART_LINE)))
+
+    def test_without_caveman_the_dock_is_the_whole_requirement(self):
+        self.build(**CAVEMAN_OFF)
+        for name in JOAN_2_CROSSING:
+            with self.subTest(location=name):
+                self.assertNotIn(TRANSPORTS, self.item_requirements(name))
+
+
+class TestJoan3Boats(Age2RuleTestBase):
+    """Joan 3's base sits across the water, and the boats that get there are a scenario item."""
+
+    campaigns = ["Joan of Arc"]
+    starting_campaigns = ["Joan of Arc"]
+
+    def base_rule(self):
+        joan_3 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_JOAN_3)
+        return joan_3.has_base().resolve(self.world)
+
+    def test_caveman_takes_the_base_away_without_the_transport_line(self):
+        self.build(**CAVEMAN_ON)
+        has_base = self.base_rule()
+        self.assertTrue(has_base(self.state_without()))
+        self.assertFalse(has_base(self.state_without(TRANSPORTS)))
+
+    def test_without_caveman_the_scenario_item_is_enough(self):
+        self.build(**CAVEMAN_OFF)
+        has_base = self.base_rule()
+        self.assertTrue(has_base(self.state_without(TRANSPORTS)))
+
+    def test_crossing_the_sea_names_the_transport_line_only_under_caveman(self):
+        name = L.JOAN3_VICTORY.global_name()
+        self.build(**CAVEMAN_ON)
+        self.assertIn(TRANSPORTS, self.item_requirements(name))
+        self.build(**CAVEMAN_OFF)
+        self.assertNotIn(TRANSPORTS, self.item_requirements(name))
+
+
+class TestJoan5Siege(Age2RuleTestBase):
+    """Joan 5 is a fixed force. Its refugees sit behind English lines and the army only opens a
+    way through while it still has the siege it arrived with."""
+
+    campaigns = ["Joan of Arc"]
+    starting_campaigns = ["Joan of Arc"]
+
+    def test_caveman_asks_for_a_siege_line_that_can_be_restored(self):
+        self.build(**CAVEMAN_ON)
+        unarmed = self.state_without(BOMBARDS, TREBUCHETS)
+        for name in JOAN_5_SIEGE:
+            with self.subTest(location=name):
+                self.assertFalse(self.can_reach(name, unarmed))
+                self.assertTrue(self.can_reach(name, self.state_without(BOMBARDS)))
+                self.assertTrue(self.can_reach(name, self.state_without(TREBUCHETS)))
+
+    def test_without_caveman_the_siege_lines_are_not_asked(self):
+        self.build(**CAVEMAN_OFF)
+        for name in JOAN_5_SIEGE:
+            with self.subTest(location=name):
+                asked = self.item_requirements(name)
+                self.assertNotIn(BOMBARDS, asked)
+                self.assertNotIn(TREBUCHETS, asked)
+
+
+class TestJoan6Artillery(Age2RuleTestBase):
+    """The French Artillery branch of besieging the Burgundian town counts siege the scenario
+    hands over."""
+
+    campaigns = ["Joan of Arc"]
+    starting_campaigns = ["Joan of Arc"]
+
+    def test_the_army_branch_names_a_restorable_siege_line_under_caveman(self):
+        name = L.JOAN6_BURGUNDIAN_TOWN.global_name()
+        self.build(**CAVEMAN_ON)
+        asked = self.item_requirements(name)
+        self.assertIn(BOMBARDS, asked)
+        self.assertIn(TREBUCHETS, asked)
+        self.build(**CAVEMAN_OFF)
+        asked = self.item_requirements(name)
+        self.assertNotIn(BOMBARDS, asked)
+        self.assertNotIn(TREBUCHETS, asked)
+
+
+class TestAttila2ScythianTroops(Age2RuleTestBase):
+    """The Scythian Troops are rams, and a Militia does not knock the Roman walls down."""
+
+    campaigns = ["Attila the Hun"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def test_the_scythian_branch_names_the_ram_line_under_caveman(self):
+        name = L.ATT2_BEAT_THE_ROMANS.global_name()
+        self.build(**CAVEMAN_ON)
+        self.assertIn(RAMS, self.item_requirements(name))
+        self.build(**CAVEMAN_OFF)
+        self.assertNotIn(RAMS, self.item_requirements(name))
+
+
+class TestGenghis3Transport(Age2RuleTestBase):
+    """Genghis 3's transport carries the engineers and the bombards off the far shore."""
+
+    campaigns = ["Genghis Khan"]
+    starting_campaigns = ["Genghis Khan"]
+
+    def test_caveman_asks_for_the_transport_line_on_top_of_the_item(self):
+        self.build(**CAVEMAN_ON)
+        stranded = self.state_without(TRANSPORTS)
+        for name in GENGHIS_3_FINDS:
+            with self.subTest(location=name):
+                self.assertFalse(self.can_reach(name, stranded))
+                self.assertTrue(self.can_reach(name))
+
+    def test_the_gate_still_wants_the_scenario_item(self):
+        self.build(**CAVEMAN_ON)
+        without_transport = self.state_without(GENGHIS_3_TRANSPORT)
+        for name in GENGHIS_3_FINDS:
+            with self.subTest(location=name):
+                self.assertFalse(self.can_reach(name, without_transport))
+
+    def test_without_caveman_the_item_is_the_whole_requirement(self):
+        self.build(**CAVEMAN_OFF)
+        for name in GENGHIS_3_FINDS:
+            with self.subTest(location=name):
+                self.assertEqual(self.item_requirements(name), {GENGHIS_3_TRANSPORT})
+
+
+class TestScenarioCavemanExemptions(Age2RuleTestBase):
+    """A scenario can name unit types caveman leaves alone there. Joan 2 and Genghis 4 name the
+    Trade Cart, because a Militia cannot be driven to Orleans or past the Shah."""
+
+    campaigns = ["Joan of Arc", "Genghis Khan"]
+    starting_campaigns = ["Joan of Arc"]
+
+    def granted(self, scenario, unit):
+        logic = self.world.rules.logic.for_scenario(scenario)
+        return logic.units.is_granted(unit).resolve(self.world)
+
+    def test_every_scenario_names_its_exemptions(self):
+        self.assertEqual(set(SCENARIO_TO_CAVEMAN_EXEMPTIONS), set(Age2ScenarioData))
+
+    def test_an_exempt_cart_is_owned_the_moment_it_is_granted(self):
+        self.build(**CAVEMAN_ON)
+        without_carts = self.state_without(TRADE_CART_LINE)
+        for scenario in (Age2ScenarioData.AP_JOAN_2, Age2ScenarioData.AP_GENGHIS_4):
+            with self.subTest(scenario=scenario.scenario_name):
+                is_granted = self.granted(scenario, Age2UnitData.TRADE_CART)
+                self.assertTrue(is_granted(without_carts))
+
+    def test_a_unit_the_scenario_does_not_exempt_still_asks_for_its_line(self):
+        self.build(**CAVEMAN_ON)
+        is_granted = self.granted(Age2ScenarioData.AP_JOAN_2, Age2UnitData.TRANSPORT_SHIP)
+        self.assertTrue(is_granted(self.state_without()))
+        self.assertFalse(is_granted(self.state_without(TRANSPORTS)))

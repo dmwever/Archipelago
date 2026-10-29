@@ -28,37 +28,17 @@ from ..generation.LocalStart import (
     scenario_base_rule,
     win_items,
 )
-from ..items.Items import Age2ItemData, NAME_TO_ITEM, Resource, StartingResources, SeedResources
+from ..items.Items import Age2ItemData
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from ..locations.Campaigns import NAME_TO_CAMPAIGN, Age2CampaignData
 from ..locations.Scenarios import Age2ScenarioData
 from .bases import Age2TestBase
 from .. import Age2World
 
-def resources_in(names) -> dict[Resource, int]:
-    """What a set of item names is worth, by resource.
-
-    The base target asks for amounts now rather than for the two town-centre items by name, so
-    what a test can assert is that the set pays for a town centre - not which items it chose.
-    """
-    totals = {resource: 0 for resource in Resource}
-    for name in names:
-        payload = NAME_TO_ITEM[name].type
-        if isinstance(payload, (StartingResources, SeedResources)):
-            totals[payload.type] += payload.amount
-    return totals
-
-
 def assert_pays_for_a_town_centre(case, names) -> None:
-    totals = resources_in(names)
-    cost = Age2ItemData.TOWN_CENTER.type.needed_resources
-    for resource, amount in cost.items():
-        case.assertGreaterEqual(totals[resource], amount,
-                                f"the set holds {totals[resource]} {resource.name}, short of the "
-                                f"{int(amount)} a town centre costs")
-    villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type.amount
-    case.assertGreaterEqual(totals[Resource.FOOD], villager_food,
-                            "the set cannot pay for the villagers to go with the town centre")
+    for seed in (Age2ItemData.TOWN_CENTER_WOOD, Age2ItemData.TOWN_CENTER_STONE,
+                 Age2ItemData.STARTING_VILLAGER_FOOD):
+        case.assertIn(seed.item_name, names)
 
 
 ATTILA = Age2CampaignData.ATTILA.campaign_name

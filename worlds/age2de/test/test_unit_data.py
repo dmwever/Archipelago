@@ -5,6 +5,7 @@ from ..client.handlers.install.UnitData import UnitData
 from ..locations.Civilizations import Age2CivData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
+from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
@@ -115,8 +116,33 @@ class TestRender(unittest.TestCase):
                               "",
                               "void LoadUnitTable() {",
                               "    return;",
+                              "}",
+                              "",
+                              "void CavemanExemption() {",
+                              "    return;",
                               "}"]) + "\n"
         self.assertEqual(UnitData().render(), expected)
+
+    def test_the_scenario_caveman_exemptions_are_rendered(self):
+        """Joan 2 and Genghis 4 keep their Trade Carts; nothing else is exempted anywhere."""
+        rendered = table([Age2UnitData.TRADE_CART]).render()
+        exemption = rendered.split("void CavemanExemption() {")[1]
+        expected = "\n".join([
+            "",
+            f"    if (scenarioId == {Age2ScenarioData.AP_JOAN_2.id}) {{",
+            f"        ExemptUnitTypeFromCaveman({Age2UnitData.TRADE_CART.game_id});",
+            "    }",
+            f"    if (scenarioId == {Age2ScenarioData.AP_GENGHIS_4.id}) {{",
+            f"        ExemptUnitTypeFromCaveman({Age2UnitData.TRADE_CART.game_id});",
+            "    }",
+            "}",
+            ""])
+        self.assertEqual(exemption, expected)
+
+    def test_an_install_without_unitsanity_exempts_nothing(self):
+        """Caveman needs the unit table, so with no table there is nothing to exempt."""
+        rendered = table([Age2UnitData.TRADE_CART], mode=Unitsanity.option_none).render()
+        self.assertIn("void CavemanExemption() {\n    return;\n}", rendered)
 
     def test_the_seed_tag_is_rendered(self):
         """A table from another seed must be refusable, which is what the tag is for."""
