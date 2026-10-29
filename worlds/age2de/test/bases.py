@@ -100,6 +100,11 @@ class Age2RuleTestBase(unittest.TestCase):
     def location_names(self) -> set[str]:
         return {location.name for location in self.multiworld.get_locations(self.world.player)}
 
+    def access_rule(self, location_name: str):
+        """A location's resolved rule, to ask on its own. `can_reach` answers for the whole
+        route to it, which hides what the location itself asks."""
+        return self.multiworld.get_location(location_name, self.world.player).access_rule
+
     def item_requirements(self, location_name: str) -> set[str]:
         """The item names a location's resolved rule asks for.
 

@@ -216,31 +216,30 @@ class TestJoan2Dock(Age2RuleTestBase):
 
     def test_caveman_sinks_the_dock_route_without_the_transport_line(self):
         self.build(**CAVEMAN_ON)
-        by_sea = self.state_without(CARTS)
-        afloat = self.state_without(CARTS, TRANSPORTS)
         for name in JOAN_2_CROSSING:
+            crossing = self.access_rule(name)
             with self.subTest(location=name):
-                self.assertTrue(self.can_reach(name, by_sea))
-                self.assertFalse(self.can_reach(name, afloat))
+                self.assertFalse(crossing(self.state_with(DOCK)))
+                self.assertTrue(crossing(self.state_with(DOCK, TRANSPORTS)))
 
-    def test_the_carts_still_cross_without_the_transport_line(self):
+    def test_the_carts_cross_without_the_transport_line(self):
+        """Joan 2 exempts its Trade Carts from caveman, so the cart half asks nothing more."""
         self.build(**CAVEMAN_ON)
-        by_land = self.state_without(DOCK, TRANSPORTS)
         for name in JOAN_2_CROSSING:
             with self.subTest(location=name):
-                self.assertTrue(self.can_reach(name, by_land))
+                self.assertTrue(self.access_rule(name)(self.state_with(CARTS)))
 
     def test_bringing_the_carts_to_orleans_is_still_the_item_alone(self):
         self.build(**CAVEMAN_ON)
         name = L.JOAN2_BRING_CARTS_TO_ORLEANS.global_name()
         self.assertEqual(self.item_requirements(name), {CARTS})
-        self.assertTrue(self.can_reach(name, self.state_without(TRADE_CART_LINE)))
+        self.assertTrue(self.access_rule(name)(self.state_with(CARTS)))
 
-    def test_without_caveman_the_dock_is_the_whole_requirement(self):
+    def test_without_caveman_the_dock_alone_is_a_crossing(self):
         self.build(**CAVEMAN_OFF)
         for name in JOAN_2_CROSSING:
             with self.subTest(location=name):
-                self.assertNotIn(TRANSPORTS, self.item_requirements(name))
+                self.assertTrue(self.access_rule(name)(self.state_with(DOCK)))
 
 
 class TestJoan3Boats(Age2RuleTestBase):
@@ -263,13 +262,6 @@ class TestJoan3Boats(Age2RuleTestBase):
         self.build(**CAVEMAN_OFF)
         has_base = self.base_rule()
         self.assertTrue(has_base(self.state_without(TRANSPORTS)))
-
-    def test_crossing_the_sea_names_the_transport_line_only_under_caveman(self):
-        name = L.JOAN3_VICTORY.global_name()
-        self.build(**CAVEMAN_ON)
-        self.assertIn(TRANSPORTS, self.item_requirements(name))
-        self.build(**CAVEMAN_OFF)
-        self.assertNotIn(TRANSPORTS, self.item_requirements(name))
 
 
 class TestJoan5Siege(Age2RuleTestBase):
