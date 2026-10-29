@@ -460,14 +460,6 @@ class ScenarioResourceLogic:
             strength=Strength.AT_SCALE,
         )
 
-    def has_own_easy_source(self, resource: Resource) -> Rule:
-        return EconomyRoutesYield(
-            economy=self.scenario.routes.economy_routes(),
-            resource=resource,
-            strength=Strength.AT_SCALE,
-            among=frozenset(route.name for route in self.scenario.routes.scenario_specific_routes()),
-        )
-
     # -- what units and techs ask -------------------------------------------------------------
 
     def can_sustain(self, resources: Collection[Resource]) -> Rule:

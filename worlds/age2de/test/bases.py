@@ -8,6 +8,18 @@ from test.bases import WorldTestBase
 from test.general import setup_solo_multiworld
 
 from .. import Age2World, AGE2_DE
+from ..items.Items import Resource
+from ..logic.custom_logic.EconomyRoutes import EconomyRoutesYield, Strength
+
+
+def own_easy_source(scenario_logic, resource: Resource):
+    routes = scenario_logic.routes
+    return EconomyRoutesYield(
+        economy=routes.economy_routes(),
+        resource=resource,
+        strength=Strength.AT_SCALE,
+        among=frozenset(route.name for route in routes.scenario_specific_routes()),
+    )
 
 
 class Age2TestBase(WorldTestBase):

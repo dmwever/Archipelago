@@ -51,6 +51,10 @@ whose economy seed the running routes cover, until nothing changes.
   per route. It also left the House out of logic wherever a Town Center stood, because it only
   rode on building the base's Town Center. The Houses route reads no gate, so it is an ungated
   route: Farmers and the lumberjacks at scale stay ungated only if their housing does.
+- **The base keeps the first villagers' cost, where housing left** (#44). The Villager Line and the
+  villagers' food are a one-time opening cost, paid from outside the economy by a seed item, so they
+  stay the base's; housing left because it recurs with every unit trained. What is left of the base
+  is a Town Center standing or paid for, that cost, and the scenario's ground.
 - Local start still aims for a base.
 - **A tier gate is the one place the rejected "authored layers" option is used** (#23). A gate
   cannot ask the economy it sits inside: `_fortified` asking `has_some_source` resolves back into

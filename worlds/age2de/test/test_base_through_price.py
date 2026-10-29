@@ -94,7 +94,7 @@ class TestAStandingTownCenterIsABase(BaseThroughPriceTestBase):
 
 class TestEasyFoodNeedsABase(BaseThroughPriceTestBase):
     def raw_or_endless_food(self, scenario: Age2ScenarioData):
-        return self.scenario_logic(scenario).economy.has_own_easy_source(Resource.FOOD)
+        return bases.own_easy_source(self.scenario_logic(scenario), Resource.FOOD)
 
     def test_no_raw_food_without_the_villager_line(self):
         self.build(shuffle_villager=ShuffleVillager.option_yes)

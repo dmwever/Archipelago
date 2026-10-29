@@ -34,7 +34,7 @@ class EconomyTestBase(bases.Age2RuleTestBase):
 
     def easy(self, scenario: Age2ScenarioData, resource: Resource):
         """has_easy_source less the market and the scenario's declared sources."""
-        return self.world.rules.logic.for_scenario(scenario).economy.has_own_easy_source(resource)
+        return bases.own_easy_source(self.world.rules.logic.for_scenario(scenario), resource)
 
 
 class TestSourcesPerScenario(EconomyTestBase):
