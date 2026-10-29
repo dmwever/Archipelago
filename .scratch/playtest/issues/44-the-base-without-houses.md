@@ -159,8 +159,8 @@ equivalence pins below.
   would be lying about.
 - **No `ScenarioHasBase`.** #42 made questions out of rules instantiated 505,121 times per seed from
   inside every building, tech and unit location. Route lists are built once per scenario behind
-  `ScenarioHasEconomyRoutes`, so the base is built about 36 times. The one unmemoised caller,
-  `has_own_easy_source`, is reached only from two test files.
+  `ScenarioHasEconomyRoutes`, so the base is built about 36 times, and since `has_own_easy_source`
+  was dropped (below) no caller builds them unmemoised at all.
 - **Local start names its seed items.** Maintainer's ruling. The follow-on "and then the amount
   rules can go" does not hold: `_has_seeded_building` and the `TRADE_SEED_*` piles still use them.
 
@@ -186,7 +186,8 @@ items are sized to what they buy - 275 wood against a 275-wood Town Center, 100 
 unchanged behaviour, or proves nothing". That is what this ticket's tests are for, so the red-check
 ritual is dropped deliberately rather than forgotten. Do not reinstate it.
 
-**Noticed, not this ticket's.** `has_own_easy_source` has no production caller and never had one:
-`d8d294259` added it alongside the two tests that call it. It sits on `ScenarioResourceLogic` beside
-the live `has_easy_source` and `has_some_source`, so it reads as production API. Whatever touches
-that class next can move it to a test helper or drop it.
+**Dropped during triage (`ac5e1f8a0`).** `has_own_easy_source` had no production caller and never
+had one: `d8d294259` added it alongside the two tests that called it, where it read as production
+API beside the live `has_easy_source` and `has_some_source`. It is deleted, and the construction it
+wrapped now lives in `test/bases.py` as `own_easy_source`, which `test_base_through_price.py` and
+`test_economy_rules.py` call.
