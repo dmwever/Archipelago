@@ -4,6 +4,7 @@ from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Players import Age2PlayerData
+from ...locations.Units import Age2UnitData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -13,10 +14,16 @@ class Joan6Rules(ScenarioRules):
 
     def set_rules(self):
         super().set_rules()
+        survives = self.logic.units.survives_caveman
+        keeps_its_siege: Rule = (survives(Age2UnitData.BOMBARD_CANNON)
+                                 | survives(Age2UnitData.TREBUCHET_PACKED))
         can_siege_town: Rule = (
-            HasAll(
-                Age2ItemData.AP_JOAN_6_ARMY.item_name,
-                Age2ItemData.AP_JOAN_6_ARTILLERY.item_name
+            (
+                HasAll(
+                    Age2ItemData.AP_JOAN_6_ARMY.item_name,
+                    Age2ItemData.AP_JOAN_6_ARTILLERY.item_name
+                )
+                & keeps_its_siege
             ) |
             self.scenario_logic.player_logic.defeats(Age2PlayerData.JOAN6_BURGUNDY)
         )

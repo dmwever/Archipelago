@@ -27,7 +27,9 @@ class Joan3StartingState(ScenarioStartingState):
 
         self.obtains_unit[Age2UnitData.TRANSPORT_SHIP] = self.has_boats
         self.obtains_unit[Age2UnitData.DEMOLITION_SHIP] = self.has_boats
-        self.meets_additional_base_requirements = self.has_boats | (
+        self.restorable_boats = self.has_boats & logic.units.survives_caveman(
+            Age2UnitData.TRANSPORT_SHIP)
+        self.meets_additional_base_requirements = self.restorable_boats | (
             logic.buildings.has_building_items(Age2BuildingData.DOCK)
             & logic.units.has_unit_items(Age2UnitData.TRANSPORT_SHIP))
 
@@ -35,7 +37,7 @@ class Joan3StartingState(ScenarioStartingState):
         military = scenario_logic.military
         transport = Age2UnitData.TRANSPORT_SHIP
         can_cross_ocean: Rule = (
-            self.has_boats |
+            self.restorable_boats |
             (
                 scenario_logic.units.can_train_structurally(transport) &
                 scenario_logic.economy.can_pay(transport.cost)

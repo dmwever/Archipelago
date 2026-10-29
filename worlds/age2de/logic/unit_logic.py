@@ -34,8 +34,8 @@ class UnitLogic:
     # -- owning ------------------------------------------------------------------------------
 
     def can_own_anywhere(self, unit: Age2UnitData) -> Rule:
-        granted = self.is_granted_anywhere(unit) & self.survives_caveman(unit)
-        return self.can_train_anywhere(unit) | granted | self.can_convert(unit)
+        return (self.can_train_anywhere(unit) | self.is_granted_anywhere(unit)
+                | self.can_convert(unit))
 
     def survives_caveman(self, unit: Age2UnitData) -> Rule:
         return NOT_CAVEMAN | self.can_restore(unit)

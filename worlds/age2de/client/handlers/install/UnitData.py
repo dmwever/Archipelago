@@ -13,6 +13,7 @@ from ....locations.UnitLines import Age2UnitLineData
 from ....locations.Units import Age2UnitData
 from ....locations.VillagerJobs import Age2VillagerJobData
 from ....locations.connections.CivilizationUnits import CIV_TO_UNITS
+from ....locations.connections.ScenarioCavemanExemptions import SCENARIO_TO_CAVEMAN_EXEMPTIONS
 from ....locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
 
@@ -154,6 +155,25 @@ class UnitData:
                 "UNIT_CAPACITY in AP_Constants.xs to match")
         return list(out.values())
 
+    def scenario_exemptions(self) -> list[tuple[int, tuple[int, ...]]]:
+        if self._mode == Unitsanity.option_none:
+            return []
+        return [(scenario.id, tuple(unit.game_id for unit in units))
+                for scenario, units in SCENARIO_TO_CAVEMAN_EXEMPTIONS.items() if units]
+
+    def exemption_lines(self) -> list[str]:
+        lines = ["void CavemanExemption() {"]
+        body = len(lines)
+        for scenario_id, type_ids in self.scenario_exemptions():
+            lines.append(f"    if (scenarioId == {scenario_id}) {{")
+            for type_id in type_ids:
+                lines.append(f"        ExemptUnitTypeFromCaveman({type_id});")
+            lines.append("    }")
+        if len(lines) == body:
+            lines.append("    return;")
+        lines.append("}")
+        return lines
+
     def render(self) -> str:
         high, low = ((SlotData.UNSET, SlotData.UNSET) if self._tag is None
                      else SlotData.seed_halves(self._tag))
@@ -176,4 +196,6 @@ class UnitData:
         if len(lines) == body:
             lines.append("    return;")
         lines.append("}")
+        lines.append("")
+        lines.extend(self.exemption_lines())
         return "\n".join(lines) + "\n"

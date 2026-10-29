@@ -35,7 +35,7 @@ class Attila2StartingState(ScenarioStartingState):
             Age2PlayerData.ATT2_DYRRHACHIUM: True_(),
             Age2PlayerData.ATT2_THESSALONICA: True_(),
             Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE: (
-                self.scythian_troop |
+                (self.scythian_troop & self.logic.units.survives_caveman(U.CAPPED_RAM)) |
                 (
                     military.has_siege() &
                     military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &

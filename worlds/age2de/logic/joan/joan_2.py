@@ -25,7 +25,8 @@ class Joan2StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has(Age2ItemData.PROGRESSIVE_JOAN_SCENARIO.item_name)
         has_carts = Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
         has_dock = Has(Age2ItemData.AP_JOAN_2_DOCK.item_name)
-        can_reach_orleans = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name) & (has_carts | has_dock)
+        by_sea = has_dock & logic.units.survives_caveman(U.TRANSPORT_SHIP)
+        can_reach_orleans = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name) & (has_carts | by_sea)
 
         self.has_vils = can_reach_orleans
         self.housing[Strength.AT_SCALE] = can_reach_orleans

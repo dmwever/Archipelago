@@ -27,6 +27,7 @@ from .locations.Techs import Age2TechData
 from .locations.VillagerJobs import Age2VillagerJobData
 from .locations.connections import (BuildingSeeds, CivilizationBuildings, CivilizationTechs,
                                     CivilizationUnits, GameCosts,
+                                    ScenarioCavemanExemptions,
                                     ScenarioExclusions, ScenarioPlayers, ScenarioResources,
                                     ScenarioStartupUnits,
                                     ScenarioTriggerUnits, TechCounters, UnitBuildings,

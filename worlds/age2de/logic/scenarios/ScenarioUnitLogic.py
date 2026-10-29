@@ -223,7 +223,16 @@ class ScenarioUnitLogic:
             rules.append(True_())   # it is standing there when the scenario opens
         if self.world.pool.units.trigger_grants(data, target):
             rules.append(self.scenario.obtains_unit(target))
-        return Or(*rules)
+        if not rules:
+            return False_()
+        return Or(*rules) & self.survives_caveman(target)
+
+    def survives_caveman(self, target: Age2UnitData | Age2HeroData | Age2EscortUnitData) -> Rule:
+        if not isinstance(target, Age2UnitData):
+            return True_()
+        if target in self.scenario.scenario.caveman_exempt_units:
+            return True_()
+        return self.logic.units.survives_caveman(target)
 
     # -- villagers ---------------------------------------------------------------------------
 

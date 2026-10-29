@@ -25,7 +25,12 @@ class Genghis3StartingState(ScenarioStartingState):
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.GEN2_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Genghis Khan Scenario", 2)
 
-        self.has_vils = self.engineers & self.transport
+        self.restorable_transport = self.transport & logic.units.survives_caveman(
+            Age2UnitData.TRANSPORT_SHIP)
+        self.restorable_bombards = self.bombards & logic.units.survives_caveman(
+            Age2UnitData.BOMBARD_CANNON)
+
+        self.has_vils = self.engineers & self.restorable_transport
         self.obtains_unit[Age2UnitData.TRANSPORT_SHIP] = self.transport
 
         self.starts_with_building[Age2BuildingData.SIEGE_WORKSHOP] = (
@@ -35,9 +40,9 @@ class Genghis3StartingState(ScenarioStartingState):
         military = scenario_logic.military
         units = scenario_logic.units
 
-        has_siege: Rule = military.has_siege() | self.bombards
+        has_siege: Rule = military.has_siege() | self.restorable_bombards
         has_siege = scenario_logic.named("has siege or the bombards", has_siege)
-        has_long_siege: Rule = military.has_long_range_siege() | self.bombards
+        has_long_siege: Rule = military.has_long_range_siege() | self.restorable_bombards
         has_long_siege = scenario_logic.named(
             "has long-range siege or the bombards",
             has_long_siege,
