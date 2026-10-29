@@ -96,27 +96,17 @@ class ScenarioLogic:
         profession arrives: without it a villager can never swap into a Builder."""
         return self.has_vils() & self.logic.units.has_profession_item(Age2VillagerJobData.BUILDER_MALE)
 
-    def can_have_base(self) -> Rule:
-        """A base, less paying for it: one to start with or one to put up, and the ground to
-        stand it on."""
-        return ((self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER]
-                 | self.buildings.can_build_base())
-                & self.starting_state.meets_additional_base_requirements)
-
     def has_base(self) -> Rule:
-        """A base, paid for: the Villager Line and the villagers' food, and the Town Center's wood
-        and stone where none stands. Paid by the items that seed it, never by an easy source - the
-        easy sources ask for a base themselves."""
+        """A base, paid for: a Town Center standing or built, the ground to stand it on, the
+        Villager Line and the villagers' food. Paid by the items that seed it, never by an easy
+        source - the easy sources ask for a base themselves."""
         return self.named("has a base", self._has_base())
 
     def _has_base(self) -> Rule:
-        standing = self.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER]
-        town_center = (Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
-                       & Has(Age2ItemData.TOWN_CENTER_STONE.item_name))
-        return (self.can_have_base()
+        return (self.has_building(Age2BuildingData.TOWN_CENTER)
+                & self.starting_state.meets_additional_base_requirements
                 & self.logic.units.has_villager_item()
-                & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name)
-                & (standing | town_center))
+                & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name))
 
     def has_water_access(self) -> Rule:
         return True_() if self.scenario.has_water_access else False_()

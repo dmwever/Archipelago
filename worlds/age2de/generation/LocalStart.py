@@ -10,7 +10,7 @@ from collections import Counter
 
 from BaseClasses import CollectionState, Item, Location
 from Fill import FillError, fill_restrictive, sweep_from_pool
-from rule_builder.rules import And, Rule, True_
+from rule_builder.rules import And, Has, Rule, True_
 
 from ..Options import LocalStart
 from ..items.Items import NAME_TO_ITEM, Age2ItemData, Campaign, ProgressiveScenario
@@ -117,22 +117,22 @@ def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
     return True_() if resolve(world, has_base).always_false else has_base
 
 def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
-    """The item half of a base: a town centre, and the houses to live in.
+    """The item half of a base: a town centre and the seed items that pay for it and its first
+    villagers, asked whether or not one already stands.
 
-    Not the scenario's own can_build_base, which also wants villagers and an age. For Joan 1 that
+    Not the scenario's own has_base, which also wants builders and the ground. For Joan 1 that
     is False_ outright and would fold the town centre items away with it - and Joan 1 is exactly
     what this is asked about, since local start is what makes the first scenario playable.
 
-    The House is asked of **this scenario's civilisation**: the Huns build none, so handing an
-    Attila player a House would be handing over something they can never place.
+    The House is the Houses route's item, not the base's, and is asked of **this scenario's
+    civilisation**: the Huns build none, so handing an Attila player a House would be handing over
+    something they can never place.
     """
     logic = world.rules.logic
-    villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
-    # Paid for out of the opening pile: what is placed here is what the player starts holding,
-    # and a scenario with no base yet has no gathering to count on.
     target = (logic.buildings.can_build_tc()
-              & logic.resources.has_amounts(Age2ItemData.TOWN_CENTER.type.needed_resources)
-              & logic.resources.has_amount(villager_food.type, villager_food.amount))
+              & Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
+              & Has(Age2ItemData.TOWN_CENTER_STONE.item_name)
+              & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name))
     if scenario_logic(world, scenario).civilization.can_build(Age2BuildingData.HOUSE):
         target = target & logic.can_build_structurally_anywhere(Age2BuildingData.HOUSE)
     return target & scenario_base_rule(world, scenario)

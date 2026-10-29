@@ -244,7 +244,6 @@ class TestNothingUnpaidAsksEasyStone(BuildingsPaidTestBase):
     def structural_rules(self, scenario: ScenarioLogic) -> dict[str, Rule]:
         rules: dict[str, Rule] = {
             "has_base": scenario.has_base(),
-            "can_have_base": scenario.can_have_base(),
         }
         for age in Age2AgeData:
             rules[f"can_reach_structurally {age.name}"] = scenario.ages.can_reach_structurally(age)

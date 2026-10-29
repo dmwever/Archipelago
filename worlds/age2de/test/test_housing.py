@@ -184,11 +184,11 @@ class TestTheBaseAsksNoHouse(HousingBase):
     def asked(self, rule: Rule) -> set[str]:
         return set(rule.resolve(self.world).item_dependencies())
 
-    def test_can_build_base_asks_no_house(self):
+    def test_has_base_asks_no_house(self):
         self.build_shuffled()
         for scenario in (Age2ScenarioData.AP_JOAN_3, Age2ScenarioData.AP_GENGHIS_3):
             with self.subTest(scenario=scenario.name):
-                self.assertNotIn(HOUSE, self.asked(self.scenario(scenario).buildings.can_build_base()))
+                self.assertNotIn(HOUSE, self.asked(self.scenario(scenario).has_base()))
 
     def test_local_start_still_asks_the_house_where_the_civilisation_builds_one(self):
         self.build_shuffled()

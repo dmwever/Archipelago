@@ -67,9 +67,6 @@ class ScenarioBuildingLogic:
     def can_build_tc(self) -> Rule:
         return self.buildings.can_build_tc() & self.scenario.has_builders()
 
-    def can_build_base(self) -> Rule:
-        return self.can_build_tc()
-
     def can_build_tc_as_defence(self) -> Rule:
         return self.scenario.named(
             "can build a second Town Center as a defence",

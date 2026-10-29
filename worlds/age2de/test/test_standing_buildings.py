@@ -81,7 +81,7 @@ class TestABaseStandsATownCenter(bases.Age2RuleTestBase):
             town_center = state.starts_with_building[Age2BuildingData.TOWN_CENTER].resolve(self.world)
             if town_center.always_false:
                 continue
-            base = scenario.can_have_base().resolve(self.world)
+            base = scenario.has_building(Age2BuildingData.TOWN_CENTER).resolve(self.world)
             with_town_center = CollectionState(self.multiworld)
             for name in town_center.item_dependencies():
                 with_town_center.collect(self.world.create_item(name), prevent_sweep=True)
