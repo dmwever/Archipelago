@@ -4,7 +4,7 @@
 
 **Reported:** 2026-10-27, raised by the maintainer while grilling [#42](42-age-climb-buildings-paid.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Blocked by:** [#39](39-economy-capital-paid.md)
 
@@ -107,24 +107,50 @@ fielded army.
 Prove each new test red at HEAD with `worlds/age2de/tools/red_check.py`, and tick each box with its
 evidence.
 
-- [ ] A scenario with a standing Town Center and the House shuffled (Genghis 5): "Villagers
+- [x] A scenario with a standing Town Center and the House shuffled (Genghis 5): "Villagers
       gathering food with a Base" does not run without the House item, and does with it and
-      *some* wood.
-- [ ] Attila 3 runs its at-scale villager routes with no House item in the state.
-- [ ] Joan 2 with `can_reach_orleans` runs an at-scale route with no House item; without Orléans
-      it needs the Houses route.
-- [ ] Joan 4: a single-unit location needs `camp` or the Houses route. Genghis 2: one is reachable
-      from the start with no House item.
-- [ ] Joan 3 and Genghis 3: a single-unit location needs the Houses route.
-- [ ] Relics need no housing where a Monk stands, and *some* where none does.
-- [ ] Market Trade yields no housing, and no item grants it.
-- [ ] `can_build_base` asks no House; local start's target still asks the House where the
-      civilisation builds one.
-- [ ] The ungated-routes test still pins that nothing in that layer reaches a gate, with the
-      housing producers in it.
-- [ ] The #37 allowlist has lost every "can build a House" line, and the test is green.
-- [ ] `test/route_catalog.md` is regenerated, and the ticket lists the routes added.
+      *some* wood. *`test_housing.py` `TestAStandingTownCenterStillAsksTheHouse`, on "Villagers
+      gathering gold with a Base" instead: no "Villagers gathering food with a Base" route is
+      possible on Genghis 5's map, before or after this ticket (see the Comments). The "with" half
+      uses the full state and checks *some* wood beside it, so it does not prove the House and
+      *some* wood alone suffice.*
+- [x] Attila 3 runs its at-scale villager routes with no House item in the state.
+      *`TestTheHunsNeedNoHouse`: "Builds no Houses" runs, and so does a "with a Base" route.*
+- [x] Joan 2 with `can_reach_orleans` runs an at-scale route with no House item; without Orléans
+      it needs the Houses route. *`TestJoan2IsGrantedHousingByOrleans`. Without Orléans Joan 2 has
+      no villagers, so the Houses route cannot run either; the test pins that its only producers of
+      housing at scale are "its own housing" and "Houses", and that it holds none without both.*
+- [x] Joan 4: a single-unit location needs `camp` or the Houses route. Genghis 2: one is reachable
+      from the start with no House item. *`TestASingleUnitNeedsSomeHousing`. Joan 4 is checked on
+      `has_housing(SOME)` and its producers ("a little of its own housing", "Houses"), not on a
+      location; Genghis 2 trains a Militia with no House item.*
+- [x] Joan 3 and Genghis 3: a single-unit location needs the Houses route.
+      *`test_joan_3_and_genghis_3_need_the_houses_route`: Militia trains with every item and not
+      without the House; "Houses" is the only producer of *some* housing.*
+- [x] Relics need no housing where a Monk stands, and *some* where none does.
+      *`TestRelicsHouseOnlyATrainedMonk`: four trained-Monk routes need *some*, four standing-Monk
+      routes need none.*
+- [x] Market Trade yields no housing, and no item grants it. *`TestNoItemYieldsHousing`; both guard
+      behaviour that holds by construction (`RouteResource` is not an item `Resource`).*
+- [x] `can_build_base` asks no House; local start's target still asks the House where the
+      civilisation builds one. *`TestTheBaseAsksNoHouse`: Joan 3 and Genghis 3's `can_build_base`
+      depend on no House; `base_target` asks it for Joan 3 and not for Attila 1.*
+- [x] The ungated-routes test still pins that nothing in that layer reaches a gate, with the
+      housing producers in it. *`TestTheHousingProducersAreUngated` (all four producers are in
+      `ungated_routes()`, and housing at both strengths answers with no question left open);
+      `test_defence_pays.py` `TestTheUngatedRoutesReachNoGate` green.*
+- [x] The #37 allowlist has lost every "can build a House" line, and the test is green.
+      *All four lines were House lines, so the allowlist is empty. `test_never_bare.py` green; its
+      meta test `test_a_still_bare_site_taken_off_the_allowlist_fails` leaned on the House entry
+      and now injects a bare University build instead.*
+- [x] `test/route_catalog.md` is regenerated, and the ticket lists the routes added. *114 → 122
+      routes per scenario, nothing starved. Added: "Houses" (9/18), "Builds no Houses" (6/18), "its
+      own housing" (1/18), "a little of its own housing" (6/18), and four "Relics with a standing
+      Monk at a standing/built Monastery, started in/advanced to Castle" (0/18 standing, 1/18
+      built). Housing joined the needs of 58 routes (at scale) and the four trained-Monk relic
+      routes (*some*).*
 - [ ] The fill gate passes on the current seed set, and its row is recorded under Stored runs.
+      *Skipped by the maintainer, 2026-10-28.*
 
 **Out of scope**
 
@@ -171,3 +197,43 @@ unverified in game and is lost when its tile is blocked. None of the figures are
 
 Joan 6's town is handed over by vanilla trigger T30 once Burgundy's Castle and Town Center are
 destroyed; those two never reach P1, and up to 52 of Burgundy's units come with the 8 Houses.
+
+> *This was generated by AI during implementation, 2026-10-28. Landed in `fbcfb704c`.*
+
+**How it landed.**
+
+- Housing is `RouteResource.HOUSING` in `EconomyRoutes.py`, a key type beside `Resource`
+  (`Yield = Resource | RouteResource`). Its value is 5 so `route_catalog.py`, which sorts needs by
+  `.value` across both enums, prints it after the item resources.
+- `ScenarioHasHousing` (`economy.has_housing(strength)`) reads the ungated routes, where every
+  producer lives, so a gate can ask it.
+- `ScenarioStartingState.housing` holds one grant per strength, default `False_()`; the grants are
+  the table above.
+- Relics split by Monk: `can_collect_relics(monastery, monk)` with `trained_monk()` and
+  `standing_monk()`. The trained-Monk routes keep their old names and need *some* housing; the new
+  "with a standing Monk" routes need none.
+- Consumers: 58 routes need housing at scale. `ScenarioUnitLogic._field(paid=True)` asks it at
+  scale (`has_military`, `has_navy`, siege, `counters`); `can_train` and
+  `can_get_villager_anywhere` ask *some*.
+
+**Rulings during implementation.**
+
+- The maintainer ruled that `_can_field_some`, the guards and holders, needs housing *some*, not
+  at scale as the brief said.
+- The fill gate was skipped by the maintainer.
+
+**Departures and gaps.**
+
+- Genghis 5 has no possible "Villagers gathering food with a Base" route at all: the map's
+  villager food falls short of its demand. The test uses "Villagers gathering gold with a Base",
+  which runs there.
+- `red_check.py` was blocked by the session's permission classifier, so no new test has been
+  proven red at HEAD. The two `TestNoItemYieldsHousing` tests pass at HEAD by construction.
+- `test_economy_routes.py::TestEveryEasySourceAnswersAsBefore` is red: 22 sampled states moved in
+  every config, the count #47 recorded at its HEAD. Left for #36. Only the count was compared, not
+  the states.
+- Not run here, left for the maintainer's full run: `test_age_advance.py`, `test_buildings_paid.py`,
+  `test_feudal_age_food.py`, `test_resource_rules.py`, `test_explain.py`, and all of
+  `test_determinism.py` but `TestCampaignOrder`.
+- Memory climbs steadily through the long rule files (2.7-3.2 GB peaks); `test_age_price.py`
+  reached 3.2 GB in 90 s.

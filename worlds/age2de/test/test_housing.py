@@ -9,7 +9,7 @@ from ..items.Items import Age2ItemData, Resource, Resources, SeedResources
 from ..locations.Buildings import BuildingOption
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Units import Age2UnitData
-from ..logic.custom_logic.EconomyRoutes import Strength
+from ..logic.custom_logic.EconomyRoutes import RouteResource, Strength, Yield
 from ..Options import MarketTrade, PartnerTrade
 
 HOUSE = Age2ItemData.HOUSE.item_name
@@ -21,12 +21,8 @@ SHUFFLED = {
     BuildingOption.tech,
     BuildingOption.military,
 }
-HOUSING = "housing"
+HOUSING = RouteResource.HOUSING
 ALL_CAMPAIGNS = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
-
-
-def by_name(amounts) -> dict[str, Strength]:
-    return {key.name.lower(): strength for key, strength in amounts.items()}
 
 
 class HousingBase(bases.Age2RuleTestBase):
@@ -52,15 +48,15 @@ class HousingBase(bases.Age2RuleTestBase):
         economy = self.economy(scenario)
         return {economy.routes[index].name for index in economy.running(state)}
 
-    def needs(self, scenario: Age2ScenarioData) -> dict[str, dict[str, Strength]]:
-        return {route.name: by_name(route.needs)
+    def needs(self, scenario: Age2ScenarioData) -> dict[str, dict[Yield, Strength]]:
+        return {route.name: dict(route.needs)
                 for route in self.scenario(scenario).routes.economy_routes().routes}
 
     def housing_producers(self, scenario: Age2ScenarioData, strength: Strength) -> set[str]:
         economy = self.economy(scenario)
         return {
             economy.routes[index].name for index in economy.possible
-                if by_name(economy.routes[index].yields).get(HOUSING, 0) >= strength
+                if economy.routes[index].is_yielding_resource_at_strength(HOUSING, strength)
         }
 
 
@@ -172,14 +168,14 @@ class TestNoItemYieldsHousing(HousingBase):
         self.build_shuffled(market_trade=MarketTrade.option_true)
         market = [route for route in self.scenario(Age2ScenarioData.AP_ATTILA_2).routes.market_routes()]
         self.assertEqual(3, len(market))
-        self.assertEqual([], [route.name for route in market if HOUSING in by_name(route.yields)])
+        self.assertEqual([], [route.name for route in market if HOUSING in route.yields])
 
     def test_every_route_resource_an_item_carries_is_an_item_resource(self):
         self.build_shuffled()
         carried = {item.type.type for item in Age2ItemData
                    if isinstance(item.type, (Resources, SeedResources))}
         self.assertLessEqual(carried, set(Resource))
-        self.assertNotIn(HOUSING, {resource.name.lower() for resource in Resource})
+        self.assertNotIn(HOUSING, carried)
         self.assertLessEqual(set(self.world.pool.resources.totals), set(Resource))
 
 

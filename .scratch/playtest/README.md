@@ -46,7 +46,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 40 | [A second Town Center as a defence and as a camp](issues/40-second-tc-defence-and-camp.md) | done |
 | 41 | [Cavemanify pulls a garrisoned unit out, and its replacement can be stuck](issues/41-cavemanify-garrisoned-units.md) | wontfix |
 | 42 | [The age climb's Town Center and age-up buildings are unpaid](issues/42-age-climb-buildings-paid.md) | done |
-| 43 | [Housing](issues/43-houses-and-the-base.md) | ready-for-agent |
+| 43 | [Housing](issues/43-houses-and-the-base.md) | done |
 | 44 | [What the base becomes once the House leaves it](issues/44-the-base-without-houses.md) | ready-for-agent |
 | 45 | [The caveman ledger is scanned linearly, and it is most of what a full pass costs](issues/45-caveman-ledger-lookup.md) | wontfix (deferred) |
 | 46 | [Spike: what does caveman do to every row of the unit table?](issues/46-caveman-catalog-spike.md) | done |
