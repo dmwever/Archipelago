@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-28, from [#10](10-caveman-sweep-delayed.md)'s run E
 
-**Status:** needs-triage
+**Status:** wontfix (deferred 2026-10-28 until the lag is felt in play)
 
 **Related:** [#33](33-unitsanity-sweep-cost-spike.md) (measured the ledger scan),
 [#35](35-unit-id-lookup-spike.md) (measured the array costs that decide the fix),
@@ -94,3 +94,44 @@ ticket should pick one and say why.
 Raised out of #10, which names "Making `originalTypeOf` O(1)" in its own *Out of scope* list.
 #10's run E then measured the cost that makes it worth doing, and it agreed with #33 to within a
 millisecond. The maintainer asked for this ticket after reading those results.
+
+### Closed 2026-10-28
+
+The maintainer closed this during triage: the cost is measured but the lag has never been felt
+in play, and the fix is only worth building once it is. Reopen if a heavy-combat run stutters
+when an item arrives or a research finishes — that is the tick a full pass runs on.
+
+Not recorded in `.out-of-scope/`. This is a deferral against an observable trigger, not a
+rejection of the idea.
+
+What triage established, so returning is cheap:
+
+- **The report is confirmed by code path.** `originalTypeOf` (`:90`) walks the ledger via
+  `cavemanListIndexOf` (`:81`); `ApplyCaveman` calls it once per given unit (`:229`);
+  `rememberOriginalType` (`:99`) and `releaseCaveman` (`:114`) open with the same scan;
+  `removeDeadCavemen` (`:132`) hands `releaseCaveman` an id and makes it re-find the `i` the
+  caller already holds.
+- **The ticket understates the cost.** `transformUnit` scans two or three times per transformed
+  unit: `:191` remembers `CAVEMAN_REMOVED`, and `:198` releases a freshly created id that is
+  almost never in the ledger — and a *miss* always costs the full ledger length. #10 run E's
+  ~29 ms measured `originalTypeOf` alone, so a sweep that actually transforms units is worse
+  than the figure in *Evidence*.
+- **A sibling scan, unmeasured.** `isUnitCavemanImmune` (`:50`) is linear, runs in the same
+  per-unit loop (`:225`), and — unlike the ledger — sheds entries only when it hits its 256 cap
+  (`reapImmuneUnits`, `:22`, is called only from `MarkUnitCavemanImmune` when full). Every
+  mercenary soldier ever spawned (`MercenarySpawn.xs:77`) stays on it, so a mercenary-heavy run
+  climbs toward 256 and sits there. It did not show up in #10 run E's delta because the immune
+  list was constant across both legs. `cavemanExemptTypes` is a different thing — keyed by type,
+  capped at 32 — and is not implicated.
+- **The design question #45 left open is already answered by #35.** Id-indexed arrays, not a
+  hash table: #35 measured 200k-slot resizes every tick as free and created arrays up to 4M
+  ints. The shape that makes all four entry points O(1) is *two* id-indexed arrays — id to
+  original type, and id to ledger index — with the compact `cavemanUnitIds` list kept only so
+  `removeDeadCavemen` has something to walk. The id-to-index array is what lets `releaseCaveman`
+  swap with last without searching, and the swap has to rewrite the moved entry's slot.
+- **`xsArrayResizeInt(arrayId, newSize)` does not document what it fills grown slots with**, and
+  unlike `xsArrayCreateInt` it takes no default. Grow-on-demand must write the `-1` sentinel over
+  the new range itself rather than trust the fill — a zero fill would read as `CAVEMAN_REMOVED`
+  and make `ApplyCaveman` (`:230`) silently skip every unit above the old high-water mark.
+- **Acceptance criterion 4 is a maintainer step.** It needs a live run of `spikes/10/TestE.xs`;
+  an agent cannot check it.
