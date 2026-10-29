@@ -25,6 +25,7 @@ from ...locations.connections.UnitRoles import (
     UnitRole,
 )
 from ...locations.connections.VillagerJobResources import scenario_has_job_resource
+from ..custom_logic.EconomyRoutes import Strength
 from ..custom_logic.ScenarioQuestions import ScenarioCanTrain
 
 MONKS_CAN_COUNTER = OptionFilter(MonksCanCounter, MonksCanCounter.option_true)
@@ -58,6 +59,7 @@ class ScenarioUnitLogic:
 
     def can_train(self, unit: Age2UnitData) -> Rule:
         return (self.can_train_structurally(unit) & self.scenario.economy.can_pay_some(unit.cost)
+                & self.scenario.economy.has_housing(Strength.SOME)
                 & self.scenario.ages.can_advance(unit.age)
                 & self.can_pay_for_training_building(unit))
 
@@ -109,7 +111,8 @@ class ScenarioUnitLogic:
             for unit in tiers
         ]
         to_train = self.resources_to_train(line, age)
-        return Or(*trained) & self.scenario.economy.can_sustain(to_train)
+        return (Or(*trained) & self.scenario.economy.can_sustain(to_train)
+                & self.scenario.economy.has_housing(Strength.AT_SCALE))
 
     def resources_to_train(
         self,

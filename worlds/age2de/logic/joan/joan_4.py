@@ -8,6 +8,7 @@ from ...items.Items import Age2ItemData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
 from ...locations.Players import Age2PlayerData
 
@@ -32,6 +33,7 @@ class Joan4StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.MILL] = camp
         self.starts_with_building[Age2BuildingData.LUMBER_CAMP] = camp
         self.starts_with_building[Age2BuildingData.MINING_CAMP] = camp
+        self.housing[Strength.SOME] = camp
 
         self.obtains_unit[U.CROSSBOWMAN] = camp
         self.obtains_unit[U.VILLAGER_MALE] = camp

@@ -1,4 +1,0 @@
-The Rising runs Lumberjacks with a Base: The Rising can build a House (unpaid: wood)
-The Rising runs Villagers gathering gold with a Base at a standing Mining Camp: The Rising can build a House (unpaid: wood)
-The Rising runs Villagers gathering stone with a Base at a standing Mining Camp: The Rising can build a House (unpaid: wood)
-The Rising, ungated runs Lumberjacks with a Base: The Rising can build a House (unpaid: wood)

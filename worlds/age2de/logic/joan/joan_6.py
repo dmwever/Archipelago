@@ -9,6 +9,7 @@ from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
 from ...locations.Heroes import Age2HeroData as H
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
 from ...locations.Players import Age2PlayerData
 
@@ -27,6 +28,7 @@ class Joan6StartingState(ScenarioStartingState):
 
         army = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
         self.must_steal_base = army   # the French army is how you take the English camp
+        self.housing[Strength.SOME] = self.must_steal_base
         self.obtains_unit[U.ARCHER] = army
         self.obtains_unit[U.MILITIA] = army
         self.obtains_unit[U.SCOUT_CAVALRY] = army

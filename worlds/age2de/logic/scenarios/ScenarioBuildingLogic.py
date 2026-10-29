@@ -68,9 +68,7 @@ class ScenarioBuildingLogic:
         return self.buildings.can_build_tc() & self.scenario.has_builders()
 
     def can_build_base(self) -> Rule:
-        if not self.scenario.civilization.can_build(Age2BuildingData.HOUSE):
-            return self.can_build_tc()
-        return self.can_build_tc() & self.can_build_structurally(Age2BuildingData.HOUSE)
+        return self.can_build_tc()
 
     def can_build_tc_as_defence(self) -> Rule:
         return self.scenario.named(

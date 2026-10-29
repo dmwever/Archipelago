@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import Has, Rule
+from rule_builder.rules import Has, Rule, True_
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Units import Age2UnitData
@@ -8,6 +8,7 @@ from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
 from ...locations.Players import Age2PlayerData
 
@@ -25,6 +26,7 @@ class Genghis2StartingState(ScenarioStartingState):
         # Temujin opens with eleven riders and a Wonder. The Tayichi'ud village is the only
         # Town Centre or villager he can ever reach, so it is the whole economy.
         self.has_vils = self.tayichiud_base
+        self.housing[Strength.SOME] = True_()
         self.obtains_unit[Age2UnitData.VILLAGER_MALE] = self.tayichiud_base
         self.obtains_unit[Age2UnitData.VILLAGER_FEMALE] = self.tayichiud_base
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = self.tayichiud_base

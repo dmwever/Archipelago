@@ -6,7 +6,9 @@ from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.VillagerJobs import Age2VillagerJobData as Job
-from ..custom_logic.EconomyRoutes import EconomyRoute, EconomyRoutes, Strength
+from rule_builder.rules import False_, True_
+
+from ..custom_logic.EconomyRoutes import EconomyRoute, EconomyRoutes, RouteResource, Strength
 from ..custom_logic.SufficientRawResources import SufficientRawResources
 
 if TYPE_CHECKING:
@@ -49,6 +51,7 @@ class ScenarioRoutesLogic:
             *self.trade_routes(),
             *self.market_routes(),
             *self.scenario_routes(),
+            *self.housing_routes(),
         ]
 
     def gated_routes(self) -> list[EconomyRoute]:
@@ -78,9 +81,11 @@ class ScenarioRoutesLogic:
                 leaf=(
                     self.economy.can_collect_relics(
                         self.scenario.starting_state.starts_with_building[Age2BuildingData.MONASTERY],
+                        self.economy.trained_monk(),
                     )
                     & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
                 ),
+                needs={RouteResource.HOUSING: Strength.SOME},
             ),
             EconomyRoute(
                 name="Relics at a standing Monastery, advanced to Castle",
@@ -88,6 +93,64 @@ class ScenarioRoutesLogic:
                 leaf=(
                     self.economy.can_collect_relics(
                         self.scenario.starting_state.starts_with_building[Age2BuildingData.MONASTERY],
+                        self.economy.trained_monk(),
+                    )
+                    & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
+                ),
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Relics at a built Monastery, started in Castle",
+                yields={Resource.GOLD: Strength.SOME},
+                leaf=(
+                    self.economy.can_collect_relics(
+                        self.scenario.buildings.can_build_structurally(Age2BuildingData.MONASTERY),
+                        self.economy.trained_monk(),
+                    )
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+                needs={Resource.WOOD: Strength.SOME, RouteResource.HOUSING: Strength.SOME},
+            ),
+            EconomyRoute(
+                name="Relics at a built Monastery, advanced to Castle",
+                yields={Resource.GOLD: Strength.SOME},
+                leaf=(
+                    self.economy.can_collect_relics(
+                        self.scenario.buildings.can_build_structurally(Age2BuildingData.MONASTERY),
+                        self.economy.trained_monk(),
+                    )
+                    & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
+                ),
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.SOME,
+                },
+            ),
+            EconomyRoute(
+                name="Relics with a standing Monk at a standing Monastery, started in Castle",
+                yields={Resource.GOLD: Strength.SOME},
+                leaf=(
+                    self.economy.can_collect_relics(
+                        self.scenario.starting_state.starts_with_building[Age2BuildingData.MONASTERY],
+                        self.economy.standing_monk(),
+                    )
+                    & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
+                ),
+            ),
+            EconomyRoute(
+                name="Relics with a standing Monk at a standing Monastery, advanced to Castle",
+                yields={Resource.GOLD: Strength.SOME},
+                leaf=(
+                    self.economy.can_collect_relics(
+                        self.scenario.starting_state.starts_with_building[Age2BuildingData.MONASTERY],
+                        self.economy.standing_monk(),
                     )
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                 ),
@@ -98,22 +161,24 @@ class ScenarioRoutesLogic:
                 },
             ),
             EconomyRoute(
-                name="Relics at a built Monastery, started in Castle",
+                name="Relics with a standing Monk at a built Monastery, started in Castle",
                 yields={Resource.GOLD: Strength.SOME},
                 leaf=(
                     self.economy.can_collect_relics(
                         self.scenario.buildings.can_build_structurally(Age2BuildingData.MONASTERY),
+                        self.economy.standing_monk(),
                     )
                     & self.scenario.ages.has_started_in(Age2AgeData.CASTLE)
                 ),
                 needs={Resource.WOOD: Strength.SOME},
             ),
             EconomyRoute(
-                name="Relics at a built Monastery, advanced to Castle",
+                name="Relics with a standing Monk at a built Monastery, advanced to Castle",
                 yields={Resource.GOLD: Strength.SOME},
                 leaf=(
                     self.economy.can_collect_relics(
                         self.scenario.buildings.can_build_structurally(Age2BuildingData.MONASTERY),
+                        self.economy.standing_monk(),
                     )
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                 ),
@@ -599,7 +664,7 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_base()
                     & self.scenario.buildings.has_wood_camp()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Lumberjacks with a Base at a second Town Center, started in Castle",
@@ -615,6 +680,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.SOME,
                     Resource.FOOD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -631,6 +697,7 @@ class ScenarioRoutesLogic:
                     Resource.FOOD: Strength.AT_SCALE,
                     Resource.GOLD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
         ]
@@ -656,6 +723,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.SOME,
                     Resource.FOOD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -677,6 +745,7 @@ class ScenarioRoutesLogic:
                     Resource.FOOD: Strength.AT_SCALE,
                     Resource.GOLD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -693,7 +762,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering food with a Base at a built Mill",
@@ -709,7 +778,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering food with a Base at a standing Folwark",
@@ -725,7 +798,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering food with a Base at a built Folwark",
@@ -741,7 +814,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering food with a Base at a Mule Cart",
@@ -757,7 +834,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering food with a Base at a Dock",
@@ -773,7 +850,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering food with a Base at a built Dock",
@@ -789,7 +866,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a second Town Center, started in Castle",
@@ -810,6 +891,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.SOME,
                     Resource.FOOD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -831,6 +913,7 @@ class ScenarioRoutesLogic:
                     Resource.FOOD: Strength.AT_SCALE,
                     Resource.GOLD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -847,7 +930,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a built Mining Camp",
@@ -863,7 +946,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a Mule Cart",
@@ -879,7 +966,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a standing Mill",
@@ -895,7 +982,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a built Mill",
@@ -911,7 +998,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a standing Folwark",
@@ -927,7 +1018,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a built Folwark",
@@ -943,7 +1034,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a Dock",
@@ -959,7 +1054,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering gold with a Base at a built Dock",
@@ -975,7 +1070,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering stone with a Base at a second Town Center, started in Castle",
@@ -996,6 +1095,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.SOME,
                     Resource.FOOD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1017,6 +1117,7 @@ class ScenarioRoutesLogic:
                     Resource.FOOD: Strength.AT_SCALE,
                     Resource.GOLD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1033,7 +1134,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers gathering stone with a Base at a built Mining Camp",
@@ -1049,7 +1150,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers gathering stone with a Base at a Mule Cart",
@@ -1065,7 +1170,7 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.FOOD: Strength.SOME},
+                needs={Resource.FOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
         ]
 
@@ -1081,7 +1186,7 @@ class ScenarioRoutesLogic:
                         resource="food",
                     )
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE},
+                needs={Resource.WOOD: Strength.AT_SCALE, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Fishing Ships gathering gold",
@@ -1093,7 +1198,7 @@ class ScenarioRoutesLogic:
                         resource="gold",
                     )
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE},
+                needs={Resource.WOOD: Strength.AT_SCALE, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Villagers and Fishing Ships gathering food",
@@ -1106,7 +1211,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers and Fishing Ships gathering food at a second Town Center, started in Castle",
@@ -1124,6 +1233,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.AT_SCALE,
                     Resource.FOOD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1142,6 +1252,7 @@ class ScenarioRoutesLogic:
                     Resource.FOOD: Strength.AT_SCALE,
                     Resource.GOLD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1155,7 +1266,11 @@ class ScenarioRoutesLogic:
                     )
                     & self.scenario.has_base()
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Villagers and Fishing Ships gathering gold at a second Town Center, started in Castle",
@@ -1173,6 +1288,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.AT_SCALE,
                     Resource.FOOD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1191,6 +1307,7 @@ class ScenarioRoutesLogic:
                     Resource.FOOD: Strength.AT_SCALE,
                     Resource.GOLD: Strength.SOME,
                     Resource.STONE: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
         ]
@@ -1202,7 +1319,11 @@ class ScenarioRoutesLogic:
                 name="Farmers",
                 yields={Resource.FOOD: Strength.AT_SCALE},
                 leaf=self.economy.can_farm(),
-                needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Fish Traps, started in Feudal",
@@ -1211,7 +1332,7 @@ class ScenarioRoutesLogic:
                     self.economy.can_work_fish_traps()
                     & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE},
+                needs={Resource.WOOD: Strength.AT_SCALE, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Fish Traps, advanced to Feudal",
@@ -1220,7 +1341,11 @@ class ScenarioRoutesLogic:
                     self.economy.can_work_fish_traps()
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Fish Traps, on Feudal Age Food",
@@ -1231,7 +1356,7 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                     & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE},
+                needs={Resource.WOOD: Strength.AT_SCALE, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
         ]
 
@@ -1253,7 +1378,11 @@ class ScenarioRoutesLogic:
                     cogs
                     & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.GOLD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Trade Cogs, advanced to Feudal",
@@ -1266,6 +1395,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.SOME,
                     Resource.FOOD: Strength.SOME,
                     Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1277,7 +1407,11 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                     & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.GOLD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Trade Cogs on banked wood, started in Feudal",
@@ -1287,7 +1421,7 @@ class ScenarioRoutesLogic:
                     & banked_wood
                     & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.GOLD: Strength.SOME},
+                needs={Resource.GOLD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Trade Cogs on banked wood, advanced to Feudal",
@@ -1301,6 +1435,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.SOME,
                     Resource.FOOD: Strength.SOME,
                     Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1313,7 +1448,7 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                     & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.GOLD: Strength.SOME},
+                needs={Resource.GOLD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Trade Cogs on banked gold, started in Feudal",
@@ -1323,7 +1458,7 @@ class ScenarioRoutesLogic:
                     & banked_gold
                     & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.SOME},
+                needs={Resource.WOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Trade Cogs on banked gold, advanced to Feudal",
@@ -1333,7 +1468,11 @@ class ScenarioRoutesLogic:
                     & banked_gold
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Trade Cogs on banked gold, on Feudal Age Food",
@@ -1345,7 +1484,7 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                     & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.SOME},
+                needs={Resource.WOOD: Strength.SOME, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Trade Cogs on banked wood and gold, started in Feudal",
@@ -1356,6 +1495,7 @@ class ScenarioRoutesLogic:
                     & banked_gold
                     & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
                 ),
+                needs={RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Trade Cogs on banked wood and gold, advanced to Feudal",
@@ -1366,7 +1506,11 @@ class ScenarioRoutesLogic:
                     & banked_gold
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                 ),
-                needs={Resource.WOOD: Strength.SOME, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.SOME,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Trade Cogs on banked wood and gold, on Feudal Age Food",
@@ -1379,6 +1523,7 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                     & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
                 ),
+                needs={RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Trade Carts, started in Feudal",
@@ -1387,7 +1532,11 @@ class ScenarioRoutesLogic:
                     carts
                     & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE, Resource.GOLD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Trade Carts, advanced to Feudal",
@@ -1400,6 +1549,7 @@ class ScenarioRoutesLogic:
                     Resource.WOOD: Strength.AT_SCALE,
                     Resource.FOOD: Strength.SOME,
                     Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
                 },
             ),
             EconomyRoute(
@@ -1411,7 +1561,11 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                     & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE, Resource.GOLD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.GOLD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Trade Carts on banked gold, started in Feudal",
@@ -1421,7 +1575,7 @@ class ScenarioRoutesLogic:
                     & banked_gold
                     & self.scenario.ages.has_started_in(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE},
+                needs={Resource.WOOD: Strength.AT_SCALE, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
             EconomyRoute(
                 name="Trade Carts on banked gold, advanced to Feudal",
@@ -1431,7 +1585,11 @@ class ScenarioRoutesLogic:
                     & banked_gold
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+                needs={
+                    Resource.WOOD: Strength.AT_SCALE,
+                    Resource.FOOD: Strength.SOME,
+                    RouteResource.HOUSING: Strength.AT_SCALE,
+                },
             ),
             EconomyRoute(
                 name="Trade Carts on banked gold, on Feudal Age Food",
@@ -1443,7 +1601,7 @@ class ScenarioRoutesLogic:
                     & self.scenario.has_building(Age2BuildingData.TOWN_CENTER)
                     & self.scenario.ages.has_standing_or_seeded_age_up_buildings(Age2AgeData.FEUDAL)
                 ),
-                needs={Resource.WOOD: Strength.AT_SCALE},
+                needs={Resource.WOOD: Strength.AT_SCALE, RouteResource.HOUSING: Strength.AT_SCALE},
             ),
         ]
 
@@ -1528,5 +1686,31 @@ class ScenarioRoutesLogic:
                 name="a little of its own stone",
                 yields={Resource.STONE: Strength.SOME},
                 leaf=self.scenario.starting_state.some_resource_sources[Resource.STONE],
+            ),
+        ]
+
+    def housing_routes(self) -> list[EconomyRoute]:
+        builds_houses = self.scenario.civilization.can_build(Age2BuildingData.HOUSE)
+        return [
+            EconomyRoute(
+                name="Houses",
+                yields={RouteResource.HOUSING: Strength.AT_SCALE},
+                leaf=self.scenario.buildings.can_build_structurally(Age2BuildingData.HOUSE),
+                needs={Resource.WOOD: Strength.SOME},
+            ),
+            EconomyRoute(
+                name="Builds no Houses",
+                yields={RouteResource.HOUSING: Strength.AT_SCALE},
+                leaf=False_() if builds_houses else True_(),
+            ),
+            EconomyRoute(
+                name="its own housing",
+                yields={RouteResource.HOUSING: Strength.AT_SCALE},
+                leaf=self.scenario.starting_state.housing[Strength.AT_SCALE],
+            ),
+            EconomyRoute(
+                name="a little of its own housing",
+                yields={RouteResource.HOUSING: Strength.SOME},
+                leaf=self.scenario.starting_state.housing[Strength.SOME],
             ),
         ]

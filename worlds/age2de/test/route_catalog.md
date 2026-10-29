@@ -33,6 +33,8 @@ A route absent from every map (oysters, whales) or built by no civilisation in t
 - **Oyster Gatherers at a standing Mill** is reachable in no scenario.
 - **Relics at a standing Monastery, advanced to Castle** is reachable in no scenario.
 - **Relics at a standing Monastery, started in Castle** is reachable in no scenario.
+- **Relics with a standing Monk at a standing Monastery, advanced to Castle** is reachable in no scenario.
+- **Relics with a standing Monk at a standing Monastery, started in Castle** is reachable in no scenario.
 - **Shepherds at a built Folwark** is reachable in no scenario.
 - **Shepherds at a standing Folwark** is reachable in no scenario.
 - **Stone Miners at a Mule Cart** is reachable in no scenario.
@@ -58,7 +60,7 @@ A route absent from every map (oysters, whales) or built by no civilisation in t
 - **its own wood** is reachable in no scenario.
 
 
-## 114 routes - every scenario
+## 122 routes - every scenario
 
 | route | yields | needs | possible in |
 | --- | --- | --- | --- |
@@ -103,35 +105,39 @@ A route absent from every map (oysters, whales) or built by no civilisation in t
 | Oyster Gatherers at a built Folwark | gold some | wood some | 0/18 |
 | Oyster Gatherers at a Dock | gold some | - | 0/18 |
 | Oyster Gatherers at a built Dock | gold some | wood some | 0/18 |
-| Lumberjacks with a Base | wood at scale | food some | 15/18 |
-| Lumberjacks with a Base at a second Town Center, started in Castle | wood at scale | wood some, food some, stone some | 10/18 |
-| Lumberjacks with a Base at a second Town Center, advanced to Castle | wood at scale | wood some, food at scale, gold some, stone some | 15/18 |
-| Relics at a standing Monastery, started in Castle | gold some | - | 0/18 |
-| Relics at a standing Monastery, advanced to Castle | gold some | wood some, food at scale, gold some | 0/18 |
-| Relics at a built Monastery, started in Castle | gold some | wood some | 2/18 |
-| Relics at a built Monastery, advanced to Castle | gold some | wood some, food at scale, gold some | 2/18 |
-| Farmers | food at scale | wood at scale, food some | 15/18 |
-| Fish Traps, started in Feudal | food at scale | wood at scale | 11/18 |
-| Fish Traps, advanced to Feudal | food at scale | wood at scale, food some | 12/18 |
-| Fish Traps, on Feudal Age Food | food at scale | wood at scale | 12/18 |
-| Trade Cogs, started in Feudal | wood at scale, gold at scale | wood some, gold some | 7/18 |
-| Trade Cogs, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some | 8/18 |
-| Trade Cogs, on Feudal Age Food | wood at scale, gold at scale | wood some, gold some | 8/18 |
-| Trade Cogs on banked wood, started in Feudal | wood at scale, gold at scale | gold some | 7/18 |
-| Trade Cogs on banked wood, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some | 8/18 |
-| Trade Cogs on banked wood, on Feudal Age Food | wood at scale, gold at scale | gold some | 8/18 |
-| Trade Cogs on banked gold, started in Feudal | wood at scale, gold at scale | wood some | 7/18 |
-| Trade Cogs on banked gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some | 8/18 |
-| Trade Cogs on banked gold, on Feudal Age Food | wood at scale, gold at scale | wood some | 8/18 |
-| Trade Cogs on banked wood and gold, started in Feudal | wood at scale, gold at scale | - | 7/18 |
-| Trade Cogs on banked wood and gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some | 8/18 |
-| Trade Cogs on banked wood and gold, on Feudal Age Food | wood at scale, gold at scale | - | 8/18 |
-| Trade Carts, started in Feudal | gold at scale | wood at scale, gold some | 11/18 |
-| Trade Carts, advanced to Feudal | gold at scale | wood at scale, food some, gold some | 13/18 |
-| Trade Carts, on Feudal Age Food | gold at scale | wood at scale, gold some | 13/18 |
-| Trade Carts on banked gold, started in Feudal | gold at scale | wood at scale | 11/18 |
-| Trade Carts on banked gold, advanced to Feudal | gold at scale | wood at scale, food some | 13/18 |
-| Trade Carts on banked gold, on Feudal Age Food | gold at scale | wood at scale | 13/18 |
+| Lumberjacks with a Base | wood at scale | food some, housing at scale | 15/18 |
+| Lumberjacks with a Base at a second Town Center, started in Castle | wood at scale | wood some, food some, stone some, housing at scale | 10/18 |
+| Lumberjacks with a Base at a second Town Center, advanced to Castle | wood at scale | wood some, food at scale, gold some, stone some, housing at scale | 15/18 |
+| Relics at a standing Monastery, started in Castle | gold some | housing some | 0/18 |
+| Relics at a standing Monastery, advanced to Castle | gold some | wood some, food at scale, gold some, housing some | 0/18 |
+| Relics at a built Monastery, started in Castle | gold some | wood some, housing some | 2/18 |
+| Relics at a built Monastery, advanced to Castle | gold some | wood some, food at scale, gold some, housing some | 2/18 |
+| Relics with a standing Monk at a standing Monastery, started in Castle | gold some | - | 0/18 |
+| Relics with a standing Monk at a standing Monastery, advanced to Castle | gold some | wood some, food at scale, gold some | 0/18 |
+| Relics with a standing Monk at a built Monastery, started in Castle | gold some | wood some | 1/18 |
+| Relics with a standing Monk at a built Monastery, advanced to Castle | gold some | wood some, food at scale, gold some | 1/18 |
+| Farmers | food at scale | wood at scale, food some, housing at scale | 15/18 |
+| Fish Traps, started in Feudal | food at scale | wood at scale, housing at scale | 11/18 |
+| Fish Traps, advanced to Feudal | food at scale | wood at scale, food some, housing at scale | 12/18 |
+| Fish Traps, on Feudal Age Food | food at scale | wood at scale, housing at scale | 12/18 |
+| Trade Cogs, started in Feudal | wood at scale, gold at scale | wood some, gold some, housing at scale | 7/18 |
+| Trade Cogs, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some, housing at scale | 8/18 |
+| Trade Cogs, on Feudal Age Food | wood at scale, gold at scale | wood some, gold some, housing at scale | 8/18 |
+| Trade Cogs on banked wood, started in Feudal | wood at scale, gold at scale | gold some, housing at scale | 7/18 |
+| Trade Cogs on banked wood, advanced to Feudal | wood at scale, gold at scale | wood some, food some, gold some, housing at scale | 8/18 |
+| Trade Cogs on banked wood, on Feudal Age Food | wood at scale, gold at scale | gold some, housing at scale | 8/18 |
+| Trade Cogs on banked gold, started in Feudal | wood at scale, gold at scale | wood some, housing at scale | 7/18 |
+| Trade Cogs on banked gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some, housing at scale | 8/18 |
+| Trade Cogs on banked gold, on Feudal Age Food | wood at scale, gold at scale | wood some, housing at scale | 8/18 |
+| Trade Cogs on banked wood and gold, started in Feudal | wood at scale, gold at scale | housing at scale | 7/18 |
+| Trade Cogs on banked wood and gold, advanced to Feudal | wood at scale, gold at scale | wood some, food some, housing at scale | 8/18 |
+| Trade Cogs on banked wood and gold, on Feudal Age Food | wood at scale, gold at scale | housing at scale | 8/18 |
+| Trade Carts, started in Feudal | gold at scale | wood at scale, gold some, housing at scale | 11/18 |
+| Trade Carts, advanced to Feudal | gold at scale | wood at scale, food some, gold some, housing at scale | 13/18 |
+| Trade Carts, on Feudal Age Food | gold at scale | wood at scale, gold some, housing at scale | 13/18 |
+| Trade Carts on banked gold, started in Feudal | gold at scale | wood at scale, housing at scale | 11/18 |
+| Trade Carts on banked gold, advanced to Feudal | gold at scale | wood at scale, food some, housing at scale | 13/18 |
+| Trade Carts on banked gold, on Feudal Age Food | gold at scale | wood at scale, housing at scale | 13/18 |
 | Market Trade, started in Feudal | wood at scale, food at scale, gold at scale, stone at scale | wood at scale | 12/18 |
 | Market Trade, advanced to Feudal | wood at scale, food at scale, gold at scale, stone at scale | wood at scale, food some | 14/18 |
 | Market Trade, on Feudal Age Food | wood at scale, food at scale, gold at scale, stone at scale | wood at scale | 14/18 |
@@ -143,59 +149,63 @@ A route absent from every map (oysters, whales) or built by no civilisation in t
 | a little of its own food | food some | - | 0/18 |
 | a little of its own gold | gold some | - | 0/18 |
 | a little of its own stone | stone some | - | 0/18 |
-| Villagers gathering food with a Base at a second Town Center, started in Castle | food at scale | wood some, food some, stone some | 1/18 |
-| Villagers gathering food with a Base at a second Town Center, advanced to Castle | food at scale | wood some, food at scale, gold some, stone some | 2/18 |
-| Villagers gathering food with a Base at a standing Mill | food at scale | food some | 2/18 |
-| Villagers gathering food with a Base at a built Mill | food at scale | wood some, food some | 2/18 |
-| Villagers gathering food with a Base at a standing Folwark | food at scale | food some | 0/18 |
-| Villagers gathering food with a Base at a built Folwark | food at scale | wood some, food some | 0/18 |
-| Villagers gathering food with a Base at a Mule Cart | food at scale | food some | 0/18 |
-| Villagers gathering food with a Base at a Dock | food at scale | food some | 0/18 |
-| Villagers gathering food with a Base at a built Dock | food at scale | wood some, food some | 0/18 |
-| Villagers gathering gold with a Base at a second Town Center, started in Castle | gold at scale | wood some, food some, stone some | 10/18 |
-| Villagers gathering gold with a Base at a second Town Center, advanced to Castle | gold at scale | wood some, food at scale, gold some, stone some | 15/18 |
-| Villagers gathering gold with a Base at a standing Mining Camp | gold at scale | food some | 2/18 |
-| Villagers gathering gold with a Base at a built Mining Camp | gold at scale | wood some, food some | 15/18 |
-| Villagers gathering gold with a Base at a Mule Cart | gold at scale | food some | 0/18 |
-| Villagers gathering gold with a Base at a standing Mill | gold at scale | food some | 0/18 |
-| Villagers gathering gold with a Base at a built Mill | gold at scale | wood some, food some | 0/18 |
-| Villagers gathering gold with a Base at a standing Folwark | gold at scale | food some | 0/18 |
-| Villagers gathering gold with a Base at a built Folwark | gold at scale | wood some, food some | 0/18 |
-| Villagers gathering gold with a Base at a Dock | gold at scale | food some | 0/18 |
-| Villagers gathering gold with a Base at a built Dock | gold at scale | wood some, food some | 0/18 |
-| Villagers gathering stone with a Base at a second Town Center, started in Castle | stone at scale | wood some, food some, stone some | 10/18 |
-| Villagers gathering stone with a Base at a second Town Center, advanced to Castle | stone at scale | wood some, food at scale, gold some, stone some | 15/18 |
-| Villagers gathering stone with a Base at a standing Mining Camp | stone at scale | food some | 2/18 |
-| Villagers gathering stone with a Base at a built Mining Camp | stone at scale | wood some, food some | 15/18 |
-| Villagers gathering stone with a Base at a Mule Cart | stone at scale | food some | 0/18 |
-| Fishing Ships gathering food | food at scale | wood at scale | 1/18 |
-| Fishing Ships gathering gold | gold at scale | wood at scale | 0/18 |
-| Villagers and Fishing Ships gathering food | food at scale | wood at scale, food some | 3/18 |
-| Villagers and Fishing Ships gathering food at a second Town Center, started in Castle | food at scale | wood at scale, food some, stone some | 1/18 |
-| Villagers and Fishing Ships gathering food at a second Town Center, advanced to Castle | food at scale | wood at scale, food at scale, gold some, stone some | 3/18 |
-| Villagers and Fishing Ships gathering gold | gold at scale | wood at scale, food some | 15/18 |
-| Villagers and Fishing Ships gathering gold at a second Town Center, started in Castle | gold at scale | wood at scale, food some, stone some | 10/18 |
-| Villagers and Fishing Ships gathering gold at a second Town Center, advanced to Castle | gold at scale | wood at scale, food at scale, gold some, stone some | 15/18 |
+| Houses | housing at scale | wood some | 9/18 |
+| Builds no Houses | housing at scale | - | 6/18 |
+| its own housing | housing at scale | - | 1/18 |
+| a little of its own housing | housing some | - | 6/18 |
+| Villagers gathering food with a Base at a second Town Center, started in Castle | food at scale | wood some, food some, stone some, housing at scale | 1/18 |
+| Villagers gathering food with a Base at a second Town Center, advanced to Castle | food at scale | wood some, food at scale, gold some, stone some, housing at scale | 2/18 |
+| Villagers gathering food with a Base at a standing Mill | food at scale | food some, housing at scale | 2/18 |
+| Villagers gathering food with a Base at a built Mill | food at scale | wood some, food some, housing at scale | 2/18 |
+| Villagers gathering food with a Base at a standing Folwark | food at scale | food some, housing at scale | 0/18 |
+| Villagers gathering food with a Base at a built Folwark | food at scale | wood some, food some, housing at scale | 0/18 |
+| Villagers gathering food with a Base at a Mule Cart | food at scale | food some, housing at scale | 0/18 |
+| Villagers gathering food with a Base at a Dock | food at scale | food some, housing at scale | 0/18 |
+| Villagers gathering food with a Base at a built Dock | food at scale | wood some, food some, housing at scale | 0/18 |
+| Villagers gathering gold with a Base at a second Town Center, started in Castle | gold at scale | wood some, food some, stone some, housing at scale | 10/18 |
+| Villagers gathering gold with a Base at a second Town Center, advanced to Castle | gold at scale | wood some, food at scale, gold some, stone some, housing at scale | 15/18 |
+| Villagers gathering gold with a Base at a standing Mining Camp | gold at scale | food some, housing at scale | 2/18 |
+| Villagers gathering gold with a Base at a built Mining Camp | gold at scale | wood some, food some, housing at scale | 15/18 |
+| Villagers gathering gold with a Base at a Mule Cart | gold at scale | food some, housing at scale | 0/18 |
+| Villagers gathering gold with a Base at a standing Mill | gold at scale | food some, housing at scale | 0/18 |
+| Villagers gathering gold with a Base at a built Mill | gold at scale | wood some, food some, housing at scale | 0/18 |
+| Villagers gathering gold with a Base at a standing Folwark | gold at scale | food some, housing at scale | 0/18 |
+| Villagers gathering gold with a Base at a built Folwark | gold at scale | wood some, food some, housing at scale | 0/18 |
+| Villagers gathering gold with a Base at a Dock | gold at scale | food some, housing at scale | 0/18 |
+| Villagers gathering gold with a Base at a built Dock | gold at scale | wood some, food some, housing at scale | 0/18 |
+| Villagers gathering stone with a Base at a second Town Center, started in Castle | stone at scale | wood some, food some, stone some, housing at scale | 10/18 |
+| Villagers gathering stone with a Base at a second Town Center, advanced to Castle | stone at scale | wood some, food at scale, gold some, stone some, housing at scale | 15/18 |
+| Villagers gathering stone with a Base at a standing Mining Camp | stone at scale | food some, housing at scale | 2/18 |
+| Villagers gathering stone with a Base at a built Mining Camp | stone at scale | wood some, food some, housing at scale | 15/18 |
+| Villagers gathering stone with a Base at a Mule Cart | stone at scale | food some, housing at scale | 0/18 |
+| Fishing Ships gathering food | food at scale | wood at scale, housing at scale | 1/18 |
+| Fishing Ships gathering gold | gold at scale | wood at scale, housing at scale | 0/18 |
+| Villagers and Fishing Ships gathering food | food at scale | wood at scale, food some, housing at scale | 3/18 |
+| Villagers and Fishing Ships gathering food at a second Town Center, started in Castle | food at scale | wood at scale, food some, stone some, housing at scale | 1/18 |
+| Villagers and Fishing Ships gathering food at a second Town Center, advanced to Castle | food at scale | wood at scale, food at scale, gold some, stone some, housing at scale | 3/18 |
+| Villagers and Fishing Ships gathering gold | gold at scale | wood at scale, food some, housing at scale | 15/18 |
+| Villagers and Fishing Ships gathering gold at a second Town Center, started in Castle | gold at scale | wood at scale, food some, stone some, housing at scale | 10/18 |
+| Villagers and Fishing Ships gathering gold at a second Town Center, advanced to Castle | gold at scale | wood at scale, food at scale, gold some, stone some, housing at scale | 15/18 |
 
 ## Per scenario
 
 | scenario | routes | possible |
 | --- | --- | --- |
-| AP_ATTILA_1 | 114 | 47 |
-| AP_ATTILA_2 | 114 | 49 |
-| AP_ATTILA_3 | 114 | 56 |
-| AP_ATTILA_4 | 114 | 34 |
-| AP_ATTILA_5 | 114 | 41 |
-| AP_ATTILA_6 | 114 | 53 |
-| AP_GENGHIS_1 | 114 | 0 |
-| AP_GENGHIS_2 | 114 | 25 |
-| AP_GENGHIS_3 | 114 | 49 |
-| AP_GENGHIS_4 | 114 | 49 |
-| AP_GENGHIS_5 | 114 | 39 |
-| AP_GENGHIS_6 | 114 | 26 |
-| AP_JOAN_1 | 114 | 0 |
-| AP_JOAN_2 | 114 | 35 |
-| AP_JOAN_3 | 114 | 49 |
-| AP_JOAN_4 | 114 | 58 |
-| AP_JOAN_5 | 114 | 0 |
-| AP_JOAN_6 | 114 | 49 |
+| AP_ATTILA_1 | 122 | 48 |
+| AP_ATTILA_2 | 122 | 50 |
+| AP_ATTILA_3 | 122 | 57 |
+| AP_ATTILA_4 | 122 | 35 |
+| AP_ATTILA_5 | 122 | 42 |
+| AP_ATTILA_6 | 122 | 54 |
+| AP_GENGHIS_1 | 122 | 0 |
+| AP_GENGHIS_2 | 122 | 27 |
+| AP_GENGHIS_3 | 122 | 50 |
+| AP_GENGHIS_4 | 122 | 51 |
+| AP_GENGHIS_5 | 122 | 43 |
+| AP_GENGHIS_6 | 122 | 28 |
+| AP_JOAN_1 | 122 | 0 |
+| AP_JOAN_2 | 122 | 37 |
+| AP_JOAN_3 | 122 | 50 |
+| AP_JOAN_4 | 122 | 60 |
+| AP_JOAN_5 | 122 | 0 |
+| AP_JOAN_6 | 122 | 51 |

@@ -8,6 +8,7 @@ from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
 from ...locations.Players import Age2PlayerData
 
@@ -27,6 +28,7 @@ class Joan2StartingState(ScenarioStartingState):
         can_reach_orleans = Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name) & (has_carts | has_dock)
 
         self.has_vils = can_reach_orleans
+        self.housing[Strength.AT_SCALE] = can_reach_orleans
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = can_reach_orleans
         self.starts_with_building[Age2BuildingData.MILL] = can_reach_orleans
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = can_reach_orleans

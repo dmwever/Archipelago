@@ -7,6 +7,7 @@ from rule_builder.rules import False_, Or, Rule
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 from ...locations.connections.UnitRoles import ROLE_TO_LINES, UnitRole
+from ..custom_logic.EconomyRoutes import Strength
 
 if TYPE_CHECKING:
     from ..ScenarioLogic import ScenarioLogic
@@ -68,7 +69,7 @@ class ScenarioMilitaryLogic:
             )
         if not rules:
             return False_()
-        return Or(*rules)
+        return Or(*rules) & self.scenario.economy.has_housing(Strength.SOME)
 
     def has_naval_bombardment(self) -> Rule:
         return self.scenario.named("has naval bombardment",

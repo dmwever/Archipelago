@@ -4,7 +4,9 @@ from . import bases
 from ..Options import ExistingTechs, PartnerTrade
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Scenarios import Age2ScenarioData
-from ..logic.custom_logic.EconomyRoutes import Strength
+from ..logic.custom_logic.EconomyRoutes import RouteResource, Strength
+
+HOUSED = {RouteResource.HOUSING: Strength.AT_SCALE}
 
 TRADE_AND_RELICS = ("Trade Cogs", "Trade Carts", "Relics", "Fish Traps")
 STARTED_IN = (", started in Feudal", ", started in Castle")
@@ -62,18 +64,18 @@ class TestUnderStartInDarkAgeRelicsPayTheCastlePrice(EconomyCapitalBase):
         self.build(existing_techs=ExistingTechs.option_start_in_dark_age)
         relics = {name: needs for name, needs in self.needs(Age2ScenarioData.AP_ATTILA_3).items()
                   if name.startswith("Relics") and name.endswith(", advanced to Castle")}
+        castle = {
+            Resource.WOOD: Strength.SOME,
+            Resource.FOOD: Strength.AT_SCALE,
+            Resource.GOLD: Strength.SOME,
+        }
+        trained = {**castle, RouteResource.HOUSING: Strength.SOME}
         self.assertEqual(
             {
-                "Relics at a standing Monastery, advanced to Castle": {
-                    Resource.WOOD: Strength.SOME,
-                    Resource.FOOD: Strength.AT_SCALE,
-                    Resource.GOLD: Strength.SOME,
-                },
-                "Relics at a built Monastery, advanced to Castle": {
-                    Resource.WOOD: Strength.SOME,
-                    Resource.FOOD: Strength.AT_SCALE,
-                    Resource.GOLD: Strength.SOME,
-                },
+                "Relics at a standing Monastery, advanced to Castle": trained,
+                "Relics at a built Monastery, advanced to Castle": trained,
+                "Relics with a standing Monk at a standing Monastery, advanced to Castle": castle,
+                "Relics with a standing Monk at a built Monastery, advanced to Castle": castle,
             },
             relics,
         )
@@ -86,8 +88,8 @@ class TestUnderStartInDarkAgeRelicsPayTheCastlePrice(EconomyCapitalBase):
 
 class TestAtScaleVillagersPayForTheirCamp(EconomyCapitalBase):
 
-    VILLAGERS = {Resource.FOOD: Strength.SOME}
-    VILLAGERS_AND_A_CAMP = {Resource.FOOD: Strength.SOME, Resource.WOOD: Strength.SOME}
+    VILLAGERS = {Resource.FOOD: Strength.SOME, **HOUSED}
+    VILLAGERS_AND_A_CAMP = {Resource.FOOD: Strength.SOME, Resource.WOOD: Strength.SOME, **HOUSED}
 
     def test_a_built_mining_camp_needs_some_wood_and_a_standing_one_nothing(self):
         self.build()
@@ -164,6 +166,7 @@ class TestASecondTownCenterAsACampPaysThroughItsNeeds(EconomyCapitalBase):
                 **self.boats(route),
                 Resource.FOOD: Strength.AT_SCALE,
                 Resource.GOLD: Strength.SOME,
+                **HOUSED,
             }
             for route in self.AT_SCALE
         }
@@ -176,6 +179,7 @@ class TestASecondTownCenterAsACampPaysThroughItsNeeds(EconomyCapitalBase):
                 **self.TOWN_CENTER,
                 **self.boats(route),
                 Resource.FOOD: Strength.SOME,
+                **HOUSED,
             }
             for route in self.AT_SCALE
         }

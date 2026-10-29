@@ -8,6 +8,7 @@ from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
 from ...locations.Players import Age2PlayerData
 
@@ -26,6 +27,7 @@ class Genghis4StartingState(ScenarioStartingState):
         # Two town centres and five villagers, north and south: the first chapter that
         # opens with an economy of its own.
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = True_()
+        self.housing[Strength.SOME] = True_()
 
         # The Kipchaks hand their camp over once they surrender, buildings and all.
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = self.kipchak_camp

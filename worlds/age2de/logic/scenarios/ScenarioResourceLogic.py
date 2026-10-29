@@ -15,6 +15,7 @@ from ..custom_logic.EconomyRoutes import EconomyRoutesYield, Strength
 from ..custom_logic.ScenarioQuestions import (
     ScenarioHasEasyResource,
     ScenarioHasEconomyRoutes,
+    ScenarioHasHousing,
     ScenarioHasSomeResource,
     ScenarioHasUngatedRoutes,
 )
@@ -207,26 +208,31 @@ class ScenarioResourceLogic:
         gathers = dropsite & self.scenario.has_vils() & self.has_job(job)
         return self._in_any_tier(self.tiered(gathers, field, self.open_resource_gates()))
 
-    def can_collect_relics(self, monastery: Rule | None = None) -> Rule:
-        return self.scenario.named("can collect relics", self._collect_relics(monastery))
+    def can_collect_relics(self, monastery: Rule | None = None, monk: Rule | None = None) -> Rule:
+        return self.scenario.named("can collect relics", self._collect_relics(monastery, monk))
 
-    def _collect_relics(self, monastery: Rule | None = None) -> Rule:
+    def _collect_relics(self, monastery: Rule | None, monk: Rule | None) -> Rule:
         if not self.counts.relic_count:
             return False_()
-        monk = Age2UnitData.MONK
         if monastery is None:
             monastery = self.scenario.has_building_structurally(Age2BuildingData.MONASTERY)
+        if monk is None:
+            monk = self.trained_monk() | self.standing_monk()
         return (
             monastery
-            & (
-                self.logic.units.has_unit_items(monk)
-                | (self.scenario.obtains_unit(monk) & self.logic.units.survives_caveman(monk))
-            )
+            & monk
             & self.scenario.ages.has_reached(Age2UnitData.MONK.age)
             & self._in_any_tier(
                 self.tiered(True_(), "relic_count", self.open_resource_gates()),
             )
         )
+
+    def trained_monk(self) -> Rule:
+        return self.logic.units.has_unit_items(Age2UnitData.MONK)
+
+    def standing_monk(self) -> Rule:
+        monk = Age2UnitData.MONK
+        return self.scenario.obtains_unit(monk) & self.logic.units.survives_caveman(monk)
 
     # -- food that grows back -----------------------------------------------------------------
 
@@ -452,6 +458,9 @@ class ScenarioResourceLogic:
 
     def has_some_source(self, resource: Resource) -> Rule:
         return ScenarioHasSomeResource(scenario=self.scenario.scenario, resource=resource)
+
+    def has_housing(self, strength: Strength) -> Rule:
+        return ScenarioHasHousing(scenario=self.scenario.scenario, strength=strength)
 
     def has_ungated_easy_source(self, resource: Resource) -> Rule:
         return EconomyRoutesYield(

@@ -7,6 +7,7 @@ from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
 from ...locations.UnitLines import Age2UnitLineData
 
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
 from ...locations.Players import Age2PlayerData
 
@@ -24,6 +25,7 @@ class Genghis6StartingState(ScenarioStartingState):
         # Ogedei holds the north bank in imperial already: a town centre, a castle, a stable
         # and an archery range behind seven guard towers.
         self.starts_with_building[Age2BuildingData.TOWN_CENTER] = True_()
+        self.housing[Strength.SOME] = True_()
         self.starts_with_building[Age2BuildingData.CASTLE] = True_()
         self.starts_with_building[Age2BuildingData.STABLE] = True_()
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = True_()

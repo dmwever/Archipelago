@@ -9,7 +9,7 @@ from NetUtils import JSONMessagePart
 from rule_builder.rules import Or, Rule
 
 from .AgeUpRequirement import AGE_UP_BUILDINGS, AgeUpRequirement
-from .EconomyRoutes import EconomyRoutesYield, Strength
+from .EconomyRoutes import EconomyRoutesYield, RouteResource, Strength
 
 from ...items.Items import Resource
 from ...locations.Ages import Age2AgeData
@@ -379,6 +379,30 @@ class ScenarioHasSomeResource(ScenarioQuestion, game="Age Of Empires II: Definit
     @override
     def describe(self, scenario: Age2ScenarioData) -> str:
         return f"{scenario.scenario_name} can gather some {self.resource.name.lower()}"
+
+
+@dataclass
+class ScenarioHasHousing(ScenarioQuestion, game="Age Of Empires II: Definitive Edition"):
+
+    strength: Strength
+
+    @override
+    def key(self) -> tuple:
+        return (type(self).__name__, self.scenario, self.strength)
+
+    @override
+    def answer(self, scenario: 'ScenarioLogic') -> Rule:
+        return EconomyRoutesYield(
+            economy=scenario.economy.has_ungated_routes(),
+            resource=RouteResource.HOUSING,
+            strength=self.strength,
+        )
+
+    @override
+    def describe(self, scenario: Age2ScenarioData) -> str:
+        if self.strength is Strength.SOME:
+            return f"{scenario.scenario_name} has some housing"
+        return f"{scenario.scenario_name} has housing at scale"
 
 
 def _question_identity(self: ScenarioQuestion.Resolved) -> int:

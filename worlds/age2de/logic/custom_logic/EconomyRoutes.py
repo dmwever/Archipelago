@@ -20,25 +20,32 @@ class Strength(enum.IntEnum):
     AT_SCALE = 2
 
 
+class RouteResource(enum.Enum):
+    HOUSING = 5
+
+
+Yield = Resource | RouteResource
+
+
 @dataclasses.dataclass(frozen=True, eq=False)
 class EconomyRoute:
     name: str
-    yields: Mapping[Resource, Strength]
+    yields: Mapping[Yield, Strength]
     leaf: Rule
-    needs: Mapping[Resource, Strength] = dataclasses.field(default_factory=dict)
+    needs: Mapping[Yield, Strength] = dataclasses.field(default_factory=dict)
 
-    def is_yielding_resource_at_strength(self, resource: Resource, strength: Strength) -> bool:
+    def is_yielding_resource_at_strength(self, resource: Yield, strength: Strength) -> bool:
         return resource in self.yields and self.yields[resource] >= strength
 
 
 @dataclasses.dataclass(frozen=True, eq=False)
 class ResolvedEconomyRoute:
     name: str
-    yields: Mapping[Resource, Strength]
+    yields: Mapping[Yield, Strength]
     leaf: Rule.Resolved
-    needs: Mapping[Resource, Strength]
+    needs: Mapping[Yield, Strength]
 
-    def is_yielding_resource_at_strength(self, resource: Resource, strength: Strength) -> bool:
+    def is_yielding_resource_at_strength(self, resource: Yield, strength: Strength) -> bool:
         return resource in self.yields and self.yields[resource] >= strength
 
 
@@ -163,7 +170,7 @@ class EconomyRoutes(Rule["Age2World"], game="Age Of Empires II: Definitive Editi
 
         def yields(
             self,
-            resource: Resource,
+            resource: Yield,
             strength: Strength,
             among: frozenset[str] | None = None,
         ) -> Rule.Resolved:
@@ -238,7 +245,7 @@ class EconomyRoutes(Rule["Age2World"], game="Age Of Empires II: Definitive Editi
 @dataclasses.dataclass()
 class EconomyRoutesYield(Rule["Age2World"], game="Age Of Empires II: Definitive Edition"):
     economy: Rule
-    resource: Resource
+    resource: Yield
     strength: Strength
     among: frozenset[str] | None = None
 

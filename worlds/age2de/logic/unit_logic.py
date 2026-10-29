@@ -15,6 +15,7 @@ from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.UnitLocations import VILLAGER_LINES
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from .custom_logic.EconomyRoutes import Strength
 
 NOT_CAVEMAN = OptionFilter(Caveman, Caveman.option_false)
 
@@ -83,6 +84,7 @@ class UnitLogic:
                 continue
             rules.append(scenario.is_unlocked() & answer
                          & scenario.economy.can_pay({food.type: food.amount})
+                         & scenario.economy.has_housing(Strength.SOME)
                          & scenario.units.can_pay_for_training_building(villager))
         return Or(*rules)
 

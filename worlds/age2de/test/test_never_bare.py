@@ -341,9 +341,6 @@ class TestNothingIsAskedBare(unittest.TestCase):
     maxDiff = None
 
     RISING_PALADIN = "Complete The Rising: The Rising can train a Paladin (unpaid: stone)"
-    RISING_HOUSE = (
-        "The Rising runs Lumberjacks with a Base: The Rising can build a House (unpaid: wood)"
-    )
 
     def test_every_bare_ask_is_on_the_allowlist_and_every_entry_is_still_bare(self):
         unlisted, stale = unlisted_and_stale(allowlist(), findings())
@@ -355,7 +352,7 @@ class TestNothingIsAskedBare(unittest.TestCase):
             "never_bare_allowlist.txt.",
         )
 
-    def test_a_bare_build_added_to_a_location_is_named(self):
+    def findings_with_a_bare_university(self) -> tuple[str, set[str]]:
         world = maximal_world(ExistingTechs.option_vanilla)
         location = world.get_location(Age2BuildingData.BARRACKS.location_name)
         scourge = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
@@ -365,15 +362,17 @@ class TestNothingIsAskedBare(unittest.TestCase):
             "(unpaid: food, gold, stone)"
         )
         with self.rule_added(location, bare.resolve(world), world):
-            unlisted, _ = unlisted_and_stale(allowlist(), findings())
+            return added, findings()
+
+    def test_a_bare_build_added_to_a_location_is_named(self):
+        added, found = self.findings_with_a_bare_university()
+        unlisted, _ = unlisted_and_stale(allowlist(), found)
         self.assertEqual([added], unlisted)
 
     def test_a_still_bare_site_taken_off_the_allowlist_fails(self):
-        unlisted, stale = unlisted_and_stale(
-            allowlist() - {self.RISING_HOUSE},
-            findings(),
-        )
-        self.assertEqual(([self.RISING_HOUSE], []), (unlisted, stale))
+        added, found = self.findings_with_a_bare_university()
+        self.assertEqual(([], []), unlisted_and_stale(allowlist() | {added}, found))
+        self.assertEqual(([added], []), unlisted_and_stale(allowlist(), found))
 
     def test_an_entry_whose_site_is_now_paid_fails(self):
         unlisted, stale = unlisted_and_stale(
