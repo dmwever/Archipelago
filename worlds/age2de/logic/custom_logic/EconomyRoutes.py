@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-from typing import TYPE_CHECKING, Callable, Mapping, cast, override
+from typing import TYPE_CHECKING, Callable, Iterable, Mapping, cast, override
 
 from BaseClasses import CollectionState
 from NetUtils import JSONMessagePart
@@ -100,9 +100,11 @@ class EconomyRoutes(Rule["Age2World"], game="Age Of Empires II: Definitive Editi
         def __post_init__(self) -> None:
             super().__post_init__()
             possible = self._least_fixpoint(
+                range(len(self.routes)),
                 lambda route: not route.leaf.always_false,
             )
             certain = self._least_fixpoint(
+                range(len(self.routes)),
                 lambda route: route.leaf.always_true,
             )
             object.__setattr__(self, "possible", possible)
@@ -113,43 +115,47 @@ class EconomyRoutes(Rule["Age2World"], game="Age Of Empires II: Definitive Editi
 
         def _least_fixpoint(
             self,
+            candidates: Iterable[int],
             holds: Callable[[ResolvedEconomyRoute], bool],
         ) -> frozenset[int]:
             running: set[int] = set()
+            supplied: dict[Yield, Strength] = {}
             changed = True
             while changed:
                 changed = False
-                for index, route in enumerate(self.routes):
+                for index in candidates:
                     if index in running:
                         continue
-                    if self.are_needs_met(route, running) and holds(route):
+                    route = self.routes[index]
+                    if self.are_needs_met(route, supplied) and holds(route):
                         running.add(index)
+                        supplied = self.supplied_by(running)
                         changed = True
             return frozenset(running)
+
+        def supplied_by(self, running: Iterable[int]) -> dict[Yield, Strength]:
+            supplied: dict[Yield, Strength] = {}
+            for index in running:
+                for resource, strength in self.routes[index].yields.items():
+                    if resource not in supplied or supplied[resource] < strength:
+                        supplied[resource] = strength
+            return supplied
 
         def are_needs_met(
             self,
             route: ResolvedEconomyRoute,
-            running: set[int] | frozenset[int],
+            supplied: Mapping[Yield, Strength],
         ) -> bool:
             return all(
-                any(self.routes[index].is_yielding_resource_at_strength(resource, strength) for index in running)
+                resource in supplied and supplied[resource] >= strength
                 for resource, strength in route.needs.items()
             )
 
         def running(self, state: CollectionState) -> frozenset[int]:
-            running: set[int] = set()
-            changed = True
-            while changed:
-                changed = False
-                for index in sorted(self.possible):
-                    if index in running:
-                        continue
-                    route = self.routes[index]
-                    if self.are_needs_met(route, running) and route.leaf(state):
-                        running.add(index)
-                        changed = True
-            return frozenset(running)
+            return self._least_fixpoint(
+                sorted(self.possible),
+                lambda route: route.leaf(state),
+            )
 
         def remember(self, state: CollectionState, running: frozenset[int]) -> None:
             if not self.caching_enabled:

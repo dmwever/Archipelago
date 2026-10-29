@@ -129,7 +129,7 @@ def _problems(economies, possible_in) -> list[str]:
             for index in economy.possible:
                 route = economy.routes[index]
                 live_in[route.name] += 1
-                others = frozenset(economy.possible) - {index}
+                others = economy.supplied_by(economy.possible - {index})
                 if route.needs and not economy.are_needs_met(route, others):
                     starved_in[route.name] += 1
     dead = sorted(name for name, count in possible_in.items() if not count)
