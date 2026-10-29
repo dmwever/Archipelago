@@ -270,3 +270,13 @@ granted-only rows — and a 41st left alone because it *is* the target, the Mili
 no cart is exempt.** Every other row becomes a Militia created on the tile the original stood on,
 water included; nothing is destroyed.
 _Avoid_: immune (that is the mercenary pavilion's separate protection, `MercenarySpawn.xs`)
+
+**Scenario exemption**:
+A unit type one scenario keeps out of caveman's reach, where the same type is cavemanified
+everywhere else. `connections/ScenarioCavemanExemptions.py` names them per scenario;
+`ScenarioUnitLogic.is_granted` drops the **restore** gate for them in that scenario, and
+`/install` renders the matching `CavemanExemption()` into `UnitData.xs`, one
+`if (scenarioId == …)` block calling `ExemptUnitTypeFromCaveman`. It is for a unit the scenario's
+own objective *is*, not one its army merely wants: Joan 2's and Genghis 4's Trade Carts are
+driven somewhere, and a Militia cannot be.
+_Avoid_: caveman-exempt (that is the unit table's per-row flag, the same word for a wider set)

@@ -159,14 +159,20 @@ JOAN_1_CROSSING = [location.global_name() for location in
                     L.JOAN1_RIVER_HIGHWAYMEN, L.JOAN1_VICTORY)]
 JOAN_1_CROSSING.append("Complete " + L.JOAN1_VICTORY.scenario.scenario_name)
 
+# The bridge is left out: its dock branch wants a military as well, so a state holding the
+# Dock alone never reaches it either way.
 JOAN_2_CROSSING = [L.JOAN2_BRING_JOAN_TO_ORLEANS.global_name(),
-                   L.JOAN2_FIND_FARMING_VILLAGE.global_name(), BRIDGE]
+                   L.JOAN2_FIND_FARMING_VILLAGE.global_name()]
 
 JOAN_5_SIEGE = [location.global_name() for location in
                 (L.JOAN5_REFUGEE_1, L.JOAN5_REFUGEE_10, L.JOAN5_LOYALISTS,
                  L.JOAN5_RENDEZVOUS, L.JOAN5_ESCORT_JOAN, L.JOAN5_ESCORT_REFUGEES,
                  L.JOAN5_VICTORY)]
 JOAN_5_SIEGE.append("Complete " + L.JOAN5_VICTORY.scenario.scenario_name)
+
+JOAN_6_ARMY = Age2ItemData.AP_JOAN_6_ARMY.item_name
+JOAN_6_ARTILLERY = Age2ItemData.AP_JOAN_6_ARTILLERY.item_name
+SCYTHIAN_TROOP = Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name
 
 GENGHIS_3_TRANSPORT = Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name
 GENGHIS_3_FINDS = [L.GEN3_FIND_ENGINEERS.global_name(), L.GEN3_FIND_BOMBARDS.global_name()]
@@ -225,9 +231,17 @@ class TestJoan2Dock(Age2RuleTestBase):
     def test_the_carts_cross_without_the_transport_line(self):
         """Joan 2 exempts its Trade Carts from caveman, so the cart half asks nothing more."""
         self.build(**CAVEMAN_ON)
-        for name in JOAN_2_CROSSING:
+        for name in JOAN_2_CROSSING + [BRIDGE]:
             with self.subTest(location=name):
                 self.assertTrue(self.access_rule(name)(self.state_with(CARTS)))
+
+    def test_the_bridge_by_sea_wants_the_transport_line_as_well(self):
+        """The dock branch of the bridge already wanted a military; under caveman it wants the
+        transports the dock hands over to be restorable too."""
+        self.build(**CAVEMAN_ON)
+        bridge = self.access_rule(BRIDGE)
+        self.assertFalse(bridge(self.state_without(CARTS, TRANSPORTS)))
+        self.assertTrue(bridge(self.state_without(CARTS)))
 
     def test_bringing_the_carts_to_orleans_is_still_the_item_alone(self):
         self.build(**CAVEMAN_ON)
@@ -296,16 +310,17 @@ class TestJoan6Artillery(Age2RuleTestBase):
     campaigns = ["Joan of Arc"]
     starting_campaigns = ["Joan of Arc"]
 
-    def test_the_army_branch_names_a_restorable_siege_line_under_caveman(self):
-        name = L.JOAN6_BURGUNDIAN_TOWN.global_name()
+    def test_caveman_asks_the_army_for_a_siege_line_it_can_restore(self):
         self.build(**CAVEMAN_ON)
-        asked = self.item_requirements(name)
-        self.assertIn(BOMBARDS, asked)
-        self.assertIn(TREBUCHETS, asked)
+        siege_town = self.access_rule(L.JOAN6_BURGUNDIAN_TOWN.global_name())
+        self.assertFalse(siege_town(self.state_with(JOAN_6_ARMY, JOAN_6_ARTILLERY)))
+        self.assertTrue(siege_town(self.state_with(JOAN_6_ARMY, JOAN_6_ARTILLERY, BOMBARDS)))
+        self.assertTrue(siege_town(self.state_with(JOAN_6_ARMY, JOAN_6_ARTILLERY, TREBUCHETS)))
+
+    def test_without_caveman_the_army_and_the_artillery_are_enough(self):
         self.build(**CAVEMAN_OFF)
-        asked = self.item_requirements(name)
-        self.assertNotIn(BOMBARDS, asked)
-        self.assertNotIn(TREBUCHETS, asked)
+        siege_town = self.access_rule(L.JOAN6_BURGUNDIAN_TOWN.global_name())
+        self.assertTrue(siege_town(self.state_with(JOAN_6_ARMY, JOAN_6_ARTILLERY)))
 
 
 class TestAttila2ScythianTroops(Age2RuleTestBase):
@@ -314,12 +329,30 @@ class TestAttila2ScythianTroops(Age2RuleTestBase):
     campaigns = ["Attila the Hun"]
     starting_campaigns = ["Attila the Hun"]
 
-    def test_the_scythian_branch_names_the_ram_line_under_caveman(self):
-        name = L.ATT2_BEAT_THE_ROMANS.global_name()
+    def restore_items(self, unit) -> list[str]:
+        """What it takes to raise a cavemanified unit back to this tier: its line's items, and
+        the upgrade technology that makes it when the seed shuffles that too."""
+        items = [unit.line.item.item_name]
+        tech = unit.upgrade_tech
+        if tech is not None and self.world.pool.techs.includes(tech):
+            items.append(tech.item.item_name)
+        return items
+
+    def test_caveman_asks_the_scythian_troops_for_a_restorable_ram(self):
         self.build(**CAVEMAN_ON)
-        self.assertIn(RAMS, self.item_requirements(name))
+        beat_the_romans = self.access_rule(L.ATT2_BEAT_THE_ROMANS.global_name())
+        restored = self.restore_items(Age2UnitData.CAPPED_RAM)
+        self.assertIn(RAMS, restored)
+        self.assertFalse(beat_the_romans(self.state_with(SCYTHIAN_TROOP)))
+        if len(restored) > 1:
+            with self.subTest(short_of="the upgrade technology"):
+                self.assertFalse(beat_the_romans(self.state_with(SCYTHIAN_TROOP, RAMS)))
+        self.assertTrue(beat_the_romans(self.state_with(SCYTHIAN_TROOP, *restored)))
+
+    def test_without_caveman_the_scythian_troops_are_enough(self):
         self.build(**CAVEMAN_OFF)
-        self.assertNotIn(RAMS, self.item_requirements(name))
+        beat_the_romans = self.access_rule(L.ATT2_BEAT_THE_ROMANS.global_name())
+        self.assertTrue(beat_the_romans(self.state_with(SCYTHIAN_TROOP)))
 
 
 class TestGenghis3Transport(Age2RuleTestBase):

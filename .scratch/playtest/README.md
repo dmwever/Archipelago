@@ -19,7 +19,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | done (with #05) |
 | 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |
 | 15 | [Joan 2 bridge accepts a military that needs Orleans first](issues/15-joan2-bridge-military-needs-orleans.md) | done |
-| 16 | [Under caveman, are scenario-granted ships and carts knocked down?](issues/16-caveman-scenario-ships-and-carts.md) | ready-for-agent |
+| 16 | [Under caveman, are scenario-granted ships and carts knocked down?](issues/16-caveman-scenario-ships-and-carts.md) | done (unblocks #50) |
 | 17 | [Buildings "standing or buildable" are never paid for](issues/17-buildable-buildings-unpaid.md) | done |
 | 18 | [Military asks for a base directly instead of through its price](issues/18-military-base-through-price.md) | done |
 | 19 | [Economy routes, resolved together (no behaviour change)](issues/19-trade-cogs-without-base.md) | done (folds in #21; naval guard unwound by #23) |
@@ -47,7 +47,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 41 | [Cavemanify pulls a garrisoned unit out, and its replacement can be stuck](issues/41-cavemanify-garrisoned-units.md) | wontfix |
 | 42 | [The age climb's Town Center and age-up buildings are unpaid](issues/42-age-climb-buildings-paid.md) | done |
 | 43 | [Housing](issues/43-houses-and-the-base.md) | done |
-| 44 | [What the base becomes once the House leaves it](issues/44-the-base-without-houses.md) | ready-for-agent |
+| 44 | [What the base becomes once the House leaves it](issues/44-the-base-without-houses.md) | done |
 | 45 | [The caveman ledger is scanned linearly, and it is most of what a full pass costs](issues/45-caveman-ledger-lookup.md) | wontfix (deferred) |
 | 46 | [Spike: what does caveman do to every row of the unit table?](issues/46-caveman-catalog-spike.md) | done |
 | 47 | [The Town Center as a dropsite, and Own Farmer's Farm, are unpaid](issues/47-town-center-dropsite-and-farm-paid.md) | done |

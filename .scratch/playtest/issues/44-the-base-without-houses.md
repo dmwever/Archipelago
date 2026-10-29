@@ -4,7 +4,7 @@
 
 **Reported:** 2026-10-27, split out of [#43](43-houses-and-the-base.md) during triage
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Blocked by:** [#43](43-houses-and-the-base.md)
 
@@ -106,27 +106,27 @@ equivalence is the point - and HEAD predates #43, so a red-check would run these
 tree where the House is still in the base and prove nothing. Evidence is "held before", plus the
 equivalence pins below.
 
-- [ ] `has_base()` asks `has_building(TOWN_CENTER)`; `can_have_base` and `can_build_base` are gone,
+- [x] `has_base()` asks `has_building(TOWN_CENTER)`; `can_have_base` and `can_build_base` are gone,
       and no caller is left naming them.
-- [ ] `test/never_bare_allowlist.txt` is **byte-identical**. It names the base nowhere today and must
+- [x] `test/never_bare_allowlist.txt` is **byte-identical**. It names the base nowhere today and must
       still name it nowhere.
-- [ ] `test/route_catalog.md` is **byte-identical**. 34 route leaves change shape, none change
+- [x] `test/route_catalog.md` is **byte-identical**. 34 route leaves change shape, none change
       meaning.
-- [ ] `test_housing.py`'s `test_can_build_base_asks_no_house` is repointed at the rule that still
+- [x] `test_housing.py`'s `test_can_build_base_asks_no_house` is repointed at the rule that still
       exists, and `test_buildings_paid.py`'s structural list drops its `can_have_base` entry
       (`has_base` is already in it).
-- [ ] `test_standing_buildings.py` asserts against `has_building(TOWN_CENTER)` where it used
+- [x] `test_standing_buildings.py` asserts against `has_building(TOWN_CENTER)` where it used
       `can_have_base`, which is what it was testing.
-- [ ] Local start: `test_joan_1_has_no_base_of_its_own`, `test_the_base_set_pays_for_a_town_centre`
+- [x] Local start: `test_joan_1_has_no_base_of_its_own`, `test_the_base_set_pays_for_a_town_centre`
       and the Attila pair hold, with no new test added.
       `ScenarioQuestion.Resolved.always_false` delegates to the cached answer, so the fixed-force
       degradation survives the move behind a question.
-- [ ] `assert_pays_for_a_town_centre` asserts `TOWN_CENTER_WOOD`, `TOWN_CENTER_STONE` and
+- [x] `assert_pays_for_a_town_centre` asserts `TOWN_CENTER_WOOD`, `TOWN_CENTER_STONE` and
       `STARTING_VILLAGER_FOOD` by name, and a Joan 1 base set contains them.
-- [ ] The fill gate passes on the current seed set, and its row is recorded under Stored runs. Any
+- [x] The fill gate passes on the current seed set, and its row is recorded under Stored runs. Any
       sphere movement is attributed to local start's item swap and noted in the row; the logic
       artifacts above carry the equivalence proof.
-- [ ] ADR-0003's new consequence still matches what was built.
+- [x] ADR-0003's new consequence still matches what was built.
 
 **Out of scope**
 
