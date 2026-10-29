@@ -7,14 +7,14 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 01 | [Caveman is not applied to scenario rules](issues/01-caveman-scenario-rules.md) | done |
 | 02 | [Switching scenarios by save/load reports a scenario mismatch](issues/02-save-load-scenario-mismatch.md) | done |
 | 03 | ["Location does not exist: 3616" (Loom)](issues/03-location-3616-does-not-exist.md) | done |
-| 04 | [Reach Feudal / Castle sent at scenario start (Joan 1)](issues/04-age-checks-sent-at-start.md) | ready-for-human (awaiting playtest) |
+| 04 | [Reach Feudal / Castle sent at scenario start (Joan 1)](issues/04-age-checks-sent-at-start.md) | done (folds into #51) |
 | 05 | [Attila 1 Forging in logic without an affordable Town Center](issues/05-attila1-forging-without-town-center.md) | done (folds in #13) |
 | 06 | [Loading a mid-scenario save misses scenario items received since](issues/06-reload-misses-scenario-items.md) | done |
 | 07 | [Own Shepherd in logic where no scenario with villagers has sheep](issues/07-own-shepherd-without-sheep.md) | done |
 | 08 | [Traps fire again after reconnecting to the server](issues/08-traps-resent-on-server-reconnect.md) | done |
 | 09 | [Castle Age received before reaching Feudal covers the Feudal button](issues/09-castle-age-covers-feudal-button.md) | done |
 | 10 | [Caveman knockdowns and unit checks are starved while the unit count keeps moving](issues/10-caveman-sweep-delayed.md) | done (folds in #34) |
-| 11 | [Khan shows up as trainable at the Castle](issues/11-khan-trainable-at-castle.md) | ready-for-human (awaiting playtest) |
+| 11 | [Khan shows up as trainable at the Castle](issues/11-khan-trainable-at-castle.md) | done (folds into #51) |
 | 12 | [Build Fish Trap doesn't require a Fishing Ship](issues/12-fish-trap-without-fishing-ship.md) | done |
 | 13 | [Easy resources don't require a base; base doesn't require the Villager Line](issues/13-easy-resources-no-base-no-villager-line.md) | done (with #05) |
 | 14 | [Castle Age missing in Joan 2](issues/14-joan2-castle-age-missing.md) | done |
@@ -53,4 +53,5 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 47 | [The Town Center as a dropsite, and Own Farmer's Farm, are unpaid](issues/47-town-center-dropsite-and-farm-paid.md) | done |
 | 48 | [Market Trade does not pay the Market's Feudal advance](issues/48-market-trade-feudal-advance.md) | done |
 | 49 | [Armies and defences pay their advance and their training building](issues/49-armies-and-defences-pay-their-advance.md) | done |
-| 50 | [Caveman playtest: does the remaining force push through?](issues/50-caveman-playtest-remaining-force.md) | ready-for-human |
+| 50 | [Caveman playtest: does the remaining force push through?](issues/50-caveman-playtest-remaining-force.md) | done (folds into #51) |
+| 51 | [In-game checks left over from finished tickets](issues/51-in-game-checks.md) | ready-for-human |

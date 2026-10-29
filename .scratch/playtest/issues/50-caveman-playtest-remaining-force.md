@@ -4,7 +4,7 @@
 
 **Reported:** 2026-10-28, split out of [#16](16-caveman-scenario-ships-and-carts.md)'s grilling
 
-**Status:** ready-for-human
+**Status:** done (folds into #51)
 
 **Blocked by:** [#16](16-caveman-scenario-ships-and-carts.md) for the rows #16 gates (J5-3, J6-2, A2-1); the rest can be played now
 
