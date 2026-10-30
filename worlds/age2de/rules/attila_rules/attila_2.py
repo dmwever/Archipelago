@@ -4,6 +4,7 @@ from ...items.Items import Age2ItemData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Players import Age2PlayerData
+from ...locations.Units import Age2UnitData
 from ..ScenarioRules import ScenarioRules
 
 
@@ -21,6 +22,10 @@ class Attila2Rules(ScenarioRules):
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_VICTORY], can_defeat_romans & can_build_tc)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.ATT2_VICTORY.scenario.scenario_name), can_defeat_romans & can_build_tc)
+        can_raze_red_tc: Rule = (self.logic.units.survives_caveman(Age2UnitData.TARKAN)
+                                 | self.has_military)
+        self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_RED_TC], can_raze_red_tc)
+
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_SCYTHIAN_VILS], self.scenario_logic.has_vils())
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_BUILD_TC], can_build_tc)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.ATT2_BEAT_THE_ROMANS], can_defeat_romans)
