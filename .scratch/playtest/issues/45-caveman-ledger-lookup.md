@@ -135,3 +135,19 @@ What triage established, so returning is cheap:
   and make `ApplyCaveman` (`:230`) silently skip every unit above the old high-water mark.
 - **Acceptance criterion 4 is a maintainer step.** It needs a live run of `spikes/10/TestE.xs`;
   an agent cannot check it.
+
+
+### Lag reported in play, and it was not this (2026-10-30)
+
+A playtest session reported the game feeling laggy, which looked at first like the deferral
+condition on this ticket being met. It was not.
+
+- The lag appeared **in a fresh game with almost no units**. An empty ledger is where this
+  ticket's cost vanishes - #33 put `ApplyCaveman` at ~20 ms with ledger 0 - so a linear ledger
+  scan cannot explain lag there.
+- The machine was running four instances of an unrelated file manager
+  (`FPilot.exe`, Voidstar File Pilot), three of them three weeks old, together burning about
+  173% of a core and holding 1.5 GB with RAM at 76%. Closing them cleared the lag.
+
+**The deferral stands.** Nothing here was measured as a cause, and a future lag report should be
+checked against machine load before it is read as evidence for this ticket.
