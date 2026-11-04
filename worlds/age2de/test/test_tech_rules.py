@@ -273,6 +273,8 @@ class TestReplacementBuildingReachesSharedTechs(Age2RuleTestBase):
         self.build_with_uniques()
         mill = Age2ItemData.MILL.item_name
         settlement = Age2ItemData.SETTLEMENT.item_name
+        for door in self.world.get_region("Starts With Building").exits:
+            door.access_rule = lambda state: False
         location = Age2TechData.HORSE_COLLAR.location_name
         self.assertTrue(self.can_reach(location, self.state_without(settlement)))
         self.assertTrue(self.can_reach(location, self.state_without(mill)))

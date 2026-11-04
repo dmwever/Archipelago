@@ -40,8 +40,6 @@ class Logic:
         self.scenario_answers_open: set[tuple] = set()
         """Questions still being answered, so a cycle fails loudly rather than hanging."""
 
-        self._can_build: dict[Age2BuildingData, Or] = {building: Or()
-                                                       for building in Age2BuildingData}
         self._can_research: dict[Age2TechData, Or] = {}
 
         self.resources = ResourceLogic(self, world)
@@ -53,11 +51,6 @@ class Logic:
             for scenario in world.pool.scenarios.in_campaign(campaign):
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
     
-        for building in Age2BuildingData:
-            self._can_build[building].children = tuple(
-                scenario.is_unlocked() & scenario.buildings.can_build_structurally(building)
-                for scenario in self.scenarios)
-
         for tech in Age2TechData:
             self._can_research[tech] = Or(*[
                 scenario.is_unlocked() & scenario.techs.can_research(tech)
@@ -88,8 +81,9 @@ class Logic:
     def can_research_anywhere(self, tech: Age2TechData) -> Rule:
         return self._can_research[tech]
 
-    def can_build_structurally_anywhere(self, building: Age2BuildingData) -> Rule:
-        return self._can_build[building]
+    def starts_with_building_anywhere(self, building: Age2BuildingData) -> Rule:
+        return Or(*[scenario.is_unlocked() & scenario.starting_state.starts_with_building[building]
+                    for scenario in self.scenarios])
 
     def can_build_anywhere(self, building: Age2BuildingData) -> Rule:
         """The Build location: putting it up, paid for."""
