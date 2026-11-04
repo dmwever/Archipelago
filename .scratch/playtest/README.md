@@ -65,10 +65,10 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 59 | [Slay Fastolf is in logic without the castle that makes Fastolf appear](issues/59-joan3-slay-fastolf-needs-a-castle.md) | done (pending in-game test) |
 | 60 | [The Jin Wonder in Genghis 3 is no threat, because custom victory turns it off](issues/60-genghis3-jin-wonder-no-threat.md) | needs-triage |
 | 61 | [Attila 6's "P5 has a wonder" watcher tests player 4, so Purple's Wonders are unwatched](issues/61-attila6-p5-wonder-watcher-wrong-player.md) | wontfix |
-| 62 | [Genghis pavilions: 4 is walled in by forest, 6 is out at the map edge](issues/62-genghis4-pavilion-walled-in.md) | needs-triage |
-| 63 | [The pavilion is invulnerable but still targetable](issues/63-pavilion-targetable-by-enemies.md) | ready-for-agent |
+| 62 | [Genghis pavilions: 4 is walled in by forest, 6 is out at the map edge](issues/62-genghis4-pavilion-walled-in.md) | done |
+| 63 | [The pavilion is invulnerable but still targetable](issues/63-pavilion-targetable-by-enemies.md) | done |
 | 64 | [researched_at_start grants upgrade techs that caveman withholds](issues/64-researched-at-start-ignores-caveman.md) | needs-triage |
-| 65 | [Conquest victory is still on in seven scenarios, so Genghis 4 ends the moment Khwarazm falls](issues/65-conquest-victory-left-on.md) | needs-triage |
+| 65 | [Conquest victory is still on in seven scenarios, so Genghis 4 ends the moment Khwarazm falls](issues/65-conquest-victory-left-on.md) | done |
 | 66 | [Attila 3's gold items tribute 3000 from enemies who hold 500 and 600](issues/66-attila3-gold-tribute-exceeds-enemy-purse.md) | done (pending in-game test) |
 | 67 | [Demolition Raft does not upgrade to Demolition Ship](issues/67-demolition-raft-upgrade.md) | needs-info |
 | 68 | [Joan 5 declares victory on the refugees alone, without Joan reaching Compiegne](issues/68-joan5-victory-without-joan.md) | done (pending in-game test) |

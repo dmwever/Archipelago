@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-31, playtesting
 
-**Status:** needs-triage
+**Status:** done
 
 **Related:** [#60](60-genghis3-jin-wonder-no-threat.md) (the same victory-mode conversion, seen
 from the other side)

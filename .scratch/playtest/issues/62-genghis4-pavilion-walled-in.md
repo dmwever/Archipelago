@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-31, playtesting
 
-**Status:** needs-triage
+**Status:** done
 
 ## Report
 
