@@ -3,7 +3,7 @@
 **Reported:** 2026-10-29, folded together from playtest #04, #11, #50 and item-delivery-cursor 09,
 10, 11
 
-**Status:** ready-for-human
+**Status:** done
 
 **Related:** [#04](04-age-checks-sent-at-start.md), [#11](11-khan-trainable-at-castle.md),
 [#50](50-caveman-playtest-remaining-force.md), `worlds/age2de/docs/spec-item-delivery-cursor.md`
@@ -265,3 +265,7 @@ Correction to the harness: `PT51_G6C` gives `AP_GENGHIS_6_SUBOTAIS_ARMY` (4019) 
 the Mangudai Line, on the theory that it was "the Khan item". It is not - it is a mercenary, and
 giving it seats a muster rather than unlocking anything. The delayed grant is harmless but tests
 nothing; the spawned Khan at (94,45) is what proves the row is live.
+
+### Closed (2026-11-03)
+
+Closed by the maintainer: the in-game checks on this list are done.

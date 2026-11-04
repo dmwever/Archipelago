@@ -29,10 +29,10 @@ class Joan6StartingState(ScenarioStartingState):
         army = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
         self.must_steal_base = army   # the French army is how you take the English camp
         self.housing[Strength.SOME] = self.must_steal_base
-        self.obtains_unit[U.ARCHER] = army
-        self.obtains_unit[U.MILITIA] = army
-        self.obtains_unit[U.SCOUT_CAVALRY] = army
-        self.obtains_unit[U.KNIGHT] = army
+        self.obtains_unit[U.ARBALESTER] = army
+        self.obtains_unit[U.CHAMPION] = army
+        self.obtains_unit[U.HUSSAR] = army
+        self.obtains_unit[U.PALADIN] = army
         self.obtains_unit[U.TREBUCHET_PACKED] = army
         self.obtains_unit[U.VILLAGER_MALE] = army
         self.obtains_unit[U.VILLAGER_FEMALE] = army

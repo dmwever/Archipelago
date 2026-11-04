@@ -54,8 +54,8 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 48 | [Market Trade does not pay the Market's Feudal advance](issues/48-market-trade-feudal-advance.md) | done |
 | 49 | [Armies and defences pay their advance and their training building](issues/49-armies-and-defences-pay-their-advance.md) | done |
 | 50 | [Caveman playtest: does the remaining force push through?](issues/50-caveman-playtest-remaining-force.md) | done (folds into #51) |
-| 51 | [In-game checks left over from finished tickets](issues/51-in-game-checks.md) | ready-for-human |
-| 52 | [Genghis Khan scenarios have no AP locations in game](issues/52-genghis-no-ap-locations.md) | ready-for-human |
+| 51 | [In-game checks left over from finished tickets](issues/51-in-game-checks.md) | done |
+| 52 | [Genghis Khan scenarios have no AP locations in game](issues/52-genghis-no-ap-locations.md) | ready-for-agent |
 | 53 | [Units handed over reach logic without the access needed to reach them](issues/53-granted-units-need-access.md) | needs-triage |
 | 54 | [Recruit Three Tribes is in logic when only two tribes can be reached](issues/54-three-tribes-unreachable.md) | done (pending in-game test) |
 | 55 | [Standing buildings do not bring their techs into logic](issues/55-standing-buildings-dont-open-their-techs.md) | needs-triage |
