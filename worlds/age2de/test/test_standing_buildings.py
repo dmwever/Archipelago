@@ -1,11 +1,14 @@
 """Buildings that already stand on the map count, and are not bought a second time."""
 
-import unittest
+from BaseClasses import Entrance
+from rule_builder.rules import Rule
 
 from . import bases
-from ..items.Items import Age2ItemData
+from .test_buildings_paid import starving
+from ..Options import Techsanity
+from ..items.Items import Age2ItemData, Resource
 from ..locations.Ages import Age2AgeData
-from ..locations.Buildings import Age2BuildingData
+from ..locations.Buildings import NAME_TO_BUILDING, Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 
@@ -55,10 +58,6 @@ class TestStandingBuildingsCount(bases.Age2RuleTestBase):
         scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
         wanted = self.deps(scenario.techs.can_research(Age2TechData.IRON_CASTING))
         self.assertNotIn(Age2BuildingData.BLACKSMITH.item.item_name, wanted)
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 class TestABaseStandsATownCenter(bases.Age2RuleTestBase):
@@ -163,3 +162,52 @@ class TestJoan4FrenchCampStands(bases.Age2RuleTestBase):
         state = self.state_without(Age2ItemData.LUMBER_CAMP_WOOD.item_name)
         running = {economy.routes[index].name for index in economy.running(state)}
         self.assertIn("Lumberjacks at a Lumber Camp", running)
+
+
+class TestAStandingBuildingOpensItsRegion(bases.Age2RuleTestBase):
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
+    starting_campaigns = ["Attila the Hun"]
+
+    def doors(self, region_name: str) -> dict[Age2BuildingData, Entrance]:
+        return {NAME_TO_BUILDING[door.connected_region.name]: door
+                for door in self.world.get_region(region_name).exits}
+
+    def test_a_standing_building_opens_the_standing_door_and_not_the_build_door(self):
+        self.build(techsanity=3, unitsanity=2, shuffle_ages=1)
+        standing_doors = self.doors("Starts With Building")
+        build_doors = self.doors("Can Build")
+        for scenario in self.world.rules.logic.scenarios:
+            for building, standing in scenario.starting_state.starts_with_building.items():
+                if standing.resolve(self.world).always_false or building not in build_doors:
+                    continue
+                if building not in self.world.pool.buildings.shuffled:
+                    continue
+                with self.subTest(scenario=scenario.scenario.name, building=building.name):
+                    state = self.state_without(building.item.item_name)
+                    self.assertTrue(standing_doors[building].can_reach(state))
+                    self.assertFalse(build_doors[building].can_reach(state))
+                    if building in self.world.pool.buildings.locations:
+                        self.assertFalse(self.can_reach(building.location_name, state))
+
+    def test_attila_3_researches_and_trains_at_its_standing_buildings(self):
+        self.build(techsanity=3, unitsanity=2, shuffle_ages=1)
+        state = self.state_without(Age2BuildingData.BLACKSMITH.item.item_name,
+                                   Age2BuildingData.ARCHERY_RANGE.item.item_name)
+        self.assertTrue(self.can_reach(Age2TechData.IRON_CASTING.location_name, state))
+        self.assertTrue(self.can_reach("Own Skirmisher", state))
+
+    def test_the_build_door_asks_for_payment(self):
+        with starving(*Resource):
+            self.build(techsanity=3, unitsanity=2, shuffle_ages=1)
+        door = self.doors("Can Build")[Age2BuildingData.UNIVERSITY]
+        self.assertFalse(door.can_reach(self.state_without()))
+
+    def test_without_techsanity_the_building_doors_still_carry_their_rules(self):
+        self.build(techsanity=Techsanity.option_none, unitsanity=2, shuffle_ages=1)
+        for region_name in ("Can Build", "Starts With Building"):
+            for building, door in self.doors(region_name).items():
+                with self.subTest(region=region_name, building=building.name):
+                    self.assertIsInstance(door.access_rule, Rule.Resolved)
+        for building, door in self.doors("Can Build").items():
+            with self.subTest(building=building.name):
+                self.assertFalse(door.access_rule.always_true)

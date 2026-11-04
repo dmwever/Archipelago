@@ -162,8 +162,13 @@ class Age2World(CachedRuleBuilderWorld):
             buildings.locations.append(
                 Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
-        
-        
+
+        standing = Region("Starts With Building", self.player, self.multiworld)
+        connection = Entrance(self.player, standing.name, source)
+        source.exits.append(connection)
+        connection.connect(standing)
+        regions.append(standing)
+
         building_regions: dict[Buildings.Age2BuildingData, Region] = {}
         for building in Age2BuildingData:
             if not self.pool.buildings.hosts_locations(building):
@@ -171,6 +176,9 @@ class Age2World(CachedRuleBuilderWorld):
             region = Region(building.item.item_name, self.player, self.multiworld)
             connection = Entrance(self.player, f"{region.name}", buildings)
             buildings.exits.append(connection)
+            connection.connect(region)
+            connection = Entrance(self.player, f"Standing {region.name}", standing)
+            standing.exits.append(connection)
             connection.connect(region)
             regions.append(region)
             building_regions[building] = region

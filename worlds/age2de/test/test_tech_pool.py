@@ -156,9 +156,6 @@ class TestReplacementEntrances(TechPoolTestBase):
         self.assertEqual(len(mw.get_region("Settlement", 1).locations), 0)
 
     def test_the_cross_entrance_is_free_and_the_building_entrances_carry_the_rule(self):
-        # Plan 3 will gate Can Build -> Mill on the Mill and Can Build -> Settlement
-        # on the Settlement; the Settlement -> Mill edge stays free, which is what
-        # makes reaching the Mill technologies a disjunction.
         self.pool(techsanity=Techsanity.option_all,
                   enabled_campaigns={"Attila the Hun", "Joan of Arc"})
         mw = self.world.multiworld
@@ -167,13 +164,15 @@ class TestReplacementEntrances(TechPoolTestBase):
         self.assertIs(cross.parent_region, mw.get_region("Settlement", 1))
         self.assertTrue(cross.access_rule(CollectionState(mw)))
 
-        mill_entrance = next(e for e in mill.entrances if e.name == "Mill")
-        settlement_entrance = mw.get_region("Settlement", 1).entrances[0]
+        mill_entrances = [e for e in mill.entrances if e is not cross]
+        settlement_entrances = mw.get_region("Settlement", 1).entrances
         for has_mill, has_settlement in ((False, False), (True, False),
                                          (False, True), (True, True)):
             with self.subTest(mill=has_mill, settlement=has_settlement):
-                mill_entrance.access_rule = lambda state, v=has_mill: v
-                settlement_entrance.access_rule = lambda state, v=has_settlement: v
+                for entrance in mill_entrances:
+                    entrance.access_rule = lambda state, v=has_mill: v
+                for entrance in settlement_entrances:
+                    entrance.access_rule = lambda state, v=has_settlement: v
                 state = CollectionState(mw)
                 self.assertEqual(state.can_reach(mill), has_mill or has_settlement)
 

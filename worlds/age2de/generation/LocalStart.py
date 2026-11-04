@@ -10,7 +10,7 @@ from collections import Counter
 
 from BaseClasses import CollectionState, Item, Location
 from Fill import FillError, fill_restrictive, sweep_from_pool
-from rule_builder.rules import And, Has, Rule, True_
+from rule_builder.rules import And, Has, Or, Rule, True_
 
 from ..Options import LocalStart
 from ..items.Items import NAME_TO_ITEM, Age2ItemData, Campaign, ProgressiveScenario
@@ -134,7 +134,10 @@ def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
               & Has(Age2ItemData.TOWN_CENTER_STONE.item_name)
               & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name))
     if scenario_logic(world, scenario).civilization.can_build(Age2BuildingData.HOUSE):
-        target = target & logic.can_build_structurally_anywhere(Age2BuildingData.HOUSE)
+        target = target & Or(*[
+            other.is_unlocked() & other.buildings.can_build_structurally(Age2BuildingData.HOUSE)
+            for other in logic.scenarios
+        ])
     return target & scenario_base_rule(world, scenario)
 
 def base_items(

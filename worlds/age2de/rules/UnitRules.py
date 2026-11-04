@@ -64,9 +64,7 @@ class UnitRules:
         return units.can_own_anywhere(location)
 
     def entrance_rule(self, region: UnitRegion, entrance: UnitEntrance) -> Rule:
-        if entrance.kind == UnitEntranceKind.train:
-            return self.logic.can_build_structurally_anywhere(entrance.via)
-        if entrance.kind == UnitEntranceKind.startup:
+        if entrance.kind in (UnitEntranceKind.train, UnitEntranceKind.startup):
             return True_()
         if entrance.kind == UnitEntranceKind.trigger:
             return self.trigger_rule(entrance.via, region.target)

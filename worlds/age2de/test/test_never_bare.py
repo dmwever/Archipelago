@@ -40,7 +40,6 @@ from ..Options import (
     Techsanity,
     Unitsanity,
 )
-from ..regions.UnitRegions import UnitEntranceKind
 
 ALLOWLIST = pathlib.Path(__file__).with_name("never_bare_allowlist.txt")
 
@@ -302,24 +301,14 @@ def is_standing(scenario: ScenarioLogic, building: Age2BuildingData) -> bool:
     return standing.resolve(scenario.logic.world).always_true
 
 def spots_with_rules(world: Age2World) -> list[Spot]:
-    doors = paid_where_they_lead(world)
     every = [
         *world.multiworld.get_locations(world.player),
         *world.multiworld.get_entrances(world.player),
     ]
     return [
         spot for spot in every
-            if spot.name not in doors and isinstance(spot.access_rule, Rule.Resolved)
+            if isinstance(spot.access_rule, Rule.Resolved)
     ]
-
-def paid_where_they_lead(world: Age2World) -> set[str]:
-    tech_doors = {door.name for door in world.get_region("Can Build").exits}
-    unit_doors = {
-        entrance.name for region in world.unit_regions.regions
-            for entrance in region.entrances
-            if entrance.kind == UnitEntranceKind.train
-    }
-    return tech_doors | unit_doors
 
 def bare_asks_at(world: Age2World, location: Location) -> set[str]:
     walk = BareAsks(subjects(world.rules.logic))
