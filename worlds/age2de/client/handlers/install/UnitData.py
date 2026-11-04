@@ -9,6 +9,7 @@ from ....locations.Buildings import Age2BuildingData
 from ....locations.Civilizations import Age2CivData
 from ....locations.EscortUnits import Age2EscortUnitData
 from ....locations.Heroes import Age2HeroData
+from ....locations.Techs import Age2TechData
 from ....locations.UnitLines import Age2UnitLineData
 from ....locations.Units import Age2UnitData
 from ....locations.VillagerJobs import Age2VillagerJobData
@@ -50,13 +51,15 @@ class UnitData:
     def __init__(self, locations: Iterable[UnitLocation] = (),
                  civs: Iterable[Age2CivData] = (), mode: int = Unitsanity.option_none,
                  items_mode: int = UnitsanityItems.option_unit_line, tag: str = None,
-                 techsanity: int = Techsanity.option_none, caveman: bool = False):
+                 techsanity: int = Techsanity.option_none, caveman: bool = False,
+                 techs: Iterable[Age2TechData] = ()):
         self._locations = set(locations)
         self._civs = tuple(civs)
         self._mode = mode
         self._items_mode = items_mode
         self._techsanity = techsanity
         self._caveman = caveman
+        self._techs = set(techs)
         self._tag = tag
         self._trainable = {unit for civ in self._civs for unit in CIV_TO_UNITS[civ]}
         if Age2UnitData.VILLAGER_MALE in self._trainable:
@@ -87,7 +90,7 @@ class UnitData:
 
     def upgrade_item_for(self, unit: Age2UnitData) -> int:
         tech = unit.upgrade_tech
-        if tech is None or tech.item is None:
+        if tech is None or tech.item is None or tech not in self._techs:
             return self.NO_UPGRADE_ITEM
         return tech.item.id
 
