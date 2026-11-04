@@ -455,11 +455,12 @@ class Age2ItemData(enum.IntEnum):
     TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         SeedResources(Resource.STONE, 100)
     
     # Scenario Progression Items
-    AP_ATTILA_1_BLEDAS_CAMP =   1002, "Attila, The Scourge of God: Bleda's Camp",           ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
-    AP_ATTILA_1_ATTILAS_CAMP =  1003, "Attila, The Scourge of God: Attila's Camp",          ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
-    AP_ATTILA_2_VILLAGERS =     1004, "Attila, The Great Ride: Villagers",                  ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
-    AP_ATTILA_3_RED_GOLD =      1005, "Attila, The Walls of Constantinople: Red Gold",      ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
-    AP_ATTILA_3_GREEN_GOLD =    1006, "Attila, The Walls of Constantinople: Green Gold",    ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
+    AP_ATTILA_1_BLEDAS_CAMP =   1002, "Attila, The Scourge of God: Bleda's Camp",            ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_1_ATTILAS_CAMP =  1003, "Attila, The Scourge of God: Attila's Camp",           ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
+    AP_ATTILA_2_VILLAGERS =     1004, "Attila, The Great Ride: Villagers",                   ScenarioItem(Age2ScenarioData.AP_ATTILA_2)
+    AP_ATTILA_3_RED_GOLD =      1005, "Attila, The Walls of Constantinople: Red Gold",       ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
+    AP_ATTILA_3_GREEN_GOLD =    1006, "Attila, The Walls of Constantinople: Green Gold",     ScenarioItem(Age2ScenarioData.AP_ATTILA_3)
+    AP_ATTILA_5_DEATHMATCH =    1027, "Attila, The Catalunian Fields: Deathmatch Resources", ScenarioItem(Age2ScenarioData.AP_ATTILA_5)
     
     # Joan of Arc
     AP_JOAN_1_TRANSPORT =       1007, "Joan of Arc, An Unlikely Messiah: Transport Ships",          ScenarioItem(Age2ScenarioData.AP_JOAN_1)
@@ -485,7 +486,6 @@ class Age2ItemData(enum.IntEnum):
 
     # Genghis Khan
     AP_GENGHIS_2_TAYICHIUD_BASE = 1026, "Genghis Khan, A Life of Revenge: Tayichi'ud Base",     ScenarioItem(Age2ScenarioData.AP_GENGHIS_2)
-    AP_ATTILA_5_DEATHMATCH = 1027, "Attila, The Catalunian Fields: Deathmatch Resources",    ScenarioItem(Age2ScenarioData.AP_ATTILA_5)
     AP_GENGHIS_3_TRANSPORT = 1028, "Genghis Khan, Into China: Transport Ship",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
     AP_GENGHIS_4_KIPCHAK_CAMP = 1031, "Genghis Khan, The Horde Rides West: Kipchak Camp",    ScenarioItem(Age2ScenarioData.AP_GENGHIS_4)
 
