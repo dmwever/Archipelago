@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-31, found while checking [#60](60-genghis3-jin-wonder-no-threat.md)
 
-**Status:** needs-triage
+**Status:** wontfix
 
 ## Report
 
@@ -92,3 +92,7 @@ Both are scenario edits. Neither touches logic: no rule references the Wonder wa
 five AP Wonder locations already work.
 
 ## Comments
+
+### Closed (2026-11-04)
+
+Wontfix by the maintainer. Found during #60's audit, not seen in play, and no AP location depends on t32 or t33.
