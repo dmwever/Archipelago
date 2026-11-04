@@ -96,6 +96,8 @@ class ResourcePool:
             return partner_trade != PartnerTrade.option_none
         if seeds is Age2BuildingData.MARKET:
             return bool(options.market_trade) or partner_trade != PartnerTrade.option_none
+        if seeds is Age2BuildingData.MULE_CART:
+            return bool(any(scenario.civ.builds(Age2BuildingData.MULE_CART) for scenario in scenarios))
         return True
 
     def plan(self, locations_to_fill: int) -> list[Age2ItemData]:
