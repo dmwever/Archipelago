@@ -60,7 +60,7 @@ STANDING_OR_BUILDABLE = ", standing or buildable"
 STANDING_OR_PAID_FOR = ", standing or paid for"
 STANDING_OR_PAID_FOR_SOME = ", standing or paid for some"
 SEED_ITEMS = {
-    item.item_name: item.type.type
+    item.item_name: frozenset(item.type.resources)
     for item in Age2ItemData
     if isinstance(item.type, SeedResources)
 }
@@ -159,10 +159,10 @@ class BareAsks:
         return frozenset()
 
     def paid_by_seed_items(self, item_names: Iterable[str]) -> frozenset[Resource]:
-        return frozenset(
+        return frozenset().union(*[
             SEED_ITEMS[name] for name in item_names
                 if name in SEED_ITEMS
-        )
+        ])
 
     def bare_asks_under(self, rule: Rule.Resolved, paid: frozenset[Resource]) -> frozenset[str]:
         key = (id(rule), paid)

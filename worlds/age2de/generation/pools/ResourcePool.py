@@ -49,8 +49,8 @@ class ResourcePool:
             if self.is_economy_route_shuffled(item.type.seeds, options, scenarios, ages)
         ]
         seed_wood = sum(
-            item.type.amount for item in self.seeds
-            if item.type.type is Resource.WOOD
+            item.type.resources[Resource.WOOD] for item in self.seeds
+            if Resource.WOOD in item.type.resources
         )
         self.targets: dict[Resource, int] = {Resource.WOOD: STARTING_WOOD - seed_wood, **TARGETS}
 
@@ -152,7 +152,10 @@ class ResourcePool:
         pooled = items + self.seeds
         for item in pooled + precollected:
             payload = item.type
-            if isinstance(payload, (Items.StartingResources, Items.SeedResources)):
+            if isinstance(payload, Items.StartingResources):
                 tallied[payload.type] += payload.amount
+            if isinstance(payload, Items.SeedResources):
+                for resource, amount in payload.resources.items():
+                    tallied[resource] += amount
         self.totals.clear()
         self.totals.update(tallied)

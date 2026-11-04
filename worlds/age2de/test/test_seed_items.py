@@ -5,6 +5,7 @@ from ..Options import MarketTrade, PartnerTrade
 from ..items import Items
 from ..items.Items import Resource
 from ..locations.Buildings import Age2BuildingData
+from ..locations.Civilizations import Age2CivData
 from ..locations.connections.ScenarioResources import Tier
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
@@ -134,27 +135,26 @@ class TestTheMonkHasNoSeedItem(unittest.TestCase):
         seeded = [item.type.seeds for item in Items.CATEGORY_TO_ITEMS[Items.SeedResources]]
         self.assertNotIn(Age2BuildingData.MONASTERY, seeded)
 
-class TestTheMuleCartSeedsItsWoodAndBanksItsFood(ToyScenarioBase):
+class TestTheMuleCartSeedCarriesItsWholeCost(ToyScenarioBase):
     MULE_CART = (
         VILLAGERS,
         LUMBERJACK,
         building(Age2BuildingData.MULE_CART),
-        MULE_CART_SEED,
     )
 
-    def test_the_seed_item_counts_as_its_wood_only(self):
+    def test_the_seed_item_carries_its_wood_and_its_food(self):
         seed = Items.NAME_TO_ITEM[MULE_CART_SEED].type
         cost = Age2BuildingData.MULE_CART.cost
-        self.assertEqual((Resource.WOOD, cost[Resource.WOOD]), (seed.type, seed.amount))
-        self.assertGreater(cost[Resource.FOOD], 0)
+        self.assertEqual({resource: int(amount) for resource, amount in cost.items()},
+                         seed.resources)
 
-    def test_the_seed_item_with_no_food_at_all_is_no_mule_cart(self):
+    def test_the_seed_item_with_no_food_at_all_is_a_mule_cart(self):
         self.toy({})
-        self.assertFalse(self.some(Resource.WOOD, self.state(*self.MULE_CART)))
+        self.assertTrue(self.some(Resource.WOOD, self.state(*self.MULE_CART, MULE_CART_SEED)))
 
-    def test_banked_food_pays_the_rest(self):
+    def test_banked_food_without_the_seed_item_is_no_mule_cart(self):
         self.toy({})
-        self.assertTrue(self.some(Resource.WOOD, self.state(*self.MULE_CART, food=50)))
+        self.assertFalse(self.some(Resource.WOOD, self.state(*self.MULE_CART, food=50)))
 
 class TestAStandingBuildingIsFree(ToyScenarioBase):
     COGS = (unit(Age2UnitData.TRADE_COG), partner(Age2BuildingData.DOCK))
@@ -219,8 +219,8 @@ class SeedPoolBase(bases.Age2RuleTestBase):
         ]
         for item in held:
             payload = Items.NAME_TO_ITEM[item.name].type
-            if isinstance(payload, Items.SeedResources) and payload.type is Resource.WOOD:
-                seeds[item.name] = payload.amount
+            if isinstance(payload, Items.SeedResources) and Resource.WOOD in payload.resources:
+                seeds[item.name] = payload.resources[Resource.WOOD]
         return seeds
 
 class TestSeedItemsArePooledOnlyWhereTheyFundSomething(SeedPoolBase):
@@ -233,16 +233,16 @@ class TestSeedItemsArePooledOnlyWhereTheyFundSomething(SeedPoolBase):
         pooled = self.pooled_seed_wood()
         self.assertNotIn(DOCK_SEED, pooled)
         self.assertNotIn(MARKET_SEED, pooled)
-        self.assertEqual(545, self.world.pool.resources.targets[Resource.WOOD])
+        self.assertEqual(625, self.world.pool.resources.targets[Resource.WOOD])
 
 class TestStartingWoodSumsToAThousand(SeedPoolBase):
     SEED_WOOD = {
-        (MarketTrade.option_true, PartnerTrade.option_allies): 780,
-        (MarketTrade.option_true, PartnerTrade.option_allies_and_enemies): 780,
-        (MarketTrade.option_false, PartnerTrade.option_allies): 780,
-        (MarketTrade.option_false, PartnerTrade.option_allies_and_enemies): 780,
-        (MarketTrade.option_true, PartnerTrade.option_none): 630,
-        (MarketTrade.option_false, PartnerTrade.option_none): 455,
+        (MarketTrade.option_true, PartnerTrade.option_allies): 700,
+        (MarketTrade.option_true, PartnerTrade.option_allies_and_enemies): 700,
+        (MarketTrade.option_false, PartnerTrade.option_allies): 700,
+        (MarketTrade.option_false, PartnerTrade.option_allies_and_enemies): 700,
+        (MarketTrade.option_true, PartnerTrade.option_none): 550,
+        (MarketTrade.option_false, PartnerTrade.option_none): 375,
     }
 
     def test_every_combination_of_market_and_partner_trade(self):
@@ -293,6 +293,25 @@ class TestAStandingFundedCampIsFree(ToyScenarioBase):
         state = self.state(standing(Age2BuildingData.MONASTERY), unit(Age2UnitData.MONK))
         self.assertFalse(self.some(Resource.WOOD, state))
         self.assertTrue(self.some(Resource.GOLD, state))
+
+class TestTheMuleCartSeedIsPooledOnlyForACivThatBuildsMuleCarts(bases.Age2RuleTestBase):
+
+    def pooled(self, campaign: str) -> bool:
+        self.campaigns = [campaign]
+        self.starting_campaigns = [campaign]
+        self.build()
+        return MULE_CART_SEED in {item.name for item in self.multiworld.itempool}
+
+    def test_no_shipped_campaign_pools_it(self):
+        for campaign in ("Attila the Hun", "Genghis Khan", "Joan of Arc"):
+            with self.subTest(campaign=campaign):
+                self.assertFalse(self.pooled(campaign))
+
+    def test_franks_that_build_mule_carts_pool_it(self):
+        original = Age2CivData.FRANKS.included_buildings
+        Age2CivData.FRANKS.included_buildings = original + [Age2BuildingData.MULE_CART]
+        self.addCleanup(setattr, Age2CivData.FRANKS, "included_buildings", original)
+        self.assertTrue(self.pooled("Joan of Arc"))
 
 if __name__ == "__main__":
     unittest.main()

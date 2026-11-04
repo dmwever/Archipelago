@@ -172,8 +172,9 @@ class TestNoItemYieldsHousing(HousingBase):
 
     def test_every_route_resource_an_item_carries_is_an_item_resource(self):
         self.build_shuffled()
-        carried = {item.type.type for item in Age2ItemData
-                   if isinstance(item.type, (Resources, SeedResources))}
+        carried = {item.type.type for item in Age2ItemData if isinstance(item.type, Resources)}
+        carried |= {resource for item in Age2ItemData if isinstance(item.type, SeedResources)
+                    for resource in item.type.resources}
         self.assertLessEqual(carried, set(Resource))
         self.assertNotIn(HOUSING, carried)
         self.assertLessEqual(set(self.world.pool.resources.totals), set(Resource))

@@ -45,5 +45,8 @@ assert not set(BASE_SEEDS) & set(SEEDED_BUILDINGS.values()), (
 
 assert not [
     building for building, item in SEEDED_BUILDINGS.items()
-    if building.item.type.needed_resources[item.type.type] != item.type.amount
+    if any(
+        building.item.type.needed_resources[resource] != amount
+        for resource, amount in item.type.resources.items()
+    )
 ], "a seed item does not carry its building's cost in that resource"
