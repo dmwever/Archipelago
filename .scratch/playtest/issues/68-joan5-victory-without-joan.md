@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** ready-for-human
+**Status:** done (pending in-game test)
 
 ## Report
 
@@ -67,3 +67,14 @@ Two shapes, and the second is safer:
 to be done; only the scenario is lenient. So this is a scenario-side fix with no rule change.
 
 ## Comments
+
+### Fixed (2026-11-03), pending in-game test
+
+`AP Victory` no longer reads the doubling counter. It now carries two conditions:
+
+| | |
+| --- | --- |
+| `variable 2 == 1` | Joan reached Compiegne |
+| `variable 0 == 6` | six refugees reached Compiegne |
+
+The looping `Refugees in Area 6` trigger can no longer supply both halves on its own.

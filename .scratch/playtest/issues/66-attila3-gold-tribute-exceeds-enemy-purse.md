@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** needs-triage
+**Status:** done (pending in-game test)
 
 ## Report
 
@@ -64,3 +64,12 @@ Cosmetic, but it is the kind of thing that makes the next person think the trigg
 scaffolding.
 
 ## Comments
+
+### Fixed (2026-11-03), pending in-game test
+
+Both tributes now take from **player 4**, which is where all of Attila 3's gold is meant to come
+from. `Trigger 49` is also renamed `AP Give Red TC Gold`.
+
+The "likely cause" recorded above was wrong. The purse figures in that table were read against
+the wrong player numbering, and the fix was to point both tributes at player 4 rather than to
+change the amount.

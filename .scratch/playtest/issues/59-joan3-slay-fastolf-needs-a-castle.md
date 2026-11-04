@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-30, playtesting
 
-**Status:** needs-triage
+**Status:** done (pending in-game test)
 
 ## Report
 
@@ -69,3 +69,14 @@ Severity: a location reachable in logic and not in game, so it can strand a seed
 name.
 
 ## Comments
+
+### Fixed (2026-11-03), pending in-game test
+
+`rules/joan_rules/joan_3.py`:
+
+```python
+self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_SLAY_FASTOLF],
+                    can_defeat_english & can_defeat_fastolf)
+```
+
+Fastolf appears only after one English castle falls, so the rule now asks for both.

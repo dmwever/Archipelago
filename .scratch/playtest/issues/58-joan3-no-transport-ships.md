@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-30, playtesting
 
-**Status:** needs-triage
+**Status:** done (pending in-game test)
 
 ## Report
 
@@ -71,3 +71,16 @@ Option 1 matches what the scenario is trying to do; option 2 only describes what
 does.
 
 ## Comments
+
+### Fixed (2026-11-03), pending in-game test
+
+The two Transport Ship spawns moved out of `[D0] Finding Boats` and into **`AP Give Boats`**
+(t49), which fires on `HasJoan3Boats()` plus `object_visible 679`.
+
+This sidesteps caveman entirely. The old trigger needed P1 to **capture** object 679, and caveman
+destroys that boat before the capture can register. The new one is driven by the **scenario item**
+instead, so the two Transport Ships are created for P1 at (14,85) and (15,85) when the item
+arrives.
+
+`[D0] Finding Boats` keeps only its message. No Transport Ship is placed on the map, which
+matches vanilla - they have always been created at run time.

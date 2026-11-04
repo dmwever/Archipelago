@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-29, playtesting
 
-**Status:** needs-triage
+**Status:** done (pending in-game test)
 
 **Related:** [#51](51-in-game-checks.md) (the G1-1 row and its fix),
 [#53](53-granted-units-need-access.md)
@@ -64,3 +64,15 @@ serious of the two Genghis 1 reports. It is not newly introduced - the counting 
 been unruled under "any" branching.
 
 ## Comments
+
+### Fixed (2026-11-03), pending in-game test
+
+`rules/genghis_rules/genghis_1.py`. Under "any" branching, Recruit Three Tribes is now gated:
+
+```python
+self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN1_RECRUIT_THREE_TRIBES],
+                    NOT_CAVEMAN | has_monk)
+```
+
+Grey needs blue, purple and green are mutually exclusive, and cyan needs more than the starting
+cavemen, so under caveman the Kereyids are the gate. Without caveman the location stays free.

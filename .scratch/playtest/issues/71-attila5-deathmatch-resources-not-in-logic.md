@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** needs-triage
+**Status:** done (pending in-game test)
 
 ## Report
 
@@ -77,3 +77,32 @@ Severity: if the first reading is correct this is reachable-in-logic-but-not-in-
 strand a seed.
 
 ## Comments
+
+### Fixed (2026-11-03), pending in-game test
+
+Three changes.
+
+`rules/attila_rules/attila_5.py` - every Attila 5 defeat location and the victory now ask for the
+item:
+
+```python
+has_deathmatch_resources = Has(Age2ItemData.AP_ATTILA_5_DEATHMATCH.item_name)
+```
+
+`items/Items.py` - `AP_ATTILA_5_DEATHMATCH` moved out of the Genghis Khan block into the Attila
+block, where it belongs.
+
+`ProgressionItems.xs` - `Attila5Deathmatch()` now only pays out inside Attila 5:
+
+```xs
+if (scenarioId == 105) {
+    ...
+}
+```
+
+Without that guard the resources landed in whatever scenario P1 happened to be in when the item
+arrived.
+
+The `scenarioId` guard is safe across scenarios: items are paid out again on scenario startup,
+and on a load once the item cursor catches up. An item received while P1 is elsewhere still pays
+when P1 reaches Attila 5.

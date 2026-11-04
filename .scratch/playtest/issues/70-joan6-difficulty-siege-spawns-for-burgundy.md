@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** ready-for-agent
+**Status:** done (pending in-game test)
 
 **Related:** [#31](31-ap-granted-units-start-as-gaia.md)
 
@@ -65,3 +65,18 @@ the rest at the desk - AoE2ScenarioParser reads both sides, which aoe2kit cannot
 vanilla files.
 
 ## Comments
+
+### Fixed (2026-11-03), pending in-game test
+
+All four `create_object` effects in `Easy` (t18) and `Easy and Moderate` (t34) are back to
+**source_player 0**, matching vanilla:
+
+| trigger | unit | tile |
+| --- | --- | --- |
+| t18 | Bombard Cannon | (108,120) |
+| t18 | Packed Trebuchet | (136,125) |
+| t34 | Bombard Cannon | (107,120) |
+| t34 | Bombard Cannon | (103,120) |
+
+They are Gaia again, inside the French Artillery and French Army areas, so the AP grants pick
+them up as the difficulty bonus they were meant to be.

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-30, playtesting
 
-**Status:** needs-info
+**Status:** done (pending in-game test)
 
 ## Report
 
@@ -80,3 +80,10 @@ That is game ahead of logic, which cannot strand a seed, but it is a divergence 
 kind of thing reading 2 might be pointing at.
 
 ## Comments
+
+### Closed (2026-11-03)
+
+Closed by the maintainer. The cart machinery is unchanged - `Trade Cart N Arrives` and
+`Trade Cart N Removed` still tally how many carts stand in Orleans, and
+`AP Bring Trade Carts to Orleans` still reads that tally. Joan 2's victory failure was
+[#57](57-joan2-castles-missing-any-branch.md), not the carts.

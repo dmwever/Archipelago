@@ -57,24 +57,24 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 51 | [In-game checks left over from finished tickets](issues/51-in-game-checks.md) | ready-for-human |
 | 52 | [Genghis Khan scenarios have no AP locations in game](issues/52-genghis-no-ap-locations.md) | ready-for-human |
 | 53 | [Units handed over reach logic without the access needed to reach them](issues/53-granted-units-need-access.md) | needs-triage |
-| 54 | [Recruit Three Tribes is in logic when only two tribes can be reached](issues/54-three-tribes-unreachable.md) | needs-triage |
+| 54 | [Recruit Three Tribes is in logic when only two tribes can be reached](issues/54-three-tribes-unreachable.md) | done (pending in-game test) |
 | 55 | [Standing buildings do not bring their techs into logic](issues/55-standing-buildings-dont-open-their-techs.md) | needs-triage |
-| 56 | [Joan 2 does not remove P1's Trade Carts after they reach Orleans](issues/56-joan2-carts-not-consumed.md) | needs-info |
+| 56 | [Joan 2 does not remove P1's Trade Carts after they reach Orleans](issues/56-joan2-carts-not-consumed.md) | done (pending in-game test) |
 | 57 | [Joan 2's castles have no "any" branch, so destroying one sends nothing](issues/57-joan2-castles-missing-any-branch.md) | done |
-| 58 | [Joan 3's Transport Ships never spawn, because caveman eats the boats that trigger them](issues/58-joan3-no-transport-ships.md) | needs-triage |
-| 59 | [Slay Fastolf is in logic without the castle that makes Fastolf appear](issues/59-joan3-slay-fastolf-needs-a-castle.md) | needs-triage |
+| 58 | [Joan 3's Transport Ships never spawn, because caveman eats the boats that trigger them](issues/58-joan3-no-transport-ships.md) | done (pending in-game test) |
+| 59 | [Slay Fastolf is in logic without the castle that makes Fastolf appear](issues/59-joan3-slay-fastolf-needs-a-castle.md) | done (pending in-game test) |
 | 60 | [The Jin Wonder in Genghis 3 is no threat, because custom victory turns it off](issues/60-genghis3-jin-wonder-no-threat.md) | needs-triage |
 | 61 | [Attila 6's "P5 has a wonder" watcher tests player 4, so Purple's Wonders are unwatched](issues/61-attila6-p5-wonder-watcher-wrong-player.md) | needs-triage |
 | 62 | [Genghis pavilions: 4 is walled in by forest, 6 is out at the map edge](issues/62-genghis4-pavilion-walled-in.md) | needs-triage |
 | 63 | [The pavilion is invulnerable but still targetable](issues/63-pavilion-targetable-by-enemies.md) | ready-for-agent |
 | 64 | [researched_at_start grants upgrade techs that caveman withholds](issues/64-researched-at-start-ignores-caveman.md) | needs-triage |
 | 65 | [Conquest victory is still on in seven scenarios, so Genghis 4 ends the moment Khwarazm falls](issues/65-conquest-victory-left-on.md) | needs-triage |
-| 66 | [Attila 3's gold items tribute 3000 from enemies who hold 500 and 600](issues/66-attila3-gold-tribute-exceeds-enemy-purse.md) | needs-triage |
+| 66 | [Attila 3's gold items tribute 3000 from enemies who hold 500 and 600](issues/66-attila3-gold-tribute-exceeds-enemy-purse.md) | done (pending in-game test) |
 | 67 | [Demolition Raft does not upgrade to Demolition Ship](issues/67-demolition-raft-upgrade.md) | needs-info |
-| 68 | [Joan 5 declares victory on the refugees alone, without Joan reaching Compiegne](issues/68-joan5-victory-without-joan.md) | ready-for-human |
+| 68 | [Joan 5 declares victory on the refugees alone, without Joan reaching Compiegne](issues/68-joan5-victory-without-joan.md) | done (pending in-game test) |
 | 69 | [Starting Mule Cart Resources gives food in game but declares wood only in logic](issues/69-mule-cart-seed-declares-wood-only.md) | needs-triage |
-| 70 | [Joan 6's easy-difficulty siege spawns for Burgundy instead of Gaia](issues/70-joan6-difficulty-siege-spawns-for-burgundy.md) | ready-for-agent |
-| 71 | [Attila 5's starting resources were moved into an item that logic never requires](issues/71-attila5-deathmatch-resources-not-in-logic.md) | needs-triage |
+| 70 | [Joan 6's easy-difficulty siege spawns for Burgundy instead of Gaia](issues/70-joan6-difficulty-siege-spawns-for-burgundy.md) | done (pending in-game test) |
+| 71 | [Attila 5's starting resources were moved into an item that logic never requires](issues/71-attila5-deathmatch-resources-not-in-logic.md) | done (pending in-game test) |
 | 72 | [Siege Ram and Siege Onager upgrades do not check their Own locations](issues/72-siege-upgrades-do-not-check-their-locations.md) | needs-info |
 | 73 | [Own Elite Leitis is in logic behind a tech item the seed never creates](issues/73-elite-leitis-restorable-by-an-item-that-does-not-exist.md) | needs-triage |
 | 74 | [Reloading un-strips any tech researched as a noop, granting its real effect free](issues/74-reload-unstrips-a-researched-noop-tech.md) | needs-triage |
