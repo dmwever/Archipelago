@@ -75,7 +75,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 69 | [Starting Mule Cart Resources gives food in game but declares wood only in logic](issues/69-mule-cart-seed-declares-wood-only.md) | done |
 | 70 | [Joan 6's easy-difficulty siege spawns for Burgundy instead of Gaia](issues/70-joan6-difficulty-siege-spawns-for-burgundy.md) | done (pending in-game test) |
 | 71 | [Attila 5's starting resources were moved into an item that logic never requires](issues/71-attila5-deathmatch-resources-not-in-logic.md) | done (pending in-game test) |
-| 72 | [Siege Ram and Siege Onager upgrades do not check their Own locations](issues/72-siege-upgrades-do-not-check-their-locations.md) | needs-info |
+| 72 | [Siege Ram and Siege Onager upgrades do not check their Own locations](issues/72-siege-upgrades-do-not-check-their-locations.md) | ready-for-agent |
 | 73 | [Own Elite Leitis is in logic behind a tech item the seed never creates](issues/73-elite-leitis-restorable-by-an-item-that-does-not-exist.md) | done (pending in-game test) |
 | 74 | [Skirmishers train as Elite with Elite Skirmisher never researched (Joan 4)](issues/74-skirmishers-train-elite-without-the-research.md) | needs-info |
 | 75 | [Caveman with techsanity off grants no starting techs](issues/75-caveman-without-techsanity-grants-no-starting-techs.md) | needs-triage |

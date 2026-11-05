@@ -2,7 +2,10 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** needs-info
+**Status:** ready-for-agent
+
+**Related:** [#67](67-demolition-raft-upgrade.md), [#74](74-skirmishers-train-elite-without-the-research.md)
+(both turn on when `tryApplyEffect` fires)
 
 ## Report
 
@@ -40,59 +43,100 @@ The only things that force the full pass that would notice the new type are `uni
 three places: the research-count watcher (`Unitsanity.xs:453`), `UnlockTech`
 (`Techsanity.xs:159`), and a row's `hasAllItems` turning true (`Unitsanity.xs:309`).
 
-## Two candidates
+## The cause: the effect lands after the pass that would have seen it
 
-### 1. `checkOwnedUnits` stops at the copy id
+`checkOwnedUnits` is correct and caveman is not involved. What is wrong is **when** the full pass
+runs relative to the upgrade, and it only goes wrong when the **item arrives before the research**.
 
-```xs
-if (MarkOwnedByType(xsGetUnitCopyId(unitId)) == false) {
-    MarkOwnedByType(xsGetUnitObjectId(unitId));
-}
-```
+`UnitsanityChecks` is `highFrequency`. `TechsanityUpdate` is `minInterval 1 / maxInterval 1`. So:
 
-`MarkOwnedByType` returns true if `findUnit` matches **any** row. `xsGetUnitCopyId` returns the
-unit's copy id in data, which is a different dat field from the object id. If a Siege Ram's copy
-id resolves to a row already in the table - the Capped Ram, say, or the line's base - the first
-call succeeds, `found` is true, and the fallback that would have marked **548** never runs.
+1. The player finishes researching Siege Ram. `cAttributeResearchCount` increments at once.
+2. Within a tick (~28 ms) `UnitsanityChecks` sees the higher count, sets `unitsDirty`, and runs a
+   full pass over units that are **still Capped Rams** - Techsanity has not run yet. Nothing new is
+   marked. The pass ends with `unitsDirty = false` and `swapUnitScans`.
+3. Up to a second later `TechsanityUpdate` fires, finds the tech Done, and calls `onTechResearched`
+   -> `tryApplyEffect` -> `applyViaShadow`. **Now** the rams become Siege Rams. Nothing on this path
+   sets `unitsDirty`.
+4. `unitsDirty` is false and the upgrade changed no unit ids, so `collectNewUnits` returns `-1`
+   from here on. Own Siege Ram is never scanned again until something else dirties the table.
 
-Neither 422, 548, 550 nor 588 has an `addUnitVariant` line, so `canonicalTypeOf` is the identity
-for all four and `MarkOwnedByType`'s `canonical != typeId` branch does nothing to save it.
+The mirror ordering works by accident. When the **research comes first and the item second**,
+`UnlockTech` sets `unitsDirty = true` as the second line of its body and applies the effect later
+in the same call, so the next pass sees transformed units. That asymmetry is why two upgrades were
+reported and not all thirteen tier-2 rows.
 
-Against this reading: it would break **every** tier upgrade, not only these two, and only these
-two were reported.
+This also answers the question the ticket used to leave open. The checks land **late, not never**:
+the next research, the next tech item, or a row's `hasAllItems` turning true forces a full pass that
+marks them. And the bug needs techsanity **on** - with it off nothing strips the effect, so the
+units are already upgraded when the watcher fires at step 2.
 
-### 2. Caveman eats the pass before the check
+## Ruled out
 
-```xs
-unitsTransformed = false;
-ApplyCaveman(passUnits);
-...
-if (unitsTransformed) {
-    return;          // before checkOwnedUnits
-}
-checkOwnedUnits(passUnits);
-```
+**The copy id is not the problem.** The original candidate was that `checkOwnedUnits` stops at
+`MarkOwnedByType(xsGetUnitCopyId(unitId))` and the object-id fallback never runs. Measured engine
+behaviour says the opposite, and the code is right: an upgraded unit keeps the **line's base id**
+in `xsGetUnitObjectId` and carries the **current tier** in `xsGetUnitCopyId`. After the upgrade the
+copy id is 548, `findUnit(548)` hits the Siege Ram row, and `MarkRowOwned` fires. Recorded in
+`AoE2_AI_Modder/docs/agent/references/XS_MEASURED_BEHAVIOR.md`, section 12.
 
-If caveman transforms anything on the same tick, the rule returns before any ownership is
-marked. `unitsDirty` stays true so the next tick retries, but a tick that keeps transforming
-keeps skipping the check. Siege Ram and Siege Onager are both **tier 2** with an upgrade item
-(3684, 3694), which is exactly what `cavemanTarget` looks at.
-
-## To settle it
-
-The question is what `xsGetUnitCopyId` returns for a unit that has just been upgraded. A
-throwaway probe answers it: own a Capped Ram, research Siege Ram, and write
-`xsGetUnitObjectId`, `xsGetUnitCopyId` and `findUnit` on both for each of P1's units to an
-`.xsdat`. If the copy id comes back as the pre-upgrade type, candidate 1 is the cause and the
-fix is to mark by object id first, or to mark both rather than stopping at the first hit.
-
-Also worth capturing in the same run: whether `unitsTransformed` was true on the tick the
-research completed, which settles candidate 2 at the same time.
-
-## Unverified
-
-Whether the locations checked **late** rather than never. The report says "did not instantly
-check"; a delayed check and a missing one have different causes, and the distinction decides
-which of the two candidates above is even in play.
+**Caveman is not eating the pass.** `ApplyCaveman` reads `xsGetUnitObjectId`, which for an upgraded
+unit is the line base - 1258 Battering Ram, 280 Mangonel - so `cavemanTarget` returns the same type
+and no transform happens. `unitsTransformed` cannot be set by these units. That is by design, not a
+second bug: the shadow-tech strip, not `Caveman.xs`, is what keeps a knocked-down unit down. See the
+shadow-tech section of `references/options/caveman.md` in Ageipelago's `docs/agent/`.
 
 ## Comments
+
+> *This was generated by AI during triage.*
+
+## Agent Brief
+
+**Category:** bug
+
+**Summary:** Applying a stripped tech effect on the research path does not dirty the unit scan, so
+the rows the upgrade creates are never marked owned until something else forces a full pass.
+
+**Current behavior:**
+Techsanity strips every unlocked tech's effect to a no-op at init and applies the real effect
+one-shot through the shadow tech. There are two entry points into that application: the item
+arriving, and the research completing. The item path dirties the unit scan before it applies the
+effect; the research path does not. Because an upgrade changes no unit ids, the incremental scan
+cannot see it, so Unitsanity marks the upgraded tier's row only on the next unrelated full pass.
+Observed as Own Siege Ram and Own Siege Onager not checking when the upgrade was researched.
+
+**Desired behavior:**
+Whenever an upgrade's effect is applied and units change type as a result, the next Unitsanity pass
+is a full one, and the upgraded tier's row is marked and its location checked on that pass -
+regardless of whether the item or the research came last.
+
+**Key interfaces:**
+- The techsanity handler for a tech the player has just researched - the one that marks the tech
+  researched, checks the tech's own location, then tries to apply the effect - should dirty the unit
+  scan the same way the item-unlock path already does, and must do it **before** the effect is
+  applied, so that no rule can interleave between the two.
+- The item-unlock path already sets both the unit-scan dirty flag and the caveman-target stale flag.
+  Do not duplicate it and do not move it.
+- Nothing in the unit-ownership sweep changes: not the tier lookup, not the incremental collector,
+  not caveman.
+
+**Acceptance criteria:**
+- [ ] Researching an upgrade whose tech item is already held marks the upgraded tier's unit row and
+      sends its location on the next Unitsanity pass, without waiting for another research, another
+      tech item, or a new unit.
+- [ ] Receiving the tech item for an upgrade that is already researched still behaves as it does
+      today.
+- [ ] Verified in game for Siege Ram (location 363) and Siege Onager (location 376) in a techsanity
+      seed, item first and research second.
+- [ ] Verified in game for one non-siege tier-2 upgrade in the same seed, confirming the fix is not
+      siege-specific.
+- [ ] XS lint clean from the xs folder on the entry points that include the changed file, e.g.
+      `./xs-check.exe -I . -- AP_Attila_1.xs`.
+
+**Out of scope:**
+- Changing how the ownership sweep resolves a unit's tier. Reading the copy id first is correct.
+- Making `ApplyCaveman` read the copy id. It reads the object id deliberately.
+- Narrowing the dirty flag to only those techs that actually change a unit type. The research-count
+  watcher already forces a full pass on every research, so this adds one more, at roughly 2 ms per
+  pass at 205 units.
+- The techsanity effect questions in #67 and #74. Same function, different symptoms.
+- Any apworld-side change. This is XS only, and no test may read Ageipelago from the apworld suite.
