@@ -55,9 +55,6 @@ class InstallerTestBase(unittest.TestCase):
     def installed_name(self, stem, tag=None, player_name=PLAYER):
         return Identity.campaign_file_name(stem, self.tag if tag is None else tag, player_name)
 
-    def installed_name(self, stem, tag=None, player_name=PLAYER):
-        return Identity.campaign_file_name(stem, self.tag if tag is None else tag, player_name)
-
     def campaign_dir(self) -> Path:
         return self.handler.campaign_dir()
 
@@ -311,7 +308,7 @@ class TestTechInstall(InstallerTestBase):
 
     def test_caveman_rebases_on_its_own(self):
         self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag, PLAYER,
-                           slot_data=self.techsanity(techsanity=0, existing_techs=0,
+                           slot_data=self.techsanity(techsanity=1, existing_techs=0,
                                                      caveman=1))
         self.assertTrue(self.handler.scenario_needs_age_up())
 

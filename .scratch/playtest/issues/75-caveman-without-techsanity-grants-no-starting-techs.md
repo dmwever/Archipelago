@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-04, found while triaging [#64](64-researched-at-start-ignores-caveman.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -106,14 +106,14 @@ Also:
 - Option classes `Techsanity`, `ExistingTechs`, `Unitsanity`, `Caveman` in `Options.py`.
 
 **Acceptance criteria:** each needs a test proven red at HEAD with `tools/red_check.py`.
-- [ ] Caveman on with unitsanity `none`: after `generate_early`, caveman is off and a warning was logged.
-- [ ] Caveman on with techsanity `none`: caveman is off. The same holds with techsanity `generic`.
-- [ ] Caveman on with unitsanity on and techsanity `units`: caveman stays on. The same holds with techsanity `all`.
-- [ ] Existing Techs Find Items with techsanity `none`: after `generate_early`, Existing Techs is vanilla and a warning was logged. The same holds for Only Find Units and Start In Dark Age.
-- [ ] Only Find Units with techsanity `generic`: Existing Techs is vanilla. Only Find Units with techsanity `units` is unchanged.
-- [ ] The slot data from `fill_slot_data` carries the values after fallback.
-- [ ] Find Items with techsanity `generic` is unchanged.
-- [ ] `python -m ruff check --select F,E9` is clean on the changed files. The tests in `test_installer.py` and the logic canaries pass.
+- [x] Caveman on with unitsanity `none`: after `generate_early`, caveman is off and a warning was logged. *`test_option_fallbacks.py::TestCavemanFallback::test_caveman_without_unitsanity_is_turned_off_with_a_warning`, red.*
+- [x] Caveman on with techsanity `none`: caveman is off. The same holds with techsanity `generic`. *`TestCavemanFallback::test_caveman_without_upgrade_techsanity_is_turned_off_with_a_warning`, red.*
+- [x] Caveman on with unitsanity on and techsanity `units`: caveman stays on. The same holds with techsanity `all`. *`TestCavemanFallback::test_caveman_with_unitsanity_and_upgrade_techsanity_stays_on`, held before.*
+- [x] Existing Techs Find Items with techsanity `none`: after `generate_early`, Existing Techs is vanilla and a warning was logged. The same holds for Only Find Units and Start In Dark Age. *`TestExistingTechsFallback::test_existing_techs_without_techsanity_falls_back_to_vanilla_with_a_warning`, red.*
+- [x] Only Find Units with techsanity `generic`: Existing Techs is vanilla. Only Find Units with techsanity `units` is unchanged. *`TestExistingTechsFallback::test_only_find_units_with_generic_techsanity_falls_back_to_vanilla`, red; `test_only_find_units_with_units_techsanity_is_unchanged`, held before.*
+- [x] The slot data from `fill_slot_data` carries the values after fallback. *`TestSlotDataAfterFallback::test_slot_data_carries_the_values_after_fallback`, red.*
+- [x] Find Items with techsanity `generic` is unchanged. *`TestExistingTechsFallback::test_find_items_with_generic_techsanity_is_unchanged`, held before.*
+- [x] `python -m ruff check --select F,E9` is clean on the changed files. The tests in `test_installer.py` and the logic canaries pass. *Ruff: all checks passed on `__init__.py`, `test_installer.py`, `test_option_fallbacks.py` (unused imports removed, `connections` wiring imports marked `X as X`, duplicate `installed_name` deleted). Tests: `test_installer.py` incl. rewritten `test_caveman_rebases_on_its_own` (held before), commit-hook tests and logic canaries, 241 passed.*
 
 **Out of scope:**
 - Find Items and techs that are not locations: #76.

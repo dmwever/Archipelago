@@ -1,7 +1,6 @@
 # world/age2DE/__init__.py
 
 import functools
-from math import ceil
 import logging
 from Options import OptionError
 from rule_builder.cached_world import CachedRuleBuilderWorld
@@ -18,23 +17,46 @@ from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
 from .regions.UnitRegions import UnitRegions
-from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching, ShuffleVillager
+from .Options import (
+    Age2Options,
+    Caveman,
+    ExistingTechs,
+    ScenarioBranching,
+    ShuffleVillager,
+    Techsanity,
+    Unitsanity,
+)
 from .items import Items
-from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
-                        UnitLines, Units, VillagerJobs)
+from .locations import (
+    Campaigns,
+    Locations,
+    Scenarios,
+    Units,
+)
 from .locations.Players import TRADE_BUILDINGS
-from .locations.Techs import Age2TechData
 from .locations.VillagerJobs import Age2VillagerJobData
-from .locations.connections import (BuildingSeeds, CivilizationBuildings, CivilizationTechs,
-                                    CivilizationUnits, GameCosts,
-                                    ScenarioCavemanExemptions,
-                                    ScenarioExclusions, ScenarioPlayers, ScenarioResources,
-                                    ScenarioStartupUnits,
-                                    ScenarioTriggerUnits, TechCounters, UnitBuildings,
-                                    UnitCounters,
-                                    UnitLineUnits, UnitRoles, UnitTechs,
-                                    UnitUpgradeTokens, UnitVariants,
-                                    VillagerJobBuildings)
+from .locations.connections import (
+    BuildingSeeds as BuildingSeeds,
+    CivilizationBuildings as CivilizationBuildings,
+    CivilizationTechs as CivilizationTechs,
+    CivilizationUnits as CivilizationUnits,
+    GameCosts as GameCosts,
+    ScenarioCavemanExemptions as ScenarioCavemanExemptions,
+    ScenarioExclusions as ScenarioExclusions,
+    ScenarioPlayers as ScenarioPlayers,
+    ScenarioResources as ScenarioResources,
+    ScenarioStartupUnits,
+    ScenarioTriggerUnits,
+    TechCounters as TechCounters,
+    UnitBuildings as UnitBuildings,
+    UnitCounters as UnitCounters,
+    UnitLineUnits as UnitLineUnits,
+    UnitRoles as UnitRoles,
+    UnitTechs as UnitTechs,
+    UnitUpgradeTokens as UnitUpgradeTokens,
+    UnitVariants as UnitVariants,
+    VillagerJobBuildings as VillagerJobBuildings,
+)
 from .explain import Explainer
 from .rules.Rules import Rules
 
@@ -104,6 +126,42 @@ class Age2World(CachedRuleBuilderWorld):
         for campaign in Campaigns.Age2CampaignData:
             if campaign.campaign_name in enabled and not CAMPAIGN_TO_SCENARIOS[campaign]:
                 raise OptionError(f"{player_name}: {campaign.campaign_name} has no scenarios.")
+        techsanity = options.techsanity.value
+        existing_techs = options.existing_techs
+        if (
+            techsanity == Techsanity.option_none
+            and existing_techs.value != ExistingTechs.option_vanilla
+        ):
+            existing_techs.value = ExistingTechs.option_vanilla
+            logger.warning(
+                f"{player_name}'s Existing Techs needs Techsanity. With Techsanity off, "
+                f"Existing Techs falls back to vanilla."
+            )
+        if (
+            techsanity == Techsanity.option_generic
+            and existing_techs.value == ExistingTechs.option_only_find_units
+        ):
+            existing_techs.value = ExistingTechs.option_vanilla
+            logger.warning(
+                f"{player_name}'s Existing Techs Only Find Units needs Techsanity units or all. "
+                f"With Techsanity {options.techsanity.current_key}, no upgrade tech is a "
+                f"location, so Existing Techs falls back to vanilla."
+            )
+        caveman = options.caveman
+        if not caveman.value:
+            return
+        if options.unitsanity.value == Unitsanity.option_none:
+            caveman.value = Caveman.option_false
+            logger.warning(
+                f"{player_name}'s Caveman needs Unitsanity. With Unitsanity off, "
+                f"Caveman is turned off."
+            )
+        elif techsanity in (Techsanity.option_none, Techsanity.option_generic):
+            caveman.value = Caveman.option_false
+            logger.warning(
+                f"{player_name}'s Caveman needs Techsanity units or all. With Techsanity "
+                f"{options.techsanity.current_key}, Caveman is turned off."
+            )
 
     def generate_early(self) -> None:
         self.seed_for_tracker()
