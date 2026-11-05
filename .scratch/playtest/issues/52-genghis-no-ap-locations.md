@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-29, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -163,18 +163,58 @@ marked **by hand** in the table.
 
 **Acceptance:**
 
-- [ ] All 49 check triggers (minus any dropped) have `display_as_objective=1`, both strings and
+- [x] All 49 check triggers (minus any dropped) have `display_as_objective=1`, both strings and
       their `objective_description_order`
-- [ ] Each scenario's `-- AP --` trigger has `display_as_objective=1`, `make_header=1` and its order
-- [ ] Within each scenario no two displayed triggers share an order, and none collides with a
+- [x] Each scenario's `-- AP --` trigger has `display_as_objective=1`, `make_header=1` and its order
+- [x] Each `-- AP --` trigger shows `-- AP Locations --` as its description and short description
+- [x] Every AP check trigger and every `-- AP --` header has `display_on_screen=1`
+- [x] No vanilla objective sits at order 0 or at or below its scenario's `-- AP --` header
+- [x] Within each scenario no two displayed triggers share an order, and none collides with a
       header
-- [ ] No `AP Give *` trigger changed
-- [ ] Trigger counts unchanged in all six scenarios
-- [ ] `kit scen diff` per scenario shows only the intended changes and the known drift
-- [ ] Objectives appear in game across the Genghis campaign
+- [x] No `AP Give *` trigger changed
+- [x] Trigger counts unchanged in all six scenarios
+- [x] `kit scen diff` per scenario shows only the intended changes and the known drift
+- [x] Objectives appear in game across the Genghis campaign
 
 **Not in scope:** the location wiring, which is already correct and verified above. Joan and
 Attila, whose displayed triggers already carry their text. Extending aoe2kit's `EditTrigger` to
 cover these fields - worth its own aoe2kit ticket, but ASP makes it unnecessary here.
 
 ## Comments
+
+**2026-11-05, agent:** Written with ASP from the table store (49 rows, 6 headers, none dropped),
+replaced in `Ageipelago/age 2 files/resources/_common/scenario/`, left uncommitted. Verified with
+`kit` alone against the pre-pass files: every row's flag, order and both strings, every header's
+flag, `make_header` and order, no other trigger's fields or text moved, no `AP Give *` displayed,
+counts 91 / 30 / 34 / 34 / 53 / 24 held, `kit scen check` OK on all six.
+
+- ASP's names are `description_order` and `header`, not the binary field names. Setting
+  `objective_description_order` / `make_header` on a `Trigger` is silently ignored, and
+  `kit scen diff` does not report text, so the first pass looked clean in the diff.
+- Drift: `color_mood` is lower-cased in all six (`Default` and `Autumn` too, not only `Winter`);
+  `ai_type` 0 -> 1 on P10-P16 in Genghis 2 only.
+- Pre-existing order clashes left alone, both on original `[Obj]` triggers: Genghis 1's seven at
+  `0`, and Genghis 4's `The Assassination` / `Kill Persians` both at `49`.
+- Table text written as the maintainer left it, trailing whitespace stripped (Genghis 5
+  `Rescue the Hermit` description). `Keyeyids` in `AP Flock By Blue 2` / `3` is written as is.
+
+**2026-11-05, maintainer correction:** the header reads `-- AP Locations --`, and every short
+objective is Display on Screen. This matches Joan and Attila, whose `-- AP --` triggers carry
+`-- AP Locations --` in both strings and whose header and AP checks all have `display_on_screen=1`.
+Rewritten in one ASP pass from the committed originals, so the files go through ASP only once, and
+re-verified with `kit`: the same results as above, plus both header strings and `display_on_screen`
+on all 49 checks and six headers.
+
+**2026-11-05, maintainer correction:** every vanilla objective at order 0 is lifted above the AP
+block, and the AP block moves down to make room. The table's orders are unchanged; the pass applies
+the shift.
+
+- Genghis 1: `First objective` 49, `VC` 48, then the tribe joins 47-43 in the same order as the AP
+  Recruit checks (Player 4 Kereyids, 5 Tayichi'uds, 8 Ungirrads, 7 Naiman, 6 Uighurs). `-- AP --`
+  moves 49 -> 42 and the checks 48-26 -> 41-19.
+- Genghis 4: `Lose if Subotai dies` 47, under `Kill Russians` 48. `-- AP --` moves 47 -> 46 and
+  the checks 46-42 -> 45-41.
+- `The Assassination` and `Kill Persians` both sit at 49 in Genghis 4, as the original ships; left
+  alone, since neither is at 0.
+
+**2026-11-05, maintainer:** checked in game across every campaign. Done.

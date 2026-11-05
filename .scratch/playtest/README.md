@@ -55,7 +55,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 49 | [Armies and defences pay their advance and their training building](issues/49-armies-and-defences-pay-their-advance.md) | done |
 | 50 | [Caveman playtest: does the remaining force push through?](issues/50-caveman-playtest-remaining-force.md) | done (folds into #51) |
 | 51 | [In-game checks left over from finished tickets](issues/51-in-game-checks.md) | done |
-| 52 | [Genghis Khan scenarios have no AP locations in game](issues/52-genghis-no-ap-locations.md) | ready-for-agent |
+| 52 | [Genghis Khan scenarios have no AP locations in game](issues/52-genghis-no-ap-locations.md) | done |
 | 53 | [Units handed over reach logic without the access needed to reach them](issues/53-granted-units-need-access.md) | needs-info |
 | 54 | [Recruit Three Tribes is in logic when only two tribes can be reached](issues/54-three-tribes-unreachable.md) | done (pending in-game test) |
 | 55 | [Standing buildings do not bring their techs into logic](issues/55-standing-buildings-dont-open-their-techs.md) | done |
@@ -67,15 +67,16 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 61 | [Attila 6's "P5 has a wonder" watcher tests player 4, so Purple's Wonders are unwatched](issues/61-attila6-p5-wonder-watcher-wrong-player.md) | wontfix |
 | 62 | [Genghis pavilions: 4 is walled in by forest, 6 is out at the map edge](issues/62-genghis4-pavilion-walled-in.md) | done |
 | 63 | [The pavilion is invulnerable but still targetable](issues/63-pavilion-targetable-by-enemies.md) | done |
-| 64 | [researched_at_start grants upgrade techs that caveman withholds](issues/64-researched-at-start-ignores-caveman.md) | ready-for-agent |
+| 64 | [researched_at_start grants upgrade techs that caveman withholds](issues/64-researched-at-start-ignores-caveman.md) | done (folds in #67) |
 | 65 | [Conquest victory is still on in seven scenarios, so Genghis 4 ends the moment Khwarazm falls](issues/65-conquest-victory-left-on.md) | done |
 | 66 | [Attila 3's gold items tribute 3000 from enemies who hold 500 and 600](issues/66-attila3-gold-tribute-exceeds-enemy-purse.md) | done (pending in-game test) |
-| 67 | [Upgrade techs below a scenario's opening age are free in logic but withheld in game](issues/67-demolition-raft-upgrade.md) | ready-for-agent |
+| 67 | [Upgrade techs below a scenario's opening age are free in logic but withheld in game](issues/67-demolition-raft-upgrade.md) | done (folds into #64) |
 | 68 | [Joan 5 declares victory on the refugees alone, without Joan reaching Compiegne](issues/68-joan5-victory-without-joan.md) | done (pending in-game test) |
 | 69 | [Starting Mule Cart Resources gives food in game but declares wood only in logic](issues/69-mule-cart-seed-declares-wood-only.md) | done |
 | 70 | [Joan 6's easy-difficulty siege spawns for Burgundy instead of Gaia](issues/70-joan6-difficulty-siege-spawns-for-burgundy.md) | done (pending in-game test) |
 | 71 | [Attila 5's starting resources were moved into an item that logic never requires](issues/71-attila5-deathmatch-resources-not-in-logic.md) | done (pending in-game test) |
-| 72 | [Siege Ram and Siege Onager upgrades do not check their Own locations](issues/72-siege-upgrades-do-not-check-their-locations.md) | ready-for-agent |
+| 72 | [Siege Ram and Siege Onager upgrades do not check their Own locations](issues/72-siege-upgrades-do-not-check-their-locations.md) | ready-for-human |
 | 73 | [Own Elite Leitis is in logic behind a tech item the seed never creates](issues/73-elite-leitis-restorable-by-an-item-that-does-not-exist.md) | done (pending in-game test) |
 | 74 | [Unitsanity enables upgraded unit tiers with no upgrade-tech gate](issues/74-skirmishers-train-elite-without-the-research.md) | ready-for-agent |
-| 75 | [Caveman with techsanity off grants no starting techs](issues/75-caveman-without-techsanity-grants-no-starting-techs.md) | needs-triage |
+| 75 | [Caveman with techsanity off grants no starting techs](issues/75-caveman-without-techsanity-grants-no-starting-techs.md) | done |
+| 76 | [Find Items withholds techs that are not locations in logic, but the game grants them](issues/76-find-items-withholds-only-locations.md) | done |
