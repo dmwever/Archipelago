@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** ready-for-agent
+**Status:** ready-for-human. The fix is in the working tree; every criterion but the lint waits on an in-game run.
 
 **Related:** [#67](67-demolition-raft-upgrade.md), [#74](74-skirmishers-train-elite-without-the-research.md)
 (both turn on when `tryApplyEffect` fires)
@@ -129,8 +129,9 @@ regardless of whether the item or the research came last.
       seed, item first and research second.
 - [ ] Verified in game for one non-siege tier-2 upgrade in the same seed, confirming the fix is not
       siege-specific.
-- [ ] XS lint clean from the xs folder on the entry points that include the changed file, e.g.
-      `./xs-check.exe -I . -- AP_Attila_1.xs`.
+- [x] XS lint clean from the xs folder on the entry points that include the changed file, e.g.
+      `./xs-check.exe -I . -- AP_Attila_1.xs`. All 18 `AP_<Campaign>_<n>.xs` entry points: no errors,
+      and the same 6 warnings at HEAD and with the fix.
 
 **Out of scope:**
 - Changing how the ownership sweep resolves a unit's tier. Reading the copy id first is correct.
@@ -140,3 +141,13 @@ regardless of whether the item or the research came last.
   pass at 205 units.
 - The techsanity effect questions in #67 and #74. Same function, different symptoms.
 - Any apworld-side change. This is XS only, and no test may read Ageipelago from the apworld suite.
+
+Fixed in `Techsanity.xs` `onTechResearched`. It now sets `unitsDirty = true` after
+`AP_Check_Location` and directly before `tryApplyEffect`, so the next `UnitsanityChecks` pass is a
+full one and sees the upgraded type. `UnlockTech` is untouched. The research path sets only
+`unitsDirty` and not `cavemanTargetsStale`: caveman reads the object id, which an upgrade does not
+change, and researching changes no row's items.
+
+Not proven by a test. XS has no test harness, so criteria 1 and 2 have no red/green test, and the
+in-game criteria have not been run. Criterion 2 holds by construction, because the item path's code
+is unchanged. Not checked in game.
