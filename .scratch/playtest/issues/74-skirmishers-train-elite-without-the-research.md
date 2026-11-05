@@ -1,61 +1,77 @@
-# 74: Skirmishers train as Elite with Elite Skirmisher never researched (Joan 4)
+# 74: Unitsanity enables upgraded unit tiers with no upgrade-tech gate
 
 **Reported:** 2026-11-03, playtesting
 
-**Status:** needs-info
+**Status:** ready-for-agent
 
-**Related:** [#67](67-demolition-raft-upgrade.md) (the noop strip)
+**Related:** [#64](64-researched-at-start-ignores-caveman.md) (the other "something grants an
+upgrade caveman withheld")
 
 ## Report
 
 In Joan 4, Skirmishers trained at the Archery Range come out as Elite Skirmishers, although
-Elite Skirmisher (tech 98, effect 164, item 3652) was never researched. First noticed after a
-load.
+Elite Skirmisher (tech 98, effect 164, item 3652) was never researched.
+
+## What is actually happening
+
+`setUnitDisable` enables an upgraded unit tier as a trainable object on the strength of the line
+item plus `ageReached`, with no gate on the upgrade tech. The upgrade itself is never applied:
+effect 164 never runs and tech 98 is never Done, which is why the Elite Skirmisher research button
+is still sitting on the Archery Range.
+
+The chain:
+
+- Under `unitsanity_items: unit_line`, `UnitData.items_for` hands every tier of a line the same
+  item, so one line item unlocks the base row and every upgraded row together.
+- `refreshUnitLocks` unhides each row whose items are all held; `setUnitDisable` then fires
+  `cEnableObject` for any row where `ageReached(row.age)` holds. For a tier-0 row that is a sound
+  availability test. For a tier > 0 row it is the wrong predicate: in vanilla that unit's
+  availability is governed by its upgrade tech, not by the age.
+- `cEnableObject` is `enable_disable_unit`, not `upgrade_unit`. It makes the unit available; it
+  does not convert existing units and does not touch the tech. Where the upgraded tier is enabled
+  into a shared train button **before** its base tier, the button binds to the upgraded unit.
+
+Each row already carries `upgradeItemId`. The enable path is the one place that ignores it.
 
 ## Established
 
-- **Never researched.** Elite Skirmisher was not researched at any point in the run.
-- **Tech 98 is not Done.** In the save, the Elite Skirmisher button is still on the Archery Range.
-  So effect 164 (or an equivalent 7 → 6 upgrade) was applied without the tech completing.
-- **The load is not shown to matter.** No Skirmishers were trained before the save, so there is
-  no "plain before, Elite after". The upgrade may have been live from the start of the run.
-- **Trained, not spawned.** The Elite units came out of the Archery Range queue.
-- **The scenario does not do it.** `AP_Joan_4.aoe2scenario` has no trigger effect that researches
-  tech 98 or touches unit 6 or 7, and no player starts with either unit placed. P1 is Franks.
-- **Startup does not grant it.** Joan 4 starts in Castle (`SetVanillaAge(CASTLE_AGE)`, 27).
-  Elite Skirmisher is a Castle tech (`Items.py:563`, age 27). `grantedByVanilla` needs
-  `age < 27`, so `reconstructStartingState` leaves it alone. The XS and Python age scales match
-  (25-28 on both sides).
-- **The item path is guarded.** Elite Skirmisher is an upgrade (`isUpgrade`), so
-  `tryApplyEffect` (`Techsanity.xs:107`) returns until `researched` is set, whatever
-  `AP_TS_BEHAVIOR` says. Holding 3652 alone should not apply 164 - by reading, not by test.
-- **No other XS write touches it.** No `xsEffectAmount` outside Techsanity names tech 98 or units
-  6 / 7 (Ages, Buildsanity, MercenarySeats, Professions, APavilion).
+- **Engine-verified in the Joan 4 save** (Castle Age, Franks): the Archery Range offers
+  Elite Skirmisher as its skirmisher-slot unit while the Elite Skirmisher *research* is still
+  present and unresearched. The Dock likewise offers War Galley and Demolition Ship with their
+  upgrades unresearched. The Barracks correctly offers Militia and Spearman.
+- **Only some lines show it, and which ones is predictable.** The engine binds a shared train
+  button to the first unit enabled into it, and `refreshUnitLocks` walks the unit table in
+  registration order. 8 of this seed's 36 lines register an upgraded tier first, because the
+  upgraded tier's location id sorts ahead of its base in `Age2UnitData` (`ELITE_SKIRMISHER = 302`
+  before `SKIRMISHER = 303`). The other 28 register base-first and look correct.
+- The eight, with the age that has to be reached before the enable fires: Elite Skirmisher (27),
+  War Galley (27), Demolition Ship (27), Fire Galley (27), Camel Rider (27), Hussar (28),
+  Capped Ram (28), Elite Leitis (28). The Castle-age four were all confirmed in the save; the
+  Imperial four are predicted, not yet observed.
+- **Scope in this seed:** 55 of 107 unit rows are tier > 0, and 31 of those are age <= Castle.
+- **The climb is not the bug.** The campaign bundle rebases every scenario to Dark Age, and
+  `ClimbToVanillaAge` lifts P1 back to the scenario's vanilla age at init. That is intentional and
+  must stay. What must not follow from it is a tech being treated as granted:
+  `reconstructStartingState` is the sole authority on that, and it deliberately withholds
+  Elite Skirmisher (age 27 is not `< 27`) and, under caveman, every upgrade tech below the
+  vanilla age.
+- **The effect system is innocent.** In the base dat effect 164 is the only command upgrading
+  unit 7 to unit 6, tech 98 is its only referrer, the shadow tech's stock effect is `-1`, and
+  `NOOP_EFFECT` 0 is an empty effect. No `xsEffectAmount` outside `Techsanity.xs` rebinds a tech's
+  effect. `tryApplyEffect` correctly refuses an upgrade until it is researched.
+- P1 starts Joan 4 with 6 Knights, 4 Man-at-Arms, 4 Crossbowmen, 2 Monks, 2 Scout Cavalry and
+  Joan: no unit on the skirmisher line, so nothing in the caveman ledger could be restored to one.
 
-## Ruled out: "reload un-strips a researched noop"
+## Ruled out
 
-The original theory was that `InitTechsanity` reruns on load, `initTech` sees a researched
-noop as Done, skips `stripTech`, and the real effect goes live. It does not fit:
-
-- Elite Skirmisher was never researched, so tech 98 was never Done.
-- `InitAP` returns early on load when `AP_INITIALIZED` is set and the array probe survives
-  (`AP.xs:244-249`, from `f93a4c1` "Fix save/load"), so `InitTechsanity` does not rerun unless
-  "AP session state was lost" is printed.
-- Not stripping binds nothing, so it could not fire an effect on its own.
-
-The gap it spotted is still real in principle - `initTech` decides "strip" and "register the
-location" from live engine state - but it is not this bug. Track it separately if wanted.
-
-## Open
-
-Effect 164 reached player 1 without tech 98. The remaining routes:
-
-1. **The shadow tech.** `applyViaShadow` (`Techsanity.xs:100`) binds an item's effect onto tech
-   1181 and sets it Done. If it ever ran with 164, Skirmishers go Elite with tech 98 untouched.
-2. **Another tech carrying the same upgrade.** Some other item tech, unique tech or civ bonus
-   whose effect also upgrades 7 → 6 would apply it as a side effect.
-3. **A mercenary seat tech** (`MercenarySeats.xs:54-62`) rebound to effect 0 but bringing
-   something else along.
+- **"A reload un-strips a researched noop."** The original theory. Elite Skirmisher was never
+  researched, so tech 98 was never Done, and `InitAP` returns early on load.
+- **Another tech carrying the same upgrade**, or the shadow firing with 164: see *The effect
+  system is innocent* above. Had the shadow run, `onTechResearched` would have sent location
+  `Research Elite Skirmisher` first; the two are inseparable.
+- **Caveman lifting a unit up.** `cavemanTarget` skips any row with `tier > originalTier`, and no
+  `addUnitVariant` maps unit 7 onto unit 6, so a freshly trained Skirmisher cannot be lifted.
+  The restore path needs an Elite in the ledger, and P1 never owned one.
 
 ## Comments
 
@@ -79,3 +95,90 @@ Effect 164 reached player 1 without tech 98. The remaining routes:
   fresh Joan 4 start instead.
 - From the game data: does any tech or civ effect other than 164 upgrade Skirmisher (7) to
   Elite Skirmisher (6), and is tech 1181's default effect inert?
+
+---
+
+> *This was generated by AI during triage.*
+
+Resolved in session on 2026-11-05. All three questions above are answered and the ticket is
+retitled: no probe was needed, and the cause is not in the tech system at all. The maintainer
+confirmed the mechanism in-game by selecting the Dock in the broken save, which showed War Galley
+and Demolition Ship exactly as the registration-order reading predicted.
+
+## Agent Brief
+
+> *This was generated by AI during triage.*
+
+**Category:** bug
+**Summary:** Unitsanity makes an upgraded unit tier trainable as soon as its line item arrives and
+its age is reached, with no check that the upgrade was ever applied.
+
+**Current behavior:**
+`setUnitDisable` enables a unit row's object whenever the row is being revealed, the row's age has
+been reached, and the row is trainable. It applies this uniformly to every tier. For a row with
+`tier > 0` this hands the player the upgraded unit while its upgrade tech is still unresearched and
+its research button still present. Where the upgraded tier is enabled into a shared train button
+before its base tier, the building trains the upgraded unit instead of the base one.
+
+**Desired behavior:**
+A row with `tier > 0` becomes trainable only once its upgrade has actually been applied. Reaching
+an age must never imply that an upgrade was granted. `reconstructStartingState` remains the sole
+authority on whether a scenario's pre-vanilla-age upgrades count as granted, including its
+deliberate refusal of upgrade techs under caveman; the enable path must agree with it rather than
+overrule it. A row with `tier == 0` keeps its current behaviour.
+
+**The gate — pick one and say which in the PR:**
+
+1. *Tech applied* (recommended). Enable on the upgrade tech actually having been applied:
+   techsanity's per-tech `researched`/`effectDone` state, falling back to
+   `xsGetTechState(id, 1) == cTechStateDone` when techsanity is off. This is the only option that
+   behaves correctly with techsanity disabled, where no tech item exists.
+2. *Upgrade item held*. Reuse `technologyUnlocked`, which tests `TechItemReceived(upgradeItemId)`.
+   Consistent with the caveman restore path and with `can_restore` in logic, but strictly looser:
+   it hands over the upgraded unit the moment the item lands, with no research and no cost.
+3. *Never enable upgraded rows*. Only ever `cEnableObject` the line head and let the upgrade tech
+   promote the unit as vanilla does. Upgraded rows still clear their disabled flag so grants and
+   caveman restores keep working.
+
+Options 1 and 2 disagree, today, in both directions: techsanity demands the research, caveman
+accepts the item. Whichever is chosen, say in the PR whether `technologyUnlocked` should be
+unified with it or deliberately left looser.
+
+**Key interfaces:**
+
+- The unit row carries `typeId`, `lineId`, `age`, `tier` and `upgradeItemId`. `upgradeItemId` is
+  already populated for every upgraded row by the installer and is currently read only by the
+  caveman target picker.
+- `setUnitDisable` / `setObjectDisable`: the `enable` decision is the single place to change. The
+  disabled-flag write should stay unconditional; only the `cEnableObject` call is gated.
+- `UnitData.items_for` in the installer: no change needed. One item per line is the intended
+  behaviour of `unitsanity_items: unit_line`; the bug is that XS treats the item as sufficient.
+
+**Acceptance criteria:**
+
+- [ ] With `unitsanity_items: unit_line`, receiving a line item in a scenario whose opening age is
+      at or above an upgraded tier's age does not make that upgraded tier trainable.
+- [ ] The base tier of that line is still trainable as soon as its own age is reached.
+- [ ] Once the upgrade is applied, the upgraded tier becomes trainable without needing a further
+      item.
+- [ ] Holds with techsanity off, where the upgrade tech is researched normally and no tech item
+      exists.
+- [ ] Behaviour does not depend on the order rows are registered in the unit table. A test that
+      pins this should cover a line registered upgrade-first (the skirmisher line is the natural
+      fixture) as well as a base-first line.
+- [ ] `reconstructStartingState`'s decisions are not contradicted: under caveman, an upgrade tech
+      below the scenario's vanilla age is withheld, and its unit tier stays untrainable.
+- [ ] In-game check in Joan 4: the Archery Range offers Skirmisher, the Dock offers Galley and
+      Demolition Raft, and each upgrade's research button is present and unresearched.
+
+**Out of scope:**
+
+- The one-shot evaluation of the age test. `setUnitHidden(row, false)` clears `locked`, so
+  `refreshUnitLocks` never revisits the row and the age is sampled only at item-arrival time. Under
+  `existing_techs: vanilla` the climb beats the items so this never bites; under
+  `start_in_dark_age` it means a row unlocked below its age is never enabled. Separate ticket.
+- `Caveman.technologyUnlocked`'s own gate, beyond saying in the PR whether it was unified.
+- The logic side. `can_restore` and `has_unit_items` already model the intended contract; this is
+  an XS-side defect only.
+- #67 and #73 are separate bugs and stay separate. Some of the units they name also appear on this
+  ticket's upgrade-first list, which is a coincidence of the unit table, not a shared cause.
