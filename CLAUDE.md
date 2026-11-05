@@ -23,3 +23,7 @@ Leave your work in the working tree for the maintainer to commit. These two rule
 ### Agent tools
 
 `worlds/age2de/tools/` holds `red_check.py` (prove a new test fails at HEAD), `route_catalog.py` (regenerate the pinned economy route list) and `recapture_easy_sources.py`. Each explains itself in its module docstring. The fill gate is defined in `worlds/age2de/fuzz/bench/README.md`.
+
+### Scenario files
+
+The AP scenarios live in `Ageipelago/age 2 files/resources/_common/scenario/`. Read them through the `aoe2-modding` skill. Resolve condition, effect and object ids from the vendored `worlds/age2de/AoE2ScenarioParser/datasets/`, never from memory, and honour each effect's `object_type` and `object_list_unit_id` filters — an unfiltered read reports objects the trigger leaves behind.

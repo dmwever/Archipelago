@@ -3,6 +3,17 @@
 The Archipelago world for Age of Empires II: DE campaigns. This glossary covers how the logic
 reasons about a scenario: what P1 can field, what beats what, and what the map yields.
 
+## What logic models
+
+A rule exists where reaching something costs an **item**. A condition P1 can meet with what it
+already has - walking somewhere, seeing something, standing in an area - is free and gets no rule.
+
+So when a scenario trigger carries a condition beyond the item, ask what item meeting it costs.
+Water costs a Transport, the Ungirrads cost the Kereyids, a relic costs a Monk. Where the answer is
+none, the item stays bare: clearing the units standing in front of a camp costs nothing, because
+the scenario already handed P1 a force to do it with. Defeating a **player** is the different
+thing, and it has its own defeat rules.
+
 ## Language
 
 ### Logic

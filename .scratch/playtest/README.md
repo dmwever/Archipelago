@@ -56,7 +56,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 50 | [Caveman playtest: does the remaining force push through?](issues/50-caveman-playtest-remaining-force.md) | done (folds into #51) |
 | 51 | [In-game checks left over from finished tickets](issues/51-in-game-checks.md) | done |
 | 52 | [Genghis Khan scenarios have no AP locations in game](issues/52-genghis-no-ap-locations.md) | done |
-| 53 | [Units handed over reach logic without the access needed to reach them](issues/53-granted-units-need-access.md) | needs-info |
+| 53 | [Units handed over reach logic without the access needed to reach them](issues/53-granted-units-need-access.md) | ready-for-agent |
 | 54 | [Recruit Three Tribes is in logic when only two tribes can be reached](issues/54-three-tribes-unreachable.md) | done (pending in-game test) |
 | 55 | [Standing buildings do not bring their techs into logic](issues/55-standing-buildings-dont-open-their-techs.md) | done |
 | 56 | [Joan 2 does not remove P1's Trade Carts after they reach Orleans](issues/56-joan2-carts-not-consumed.md) | done (pending in-game test) |

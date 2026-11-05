@@ -2,10 +2,18 @@
 
 **Reported:** 2026-10-29, playtesting
 
-**Status:** needs-info
+**Status:** ready-for-agent
 
 **Related:** [#51](51-in-game-checks.md) (the G1-1 row and its fix),
 [#54](54-three-tribes-unreachable.md)
+
+> **Read `## Rulings` first, then `## Agent Brief`, which is the contract.** Where anything below
+> disagrees with them, they win. The
+> `2026-11-04` audit and triage notes were written before the scope widened to every `AP Give`
+> trigger and before `CONTEXT.md` recorded what logic models; the claims they got wrong are
+> corrected in place and marked. The `2026-11-05` audit comment supersedes the `## Audit` section
+> below: it covers all 18 scenarios rather than the 21 mercenaries, and it honours each effect's
+> `object_type` filter, which the earlier read did not.
 
 ## Report
 
@@ -84,6 +92,12 @@ the far bank, the Kereyids recruited first - and that condition is invisible to
 
 ## What this needs
 
+> **Items 1-3 are done.** The enumeration is the `2026-11-05` audit comment, which covers every
+> `AP Give` trigger in all 18 scenarios rather than the mercenaries alone; the access each needs is
+> in `## Rulings`; and where it lives was decided - on the `StartingState`, not on the item. Item 4
+> is done too: `in_logic` is not a decision. `test_mercenaries` derives it from an AST scan of the
+> `rules` and `logic` packages, so authoring a grant per mercenary flips every flag on its own.
+
 1. **Enumerate every unit hand-over.** Each AP item whose roster lists units, and for each the
    scenario trigger that actually performs the `change_ownership` or `remove_object`, with its
    full condition list. `kit scen describe --section triggers --full --json` gives the conditions
@@ -99,6 +113,130 @@ the far bank, the Kereyids recruited first - and that condition is invisible to
 
 Severity: this direction is the dangerous one. A unit in logic that the game cannot hand over can
 strand a seed, the same way #54 can.
+
+## Rulings
+
+Settled decisions, oldest first. A ruling here is closed; reopen one only on new evidence. The
+reasoning behind each lives in the comments below.
+
+- 2026-11-04 - `default_mercenary_grants` goes away. Every hand-over rule is authored by hand, per
+  scenario, in `StartingState.obtains_unit`.
+- 2026-11-04 - A gate shared by a location and a grant lives once, on the `StartingState`, and the
+  `*Rules` class reads it from there.
+- 2026-11-04 - J1: `can_cross_water` moves to the state. `SCORPION = Has(RECRUITS) &
+  can_cross_water`; `CROSSBOWMAN = Has(CROSSBOWMEN) | (Has(RECRUITS) & can_cross_water)`.
+- 2026-11-04 - J1 Ram Army is bare: `PIKEMAN`/`CAPPED_RAM = Has(RAM)`, `MAN_AT_ARMS =
+  Has(SWORDSMEN) | Has(RAM)`.
+- 2026-11-04 - G1: `has_monk` and `can_slay_ornlu` move to the state. `CAVALRY_ARCHER` and
+  `LIGHT_CAVALRY` stay `True_()`, `MONK = Has(KEREYID)`, `MANGUDAI = Has(UNGIRRAD) & has_monk`,
+  `CAMEL_RIDER = Has(UIGHUR) & can_slay_ornlu`.
+- 2026-11-04 - G3: `engineers = Has(ENGINEERS) & restorable_transport`; `bombards_reached =
+  Has(BOMBARDS) & restorable_transport`; `starts_with_building[SIEGE_WORKSHOP] = bombards_reached |
+  engineers`.
+- 2026-11-04 - A2 Scythian Troop: `Has(SCYTHIAN_TROOP) & purple_vils`, for Mangudai, Capped Ram and
+  Onager.
+- 2026-11-04 - Bare `Has(item)`: G5 Hermits, A1 Roman Villagers, A1 Mangudai, A2 Dyrrhachium
+  Prisoners, J5 Loyalists, J5 King's Troop, J6 Artillery, G1 Kereyid, G6 Subotai's Army.
+- 2026-11-05 - Scope is every `AP Give` trigger, not only the mercenary ones. A trigger's units and
+  its buildings are authored together, from one gate.
+- 2026-11-05 - Logic models a trigger condition only where meeting it costs an item. A position
+  condition - walking somewhere, seeing something, standing in an area - is free and gets no rule.
+- 2026-11-05 - A starting age grants the techs of the ages *before* it. Only J6's Gaia
+  (Post-Imperial) re-tiers what it hands over; every roster is correct as written, and the rosters
+  stay unchanged because they are the muster spawn list, not the hand-over.
+- 2026-11-05 - Own Militia is free whenever caveman is on. One global rule in
+  `UnitLogic.can_own_anywhere`, not a grant authored on each scenario.
+- 2026-11-05 - Keep the roster append in `SCENARIO_TO_TRIGGER_UNITS`; `AUTHORED_TRIGGER_UNITS`
+  stays non-mercenary; the test pins `set(obtains_unit) == set(trigger_units)`.
+- 2026-11-05 - No test compares the scenario files to the authored list. See
+  `worlds/age2de/docs/adr/0005-the-scenario-file-is-not-the-oracle-for-granted-units.md`.
+- 2026-11-05 - G5: `starts_with_building[MONASTERY] = Has(HERMITS)`.
+- 2026-11-05 - A1's Archer, G2's and G4's Cavalry Archers stay out of `AUTHORED_TRIGGER_UNITS`:
+  their triggers need those units dead before they fire.
+- 2026-11-05 - This ticket is not split. The camps stay in it.
+- 2026-11-05 - A camp whose trigger needs enemy units dead before it fires is bare. Clearing what
+  stands in front of a camp, with the force the scenario already hands P1, costs no item - which is
+  why 2026-11-04 ruled A2's Dyrrhachium Prisoners bare behind a destroyed Town Center. Covers A1
+  Bleda's Camp, G2 Tayichiud Base, G4 Kipchak Camp, A3's two gold items and A2 Purple Villagers.
+  Defeating a *player* is the different thing, and it has `defeat_rules` already.
+- 2026-11-05 - G2: `starts_with_building[MILL] = tayichiud_base`. The Tayichi'ud trigger hands
+  everything P4 owns, map-wide and unfiltered, and the two Mills come with it.
+- 2026-11-05 - G2's housing is unchanged: `housing[Strength.SOME] = True_()`, ungated. The Yurts
+  are the housing - 5 pop each - and P1 holds seven of its own from the opening, so the base is not
+  what makes the room.
+- 2026-11-05 - G3's ram is in this ticket's scope, and no scenario is edited. Unit 35 and unit 1258
+  are both Battering Rams in DE: 1258 is where the line starts for every civ, and is the
+  Feudal-active ram for the Cumans; 35 is what the shipped campaign places. `BATTERING_RAM` keeps
+  `game_id = 1258` and takes 35 as a **variant id**, the way the Tarkan and Huskarl splits already
+  work. The Cuman half is verified against the game data - see the `2026-11-05` ram comment.
+- 2026-11-05 - `in_logic` is not authored by hand. `test_mercenaries` derives it from an AST scan,
+  so it follows the grants and every mercenary becomes progression.
+
+## Agent Brief
+
+> *This was generated by AI during triage.* Approved 2026-11-05.
+
+**Category:** bug
+
+**Summary:** Every unit a scenario hands P1 is authored by hand on that scenario's starting state,
+behind the access the hand-over really needs, and `default_mercenary_grants` goes away.
+
+**Current behavior**
+
+`ScenarioStartingState.default_mercenary_grants` ORs `Has(item)` onto every unit in every mercenary
+item's roster, with no access condition, and `ScenarioUnitLogic.is_granted` reads it. A unit
+therefore enters logic the moment its item is placed, even where the scenario's trigger needs
+something further: Joan standing across the river, the Kereyids herded before the Ungirrads, Ornlu
+slain before the Uighurs. Two further gaps survive the audit: Genghis 2's Tayichi'ud Base hands two
+Mills that no `starts_with_building` declares, and Genghis 5's Hermits hand a Monastery.
+
+**Desired behavior**
+
+Every rule in `## Rulings` is expressed in code, and nothing derives a grant from a roster. Each
+scenario's starting state names each unit its `AP Give` triggers hand over, with the gate that
+ruling gives it - `Has(item)` alone where the ruling says bare, `Has(item) & <access>` where it does
+not. A gate shared by a location and a grant is one field on the starting state, which the
+scenario's `*Rules` class reads rather than rebuilding.
+
+**Key interfaces**
+
+- `ScenarioStartingState.default_mercenary_grants` is deleted, along with the call in
+  `ScenarioLogic`'s constructor. No replacement: there is no generic per-item gate.
+- Each scenario's `StartingState.obtains_unit` and `starts_with_building` carry the authored rules.
+- `ScenarioUnitLogic.is_granted` keeps ANDing `survives_caveman`, so authored rules stay
+  caveman-free.
+- `AUTHORED_TRIGGER_UNITS` stays non-mercenary and `SCENARIO_TO_TRIGGER_UNITS` keeps appending the
+  rosters to it.
+- `UnitLogic.can_own_anywhere` carries Own Militia under caveman, globally, not per scenario.
+- `Mercenary.in_logic` is not set by judgement: make it agree with what the rules now name.
+- `UNIT_TO_VARIANT_IDS`, which binds `Age2UnitData.variant_game_ids`, gains the Battering Ram's
+  second genie id. The rendering into `addUnitVariant` and the XS side that consumes it both exist
+  already; nothing new is built for this.
+
+**Acceptance criteria**
+
+- [ ] `default_mercenary_grants` no longer exists and nothing calls it
+- [ ] every ruling in `## Rulings` has a rule in code that matches it, for all 18 scenarios
+- [ ] `set(obtains_unit) == set(trigger_units)` holds for every scenario
+- [ ] Genghis 2 declares `starts_with_building[MILL]` on `tayichiud_base`
+- [ ] Genghis 5 declares `starts_with_building[MONASTERY]` on `Has(HERMITS)`
+- [ ] Genghis 3 gates its Engineers and Bombards grants, and its Siege Workshop, on
+      `restorable_transport`
+- [ ] Own Militia is free under caveman from one global rule, not a grant on each scenario
+- [ ] `BATTERING_RAM` carries 35 as a variant id, so a regenerated `UnitData.xs` emits
+      `addUnitVariant` for it and Own Battering Ram answers to the ram Genghis 3 hands over as well
+      as to a trained one
+- [ ] `test_mercenaries` passes: `in_logic` matches the mercenaries the rules name, and each is
+      classified progression
+- [ ] the pre-commit subset for the touched packages passes
+
+**Out of scope**
+
+- Editing any scenario file. The ram is handled as a variant id instead, and the `filter=-1` effect
+  on Genghis 3's engineers box stays as the shipped campaign wrote it, decoration and all
+- Genghis 2's housing, which is correct as written
+- A test that compares the scenario files to the authored list - ADR-0005 rejects it
+- Splitting this ticket; the camps stay in it
 
 ## Comments
 
@@ -126,15 +264,21 @@ sets `obtains_unit[soldier] |= Has(item)` for every roster unit, with no access 
 
 Uighur and Engineers are new cases of the reported shape.
 
-#### B. Real gate, not modelled anywhere
+#### B. A condition beyond the item
+
+> **Corrected 2026-11-05.** This heading read "Real gate, not modelled anywhere", which is wrong
+> for most of the table. Logic models a condition only where meeting it costs an item, so every row
+> whose condition is a position - seeing a gaia object, standing in an area, reaching a corner - is
+> free and gets no rule. The rows that survive as gates are the Kereyids' herding, the Ungirrads'
+> relic, the Uighurs' Ornlu, and A2's trade.
 
 | item | trigger | real gate |
 | --- | --- | --- |
 | 4000 A1 Mangudai (Mangudai 18) | A1 [87], disabled | chain [60] Scythian scout (852) home → [66] Attila (777) in `(0,0)-(64,72)` → [87] needs **10 HORSE_A owned by P1 in `(29,42)-(45,56)`**. Creates Mangudai, does not change ownership |
 | 4001 A1 Roman Villagers | A1 [151] | P1 sees gaia Villager ref 52442 at (4,132), SW corner |
 | 4002 A2 Dyrrhachium Prisoners (Tarkan 5, Hussar 2) | A2 [58] | destroy P5 Town Center ref 8320 at (29,47), plus 3 gaia in the pen. `defeat_rules` says Dyrrhachium is `True_()` |
-| 4003 A2 Scythian Troop (Mangudai 9, Capped Ram 3, Onager 1) | A2 [57] | P8 owns 6 **civilians** in `(80,53)-(146,114)`: the vanilla "Trade with Scythians" ([9]) handing 6 P1 units to P8. **The trigger changes no ownership**: it clears the forest in `(106,85)-(118,100)` and reveals the map. The troops are gaia at (120-122,84-88), presumably claimed by walking up (not verified). `Attila2StartingState` defeat rule uses `scythian_troop` bare |
-| 4004 J1 Ram Army (Pikeman 6, Man-at-Arms 4, Capped Ram 1) | J1 [63] | Joan in `(105,10)-(115,29)`. Is that across the river? |
+| 4003 A2 Scythian Troop (Mangudai 9, Capped Ram 3, Onager 1) | A2 [57] | P8 owns 6 **civilians** in `(80,53)-(146,114)`: the vanilla "Trade with Scythians" ([9]) handing 6 P1 units to P8. **The trigger changes no ownership**: it clears the forest in `(106,85)-(118,100)` and reveals the map. The troops are gaia at (120-122,84-88) carrying `capture_flag = 1`, and **walking up claims them** (verified 2026-11-05: no trigger names them, and they are the only capturable objects on that map). `Attila2StartingState` defeat rule uses `scythian_troop` bare |
+| 4004 J1 Ram Army (Pikeman 6, Man-at-Arms 4, Capped Ram 1) | J1 [63] | Joan in `(105,10)-(115,29)`. **Ruled bare**: a position condition is free. The effect filters to military, so the Siege Workshop standing in the same box is not handed |
 | 4008 J5 Loyalists | J5 [77] | P1 sees gaia Heavy Scorpion ref 20092 at (114,96) |
 | 4009 J5 King's Troop | J5 [78], var 4 ← [3] Treachery ← [9] | P5 Scout Cavalry reaches `(64,63)-(75,77)`: scripted arrival, activator of [9] not traced |
 | 4011 J6 Artillery | J6 [45] | P1 sees gaia Hand Cannoneer ref 8105 at (110,118) |
@@ -152,18 +296,20 @@ The G1 tribes whose units are also starting units (Light Cav, Cav Archer) cost l
 | --- | --- | --- |
 | 4005 J1 Swordsmen | J1 [57] | |
 | 4006 J1 Crossbowmen | J1 [62] | |
-| 4010 J6 Lone Swordsman | J6 [43] `AP Give La Hire` | hands gaia ref 13263, which is **MILITIA (74)**. Roster says `LONG_SWORDSMAN` |
+| 4010 J6 Lone Swordsman | J6 [43] `AP Give La Hire` | hands gaia ref 13263, which is **MILITIA (74)**. Gaia is Post-Imperial, so it reaches P1 as a Champion, which is what roster 4010 declares - **the "Roster says `LONG_SWORDSMAN`" claim here was wrong**. The trigger's name is also wrong: La Hire comes with the Army ([44]) |
 | 4019 G6 Subotai's Army | G6 [23] | timer 2400 s and P1 not defeated. Creates units directly |
 
-#### What this leaves open for grilling
+#### What this left open, and where it landed
 
-- Which B rows are real access, and which are trivially met by the starting force: seeing a
-  corner, herding sheep, reaching (98,10) or (26,36) in G3/G5, the J1 Ram area relative to the
-  river.
-- Where the gate lives: on the item (`Mercenary` carries a rule) or as per-scenario overrides
-  in each `StartingState`.
-- The J6 Militia/Long Swordsman roster mismatch, and A2 Scythian Troop handing over gaia rather
-  than through `change_ownership`.
+All three were settled on 2026-11-05; see `## Rulings`.
+
+- **Which B rows are real access.** None of the position ones. Logic models a condition only where
+  meeting it costs an item.
+- **Where the gate lives.** On the `StartingState`, shared by the location and the grant, with the
+  `*Rules` class reading it. Not on the item.
+- **The J6 roster and the A2 Scythians.** There is no roster mismatch: 4010 declares a Champion and
+  Post-Imperial Gaia hands one. A2's troop is gaia the player converts by walking up, which needs no
+  `change_ownership` and no rule beyond the trade.
 
 ### 2026-11-04: triage notes
 
@@ -199,25 +345,220 @@ The G1 tribes whose units are also starting units (Light Cav, Cav Archer) cost l
     Mangudai, A2 Dyrrhachium Prisoners (Tarkan, Hussar), J5 Loyalists, J5 King's Troop, J6
     Artillery, G1 Kereyid, G6 Subotai's Army (Subotai, Khan, Saboteur; the 2 Hunting Wolves
     are ignored).
-- J6 Gaia starts Post-Imperial (`starting_age = 6`), as does G5. That is the likely reason
-  the J6 Lone Swordsman (placed as Militia, unit 74) shows as a Champion. J6 never obtains
-  Militia except through caveman, so the current `obtains_unit[MILITIA] = army` is wrong, and
-  J6 Army as authored is wrong. Neither "drop Gaia to Castle" nor "author the top tiers" is
-  the fix.
+- J6 Gaia starts Post-Imperial (`starting_age = 6`), as does G5. **Corrected 2026-11-05:** this
+  bullet originally said `obtains_unit[MILITIA] = army` is wrong and that J6's Army as authored is
+  wrong. Both claims were false. No such line exists - `joan_6.py:33` authors
+  `obtains_unit[U.CHAMPION] = army`, and the authored top tiers are right, because a starting age
+  grants the techs of the ages *before* it, so Post-Imperial Gaia hands over Arbalester, Champion,
+  Hussar and Paladin. J6 obtains Militia only through caveman, which is now a global rule rather
+  than a scenario grant.
 
-**What we still need from you (@maintainer, on the PC with AoE2 installed):**
+**What we needed from the maintainer - all four answered 2026-11-05:**
 
-- **J6**: what do the Lone Swordsman ([43]) and Army ([44]) hand-overs actually give P1 in
-  game, and what is the fix for it? Read each unit's copy id: the parser sees only
-  `unit_const`.
-- **Q22, blocked on J6**: should the static list keep the roster append? That means
-  `AUTHORED_TRIGGER_UNITS` stays non-mercenary, `trigger_units` = authored + rosters,
-  `needs_mercenary` stays untouched, and the test pins `set(obtains_unit) ==
-  set(trigger_units)`. Listing rosters in `AUTHORED_TRIGGER_UNITS` by hand instead would
-  make every roster unit "granted anyway" and silently stop the exclusivity promotion in
-  `needs_mercenary`.
-- **G5 / G3 buildings**: does the G5 Hermits trigger hand P1 the gaia Monastery (ref 5947),
-  and G3 the P6 Siege Workshop? If so, should G5 author
-  `starts_with_building[MONASTERY] = Has(HERMITS)`?
-- **A2 Scythian Troop**: trigger [57] changes no ownership. It clears forest and reveals the
-  map. Does walking up to the gaia troops at (120-122,84-88) claim them?
+- **J6**: every unit the hand-overs give P1 is Post-Imperial, the lone swordsman included. It was
+  already fixed before this session; only the item's display name still reads "A Single
+  Longswordsman".
+- **Q22**: keep the roster append. `AUTHORED_TRIGGER_UNITS` stays non-mercenary and the test pins
+  `set(obtains_unit) == set(trigger_units)`. It was never blocked on J6: the Army is a
+  `ScenarioItem`, so its units live in the authored list either way.
+- **G5 / G3 buildings**: both yes. G5 [52] moves the gaia Monastery (104) alongside the Monk and the
+  Leitis, so G5 authors `starts_with_building[MONASTERY] = Has(HERMITS)`. G3 [31] and [32] each move
+  two P6 Siege Workshops, which is why the existing ruling takes either item.
+- **A2 Scythian Troop**: yes, walking up claims them. Gaia units convert by default, and these carry
+  `capture_flag = 1` while #31's handed-over set carries `0`. The ruling
+  `Has(SCYTHIAN_TROOP) & purple_vils` stands unchanged: the trade is the gate, the walk is free.
+
+### 2026-11-05: every `AP Give` trigger, all 18 scenarios
+
+> *This was generated by AI during triage.*
+
+The 2026-11-04 audit walked only the triggers whose conditions `script_call` a mercenary predicate.
+This one walks all of them, because the camps hand over through the same mechanism. Rebuild it from
+here rather than from the scenario files.
+
+**Method.** Every trigger named `AP Give*` in each `AP_*.aoe2scenario`, read with
+AoE2ScenarioParser. For each `change_ownership` effect, the objects it moves are resolved against
+the map, honouring `selected_object_ids`, `object_list_unit_id` **and `object_type`**. Condition and
+effect names come from the vendored `AoE2ScenarioParser/datasets/`. Ignoring `object_type` is what
+produced two wrong findings earlier in this session: it reports every object standing in the box,
+including ones the trigger leaves behind.
+
+**Three corrections to the 2026-11-04 comment.**
+
+- `obtains_unit[MILITIA] = army` does not exist. `joan_6.py:33` authors `obtains_unit[U.CHAMPION] =
+  army`, and item 4010's roster is already `MercenaryUnit(Age2UnitData.CHAMPION, 1)`. The lone
+  swordsman was fixed before this session; the item's display name still reads "A Single
+  Longswordsman".
+- `AP Give La Hire` [43] does not hand La Hire. It hands one selected object, ref 13263, a
+  **Militia**. La Hire (640) and Constable Richemont (646) both stand in the Army box and come with
+  [44].
+- A2's Scythian troop is settled. The 13 Gaia units carry `capture_flag = 1`; across every Gaia
+  object in that scenario the histogram is `{-1: 10959, 0: 32, 1: 13}`, where the 32 at `0` (Never)
+  are #31's handed-over set and the 13 at `1` are this troop. Gaia units convert by default, so
+  walking up claims them, and no trigger ever needs to.
+
+**The hand-overs.**
+
+| trigger | hands P1 | condition beyond the item |
+| --- | --- | --- |
+| A1 [145] Horses | creates horses | variable 2 ≥ 10 |
+| A1 [148] Spawn Attila's Camp Vils | creates 4 **Gaia** villagers, activates [149] | P1 holds a unit at the camp approach |
+| A1 [149] Attila's Camp | P2 **buildings only**: Stable, Palisade ×17, 2 Yurts | starts disabled; [148] activates it, then a 10 s timer |
+| A1 [151] Roman Camp Vils | Gaia: Villager M ×7, F ×5 | sees Gaia villager 52442 |
+| A1 [153] Bleda's Camp | P2: Town Center, Barracks, Mill, Market, Archery Range, Stable, Blacksmith, Lumber Camp, Outpost ×3, Tarkan ×12, Archer ×5, Scout Cavalry, Villager M ×2 F ×1, Attila, Bleda, Horse ×3 | P2 down to no Archers **and** ≤5 Tarkans; object 10840 destroyed; P1 has not captured 21743; P2 not defeated |
+| A2 [49] Purple Vils | P6: Villager F ×4, M ×2 | P6 down to none of object 70 |
+| A2 [57] Scythian Troops | nothing - clears forest, drops a Map Revealer | P8 holds ≥6 civilians (the trade) |
+| A2 [58] Dyrrhachium Prisoners | Gaia: Hussar ×2, Tarkan ×5 | Town Center 8320 destroyed; ≥3 objects in the pen |
+| A3 [48] / [49] TC Gold | resources, no objects | Town Center 2705 / object 852 destroyed |
+| A4, A5, A6 | no `AP Give` triggers | |
+| G1 [86] Kereyid | P4: Cavalry Archer ×6, Monk ×2 | variable 3 (20 sheep herded) |
+| G1 [87] Tayichi'ud | P5: Light Cavalry ×5 | variable 4 |
+| G1 [88] Ungirrad | P8: Mangudai ×4, Monk ×1 | variable 5 (a relic, so a Monk, so the Kereyids) |
+| G1 [89] Naiman | P7: Cavalry Archer ×5 | variable 6 |
+| G1 [90] Uighur | P6: Camel Rider ×5 | variable 7 (Ornlu slain) |
+| G2 [29] Tayichiud Base | P4: Town Center, Barracks, **Mill ×2**, Cavalry Archer ×5, Villager M ×4 F ×3 | P4 down to no military |
+| G3 [31] Engineers | Gaia: Villager M ×1 F ×5, **ram (unit 35)** ×1, Rocket Cart ×1; P6: Siege Workshop ×2 | sees Gaia villager 17923 |
+| G3 [32] Bombards | Gaia: Bombard Cannon ×6; P6: Siege Workshop ×2 | sees Gaia Bombard 17932 |
+| G3 [33] Transport | Gaia: Transport Ship ×1 | sees 15599 |
+| G4 [33] Kipchak Camp | P2: Mill, Market, Archery Range ×2, Monastery, Mining Camp, Cavalry Archer ×2 | P2 under one military |
+| G5 [52] Hermits | Gaia: Monk ×1, Elite Leitis ×10, **Monastery** ×1 | sees Gaia Monk 5948 |
+| G6 [23] Subotai's Army | creates Subotai, Khan, Saboteur | 2400 s timer; P1 not defeated |
+| J1 [55] / [64] Transports | creates Transport Ships | P1 holds a military unit at the crossing |
+| J1 [57] Swordsmen | P5: Man-at-Arms ×4 | item only |
+| J1 [62] Crossbows | P5: Crossbowman ×6 | item only |
+| J1 [63] Ram Army | P5, **military only**: Man-at-Arms ×4, Pikeman ×6, Capped Ram ×1 | Joan (430) in the camp. The Siege Workshop standing in the same box is **not** handed |
+| J1 [65] Recruits | P5: Crossbowman ×6, Scorpion ×2 | Joan (430) across the river |
+| J2 [67] Trade Carts | Gaia: Crossbowman ×12, Knight ×8, Trade Cart ×6 | object 17350 brought to an area |
+| J2 [68] / [70] Orleans | Gaia: Town Center, one each | object 17350 brought to an area |
+| J2 [69] Dock | Gaia: Dock | sees object 94 |
+| J3 [49] Boats | Gaia: Demolition Ship ×2 | sees 679 |
+| J4 [41] Base | Gaia: Town Center, Mill, Lumber Camp, Mining Camp, Villager M ×4 F ×2, Crossbowman ×2 | sees 4516 |
+| J5 [67]-[76] Refugees | Gaia: one villager each, M ×6 F ×4 | each sees its own refugee |
+| J5 [77] Loyalists | Gaia: Knight ×2, **Militia ×16**, Throwing Axeman ×2, Heavy Scorpion ×2 | sees Gaia Heavy Scorpion 20092 |
+| J5 [78] King's Troop | P5, filtered to Scout Cavalry and Militia; **no P5 unit stands in the box on the map**, so this is a scripted arrival | variable 4 (Treachery) |
+| J6 [43] La Hire | Gaia: **Militia ×1** (ref 13263) | item only |
+| J6 [44] Army | Gaia: Archer ×16, Knight ×6, Militia ×8, Scout Cavalry ×8, Trebuchet (packed) ×1, Villager M ×3 F ×3, La Hire, Constable Richemont | sees 8171 |
+| J6 [45] Artillery | Gaia: Hand Cannoneer ×8, Bombard Cannon ×3, Jean Bureau | sees 8105 |
+
+**Re-tiering.** A starting age grants the techs of the ages *before* it, so a hand-over arrives at
+the source player's tier only where that player outranks the placed unit. Gaia's starting age by
+scenario: A1 2, A2 4, A3 2, A4 2, A5 0, A6 0, G1 0, G2 2, G3 4, G4 2, **G5 6**, G6 2, J1 2, J2 3,
+J3 2, J4 4, J5 4, **J6 6**. Only J6 has both a Post-Imperial source and units with upgrades to take,
+which is why its map holds Archer, Militia, Scout Cavalry and Knight while
+`AUTHORED_TRIGGER_UNITS[AP_JOAN_6]` correctly holds Arbalester, Champion, Hussar and Paladin.
+G5's Gaia is Post-Imperial too, but a Monk has no line and its Leitis are placed Elite already.
+J5's Militia ×16 become Man-at-Arms, which is what roster 4008 declares, and G3's ram stays a
+Battering Ram because Capped Ram is a Castle tech. Every roster checks out unchanged.
+
+**Gaps that survive the diff.** Comparing what each trigger moves against
+`SCENARIO_TO_TRIGGER_UNITS` and the authored `starts_with_building`, after the rulings above:
+
+- **G2**: the Tayichiud Base hands **Mill ×2**, and `genghis_2.py` authors only Town Center and
+  Barracks. The Mills are buildings, so "P4 down to no military" does not kill them.
+- **G3**: the ram the trigger hands is **unit 35**. `Age2UnitData.BATTERING_RAM` is **1258**, so
+  logic and the client are both looking for a unit the scenario never hands over.
+
+Everything else that differs is explained and needs nothing: created rather than handed (A1
+Mangudai, J1 and J2 Transports, G4 Champion, G5 Scout Cavalry, G6 Subotai, Khan and Saboteur), Gaia
+captured (A2's Scythian troop), a scripted arrival (J5 King's Troop), and J6's re-tiering. J2's
+Dock and J4's Mill, Lumber Camp and Mining Camp are already authored.
+
+**Still open.** Both were settled later the same day; see the next comment and `## Rulings`.
+
+1. **G2** `starts_with_building[MILL]`: the Tayichiud Base hands two Mills and `genghis_2.py`
+   authors only the Town Center and the Barracks. The Mills are buildings, so "P4 down to no
+   military" never touches them.
+2. **G3's ram**: change the scenario to place 1258, or teach the data that 35 is the same unit.
+
+The kill-gated camps are **not** open: they are bare, by the ruling above.
+
+### 2026-11-05: the last two points, and what 35 is
+
+> *This was generated by AI during triage.*
+
+**G2's Mills, and why the gate is wider than it looked.** Trigger [29] `AP Give Tayichiud Base`
+carries a *single* `change_ownership`: source P4, area `(0,0)-(143,143)`, no object filter at all.
+It hands P1 everything P4 owns anywhere on the map, not a boxed set. Resolved against the map that
+is Cavalry Archer x5, Villager M x4 / F x3, **Mill x2**, Town Center, Barracks, and decoration
+(Yurt A-D x7, Flag x2, Torch x2, Bonfire). The Cavalry Archers cost logic nothing - Mongols train
+them - so the Mills are the one gap, and they take the same `tayichiud_base` gate the Town Center
+and Barracks already have.
+
+**G2's housing, asked during triage.** No House (const 70) stands anywhere on that map, for any
+player, and no trigger touches `POPULATION_HEADROOM` or `BONUS_POPULATION_CAP`. The housing is the
+Yurts, at 5 pop each: P1 opens with seven of its own (Yurt E x4, G x2, F x1) and the Tayichi'ud
+base hands seven more. The opening seven are what `housing[Strength.SOME] = True_()` is already
+saying, ungated, so the hand-over is not what creates the room and the rule stands unchanged.
+
+**What const 35 is.** Resolved against the game's own `empires2_x2_p1.dat`, because the vendored
+`AoE2ScenarioParser` datasets name neither object in that box:
+
+| const | dat name | what it is |
+| --- | --- | --- |
+| 35 | `BTRAM` | a Battering Ram. Full unit entry, cost 160 wood / 75 gold. Not in the DE editor's placeable list, and it is what the **shipped** campaign places |
+| 1258 | `BTRAM` | a Battering Ram. Where the line starts for every civ, and the Feudal-active ram for the Cumans. `Node Type: Unit`, `Building ID: 49`, with Capped Ram's `Link ID` pointing at it |
+| 422 | `CBATR` | Capped Ram, links from 1258 |
+| 548 | `SGRAM` | Siege Ram, links from 422 |
+| 933 | `BARRELS` | decoration |
+
+Both 35 and 1258 are real, fully-specified rams, and the shared internal name settles nothing:
+genie internal names are historical, so Militia (74) is `SPRMN`, Spearman (93) is `PKEMN`,
+Man-at-Arms (75) is `SWDMN` and Mangudai (11) is `MOSUN`. Vanilla `4_Genghis_3`, read straight out
+of `cam4.aoe2campaign`, carries const 35 at ref 17925 on the same tile, so the AP conversion did
+not introduce it and re-saving our copy would only diverge it from the campaign.
+
+> **Two claims in the first draft of this comment were wrong and are corrected above.** It read
+> that 35 "never appears as a unit node" in the civ tech trees and that the map was therefore at
+> fault. The only ID 35 in those files is the *Heavy Warships* `Research` node - techs and units
+> are separate ID spaces, so that file cannot speak to whether a unit 35 exists. It does.
+
+**How it got there.** `AP Give Engineers` [31] has four Gaia `change_ownership` effects over the
+*same* box `(181,97)-(187,109)`: `filter=83` (Villager M x1), `filter=293` (Villager F x5),
+`filter=1904` (Rocket Cart x1), and `filter=-1`, which takes everything - the three above plus
+35 x1 and 933 x1. The ram is the one roster entry with no filtered effect of its own, so nothing in
+the trigger ever names its const, and the roster was written against the ram it meant rather than
+the one standing there. The catch-all also hands P1 a Barrels. Bombards [32] and Transport [33] are
+clean: every object they move is explicitly filtered.
+
+**How the ram is fixed.** Not by touching the map. `Age2UnitData` already carries
+`variant_game_ids` for exactly this - "the same unit trained at a different building keeps a
+separate id", which is the Tarkan 755/886 and Huskarl 41/759 case - and the whole path is built:
+`UNIT_TO_VARIANT_IDS` binds it, the installer renders `addUnitVariant`, and `Unitsanity.xs` folds
+each variant into its `canonicalType`. The Battering Ram's second id joins that table and Own
+Battering Ram then answers to both. One row of data, no new mechanism, no scenario divergence.
+
+**The Cumans, verified.** Across all 62 `CivTechTrees/*.json`, the Battering Ram `Node Type: Unit`
+entry is `Node ID 1258` in **every** civ, and the age splits exactly one way:
+
+| `Age ID` | civs |
+| --- | --- |
+| 3, Castle | 61 |
+| 2, Feudal | **CUMANS**, alone |
+
+`Building ID` is 49 for all of them. So both halves hold: every civ starts the ram line at 1258,
+and 1258 is the Feudal-active ram for the Cumans specifically. Unit 35 appears as a `Unit` node in
+no civ's tree, which is what makes it the legacy entry rather than a tier anyone trains.
+
+**What is still unmeasured.** The tech trees say which ram a civ *can* train; they do not say which
+genie id the engine stamps on the unit that comes out, nor what id the Genghis 3 hand-over carries
+at runtime. `spikes/53/` answers both: the harness is written into the live `Test.xs` and spawns a
+ram as 35 and as 1258, reading `xsGetUnitCopyId` and `xsGetUnitObjectId` off each, then places a
+Siege Workshop and watches P1 for three minutes while the tester trains rams by hand, logging each
+new one once. It deliberately does not call `InitUnitsanity` or `InitCaveman`, so nothing is
+disabled and the answer is the raw engine's. `spikes/53/decode.py` reads the `.xsdat`.
+
+The variant ruling does not wait on this - it is correct whichever id the engine stamps, because it
+accepts both. The spike settles whether 35 can reach a player at all, which is what would decide
+if 35 ever needs to be more than a variant.
+
+**`in_logic`, item 4 of `## What this needs`.** Not a decision.
+`test_mercenaries.test_in_logic_matches_the_rules_that_exist` derives the flag from an AST scan of
+the `rules` and `logic` packages for `Age2ItemData.<mercenary>`, so only the six mercenaries a rule
+currently names are `True`. Authoring a grant per mercenary flips all 21, or the test fails. The
+one consequence worth recording is that every mercenary then classifies as progression rather than
+useful, which shifts fill weight.
+
+**State of the work.** None of the rulings are in code yet: `default_mercenary_grants` is still
+defined and still called, Joan 1 authors only its Transport Ship, Genghis 1 only its two `True_()`
+riders. The infrastructure the rulings lean on has landed - `AUTHORED_TRIGGER_UNITS`,
+`SCENARIO_TO_TRIGGER_UNITS`, ADR-0005. Moved to `ready-for-agent` with the brief above.

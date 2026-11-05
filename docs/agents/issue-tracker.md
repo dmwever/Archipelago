@@ -12,6 +12,7 @@ describe.
 - A finished ticket gets `**Status:** done` and its acceptance boxes ticked. `done` is not a triage role; it closes the ticket
 - A ticket folded into another names it on its Status line (`**Status:** done (folds into #05)`); the named ticket's acceptance criteria are its contract
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
+- Settled decisions go in a `## Rulings` section above `## Comments`: one dated line per ruling, the decision only. Read that section before putting any question to the maintainer; a ruling there is closed, and reopening one needs new evidence. The reasoning stays in the comments, the decision lives here
 
 ## When a skill says "publish to the issue tracker"
 
