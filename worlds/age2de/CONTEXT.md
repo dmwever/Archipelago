@@ -221,6 +221,14 @@ start, or out of the civ's reach, is not registered here, even when another scen
 A checked location the server reports that is not registered is expected, not an error.
 _Avoid_: existing location, known location
 
+**Withheld tech**:
+A tech below the age a scenario opens in that P1 does not start with, though vanilla would have
+granted it. Find Items withholds every such tech that is a location, Only Find Units every such
+upgrade tech that is a location, and caveman every such upgrade tech. Start In Dark Age withholds
+everything. A tech that is not a location is withheld only by Start In Dark Age; otherwise P1
+starts with it.
+_Avoid_: locked at start, held back
+
 ### Units
 
 **Unit row**:
