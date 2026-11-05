@@ -157,7 +157,7 @@ def _villager(world: Age2World) -> Route:
     return Route(
         "Trains it", "can't train",
         lambda sl: [Way(sl.units.can_train_structurally(villager),
-                        sl.economy.can_pay({food.type: food.amount}))],
+                        sl.economy.can_pay(food.resources))],
         requires=(world.rules.logic.units.has_villager_item(), any_building_item(world, buildings)),
         at=tuple(buildings),
         age=villager.age,

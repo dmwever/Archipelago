@@ -25,8 +25,7 @@ class Resources:
 
 @dataclass
 class SeedResources:
-    type: Resource
-    amount: int
+    resources: dict[Resource, int]
     seeds: 'Age2BuildingData | Age2AgeData | None' = None
 
 @dataclass
@@ -451,8 +450,8 @@ class Age2ItemData(enum.IntEnum):
     PROFESSION_STONE_MINER        = 711, "Stone Miner", VillagerProfession()
 
     #1000 - 2999 = Progression Items
-    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          SeedResources(Resource.WOOD, 275)
-    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         SeedResources(Resource.STONE, 100)
+    TOWN_CENTER_WOOD =                  1000, "Starting Town Center Wood",          SeedResources({Resource.WOOD: 275})
+    TOWN_CENTER_STONE =                 1001, "Starting Town Center Stone",         SeedResources({Resource.STONE: 100})
     
     # Scenario Progression Items
     AP_ATTILA_1_BLEDAS_CAMP =   1002, "Attila, The Scourge of God: Bleda's Camp",            ScenarioItem(Age2ScenarioData.AP_ATTILA_1)
@@ -482,18 +481,18 @@ class Age2ItemData(enum.IntEnum):
     AP_JOAN_6_ARMY =            1023, "Joan of Arc, A Perfect Martyr: French Army",                 ScenarioItem(Age2ScenarioData.AP_JOAN_6)
 
     # Here to avoid updating existing items
-    STARTING_VILLAGER_FOOD =    1024, "Starting Villager Food",                                     SeedResources(Resource.FOOD, 150)
+    STARTING_VILLAGER_FOOD =    1024, "Starting Villager Food",                                     SeedResources({Resource.FOOD: 150})
 
     # Genghis Khan
     AP_GENGHIS_2_TAYICHIUD_BASE = 1026, "Genghis Khan, A Life of Revenge: Tayichi'ud Base",     ScenarioItem(Age2ScenarioData.AP_GENGHIS_2)
     AP_GENGHIS_3_TRANSPORT = 1028, "Genghis Khan, Into China: Transport Ship",               ScenarioItem(Age2ScenarioData.AP_GENGHIS_3)
     AP_GENGHIS_4_KIPCHAK_CAMP = 1031, "Genghis Khan, The Horde Rides West: Kipchak Camp",    ScenarioItem(Age2ScenarioData.AP_GENGHIS_4)
 
-    LUMBER_CAMP_WOOD =          1032, "Starting Lumber Camp Wood",                                  SeedResources(Resource.WOOD, 100)
-    MULE_CART_RESOURCES =       1033, "Starting Mule Cart Resources",                               SeedResources(Resource.WOOD, 80)
-    DOCK_WOOD =                 1034, "Starting Dock Wood",                                         SeedResources(Resource.WOOD, 150)
-    MARKET_WOOD =               1035, "Starting Market Wood",                                       SeedResources(Resource.WOOD, 175)
-    FEUDAL_AGE_FOOD =           1036, "Feudal Age Food",                                            SeedResources(Resource.FOOD, 500)
+    LUMBER_CAMP_WOOD =          1032, "Starting Lumber Camp Wood",                                  SeedResources({Resource.WOOD: 100})
+    MULE_CART_RESOURCES =       1033, "Starting Mule Cart Resources",                               SeedResources({Resource.WOOD: 80, Resource.FOOD: 20})
+    DOCK_WOOD =                 1034, "Starting Dock Wood",                                         SeedResources({Resource.WOOD: 150})
+    MARKET_WOOD =               1035, "Starting Market Wood",                                       SeedResources({Resource.WOOD: 175})
+    FEUDAL_AGE_FOOD =           1036, "Feudal Age Food",                                            SeedResources({Resource.FOOD: 500})
 
     #3000 - 3499 = Progressive scenarios, 3500 - 3599 = Campaign unlocks
     

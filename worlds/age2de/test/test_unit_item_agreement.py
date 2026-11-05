@@ -1,15 +1,23 @@
 import itertools
+import tempfile
+from pathlib import Path
 
-from ..Options import (IncludeUniqueUnits, ShuffleVillager, Unitsanity,
+from test.general import setup_solo_multiworld
+
+from .. import Age2World
+from ..Options import (IncludeUniqueUnits, ShuffleVillager, Techsanity, Unitsanity,
                        UnitsanityItems)
+from ..client.handlers.InstallHandler import InstallHandler
 from ..client.handlers.install.UnitData import UnitData
 from ..generation import SlotData
 from ..locations.UnitLocations import unit_location
 from ..items.Items import Age2ItemData
+from ..locations.Campaigns import NAME_TO_CAMPAIGN
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
 from ..locations.connections.LocationMapping import location_name_to_id
+from .test_installer import fake_user_folder
 from .test_unit_pool import UnitPoolTestBase
 
 MODES = [Unitsanity.option_none, Unitsanity.option_unit_line, Unitsanity.option_all]
@@ -33,9 +41,15 @@ class UnitTableAgreementBase(UnitPoolTestBase):
 
     def table_for(self, world) -> UnitData:
         installed = self.installed(world)
-        return UnitData(self.places(world), world.pool.civs.included,
-                        installed[SlotData.US_MODE], installed[SlotData.US_ITEMS], "a1b2c3d4",
-                        caveman=bool(installed[SlotData.US_CAVEMAN]))
+        return UnitData(
+            self.places(world),
+            world.pool.civs.included,
+            installed[SlotData.US_MODE],
+            installed[SlotData.US_ITEMS],
+            "a1b2c3d4",
+            caveman=bool(installed[SlotData.US_CAVEMAN]),
+            techs=world.pool.techs.shuffled,
+        )
 
     def place_name(self, place) -> str:
         for attribute in ("unit_name", "job_name", "hero_name", "escort_name", "line_name"):
@@ -147,3 +161,73 @@ class TestUniqueUnitsInstall(UnitTableAgreementBase):
             emitted = {row.unit for row in self.table_for(world).rows()}
             self.assertIn(Age2UnitData.MANGUDAI, emitted,
                           "a unit only a grant can supply is placed but never reaches the game")
+
+class TestTheInstalledUpgradeItemIsInTheSeed(UnitTableAgreementBase):
+    def build_three_campaigns(self, techsanity: int) -> Age2World:
+        world = setup_solo_multiworld(Age2World, ()).worlds[1]
+        world.options.enabled_campaigns.value = {
+            "Attila the Hun",
+            "Joan of Arc",
+            "Genghis Khan",
+        }
+        world.options.starting_campaigns.value = {"Attila the Hun"}
+        world.options.caveman.value = 1
+        world.options.unitsanity.value = Unitsanity.option_all
+        world.options.techsanity.value = techsanity
+        world.generate_early()
+        world.create_regions()
+        world.create_items()
+        return world
+
+    def installed_upgrade_items(self, world: Age2World) -> list[tuple[int, int]]:
+        with tempfile.TemporaryDirectory() as folder:
+            handler = InstallHandler()
+            handler.set_user_folder(str(fake_user_folder(Path(folder))))
+            campaigns = [
+                NAME_TO_CAMPAIGN[name]
+                for name in world.options.enabled_campaigns.value
+            ]
+            location_ids = [
+                location.address for location in world.multiworld.get_locations(1)
+                    if location.address is not None
+            ]
+            handler.setup(campaigns, 1, "a1b2c3d4", "Player", world.fill_slot_data(), location_ids)
+            rendered = handler._write_unit_data().read_text(encoding="utf-8")
+        rows: list[tuple[int, int]] = []
+        for line in rendered.splitlines():
+            if not line.startswith("    addUnit("):
+                continue
+            arguments = line.removeprefix("    addUnit(").removesuffix(");").split(", ")
+            self.assertEqual(len(arguments), 7, line)
+            rows.append((int(arguments[1]), int(arguments[5])))
+        return rows
+
+    def expected_upgrade_item(self, world: Age2World, game_id: int) -> int:
+        units = {unit.game_id: unit for unit in Age2UnitData}
+        if game_id not in units:
+            return UnitData.NO_UPGRADE_ITEM
+        tech = units[game_id].upgrade_tech
+        if tech is None or tech.item is None or not world.pool.techs.includes(tech):
+            return UnitData.NO_UPGRADE_ITEM
+        return tech.item.id
+
+    def test_a_unit_waits_for_exactly_the_upgrade_item_logic_waits_for(self):
+        for techsanity in (
+            Techsanity.option_generic,
+            Techsanity.option_units,
+            Techsanity.option_all,
+        ):
+            with self.subTest(techsanity=techsanity):
+                world = self.build_three_campaigns(techsanity)
+                rows = self.installed_upgrade_items(world)
+                wrong = [
+                    (game_id, item_id, self.expected_upgrade_item(world, game_id))
+                    for game_id, item_id in rows
+                        if item_id != self.expected_upgrade_item(world, game_id)
+                ]
+                self.assertEqual(wrong, [])
+                gated = [item_id for _, item_id in rows if item_id != UnitData.NO_UPGRADE_ITEM]
+                if techsanity == Techsanity.option_generic:
+                    self.assertEqual(gated, [])
+                else:
+                    self.assertNotEqual(gated, [])

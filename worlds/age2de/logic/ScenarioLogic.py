@@ -155,7 +155,7 @@ class ScenarioLogic:
         seed = building.seed_item
         banked = {
             resource: amount for resource, amount in building.cost.items()
-            if resource is not seed.type.type
+            if resource not in seed.type.resources
         }
         seeded = Has(seed.item_name) & self.logic.resources.has_amounts(banked)
         return (

@@ -46,12 +46,12 @@ class TestSmartStartingResources(bases.Age2TestBase):
         self.assertEqual([], self.world.pool.resources.build(-5))
 
     def test_the_exact_fit_hands_back_the_large_items(self) -> None:
-        # 220/250 + 850/250 + 750/250 + 400/125 = 1 + 4 + 3 + 4 = 12. The targets came down by
+        # 300/250 + 850/250 + 750/250 + 400/125 = 2 + 4 + 3 + 4 = 13. The targets came down by
         # what the seed items now contribute to the same totals.
-        got = self.world.pool.resources.build(12)
+        got = self.world.pool.resources.build(13)
         self.assertEqual(
             Counter({
-                Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 1,
+                Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 2,
                 Items.Age2ItemData.STARTING_FOOD_LARGE.item_name: 4,
                 Items.Age2ItemData.STARTING_GOLD_LARGE.item_name: 3,
                 Items.Age2ItemData.STARTING_STONE_LARGE.item_name: 4,
@@ -78,10 +78,8 @@ class TestTownCentreItems(bases.Age2TestBase):
     def test_the_pair_covers_the_real_cost(self) -> None:
         cost = Items.Age2ItemData.TOWN_CENTER.type.needed_resources
         granted = {
-            Items.Age2ItemData.TOWN_CENTER_WOOD.type.type:
-                Items.Age2ItemData.TOWN_CENTER_WOOD.type.amount,
-            Items.Age2ItemData.TOWN_CENTER_STONE.type.type:
-                Items.Age2ItemData.TOWN_CENTER_STONE.type.amount,
+            **Items.Age2ItemData.TOWN_CENTER_WOOD.type.resources,
+            **Items.Age2ItemData.TOWN_CENTER_STONE.type.resources,
         }
         self.assertEqual({resource: int(amount) for resource, amount in cost.items()}, granted,
                          "the Town Center items do not add up to a Town Center")
@@ -91,13 +89,12 @@ class TestTownCentreItems(bases.Age2TestBase):
         not a start. 150 food is three villagers at 50 each."""
         food = Items.Age2ItemData.STARTING_VILLAGER_FOOD
         self.assertIsInstance(food.type, Items.SeedResources)
-        self.assertEqual(food.type.type, Items.Resource.FOOD)
-        self.assertEqual(food.type.amount, 150)
+        self.assertEqual({Items.Resource.FOOD: 150}, food.type.resources)
         self.assertIn(food, Items.CATEGORY_TO_ITEMS[Items.SeedResources])
 
     def test_exactly_one_of_each_opening_item_reaches_the_pool(self) -> None:
         names = [item.name for item in self.multiworld.itempool]
-        for item in Items.CATEGORY_TO_ITEMS[Items.SeedResources]:
+        for item in self.world.pool.resources.seeds:
             with self.subTest(item.item_name):
                 self.assertEqual(names.count(item.item_name), 1)
 
@@ -129,8 +126,11 @@ class TestStartingResourcesAreProgression(bases.Age2TestBase):
         pooled = [item for item in self.multiworld.itempool if item.player == self.world.player]
         for item in pooled + self.multiworld.precollected_items[self.world.player]:
             payload = Items.NAME_TO_ITEM[item.name].type
-            if isinstance(payload, (Items.StartingResources, Items.SeedResources)):
+            if isinstance(payload, Items.StartingResources):
                 by_hand[payload.type] += payload.amount
+            if isinstance(payload, Items.SeedResources):
+                for resource, amount in payload.resources.items():
+                    by_hand[resource] += amount
         self.assertEqual(self.world.pool.resources.totals, by_hand)
 
 

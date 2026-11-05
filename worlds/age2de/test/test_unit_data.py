@@ -17,8 +17,8 @@ FRANKS = (Age2CivData.FRANKS,)
 
 def table(places, mode=Unitsanity.option_all,
           items=UnitsanityItems.option_unit_line, civs=FRANKS, tag=TAG,
-          techsanity=Techsanity.option_none, caveman=False):
-    return UnitData(places, civs, mode, items, tag, techsanity, caveman)
+          techsanity=Techsanity.option_none, caveman=False, techs=()):
+    return UnitData(places, civs, mode, items, tag, techsanity, caveman, techs)
 
 
 class TestWhichUnitsGetARow(unittest.TestCase):

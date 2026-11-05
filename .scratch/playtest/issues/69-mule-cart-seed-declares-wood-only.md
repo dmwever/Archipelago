@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** needs-triage
+**Status:** done
 
 ## Report
 
@@ -80,3 +80,25 @@ something else - the item not arriving, or the wrong amount - say so and this ti
 re-pointing.
 
 ## Comments
+
+**2026-11-04:** Closed by `1dbbf775c`: `ResourcePool.is_economy_route_shuffled` now pools the
+Mule Cart seed only when an enabled scenario's civ builds the Mule Cart. No shipped civ does, so
+it is never pooled today.
+
+Test: `test_seed_items.py::TestTheMuleCartSeedIsPooledOnlyForACivThatBuildsMuleCarts`.
+`test_no_shipped_campaign_pools_it` fails on all three campaigns at `37c6fa8b9` (before the fix)
+and passes after it; `test_franks_that_build_mule_carts_pool_it` gives the Franks mule carts and
+expects the seed in the pool.
+
+The 80-wood drop in the pinned seed-wood totals followed from the fix: `test_seed_items.py`
+(780/630/455 -> 700/550/375, wood target 545 -> 625), `test_item_pool.py` (exact fit 12 -> 13,
+one-of-each now iterates the pooled seeds), `test_traps.py` (wood target 220 -> 300).
+
+**2026-11-04:** The declaration half is fixed too. `SeedResources` now carries
+`resources: dict[Resource, int]`, and `Starting Mule Cart Resources` declares
+`{WOOD: 80, FOOD: 20}` to match `MuleCartResources()`, so `_has_seeded_building` banks nothing
+for the Mule Cart. `contributors(FOOD)` now counts its 20 food.
+
+Test: `test_seed_items.py::TestTheMuleCartSeedCarriesItsWholeCost`.
+`test_the_seed_item_with_no_food_at_all_is_a_mule_cart` and
+`test_the_seed_item_carries_its_wood_and_its_food` fail at HEAD and pass with the change.

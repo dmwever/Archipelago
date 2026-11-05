@@ -20,11 +20,17 @@ if TYPE_CHECKING:
 def contributors(resource: Resource) -> tuple[tuple[str, int], ...]:
     """Every item that adds to the pile a scenario opens with, and what each one adds. The seed
     items a seed pools are the guaranteed floor: one of each."""
-    return tuple(sorted(
+    starting = [
         (item.item_name, item.type.amount)
         for item in Age2ItemData
-        if isinstance(item.type, (StartingResources, SeedResources)) and item.type.type is resource
-    ))
+        if isinstance(item.type, StartingResources) and item.type.type is resource
+    ]
+    seeded = [
+        (item.item_name, item.type.resources[resource])
+        for item in Age2ItemData
+        if isinstance(item.type, SeedResources) and resource in item.type.resources
+    ]
+    return tuple(sorted(starting + seeded))
 
 
 @dataclass
