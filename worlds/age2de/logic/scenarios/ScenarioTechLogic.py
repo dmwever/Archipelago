@@ -37,10 +37,12 @@ class ScenarioTechLogic:
         return ScenarioCanResearch(scenario=self.scenario.scenario, tech=tech)
 
     def researched_at_start(self, tech: Age2TechData) -> bool:
-        """The scenario researched it for itself: it belongs below the age the scenario opens in,
-        and it is not withheld."""
-        return (tech.age < self.scenario.scenario.vanilla_age
-                and not self.world.pool.techs.locked_at_start(tech))
+        if tech.age >= self.scenario.scenario.vanilla_age:
+            return False
+        pool = self.world.pool
+        if not pool.techs.withheld_at_start(tech):
+            return True
+        return not pool.techs.includes(tech) and not pool.ages.dark_start
 
     def has_researched(self, tech: Age2TechData) -> Rule:
         return self._has_researched(tech, paid=True)

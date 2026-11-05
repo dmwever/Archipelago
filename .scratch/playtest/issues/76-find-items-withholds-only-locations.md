@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-05, found while triaging [#75](75-caveman-without-techsanity-grants-no-starting-techs.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Blocked by:** 64
 
@@ -66,12 +66,12 @@ As a result, a tech below the opening age that is not a location counts as not r
 - `TechPool.includes(tech)`, `TechPool.withheld_at_start(tech)` (from #64), and `AgePool.dark_start`: the inputs.
 
 **Acceptance criteria:** each needs a test proven red at HEAD with `tools/red_check.py`.
-- [ ] Find Items with techsanity `units`: Loom is researched at start in every scenario that opens above the Dark Age and can research it.
-- [ ] Find Items with techsanity `generic`, unitsanity `all`: in a scenario opening above Feudal, the Man-at-Arms upgrade is researched at start, and `upgraded_away(MILITIA)` is True.
-- [ ] Find Items with techsanity `all` and `shuffle_unique_techs` unshuffled: Marauders is researched at start in Attila 6.
-- [ ] Find Items with techsanity `all`: a tech that is a location (for example Loom) is still not researched at start, and `upgraded_away(MILITIA)` is still False everywhere. `test_withheld_upgrades_leave_every_tier_trainable` still passes.
-- [ ] Start In Dark Age with techsanity `units`: Loom is still not researched at start.
-- [ ] `python -m ruff check --select F,E9` is clean on the changed files, and the logic canaries pass.
+- [x] Find Items with techsanity `units`: Loom is researched at start in every scenario that opens above the Dark Age and can research it. Red: `worlds/age2de/test/test_find_items_withholds_locations.py::TestFindItemsWithholdsOnlyLocations::test_loom_is_granted_when_it_is_not_a_location`
+- [x] Find Items with techsanity `generic`, unitsanity `all`: in a scenario opening above Feudal, the Man-at-Arms upgrade is researched at start, and `upgraded_away(MILITIA)` is True. Red: `worlds/age2de/test/test_find_items_withholds_locations.py::TestFindItemsWithholdsOnlyLocations::test_man_at_arms_is_granted_when_it_is_not_a_location`
+- [x] Find Items with techsanity `all` and `shuffle_unique_techs` unshuffled: Marauders is researched at start in Attila 6. Red: `worlds/age2de/test/test_find_items_withholds_locations.py::TestFindItemsWithholdsOnlyLocations::test_unshuffled_marauders_is_granted_in_attila_6`
+- [x] Find Items with techsanity `all`: a tech that is a location (for example Loom) is still not researched at start, and `upgraded_away(MILITIA)` is still False everywhere. `test_withheld_upgrades_leave_every_tier_trainable` still passes. Held before: `worlds/age2de/test/test_find_items_withholds_locations.py::TestFindItemsWithholdsOnlyLocations::test_a_location_is_still_withheld`; `test_withheld_upgrades_leave_every_tier_trainable` passes.
+- [x] Start In Dark Age with techsanity `units`: Loom is still not researched at start. Held before: `worlds/age2de/test/test_find_items_withholds_locations.py::TestFindItemsWithholdsOnlyLocations::test_start_in_dark_age_withholds_loom_that_is_not_a_location`
+- [x] `python -m ruff check --select F,E9` is clean on the changed files, and the logic canaries pass. Ruff clean; pre-commit set incl. canaries 105 passed.
 
 **Out of scope:**
 - Any XS change. The game already behaves as described.

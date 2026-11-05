@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-31, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Report
 
@@ -144,13 +144,13 @@ The logic lets P1 train Man-at-Arms with no upgrade item and treats the Militia 
 - `Caveman` option (`Options.py`): read as a plain option value at pool time.
 
 **Acceptance criteria:** each needs a test proven red at HEAD with `tools/red_check.py`.
-- [ ] Joan-only seed, caveman on, techsanity all, Existing Techs vanilla: in Joan 1, `can_train` for Man-at-Arms is false without the Man-at-Arms upgrade tech item, and true with it (and its unit items).
-- [ ] Same seed: in Joan 1, `upgraded_away(MILITIA)` is False.
-- [ ] Same seed with caveman off: in Joan 1, the Man-at-Arms upgrade is still researched at start, and `upgraded_away(MILITIA)` is True.
-- [ ] `withheld_at_start(Man-at-Arms upgrade)` is True with caveman on and False with caveman off (Existing Techs vanilla), and for caveman on it is True whatever unitsanity is set to.
-- [ ] From #67: Attila + Joan + Genghis seed, caveman on, techsanity all, Existing Techs vanilla. In Attila 6, Joan 5 and Genghis 6 (each opens in Imperial), `has_upgrade_tech(DEMOLITION_SHIP)` is not `True_()` and asks for the Demolition Ship item, and `upgraded_away(DEMOLITION_RAFT)` is False. With caveman off, both are as at HEAD: `True_()` and True.
-- [ ] No identifier named `locked_at_start` remains in `worlds/age2de`.
-- [ ] `python -m ruff check --select F,E9` is clean on the changed files, and the logic canaries pass.
+- [x] Joan-only seed, caveman on, techsanity all, Existing Techs vanilla: in Joan 1, `can_train` for Man-at-Arms is false without the Man-at-Arms upgrade tech item, and true with it (and its unit items).
+- [x] Same seed: in Joan 1, `upgraded_away(MILITIA)` is False. Red: `worlds/age2de/test/test_caveman_withholds_upgrades.py::TestCavemanWithholdsUpgradesInJoan::test_joan_1_keeps_its_militia`
+- [x] Same seed with caveman off: in Joan 1, the Man-at-Arms upgrade is still researched at start, and `upgraded_away(MILITIA)` is True. Held before: `worlds/age2de/test/test_caveman_withholds_upgrades.py::TestCavemanWithholdsUpgradesInJoan::test_without_caveman_joan_1_starts_upgraded`
+- [x] `withheld_at_start(Man-at-Arms upgrade)` is True with caveman on and False with caveman off (Existing Techs vanilla), and for caveman on it is True whatever unitsanity is set to. Red: `worlds/age2de/test/test_caveman_withholds_upgrades.py::TestCavemanWithholdsAtStart::test_caveman_withholds_the_upgrade_whatever_unitsanity_is`, `worlds/age2de/test/test_caveman_withholds_upgrades.py::TestCavemanWithholdsAtStart::test_without_caveman_the_upgrade_is_granted`
+- [x] From #67: Attila + Joan + Genghis seed, caveman on, techsanity all, Existing Techs vanilla. In Attila 6, Joan 5 and Genghis 6 (each opens in Imperial), `has_upgrade_tech(DEMOLITION_SHIP)` is not `True_()` and asks for the Demolition Ship item, and `upgraded_away(DEMOLITION_RAFT)` is False. With caveman off, both are as at HEAD: `True_()` and True. Red: `worlds/age2de/test/test_caveman_withholds_upgrades.py::TestCavemanWithholdsDemolitionShips::test_caveman_asks_for_the_demolition_ship`; held before: `worlds/age2de/test/test_caveman_withholds_upgrades.py::TestCavemanWithholdsDemolitionShips::test_without_caveman_the_demolition_ship_is_handed_over`
+- [x] No identifier named `locked_at_start` remains in `worlds/age2de`. `grep -rn locked_at_start --include=*.py worlds/age2de` is empty.
+- [x] `python -m ruff check --select F,E9` is clean on the changed files, and the logic canaries pass. Ruff clean; pre-commit set incl. canaries 105 passed.
 
 **Out of scope:**
 - Caveman with techsanity off granting no starting techs: that is #75, a game-side fix.
@@ -166,3 +166,7 @@ The logic lets P1 train Man-at-Arms with no upgrade item and treats the Militia 
 #75 changed direction. It no longer fixes the game. Instead, caveman now requires unitsanity on and techsanity `units` or `all`, and is turned off with a warning otherwise. Under those modes every upgrade tech the caveman clause can withhold is a location, so this brief stands as written. Its *Out of scope* line that calls #75 "a game-side fix" is now out of date.
 
 [#76](76-find-items-withholds-only-locations.md) changes `researched_at_start` after this ticket lands, so that Find Items no longer withholds techs that are not locations. It is blocked by this ticket.
+
+### Implementation (2026-11-05)
+
+Criterion 1 could not hold as written. Joan 1 is a fixed force with no Barracks and does not reach Feudal in logic, so `can_train(MAN_AT_ARMS)` is False there even with every item, at HEAD and after the fix. What the fix changes in Joan 1 is `has_upgrade_tech(MAN_AT_ARMS)`, which now asks for the Man-at-Arms item (red: `worlds/age2de/test/test_caveman_withholds_upgrades.py::TestCavemanWithholdsUpgradesInJoan::test_joan_1_asks_for_the_man_at_arms_upgrade`). The false/true `can_train` pair is proven in Joan 4 instead, which opens in Castle and trains (red: `...::test_joan_4_trains_man_at_arms_only_with_the_upgrade`). Maintainer accepted Joan 4 as the criterion's scenario (2026-11-05).

@@ -10,7 +10,6 @@ from ..locations.Civilizations import Age2CivData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
-from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from .bases import Age2RuleTestBase
 
 
@@ -104,7 +103,7 @@ class TestUpgradesWaitOnTheirItem(Age2RuleTestBase):
             tech = unit.upgrade_tech
             if tech is None or not world.pool.techs.includes(tech):
                 continue
-            if world.pool.techs.locked_at_start(tech):
+            if world.pool.techs.withheld_at_start(tech):
                 continue
             for scenario in world.rules.logic.scenarios:
                 if tech.age >= scenario.scenario.vanilla_age:
@@ -252,7 +251,7 @@ class TestExistingTechs(Age2RuleTestBase):
         world = self.build(techsanity=Techsanity.option_all,
                            existing_techs=ExistingTechs.option_find_items)
         for tech in world.pool.techs.shuffled:
-            self.assertTrue(world.pool.techs.locked_at_start(tech), tech.name)
+            self.assertTrue(world.pool.techs.withheld_at_start(tech), tech.name)
 
 
 class TestReplacementBuildingReachesSharedTechs(Age2RuleTestBase):

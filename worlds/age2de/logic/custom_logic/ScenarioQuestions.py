@@ -186,7 +186,7 @@ class ScenarioCanResearch(ScenarioQuestion, game="Age Of Empires II: Definitive 
 
     @override
     def answer(self, scenario: 'ScenarioLogic') -> Rule:
-        if scenario.logic.world.pool.techs.locked_at_start(self.tech):
+        if scenario.logic.world.pool.techs.withheld_at_start(self.tech):
             age = scenario.ages.has_reached(self.tech.age)
         else:
             age = scenario.ages.can_reach_structurally(self.tech.age)

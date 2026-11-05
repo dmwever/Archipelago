@@ -23,6 +23,7 @@ class TechPool:
         self._techsanity = options.techsanity
         self._shuffle_uniques = options.shuffle_unique_techs
         self._existing_techs_mode = options.existing_techs
+        self._caveman = options.caveman
         self._earliest_age = earliest_age
         self._civs = civs
         # A technology some included scenario can research: its civilisation has it, the scenario
@@ -46,8 +47,9 @@ class TechPool:
         return self._shuffle_uniques != ShuffleUniqueTechs.option_unshuffled
 
 
-    def locked_at_start(self, tech: Age2TechData) -> bool:
-        """Whether Existing Techs withholds a technology the scenario would grant."""
+    def withheld_at_start(self, tech: Age2TechData) -> bool:
+        if self._caveman and TechOption.units in tech.tech_options:
+            return True
         if self._existing_techs_mode == ExistingTechs.option_find_items:
             return True
         if self._existing_techs_mode == ExistingTechs.option_start_in_dark_age:
@@ -60,7 +62,7 @@ class TechPool:
         """Existing Techs. A scenario auto-researches everything below the age it
         starts in, so unless this mode withholds it, a technology no scenario starts
         below is granted on load and never becomes a location the game can check."""
-        if self.locked_at_start(tech):
+        if self.withheld_at_start(tech):
             return True
         return self._earliest_age <= tech.age
 
