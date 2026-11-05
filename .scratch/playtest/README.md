@@ -63,7 +63,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 57 | [Joan 2's castles have no "any" branch, so destroying one sends nothing](issues/57-joan2-castles-missing-any-branch.md) | done |
 | 58 | [Joan 3's Transport Ships never spawn, because caveman eats the boats that trigger them](issues/58-joan3-no-transport-ships.md) | done (pending in-game test) |
 | 59 | [Slay Fastolf is in logic without the castle that makes Fastolf appear](issues/59-joan3-slay-fastolf-needs-a-castle.md) | done (pending in-game test) |
-| 60 | [Restore standard victory threats (Wonder, relic) under custom victory](issues/60-genghis3-jin-wonder-no-threat.md) | ready-for-agent |
+| 60 | [Restore standard victory threats (Wonder, relic) under custom victory](issues/60-genghis3-jin-wonder-no-threat.md) | ready-for-human |
 | 61 | [Attila 6's "P5 has a wonder" watcher tests player 4, so Purple's Wonders are unwatched](issues/61-attila6-p5-wonder-watcher-wrong-player.md) | wontfix |
 | 62 | [Genghis pavilions: 4 is walled in by forest, 6 is out at the map edge](issues/62-genghis4-pavilion-walled-in.md) | done |
 | 63 | [The pavilion is invulnerable but still targetable](issues/63-pavilion-targetable-by-enemies.md) | done |
