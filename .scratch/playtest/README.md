@@ -70,7 +70,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 64 | [researched_at_start grants upgrade techs that caveman withholds](issues/64-researched-at-start-ignores-caveman.md) | needs-triage |
 | 65 | [Conquest victory is still on in seven scenarios, so Genghis 4 ends the moment Khwarazm falls](issues/65-conquest-victory-left-on.md) | done |
 | 66 | [Attila 3's gold items tribute 3000 from enemies who hold 500 and 600](issues/66-attila3-gold-tribute-exceeds-enemy-purse.md) | done (pending in-game test) |
-| 67 | [Demolition Raft does not upgrade to Demolition Ship](issues/67-demolition-raft-upgrade.md) | needs-info |
+| 67 | [Upgrade techs below a scenario's opening age are free in logic but withheld in game](issues/67-demolition-raft-upgrade.md) | ready-for-agent |
 | 68 | [Joan 5 declares victory on the refugees alone, without Joan reaching Compiegne](issues/68-joan5-victory-without-joan.md) | done (pending in-game test) |
 | 69 | [Starting Mule Cart Resources gives food in game but declares wood only in logic](issues/69-mule-cart-seed-declares-wood-only.md) | needs-triage |
 | 70 | [Joan 6's easy-difficulty siege spawns for Burgundy instead of Gaia](issues/70-joan6-difficulty-siege-spawns-for-burgundy.md) | done (pending in-game test) |
