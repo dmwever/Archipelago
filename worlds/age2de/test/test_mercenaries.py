@@ -1,36 +1,19 @@
-"""A mercenary is progression only where a rule leans on it, and that is two questions.
-
-Whether unitsanity turns a soldier it hands over into a location is derived from the pool, since
-that moves with the options. The eight a rule names with no location standing behind them cannot
-be derived from anything, so they are declared on the item as in_logic.
-Age2World.needs_mercenary is the two together, and TestMercenariesTheSeedNeeds is what keeps the
-flag honest: it compares the claim against the item dependencies of the rules a seed really built,
-with the unit locations open and shut, because the pool half decides nothing once they are shut.
-
-Source text cannot answer this. Since the unit grants became hand-authored, every mercenary is
-named exactly once, where its Has() rule is bound; whether that binding is an objective gate or a
-hand-over is decided by what consumes the name, not by the mention.
-"""
-
 import unittest
 
 from BaseClasses import ItemClassification
 
 from ..client.DataStorage import DataStorage
-from . import bases
 from ..items import Items
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
 
-class TestMercenaryLogicFlag(unittest.TestCase):
+class TestMercenaryClassification(unittest.TestCase):
 
-    def test_classification_follows_in_logic(self) -> None:
+    def test_every_mercenary_is_progression(self) -> None:
         for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]:
-            expected = (ItemClassification.progression if item.type.in_logic
-                        else ItemClassification.useful)
-            self.assertEqual(expected, Items.classification_for(item),
-                             f"{item.item_name} is classified against its own in_logic flag")
+            self.assertEqual(ItemClassification.progression, Items.classification_for(item),
+                             f"{item.item_name} is not progression")
 
 
 class TestPackedBitfields(unittest.TestCase):
@@ -139,66 +122,3 @@ class TestMercenaryUnits(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-class TestMercenariesTheSeedNeeds(bases.Age2RuleTestBase):
-    """A mercenary is progression only where a rule leans on it, and which mercenaries those are
-    is a property of the seed: seven are named with the unit locations shut, the unit lines carry
-    it to eighteen, and opening the heroes names Subotai's Army too. The declared in_logic flag
-    carries the ones no location stands behind; the pool carries the rest, because whether a
-    soldier becomes a location is what decides them.
-    """
-
-    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
-    starting_campaigns = ["Attila the Hun"]
-
-    def referenced(self, world) -> set:
-        """The mercenary names this seed's access rules actually ask for."""
-        names = {item.item_name for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]}
-        found: set[str] = set()
-        for spot in (*world.multiworld.get_locations(world.player),
-                     *world.multiworld.get_entrances(world.player)):
-            dependencies = getattr(spot.access_rule, "item_dependencies", None)
-            if dependencies is None:
-                continue
-            found |= names & dependencies().keys()
-        return found
-
-    def needed(self, world) -> set:
-        return {item.item_name for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]
-                if world.needs_mercenary(item)}
-
-    def test_the_seed_claims_exactly_what_its_rules_ask_for(self):
-        for options in ({}, {"unitsanity": 1}, {"unitsanity": 2},
-                        {"unitsanity": 2, "techsanity": 3}):
-            with self.subTest(str(options)):
-                world = self.build(**options)
-                self.assertEqual(self.referenced(world), self.needed(world))
-
-    def test_the_claim_still_covers_the_rules_with_the_unit_locations_shut(self):
-        world = self.build(unitsanity=0)
-        self.assertLessEqual(
-            self.referenced(world), self.needed(world),
-            "unitsanity off leaves the pool half deciding nothing, so every mercenary a rule "
-            "names has to be carried by in_logic or fill places it as filler. The claim may run "
-            "ahead of the rules here, because a flag is one value for every seed, but a seed that "
-            "asks for more than it claims has locations behind an item fill is free to bury")
-
-    def test_the_set_grows_when_the_unit_locations_open(self):
-        """The flag alone could not say this - it is the same eight items either way."""
-        self.assertLess(self.needed(self.build()), self.needed(self.build(unitsanity=2)))
-
-    def test_what_the_seed_needs_is_pooled_as_progression(self):
-        world = self.build(unitsanity=2)
-        wanted = self.needed(world)
-        pooled = {item.name: item for item in world.multiworld.itempool
-                  if item.player == world.player
-                  and item.name in {m.item_name
-                                    for m in Items.CATEGORY_TO_ITEMS[Items.Mercenary]}}
-        self.assertTrue(pooled, "no mercenary reached the pool")
-        for name, item in pooled.items():
-            with self.subTest(name):
-                self.assertEqual(name in wanted,
-                                 ItemClassification.progression in item.classification,
-                                 "a rule depends on this, so fill has to place it as progression "
-                                 "or the locations behind it are unreachable")

@@ -188,6 +188,8 @@ reasoning behind each lives in the comments below.
   but `in_logic` is one value for every seed. Over-claiming costs fill weight and strands nothing;
   dropping the flag would under-claim it from Unitsanity Line up, because the pool half cannot see
   Champion behind `AUTHORED_TRIGGER_UNITS`. Closing this properly needs #77.
+- 2026-11-06 - The three rulings above are superseded: every mercenary is progression, and
+  `in_logic` is deleted. See [#77](77-mercenary-classification-misses-non-unit-checks.md).
 
 ## Agent Brief
 

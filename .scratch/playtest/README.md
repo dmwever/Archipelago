@@ -80,4 +80,4 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 74 | [Unitsanity enables upgraded unit tiers with no upgrade-tech gate](issues/74-skirmishers-train-elite-without-the-research.md) | ready-for-human |
 | 75 | [Caveman with techsanity off grants no starting techs](issues/75-caveman-without-techsanity-grants-no-starting-techs.md) | done |
 | 76 | [Find Items withholds techs that are not locations in logic, but the game grants them](issues/76-find-items-withholds-only-locations.md) | done |
-| 77 | [A mercenary that is a way to a non-unit check is classified by nothing](issues/77-mercenary-classification-misses-non-unit-checks.md) | ready-for-human |
+| 77 | [A mercenary that is a way to a non-unit check is classified by nothing](issues/77-mercenary-classification-misses-non-unit-checks.md) | wontfix (superseded) |
