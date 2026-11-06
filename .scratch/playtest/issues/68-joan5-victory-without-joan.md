@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done (in-game checks in #78)
 
 ## Report
 
@@ -78,3 +78,7 @@ to be done; only the scenario is lenient. So this is a scenario-side fix with no
 | `variable 0 == 6` | six refugees reached Compiegne |
 
 The looping `Refugees in Area 6` trigger can no longer supply both halves on its own.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

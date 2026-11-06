@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done (in-game checks in #78)
 
 ## Report
 
@@ -73,3 +73,7 @@ from. `Trigger 49` is also renamed `AP Give Red TC Gold`.
 The "likely cause" recorded above was wrong. The purse figures in that table were read against
 the wrong player numbering, and the fix was to point both tributes at player 4 rather than to
 change the amount.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

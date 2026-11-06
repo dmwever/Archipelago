@@ -3,7 +3,7 @@
 **Reported:** 2026-10-31, playtesting, as "The Jin Wonder in Genghis 3 is no threat, because
 custom victory turns it off"
 
-**Status:** ready-for-human. The work is in the working tree; the playtest criteria wait on an in-game run.
+**Status:** done (in-game checks in #78)
 
 **Category:** enhancement
 
@@ -254,3 +254,7 @@ then a new silent `mutable InitScenarioThreats()`, which Genghis 3 and Attila 6 
     removed when the Wonder goes.
 - Timer ids: Wonders use 0-7 (`THREAT_WONDER_CAPACITY`), relics use 8. Neither scenario uses timers.
 - If the holder of all relics changes, even to an ally, the relic countdown is cancelled and re-armed.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

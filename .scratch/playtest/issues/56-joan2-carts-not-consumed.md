@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-30, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done
 
 ## Report
 

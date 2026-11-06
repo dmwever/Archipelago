@@ -50,11 +50,11 @@ untouched. Each row stays in logic as the third column says until it is tested.
 
 ### The spent record (item-delivery-cursor)
 
-- [ ] **09** Spend a trap on one machine, connect from a second machine with an older state file,
+- [x] **09** Spend a trap on one machine, connect from a second machine with an older state file,
       and confirm the trap does not re-fire.
-- [ ] **10** Spend a mercenary, run `/install` with the scenario attached, and confirm the mercenary
+- [x] **10** Spend a mercenary, run `/install` with the scenario attached, and confirm the mercenary
       stays out of the pavilion and spent traps don't re-fire.
-- [ ] **11** Finish a mercenary while reconnecting, and confirm it stays spent and out of the
+- [x] **11** Finish a mercenary while reconnecting, and confirm it stays spent and out of the
       pavilion.
 
 ## Comments
@@ -269,3 +269,5 @@ nothing; the spawned Khan at (94,45) is what proves the row is live.
 ### Closed (2026-11-03)
 
 Closed by the maintainer: the in-game checks on this list are done.
+
+The three spent-record checks (09, 10, 11) are done, per the maintainer on 2026-11-06.

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-03, playtesting
 
-**Status:** ready-for-human (candidate gate in the working tree, unproven; the spike decides: [spikes/74](../spikes/74/README.md))
+**Status:** done (in-game checks in #78)
 
 **Related:** [#64](64-researched-at-start-ignores-caveman.md) (the other "something grants an
 upgrade caveman withheld")
@@ -207,3 +207,7 @@ unified with it or deliberately left looser.
   an XS-side defect only.
 - #67 and #73 are separate bugs and stay separate. Some of the units they name also appear on this
   ticket's upgrade-first list, which is a coincidence of the unit table, not a shared cause.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

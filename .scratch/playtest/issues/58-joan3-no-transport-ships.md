@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-30, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done (in-game checks in #78)
 
 ## Report
 
@@ -84,3 +84,7 @@ arrives.
 
 `[D0] Finding Boats` keeps only its message. No Transport Ship is placed on the map, which
 matches vanilla - they have always been created at run time.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

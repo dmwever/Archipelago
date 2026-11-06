@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** ready-for-human. The fix is in the working tree; every criterion but the lint waits on an in-game run.
+**Status:** done (in-game checks in #78)
 
 **Related:** [#67](67-demolition-raft-upgrade.md), [#74](74-skirmishers-train-elite-without-the-research.md)
 (both turn on when `tryApplyEffect` fires)
@@ -151,3 +151,7 @@ change, and researching changes no row's items.
 Not proven by a test. XS has no test harness, so criteria 1 and 2 have no red/green test, and the
 in-game criteria have not been run. Criterion 2 holds by construction, because the item path's code
 is unchanged. Not checked in game.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done (in-game checks in #78)
 
 **Related:** [#31](31-ap-granted-units-start-as-gaia.md)
 
@@ -80,3 +80,7 @@ All four `create_object` effects in `Easy` (t18) and `Easy and Moderate` (t34) a
 
 They are Gaia again, inside the French Artillery and French Army areas, so the AP grants pick
 them up as the difficulty bonus they were meant to be.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done (in-game checks in #78)
 
 ## Report
 
@@ -106,3 +106,7 @@ arrived.
 The `scenarioId` guard is safe across scenarios: items are paid out again on scenario startup,
 and on a load once the item cursor catches up. An item received while P1 is elsewhere still pays
 when P1 reaches Attila 5.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

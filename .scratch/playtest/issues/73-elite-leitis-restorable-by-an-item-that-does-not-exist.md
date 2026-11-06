@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-02, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done (in-game checks in #78)
 
 ## Report
 
@@ -119,3 +119,7 @@ Test: `test_unit_item_agreement.py::TestTheInstalledUpgradeItemIsInTheSeed` writ
 through `InstallHandler` for techsanity `units` and `all` and checks that every upgrade item is
 `-1` or in the seed. It is red at HEAD (`{'1236': 3800}`) and green with the fix. Not checked
 in game.
+
+### Closed (2026-11-06)
+
+The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.

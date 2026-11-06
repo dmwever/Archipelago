@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-29, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done
 
 **Related:** [#51](51-in-game-checks.md) (the G1-1 row and its fix),
 [#53](53-granted-units-need-access.md)
@@ -76,3 +76,7 @@ self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN1_RECRUIT_THREE_T
 
 Grey needs blue, purple and green are mutually exclusive, and cyan needs more than the starting
 cavemen, so under caveman the Kereyids are the gate. Without caveman the location stays free.
+
+### Closed (2026-11-06)
+
+The fix is on the AP side only, so there is nothing to check in game.

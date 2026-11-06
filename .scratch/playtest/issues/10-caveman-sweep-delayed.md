@@ -428,7 +428,7 @@ This holds with caveman on and off. With caveman off, it is location checks alon
 The in-game criteria are run by the maintainer, in the `XsTesting` setup from #33 and #35 or in a
 live scenario. The agent's job is the code and the XS check.
 
-- [ ] With caveman on, during a pavilion muster of a multi-soldier mercenary (Kereyid Tribe), a
+- [x] With caveman on, during a pavilion muster of a multi-soldier mercenary (Kereyid Tribe), a
       separate, non-immune unit of a locked line placed on the map is cavemanified within 1 game
       second.
 - [x] A unit converted in the same second as P1 loses another unit is cavemanified within 1 game

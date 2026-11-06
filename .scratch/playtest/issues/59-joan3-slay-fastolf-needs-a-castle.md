@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-30, playtesting
 
-**Status:** done (pending in-game test)
+**Status:** done
 
 ## Report
 
@@ -80,3 +80,7 @@ self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN3_SLAY_FASTOLF],
 ```
 
 Fastolf appears only after one English castle falls, so the rule now asks for both.
+
+### Closed (2026-11-06)
+
+The fix is on the AP side only, so there is nothing to check in game.
