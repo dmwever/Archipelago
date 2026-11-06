@@ -1,4 +1,4 @@
-from ..Options import Caveman
+from ..Options import Caveman, Unitsanity
 from ..items.Items import Age2ItemData as I
 from ..items.Items import CATEGORY_TO_ITEMS, Mercenary
 from ..locations.Buildings import Age2BuildingData as B
@@ -19,9 +19,11 @@ class GrantTestBase(Age2RuleTestBase):
     campaigns = EVERY_CAMPAIGN
     starting_campaigns = EVERY_CAMPAIGN
     caveman = Caveman.option_false
+    unitsanity = Unitsanity.option_all
 
     def build(self, **options):
         options.setdefault("caveman", self.caveman)
+        options.setdefault("unitsanity", self.unitsanity)
         return super().build(**options)
 
     def hand_over(self, scenario, unit):

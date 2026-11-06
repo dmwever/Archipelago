@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-29, playtesting
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Related:** [#51](51-in-game-checks.md) (the G1-1 row and its fix),
 [#54](54-three-tribes-unreachable.md)
@@ -171,6 +171,23 @@ reasoning behind each lives in the comments below.
   work. The Cuman half is verified against the game data - see the `2026-11-05` ram comment.
 - 2026-11-05 - `in_logic` is not authored by hand. `test_mercenaries` derives it from an AST scan,
   so it follows the grants and every mercenary becomes progression.
+  **Superseded by the three 2026-11-06 rulings below.**
+- 2026-11-06 - A mercenary is in logic where it is *a way* to reach a check, not only where it is
+  the *only* way. A redundant branch still counts, so Roman Villagers is in logic although
+  Attila's Camp reaches `has_vils` as well.
+- 2026-11-06 - `in_logic` is authored by hand after all, and carries the mercenaries that are a
+  way to a check in **every** seed: Roman Villagers, Scythian Troops, Kereyid Tribe, Chinese
+  Engineers, Bombard Cannons, Hermit Monks, French Artillery, and A Single Longswordsman. The AST
+  scan is deleted. It could only see the one line that binds a mercenary's `Has()` rule, and
+  hand-authored grants made every mercenary carry exactly one such line, so it can no longer tell
+  an objective gate from a hand-over. `TestMercenariesTheSeedNeeds` keeps the flag honest instead,
+  against the item dependencies of the rules a seed really builds, with the unit locations open
+  and shut.
+- 2026-11-06 - A Single Longswordsman is over-claimed in unitsanity-off seeds and this is accepted.
+  It is a way to Own Champion wherever Champion is a check, and no way to anything where it is not,
+  but `in_logic` is one value for every seed. Over-claiming costs fill weight and strands nothing;
+  dropping the flag would under-claim it from Unitsanity Line up, because the pool half cannot see
+  Champion behind `AUTHORED_TRIGGER_UNITS`. Closing this properly needs #77.
 
 ## Agent Brief
 
@@ -215,20 +232,21 @@ scenario's `*Rules` class reads rather than rebuilding.
 
 **Acceptance criteria**
 
-- [ ] `default_mercenary_grants` no longer exists and nothing calls it
-- [ ] every ruling in `## Rulings` has a rule in code that matches it, for all 18 scenarios
-- [ ] `set(obtains_unit) == set(trigger_units)` holds for every scenario
-- [ ] Genghis 2 declares `starts_with_building[MILL]` on `tayichiud_base`
-- [ ] Genghis 5 declares `starts_with_building[MONASTERY]` on `Has(HERMITS)`
-- [ ] Genghis 3 gates its Engineers and Bombards grants, and its Siege Workshop, on
+- [x] `default_mercenary_grants` no longer exists and nothing calls it
+- [x] every ruling in `## Rulings` has a rule in code that matches it, for all 18 scenarios
+- [x] `set(obtains_unit) == set(trigger_units)` holds for every scenario
+- [x] Genghis 2 declares `starts_with_building[MILL]` on `tayichiud_base`
+- [x] Genghis 5 declares `starts_with_building[MONASTERY]` on `Has(HERMITS)`
+- [x] Genghis 3 gates its Engineers and Bombards grants, and its Siege Workshop, on
       `restorable_transport`
-- [ ] Own Militia is free under caveman from one global rule, not a grant on each scenario
-- [ ] `BATTERING_RAM` carries 35 as a variant id, so a regenerated `UnitData.xs` emits
+- [x] Own Militia is free under caveman from one global rule, not a grant on each scenario
+- [x] `BATTERING_RAM` carries 35 as a variant id, so a regenerated `UnitData.xs` emits
       `addUnitVariant` for it and Own Battering Ram answers to the ram Genghis 3 hands over as well
       as to a trained one
-- [ ] `test_mercenaries` passes: `in_logic` matches the mercenaries the rules name, and each is
-      classified progression
-- [ ] the pre-commit subset for the touched packages passes
+- [x] `test_mercenaries` passes: `in_logic` matches the mercenaries the rules name, and each is
+      classified progression - met by the 2026-11-06 rulings, which replace the AST scan with a
+      runtime pin against the rules a seed builds
+- [x] the pre-commit subset for the touched packages passes
 
 **Out of scope**
 
@@ -562,3 +580,51 @@ useful, which shifts fill weight.
 defined and still called, Joan 1 authors only its Transport Ship, Genghis 1 only its two `True_()`
 riders. The infrastructure the rulings lean on has landed - `AUTHORED_TRIGGER_UNITS`,
 `SCENARIO_TO_TRIGGER_UNITS`, ADR-0005. Moved to `ready-for-agent` with the brief above.
+
+### `in_logic` after the grants were authored (2026-11-06)
+
+The `2026-11-05` ruling said the flag would follow the grants and every mercenary would become
+progression. Both halves turned out wrong once the grants landed, and the measurements are here
+because they are what reopened it.
+
+**The AST scan cannot work any more.** Every one of the 21 mercenaries is now named exactly once
+across `rules/` and `logic/`, at the line that binds its `Has()` rule - `kereyid: Rule = Has(...)`,
+`subotais_army = Has(...)`. Whether that binding is an objective gate or a hand-over is decided by
+what consumes the name, not by the mention, so the scan sees bindings where it needs uses. Only
+`AP_JOAN_6_ARTILLERY` appears in `rules/` at all, so narrowing `RULE_PACKAGES` does not recover it
+either: the `2026-11-04` ruling moved the shared gates onto the starting state, which is what took
+Kereyid's reference out of `rules/genghis_1.py`.
+
+**What a seed really asks for.** Measured as the mercenaries named by the `item_dependencies` of
+any location or entrance access rule, against the eight declared flags:
+
+| seed | named by a rule | claimed | outlier |
+| --- | --- | --- | --- |
+| unitsanity 0, and with buildings shuffled, techsanity 1, caveman | 7 | 8 | A Single Longswordsman |
+| Unitsanity Line | 18 | 18 | none |
+| Unitsanity All, and with techsanity 3 + caveman | 19 | 19 | none |
+
+Nothing is ever under-claimed. The flag carries the seven that are a way to a check with the unit
+locations shut - objectives, defeat rules, `has_vils`, buildings - and the pool half carries the
+rest, because whether a soldier becomes a location is what decides them.
+
+**Why the criterion is "a way" and not "the only way".** A removal test - take one mercenary out of
+a state holding everything else, and see what stops being reachable - says only Chinese Engineers
+(13 spots, Into China's victory, its four defeats, Complete Into China) and Kereyid Tribe (3 spots,
+Crucible's victory, Pick Up Any Relic, Complete Crucible) are ever required. That criterion was
+tried and rejected: a mercenary classified useful never enters `prog_items`, so every route through
+it is dead to the solver, and a check whose routes are all useful items is unreachable. Being a
+route is what has to be classified.
+
+**What this does not cover.** The pool half asks one question, whether a roster unit is a unit or
+hero check in this seed, so it only notices unitsanity. Hermit Monks declares
+`starts_with_building[MONASTERY]`, and with `shuffle_buildings: Military` it is a way to that check
+- named by 102 spots in the measured seed - while the pool half claims nothing there. It comes out
+right only because Hermit Monks is on the always-list. Genghis 1's Naiman and Tayichi'ud tribes are
+the mirror image: they are correctly not progression, but only because their units sit in
+`AUTHORED_TRIGGER_UNITS`, which records that a trigger hands a unit over and not whether that
+trigger costs anything. Both are #77.
+
+Option shapes measured: unitsanity 0 / Line / All, techsanity 1 and 3, caveman on, and
+`shuffle_buildings` Base+Economy+Tech+Military+Castle. Not measured: `shuffle_villager`,
+`shuffle_ages`, `goal`, `market_trade`, `partner_trade`, `local_start`, `existing_techs`.

@@ -1,13 +1,17 @@
 """A mercenary is progression only where a rule leans on it, and that is two questions.
 
-A scenario objective that names one is declared on the item as in_logic, because those references
-live in hand-written rule code that nothing can derive from - the AST scan below is what keeps the
-flag honest. Whether unitsanity turns a soldier it hands over into a location is derived from the
-pool instead, since that moves with the options. Age2World.needs_mercenary is the two together.
+Whether unitsanity turns a soldier it hands over into a location is derived from the pool, since
+that moves with the options. The eight a rule names with no location standing behind them cannot
+be derived from anything, so they are declared on the item as in_logic.
+Age2World.needs_mercenary is the two together, and TestMercenariesTheSeedNeeds is what keeps the
+flag honest: it compares the claim against the item dependencies of the rules a seed really built,
+with the unit locations open and shut, because the pool half decides nothing once they are shut.
+
+Source text cannot answer this. Since the unit grants became hand-authored, every mercenary is
+named exactly once, where its Has() rule is bound; whether that binding is an objective gate or a
+hand-over is decided by what consumes the name, not by the mention.
 """
 
-import ast
-import pathlib
 import unittest
 
 from BaseClasses import ItemClassification
@@ -18,32 +22,8 @@ from ..items import Items
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
-RULE_PACKAGES = ("rules", "logic")
-
-
-def referenced_by_rules() -> set[str]:
-    """Names of mercenary items any rule or logic module mentions."""
-    mercenaries = {item.name for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]}
-    world = pathlib.Path(__file__).parent.parent
-    found: set[str] = set()
-    for package in RULE_PACKAGES:
-        for source in (world / package).rglob("*.py"):
-            tree = ast.parse(source.read_text(encoding="utf-8"))
-            for node in ast.walk(tree):
-                if (isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name)
-                        and node.value.id == "Age2ItemData" and node.attr in mercenaries):
-                    found.add(node.attr)
-    return found
-
 
 class TestMercenaryLogicFlag(unittest.TestCase):
-
-    def test_in_logic_matches_the_rules_that_exist(self) -> None:
-        declared = {item.name for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]
-                    if item.type.in_logic}
-        self.assertEqual(referenced_by_rules(), declared,
-                         "in_logic no longer matches the mercenaries the rules name; a rule was "
-                         "added or dropped without moving the flag with it")
 
     def test_classification_follows_in_logic(self) -> None:
         for item in Items.CATEGORY_TO_ITEMS[Items.Mercenary]:
@@ -51,13 +31,6 @@ class TestMercenaryLogicFlag(unittest.TestCase):
                         else ItemClassification.useful)
             self.assertEqual(expected, Items.classification_for(item),
                              f"{item.item_name} is classified against its own in_logic flag")
-
-    def test_a_mercenary_a_rule_needs_is_never_merely_useful(self) -> None:
-        for name in referenced_by_rules():
-            item = Items.Age2ItemData[name]
-            self.assertEqual(ItemClassification.progression, Items.classification_for(item),
-                             f"a rule depends on {item.item_name}, so fill has to place it as "
-                             "progression or the locations behind it are unreachable")
 
 
 class TestPackedBitfields(unittest.TestCase):
@@ -170,9 +143,10 @@ if __name__ == "__main__":
 
 class TestMercenariesTheSeedNeeds(bases.Age2RuleTestBase):
     """A mercenary is progression only where a rule leans on it, and which mercenaries those are
-    is a property of the seed: six are named at default options, and opening the unit locations
-    names five more. The declared in_logic flag covers the scenario objectives; the pool covers
-    the units, because whether a soldier becomes a location is what decides the rest.
+    is a property of the seed: seven are named with the unit locations shut, the unit lines carry
+    it to eighteen, and opening the heroes names Subotai's Army too. The declared in_logic flag
+    carries the ones no location stands behind; the pool carries the rest, because whether a
+    soldier becomes a location is what decides them.
     """
 
     campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
@@ -201,8 +175,17 @@ class TestMercenariesTheSeedNeeds(bases.Age2RuleTestBase):
                 world = self.build(**options)
                 self.assertEqual(self.referenced(world), self.needed(world))
 
+    def test_the_claim_still_covers_the_rules_with_the_unit_locations_shut(self):
+        world = self.build(unitsanity=0)
+        self.assertLessEqual(
+            self.referenced(world), self.needed(world),
+            "unitsanity off leaves the pool half deciding nothing, so every mercenary a rule "
+            "names has to be carried by in_logic or fill places it as filler. The claim may run "
+            "ahead of the rules here, because a flag is one value for every seed, but a seed that "
+            "asks for more than it claims has locations behind an item fill is free to bury")
+
     def test_the_set_grows_when_the_unit_locations_open(self):
-        """The flag alone could not say this - it is the same six items either way."""
+        """The flag alone could not say this - it is the same eight items either way."""
         self.assertLess(self.needed(self.build()), self.needed(self.build(unitsanity=2)))
 
     def test_what_the_seed_needs_is_pooled_as_progression(self):
