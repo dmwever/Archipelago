@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class Attila2StartingState(ScenarioStartingState):
     purple_vils: Rule = Has(Age2ItemData.AP_ATTILA_2_VILLAGERS.item_name)
-    scythian_troop: Rule = Has(Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name)
+    prisoners: Rule = Has(Age2ItemData.AP_ATTILA_2_DYRRHACHIUMS_PRISONERS.item_name)
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
@@ -25,8 +25,16 @@ class Attila2StartingState(ScenarioStartingState):
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario")
         self.has_vils = self.purple_vils
 
+        self.scythian_troop = (Has(Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name)
+                               & self.purple_vils)
+
         self.obtains_unit[U.VILLAGER_MALE] = self.purple_vils
         self.obtains_unit[U.VILLAGER_FEMALE] = self.purple_vils
+        self.obtains_unit[U.TARKAN] = self.prisoners
+        self.obtains_unit[U.HUSSAR] = self.prisoners
+        self.obtains_unit[U.MANGUDAI] = self.scythian_troop
+        self.obtains_unit[U.CAPPED_RAM] = self.scythian_troop
+        self.obtains_unit[U.ONAGER] = self.scythian_troop
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military

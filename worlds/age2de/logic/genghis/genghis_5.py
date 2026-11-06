@@ -30,6 +30,11 @@ class Genghis5StartingState(ScenarioStartingState):
         # A scout rides in unasked early on.
         self.obtains_unit[Age2UnitData.SCOUT_CAVALRY] = True_()
 
+        hermits = Has(Age2ItemData.AP_GENGHIS_5_HERMITS.item_name)
+        self.starts_with_building[Age2BuildingData.MONASTERY] = hermits
+        self.obtains_unit[Age2UnitData.MONK] = hermits
+        self.obtains_unit[Age2UnitData.ELITE_LEITIS] = hermits
+
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
         return {

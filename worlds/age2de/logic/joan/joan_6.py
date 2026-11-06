@@ -29,8 +29,10 @@ class Joan6StartingState(ScenarioStartingState):
         army = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
         self.must_steal_base = army   # the French army is how you take the English camp
         self.housing[Strength.SOME] = self.must_steal_base
+        artillery = Has(Age2ItemData.AP_JOAN_6_ARTILLERY.item_name)
+        lone_swordsman = Has(Age2ItemData.AP_JOAN_6_LONE_SWORDSMAN.item_name)
         self.obtains_unit[U.ARBALESTER] = army
-        self.obtains_unit[U.CHAMPION] = army
+        self.obtains_unit[U.CHAMPION] = army | lone_swordsman
         self.obtains_unit[U.HUSSAR] = army
         self.obtains_unit[U.PALADIN] = army
         self.obtains_unit[U.TREBUCHET_PACKED] = army
@@ -38,6 +40,9 @@ class Joan6StartingState(ScenarioStartingState):
         self.obtains_unit[U.VILLAGER_FEMALE] = army
         self.obtains_unit[H.LA_HIRE] = army
         self.obtains_unit[H.CONSTABLE_RICHEMONT] = army
+        self.obtains_unit[U.HAND_CANNONEER] = artillery
+        self.obtains_unit[U.BOMBARD_CANNON] = artillery
+        self.obtains_unit[H.JEAN_BUREAU] = artillery
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military

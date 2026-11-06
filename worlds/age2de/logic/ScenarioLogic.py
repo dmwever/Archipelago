@@ -42,15 +42,6 @@ class ScenarioStartingState:
         default_factory=lambda: {strength: False_() for strength in Strength},
     )
 
-    def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
-        from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
-        for item in SCENARIO_TO_ITEMS[scenario]:
-            if item.type_data is not Mercenary:
-                continue
-            for soldier in item.type.units:
-                self.obtains_unit[soldier.unit] = (
-                    self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
-
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         return {}
 
@@ -68,7 +59,6 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
-        data.default_mercenary_grants(scenario)
         from .scenarios.ScenarioAgeLogic import ScenarioAgeLogic
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic

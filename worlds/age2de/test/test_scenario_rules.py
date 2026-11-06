@@ -173,6 +173,7 @@ JOAN_5_SIEGE.append("Complete " + L.JOAN5_VICTORY.scenario.scenario_name)
 JOAN_6_ARMY = Age2ItemData.AP_JOAN_6_ARMY.item_name
 JOAN_6_ARTILLERY = Age2ItemData.AP_JOAN_6_ARTILLERY.item_name
 SCYTHIAN_TROOP = Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name
+PURPLE_VILS = Age2ItemData.AP_ATTILA_2_VILLAGERS.item_name
 
 GENGHIS_3_TRANSPORT = Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name
 GENGHIS_3_FINDS = [L.GEN3_FIND_ENGINEERS.global_name(), L.GEN3_FIND_BOMBARDS.global_name()]
@@ -343,16 +344,16 @@ class TestAttila2ScythianTroops(Age2RuleTestBase):
         beat_the_romans = self.access_rule(L.ATT2_BEAT_THE_ROMANS.global_name())
         restored = self.restore_items(Age2UnitData.CAPPED_RAM)
         self.assertIn(RAMS, restored)
-        self.assertFalse(beat_the_romans(self.state_with(SCYTHIAN_TROOP)))
+        self.assertFalse(beat_the_romans(self.state_with(SCYTHIAN_TROOP, PURPLE_VILS)))
         if len(restored) > 1:
             with self.subTest(short_of="the upgrade technology"):
-                self.assertFalse(beat_the_romans(self.state_with(SCYTHIAN_TROOP, RAMS)))
-        self.assertTrue(beat_the_romans(self.state_with(SCYTHIAN_TROOP, *restored)))
+                self.assertFalse(beat_the_romans(self.state_with(SCYTHIAN_TROOP, PURPLE_VILS, RAMS)))
+        self.assertTrue(beat_the_romans(self.state_with(SCYTHIAN_TROOP, PURPLE_VILS, *restored)))
 
     def test_without_caveman_the_scythian_troops_are_enough(self):
         self.build(**CAVEMAN_OFF)
         beat_the_romans = self.access_rule(L.ATT2_BEAT_THE_ROMANS.global_name())
-        self.assertTrue(beat_the_romans(self.state_with(SCYTHIAN_TROOP)))
+        self.assertTrue(beat_the_romans(self.state_with(SCYTHIAN_TROOP, PURPLE_VILS)))
 
 
 class TestGenghis3Transport(Age2RuleTestBase):

@@ -17,8 +17,6 @@ if TYPE_CHECKING:
 
 class Genghis3StartingState(ScenarioStartingState):
     transport: Rule = Has(Age2ItemData.AP_GENGHIS_3_TRANSPORT.item_name)
-    engineers: Rule = Has(Age2ItemData.AP_GENGHIS_3_ENGINEERS.item_name)
-    bombards: Rule = Has(Age2ItemData.AP_GENGHIS_3_BOMBARDS.item_name)
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
@@ -27,14 +25,23 @@ class Genghis3StartingState(ScenarioStartingState):
 
         self.restorable_transport = self.transport & logic.units.survives_caveman(
             Age2UnitData.TRANSPORT_SHIP)
-        self.restorable_bombards = self.bombards & logic.units.survives_caveman(
+        self.engineers = (Has(Age2ItemData.AP_GENGHIS_3_ENGINEERS.item_name)
+                          & self.restorable_transport)
+        self.bombards_reached = (Has(Age2ItemData.AP_GENGHIS_3_BOMBARDS.item_name)
+                                 & self.restorable_transport)
+        self.restorable_bombards = self.bombards_reached & logic.units.survives_caveman(
             Age2UnitData.BOMBARD_CANNON)
 
-        self.has_vils = self.engineers & self.restorable_transport
+        self.has_vils = self.engineers
         self.obtains_unit[Age2UnitData.TRANSPORT_SHIP] = self.transport
+        self.obtains_unit[Age2UnitData.VILLAGER_MALE] = self.engineers
+        self.obtains_unit[Age2UnitData.VILLAGER_FEMALE] = self.engineers
+        self.obtains_unit[Age2UnitData.BATTERING_RAM] = self.engineers
+        self.obtains_unit[Age2UnitData.ROCKET_CART] = self.engineers
+        self.obtains_unit[Age2UnitData.BOMBARD_CANNON] = self.bombards_reached
 
         self.starts_with_building[Age2BuildingData.SIEGE_WORKSHOP] = (
-            self.bombards | self.engineers)
+            self.bombards_reached | self.engineers)
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
