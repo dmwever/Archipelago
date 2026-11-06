@@ -78,7 +78,14 @@ def routes_for(world: Age2World, data: Explained) -> list[Route]:
         return [_villager(world)]
     tiers = ([unit for unit in data.units if world.pool.units.includes(unit)]
              if isinstance(data, Age2UnitLineData) else [data])
-    return [*_trained(world, tiers), *_granted(world, data, tiers)]
+    return [*_trained(world, tiers), *_granted(world, data, tiers),
+            *_cavemanified(world, tiers)]
+
+
+def _cavemanified(world: Age2World, tiers: list[Age2UnitData]) -> list[Route]:
+    if not world.options.caveman.value or Age2UnitData.MILITIA not in tiers:
+        return []
+    return [Route("Ook Onk", "no onk", lambda sl: [Way(True_())])]
 
 
 # -- a scenario's own locations: its objectives and its victory ---------------------------------

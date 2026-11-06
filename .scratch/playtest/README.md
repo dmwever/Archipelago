@@ -56,7 +56,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 50 | [Caveman playtest: does the remaining force push through?](issues/50-caveman-playtest-remaining-force.md) | done (folds into #51) |
 | 51 | [In-game checks left over from finished tickets](issues/51-in-game-checks.md) | done |
 | 52 | [Genghis Khan scenarios have no AP locations in game](issues/52-genghis-no-ap-locations.md) | done |
-| 53 | [Units handed over reach logic without the access needed to reach them](issues/53-granted-units-need-access.md) | needs-info |
+| 53 | [Units handed over reach logic without the access needed to reach them](issues/53-granted-units-need-access.md) | done |
 | 54 | [Recruit Three Tribes is in logic when only two tribes can be reached](issues/54-three-tribes-unreachable.md) | done |
 | 55 | [Standing buildings do not bring their techs into logic](issues/55-standing-buildings-dont-open-their-techs.md) | done |
 | 56 | [Joan 2 does not remove P1's Trade Carts after they reach Orleans](issues/56-joan2-carts-not-consumed.md) | done |
@@ -80,4 +80,5 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 74 | [Unitsanity enables upgraded unit tiers with no upgrade-tech gate](issues/74-skirmishers-train-elite-without-the-research.md) | done (in-game checks in #78) |
 | 75 | [Caveman with techsanity off grants no starting techs](issues/75-caveman-without-techsanity-grants-no-starting-techs.md) | done |
 | 76 | [Find Items withholds techs that are not locations in logic, but the game grants them](issues/76-find-items-withholds-only-locations.md) | done |
+| 77 | [A mercenary that is a way to a non-unit check is classified by nothing](issues/77-mercenary-classification-misses-non-unit-checks.md) | wontfix (superseded) |
 | 78 | [In-game checks left over from finished tickets, round 2](issues/78-in-game-checks-round-2.md) | ready-for-human |

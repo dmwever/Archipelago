@@ -6,7 +6,7 @@ from Options import OptionError
 from rule_builder.cached_world import CachedRuleBuilderWorld
 import settings
 from typing import Any, ClassVar, Mapping
-from BaseClasses import CollectionState, Entrance, Item, ItemClassification, Location, MultiWorld, Region
+from BaseClasses import CollectionState, Entrance, Item, Location, MultiWorld, Region
 from NetUtils import JSONMessagePart
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, icon_paths, launch as launch_subprocess
@@ -31,7 +31,6 @@ from .locations import (
     Campaigns,
     Locations,
     Scenarios,
-    Units,
 )
 from .locations.Players import TRADE_BUILDINGS
 from .locations.VillagerJobs import Age2VillagerJobData
@@ -45,8 +44,8 @@ from .locations.connections import (
     ScenarioExclusions as ScenarioExclusions,
     ScenarioPlayers as ScenarioPlayers,
     ScenarioResources as ScenarioResources,
-    ScenarioStartupUnits,
-    ScenarioTriggerUnits,
+    ScenarioStartupUnits as ScenarioStartupUnits,
+    ScenarioTriggerUnits as ScenarioTriggerUnits,
     TechCounters as TechCounters,
     UnitBuildings as UnitBuildings,
     UnitCounters as UnitCounters,
@@ -398,28 +397,11 @@ class Age2World(CachedRuleBuilderWorld):
         item = Items.NAME_TO_ITEM[name]
         return Item(
             item.item_name,
-            self.classification_for(item),
+            Items.classification_for(item),
             item.id,
             self.player
         )
 
-    def classification_for(self, item: Items.Age2ItemData) -> ItemClassification:
-        if isinstance(item.type, Items.Mercenary) and self.needs_mercenary(item):
-            return ItemClassification.progression
-        return Items.classification_for(item)
-
-    def needs_mercenary(self, item: Items.Age2ItemData) -> bool:
-        if item.type.in_logic:
-            return True
-        scenario = item.type.vanilla_scenario
-        granted_anyway = (set(ScenarioStartupUnits.SCENARIO_TO_STARTUP_UNITS[scenario])
-                          | set(ScenarioTriggerUnits.AUTHORED_TRIGGER_UNITS[scenario]))
-        return any(self.pool.units.mercenary_exclusive_location(soldier.unit)
-                   if isinstance(soldier.unit, Units.Age2UnitData)
-                   else soldier.unit in self.pool.units.special_units
-                   for soldier in item.type.units
-                   if soldier.unit not in granted_anyway)
-    
     def get_filler_item_name(self) -> str:
         filler = []
         for item in Items.filler_items:

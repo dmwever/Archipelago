@@ -32,6 +32,10 @@ When your output names a domain concept (in an issue title, a refactor proposal,
 
 If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 
+## Speak in scenario terms, not file terms
+
+What reaches the maintainer is what a trigger needs, which item pays for it, and which units move. Grid coordinates, object reference ids and trigger indices belong in an audit table, not in a question put to them: a question they have to decode is a round spent.
+
 ## Flag ADR conflicts
 
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:

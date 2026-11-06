@@ -13,6 +13,7 @@ from ..VillagerJobs import Age2VillagerJobData
 
 
 UNIT_TO_VARIANT_IDS: dict[Age2UnitData, list[int]] = {
+    Age2UnitData.BATTERING_RAM: [35],
     Age2UnitData.HUSKARL: [759],
     Age2UnitData.VILLAGER_MALE: [56, 118, 120, 122, 123, 124, 156, 259, 579, 592, 1810, 1892, 2333],
     Age2UnitData.SPEARMAN: [1786],

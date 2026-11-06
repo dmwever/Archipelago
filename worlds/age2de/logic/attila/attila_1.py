@@ -36,6 +36,7 @@ class Attila1StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.MARKET] = self.has_bledas_camp
 
         self.obtains_unit[U.TARKAN] = True_()
+        self.obtains_unit[U.MANGUDAI] = Has(Age2ItemData.AP_ATTILA_1_MANGUDAI.item_name)
         self.obtains_unit[U.SCOUT_CAVALRY] = self.has_bledas_camp
         self.obtains_unit[U.VILLAGER_MALE] = self.has_bledas_camp | self.alternate_vils
         self.obtains_unit[U.VILLAGER_FEMALE] = self.has_bledas_camp | self.alternate_vils

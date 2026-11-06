@@ -18,6 +18,7 @@ from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 from .custom_logic.EconomyRoutes import Strength
 
 NOT_CAVEMAN = OptionFilter(Caveman, Caveman.option_false)
+IS_CAVEMAN = OptionFilter(Caveman, Caveman.option_true)
 
 if TYPE_CHECKING:
     from .. import Age2World
@@ -34,8 +35,11 @@ class UnitLogic:
     # -- owning ------------------------------------------------------------------------------
 
     def can_own_anywhere(self, unit: Age2UnitData) -> Rule:
-        return (self.can_train_anywhere(unit) | self.is_granted_anywhere(unit)
-                | self.can_convert(unit))
+        owned = (self.can_train_anywhere(unit) | self.is_granted_anywhere(unit)
+                 | self.can_convert(unit))
+        if unit is Age2UnitData.MILITIA:
+            return owned | IS_CAVEMAN
+        return owned
 
     def survives_caveman(self, unit: Age2UnitData) -> Rule:
         return NOT_CAVEMAN | self.can_restore(unit)

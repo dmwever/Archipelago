@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from rule_builder.rules import False_, Has, Rule, True_
 from ...locations.Buildings import Age2BuildingData
+from ...locations.Heroes import Age2HeroData
 from ...locations.Locations import Age2ScenarioLocationData
 from ...items.Items import Age2ItemData
 from ...locations.Ages import Age2AgeData
@@ -29,6 +30,11 @@ class Genghis6StartingState(ScenarioStartingState):
         self.starts_with_building[Age2BuildingData.CASTLE] = True_()
         self.starts_with_building[Age2BuildingData.STABLE] = True_()
         self.starts_with_building[Age2BuildingData.ARCHERY_RANGE] = True_()
+
+        subotais_army = Has(Age2ItemData.AP_GENGHIS_6_SUBOTAIS_ARMY.item_name)
+        self.obtains_unit[Age2HeroData.SUBOTAI] = subotais_army
+        self.obtains_unit[Age2HeroData.KHAN] = subotais_army
+        self.obtains_unit[Age2HeroData.SABOTEUR] = subotais_army
 
     def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
         military = scenario_logic.military
