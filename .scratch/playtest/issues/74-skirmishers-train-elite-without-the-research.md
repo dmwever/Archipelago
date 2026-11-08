@@ -211,3 +211,30 @@ unified with it or deliberately left looser.
 ### Closed (2026-11-06)
 
 The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.
+
+### Correction: the button is not bound by registration order (2026-11-06)
+
+The *Established* section says:
+
+> The engine binds a shared train button to the first unit enabled into it, and
+> `refreshUnitLocks` walks the unit table in registration order.
+
+**The first half is wrong.** Spiked in [`spikes/80/`](../spikes/80/README.md): the installed
+`UnitData.xs` was reordered so every line registers base-first, the `tier == 0` gate was removed,
+and an Archery Range was placed for a Mongol P1 at Imperial Age with the skirmisher line item
+held. Skirmisher (tier 0) was enabled before Elite Skirmisher (tier 1). **The Archery Range still
+showed Elite Skirmisher.**
+
+The eight upgrade-first lines were a real correlation, but registration order is not the cause,
+and sorting the installer's output fixes nothing.
+
+Nor is the rule simply "the most upgraded enabled tier wins". In the same run the Stable showed
+**Camel Rider** (tier 1) rather than Heavy Camel Rider (tier 2), with both enabled, age-reached
+and trainable by Mongols. The engine's actual rule is unknown.
+
+The fix does not depend on knowing it. The same run shows that removing the gate brings Elite
+Skirmisher back, so upgraded rows with a lower tier present must stay gated; and that removing
+the gate frees Camel Rider, so rows that are the lowest tier on their line must not be. That is
+[#80](80-camel-rider-stranded-by-the-tier-0-enable-gate.md).
+
+This ticket's criteria stay blocked on #80.

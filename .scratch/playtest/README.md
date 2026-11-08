@@ -81,4 +81,11 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 75 | [Caveman with techsanity off grants no starting techs](issues/75-caveman-without-techsanity-grants-no-starting-techs.md) | done |
 | 76 | [Find Items withholds techs that are not locations in logic, but the game grants them](issues/76-find-items-withholds-only-locations.md) | done |
 | 77 | [A mercenary that is a way to a non-unit check is classified by nothing](issues/77-mercenary-classification-misses-non-unit-checks.md) | wontfix (superseded) |
-| 78 | [In-game checks left over from finished tickets, round 2](issues/78-in-game-checks-round-2.md) | ready-for-human |
+| 78 | [In-game checks left over from finished tickets, round 2](issues/78-in-game-checks-round-2.md) | done (layer 3 moved to #82) |
+| 79 | [Joan 5 victory counts refugees located, not escorted](issues/79-joan5-victory-counts-refugees-located-not-escorted.md) | done (in-game check in #78) |
+| 80 | [The tier == 0 enable gate strands Mongols' Camel Rider](issues/80-camel-rider-stranded-by-the-tier-0-enable-gate.md) | wontfix (premise disproved) |
+| 81 | [The threat owner arrays are indexed by player number instead of player - 1](issues/81-wonder-threat-owner-array-is-one-slot-short.md) | done |
+| 82 | [The in-game checks that only a person can make](issues/82-layer-3-in-game-checks.md) | done (9 played, 8 passed; #84 filed) |
+| 83 | [Joan 6's difficulty siege is spawned capturable, so the AP items can be walked past](issues/83-joan6-difficulty-siege-is-capturable.md) | done |
+| 84 | [A Wonder foundation is never tracked, so nothing reveals it](issues/84-wonder-foundation-is-never-tracked.md) | done |
+| 85 | [The Wonder countdown is a fixed 200 years, but the game's scales with map size](issues/85-wonder-countdown-ignores-map-size.md) | ready-for-agent |

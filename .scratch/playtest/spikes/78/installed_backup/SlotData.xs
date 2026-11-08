@@ -1,0 +1,14 @@
+extern const int AP_SLOT_ID = 1;
+extern const int AP_SEED_HIGH = 58234;
+extern const int AP_SEED_LOW = 33548;
+extern const int AP_TS_MODE = 3;
+extern const int AP_TS_BEHAVIOR = 0;
+extern const int AP_TS_UNIQUES = 1;
+extern const int AP_TS_EXISTING = 0;
+extern const int AP_SHUFFLE_AGES = 1;
+extern const int AP_US_MODE = 2;
+extern const int AP_US_ITEMS = 0;
+extern const int AP_US_VILLAGER = 2;
+extern const int AP_US_UNIQUES = 3;
+extern const int AP_US_CAVEMAN = 1;
+extern const int AP_TRAP_DIFFICULTY = 2;

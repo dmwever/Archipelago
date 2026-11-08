@@ -1,0 +1,57 @@
+Expected train menus for Mongols, from 107 installed rows
+34 unit lines, 40 rows that are granted-only or a profession
+
+A line shares one train button, so one line is one thing to look at.
+Phase 1 is every line item delivered and no upgrade researched.
+Phase 2 is every upgrade researched as well.
+
+ line   phase 1   phase 2   ladder
+  800         4       492   t0:4 -> t1:24 -> t2:492
+  801   nothing   nothing   t0:5(no)
+  802         7         6   t0:7 -> t1:6
+  804        11       561   t0:11 -> t1:561
+  805        13        13   t0:13
+  806        17        17   t0:17
+  808   nothing   nothing   t0:36(no)
+  809        38       569   t0:38 -> t1:283 -> t2:569(no)
+  810        39       474   t0:39 -> t1:474
+  815        74       567   t0:74 -> t1:75 -> t2:77 -> t3:473 -> t4:567
+  817        93       359   t0:93 -> t1:358 -> t2:359(no)
+  818       125       125   t0:125
+  819       128       128   t0:128
+  824       279       542   t0:279 -> t1:542
+  825       280       588   t0:280 -> t1:550 -> t2:588
+  826   nothing   nothing   t0:281(no) -> t1:531(no)
+  829       331       331   t0:331
+  830       420       420   t0:420
+  831       440       440   t0:440
+  832       448       441   t0:448 -> t1:546 -> t2:441
+  833       539       442   t0:539 -> t1:21 -> t2:442
+  834       545       545   t0:545
+  839   nothing   nothing   t0:755(no) -> t1:757(no)
+  857      1103       532   t0:1103 -> t1:529 -> t2:532
+  858      1104       528   t0:1104 -> t1:527 -> t2:528
+  859      1105      1105   t0:1105
+  868   nothing   nothing   t1:1236(no)
+  869      1258       548   t0:1258 -> t1:422 -> t2:548
+  872      1370      1372   t0:1370 -> t1:1372
+  884       329       330   t1:329 -> t2:330
+  887   nothing   nothing   t0:1795(no)
+  892   nothing   nothing   t0:1904(no)
+  928   nothing   nothing   t0:2700(no) -> t1:2701(no)
+  934      2626      2627   t0:2626 -> t1:2627 -> t2:2628(umbrella, gated)
+
+17 lines should change unit between the phases, 9 should stay put, 8 should stay empty.
+
+Phase 2 is what the SWEEP produces, which is not always what a player would see.
+The sweep writes every upgrade tech to Done, and a tech the civ lacks reports NotReady
+rather than Disabled, so the write goes through and the line runs past the civ's
+real top tier. Only an explicit gate in the mod stops it - the umbrella rows.
+
+Lines the sweep cannot judge, because it forces a tech this civ could not research:
+  line 809: a player would stop at 283, the sweep reaches 569
+  line 817: a player would stop at 358, the sweep reaches 359
+Those rows prove nothing either way. Every other line is a real test of the gate.
+
+29 distinct upgrade items across the table; 0 have no tech in the seed []
+The spike researches every tech the table names, straight out of TechData, so no list is hardcoded.
