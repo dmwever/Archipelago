@@ -187,7 +187,7 @@ New tunables go in `AP_Constants.xs`:
       is `inactive`, enabled only by `EnableRelicThreat()`, which nothing calls; scripted check red
       at HEAD, green now)*
 - [x] No file under `worlds/age2de/rules/` or `worlds/age2de/logic/` changes. *(held before)*
-- [ ] Manual playtest, run by the maintainer:
+- [x] Manual playtest, run by the maintainer:
   - [ ] Genghis 3: a Jin Wonder foundation reveals about 10 tiles around it.
   - [ ] Genghis 3: on completion, the announcement and on-screen timer appear. The timer line
         reads `<colour>Jin Wonder <TIMER>` and stands in for the objective line (XS has no Change
@@ -258,3 +258,7 @@ then a new silent `mutable InitScenarioThreats()`, which Genghis 3 and Attila 6 
 ### Closed (2026-11-06)
 
 The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

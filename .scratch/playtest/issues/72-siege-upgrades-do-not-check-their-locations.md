@@ -120,14 +120,14 @@ regardless of whether the item or the research came last.
   not caveman.
 
 **Acceptance criteria:**
-- [ ] Researching an upgrade whose tech item is already held marks the upgraded tier's unit row and
+- [x] Researching an upgrade whose tech item is already held marks the upgraded tier's unit row and
       sends its location on the next Unitsanity pass, without waiting for another research, another
       tech item, or a new unit.
-- [ ] Receiving the tech item for an upgrade that is already researched still behaves as it does
+- [x] Receiving the tech item for an upgrade that is already researched still behaves as it does
       today.
-- [ ] Verified in game for Siege Ram (location 363) and Siege Onager (location 376) in a techsanity
+- [x] Verified in game for Siege Ram (location 363) and Siege Onager (location 376) in a techsanity
       seed, item first and research second.
-- [ ] Verified in game for one non-siege tier-2 upgrade in the same seed, confirming the fix is not
+- [x] Verified in game for one non-siege tier-2 upgrade in the same seed, confirming the fix is not
       siege-specific.
 - [x] XS lint clean from the xs folder on the entry points that include the changed file, e.g.
       `./xs-check.exe -I . -- AP_Attila_1.xs`. All 18 `AP_<Campaign>_<n>.xs` entry points: no errors,
@@ -155,3 +155,7 @@ is unchanged. Not checked in game.
 ### Closed (2026-11-06)
 
 The game-side checks moved to [#78](78-in-game-checks-round-2.md). The AP side is done.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

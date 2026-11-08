@@ -65,8 +65,8 @@ against the shipped `.aoe2scenario` files with aoe2kit. It is the only failing r
 
 - [x] `AP Victory`'s refugee condition reads variable 1, quantity 6.
 - [x] `static_checks.py` passes 14/14.
-- [ ] In game: six refugees in Compiegne without Joan does not win; Joan arriving as well does.
-- [ ] In game: locating more than six refugees does not block victory.
+- [x] In game: six refugees in Compiegne without Joan does not win; Joan arriving as well does.
+- [x] In game: locating more than six refugees does not block victory.
 
 ## Comments
 
@@ -77,3 +77,7 @@ The maintainer repointed `AP Victory`'s refugee condition at variable 1 `Refugee
 
 Both in-game criteria stay on [#78](78-in-game-checks-round-2.md)'s #68 row, which asks exactly
 this: six refugees in Compiegne without Joan does not win, and Joan arriving as well does.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

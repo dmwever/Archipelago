@@ -45,7 +45,7 @@ STAGES = {
 }
 
 WONDER_COLLISION_X100 = 250
-WONDER_FOOTPRINT_TILES = 6
+WONDER_FOOTPRINT_TILES = 5
 
 results = []
 
@@ -188,9 +188,10 @@ def check_definition(rows):
     check("cUnitSizeX reads the Wonder's collision radius, 2.5 tiles",
           size_x == WONDER_COLLISION_X100 and size_y == WONDER_COLLISION_X100,
           f"cUnitSizeX={size_x / 100} cUnitSizeY={size_y / 100}"
-          f" - the dat agrees, but 2 x collision_size_x is NOT the tile footprint:"
-          f" a Wonder occupies {WONDER_FOOTPRINT_TILES}x{WONDER_FOOTPRINT_TILES} tiles,"
-          " measured in game 2026-11-07")
+          f" - 2 x collision_size_x IS the tile footprint:"
+          f" a Wonder occupies {WONDER_FOOTPRINT_TILES}x{WONDER_FOOTPRINT_TILES} tiles."
+          " The 6x6 measured in game 2026-11-07 was this spike placing the Wonder on a"
+          " tile corner, where a 5x5 straddles six columns; corrected 2026-11-08")
     check("cTrainTime is the build points a finished Wonder reaches", train > 0,
           f"cTrainTime={train}, cClearanceSizeX={clear_x / 100}"
           f" cClearanceSizeY={clear_y / 100}")

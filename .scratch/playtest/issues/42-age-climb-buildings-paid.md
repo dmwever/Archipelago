@@ -67,9 +67,9 @@ Open for triage:
 
 ## Acceptance criteria (draft, for triage)
 
-- [ ] The two `test_base_through_price.py` tests above pass against #38's age prices, unchanged.
-- [ ] Every allowlist line starting `Reach ` is gone, and `test_never_bare.py` is green.
-- [ ] The fill gate (`fuzz/bench/README.md`) passes, with #38's work in the tree.
+- [x] The two `test_base_through_price.py` tests above pass against #38's age prices, unchanged.
+- [x] Every allowlist line starting `Reach ` is gone, and `test_never_bare.py` is green.
+- [x] The fill gate (`fuzz/bench/README.md`) passes, with #38's work in the tree.
 
 ## Agent Brief
 
@@ -363,3 +363,7 @@ The results:
 - That seed now takes 11.8s, with the same spheres.
 - The full replay is faster than before #38.
 - The test subset runs in about half the time.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

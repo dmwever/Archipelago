@@ -249,38 +249,38 @@ in `.githooks/pre-commit`.
 Prove each new test red at HEAD with `worlds/age2de/tools/red_check.py`, and tick each box with
 its evidence.
 
-- [ ] The never-bare tree-walk test exists, is red at HEAD (Attila 3's Build Castle at least), is
+- [x] The never-bare tree-walk test exists, is red at HEAD (Attila 3's Build Castle at least), is
       green after, and runs in the pre-commit logic canaries.
-- [ ] Attila 1 under `allies_and_enemies`, with no food route and no Feudal Age Food, cannot run
+- [x] Attila 1 under `allies_and_enemies`, with no food route and no Feudal Age Food, cannot run
       Trade Cogs. With a forage or hunt route of *some*, or with Feudal Age Food, it can.
-- [ ] A Castle-start scenario runs its trade and relic routes with no age needs (no `food` need
+- [x] A Castle-start scenario runs its trade and relic routes with no age needs (no `food` need
       from Feudal or Castle).
-- [ ] Under `start_in_dark_age`, the same relic route needs food at scale and *some* gold.
-- [ ] Feudal Age Food is in the pool exactly when the #24 rule above says so, and absent in a
+- [x] Under `start_in_dark_age`, the same relic route needs food at scale and *some* gold.
+- [x] Feudal Age Food is in the pool exactly when the #24 rule above says so, and absent in a
       world where every enabled scenario starts in Feudal or later.
-- [ ] Reach Feudal is in logic with *some* food and no easy food. Reach Castle is in logic with
+- [x] Reach Feudal is in logic with *some* food and no easy food. Reach Castle is in logic with
       easy food and *some* gold, but no easy gold.
-- [ ] A second Town Center counts as a defence in a base scenario with no trade and no market,
+- [x] A second Town Center counts as a defence in a base scenario with no trade and no market,
       paid by ungated Farmers whose wood comes from "Lumberjacks with a Base".
-- [ ] A second Town Center as a camp never asks the Town Center items, and its route carries the
+- [x] A second Town Center as a camp never asks the Town Center items, and its route carries the
       Castle price and *some* wood and stone as needs.
-- [ ] An at-scale villager route at a built Mining Camp or Mill needs `wood: some`; at a standing
+- [x] An at-scale villager route at a built Mining Camp or Mill needs `wood: some`; at a standing
       one it needs nothing for the camp.
-- [ ] Every route that asks for a base needs `food: some`, and `wood: some` where the civilisation
+- [x] Every route that asks for a base needs `food: some`, and `wood: some` where the civilisation
       builds Houses (not for the Huns).
-- [ ] `test_defence_pays.py` pins "Lumberjacks with a Base" in the ungated layer and still passes
+- [x] `test_defence_pays.py` pins "Lumberjacks with a Base" in the ungated layer and still passes
       its acyclicity check.
-- [ ] Attila 3's Build Castle asks the Castle's cost and the Castle price. Genghis 5's castles ask
+- [x] Attila 3's Build Castle asks the Castle's cost and the Castle price. Genghis 5's castles ask
       the Castle price.
-- [ ] A unit location asks the unit's age price and a paid or standing training building.
-- [ ] Own Builder and Own Repairer (with no starting building) ask *some* of a buildable building.
-- [ ] Ageipelago: `case 1036` grants 500 food, and the cross-repo tests pass with
+- [x] A unit location asks the unit's age price and a paid or standing training building.
+- [x] Own Builder and Own Repairer (with no starting building) ask *some* of a buildable building.
+- [x] Ageipelago: `case 1036` grants 500 food, and the cross-repo tests pass with
       `AGEIPELAGO_PATH` set.
-- [ ] `test/route_catalog.md` is regenerated with `tools/route_catalog.py`, and the ticket says
+- [x] `test/route_catalog.md` is regenerated with `tools/route_catalog.py`, and the ticket says
       which routes were added, split or moved.
-- [ ] The fill gate (`fuzz/bench/README.md`) passes on the current seed set (it rolls `partner_trade`, so it covers enemy trade), and its row
+- [x] The fill gate (`fuzz/bench/README.md`) passes on the current seed set (it rolls `partner_trade`, so it covers enemy trade), and its row
       is recorded under Stored runs.
-- [ ] ADR-0002 and ADR-0003 carry the amendments drafted during triage (already in the tree). The
+- [x] ADR-0002 and ADR-0003 carry the amendments drafted during triage (already in the tree). The
       agent checks that they still match what was built.
 
 **Out of scope**
@@ -394,3 +394,7 @@ Rulings worth keeping:
 - **The army defence pays *some* of a training building**, and the walk now costs training and research
   buildings. Triage found the walk blind to them.
 - Order: #47, then #48, then #49.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

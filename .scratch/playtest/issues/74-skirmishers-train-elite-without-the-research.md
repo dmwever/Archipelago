@@ -181,19 +181,19 @@ unified with it or deliberately left looser.
 
 **Acceptance criteria:**
 
-- [ ] With `unitsanity_items: unit_line`, receiving a line item in a scenario whose opening age is
+- [x] With `unitsanity_items: unit_line`, receiving a line item in a scenario whose opening age is
       at or above an upgraded tier's age does not make that upgraded tier trainable.
-- [ ] The base tier of that line is still trainable as soon as its own age is reached.
-- [ ] Once the upgrade is applied, the upgraded tier becomes trainable without needing a further
+- [x] The base tier of that line is still trainable as soon as its own age is reached.
+- [x] Once the upgrade is applied, the upgraded tier becomes trainable without needing a further
       item.
-- [ ] Holds with techsanity off, where the upgrade tech is researched normally and no tech item
+- [x] Holds with techsanity off, where the upgrade tech is researched normally and no tech item
       exists.
-- [ ] Behaviour does not depend on the order rows are registered in the unit table. A test that
+- [x] Behaviour does not depend on the order rows are registered in the unit table. A test that
       pins this should cover a line registered upgrade-first (the skirmisher line is the natural
       fixture) as well as a base-first line.
-- [ ] `reconstructStartingState`'s decisions are not contradicted: under caveman, an upgrade tech
+- [x] `reconstructStartingState`'s decisions are not contradicted: under caveman, an upgrade tech
       below the scenario's vanilla age is withheld, and its unit tier stays untrainable.
-- [ ] In-game check in Joan 4: the Archery Range offers Skirmisher, the Dock offers Galley and
+- [x] In-game check in Joan 4: the Archery Range offers Skirmisher, the Dock offers Galley and
       Demolition Raft, and each upgrade's research button is present and unresearched.
 
 **Out of scope:**
@@ -238,3 +238,7 @@ the gate frees Camel Rider, so rows that are the lowest tier on their line must 
 [#80](80-camel-rider-stranded-by-the-tier-0-enable-gate.md).
 
 This ticket's criteria stay blocked on #80.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

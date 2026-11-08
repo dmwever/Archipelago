@@ -68,17 +68,17 @@ With caveman disabled, behaviour is unchanged.
 
 **Acceptance criteria:**
 
-- [ ] With caveman on and `existing_techs = vanilla`, `has_upgrade_tech` for a unit whose upgrade
+- [x] With caveman on and `existing_techs = vanilla`, `has_upgrade_tech` for a unit whose upgrade
       technology sits below the scenario's opening age resolves to a rule requiring both the
       technology and its item, not `True_()`. Demolition Ship in Attila 6, Joan 5 and Genghis 6
       are the concrete cases; Warships, Pikeman, Crossbowman and the other upgrade technologies
       behave the same way.
-- [ ] With caveman off, the same rule still resolves to `True_()`, and no non-upgrade technology
+- [x] With caveman off, the same rule still resolves to `True_()`, and no non-upgrade technology
       changes behaviour in either mode.
-- [ ] `upgraded_away` does not report a lower tier as upgraded away when caveman withholds the
+- [x] `upgraded_away` does not report a lower tier as upgraded away when caveman withholds the
       technology that would have done it.
-- [ ] A red check proves the new rules fail at HEAD.
-- [ ] `python -m ruff check --select F,E9` is clean on the changed files, and the logic canaries
+- [x] A red check proves the new rules fail at HEAD.
+- [x] `python -m ruff check --select F,E9` is clean on the changed files, and the logic canaries
       under `worlds/age2de/logic/` and `locations/` pass.
 
 **Out of scope:**
@@ -109,3 +109,7 @@ Moved to #64:
 - The Heavy Warships note, as an Out of scope item.
 
 This ticket's first acceptance criterion asks for "both the technology and its item". It is not carried over: for a tech below the opening age, `has_upgrade_tech` asks only for the item.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

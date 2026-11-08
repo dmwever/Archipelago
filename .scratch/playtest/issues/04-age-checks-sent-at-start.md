@@ -118,7 +118,7 @@ locked but still registered.
 - [x] `ShuffleAgesUpdate` still turns itself off once every age up to `apMaxAge` is done.
 - [x] `xs-check` passes on one entry point per campaign, e.g. `./xs-check.exe -I . -- AP_Joan_1.xs`
       (without `-I . --` it only prints usage).
-- [ ] Manual (maintainer, in game): Joan 1 with `shuffle_ages` on sends no age checks at start.
+- [x] Manual (maintainer, in game): Joan 1 with `shuffle_ages` on sends no age checks at start.
 
 **Out of scope:**
 - Fixed-force scenarios: no new flag, no special handling.
@@ -163,3 +163,7 @@ Two defects found in review and fixed before this was written up:
 **Not done, deliberately:** a review suggested replacing the three bools with a
 `FindLocationById(age) != cInvalidVector` scan in the rule. The grilling rules that out — "reads
 bools recorded in `InitAges`, one per age [...] No ledger scan per tick". Left as bools.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

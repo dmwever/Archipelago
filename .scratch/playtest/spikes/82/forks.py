@@ -13,7 +13,7 @@ BOMBARD_CANNON = 36
 PACKED_TREBUCHET = 331
 
 
-FOOTPRINT = {ARCHERY_RANGE: 3, DOCK: 3, WONDER: 6}
+FOOTPRINT = {ARCHERY_RANGE: 3, DOCK: 3, WONDER: 5}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -422,10 +422,11 @@ G3W = Fork(
         "Neither alive probe carries an expectation, because the look asks the player to"
         " destroy the finished Wonder. A creation that never placed is caught by the two slot"
         " probes, which forbid -1, and by PT82CreateNear's own red chat line.",
-        "A Wonder occupies 6x6 tiles, measured in game. THREAT_FOUNDATION_ROWS is the 4 rows of"
-        " line-of-sight 1 revealers that covers it, settled by eye over several runs of #84 and"
-        " not derived from the dat - 2 x collision_size_x gives 5, and it is wrong for this one"
-        " building.",
+        "A Wonder occupies 5x5 tiles: collision_size_x is 2.5 in the dat and 2 x that is the"
+        " footprint. THREAT_FOUNDATION_ROWS is the 5 rows of line-of-sight 1 revealers that"
+        " covers it. The 6x6 settled by eye over several runs of #84 was the spike placing the"
+        " Wonder at whole-integer coordinates - a tile corner - where a 5x5 straddles six"
+        " columns and six rows; corrected 2026-11-08.",
     ),
 )
 
@@ -555,8 +556,7 @@ J4M = Fork(
         "XS cannot read whether an object is enabled, which is why this one is an eye at all.",
         "The Archery Range and the Dock are placed on tiles the build picks out of the patched"
         " scenario, after P1's army has been moved, so they cannot land under it. Building"
-        " footprints in FOOTPRINT are measured in game; 2 x collision_size_x gives 5 for a"
-        " Wonder and the real footprint is 6.",
+        " footprints in FOOTPRINT come from 2 x collision_size_x in the dat; a Wonder is 5.",
     ),
 )
 

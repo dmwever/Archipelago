@@ -145,7 +145,7 @@ carries `is_main_opponent`, which no generator code reads; only tests and docs u
 - [x] `TestTheGuardRecordsAndRulesAgree` stays green with eight GUARDED docks.
       *Held:* green, with its fixtures adapted - see Comments. `test_shipped_records_and_guard_rules_match`
       now compares eight records with eight rules.
-- [ ] No identifier, comment or doc in either repo names a main opponent (`grep -rni "main.opponent"`
+- [x] No identifier, comment or doc in either repo names a main opponent (`grep -rni "main.opponent"`
       over `worlds/age2de` and Ageipelago's `docs/` comes back empty, fuzz output aside).
       *Held:* `grep -rniI "main.opponent"` (excluding `__pycache__` and `fuzz/fuzz_output*`) over
       both is empty.
@@ -159,13 +159,13 @@ carries `is_main_opponent`, which no generator code reads; only tests and docs u
       green.
 - [x] `test_determinism.py::TestCampaignOrder` stays green.
       *Held:* green in the pre-commit run below.
-- [ ] **Fill gate**, as #25: replay the 100 seeds in `fuzz_output_6f09d7ec6/yamls/` before (a
+- [x] **Fill gate**, as #25: replay the 100 seeds in `fuzz_output_6f09d7ec6/yamls/` before (a
       HEAD worktree) and after; no new failing seed. Record both counts.
       *Held:* before (`replay_3b376244.jsonl`, detached worktree at `3b376244`) 100/100 ok; after
       (`replay_issue26-dock-guards.jsonl`) 100/100 ok. Spheres and sphere 1 identical on all 100.
       Times void (shared machine). The seed yamls leave `partner_trade` at its default `allies`, so
       this gate never exercises an enemy dock: it shows no harm, not the rulings at work.
-- [ ] **Reported, not gated:** under `allies_and_enemies` with every item but the Villager, which
+- [x] **Reported, not gated:** under `allies_and_enemies` with every item but the Villager, which
       scenarios can be won. #25 measured Attila 1, 3, 6 and Joan 6 under a simulated guard.
       *Reported:* Attila + Joan + Genghis, `shuffle_villager: yes`, `allies_and_enemies`, every
       pool item but `Villager Line`, swept. HEAD wins 2: Joan 1, Genghis 1 (fixed force / no fight).
@@ -304,3 +304,7 @@ regenerates it. The writer check passed (detached worktree at HEAD: `git diff --
   with `partner_trade: allies_and_enemies` added. Documented in `fuzz/bench/README.md`. The #26
   gate on it: before (`3b376244`) 100/100 ok, after 100/100 ok, spheres and sphere 1 identical on
   all 100. Neither seed set enables Genghis Khan, so the Jin's dock is unexercised.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

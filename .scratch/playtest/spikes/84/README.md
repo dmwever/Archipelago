@@ -116,7 +116,10 @@ its build points reach `cTrainTime`, then 1.
 that matches the construction site was settled by eye, not by arithmetic from that: a
 square block of revealers, one per tile, anchored half a tile below the centre
 `xsGetUnitPosition` reports. For the 6x6 Wonder that is 4x4, which is now stated outright as
-`THREAT_FOUNDATION_ROWS` rather than derived from `cUnitSizeX`. The completed Wonder's circle was
+`THREAT_FOUNDATION_ROWS` rather than derived from `cUnitSizeX`. **Corrected 2026-11-08: the
+Wonder is 5x5 and the grid is now 5x5, centred.** Both halves of the by-eye result were
+compensating for a spike that placed the Wonder half a tile off the grid; see the correction
+below. The completed Wonder's circle was
 separately rebuilt on the same principle: four `THREAT_REVEAL_RADIUS` revealers in a block at the
 Wonder's centre, through the shared `RevealGrid`. Several attempts to derive either geometry -
 resizing, recentring, snapping to tile centres, shifting the grid by a tile - all came out wrong;
@@ -146,14 +149,22 @@ the mod, and `read.py` asserts that a foundation reaches a slot. Full write-up i
 kit dat unit <dat> 0 276   ->  WNDR collision_size_x = 2.5
 ```
 
-**`2 x collision_size_x` is not the tile footprint.** That rule gives 5 for a Wonder; a Wonder
-occupies **6x6** tiles, measured in game on 2026-11-07. The formula looked right because it
-matches buildings whose size is already known - House 1.0 (2x2), Barracks and Monastery 1.5
-(3x3), Town Center and Castle 2.0 (4x4) - and it was wrong for the one building this ticket is
-about. It cost several rounds of a reveal grid that was a tile short, each one needing a game boot
-to find out.
+**Corrected 2026-11-08: `2 x collision_size_x` IS the tile footprint, and a Wonder is 5x5.**
 
-Take the footprint from play, not from the dat.
+This file previously said the rule gives 5 but a Wonder occupies 6x6, measured in game on
+2026-11-07. The measurement was wrong, not the rule. `runFoundationCase` created the Wonder at
+`xsVectorSet(1.0 * (spotX + 18), 1.0 * (spotZ + 18), 0.0)` - whole integers, a tile *corner*. A
+building whose half-extent is 2.5 has to sit on a tile *centre* to align to the grid, so the
+spike's Wonder was half a tile off on both axes and covered part of six columns and six rows.
+What was measured was the misplacement, not the building.
+
+The rule matches every building whose size is independently known - House 1.0 (2x2), Barracks
+and Monastery 1.5 (3x3), Town Center and Castle 2.0 (4x4) - and it matches the Wonder as well.
+A half-integer half-extent means an odd footprint, which means the building belongs on a tile
+centre; an integer one means an even footprint and a tile corner. That is the thing to carry
+forward.
+
+Take the footprint from the dat. Check placement before trusting anything measured off a spike.
 
 ## What it still cannot answer
 

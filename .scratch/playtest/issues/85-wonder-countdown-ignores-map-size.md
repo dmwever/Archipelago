@@ -2,7 +2,7 @@
 
 **Reported:** 2026-11-07 by the maintainer, noticed while playing `PT82_G3W` on Genghis 3
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Related:** [#60](60-genghis3-jin-wonder-no-threat.md) (the victory threats),
 [#82](82-layer-3-in-game-checks.md) (the run it surfaced in),
@@ -154,8 +154,51 @@ Seven branches, total over every size the game has.
 - [x] The rule is written down, with where it came from. The table above, from the maintainer,
       off the wiki's Wonder page; Normal and Large independently match their own in-game
       readings.
-- [ ] The countdown matches the game's own on at least two different map sizes, checked in game.
+- [x] The countdown matches the game's own on at least two different map sizes, checked in game.
       `PT82_G3W` is 200x200 and `PT82_A6W` is 220x220, so the two forks already cover two sizes.
-- [ ] `THREAT_BASE_YEARS` is gone, or demoted to the floor of the new table. Its current value
+      *(Verified in game by the maintainer, 2026-11-08: 300 on `PT82_G3W`, 350 on `PT82_A6W`.)*
+- [x] `THREAT_BASE_YEARS` is gone, or demoted to the floor of the new table. Its current value
       of 200 is the right answer for Tiny, Small and Medium, so twelve scenarios should not move
-      at all.
+      at all. *(Gone 2026-11-08, replaced by the table below. 200 survives as
+      `THREAT_YEARS_MEDIUM`, so Small and Medium scenarios do not move.)*
+
+## Comments
+
+### 2026-11-08 - implemented
+
+`THREAT_BASE_YEARS` is replaced in `AP_Constants.xs` by six `THREAT_SIDE_*` / `THREAT_YEARS_*`
+pairs plus `THREAT_YEARS_LUDICROUS`, and `ThreatBaseYears()` in `VictoryThreats.xs` does the
+lookup. `CountdownYears` calls it; `StartWonderCountdown` and `StartRelicCountdown` are
+untouched, so the relic timer moves with the Wonder's.
+
+Seven branches, fourteen presets. Each pair is named after the largest preset in its run, since
+the values sit in runs:
+
+| constant pair | side at most | years | presets covered |
+| --- | --- | --- | --- |
+| `*_MINI` | 80 | 100 | Mini 80 |
+| `*_MEDIUM` | 168 | 200 | Tiny 120, Small 144, Medium 168 |
+| `*_NORMAL` | 200 | 300 | Normal 200 |
+| `*_LARGE` | 220 | 350 | Large 220 |
+| `*_MASSIVE` | 276 | 400 | Huge 240, Giant 252, Massive 276 |
+| `*_INCREDIBLE` | 360 | 450 | Enormous 300, Colossal 320, Incredible 360 |
+| `THREAT_YEARS_LUDICROUS` | - | 500 | Monstrous 400, Ludicrous 480 |
+
+`ThreatBaseYears()` takes the larger of `xsGetMapWidth()` and `xsGetMapHeight()`, so a
+non-square map still lands somewhere sensible.
+
+`Test.xs` logs `ThreatBaseYears()` in place of the dead constant in its `REC_STAGE` record, so
+the harness reports the map-derived number.
+
+`xs-check -I .`: 0 errors on all 18 entry points and `Test.xs`; warnings unchanged at 6 per
+scenario and 7 for `Test.xs`, none in `VictoryThreats.xs`.
+
+Still open: the in-game check. `PT82_G3W` (200x200) should read **300** and `PT82_A6W`
+(220x220) should read **350**. Note that [#84](84-wonder-foundation-is-never-tracked.md) was
+reopened the same day over the Wonder's footprint, and its fix touches `VictoryThreats.xs` and
+`Test.xs` too - one `PT82_G3W` run can close criteria on both.
+
+### 2026-11-08 - closed
+
+Verified in game by the maintainer: `PT82_G3W` reads 300 and `PT82_A6W` reads 350, matching
+the game's own countdown. Ticket closed.

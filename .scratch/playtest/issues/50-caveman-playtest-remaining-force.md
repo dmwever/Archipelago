@@ -34,5 +34,9 @@ untouched.
 
 ## Acceptance criteria
 
-- [ ] Each row is played and its result recorded under *Comments*.
-- [ ] Every row that fails has a follow-up ticket (or a fix) that gates it as the last column says.
+- [x] Each row is played and its result recorded under *Comments*.
+- [x] Every row that fails has a follow-up ticket (or a fix) that gates it as the last column says.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

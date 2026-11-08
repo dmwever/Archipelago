@@ -149,7 +149,7 @@ evidence.
       Monk at a standing/built Monastery, started in/advanced to Castle" (0/18 standing, 1/18
       built). Housing joined the needs of 58 routes (at scale) and the four trained-Monk relic
       routes (*some*).*
-- [ ] The fill gate passes on the current seed set, and its row is recorded under Stored runs.
+- [x] The fill gate passes on the current seed set, and its row is recorded under Stored runs.
       *Skipped by the maintainer, 2026-10-28.*
 
 **Out of scope**
@@ -237,3 +237,7 @@ destroyed; those two never reach P1, and up to 52 of Burgundy's units come with 
   `test_determinism.py` but `TestCampaignOrder`.
 - Memory climbs steadily through the long rule files (2.7-3.2 GB peaks); `test_age_price.py`
   reached 3.2 GB in 90 s.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

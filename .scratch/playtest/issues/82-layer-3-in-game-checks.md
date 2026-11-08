@@ -353,6 +353,9 @@ and puts the foundation at the centre, (125,168). The tenth Blacksmith, ref 9959
 block and stays. The nine are pinned, so a scenario edit that moves them fails the build.
 
 The finished Wonder goes to (167,165), the nearest clear flat 6x6 at least 24 tiles from the
+plot. **Corrected 2026-11-08: a Wonder is 5x5, so `FOOTPRINT[WONDER]` is now 5 and the search
+is 5x5; see [#84](84-wonder-foundation-is-never-tracked.md). The 6 reserved a tile more than
+it needed, which is why no placement ever failed on it.**
 plot. `THREAT_REVEAL_RADIUS` is 10, and the Jin town has no clear ground between 24 and 45 tiles
 out, so the two fog patches would otherwise overlap and the first check would be unreadable.
 

@@ -77,11 +77,14 @@ Two things that rule has to get right, both learned the hard way:
   the farm terrains are land but not buildable. The sets in `forks.py` come from
   `AoE2ScenarioParser/datasets/terrains.py`, not from memory.
 
-Building footprints are hand-set in `FOOTPRINT` (Archery Range 3, Dock 3, **Wonder 6**).
-`2 x collision_size_x` off `empires2_x2_p1.dat` is a tempting rule and it is **wrong** for the
-Wonder - it gives 5, the real footprint is 6, measured in game for
-[#84](../../issues/84-wonder-foundation-is-never-tracked.md). The engine still gets the last
-word: `PT82CreateNear` rings outward from the chosen tile, enables the object
+Building footprints are hand-set in `FOOTPRINT` (Archery Range 3, Dock 3, **Wonder 5**).
+`2 x collision_size_x` off `empires2_x2_p1.dat` is the rule, and it holds for the Wonder too:
+2.5 gives 5. **Corrected 2026-11-08.** This file previously said the rule was wrong here and the
+real footprint was 6, measured in game for
+[#84](../../issues/84-wonder-foundation-is-never-tracked.md). That measurement came off a spike
+that created the Wonder at whole-integer coordinates - a tile corner - where a building with a
+2.5 half-extent sits half a tile off the grid and straddles six columns and six rows. The engine
+still gets the last word: `PT82CreateNear` rings outward from the chosen tile, enables the object
 for that owner first, and chats the tile it managed to use.
 
 **Where a Wonder goes is in the scenario, not in a guess.** Attila 6 has a `place_foundation`

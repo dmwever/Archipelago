@@ -37,7 +37,7 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 31 | [Units handed to P1 by AP triggers start as Gaia, never capturable](issues/31-ap-granted-units-start-as-gaia.md) | done |
 | 32 | [Nothing may be unpaid: ages, buildings and units the logic asks without a price](issues/32-feudal-prerequisite-unpaid.md) | done (split into #37–#40, #42, #47–#49; Houses are #43's) |
 | 33 | [Spike: what do the caveman sweep and the unit checks cost per tick?](issues/33-unitsanity-sweep-cost-spike.md) | done |
-| 34 | [Without caveman, unit location checks wait for a quiet second](issues/34-unit-checks-starved-caveman-off.md) | done (folds into #10) |
+| 34 | [Without caveman, unit location checks wait for a quiet second](issues/34-unit-checks-starved-caveman-off.md) | done |
 | 35 | [Spike: can the unitsanity rule find P1's new units by id on every tick?](issues/35-unit-id-lookup-spike.md) | done |
 | 36 | [Which tests run on every commit, and what the easy-source snapshot is for](issues/36-pre-commit-test-curation.md) | wontfix |
 | 37 | [A test that no structural form is asked bare](issues/37-never-bare-test.md) | done |
@@ -88,4 +88,4 @@ Running list of issues found while playtesting Ageipelago. One file per issue un
 | 82 | [The in-game checks that only a person can make](issues/82-layer-3-in-game-checks.md) | done (9 played, 8 passed; #84 filed) |
 | 83 | [Joan 6's difficulty siege is spawned capturable, so the AP items can be walked past](issues/83-joan6-difficulty-siege-is-capturable.md) | done |
 | 84 | [A Wonder foundation is never tracked, so nothing reveals it](issues/84-wonder-foundation-is-never-tracked.md) | done |
-| 85 | [The Wonder countdown is a fixed 200 years, but the game's scales with map size](issues/85-wonder-countdown-ignores-map-size.md) | ready-for-agent |
+| 85 | [The Wonder countdown is a fixed 200 years, but the game's scales with map size](issues/85-wonder-countdown-ignores-map-size.md) | done |

@@ -541,18 +541,18 @@ and a net-zero change is still caught.
 
 **Acceptance criteria:**
 
-- [ ] A unit that caveman should knock down is knocked down within a small bounded number of seconds
+- [x] A unit that caveman should knock down is knocked down within a small bounded number of seconds
       while the unit count is changing every second — verified with a pavilion muster of a
       multi-soldier mercenary (e.g. Kereyid Tribe) with a non-immune unit of a locked line on the
       map.
-- [ ] A unit gained in the same second another unit is lost is knocked down within the same bound.
-- [ ] An owned-unit location check fires within the same bound under the same conditions.
-- [ ] Receiving a unit or tech item still lets an already-knocked-down unit climb back to its new
+- [x] A unit gained in the same second another unit is lost is knocked down within the same bound.
+- [x] An owned-unit location check fires within the same bound under the same conditions.
+- [x] Receiving a unit or tech item still lets an already-knocked-down unit climb back to its new
       tier, with no regression to the `cavemanTargetsStale` / `unitsDirty` path.
-- [ ] Mercenaries spawned at the pavilion are still never knocked down.
-- [ ] No measurable sim-thread stall at high population: the caveman sweep does not run every tick
+- [x] Mercenaries spawned at the pavilion are still never knocked down.
+- [x] No measurable sim-thread stall at high population: the caveman sweep does not run every tick
       at 200 pop.
-- [ ] `./xs-check.exe -I . -- AP_<Scenario>.xs` is clean for the scenario entry points (run from the
+- [x] `./xs-check.exe -I . -- AP_<Scenario>.xs` is clean for the scenario entry points (run from the
       xs folder; needs v0.2.30 or later).
 
 **Out of scope:**
@@ -564,3 +564,7 @@ and a net-zero change is still caught.
 - The garrison question above. If `xsGetPlayerUnitIds` hides garrisoned units, a unit knocked down
   on leaving a building is expected and is not this ticket.
 - Any change to the apworld logic. This is game-side only.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

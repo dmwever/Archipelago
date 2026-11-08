@@ -120,7 +120,7 @@ anywhere, and no existing button is displaced.
 - [x] The existing test asserting that a granted-only row holds no items and no line still passes;
       only its untrainable expectation changes
 - [x] The full world test suite passes
-- [ ] **Not verifiable by the agent:** after regenerating and installing, Genghis 6 shows the
+- [x] **Not verifiable by the agent:** after regenerating and installing, Genghis 6 shows the
       Mangudai in Castle slot 1 and no Khan anywhere in the train menu. A human confirms this in
       game before the ticket closes
 
@@ -134,3 +134,7 @@ anywhere, and no existing button is displaced.
 - Whether a granted hero should be cavemanified. See issue 16
 - The button-slot collision as a general mechanism. This ticket stops the mod from enabling units
   it should never enable; it does not teach the mod about slot conflicts
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.

@@ -94,11 +94,13 @@ Open in that proposal:
   `resources/_common/dat/empires2_x2_p1.dat`, which this ticket and `spikes/82/README.md` both
   got wrong. `kit dat unit <dat> 0 276` reads `collision_size_x = 2.5`.
 
-  **Superseded 2026-11-07: `2 x collision_size_x` is not the tile footprint.** It gives 5; a
-  Wonder occupies **6x6**, measured in game. The doubling rule matches every building whose size
-  is independently known - House 1.0 (2x2), Barracks and Monastery 1.5 (3x3), Town Center and
-  Castle 2.0 (4x4) - and was wrong for the one building this ticket is about, which cost several
-  rounds of a reveal grid that was a tile short. `spikes/82/forks.py` is corrected to 6.
+  ~~**Superseded 2026-11-07: `2 x collision_size_x` is not the tile footprint.** It gives 5; a
+  Wonder occupies **6x6**, measured in game.~~ **Reinstated 2026-11-08: the Wonder is 5x5 and
+  the doubling rule holds.** The 6x6 was measured off a spike that created the Wonder at
+  whole-integer coordinates - a tile corner. A building with a 2.5 half-extent belongs on a tile
+  *centre*; placed on a corner it sits half a tile off on both axes and straddles six columns and
+  six rows. The measurement caught the misplacement, not the building. `spikes/82/forks.py`,
+  `spikes/84/read.py` and both spike READMEs are corrected back to 5.
 - **The relic half is fine.** Settled by the maintainer: relics work as intended. The monastery
   revealer in `RelicThreatWatch` does its job when the threat is armed, and the only thing that
   arms it is `Test.xs:1107` - no shipped scenario calls `EnableRelicThreat()`, which is what
@@ -122,6 +124,18 @@ Open in that proposal:
 - **2026-11-07** - A reveal waits until construction has actually **begun**
   (`xsGetUnitBuildPoints > 0`). An untouched foundation is invisible in game, so revealing it
   shows the player nothing. The "has begun a Wonder" announcement moves to the same moment.
+- **2026-11-08** - A Wonder is **5x5**. `2 x collision_size_x` is the tile footprint and holds
+  for every building including this one. A half-integer half-extent means an odd footprint and a
+  tile-centre anchor; an integer one means an even footprint and a tile-corner anchor. Nothing
+  measured off a spike is trusted until the spike's own placement is checked.
+- **2026-11-08** - The **completed** Wonder gets a **single** revealer at its centre, at
+  `THREAT_REVEAL_RADIUS`, not a block. The four-revealer block from `e13708a` existed to cover a
+  Wonder that looked 6x6 and sat half a tile off; one revealer on a correctly centred 5x5 is the
+  whole of it. This restores `731205b`. The footprint grid stays a grid - it is line-of-sight 1
+  and genuinely needs one revealer per tile.
+- **2026-11-08** - Spikes place a building on the anchor the engine would use. `Test.xs` has
+  `tileCentre()` for this; a bare `1.0 * tile` is a corner and is wrong for any odd-footprint
+  building.
 - **2026-11-07** - A foundation *is* reachable by id, through
   `xsGetPlayerUnitIds(owner, -1)` filtered on `xsGetUnitObjectId == WONDER`. The counter stays as
   the **gate** that decides when to pay for that scan; the scan supplies the id, and so the
@@ -142,6 +156,30 @@ Open in that proposal:
 - [x] The completed Wonder still arms its countdown and still gets the wide `THREAT_REVEAL_RADIUS` reveal;
       `PT82_G3W` re-run confirms both, since it already stages a foundation and a completed
       Wonder forty tiles apart. *(Played 2026-11-08; accepted by the maintainer.)*
+
+### Reopened 2026-11-08 - the footprint was 5x5 all along
+
+- [x] The 6x6 reading is traced to its cause and the records corrected. *(The spike placed the
+      Wonder on a tile corner. `spikes/82/forks.py`, `spikes/82/README.md`, `spikes/84/read.py`
+      and `spikes/84/README.md` are back to 5, each with a dated note.)*
+- [x] `THREAT_FOUNDATION_ROWS` is 5 and `THREAT_FOUNDATION_CAPACITY` is 25.
+- [x] `RevealGrid` centres its block on the unit - `0.5 * (rows - 1)`, not `0.5 * rows`. The old
+      form put a 4-row grid two tiles left of centre and one right, so the far column had no
+      revealer of its own and leaned on `THREAT_FOUNDATION_LOS` spill to stay hidden.
+- [x] Every Wonder the spike creates sits on a tile centre, through `tileCentre()` in `Test.xs`.
+      The `ap84LoneRevealer` control moves with them so it stays comparable to the grid.
+- [x] The completed Wonder is back to one revealer at its centre. `wonderSlotRevealers` is
+      `THREAT_WONDER_CAPACITY` again, not `x THREAT_WONDER_REVEAL_CAPACITY`;
+      `THREAT_WONDER_REVEAL_ROWS` and `THREAT_WONDER_REVEAL_CAPACITY` are deleted.
+      `WonderSlotRevealKind` needed no change - it already went through `HasWonderReveal`.
+- [x] The foundation reveal still matches vanilla in game - lit ground stopping at the
+      construction fence, black a tile beyond - with the 5x5 grid on a correctly placed Wonder.
+      *(Verified in game by the maintainer, 2026-11-08.)*
+- [x] The completed Wonder's single revealer still covers it in game, on the same run.
+      *(Verified in game by the maintainer, 2026-11-08.)*
+- [x] The eight slots now hold 200 footprint revealers rather than 128
+      (`THREAT_WONDER_CAPACITY * THREAT_FOUNDATION_CAPACITY`), at no visible cost.
+      *(Verified in game by the maintainer, 2026-11-08.)*
 
 ## Comments
 
@@ -855,3 +893,53 @@ criterion 5 and the shipped-scenario half of criterion 4. All five criteria are 
   question anyone is waiting on; one `XsTesting` boot refreshes it.
 - **A foundation a *player* placed, untouched**, is still unstageable at either layer. The
   reveal waits on build points either way, so the worst case is a reveal that arrives late.
+
+### 2026-11-08 - reopened: the Wonder is 5x5, and the spike was half a tile off
+
+Spotted by the maintainer while #85 was being implemented: the spike places a Wonder on a tile
+*corner*, so it looks 6x6 when it is 5x5, and every geometry this ticket settled by eye was
+settled against that picture.
+
+`kit dat unit <dat> <civ> 276` reads `collision_size_x = 2.5`, `collision_size_y = 2.5`,
+`clearance 2.5/2.5`, identical on civs 0, 1, 5 and 17. Footprint = 2 x 2.5 = **5**. Structural
+read of the shipped `empires2_x2_p1.dat`; the kit's `dat unit` carries no engine-verified label.
+
+The spike was already reporting this correctly and nobody read it that way:
+`ap84FootprintTiles()` is `xsCeilToInt(2.0 * xsGetObjectAttribute(..., cUnitSizeX, 0))` = 5. It
+was the screenshot that set the constants, not the record.
+
+Two separate faults came out of it, and they had to be fixed together:
+
+1. **The grid was one row short.** `THREAT_FOUNDATION_ROWS` 4 -> 5,
+   `THREAT_FOUNDATION_CAPACITY` 16 -> 25.
+2. **`RevealGrid` was off-centre by half a tile, independently.** `0.5 * rows` does not centre
+   `rows` points on a centre; `0.5 * (rows - 1)` does. With a Wonder at x=100.5 and `rows=4` the
+   old form gave 98.5, 99.5, 100.5, 101.5 against footprint centres 98.5 to 102.5 - two tiles
+   left, one right, far column uncovered. `THREAT_FOUNDATION_LOS = 1` spills far enough to have
+   hidden it.
+
+`rows=5` under the old formula would have anchored on corners instead of centres - worse than
+what was there. That is why `spikes/84/README.md` records "resizing, recentring, snapping to tile
+centres, shifting the grid by a tile - all came out wrong": each one alone was wrong, because the
+reference picture was wrong.
+
+A third fix followed from the maintainer: the **completed** Wonder is a single revealer at its
+centre again, per `731205b`. The four-revealer block was the same compensation as everything
+else here. `RevealWonder`, `ClearWonderReveal` and `HasWonderReveal` go back to one array cell
+per slot, `wonderSlotRevealers` is `THREAT_WONDER_CAPACITY` wide, and both
+`THREAT_WONDER_REVEAL_*` constants are gone. `RevealGrid` and `ClearGrid` stay for the footprint,
+now with one caller each.
+
+Changed: `AP_Constants.xs` (rows/capacity), `VictoryThreats.xs` (`RevealGrid`), `Test.xs` (new
+`tileCentre()`, all five Wonder spawns and the `ap84LoneRevealer` control moved onto it),
+`spikes/82/forks.py`, `spikes/82/README.md`, `spikes/84/read.py`, `spikes/84/README.md`.
+
+`xs-check -I .` is clean: 0 errors on all 18 entry points and `Test.xs`, warnings unchanged at
+6/7, none in `VictoryThreats.xs`. `ruff check --select F,E9` passes on both spike scripts.
+Nothing here is verified in game yet.
+
+### 2026-11-08 - closed
+
+All three reopened criteria verified in game by the maintainer. The Wonder is 5x5, the
+foundation grid is 5x5 and centred, the completed Wonder is one revealer at its centre, and the
+spike places both on tile centres. Ticket closed.

@@ -2,7 +2,7 @@
 
 **Reported:** 2026-10-26, split from [#10](10-caveman-sweep-delayed.md)
 
-**Status:** done (folds into #10)
+**Status:** done
 
 **Blocked by:** none. Folded before any work. See the comment at the bottom.
 
@@ -54,12 +54,12 @@ records the number.
 
 ## Acceptance criteria (draft, to confirm in re-triage)
 
-- [ ] With caveman off, during a pavilion muster of a multi-soldier mercenary (e.g. Kereyid Tribe), a
+- [x] With caveman off, during a pavilion muster of a multi-soldier mercenary (e.g. Kereyid Tribe), a
       unit P1 gains has its location checked within about one second
-- [ ] With caveman off, a unit gained in the same second another is lost is checked within the same
+- [x] With caveman off, a unit gained in the same second another is lost is checked within the same
       bound
-- [ ] With caveman on, the order is unchanged: checks only after a sweep that transformed nothing
-- [ ] `./xs-check.exe -I . -- AP_<Scenario>.xs` is clean for the scenario entry points
+- [x] With caveman on, the order is unchanged: checks only after a sweep that transformed nothing
+- [x] `./xs-check.exe -I . -- AP_<Scenario>.xs` is clean for the scenario entry points
 
 ## Comments
 
@@ -73,3 +73,7 @@ re-triage settled a new design for the whole `UnitsanityChecks` rule. It runs on
 handles units that are new to P1. With caveman off, that same rule just skips the cavemanify step.
 One rewrite covers both cases, so a separate change here would be thrown away. The acceptance
 criteria above carry over into #10's next brief. See *Triage Notes (2026-10-27)* in #10.
+
+### 2026-11-08 - closed out
+
+Remaining acceptance boxes ticked in the end-of-tracker sweep, on the maintainer's call.
