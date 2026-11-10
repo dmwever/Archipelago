@@ -24,6 +24,11 @@ class TestShuffleBuildingsKeys(unittest.TestCase):
         option.verify_keys()
         self.assertEqual({"Economy", "Archery Range", "Castle"}, option.value)
 
+    def test_all_validates_in_any_case_and_is_stored_canonically(self) -> None:
+        option = ShuffleBuildings.from_any(["aLL"])
+        option.verify_keys()
+        self.assertEqual({"All"}, option.value)
+
     def test_a_misspelled_building_is_rejected(self) -> None:
         with self.assertRaises(OptionError):
             ShuffleBuildings.from_any(["Fulwark"]).verify_keys()
@@ -31,7 +36,7 @@ class TestShuffleBuildingsKeys(unittest.TestCase):
     def test_only_the_categories_are_listed(self) -> None:
         """valid_keys is what the options page draws as checkboxes; building names stay off it."""
         self.assertEqual(
-            {"Base", "Economy", "Tech", "Military", "Castle", "Defense", "Unique", "Wonder"},
+            {"All", "Base", "Economy", "Tech", "Military", "Castle", "Defense", "Unique", "Wonder"},
             set(ShuffleBuildings.valid_keys),
         )
 
@@ -56,5 +61,20 @@ class TestCategoriesMixedWithNames(Age2TestBase):
                 Age2BuildingData.STABLE,
                 Age2BuildingData.CASTLE,
             ],
+            self.world.pool.buildings.shuffled,
+        )
+
+
+class TestAllShufflesEveryBuilding(Age2TestBase):
+
+    options = {
+        "enabled_campaigns": {"Attila the Hun", "Joan of Arc", "Genghis Khan"},
+        "starting_campaigns": {"Attila the Hun"},
+        "shuffle_buildings": {"All"},
+    }
+
+    def test_every_building_a_civ_in_the_seed_builds_is_shuffled(self) -> None:
+        self.assertEqual(
+            [building for building in Age2BuildingData if self.world.pool.civs.builds(building)],
             self.world.pool.buildings.shuffled,
         )

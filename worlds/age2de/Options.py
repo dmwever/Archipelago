@@ -49,6 +49,7 @@ class LocalStart(Choice):
 class ShuffleBuildings(OptionSet):
     """
     Determines which buildings to shuffle.
+        All: Shuffle every building in every category below.
         Base: Shuffle the town center and houses. Local Start's Base places these in your own world.
         Economy: Shuffle the market, resource buildings and farms. Includes dock.
         Tech: Shuffle the blacksmith and university.
@@ -62,6 +63,7 @@ class ShuffleBuildings(OptionSet):
     """
     display_name = "Shuffle Buildings"
     valid_keys = frozenset({
+        BuildingOption.all,
         BuildingOption.base,
         BuildingOption.economy,
         BuildingOption.tech,

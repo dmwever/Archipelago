@@ -5,6 +5,7 @@ from .Ages import Age2AgeData
 from ..items.Items import Age2ItemData
 
 class BuildingOption:
+    all = "All"
     base = "Base"
     economy = "Economy"
     tech = "Tech"
