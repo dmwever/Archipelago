@@ -99,6 +99,7 @@ class Age2Packet:
     completed_mercenary_id: int = -1
     acked_queue_serial: int = -1
     applied_item_count: int = 0
+    checked_locations_count: int = 0
     location_ids: List[int]
     
     def __init__(self, fp = None):
@@ -117,7 +118,8 @@ class Age2Packet:
         self.completed_mercenary_id = XsdatFile.read_int(fp)
         self.acked_queue_serial = XsdatFile.read_int(fp)
         self.applied_item_count = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 26)
+        self.checked_locations_count = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 25)
         while True:
             data = fp.read(4)
             if not data:
@@ -170,6 +172,7 @@ class Age2GameContext:
     missing_since: float = 0.0
     reported_install_mismatch: bool = False
     reported_packet_mismatch: str = ''
+    checked_set_armed: bool = False
 
     def __init__(self, client_interface):
         self.client_interface = client_interface
@@ -193,6 +196,7 @@ class Age2GameContext:
         self.client_status.player_name = player_name
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
+        self.checked_set_armed = True
         self.campaign_handler.setup_victory_requirements(slot_data)
         self.try_startup_game_connection()
         self.message_handler.add_message("Client Connected!")
@@ -215,6 +219,7 @@ class Age2GameContext:
         self.missing_since = 0.0
         self.reported_install_mismatch = False
         self.reported_packet_mismatch = ''
+        self.checked_set_armed = False
         self.current_packet = Age2Packet()
         self.client_status = ClientStatus(unlocked_items=[])
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
@@ -396,7 +401,13 @@ class Age2GameContext:
             return SlotData.UNSET, SlotData.UNSET
         return SlotData.seed_halves(tag)
 
+    def confirm_checked_set(self, read_count: int) -> None:
+        if read_count != len(self.client_status.checked_locations or ()):
+            self.checked_set_armed = True
+
     def ping_game(self) -> None:
+        send_checked_set = (self.checked_set_armed
+                            or len(self.current_packet.location_ids) != 0)
         try:
             with open(self.profile_folder() + "AP.xsdat", "wb") as fp:
                 XsdatFile.write_int(fp, self.current_packet.scenario_id)
@@ -408,12 +419,13 @@ class Age2GameContext:
                 XsdatFile.write_int(fp, high)
                 XsdatFile.write_int(fp, low)
                 XsdatFile.write_bool(fp, self.item_handler.in_flight()) # Send Items
-                XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
+                XsdatFile.write_bool(fp, send_checked_set) # Free Locations
                 XsdatFile.write_bool(fp, self.mercenary_handler.queue_serial()
                                      != self.current_packet.acked_queue_serial) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
                 XsdatFile.write_int(fp, self.mercenary_handler.ack()) # Ack mercenary
+            self.checked_set_armed = False
         except Exception as ex:
             print(ex)
 
@@ -535,6 +547,7 @@ async def status_tick(ctx: Age2GameContext) -> None:
         pass
     
     ctx.sync_delivery(packet.applied_item_count)
+    ctx.confirm_checked_set(packet.checked_locations_count)
 
     if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
         ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)

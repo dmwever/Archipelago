@@ -240,6 +240,31 @@ everything. A tech that is not a location is withheld only by Start In Dark Age;
 starts with it.
 _Avoid_: locked at start, held back
 
+**Checked**:
+A location the AP server records as collected. Global and permanent: it outlives the scenario that
+checked it, and every later scenario sees it checked. The game holds it per **registered location**
+as `scenarioComplete` (checked in the run now playing) or `serverComplete` (the client has
+acknowledged it), and learns it from `locations.xsdat`.
+_Avoid_: completed, done, collected
+
+**Unlocked**:
+The AP item for a thing has been received. Global and permanent like **checked**, and independent
+of it: the item that unlocks a tech and the item sitting at that tech's location are two different
+items, and either can arrive first.
+_Avoid_: received (where the thing is meant rather than its item), owned
+
+**Researched**:
+P1 has researched a tech in the run now playing. Per-run, rebuilt from nothing by `initTech` at
+every scenario start, so it is false for techs whose location is already **checked**. Checking a
+tech location requires researching it; being **checked** does not mean it is researched here.
+_Avoid_: checked, learned
+
+**Active**:
+A tech's effect is applied in the run now playing. Per-run like **researched**. It needs the tech
+**unlocked**, and under Must Research or for any upgrade it needs it **researched** in this run as
+well. A tech with no effect counts as active, because there is nothing left to wait for.
+_Avoid_: applied, granted, done
+
 ### Units
 
 **Unit row**:

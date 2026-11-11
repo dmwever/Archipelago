@@ -18,11 +18,12 @@ from ..locations.Campaigns import Age2CampaignData
 
 FIXED_INTS = 49
 SCENARIO_ID_OFFSET = 72
-RESERVED_AFTER_MERCENARY = 26
+RESERVED_AFTER_MERCENARY = 25
 
 
 def build_packet(scenario_id: int = 101, mercenary_id: int = -1, queue_serial: int = -1,
-                 applied_item_count: int = 0, locations: list[int] = ()) -> io.BytesIO:
+                 applied_item_count: int = 0, checked_locations_count: int = 0,
+                 locations: list[int] = ()) -> io.BytesIO:
     """A scenario packet exactly as AP_Write lays it out."""
     fp = io.BytesIO()
     XsdatFile.write_bool(fp, True)          # active
@@ -38,6 +39,7 @@ def build_packet(scenario_id: int = 101, mercenary_id: int = -1, queue_serial: i
     XsdatFile.write_int(fp, mercenary_id)   # first reserved int
     XsdatFile.write_int(fp, queue_serial)   # second reserved int
     XsdatFile.write_int(fp, applied_item_count)
+    XsdatFile.write_int(fp, checked_locations_count)
     for index in range(RESERVED_AFTER_MERCENARY):
         XsdatFile.write_int(fp, index)      # AP_Write writes the loop counter here, not zeros
     for location in locations:
@@ -107,3 +109,33 @@ class TestTheDeliveryCursor(unittest.TestCase):
         fp.seek(SCENARIO_ID_OFFSET)
         self.assertEqual(205, XsdatFile.read_int(fp))
 
+
+
+class TestTheCheckedLocationsAck(unittest.TestCase):
+    """The game reports how many checked ids its last read of locations.xsdat took in.
+
+    It came out of the reserved block, so it has to be read explicitly or it reads back as its own
+    loop index. The client compares it with the set it is writing and asks for another read while
+    the two disagree, so a stale value here means the game never learns the checked set.
+    """
+
+    def test_an_idle_packet_reports_an_empty_checked_set(self) -> None:
+        self.assertEqual(0, Age2Packet(build_packet()).checked_locations_count)
+
+    def test_the_ack_survives_the_reserved_block(self) -> None:
+        packet = Age2Packet(build_packet(checked_locations_count=12))
+        self.assertEqual(12, packet.checked_locations_count,
+                         "the loop counter filling the rest of the block must not bleed into this")
+
+    def test_taking_the_ack_did_not_move_the_scenario_id(self) -> None:
+        fp = build_packet(scenario_id=205, checked_locations_count=9)
+        fp.seek(SCENARIO_ID_OFFSET)
+        self.assertEqual(205, XsdatFile.read_int(fp))
+
+    def test_taking_the_ack_did_not_widen_the_fixed_header(self) -> None:
+        self.assertEqual(FIXED_INTS * 4, len(build_packet(checked_locations_count=4).getvalue()),
+                         "the reserved block must shrink by one to pay for the ack")
+
+    def test_the_ack_does_not_eat_the_location_tail(self) -> None:
+        packet = Age2Packet(build_packet(checked_locations_count=3, locations=[20101, 20102]))
+        self.assertEqual([20101, 20102], packet.location_ids)
