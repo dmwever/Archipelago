@@ -100,6 +100,7 @@ class Age2Packet:
     acked_queue_serial: int = -1
     applied_item_count: int = 0
     checked_locations_count: int = 0
+    current_packet_location_count: int = 0
     location_ids: List[int]
     
     def __init__(self, fp = None):
@@ -119,10 +120,13 @@ class Age2Packet:
         self.acked_queue_serial = XsdatFile.read_int(fp)
         self.applied_item_count = XsdatFile.read_int(fp)
         self.checked_locations_count = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 25)
-        while True:
+        self.current_packet_location_count = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 24)
+        # Read exactly the ids the game counted: a host such as the XS function injector may append
+        # its own section after them, and those bytes must never be sent as location checks.
+        for _ in range(self.current_packet_location_count):
             data = fp.read(4)
-            if not data:
+            if len(data) < 4:
                 break
             s = struct.unpack("<i", data)
             self.location_ids.append(s[0])

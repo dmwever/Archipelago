@@ -103,7 +103,7 @@ professions are left.
 
 ## Implementation Decisions
 
-**Three seams, agreed with the maintainer.** The game context, a new classification handler, and the
+**Three seams, agreed with the maintainer.** The game context, the location handler, and the
 install row generators. Nothing else gains a test boundary.
 
 **The scout reply is the single oracle.** The client scouts its own locations at connect without
@@ -112,11 +112,13 @@ unchecked one takes*. A location absent from the reply gets no status line regar
 game registered locally. This is what reconciles Buildsanity, where the game registers all
 thirty-five buildings in every seed while the world creates locations only for shuffled categories.
 
-**Classification travels on its own channel.** A new handler writes a classification file beside the
-existing startup files, following the shape the building, technology and unit handlers already use:
-a user folder is set, a sync method is handed what it needs, and it writes a flat file of ints. It
-is not folded into the per-tick checked-locations writer, because a scout-once table does not belong
-in a writer that runs every tick and because that file's layout is already pinned by tests.
+**Classification travels on its own channel.** It writes a classification file beside the existing
+startup files, following the shape the building, technology and unit handlers already use: a user
+folder is set, a sync method is handed what it needs, and it writes a flat file of ints. The
+channel is a second method on `LocationHandler` (09), which owns everything the client sends the
+game about locations. It shares that class with the checked-locations writer but neither its file
+nor its cadence: a scout-once table does not belong in a writer that runs every tick, and that
+file's layout is already pinned by tests.
 
 **The trap disguise colour is derived, never rolled.** It is a pure function of the seed and the
 location id, yielding one of the three non-trap colours. Any implementation that reaches for a
@@ -178,11 +180,12 @@ the installer, the packet a context produced. None of them reach inside to check
 helper was called, and none of them assert on text the game renders, because nothing in the test
 suite can see a tooltip.
 
-**The classification handler.** Tested exactly as the unit handler is: construct it, point it at a
-temporary folder, hand it scouted locations, read the file back as little-endian ints. Cover a
-location of each classification, a trap, an empty set, locations the handler should ignore, and that
-the same seed and location id produce the same trap colour across repeated calls and fresh handler
-instances. Prior art: `test_unit_handler.py`, `test_mercenary_handler.py`, `test_storage_handler.py`,
+**The location handler (09).** Tested exactly as the unit handler is: construct it, point it at a
+temporary folder, hand it what the channel under test takes, read the file back as little-endian
+ints. For classification, cover a location of each class, a trap, an empty set, locations the
+handler should ignore, and that the same seed and location id produce the same trap colour across
+repeated calls and fresh handler instances. For the checked set, cover the writer and the
+`CheckedLocationsCount` ack that 01 established. Prior art: `test_unit_handler.py`, `test_mercenary_handler.py`, `test_storage_handler.py`,
 with `test_xsdat.py` for the file encoding.
 
 **The install row generators.** Tested as the technology and unit catalogues are: build the table
@@ -196,8 +199,8 @@ checked-set read is armed once on connect rather than only after the game sends 
 a tick which raises still leaves the loop running. Prior art: `test_game_loop.py`,
 `test_ping_packet.py`, `test_mercenary_ack.py`.
 
-**The trap derivation gets no test file of its own.** It is exercised through the classification
-handler, which is the seam that has a contract.
+**The trap derivation gets no test file of its own.** It is exercised through the location
+handler's classification channel (09), which is the seam that has a contract.
 
 **The game half has no tests.** Tests in this repo must not read the Ageipelago checkout, so the XS
 side is covered by the linter and by reading it. Run the linter from the xs folder against the entry

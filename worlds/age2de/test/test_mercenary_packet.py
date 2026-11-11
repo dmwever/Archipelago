@@ -18,13 +18,16 @@ from ..locations.Campaigns import Age2CampaignData
 
 FIXED_INTS = 49
 SCENARIO_ID_OFFSET = 72
-RESERVED_AFTER_MERCENARY = 25
+RESERVED_AFTER_MERCENARY = 24
 
 
 def build_packet(scenario_id: int = 101, mercenary_id: int = -1, queue_serial: int = -1,
                  applied_item_count: int = 0, checked_locations_count: int = 0,
-                 locations: list[int] = ()) -> io.BytesIO:
-    """A scenario packet exactly as AP_Write lays it out."""
+                 locations: list[int] = (), current_packet_location_count: int | None = None,
+                 trailer: bytes = b"") -> io.BytesIO:
+    """A scenario packet exactly as AP_Write lays it out, plus any bytes a host appends after it."""
+    if current_packet_location_count is None:
+        current_packet_location_count = len(locations)
     fp = io.BytesIO()
     XsdatFile.write_bool(fp, True)          # active
     XsdatFile.write_int(fp, 1234)           # ping
@@ -40,10 +43,12 @@ def build_packet(scenario_id: int = 101, mercenary_id: int = -1, queue_serial: i
     XsdatFile.write_int(fp, queue_serial)   # second reserved int
     XsdatFile.write_int(fp, applied_item_count)
     XsdatFile.write_int(fp, checked_locations_count)
+    XsdatFile.write_int(fp, current_packet_location_count)
     for index in range(RESERVED_AFTER_MERCENARY):
         XsdatFile.write_int(fp, index)      # AP_Write writes the loop counter here, not zeros
     for location in locations:
         XsdatFile.write_int(fp, location)
+    fp.write(trailer)
     fp.seek(0)
     return fp
 
@@ -139,3 +144,39 @@ class TestTheCheckedLocationsAck(unittest.TestCase):
     def test_the_ack_does_not_eat_the_location_tail(self) -> None:
         packet = Age2Packet(build_packet(checked_locations_count=3, locations=[20101, 20102]))
         self.assertEqual([20101, 20102], packet.location_ids)
+
+
+class TestTheCurrentPacketLocationCount(unittest.TestCase):
+    """The game says how many location ids follow the header, so the client stops there.
+
+    Anything after them belongs to someone else -- the XS function injector appends its response
+    section to this same file -- and reading to EOF would send those bytes as location checks.
+    """
+
+    def test_an_idle_packet_carries_no_locations(self) -> None:
+        packet = Age2Packet(build_packet())
+        self.assertEqual(0, packet.current_packet_location_count)
+        self.assertEqual([], packet.location_ids)
+
+    def test_the_count_survives_the_reserved_block(self) -> None:
+        packet = Age2Packet(build_packet(locations=[20101, 20102, 20103]))
+        self.assertEqual(3, packet.current_packet_location_count,
+                         "the loop counter filling the rest of the block must not bleed into this")
+
+    def test_trailing_bytes_are_not_read_as_locations(self) -> None:
+        trailer = b"XSIJ" + bytes(range(28))
+        packet = Age2Packet(build_packet(locations=[20101, 20102], trailer=trailer))
+        self.assertEqual([20101, 20102], packet.location_ids)
+
+    def test_a_truncated_tail_reads_only_what_is_there(self) -> None:
+        packet = Age2Packet(build_packet(locations=[20101], current_packet_location_count=3))
+        self.assertEqual([20101], packet.location_ids)
+
+    def test_taking_the_count_did_not_move_the_scenario_id(self) -> None:
+        fp = build_packet(scenario_id=205, locations=[20101])
+        fp.seek(SCENARIO_ID_OFFSET)
+        self.assertEqual(205, XsdatFile.read_int(fp))
+
+    def test_taking_the_count_did_not_widen_the_fixed_header(self) -> None:
+        self.assertEqual(FIXED_INTS * 4, len(build_packet().getvalue()),
+                         "the reserved block must shrink by one to pay for the count")

@@ -1,8 +1,9 @@
 # 02: Classification reaches the game
 
 **What to build:** At connect the client asks the server what sits at each of its own locations,
-without creating hints, and hands the reply to a new classification handler that writes a flat file
-of ints into the profile folder beside the building, technology and unit files. Each entry says
+without creating hints, and hands the reply to `LocationHandler`'s classification channel (09),
+which writes a flat file of ints into the profile folder beside the building, technology and unit
+files. Each entry says
 which of the three colour classes the item at that location wears: progression, useful or filler.
 A trap wears one of those same three, derived from the seed and the location id, so the same trap
 reads the same way on every reconnect, reload and session and cannot be told from a genuine item of
@@ -10,7 +11,7 @@ that class. The reply is also the record of which locations this seed has at all
 server does not report is absent from the file rather than written with a default. Nothing in the
 game reads the file yet.
 
-**Blocked by:** None (can start immediately).
+**Blocked by:** 09 (the handler this channel is written on).
 
 **Status:** ready-for-agent
 
@@ -24,5 +25,7 @@ game reads the file yet.
       fresh handler instances; no random source is reached for anywhere
 - [ ] The handler is handed its folder the way the other startup handlers are, and its file is
       cleared alongside theirs when the client flushes or disconnects
-- [ ] The classification channel stays out of the per-tick checked-locations writer
+- [ ] The classification channel is written once at connect and never from the per-tick path. It
+      shares `LocationHandler` with the checked-locations writer but not its cadence or its file;
+      see the amended ruling in 09
 - [ ] The pre-commit subset for the files touched passes

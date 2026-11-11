@@ -8,7 +8,7 @@ Spec: [`worlds/age2de/docs/spec-description-status.md`](../../worlds/age2de/docs
 Decision record: [`worlds/age2de/docs/adr/0006-an-unchecked-location-is-coloured-by-its-item-classification.md`](../../worlds/age2de/docs/adr/0006-an-unchecked-location-is-coloured-by-its-item-classification.md)
 Vocabulary: `worlds/age2de/CONTEXT.md` — **checked**, **unlocked**, **researched**, **active**
 
-Seams agreed with the maintainer: the game context, a new classification handler, and the install
+Seams agreed with the maintainer: the game context, the location handler (09), and the install
 row generators. The game half of the work lives in the Ageipelago checkout and is covered by the
 linter rather than by tests.
 
@@ -23,6 +23,8 @@ linter rather than by tests.
 | 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | ready-for-agent |
 | 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | ready-for-agent |
 | 07 | [The Villager shows the profession row](issues/07-the-villager-shows-the-profession-row.md) | ready-for-agent |
+| 08 | [A checked location's trigger clears itself](issues/08-checked-triggers-clear-themselves.md) | ready-for-agent |
+| 09 | [The client's location channel is a handler](issues/09-the-location-channel-is-a-handler.md) | ready-for-agent |
 
 ## Rulings
 
@@ -43,3 +45,12 @@ linter rather than by tests.
 - 2026-11-11: The writer follows the bulk `serverComplete` pass as well as the single-id sites.
   Acceptance sits on 04 and is inherited by 05. It is also what covers a save loaded into a checked
   set that grew after it was saved, which 06's no-hook resume does not reach.
+- 2026-11-11: A location already checked on the server clears its scenario trigger through an OR'd
+  `script_call` condition, in 08. The XS flags are not collapsed and `CONTEXT.md`'s **Checked**
+  entry stands.
+- 2026-11-11: The 2026-11-10 separation ruling is amended, in 09. The checked-locations writer and
+  the scouted classification table are one handler with two channels: separate file and separate
+  cadence, same class. 02's acceptance and the spec are rewritten to match.
+- 2026-11-11: Save and load is acceptance on 08, not a ticket of its own. A save carries the game's
+  XS state and a reload brings the scenario triggers back as they were saved, so the gap is the
+  player redoing an objective the server already holds, not a lost checked set.

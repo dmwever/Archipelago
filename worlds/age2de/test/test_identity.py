@@ -155,7 +155,8 @@ def write_game_packet(slot_id: int, scenario_id: int, major: int = AP_WORLD_VERS
     XsdatFile.write_int(fp, scenario_id)
     XsdatFile.write_int(fp, minor)
     for i in range(29):
-        XsdatFile.write_int(fp, i)
+        # Fields 21-49; the fifth of them is CurrentPacketLocationCount, which bounds the tail.
+        XsdatFile.write_int(fp, len(location_ids) if i == 4 else i)
     for location_id in location_ids:
         XsdatFile.write_int(fp, location_id)
     return fp.getvalue()
