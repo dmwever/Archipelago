@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import ItemClassification
 
-from ...items.Items import Age2ItemData
+from ...items.Items import Age2ItemData, classification_for
 from ...locations.FillerLocations import Age2FillerLocationData, FillerKind
 from ...locations.connections.ScenarioMilestones import capability
 
@@ -63,9 +63,9 @@ class FillerPool:
 
     @cached_property
     def opening_scenarios(self) -> list['Age2ScenarioData']:
-        return [self._scenarios.of(campaign)[0]
+        return [self._scenarios.in_campaign(campaign)[0]
                 for campaign in self._campaigns.starting
-                if self._scenarios.of(campaign)]
+                if self._scenarios.in_campaign(campaign)]
 
     @cached_property
     def opening_locations(self) -> int:
@@ -86,7 +86,7 @@ class FillerPool:
     def progression_in(self, locations: int, unit_items: list[Age2ItemData]) -> int:
         plan = self._world.pool.item_plan(unit_items)
         structural = sum(1 for data in plan.pooled
-                         if self._world.classification_for(data)
+                         if classification_for(data)
                          & ItemClassification.progression)
         budget = max(0, int((locations - len(plan.pooled)) * RESOURCE_SHARE))
         return structural + budget

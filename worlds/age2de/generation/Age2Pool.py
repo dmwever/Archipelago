@@ -64,8 +64,9 @@ class Age2Pool:
                 continue
             elif isinstance(item.type, Items.StartingResources):
                 continue
-            elif isinstance(item.type, Items.TCResources):
-                plan.pooled.append(item)
+            elif isinstance(item.type, Items.SeedResources):
+                if item in self.resources.seeds:
+                    plan.pooled.append(item)
             elif isinstance(item.type, Items.Age2AgeData):
                 if item.type in self.ages.locations:
                     plan.pooled.append(item)
@@ -73,7 +74,7 @@ class Age2Pool:
                     plan.precollected.append(item)
             elif isinstance(item.type, (Items.Building, Items.Tech, Items.UnitLine,
                                         Items.UnitUpgrade, Items.UnitBuilding,
-                                        Items.VillagerProfession, Items.Trap)):
+                                        Items.VillagerProfession, Items.Trap, Items.Skip)):
                 continue
             else:
                 raise ValueError(f"Item {item} has unknown type {type(item.type)}")

@@ -112,6 +112,10 @@ class TestTheEconomyDoesNotMove(unittest.TestCase):
         from .. import Age2World
         from ..items import Items
         world = setup_solo_multiworld(Age2World, (), self.SEED).worlds[1]
+        # Pinned: only these campaigns have milestone capabilities, so the default campaign
+        # would select nothing and prove nothing.
+        world.options.enabled_campaigns.value = {"Joan of Arc", "Attila the Hun"}
+        world.options.starting_campaigns.value = {"Joan of Arc"}
         world.options.minimum_filler_locations.value = minimum
         for step in ("generate_early", "create_regions", "create_items"):
             getattr(world, step)()
