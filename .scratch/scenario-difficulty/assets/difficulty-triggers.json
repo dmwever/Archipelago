@@ -1,0 +1,1328 @@
+{
+ "triggers": [
+  {
+   "scenario": "AP_Attila_1",
+   "trigger_id": 80,
+   "name": "Easy Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "CHANGE_OBJECT_HP",
+     "source_player": 0,
+     "quantity": 100,
+     "selected_object_ids": [
+      10841
+     ]
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 22,
+     "item_id": 22
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 322,
+     "item_id": 322
+    },
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 2,
+     "object_list_unit_id": 79,
+     "location_x": 129,
+     "location_y": 66,
+     "item_id": 79
+    },
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 2,
+     "object_list_unit_id": 79,
+     "location_x": 140,
+     "location_y": 64,
+     "item_id": 79
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 0,
+     "selected_object_ids": [
+      22087
+     ],
+     "object_state": 2
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "object_list_unit_id": 79,
+     "selected_object_ids": [
+      43694
+     ],
+     "item_id": 79,
+     "object_state": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_1",
+   "trigger_id": 84,
+   "name": "Moderate/Easy Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "object_list_unit_id": 82,
+     "selected_object_ids": [
+      43858
+     ],
+     "item_id": 82,
+     "object_state": 2
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "object_list_unit_id": 79,
+     "selected_object_ids": [
+      43695
+     ],
+     "item_id": 79,
+     "object_state": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_2",
+   "trigger_id": 22,
+   "name": "Easy Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "Takes away castle in roman town for easy and easiest difficulty levels.",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 7,
+     "selected_object_ids": [
+      11453
+     ]
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 0,
+     "selected_object_ids": [
+      11667
+     ]
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 0,
+     "selected_object_ids": [
+      11666
+     ]
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 322,
+     "item_id": 322
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "area_x1": 33,
+     "area_y1": 54,
+     "area_x2": 35,
+     "area_y2": 55
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 3,
+     "selected_object_ids": [
+      13824
+     ]
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 4,
+     "selected_object_ids": [
+      13823
+     ]
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 6,
+     "area_x1": 49,
+     "area_y1": 99,
+     "area_x2": 49,
+     "area_y2": 101
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 6,
+     "area_x1": 62,
+     "area_y1": 95,
+     "area_x2": 64,
+     "area_y2": 95
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "area_x1": 32,
+     "area_y1": 56,
+     "area_x2": 33,
+     "area_y2": 58
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "area_x1": 29,
+     "area_y1": 34,
+     "area_x2": 31,
+     "area_y2": 35
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_3",
+   "trigger_id": 21,
+   "name": "Easy Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 322,
+     "item_id": 322
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 4,
+   "name": "TM - Stop Cavalry Moderate",
+   "enabled": 0,
+   "looping": 0,
+   "description": "Trigger that stops cataphract production on moderate.",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 32
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 5,
+   "name": "TM - Stop Infantry Moderate",
+   "enabled": 0,
+   "looping": 0,
+   "description": "Trigger that stops legionary production on moderate.",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 72
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 1
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "area_x1": 163,
+     "area_y1": 0,
+     "area_x2": 167,
+     "area_y2": 4
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 16,
+   "name": "Easy Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 322,
+     "item_id": 322
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 17,
+   "name": "TM - Stop Cavalry Easy",
+   "enabled": 0,
+   "looping": 0,
+   "description": "Trigger that stops cataphract production on easy",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 16
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 18,
+   "name": "TM - Stop Infantry Easy",
+   "enabled": 0,
+   "looping": 0,
+   "description": "Trigger that stops legionary production on easy.",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 36
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 1
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "area_x1": 165,
+     "area_y1": 0,
+     "area_x2": 167,
+     "area_y2": 1
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 28,
+   "name": "TM - Stop Cavalry Hard",
+   "enabled": 0,
+   "looping": 0,
+   "description": "Trigger that stops cataphract production on hard.",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 64
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 1,
+     "condition_type": 19
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19,
+     "inverted": 1
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 29,
+   "name": "TM - Stop Infantry Hard",
+   "enabled": 0,
+   "looping": 0,
+   "description": "Trigger that stops legionary production on hard.",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 144
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 1,
+     "condition_type": 19
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19,
+     "inverted": 1
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 1
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 5,
+     "area_x1": 163,
+     "area_y1": 0,
+     "area_x2": 167,
+     "area_y2": 4
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_5",
+   "trigger_id": 6,
+   "name": "Easy Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 322,
+     "item_id": 322
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_6",
+   "trigger_id": 9,
+   "name": "Easy Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "Gives Yellow two mining camps and a castle on Easy or Easiest.",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 1,
+     "object_list_unit_id": 584,
+     "location_x": 51,
+     "location_y": 10,
+     "item_id": 584
+    },
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 1,
+     "object_list_unit_id": 584,
+     "location_x": 157,
+     "location_y": 7,
+     "item_id": 584
+    },
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 1,
+     "object_list_unit_id": 82,
+     "location_x": 137,
+     "location_y": 4,
+     "item_id": 82
+    },
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 22
+    },
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 23
+    },
+    {
+     "type": "ACTIVATE_TRIGGER",
+     "trigger_id": 3
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_6",
+   "trigger_id": 22,
+   "name": "Moderate Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 23
+    },
+    {
+     "type": "ACTIVATE_TRIGGER",
+     "trigger_id": 20
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Attila_6",
+   "trigger_id": 23,
+   "name": "Hard Difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 1,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "ACTIVATE_TRIGGER",
+     "trigger_id": 21
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Genghis_1",
+   "trigger_id": 19,
+   "name": "Easy difficulty",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "object_list_unit_id": 1904,
+     "area_x1": 75,
+     "area_y1": 0,
+     "area_x2": 167,
+     "area_y2": 162,
+     "item_id": 1904,
+     "object_state": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Genghis_6",
+   "trigger_id": 18,
+   "name": "Additional Siege Onagers",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 3
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19,
+     "inverted": 1
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 1,
+     "condition_type": 19,
+     "inverted": 1
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 0,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 1,
+     "object_list_unit_id": 588,
+     "location_x": 143,
+     "location_y": 94,
+     "item_id": 588
+    },
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 1,
+     "object_list_unit_id": 588,
+     "location_x": 143,
+     "location_y": 103,
+     "item_id": 588
+    },
+    {
+     "type": "TASK_OBJECT",
+     "source_player": 1,
+     "object_list_unit_id": 588,
+     "object_type": 4,
+     "location_x": 133,
+     "location_y": 96,
+     "item_id": 588
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 257,
+     "item_id": 257
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 1,
+     "technology": 320,
+     "item_id": 320
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_1",
+   "trigger_id": 30,
+   "name": "Standard",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 78,
+     "area_y1": 65,
+     "area_x2": 81,
+     "area_y2": 69
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 11,
+     "area_y1": 97,
+     "area_x2": 13,
+     "area_y2": 100
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 75,
+     "area_y1": 0,
+     "area_x2": 98,
+     "area_y2": 4
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 95,
+     "area_y1": 66,
+     "area_x2": 97,
+     "area_y2": 68
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_2",
+   "trigger_id": 22,
+   "name": "Standard",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 3,
+     "object_group": 52,
+     "area_x1": 160,
+     "area_y1": 17,
+     "area_x2": 166,
+     "area_y2": 26
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 3,
+     "object_group": 52,
+     "area_x1": 174,
+     "area_y1": 30,
+     "area_x2": 178,
+     "area_y2": 35
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 7,
+     "object_group": 52,
+     "area_x1": 53,
+     "area_y1": 133,
+     "area_x2": 93,
+     "area_y2": 145
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 4,
+     "technology": 199,
+     "item_id": 199
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 4,
+     "technology": 322,
+     "item_id": 322
+    },
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 38
+    },
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 39
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_2",
+   "trigger_id": 38,
+   "name": "Moderate",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "DEACTIVATE_TRIGGER",
+     "trigger_id": 39
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_2",
+   "trigger_id": 39,
+   "name": "Hard",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 1,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 2,
+     "technology": 322,
+     "item_id": 322
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 3,
+     "technology": 322,
+     "item_id": 322
+    },
+    {
+     "type": "RESEARCH_TECHNOLOGY",
+     "source_player": 4,
+     "technology": 322,
+     "item_id": 322
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_3",
+   "trigger_id": 30,
+   "name": "Standard",
+   "enabled": 1,
+   "looping": 0,
+   "description": "Spawns tree to block rams",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "selected_object_ids": [
+      4084
+     ]
+    },
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 0,
+     "object_list_unit_id": 411,
+     "location_x": 167,
+     "location_y": 141,
+     "item_id": 411
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_3",
+   "trigger_id": 31,
+   "name": "Moderate",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "CREATE_OBJECT",
+     "source_player": 0,
+     "object_list_unit_id": 411,
+     "location_x": 167,
+     "location_y": 142,
+     "item_id": 411
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_5",
+   "trigger_id": 13,
+   "name": "Standard/Moderate",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 160,
+     "area_y1": 104,
+     "area_x2": 169,
+     "area_y2": 157
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 3,
+     "object_group": 52,
+     "area_x1": 16,
+     "area_y1": 23,
+     "area_x2": 194,
+     "area_y2": 136
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 3,
+     "object_list_unit_id": 125,
+     "area_x1": 6,
+     "area_y1": 36,
+     "area_x2": 160,
+     "area_y2": 172,
+     "item_id": 125
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_5",
+   "trigger_id": 14,
+   "name": "Standard",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 3,
+     "object_group": 13,
+     "area_x1": 11,
+     "area_y1": 45,
+     "area_x2": 140,
+     "area_y2": 153
+    },
+    {
+     "type": "CHANGE_DIPLOMACY",
+     "source_player": 3,
+     "target_player": 1,
+     "diplomacy": 1
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "object_group": 13,
+     "area_x1": 152,
+     "area_y1": 118,
+     "area_x2": 156,
+     "area_y2": 121
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_6",
+   "trigger_id": 18,
+   "name": "Easy",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 106,
+     "area_y1": 88,
+     "area_x2": 108,
+     "area_y2": 89,
+     "object_state": 2
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "object_type": 2,
+     "area_x1": 34,
+     "area_y1": 114,
+     "area_x2": 39,
+     "area_y2": 119
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 108,
+     "area_y1": 91,
+     "area_x2": 111,
+     "area_y2": 91
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "selected_object_ids": [
+      5337
+     ]
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_6",
+   "trigger_id": 33,
+   "name": "Extra Town Center",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "TIMER",
+     "condition_type": 10,
+     "timer": 900
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 1,
+     "condition_type": 19
+    },
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "PLACE_FOUNDATION",
+     "source_player": 3,
+     "object_list_unit_id": 71,
+     "location_x": 8,
+     "location_y": 11,
+     "item_id": 71
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_6",
+   "trigger_id": 34,
+   "name": "Easy and Moderate",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 106,
+     "area_y1": 88,
+     "area_x2": 108,
+     "area_y2": 89,
+     "object_state": 2
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "area_x1": 108,
+     "area_y1": 91,
+     "area_x2": 108,
+     "area_y2": 92,
+     "object_state": 2
+    },
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 2,
+     "selected_object_ids": [
+      5337
+     ],
+     "object_state": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_6",
+   "trigger_id": 46,
+   "name": "Not Easy",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 3,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 0,
+     "selected_object_ids": [
+      58827,
+      58828
+     ],
+     "object_state": 2
+    }
+   ]
+  },
+  {
+   "scenario": "AP_Joan_6",
+   "trigger_id": 47,
+   "name": "Not Easy or Moderate",
+   "enabled": 1,
+   "looping": 0,
+   "description": "",
+   "conditions": [
+    {
+     "type": "DIFFICULTY_LEVEL",
+     "quantity": 2,
+     "condition_type": 19,
+     "inverted": 1
+    }
+   ],
+   "effects": [
+    {
+     "type": "REMOVE_OBJECT",
+     "source_player": 0,
+     "selected_object_ids": [
+      58829,
+      58830
+     ],
+     "object_state": 2
+    }
+   ]
+  }
+ ],
+ "other_mentions": [
+  {
+   "scenario": "AP_Attila_1",
+   "trigger_id": 108,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  },
+  {
+   "scenario": "AP_Attila_2",
+   "trigger_id": 23,
+   "name": "Moderate Difficulty",
+   "text": "Moderate Difficulty    "
+  },
+  {
+   "scenario": "AP_Attila_2",
+   "trigger_id": 31,
+   "name": "--- Difficulty ---",
+   "text": "--- Difficulty --- "
+  },
+  {
+   "scenario": "AP_Attila_2",
+   "trigger_id": 36,
+   "name": "Hard Difficulty",
+   "text": "Hard Difficulty      "
+  },
+  {
+   "scenario": "AP_Attila_3",
+   "trigger_id": 25,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  },
+  {
+   "scenario": "AP_Attila_4",
+   "trigger_id": 21,
+   "name": "--- Difficulty ---",
+   "text": "--- Difficulty --- "
+  },
+  {
+   "scenario": "AP_Attila_5",
+   "trigger_id": 8,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  },
+  {
+   "scenario": "AP_Attila_6",
+   "trigger_id": 14,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  },
+  {
+   "scenario": "AP_Attila_6",
+   "trigger_id": 21,
+   "name": "Green Constructs Wonder (time)",
+   "text": "Green Constructs Wonder (time) Green starts a wonder 1800 seconds in game on hard.       "
+  },
+  {
+   "scenario": "AP_Genghis_1",
+   "trigger_id": 1,
+   "name": "[D1] Player 4 request",
+   "text": "[D1] Player 4 request Player 4 asks for sheep\r\n46512 <BLUE>Kereyids: Winter has been hard and our warriors are hungry. Bring us 20 sheep and we will join you. If you are injured, our monks can heal you.     "
+  },
+  {
+   "scenario": "AP_Genghis_1",
+   "trigger_id": 25,
+   "name": "Hard Difficulty",
+   "text": "Hard Difficulty DO NOT TOUCH       "
+  },
+  {
+   "scenario": "AP_Genghis_2",
+   "trigger_id": 19,
+   "name": "EASY MODE",
+   "text": "EASY MODE              "
+  },
+  {
+   "scenario": "AP_Genghis_4",
+   "trigger_id": 19,
+   "name": "Easy Mode",
+   "text": "Easy Mode    "
+  },
+  {
+   "scenario": "AP_Genghis_4",
+   "trigger_id": 23,
+   "name": "Hard Mode",
+   "text": "Hard Mode        "
+  },
+  {
+   "scenario": "AP_Genghis_4",
+   "trigger_id": 24,
+   "name": "Not Easy Mode",
+   "text": "Not Easy Mode    "
+  },
+  {
+   "scenario": "AP_Genghis_5",
+   "trigger_id": 24,
+   "name": "EASY MODE",
+   "text": "EASY MODE    "
+  },
+  {
+   "scenario": "AP_Genghis_5",
+   "trigger_id": 25,
+   "name": "HARD MODE",
+   "text": "HARD MODE        "
+  },
+  {
+   "scenario": "AP_Joan_1",
+   "trigger_id": 38,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  },
+  {
+   "scenario": "AP_Joan_2",
+   "trigger_id": 27,
+   "name": "---Difficulties---",
+   "text": "---Difficulties--- "
+  },
+  {
+   "scenario": "AP_Joan_3",
+   "trigger_id": 26,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  },
+  {
+   "scenario": "AP_Joan_3",
+   "trigger_id": 32,
+   "name": "Hard",
+   "text": "Hard "
+  },
+  {
+   "scenario": "AP_Joan_5",
+   "trigger_id": 19,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  },
+  {
+   "scenario": "AP_Joan_6",
+   "trigger_id": 23,
+   "name": "--- Difficulties ---",
+   "text": "--- Difficulties --- "
+  }
+ ]
+}

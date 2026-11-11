@@ -36,6 +36,16 @@ Any other slot in a scenario, P2 to P8, named for what the campaign calls it (a 
 colour). Each is an ally or an enemy of P1, or is neutral and ignored by the logic.
 _Avoid_: faction, side, player number or colour (as an identity), AP slot (the Archipelago sense)
 
+**Scenario difficulty**:
+How hard the seed's scenarios play, one of five tiers named as the trap tiers are: easiest,
+standard, medium, hard, legendary. Chosen per seed; the **lobby difficulty** no longer decides it.
+_Avoid_: AI difficulty, game difficulty
+
+**Lobby difficulty**:
+The difficulty the person picks in the game's own menu before starting a scenario. Distinct from
+the **scenario difficulty**, which overrides it for the AIs and triggers the seed controls.
+_Avoid_: difficulty (unqualified)
+
 **Fixed-force scenario**:
 A scenario fought only with what it hands P1: no base, no villagers, no economy and no age to
 advance to. A villager job never counts one.

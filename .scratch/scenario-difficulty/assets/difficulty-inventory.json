@@ -1,0 +1,9083 @@
+[
+ {
+  "scenario": "AP_Attila_1",
+  "player": 0,
+  "file": "AP_Attila_1_p0.per",
+  "len": 756,
+  "personality": "Promisory",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\const",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\tsa",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\onevone",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 1,
+  "file": "AP_Attila_1_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 2,
+  "file": "AP_Attila_1_p2.per",
+  "len": 2101,
+  "personality": "Attila-scn1 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 3,
+  "file": "AP_Attila_1_p3.per",
+  "len": 9148,
+  "personality": "Attila-scn1 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 137,
+    "difficulty": [
+     "== standard"
+    ],
+    "conds": [
+     "(defend-soldier-count >= 10)",
+     "(timer-triggered 1)"
+    ],
+    "acts": [
+     "attack-now",
+     "disable-timer 1",
+     "enable-timer 1 600"
+    ]
+   },
+   {
+    "line": 148,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(defend-soldier-count >= 10)",
+     "(timer-triggered 1)"
+    ],
+    "acts": [
+     "attack-now",
+     "disable-timer 1",
+     "enable-timer 1 300"
+    ]
+   },
+   {
+    "line": 205,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager < 40)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 214,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager < 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 275,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 7)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 285,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 13)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 405,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total cavalry-archer-line < 12)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer-line"
+    ]
+   },
+   {
+    "line": 414,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total cavalry-archer-line < 17)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer-line"
+    ]
+   },
+   {
+    "line": 424,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total my-unique-unit < 8)",
+     "(can-train my-unique-unit)"
+    ],
+    "acts": [
+     "train my-unique-unit"
+    ]
+   },
+   {
+    "line": 433,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total my-unique-unit < 14)",
+     "(can-train my-unique-unit)"
+    ],
+    "acts": [
+     "train my-unique-unit"
+    ]
+   }
+  ],
+  "cmps": {
+   "== standard": 1,
+   "<= moderate": 5,
+   "== easy": 4
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 4,
+  "file": "AP_Attila_1_p4.per",
+  "len": 8832,
+  "personality": "Attila-scn1 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 114,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager < 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 123,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager < 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 194,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 10)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 204,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 15)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 337,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total mangonel-line < 2)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 347,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total mangonel-line < 4)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 357,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total knight-line < 14)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 367,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total knight-line < 20)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 377,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total galley-line < 8)",
+     "(can-train galley-line)"
+    ],
+    "acts": [
+     "train galley-line"
+    ]
+   },
+   {
+    "line": 386,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total galley-line < 12)",
+     "(can-train galley-line)"
+    ],
+    "acts": [
+     "train galley-line"
+    ]
+   },
+   {
+    "line": 395,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total war-elephant-line < 7)",
+     "(can-train war-elephant-line)"
+    ],
+    "acts": [
+     "train war-elephant-line"
+    ]
+   },
+   {
+    "line": 404,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total war-elephant-line < 12)",
+     "(can-train war-elephant-line)"
+    ],
+    "acts": [
+     "train war-elephant-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 6,
+   "<= moderate": 6
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 5,
+  "file": "AP_Attila_1_p5.per",
+  "len": 3290,
+  "personality": "Attila-scn1 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 45,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 12)",
+     "(timer-triggered 1)"
+    ],
+    "acts": [
+     "cc-add-resource food 300",
+     "cc-add-resource wood 300",
+     "cc-add-resource gold 300",
+     "disable-timer 1",
+     "enable-timer 1 600"
+    ]
+   },
+   {
+    "line": 58,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 12)",
+     "(timer-triggered 1)"
+    ],
+    "acts": [
+     "cc-add-resource food 600",
+     "cc-add-resource wood 600",
+     "cc-add-resource gold 600",
+     "disable-timer 1",
+     "enable-timer 1 600"
+    ]
+   },
+   {
+    "line": 96,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 12)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 105,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 22)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 114,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 6)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 123,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 15)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 132,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(or (game-time > 900) (difficulty <= moderate) )",
+     "(can-research ri-man-at-arms)"
+    ],
+    "acts": [
+     "research ri-man-at-arms"
+    ]
+   },
+   {
+    "line": 150,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(can-research ri-fletching)"
+    ],
+    "acts": [
+     "research ri-fletching"
+    ]
+   },
+   {
+    "line": 158,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(can-research ri-padded-archer-armor)"
+    ],
+    "acts": [
+     "research ri-padded-archer-armor"
+    ]
+   },
+   {
+    "line": 166,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(can-research ri-scale-mail)"
+    ],
+    "acts": [
+     "research ri-scale-mail"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 3,
+   "<= moderate": 7
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 6,
+  "file": "AP_Attila_1_p6.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 7,
+  "file": "AP_Attila_1_p7.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_1",
+  "player": 8,
+  "file": "AP_Attila_1_p8.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 0,
+  "file": "AP_Attila_2_p0.per",
+  "len": 825,
+  "personality": "Promisory",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\const",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\tsa",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\onevone",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\expansions",
+   "Promisory\\trade",
+   "Promisory\\resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 1,
+  "file": "AP_Attila_2_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 2,
+  "file": "AP_Attila_2_p2.per",
+  "len": 1570,
+  "personality": "Attila-scn2 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 3,
+  "file": "AP_Attila_2_p3.per",
+  "len": 1069,
+  "personality": "Attila-scn2 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 4,
+  "file": "AP_Attila_2_p4.per",
+  "len": 1071,
+  "personality": "Attila-scn2 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 5,
+  "file": "AP_Attila_2_p5.per",
+  "len": 1403,
+  "personality": "Attila-scn2 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 15,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 1"
+    ]
+   },
+   {
+    "line": 22,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 2"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= moderate": 1,
+   "== hard": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 6,
+  "file": "AP_Attila_2_p6.per",
+  "len": 1075,
+  "personality": "Attila-scn2 player 6.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 7,
+  "file": "AP_Attila_2_p7.per",
+  "len": 5282,
+  "personality": "Attila-scn2 player 7.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 35,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(timer-triggered 2)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-attack-soldiers 50",
+     "attack-now",
+     "enable-timer 1 600"
+    ]
+   },
+   {
+    "line": 79,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total villager < 24)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 88,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager < 34)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 139,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 7)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 149,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 10)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 161,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total battering-ram-line > 0)",
+     "(unit-type-count-total scorpion-line < 4)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 181,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total knight-line < 6)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 191,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total knight-line < 12)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 201,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total militiaman-line < 6)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 211,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total militiaman-line < 12)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 221,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total spearman-line < 6)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 231,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total spearman-line < 12)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= moderate": 7,
+   "== normal": 4,
+   "== easy": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_2",
+  "player": 8,
+  "file": "AP_Attila_2_p8.per",
+  "len": 871,
+  "personality": "Attila-scn2 player 8.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 0,
+  "file": "AP_Attila_3_p0.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 1,
+  "file": "AP_Attila_3_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 2,
+  "file": "AP_Attila_3_p2.per",
+  "len": 907,
+  "personality": "scenario noncombat.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 3,
+  "file": "AP_Attila_3_p3.per",
+  "len": 4721,
+  "personality": "Attila-scn3 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 59,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(timer-triggered 2)",
+     "(unit-type-count-total villager > 10)"
+    ],
+    "acts": [
+     "cc-add-resource gold 75",
+     "disable-timer 2",
+     "enable-timer 2 60"
+    ]
+   },
+   {
+    "line": 78,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 87,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 140,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 10)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 150,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 15)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 196,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line less-than 10)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 205,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line less-than 20)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= moderate": 4,
+   "== easy": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 4,
+  "file": "AP_Attila_3_p4.per",
+  "len": 5364,
+  "personality": "Attila-scn3 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 59,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(timer-triggered 2)",
+     "(unit-type-count-total villager > 10)"
+    ],
+    "acts": [
+     "cc-add-resource gold 75",
+     "disable-timer 2",
+     "enable-timer 2 60"
+    ]
+   },
+   {
+    "line": 69,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(timer-triggered 1)",
+     "(defend-soldier-count >= 8)"
+    ],
+    "acts": [
+     "disable-timer 1",
+     "enable-timer 1 560",
+     "attack-now"
+    ]
+   },
+   {
+    "line": 79,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 88,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 150,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 10)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 160,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 15)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 222,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line less-than 12)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman"
+    ]
+   },
+   {
+    "line": 231,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line less-than 6)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 240,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line less-than 8)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 251,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line less-than 18)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= moderate": 6,
+   "== easy": 4
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 5,
+  "file": "AP_Attila_3_p5.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 6,
+  "file": "AP_Attila_3_p6.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 7,
+  "file": "AP_Attila_3_p7.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_3",
+  "player": 8,
+  "file": "AP_Attila_3_p8.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 0,
+  "file": "AP_Attila_4_p0.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 1,
+  "file": "AP_Attila_4_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 2,
+  "file": "AP_Attila_4_p2.per",
+  "len": 7298,
+  "personality": "Attila-scn4 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 163,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(or (difficulty <= moderate) (players-stance 1 ally) )",
+     "(timer-triggered 1)",
+     "(defend-soldier-count >= 10)"
+    ],
+    "acts": [
+     "attack-now",
+     "disable-timer 1",
+     "enable-timer 1 520"
+    ]
+   },
+   {
+    "line": 336,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(or (difficulty <= moderate) (players-stance 1 ally) )",
+     "(unit-type-count-total archer-line < 15)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= moderate": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 3,
+  "file": "AP_Attila_4_p3.per",
+  "len": 7415,
+  "personality": "Attila-scn4 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 70,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 79,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 35)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 157,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(building-type-count-total castle less-than 2)",
+     "(can-build castle)"
+    ],
+    "acts": [
+     "build castle"
+    ]
+   },
+   {
+    "line": 167,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 10)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 177,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 15)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 297,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 10)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 314,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(and (difficulty <= moderate) (current-age == imperial-age) )",
+     "(unit-type-count-total knight-line < 30)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 335,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(and (difficulty <= moderate) (current-age == imperial-age) )",
+     "(unit-type-count-total throwing-axeman-line < 25)",
+     "(can-train throwing-axeman-line)"
+    ],
+    "acts": [
+     "train throwing-axeman-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 2,
+   "<= moderate": 6
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 4,
+  "file": "AP_Attila_4_p4.per",
+  "len": 7032,
+  "personality": "Attila-scn4 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 57,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 2200"
+    ]
+   },
+   {
+    "line": 64,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 1600"
+    ]
+   },
+   {
+    "line": 71,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(timer-triggered 4)"
+    ],
+    "acts": [
+     "cc-add-resource food 400",
+     "cc-add-resource wood 400",
+     "cc-add-resource gold 400",
+     "cc-add-resource stone 400",
+     "disable-timer 4",
+     "enable-timer 4 700"
+    ]
+   },
+   {
+    "line": 84,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(timer-triggered 1)",
+     "(defend-soldier-count >= 9)"
+    ],
+    "acts": [
+     "attack-now",
+     "disable-timer 1",
+     "enable-timer 1 1020"
+    ]
+   },
+   {
+    "line": 95,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(timer-triggered 1)",
+     "(defend-soldier-count >= 20)"
+    ],
+    "acts": [
+     "attack-now",
+     "disable-timer 1",
+     "enable-timer 1 720"
+    ]
+   },
+   {
+    "line": 106,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 115,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 45)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 176,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 10)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 186,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 15)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 237,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line < 10)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 246,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line < 20)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 255,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 7)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 264,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 30)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 273,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total monk < 1)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   },
+   {
+    "line": 282,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total monk < 3)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   },
+   {
+    "line": 291,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total monk < 6)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   },
+   {
+    "line": 300,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total throwing-axeman-line < 10)",
+     "(can-train throwing-axeman-line)"
+    ],
+    "acts": [
+     "train throwing-axeman-line"
+    ]
+   },
+   {
+    "line": 309,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total throwing-axeman-line < 20)",
+     "(can-train throwing-axeman-line)"
+    ],
+    "acts": [
+     "train throwing-axeman-line"
+    ]
+   },
+   {
+    "line": 318,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total throwing-axeman-line < 34)",
+     "(can-train throwing-axeman-line)"
+    ],
+    "acts": [
+     "train throwing-axeman-line"
+    ]
+   },
+   {
+    "line": 327,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line < 5)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 8,
+   "<= moderate": 7,
+   "== hard": 3,
+   "== moderate": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 5,
+  "file": "AP_Attila_4_p5.per",
+  "len": 1099,
+  "personality": "Attila-scn4 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 6,
+  "file": "AP_Attila_4_p6.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 7,
+  "file": "AP_Attila_4_p7.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_4",
+  "player": 8,
+  "file": "AP_Attila_4_p8.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 0,
+  "file": "AP_Attila_5_p0.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 1,
+  "file": "AP_Attila_5_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 2,
+  "file": "AP_Attila_5_p2.per",
+  "len": 9086,
+  "personality": "Attila-scn5 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 141,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 35)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 150,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 227,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 14)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 237,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 9)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 373,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line less-than 25)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 382,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line less-than 20)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 391,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line less-than 15)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 409,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set less-than 2)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 418,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 14)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 427,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 11)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 436,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 8)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 5,
+   "<= moderate": 2,
+   "== moderate": 2,
+   "== hard": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 3,
+  "file": "AP_Attila_5_p3.per",
+  "len": 8839,
+  "personality": "Attila-scn5 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 74,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 1520",
+     "set-strategic-number sn-cap-civilian-builders 3"
+    ]
+   },
+   {
+    "line": 82,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 1320",
+     "set-strategic-number sn-cap-civilian-builders 4"
+    ]
+   },
+   {
+    "line": 90,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 1120",
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 107,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(timer-triggered 1)",
+     "(defend-soldier-count >= 14)"
+    ],
+    "acts": [
+     "disable-timer 1",
+     "enable-timer 1 660",
+     "attack-now"
+    ]
+   },
+   {
+    "line": 117,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(timer-triggered 1)",
+     "(defend-soldier-count >= 8)"
+    ],
+    "acts": [
+     "disable-timer 1",
+     "enable-timer 1 1200",
+     "attack-now"
+    ]
+   },
+   {
+    "line": 128,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 138,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time < 1800)",
+     "(unit-type-count-total villager less-than 35)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 148,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time > 1800)",
+     "(unit-type-count-total villager less-than 45)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 226,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 7)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 236,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 16)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 290,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(can-build watch-tower)",
+     "(building-type-count-total watch-tower < 6)"
+    ],
+    "acts": [
+     "build watch-tower"
+    ]
+   },
+   {
+    "line": 298,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(can-build watch-tower)",
+     "(building-type-count-total watch-tower < 10)"
+    ],
+    "acts": [
+     "build watch-tower"
+    ]
+   },
+   {
+    "line": 307,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total my-unique-unit-line less-than 6)",
+     "(can-train my-unique-unit-line)"
+    ],
+    "acts": [
+     "train my-unique-unit-line"
+    ]
+   },
+   {
+    "line": 317,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total my-unique-unit-line less-than 15)",
+     "(can-train my-unique-unit-line)"
+    ],
+    "acts": [
+     "train my-unique-unit-line"
+    ]
+   },
+   {
+    "line": 327,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total my-unique-unit-line less-than 22)",
+     "(can-train my-unique-unit-line)"
+    ],
+    "acts": [
+     "train my-unique-unit-line"
+    ]
+   },
+   {
+    "line": 337,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total militiaman-line less-than 8)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 347,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total militiaman-line less-than 20)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 357,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total militiaman-line less-than 30)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 376,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total trebuchet-set less-than 2)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 386,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total trebuchet-set less-than 4)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 396,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total scorpion-line < 2)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 406,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total scorpion-line less-than 4)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 416,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total scorpion-line less-than 8)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 9,
+   "== moderate": 4,
+   "== hard": 4,
+   "<= moderate": 6
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 4,
+  "file": "AP_Attila_5_p4.per",
+  "len": 9672,
+  "personality": "Attila-scn5 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 68,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 1020",
+     "set-strategic-number sn-cap-civilian-builders 3"
+    ]
+   },
+   {
+    "line": 76,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 820",
+     "set-strategic-number sn-cap-civilian-builders 4"
+    ]
+   },
+   {
+    "line": 84,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 620",
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 92,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(timer-triggered 1)",
+     "(defend-soldier-count >= 15)"
+    ],
+    "acts": [
+     "disable-timer 1",
+     "enable-timer 1 300",
+     "attack-now"
+    ]
+   },
+   {
+    "line": 102,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 112,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time < 1800)",
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 122,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time > 1800)",
+     "(unit-type-count-total villager less-than 40)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 200,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 9)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 210,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(idle-farm-count <= 1)",
+     "(game-time greater-than 300)",
+     "(building-type-count-total farm less-than 18)",
+     "(can-build farm)"
+    ],
+    "acts": [
+     "build farm"
+    ]
+   },
+   {
+    "line": 326,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total militiaman-line less-than 15)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 336,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total militiaman-line less-than 20)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 346,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total militiaman-line less-than 30)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman"
+    ]
+   },
+   {
+    "line": 356,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total spearman-line less-than 10)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman"
+    ]
+   },
+   {
+    "line": 366,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total spearman-line less-than 15)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman"
+    ]
+   },
+   {
+    "line": 376,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total spearman-line less-than 20)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman"
+    ]
+   },
+   {
+    "line": 395,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total huskarl-line less-than 15)",
+     "(can-train huskarl-line)"
+    ],
+    "acts": [
+     "train huskarl"
+    ]
+   },
+   {
+    "line": 405,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total huskarl-line less-than 20)",
+     "(can-train huskarl-line)"
+    ],
+    "acts": [
+     "train huskarl"
+    ]
+   },
+   {
+    "line": 415,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total trebuchet-set less-than 2)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 425,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total trebuchet-set less-than 4)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 435,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(unit-type-count-total trebuchet-set less-than 5)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 445,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(not (town-under-attack))",
+     "(unit-type-count-total battering-ram-line less-than 3)",
+     "(can-train battering-ram-line)"
+    ],
+    "acts": [
+     "train battering-ram-line"
+    ]
+   },
+   {
+    "line": 456,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 100)",
+     "(not (town-under-attack))",
+     "(unit-type-count-total battering-ram-line less-than 6)",
+     "(can-train battering-ram-line)"
+    ],
+    "acts": [
+     "train battering-ram-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 7,
+   "== moderate": 5,
+   "== hard": 5,
+   "<= moderate": 5
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 5,
+  "file": "AP_Attila_5_p5.per",
+  "len": 8985,
+  "personality": "Attila-scn5 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 59,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 1320",
+     "set-strategic-number sn-cap-civilian-builders 3"
+    ]
+   },
+   {
+    "line": 67,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 1120",
+     "set-strategic-number sn-cap-civilian-builders 4"
+    ]
+   },
+   {
+    "line": 75,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 920",
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 300,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total cavalry-archer-line less-than 10)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer"
+    ]
+   },
+   {
+    "line": 309,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total cavalry-archer-line less-than 15)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer"
+    ]
+   },
+   {
+    "line": 318,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(and (difficulty == easy) (current-age == imperial-age) )",
+     "(unit-type-count-total cavalry-archer-line less-than 15)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer"
+    ]
+   },
+   {
+    "line": 330,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(and (difficulty == moderate) (current-age == imperial-age) )",
+     "(unit-type-count-total cavalry-archer-line less-than 20)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer"
+    ]
+   },
+   {
+    "line": 342,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(and (difficulty == hard) (current-age == imperial-age) )",
+     "(unit-type-count-total cavalry-archer-line less-than 25)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer"
+    ]
+   },
+   {
+    "line": 354,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 6)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight"
+    ]
+   },
+   {
+    "line": 363,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 8)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight"
+    ]
+   },
+   {
+    "line": 372,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(and (difficulty == easy) (current-age == imperial-age) )",
+     "(unit-type-count-total knight-line less-than 10)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight"
+    ]
+   },
+   {
+    "line": 384,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(and (difficulty == moderate) (current-age == imperial-age) )",
+     "(unit-type-count-total knight-line less-than 12)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight"
+    ]
+   },
+   {
+    "line": 396,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(and (difficulty == hard) (current-age == imperial-age) )",
+     "(unit-type-count-total knight-line less-than 15)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight"
+    ]
+   },
+   {
+    "line": 408,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time greater-than 300)",
+     "(unit-type-count-total trebuchet-set less-than 2)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 418,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 300)",
+     "(unit-type-count-total trebuchet-set less-than 3)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 428,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 300)",
+     "(not (town-under-attack))",
+     "(unit-type-count-total mangonel-line less-than 4)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 6,
+   "== moderate": 3,
+   "== hard": 3,
+   "<= moderate": 4
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 6,
+  "file": "AP_Attila_5_p6.per",
+  "len": 1468,
+  "personality": "Fe Immobile AI.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 7,
+  "file": "AP_Attila_5_p7.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_5",
+  "player": 8,
+  "file": "AP_Attila_5_p8.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 0,
+  "file": "AP_Attila_6_p0.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 1,
+  "file": "AP_Attila_6_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 2,
+  "file": "AP_Attila_6_p2.per",
+  "len": 5162,
+  "personality": "Attila-scn6 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 93,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 6)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 103,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 6)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 10"
+    ]
+   },
+   {
+    "line": 113,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(event-detected trigger 6)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 20"
+    ]
+   },
+   {
+    "line": 169,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 6)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 178,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 16)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 187,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total scout-cavalry-line < 6)",
+     "(can-train scout-cavalry-line)"
+    ],
+    "acts": [
+     "train scout-cavalry-line"
+    ]
+   },
+   {
+    "line": 196,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total scout-cavalry-line < 16)",
+     "(can-train scout-cavalry-line)"
+    ],
+    "acts": [
+     "train scout-cavalry-line"
+    ]
+   },
+   {
+    "line": 213,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line < 12)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 222,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line < 25)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 4,
+   "== moderate": 1,
+   "== hard": 1,
+   "<= moderate": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign",
+   "scenario upgrades DE",
+   "scenario market"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 3,
+  "file": "AP_Attila_6_p3.per",
+  "len": 4912,
+  "personality": "Attila-scn6 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 91,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 3)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 101,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 3)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 10"
+    ]
+   },
+   {
+    "line": 111,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(event-detected trigger 3)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 20"
+    ]
+   },
+   {
+    "line": 167,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 6)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 176,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 18)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 185,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set < 4)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 202,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 12)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 211,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 25)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 3,
+   "== moderate": 1,
+   "== hard": 1,
+   "<= moderate": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign",
+   "scenario upgrades DE",
+   "scenario market"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 4,
+  "file": "AP_Attila_6_p4.per",
+  "len": 5117,
+  "personality": "Attila-scn6 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 93,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 7)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 103,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 7)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 10"
+    ]
+   },
+   {
+    "line": 113,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(event-detected trigger 7)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 20"
+    ]
+   },
+   {
+    "line": 168,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 10)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 177,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 30)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 186,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set < 4)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 195,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total monk < 4)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   },
+   {
+    "line": 204,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total throwing-axeman-line < 8)",
+     "(can-train throwing-axeman-line)"
+    ],
+    "acts": [
+     "train throwing-axeman-line"
+    ]
+   },
+   {
+    "line": 213,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total throwing-axeman-line < 16)",
+     "(can-train throwing-axeman-line)"
+    ],
+    "acts": [
+     "train throwing-axeman-line"
+    ]
+   },
+   {
+    "line": 222,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 6)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 231,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 12)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 4,
+   "== moderate": 1,
+   "== hard": 1,
+   "<= moderate": 5
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign",
+   "scenario upgrades DE",
+   "scenario market"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 5,
+  "file": "AP_Attila_6_p5.per",
+  "len": 5283,
+  "personality": "Attila-scn6 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 84,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 8)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 94,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 8)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 0",
+     "set-strategic-number sn-cap-civilian-builders 10"
+    ]
+   },
+   {
+    "line": 104,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 9)"
+    ],
+    "acts": [
+     "cc-add-resource food 400",
+     "cc-add-resource wood 400",
+     "cc-add-resource gold 400",
+     "cc-add-resource stone 400",
+     "set-strategic-number sn-cap-civilian-builders 20"
+    ]
+   },
+   {
+    "line": 116,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 9)"
+    ],
+    "acts": [
+     "cc-add-resource food 700",
+     "cc-add-resource wood 700",
+     "cc-add-resource gold 700",
+     "cc-add-resource stone 700",
+     "set-strategic-number sn-cap-civilian-builders 30"
+    ]
+   },
+   {
+    "line": 173,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 10)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 182,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line < 15)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 191,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total my-unique-unit-line < 8)",
+     "(can-train my-unique-unit-line)"
+    ],
+    "acts": [
+     "train my-unique-unit-line"
+    ]
+   },
+   {
+    "line": 200,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total my-unique-unit-line < 15)",
+     "(can-train my-unique-unit-line)"
+    ],
+    "acts": [
+     "train my-unique-unit-line"
+    ]
+   },
+   {
+    "line": 209,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 8)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 218,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 18)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 5,
+   "<= moderate": 5
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE",
+   "scenario resign",
+   "scenario upgrades DE",
+   "scenario market"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 6,
+  "file": "AP_Attila_6_p6.per",
+  "len": 1057,
+  "personality": "Attila-scn6 player 6.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 7,
+  "file": "AP_Attila_6_p7.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Attila_6",
+  "player": 8,
+  "file": "AP_Attila_6_p8.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 1,
+  "file": "AP_Genghis_1_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 2,
+  "file": "AP_Genghis_1_p2.per",
+  "len": 2196,
+  "personality": "Mongols-scn1 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 27,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 201"
+    ]
+   }
+  ],
+  "cmps": {
+   "== hard": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 3,
+  "file": "AP_Genghis_1_p3.per",
+  "len": 4623,
+  "personality": "Mongols-scn1.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "DIFFICULTY-EASIEST": 1,
+   "DIFFICULTY-EASY": 1,
+   "DIFFICULTY-MODERATE": 1,
+   "DIFFICULTY-HARD": 1,
+   "DIFFICULTY-HARDEST": 1,
+   "DIFFICULTY-EXTREME": 1,
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1,
+   "!DIFFICULTY-HARD": 1,
+   "!DIFFICULTY-HARDEST": 1,
+   "!DIFFICULTY-EXTREME": 1
+  },
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 4,
+  "file": "AP_Genghis_1_p4.per",
+  "len": 4623,
+  "personality": "Mongols-scn1.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "DIFFICULTY-EASIEST": 1,
+   "DIFFICULTY-EASY": 1,
+   "DIFFICULTY-MODERATE": 1,
+   "DIFFICULTY-HARD": 1,
+   "DIFFICULTY-HARDEST": 1,
+   "DIFFICULTY-EXTREME": 1,
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1,
+   "!DIFFICULTY-HARD": 1,
+   "!DIFFICULTY-HARDEST": 1,
+   "!DIFFICULTY-EXTREME": 1
+  },
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 5,
+  "file": "AP_Genghis_1_p5.per",
+  "len": 2170,
+  "personality": "Mongols-scn1 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 6,
+  "file": "AP_Genghis_1_p6.per",
+  "len": 4623,
+  "personality": "Mongols-scn1.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "DIFFICULTY-EASIEST": 1,
+   "DIFFICULTY-EASY": 1,
+   "DIFFICULTY-MODERATE": 1,
+   "DIFFICULTY-HARD": 1,
+   "DIFFICULTY-HARDEST": 1,
+   "DIFFICULTY-EXTREME": 1,
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1,
+   "!DIFFICULTY-HARD": 1,
+   "!DIFFICULTY-HARDEST": 1,
+   "!DIFFICULTY-EXTREME": 1
+  },
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 7,
+  "file": "AP_Genghis_1_p7.per",
+  "len": 2203,
+  "personality": "Mongols-scn1 player 7.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_1",
+  "player": 8,
+  "file": "AP_Genghis_1_p8.per",
+  "len": 4623,
+  "personality": "Mongols-scn1.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "DIFFICULTY-EASIEST": 1,
+   "DIFFICULTY-EASY": 1,
+   "DIFFICULTY-MODERATE": 1,
+   "DIFFICULTY-HARD": 1,
+   "DIFFICULTY-HARDEST": 1,
+   "DIFFICULTY-EXTREME": 1,
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1,
+   "!DIFFICULTY-HARD": 1,
+   "!DIFFICULTY-HARDEST": 1,
+   "!DIFFICULTY-EXTREME": 1
+  },
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_2",
+  "player": 0,
+  "file": "AP_Genghis_2_p0.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_2",
+  "player": 1,
+  "file": "AP_Genghis_2_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_2",
+  "player": 2,
+  "file": "AP_Genghis_2_p2.per",
+  "len": 8468,
+  "personality": "Mongols-scn2 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 103,
+    "difficulty": [
+     "<= hard"
+    ],
+    "conds": [
+     "(timer-triggered 4)"
+    ],
+    "acts": [
+     "cc-add-resource food 700",
+     "cc-add-resource wood 700",
+     "cc-add-resource gold 700",
+     "disable-timer 4",
+     "enable-timer 4 2700"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= hard": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario upgrades PDLC 9",
+   "scenario difficulty DE",
+   "scenario resign FE",
+   "scenario resign PDLC 9"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_2",
+  "player": 3,
+  "file": "AP_Genghis_2_p3.per",
+  "len": 7663,
+  "personality": "Mongols-scn2 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 71,
+    "difficulty": [
+     "<= hard"
+    ],
+    "conds": [
+     "(timer-triggered 4)"
+    ],
+    "acts": [
+     "cc-add-resource food 700",
+     "cc-add-resource wood 700",
+     "cc-add-resource gold 700",
+     "cc-add-resource stone 700",
+     "disable-timer 4",
+     "enable-timer 4 2700"
+    ]
+   },
+   {
+    "line": 241,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(building-type-count-total castle less-than 1)",
+     "(can-build castle)"
+    ],
+    "acts": [
+     "build castle"
+    ]
+   },
+   {
+    "line": 319,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total mangudai-line less-than 8)",
+     "(can-train mangudai-line)"
+    ],
+    "acts": [
+     "train mangudai-line"
+    ]
+   },
+   {
+    "line": 330,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 360)",
+     "(unit-type-count-total mangudai-line less-than 12)",
+     "(can-train mangudai-line)"
+    ],
+    "acts": [
+     "train mangudai-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= hard": 1,
+   "<= moderate": 1,
+   "== moderate": 1,
+   "== hard": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_2",
+  "player": 4,
+  "file": "AP_Genghis_2_p4.per",
+  "len": 1695,
+  "personality": "Mongols-scn2 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 57,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 201"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 1
+  },
+  "loadifs": {},
+  "other": [
+   "(set-difficulty-parameter ability-to-maintain-distance 100)",
+   "(set-difficulty-parameter ability-to-dodge-missiles 100)"
+  ],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Genghis_3",
+  "player": 0,
+  "file": "AP_Genghis_3_p0.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_3",
+  "player": 1,
+  "file": "AP_Genghis_3_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_3",
+  "player": 2,
+  "file": "AP_Genghis_3_p2.per",
+  "len": 9583,
+  "personality": "Mongols-scn3 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 49,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(not (player-in-game 4))"
+    ],
+    "acts": [
+     "cc-add-resource wood 1500",
+     "cc-add-resource gold 1500",
+     "cc-add-resource food 1500"
+    ]
+   },
+   {
+    "line": 352,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(not (difficulty == easy))",
+     "(game-time greater-than 3600)",
+     "(unit-type-count-total rocket-cart-line < 5)",
+     "(can-train rocket-cart-line)"
+    ],
+    "acts": [
+     "train rocket-cart-line"
+    ]
+   },
+   {
+    "line": 391,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total fire-lancer-line < 8)",
+     "(can-train fire-lancer-line)"
+    ],
+    "acts": [
+     "train fire-lancer-line"
+    ]
+   },
+   {
+    "line": 400,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total fire-lancer-line < 5)",
+     "(can-train fire-lancer-line)"
+    ],
+    "acts": [
+     "train fire-lancer-line"
+    ]
+   },
+   {
+    "line": 409,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total fire-lancer-line < 2)",
+     "(can-train fire-lancer-line)"
+    ],
+    "acts": [
+     "train fire-lancer-line"
+    ]
+   },
+   {
+    "line": 420,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time greater-than 3600)",
+     "(unit-type-count-total mounted-trebuchet < 1)",
+     "(can-train mounted-trebuchet)"
+    ],
+    "acts": [
+     "train mounted-trebuchet"
+    ]
+   },
+   {
+    "line": 430,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time greater-than 3300)",
+     "(unit-type-count-total mounted-trebuchet < 2)",
+     "(can-train mounted-trebuchet)"
+    ],
+    "acts": [
+     "train mounted-trebuchet"
+    ]
+   }
+  ],
+  "cmps": {
+   "== hard": 3,
+   "== easy": 2,
+   "== moderate": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario upgrades PDLC 9",
+   "scenario difficulty DE",
+   "scenario resign FE",
+   "scenario resign PDLC 9"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_3",
+  "player": 3,
+  "file": "AP_Genghis_3_p3.per",
+  "len": 6958,
+  "personality": "Mongols-scn3 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 275,
+    "difficulty": [
+     "equal hard"
+    ],
+    "conds": [
+     "(not (difficulty equal hard))",
+     "(unit-type-count-total scorpion-line less-than 5)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 284,
+    "difficulty": [
+     "equal hard"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line less-than 7)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "equal hard": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario upgrades PDLC 9",
+   "scenario difficulty DE",
+   "scenario resign FE",
+   "scenario resign PDLC 9"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_3",
+  "player": 4,
+  "file": "AP_Genghis_3_p4.per",
+  "len": 11584,
+  "personality": "Mongols-scn3 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 289,
+    "difficulty": [
+     "equal hard"
+    ],
+    "conds": [
+     "(not (difficulty equal hard))",
+     "(current-age equal imperial-age)",
+     "(unit-type-count-total rocket-cart-line less-than 2)",
+     "(can-train rocket-cart-line)"
+    ],
+    "acts": [
+     "train rocket-cart-line"
+    ]
+   },
+   {
+    "line": 299,
+    "difficulty": [
+     "equal hard"
+    ],
+    "conds": [
+     "(current-age equal imperial-age)",
+     "(unit-type-count-total rocket-cart-line less-than 5)",
+     "(can-train rocket-cart-line)"
+    ],
+    "acts": [
+     "train rocket-cart-line"
+    ]
+   },
+   {
+    "line": 387,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(goal 16 98)",
+     "(building-type-count-total wonder less-than 1)",
+     "(can-build-with-escrow wonder)",
+     "(not (difficulty == normal))"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-explorers 5",
+     "set-strategic-number sn-cap-civilian-explorers 1",
+     "set-strategic-number sn-minimum-civilian-explorers 1",
+     "set-strategic-number sn-percent-civilian-builders 80",
+     "set-strategic-number sn-cap-civilian-builders 100",
+     "set-strategic-number sn-percent-civilian-gatherers 15",
+     "set-doctrine 77"
+    ]
+   },
+   {
+    "line": 404,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(goal 16 98)",
+     "(building-type-count-total wonder less-than 1)",
+     "(can-build-with-escrow wonder)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-civilian-explorers 5",
+     "set-strategic-number sn-cap-civilian-explorers 1",
+     "set-strategic-number sn-minimum-civilian-explorers 1",
+     "set-strategic-number sn-percent-civilian-builders 80",
+     "set-strategic-number sn-cap-civilian-builders 4",
+     "set-strategic-number sn-percent-civilian-gatherers 15",
+     "set-doctrine 77"
+    ]
+   }
+  ],
+  "cmps": {
+   "equal hard": 2,
+   "== normal": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario upgrades PDLC 9",
+   "scenario difficulty DE",
+   "scenario resign FE",
+   "scenario resign PDLC 9"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_3",
+  "player": 5,
+  "file": "AP_Genghis_3_p5.per",
+  "len": 7913,
+  "personality": "Mongols-scn3 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario upgrades PDLC 9",
+   "scenario difficulty DE",
+   "scenario resign FE",
+   "scenario resign PDLC 9"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_3",
+  "player": 6,
+  "file": "AP_Genghis_3_p6.per",
+  "len": 2073,
+  "personality": "Mongols-scn3 player 6.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_4",
+  "player": 0,
+  "file": "AP_Genghis_4_p0.per",
+  "len": 65,
+  "personality": "_ajl",
+  "ai_type": "0",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Genghis_4",
+  "player": 1,
+  "file": "AP_Genghis_4_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_4",
+  "player": 2,
+  "file": "AP_Genghis_4_p2.per",
+  "len": 2012,
+  "personality": "Mongols-scn4 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 65,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total skirmisher-line < 2)",
+     "(can-train skirmisher-line)"
+    ],
+    "acts": [
+     "train skirmisher-line"
+    ]
+   },
+   {
+    "line": 75,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total skirmisher-line < 3)",
+     "(can-train skirmisher-line)"
+    ],
+    "acts": [
+     "train skirmisher-line"
+    ]
+   },
+   {
+    "line": 85,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total skirmisher-line < 4)",
+     "(can-train skirmisher-line)"
+    ],
+    "acts": [
+     "train skirmisher-line"
+    ]
+   },
+   {
+    "line": 123,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 202"
+    ]
+   },
+   {
+    "line": 132,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 203"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 1,
+   "== moderate": 1,
+   "== hard": 2,
+   "== normal": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Genghis_4",
+  "player": 3,
+  "file": "AP_Genghis_4_p3.per",
+  "len": 5615,
+  "personality": "Mongols-scn4 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 247,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(not (difficulty == normal))",
+     "(unit-type-count-total my-unique-unit-line less-than 8)",
+     "(can-train my-unique-unit-line)"
+    ],
+    "acts": [
+     "train my-unique-unit-line"
+    ]
+   },
+   {
+    "line": 256,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total my-unique-unit-line less-than 3)",
+     "(can-train my-unique-unit-line)"
+    ],
+    "acts": [
+     "train my-unique-unit-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== normal": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_4",
+  "player": 4,
+  "file": "AP_Genghis_4_p4.per",
+  "len": 10416,
+  "personality": "Mongols-scn4 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 308,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(not (difficulty == hard))",
+     "(unit-type-count-total monk less-than 1)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   },
+   {
+    "line": 317,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(not (difficulty == hard))",
+     "(unit-type-count-total cavalry-archer-line less-than 8)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer-line"
+    ]
+   },
+   {
+    "line": 326,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(not (difficulty == hard))",
+     "(unit-type-count-total knight-line less-than 8)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 344,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(not (difficulty == hard))",
+     "(unit-type-count-total war-elephant-line less-than 8)",
+     "(can-train war-elephant-line)"
+    ],
+    "acts": [
+     "train war-elephant-line"
+    ]
+   },
+   {
+    "line": 354,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(not (difficulty == normal))",
+     "(unit-type-count-total scorpion-line < 1)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 364,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set < 1)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 375,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total monk less-than 2)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   },
+   {
+    "line": 384,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total cavalry-archer-line less-than 10)",
+     "(can-train cavalry-archer-line)"
+    ],
+    "acts": [
+     "train cavalry-archer-line"
+    ]
+   },
+   {
+    "line": 393,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 11)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 403,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total war-elephant-line less-than 11)",
+     "(can-train war-elephant-line)"
+    ],
+    "acts": [
+     "train war-elephant-line"
+    ]
+   },
+   {
+    "line": 413,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line < 3)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 423,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set < 2)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 450,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(timer-triggered 9)",
+     "(food-amount < 200)"
+    ],
+    "acts": [
+     "cc-add-resource food 60",
+     "disable-timer 9",
+     "enable-timer 9 60"
+    ]
+   },
+   {
+    "line": 460,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(timer-triggered 9)",
+     "(food-amount < 400)"
+    ],
+    "acts": [
+     "cc-add-resource food 112",
+     "disable-timer 9",
+     "enable-timer 9 60"
+    ]
+   },
+   {
+    "line": 470,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(timer-triggered 9)",
+     "(food-amount < 900)"
+    ],
+    "acts": [
+     "cc-add-resource food 112",
+     "disable-timer 9",
+     "enable-timer 9 60"
+    ]
+   },
+   {
+    "line": 483,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(timer-triggered 10)",
+     "(wood-amount < 200)"
+    ],
+    "acts": [
+     "cc-add-resource wood 60",
+     "disable-timer 10",
+     "enable-timer 10 60"
+    ]
+   },
+   {
+    "line": 493,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(timer-triggered 10)",
+     "(wood-amount < 400)"
+    ],
+    "acts": [
+     "cc-add-resource wood 90",
+     "disable-timer 10",
+     "enable-timer 10 60"
+    ]
+   },
+   {
+    "line": 503,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(timer-triggered 10)",
+     "(wood-amount < 700)"
+    ],
+    "acts": [
+     "cc-add-resource wood 110",
+     "disable-timer 10",
+     "enable-timer 10 60"
+    ]
+   },
+   {
+    "line": 515,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(timer-triggered 11)",
+     "(gold-amount < 200)"
+    ],
+    "acts": [
+     "cc-add-resource gold 60",
+     "disable-timer 11",
+     "enable-timer 11 60"
+    ]
+   },
+   {
+    "line": 525,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(timer-triggered 11)",
+     "(gold-amount < 400)"
+    ],
+    "acts": [
+     "cc-add-resource gold 90",
+     "disable-timer 11",
+     "enable-timer 11 60"
+    ]
+   },
+   {
+    "line": 535,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(timer-triggered 11)",
+     "(gold-amount < 600)"
+    ],
+    "acts": [
+     "cc-add-resource gold 110",
+     "disable-timer 11",
+     "enable-timer 11 60"
+    ]
+   }
+  ],
+  "cmps": {
+   "== hard": 13,
+   "== normal": 1,
+   "== moderate": 4,
+   "== easy": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_4",
+  "player": 5,
+  "file": "AP_Genghis_4_p5.per",
+  "len": 2807,
+  "personality": "Greg's Peaceful",
+  "ai_type": "0",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Genghis_5",
+  "player": 0,
+  "file": "AP_Genghis_5_p0.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_5",
+  "player": 1,
+  "file": "AP_Genghis_5_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_5",
+  "player": 2,
+  "file": "AP_Genghis_5_p2.per",
+  "len": 8985,
+  "personality": "Mongols-scn5 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 66,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(game-time > 420)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-attack-soldiers 30",
+     "attack-now"
+    ]
+   },
+   {
+    "line": 321,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 9)",
+     "(or (unit-type-count-total mangonel-line > 1) (town-under-attack) )",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 335,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 12)",
+     "(or (unit-type-count-total mangonel-line > 1) (town-under-attack) )",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 348,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 16)",
+     "(or (unit-type-count-total mangonel-line > 1) (town-under-attack) )",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 363,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 6)",
+     "(or (unit-type-count-total mangonel-line > 1) (town-under-attack) )",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 376,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 8)",
+     "(or (unit-type-count-total mangonel-line > 1) (town-under-attack) )",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 389,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 11)",
+     "(or (unit-type-count-total mangonel-line > 1) (town-under-attack) )",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 405,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line < 2)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 414,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line < 4)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 423,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line < 6)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= moderate": 1,
+   "== normal": 3,
+   "== moderate": 3,
+   "== hard": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_5",
+  "player": 3,
+  "file": "AP_Genghis_5_p3.per",
+  "len": 1900,
+  "personality": "Mongols-scn5 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 84,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 201"
+    ]
+   },
+   {
+    "line": 93,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-signal 202"
+    ]
+   }
+  ],
+  "cmps": {
+   "== normal": 1,
+   "== hard": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_5",
+  "player": 4,
+  "file": "AP_Genghis_5_p4.per",
+  "len": 8866,
+  "personality": "Mongols-scn5 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 325,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line less-than 7)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 334,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line less-than 9)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 343,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line less-than 12)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 354,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line less-than 8)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 363,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line less-than 12)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 372,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total archer-line less-than 15)",
+     "(can-train archer-line)"
+    ],
+    "acts": [
+     "train archer-line"
+    ]
+   },
+   {
+    "line": 391,
+    "difficulty": [
+     "== normal"
+    ],
+    "conds": [
+     "(unit-type-count-total teutonic-knight-line less-than 5)",
+     "(can-train teutonic-knight-line)"
+    ],
+    "acts": [
+     "train teutonic-knight-line"
+    ]
+   },
+   {
+    "line": 400,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total teutonic-knight-line less-than 8)",
+     "(can-train teutonic-knight-line)"
+    ],
+    "acts": [
+     "train teutonic-knight-line"
+    ]
+   },
+   {
+    "line": 409,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total teutonic-knight-line less-than 10)",
+     "(can-train teutonic-knight-line)"
+    ],
+    "acts": [
+     "train teutonic-knight-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== normal": 3,
+   "== moderate": 3,
+   "== hard": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_6",
+  "player": 0,
+  "file": "AP_Genghis_6_p0.per",
+  "len": 1174,
+  "personality": "RandomGame",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "elite petersen constants",
+   "elite wonder rush",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite petersen deathmatch",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite wonder kill",
+   "elite petersen map loads",
+   "elite petersen diplomacy",
+   "elite petersen supplement",
+   "elite petersen groups",
+   "elite petersen resign",
+   "elite AI petersen rules",
+   "Promisory\\finaling"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_6",
+  "player": 1,
+  "file": "AP_Genghis_6_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_6",
+  "player": 2,
+  "file": "AP_Genghis_6_p2.per",
+  "len": 11492,
+  "personality": "Mongols-scn6 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 234,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 243,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 40)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 252,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 50)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 437,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line < 2)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 446,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line < 4)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 455,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line < 5)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 2,
+   "== moderate": 2,
+   "== hard": 2
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Genghis_6",
+  "player": 3,
+  "file": "AP_Genghis_6_p3.per",
+  "len": 911,
+  "personality": "Joan-noncombat",
+  "ai_type": "0",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_1",
+  "player": 0,
+  "file": "AP_Joan_1_p0.per",
+  "len": 732,
+  "personality": "Promisory",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\const",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\tsa",
+   "Promisory\\general",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\onevone",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_1",
+  "player": 1,
+  "file": "AP_Joan_1_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_1",
+  "player": 2,
+  "file": "AP_Joan_1_p2.per",
+  "len": 911,
+  "personality": "Joan-noncombat.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_1",
+  "player": 3,
+  "file": "AP_Joan_1_p3.per",
+  "len": 911,
+  "personality": "Joan-noncombat.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_1",
+  "player": 4,
+  "file": "AP_Joan_1_p4.per",
+  "len": 911,
+  "personality": "Joan-noncombat.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_1",
+  "player": 5,
+  "file": "AP_Joan_1_p5.per",
+  "len": 1910,
+  "personality": "Joan-scn1 player 5.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_1",
+  "player": 6,
+  "file": "AP_Joan_1_p6.per",
+  "len": 911,
+  "personality": "Joan-noncombat.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 0,
+  "file": "AP_Joan_2_p0.per",
+  "len": 589,
+  "personality": "Promisory",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\const",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\tsa",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 1,
+  "file": "AP_Joan_2_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 2,
+  "file": "AP_Joan_2_p2.per",
+  "len": 9831,
+  "personality": "Joan-scn2 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 103,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager > 16)",
+     "(current-age == feudal-age)"
+    ],
+    "acts": [
+     "set-goal 16 98"
+    ]
+   },
+   {
+    "line": 190,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 199,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 208,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 218,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(current-age == castle-age)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 228,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(current-age == castle-age)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 238,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 35)",
+     "(current-age == castle-age)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 282,
+    "difficulty": [
+     "< easy"
+    ],
+    "conds": [
+     "(building-type-count-total monastery less-than 1)",
+     "(can-build monastery)"
+    ],
+    "acts": [
+     "build monastery"
+    ]
+   },
+   {
+    "line": 357,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 75)",
+     "(current-age == castle-age)",
+     "(unit-type-count-total militiaman-line less-than 8)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 368,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 75)",
+     "(current-age == castle-age)",
+     "(unit-type-count-total militiaman-line less-than 12)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 379,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 75)",
+     "(current-age == castle-age)",
+     "(unit-type-count-total militiaman-line less-than 17)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 390,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 75)",
+     "(current-age == castle-age)",
+     "(unit-type-count-total spearman-line less-than 12)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 401,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 75)",
+     "(current-age == castle-age)",
+     "(unit-type-count-total spearman-line less-than 17)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 412,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 75)",
+     "(current-age == castle-age)",
+     "(unit-type-count-total spearman-line less-than 21)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "<= moderate": 1,
+   "== easy": 4,
+   "== moderate": 4,
+   "== hard": 4,
+   "< easy": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario difficulty DE",
+   "scenario upgrades DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 3,
+  "file": "AP_Joan_2_p3.per",
+  "len": 6617,
+  "personality": "Joan-scn2 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 117,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 15)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 126,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 135,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 35)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 242,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line < 6)",
+     "(can-train longbowman-line)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 251,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line < 12)",
+     "(can-train longbowman-line)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 260,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line < 20)",
+     "(can-train longbowman-line)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 269,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total monk less-than 1)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   },
+   {
+    "line": 278,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 9)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 287,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 14)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 296,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 18)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 305,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(game-time < 2400)",
+     "(unit-type-count-total mangonel-line < 2)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 315,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(game-time < 2400)",
+     "(unit-type-count-total mangonel-line < 3)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 3,
+   "== moderate": 4,
+   "== hard": 4,
+   "<= moderate": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 4,
+  "file": "AP_Joan_2_p4.per",
+  "len": 835,
+  "personality": "Joan-scn2 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 5,
+  "file": "AP_Joan_2_p5.per",
+  "len": 911,
+  "personality": "Joan-noncombat.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 6,
+  "file": "AP_Joan_2_p6.per",
+  "len": 911,
+  "personality": "Joan-noncombat.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_2",
+  "player": 7,
+  "file": "AP_Joan_2_p7.per",
+  "len": 6399,
+  "personality": "Joan-scn2 player 7.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 116,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 125,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 26)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 134,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 32)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 192,
+    "difficulty": [
+     "< easy"
+    ],
+    "conds": [
+     "(building-type-count-total monastery less-than 1)",
+     "(can-build monastery)"
+    ],
+    "acts": [
+     "build monastery"
+    ]
+   },
+   {
+    "line": 253,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 7)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 262,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 12)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 271,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 15)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 288,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(not (town-under-attack))",
+     "(unit-type-count-total battering-ram-line < 3)",
+     "(can-train battering-ram-line)"
+    ],
+    "acts": [
+     "train battering-ram-line"
+    ]
+   },
+   {
+    "line": 298,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(not (town-under-attack))",
+     "(unit-type-count-total battering-ram-line < 4)",
+     "(can-train battering-ram-line)"
+    ],
+    "acts": [
+     "train battering-ram-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 3,
+   "== moderate": 2,
+   "== hard": 2,
+   "< easy": 1,
+   "<= moderate": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_3",
+  "player": 0,
+  "file": "AP_Joan_3_p0.per",
+  "len": 589,
+  "personality": "Promisory",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\const",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\tsa",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_3",
+  "player": 1,
+  "file": "AP_Joan_3_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_3",
+  "player": 2,
+  "file": "AP_Joan_3_p2.per",
+  "len": 10286,
+  "personality": "Joan-scn3 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 95,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 2000"
+    ]
+   },
+   {
+    "line": 102,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 3",
+     "enable-timer 1 1200"
+    ]
+   },
+   {
+    "line": 110,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 5",
+     "enable-timer 1 900"
+    ]
+   },
+   {
+    "line": 128,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 18)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 137,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 146,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 32)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 213,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(building-type-count-total barracks less-than 1)",
+     "(can-build barracks)"
+    ],
+    "acts": [
+     "build barracks"
+    ]
+   },
+   {
+    "line": 222,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(building-type-count-total barracks less-than 2)",
+     "(can-build barracks)"
+    ],
+    "acts": [
+     "build barracks"
+    ]
+   },
+   {
+    "line": 270,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 110)",
+     "(unit-type-count-total militiaman-line < 10)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 280,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 60)",
+     "(unit-type-count-total militiaman-line < 15)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 290,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 60)",
+     "(unit-type-count-total militiaman-line < 20)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 300,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 110)",
+     "(unit-type-count-total spearman-line < 8)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 310,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 60)",
+     "(unit-type-count-total spearman-line < 12)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 320,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(up-compare-goal gl-available-food-amount > 60)",
+     "(unit-type-count-total spearman-line < 15)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 338,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line < 4)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 347,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(building-type-count-total watch-tower-line < 5)",
+     "(can-build watch-tower-line)"
+    ],
+    "acts": [
+     "build watch-tower-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 5,
+   "== moderate": 4,
+   "== hard": 4,
+   "<= moderate": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_3",
+  "player": 3,
+  "file": "AP_Joan_3_p3.per",
+  "len": 6628,
+  "personality": "Joan-scn3 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 118,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 126,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 134,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 240,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line < 10)",
+     "(can-train longbowman-line)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 249,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line < 14)",
+     "(can-train longbowman-line)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 258,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line < 18)",
+     "(can-train longbowman-line)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 267,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 5)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 276,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 8)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 285,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 12)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 294,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 8)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 303,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 12)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 312,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total militiaman-line < 15)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 4,
+   "== moderate": 4,
+   "== hard": 4
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario upgrades"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_3",
+  "player": 4,
+  "file": "AP_Joan_3_p4.per",
+  "len": 8054,
+  "personality": "Joan-scn3 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 94,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 3"
+    ]
+   },
+   {
+    "line": 101,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 5"
+    ]
+   },
+   {
+    "line": 138,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 25)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 146,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 35)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 154,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 45)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 270,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager > 20)",
+     "(game-time > 2700)",
+     "(current-age == castle-age)"
+    ],
+    "acts": [
+     "set-goal 16 99"
+    ]
+   },
+   {
+    "line": 343,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 8)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 352,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 12)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 361,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 17)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== moderate": 3,
+   "== hard": 3,
+   "== easy": 2,
+   "<= moderate": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign FE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_4",
+  "player": 0,
+  "file": "AP_Joan_4_p0.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_4",
+  "player": 1,
+  "file": "AP_Joan_4_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_4",
+  "player": 2,
+  "file": "AP_Joan_4_p2.per",
+  "len": 9799,
+  "personality": "Joan-scn4 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 161,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 1 2000"
+    ]
+   },
+   {
+    "line": 168,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 3",
+     "enable-timer 1 1500"
+    ]
+   },
+   {
+    "line": 176,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 5",
+     "enable-timer 1 1200"
+    ]
+   },
+   {
+    "line": 350,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 18)",
+     "(can-train villager)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 360,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 45)",
+     "(can-train villager)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 430,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total spearman-line < 30)",
+     "(or (unit-type-count-total knight-line > 2) (town-under-attack) )",
+     "(can-train spearman-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 453,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 18)",
+     "(can-train knight-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 2,
+   "== moderate": 1,
+   "== hard": 1,
+   "<= moderate": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_4",
+  "player": 3,
+  "file": "AP_Joan_4_p3.per",
+  "len": 12394,
+  "personality": "Joan-scn4 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 180,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 15)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "enable-timer 1 1240"
+    ]
+   },
+   {
+    "line": 189,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 15)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 3",
+     "enable-timer 1 740"
+    ]
+   },
+   {
+    "line": 199,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(event-detected trigger 15)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 5",
+     "enable-timer 1 340"
+    ]
+   },
+   {
+    "line": 370,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 379,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 42)",
+     "(can-train villager)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 485,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 20)",
+     "(can-train knight-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 505,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(not (town-under-attack))",
+     "(unit-type-count-total battering-ram-line less-than 5)",
+     "(can-train battering-ram-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train battering-ram-line"
+    ]
+   },
+   {
+    "line": 516,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line less-than 3)",
+     "(can-train scorpion-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 526,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line less-than 5)",
+     "(can-train scorpion-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 536,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line less-than 8)",
+     "(can-train scorpion-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 555,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total cannon-galleon-line < 4)",
+     "(can-train cannon-galleon-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train cannon-galleon-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 3,
+   "== moderate": 1,
+   "== hard": 1,
+   "<= moderate": 6
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_4",
+  "player": 4,
+  "file": "AP_Joan_4_p4.per",
+  "len": 11207,
+  "personality": "Joan-scn4 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 152,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "enable-timer 2 2850"
+    ]
+   },
+   {
+    "line": 159,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 3",
+     "enable-timer 2 2450"
+    ]
+   },
+   {
+    "line": 167,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-cap-civilian-builders 5",
+     "enable-timer 2 1850"
+    ]
+   },
+   {
+    "line": 292,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 22)",
+     "(can-train villager)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 302,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 35)",
+     "(can-train villager)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 312,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 45)",
+     "(can-train villager)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 346,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(game-time > 1820)",
+     "(unit-type-count-total villager > 20)",
+     "(current-age == castle-age)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "set-goal 16 99"
+    ]
+   },
+   {
+    "line": 357,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager > 25)",
+     "(current-age == castle-age)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "set-goal 16 99"
+    ]
+   },
+   {
+    "line": 462,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line less-than 20)",
+     "(can-train longbowman-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 481,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 5)",
+     "(can-train knight-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 491,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line less-than 7)",
+     "(can-train knight-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 501,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line less-than 1)",
+     "(can-train mangonel-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 511,
+    "difficulty": [
+     ">= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line less-than 3)",
+     "(can-train mangonel-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 521,
+    "difficulty": [
+     "< moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line less-than 5)",
+     "(can-train mangonel-line)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 531,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set less-than 2)",
+     "(can-train trebuchet)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 541,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set less-than 6)",
+     "(can-train trebuchet)",
+     "(goal 2 1)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 5,
+   "== moderate": 3,
+   "== hard": 3,
+   "<= moderate": 3,
+   ">= moderate": 1,
+   "< moderate": 1
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_4",
+  "player": 5,
+  "file": "AP_Joan_4_p5.per",
+  "len": 1468,
+  "personality": "Fe Immobile AI.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Joan_5",
+  "player": 0,
+  "file": "AP_Joan_5_p0.per",
+  "len": 825,
+  "personality": "Promisory",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\const",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\tsa",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\onevone",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\expansions",
+   "Promisory\\trade",
+   "Promisory\\resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_5",
+  "player": 1,
+  "file": "AP_Joan_5_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_5",
+  "player": 2,
+  "file": "AP_Joan_5_p2.per",
+  "len": 584,
+  "personality": "Joan-scn5 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_5",
+  "player": 3,
+  "file": "AP_Joan_5_p3.per",
+  "len": 1401,
+  "personality": "Joan-scn5 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [
+   "(set-difficulty-parameter ability-to-maintain-distance 100)",
+   "(set-difficulty-parameter ability-to-dodge-missiles 100)"
+  ],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_5",
+  "player": 4,
+  "file": "AP_Joan_5_p4.per",
+  "len": 170,
+  "personality": "Joan-scn5 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_5",
+  "player": 5,
+  "file": "AP_Joan_5_p5.per",
+  "len": 1468,
+  "personality": "Fe Immobile AI.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Joan_6",
+  "player": 0,
+  "file": "AP_Joan_6_p0.per",
+  "len": 65,
+  "personality": "_ajl",
+  "ai_type": "0",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {},
+  "other": [],
+  "loads": []
+ },
+ {
+  "scenario": "AP_Joan_6",
+  "player": 1,
+  "file": "AP_Joan_6_p1.per",
+  "len": 969,
+  "personality": "PromiDE",
+  "ai_type": "1",
+  "active": "True",
+  "human": "True",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\defaultConstants",
+   "Promisory\\finalingConstants",
+   "Promisory\\customConstants",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\scoutcontrol",
+   "Promisory\\tsa",
+   "Promisory\\watercontrol",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\trade",
+   "Promisory\\resign",
+   "Promisory\\finaling",
+   "Promisory\\event"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_6",
+  "player": 2,
+  "file": "AP_Joan_6_p2.per",
+  "len": 5707,
+  "personality": "Joan-scn6 player 2.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 96,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 105,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 45)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 225,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 1)",
+     "(unit-type-count-total militiaman-line < 50)",
+     "(can-train militiaman-line)"
+    ],
+    "acts": [
+     "train militiaman-line"
+    ]
+   },
+   {
+    "line": 244,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 1)",
+     "(unit-type-count-total spearman-line < 35)",
+     "(can-train spearman-line)"
+    ],
+    "acts": [
+     "train spearman-line"
+    ]
+   },
+   {
+    "line": 263,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 1)",
+     "(unit-type-count-total monk < 3)",
+     "(can-train monk)"
+    ],
+    "acts": [
+     "train monk"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 1,
+   "<= moderate": 4
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_6",
+  "player": 3,
+  "file": "AP_Joan_6_p3.per",
+  "len": 7407,
+  "personality": "Joan-scn6 player 3.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 68,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(event-detected trigger 1)",
+     "(game-time > 2100)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-attack-soldiers 20",
+     "set-signal 30",
+     "attack-now",
+     "enable-timer 1 920"
+    ]
+   },
+   {
+    "line": 81,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(event-detected trigger 1)",
+     "(game-time > 1700)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-attack-soldiers 25",
+     "set-signal 30",
+     "attack-now",
+     "enable-timer 1 920"
+    ]
+   },
+   {
+    "line": 94,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(event-detected trigger 1)",
+     "(game-time > 1400)"
+    ],
+    "acts": [
+     "set-strategic-number sn-percent-attack-soldiers 30",
+     "set-signal 30",
+     "attack-now",
+     "enable-timer 1 920"
+    ]
+   },
+   {
+    "line": 131,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 21)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 140,
+    "difficulty": [
+     "== moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 30)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 149,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 40)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 292,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total longbowman-line < 25)",
+     "(can-train longbowman-line)"
+    ],
+    "acts": [
+     "train longbowman-line"
+    ]
+   },
+   {
+    "line": 309,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total mangonel-line < 4)",
+     "(can-train mangonel-line)"
+    ],
+    "acts": [
+     "train mangonel-line"
+    ]
+   },
+   {
+    "line": 326,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 18)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 335,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total scorpion-line < 6)",
+     "(can-train scorpion-line)"
+    ],
+    "acts": [
+     "train scorpion-line"
+    ]
+   },
+   {
+    "line": 352,
+    "difficulty": [
+     "== hard"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set < 6)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 2,
+   "== moderate": 2,
+   "== hard": 4,
+   "<= moderate": 3
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_6",
+  "player": 4,
+  "file": "AP_Joan_6_p4.per",
+  "len": 6205,
+  "personality": "Joan-scn6 player 4.ai",
+  "ai_type": "0",
+  "active": "True",
+  "human": "False",
+  "rules": [
+   {
+    "line": 65,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-percent-attack-soldiers 70",
+     "set-strategic-number sn-number-explore-groups 1",
+     "enable-timer 1 1200"
+    ]
+   },
+   {
+    "line": 74,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [],
+    "acts": [
+     "set-strategic-number sn-percent-attack-soldiers 80",
+     "set-strategic-number sn-number-explore-groups 1",
+     "enable-timer 1 300"
+    ]
+   },
+   {
+    "line": 93,
+    "difficulty": [
+     "== easy"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 20)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 102,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total villager less-than 45)",
+     "(can-train villager)"
+    ],
+    "acts": [
+     "train villager"
+    ]
+   },
+   {
+    "line": 240,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total knight-line < 40)",
+     "(can-train knight-line)"
+    ],
+    "acts": [
+     "train knight-line"
+    ]
+   },
+   {
+    "line": 249,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total trebuchet-set < 4)",
+     "(can-train trebuchet)"
+    ],
+    "acts": [
+     "train trebuchet"
+    ]
+   },
+   {
+    "line": 266,
+    "difficulty": [
+     "<= moderate"
+    ],
+    "conds": [
+     "(unit-type-count-total scout-cavalry-line < 30)",
+     "(can-train scout-cavalry-line)"
+    ],
+    "acts": [
+     "train scout-cavalry-line"
+    ]
+   }
+  ],
+  "cmps": {
+   "== easy": 2,
+   "<= moderate": 5
+  },
+  "loadifs": {},
+  "other": [],
+  "loads": [
+   "scenario market",
+   "scenario upgrades DE",
+   "scenario difficulty DE",
+   "scenario resign"
+  ]
+ },
+ {
+  "scenario": "AP_Joan_6",
+  "player": 5,
+  "file": "AP_Joan_6_p5.per",
+  "len": 825,
+  "personality": "Promisory",
+  "ai_type": "1",
+  "active": "False",
+  "human": "False",
+  "rules": [],
+  "cmps": {},
+  "loadifs": {
+   "!DIFFICULTY-EASIEST": 1,
+   "!DIFFICULTY-EASY": 1,
+   "!DIFFICULTY-MODERATE": 1
+  },
+  "other": [],
+  "loads": [
+   "Promisory\\const",
+   "Promisory\\init",
+   "Promisory\\threats",
+   "Promisory\\escrow",
+   "Promisory\\dawn",
+   "Promisory\\gatherers",
+   "Promisory\\tsa",
+   "Promisory\\general",
+   "Promisory\\orb",
+   "Promisory\\boarhunting",
+   "Promisory\\researches",
+   "Promisory\\interaction",
+   "Promisory\\onevone",
+   "Promisory\\buildings",
+   "Promisory\\units",
+   "Promisory\\expansions",
+   "Promisory\\trade",
+   "Promisory\\resign"
+  ]
+ }
+]
