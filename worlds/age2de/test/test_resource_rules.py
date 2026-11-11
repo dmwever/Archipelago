@@ -51,7 +51,8 @@ class TestContributors(unittest.TestCase):
         self.assertEqual(
             dict(contributors(Resource.FOOD)),
             {"+50 Starting Food": 50, "+100 Starting Food": 100, "+250 Starting Food": 250,
-             "Starting Villager Food": 150})
+             "Starting Villager Food": 150, "Feudal Age Food": 500,
+             "Starting Mule Cart Resources": 20})
 
 
 class TestSummation(bases.Age2RuleTestBase):
@@ -104,7 +105,7 @@ class TestResolveTimeDegrade(bases.Age2RuleTestBase):
                               .resolve(self.world), True_.Resolved)
 
     def test_more_than_the_seed_holds_is_false(self):
-        """Not an unsatisfiable rule - an honest False, so the Or in can_afford drops this
+        """Not an unsatisfiable rule - an honest False, so an Or around it drops this
         branch and the gathering branch carries the cost alone."""
         self.build()
         self.world.pool.resources.totals[Resource.STONE] = 100

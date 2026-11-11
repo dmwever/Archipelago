@@ -26,25 +26,32 @@ class TestSmartStartingResources(bases.Age2TestBase):
         "starting_campaigns": {ATTILA},
     }
 
-    def test_returns_exactly_the_number_asked_for(self) -> None:
-        # 1 to 3 is the range that used to hang; 15 and 20 returned 0 and 8.
-        for wanted in range(0, 40):
-            got = self.world.pool.resources.build_items(wanted)
+    def test_a_budget_too_small_for_the_targets_is_spent_whole(self) -> None:
+        # 1 to 3 is the range that used to hang. Up to 12 the targets cannot all be met, so every
+        # location asked for is a starting resource.
+        for wanted in range(0, 13):
+            got = self.world.pool.resources.build(wanted)
             self.assertEqual(wanted, len(got), f"asked for {wanted} items, got {len(got)}")
 
+    def test_never_more_than_asked_for(self) -> None:
+        # 15 and 20 used to return 0 and 8.
+        for wanted in range(0, 80):
+            got = self.world.pool.resources.build(wanted)
+            self.assertLessEqual(len(got), wanted, f"asked for {wanted} items, got {len(got)}")
+
     def test_zero_locations_returns_nothing(self) -> None:
-        self.assertEqual([], self.world.pool.resources.build_items(0))
+        self.assertEqual([], self.world.pool.resources.build(0))
 
     def test_a_negative_count_returns_nothing(self) -> None:
-        self.assertEqual([], self.world.pool.resources.build_items(-5))
+        self.assertEqual([], self.world.pool.resources.build(-5))
 
     def test_the_exact_fit_hands_back_the_large_items(self) -> None:
-        # 725/250 + 850/250 + 750/250 + 400/125 = 3 + 4 + 3 + 4 = 14. The targets came down by
-        # what the three town-centre items now contribute to the same totals.
-        got = self.world.pool.resources.build_items(14)
+        # 300/250 + 850/250 + 750/250 + 400/125 = 2 + 4 + 3 + 4 = 13. The targets came down by
+        # what the seed items now contribute to the same totals.
+        got = self.world.pool.resources.build(13)
         self.assertEqual(
             Counter({
-                Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 3,
+                Items.Age2ItemData.STARTING_WOOD_LARGE.item_name: 2,
                 Items.Age2ItemData.STARTING_FOOD_LARGE.item_name: 4,
                 Items.Age2ItemData.STARTING_GOLD_LARGE.item_name: 3,
                 Items.Age2ItemData.STARTING_STONE_LARGE.item_name: 4,
@@ -55,13 +62,13 @@ class TestSmartStartingResources(bases.Age2TestBase):
 
     def test_everything_returned_is_a_starting_resource(self) -> None:
         for wanted in (5, 15, 30):
-            for item in self.world.pool.resources.build_items(wanted):
+            for item in self.world.pool.resources.build(wanted):
                 self.assertIsInstance(item.type, Items.StartingResources)
 
 
 class TestTownCentreItems(bases.Age2TestBase):
     """Starting Town Center Stone declared Resource.FOOD. A Town Center costs wood and stone, and
-    nothing in Python reads TCResources.type yet - the XS side is what would act on it."""
+    nothing in Python reads SeedResources.type yet - the XS side is what would act on it."""
 
     options = {
         "enabled_campaigns": {ATTILA},
@@ -71,10 +78,8 @@ class TestTownCentreItems(bases.Age2TestBase):
     def test_the_pair_covers_the_real_cost(self) -> None:
         cost = Items.Age2ItemData.TOWN_CENTER.type.needed_resources
         granted = {
-            Items.Age2ItemData.TOWN_CENTER_WOOD.type.type:
-                Items.Age2ItemData.TOWN_CENTER_WOOD.type.amount,
-            Items.Age2ItemData.TOWN_CENTER_STONE.type.type:
-                Items.Age2ItemData.TOWN_CENTER_STONE.type.amount,
+            **Items.Age2ItemData.TOWN_CENTER_WOOD.type.resources,
+            **Items.Age2ItemData.TOWN_CENTER_STONE.type.resources,
         }
         self.assertEqual({resource: int(amount) for resource, amount in cost.items()}, granted,
                          "the Town Center items do not add up to a Town Center")
@@ -83,14 +88,13 @@ class TestTownCentreItems(bases.Age2TestBase):
         """The third of the opening set: a town centre you cannot put villagers in front of is
         not a start. 150 food is three villagers at 50 each."""
         food = Items.Age2ItemData.STARTING_VILLAGER_FOOD
-        self.assertIsInstance(food.type, Items.TCResources)
-        self.assertEqual(food.type.type, Items.Resource.FOOD)
-        self.assertEqual(food.type.amount, 150)
-        self.assertIn(food, Items.CATEGORY_TO_ITEMS[Items.TCResources])
+        self.assertIsInstance(food.type, Items.SeedResources)
+        self.assertEqual({Items.Resource.FOOD: 150}, food.type.resources)
+        self.assertIn(food, Items.CATEGORY_TO_ITEMS[Items.SeedResources])
 
     def test_exactly_one_of_each_opening_item_reaches_the_pool(self) -> None:
         names = [item.name for item in self.multiworld.itempool]
-        for item in Items.CATEGORY_TO_ITEMS[Items.TCResources]:
+        for item in self.world.pool.resources.seeds:
             with self.subTest(item.item_name):
                 self.assertEqual(names.count(item.item_name), 1)
 
@@ -122,8 +126,11 @@ class TestStartingResourcesAreProgression(bases.Age2TestBase):
         pooled = [item for item in self.multiworld.itempool if item.player == self.world.player]
         for item in pooled + self.multiworld.precollected_items[self.world.player]:
             payload = Items.NAME_TO_ITEM[item.name].type
-            if isinstance(payload, (Items.StartingResources, Items.TCResources)):
+            if isinstance(payload, Items.StartingResources):
                 by_hand[payload.type] += payload.amount
+            if isinstance(payload, Items.SeedResources):
+                for resource, amount in payload.resources.items():
+                    by_hand[resource] += amount
         self.assertEqual(self.world.pool.resources.totals, by_hand)
 
 
@@ -179,3 +186,70 @@ class TestProgressiveScenarioCoverage(unittest.TestCase):
             self.assertEqual(1, len(owned),
                              f"{campaign.campaign_name} needs exactly one campaign item, or "
                              "sync_unlocked's any() would open it from the wrong one")
+
+
+class TestTheHouseComesEarly(bases.Age2TestBase):
+    """A civilisation that builds houses has no base without one, so a House found late left
+    Joan 3 with no easy source of anything for most of a seed. It is an early item whenever it is
+    shuffled at all."""
+
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"Base"},
+    }
+
+    def test_the_house_is_asked_for_early(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertEqual(1, self.multiworld.early_items[self.player].get(house))
+
+    def test_the_house_lands_in_the_first_sphere(self) -> None:
+        from Fill import distribute_items_restrictive
+        distribute_items_restrictive(self.multiworld)
+        house = Items.Age2ItemData.HOUSE.item_name
+        first_sphere = next(iter(self.multiworld.get_spheres()))
+        holders = [location for location in first_sphere
+                   if location.item.player == self.player and location.item.name == house]
+        self.assertEqual(1, len(holders), "the House was not placed in the first sphere")
+
+
+class TestANamedHouseComesEarly(bases.Age2TestBase):
+    """Naming the House shuffles it as surely as the Base category does."""
+
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"House"},
+    }
+
+    def test_the_house_is_asked_for_early(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertEqual(1, self.multiworld.early_items[self.player].get(house))
+
+
+class TestAnUnshuffledHouseIsLeftAlone(bases.Age2TestBase):
+    """With base buildings unshuffled the House is precollected, so there is nothing to place."""
+
+    options = {
+        "enabled_campaigns": {ATTILA, JOAN},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"Tech"},
+    }
+
+    def test_the_house_is_not_an_early_item(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertNotIn(house, self.multiworld.early_items[self.player])
+
+
+class TestHunsNeverAskForAHouse(bases.Age2TestBase):
+    """Huns build no houses, so an Attila-only seed has no House location and no House item."""
+
+    options = {
+        "enabled_campaigns": {ATTILA},
+        "starting_campaigns": {ATTILA},
+        "shuffle_buildings": {"Base"},
+    }
+
+    def test_the_house_is_not_an_early_item(self) -> None:
+        house = Items.Age2ItemData.HOUSE.item_name
+        self.assertNotIn(house, self.multiworld.early_items[self.player])

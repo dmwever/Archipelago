@@ -1,4 +1,6 @@
 from ...items.Items import Resource
+from ..Ages import Age2AgeData
+from ..Buildings import Age2BuildingData
 from ..Techs import Age2TechData
 from ..Units import Age2UnitData
 
@@ -66,6 +68,9 @@ UNIT_COSTS: dict[Age2UnitData, dict[Resource, int]] = {
     Age2UnitData.ELITE_LONGBOAT: {Resource.GOLD: 50, Resource.WOOD: 100},
     Age2UnitData.ELITE_WOAD_RAIDER: {Resource.FOOD: 70, Resource.GOLD: 25},
     Age2UnitData.GALLEY: {Resource.GOLD: 30, Resource.WOOD: 90},
+    Age2UnitData.HULK: {Resource.GOLD: 35, Resource.WOOD: 75},
+    Age2UnitData.WAR_HULK: {Resource.GOLD: 35, Resource.WOOD: 75},
+    Age2UnitData.CARRACK: {Resource.GOLD: 35, Resource.WOOD: 75},
     Age2UnitData.HEAVY_SCORPION: {Resource.GOLD: 75, Resource.WOOD: 75},
     Age2UnitData.TRANSPORT_SHIP: {Resource.WOOD: 125},
     Age2UnitData.LIGHT_CAVALRY: {Resource.FOOD: 80},
@@ -242,7 +247,8 @@ UNIT_COSTS: dict[Age2UnitData, dict[Resource, int]] = {
 TECH_COSTS: dict[Age2TechData, dict[Resource, int]] = {
     Age2TechData.ELITE_TARKAN_HUNS: {Resource.FOOD: 1000, Resource.GOLD: 500},
     Age2TechData.YEOMEN_BRITONS: {Resource.GOLD: 450, Resource.WOOD: 750},
-    Age2TechData.COTTON_ARMORS_MAYANS: {Resource.FOOD: 750, Resource.GOLD: 450},
+    Age2TechData.HOLCANS_MAYANS: {Resource.FOOD: 750, Resource.GOLD: 450},
+    Age2TechData.ORDONNANCE_COMPANIES_FRANKS: {Resource.FOOD: 400, Resource.GOLD: 250},
     Age2TechData.FUROR_CELTICA_CELTS: {Resource.FOOD: 750, Resource.GOLD: 450},
     Age2TechData.DRILL_MONGOLS: {Resource.GOLD: 450, Resource.WOOD: 500},
     Age2TechData.CITADELS_PERSIANS: {Resource.GOLD: 300, Resource.WOOD: 600},
@@ -387,7 +393,7 @@ TECH_COSTS: dict[Age2TechData, dict[Resource, int]] = {
     Age2TechData.STRONGHOLD_CELTS: {Resource.FOOD: 250, Resource.GOLD: 200},
     Age2TechData.MARAUDERS_HUNS: {Resource.GOLD: 200, Resource.WOOD: 300},
     Age2TechData.YASAMA_JAPANESE: {Resource.FOOD: 300, Resource.WOOD: 300},
-    Age2TechData.OBSIDIAN_ARROWS_MAYANS: {Resource.FOOD: 300, Resource.GOLD: 300},
+    Age2TechData.HULCHE_JAVELINEERS_MAYANS: {Resource.FOOD: 300, Resource.GOLD: 300},
     Age2TechData.EUPSEONG_KOREANS: {Resource.FOOD: 300, Resource.WOOD: 300},
     Age2TechData.NOMADS_MONGOLS: {Resource.GOLD: 150, Resource.WOOD: 300},
     Age2TechData.KAMANDARAN_PERSIANS: {Resource.FOOD: 400, Resource.GOLD: 300},
@@ -449,6 +455,12 @@ TECH_COSTS: dict[Age2TechData, dict[Resource, int]] = {
     Age2TechData.HILL_FORTS_LITHUANIANS: {Resource.FOOD: 250, Resource.GOLD: 250},
     Age2TechData.TOWER_SHIELDS_LITHUANIANS: {Resource.FOOD: 500, Resource.GOLD: 200},
     Age2TechData.ELITE_STEPPE_LANCER: {Resource.FOOD: 600, Resource.GOLD: 550},
+    # Read from empires2_x2_p1.dat along with the techs themselves.
+    Age2TechData.HEAVY_MOUNTED_CROSSBOWMAN: {Resource.FOOD: 1000, Resource.GOLD: 650},
+    Age2TechData.ELITE_VARANGIAN_GUARD: {Resource.FOOD: 750, Resource.GOLD: 475},
+    Age2TechData.ELITE_HEARTH_TROOP_SAXONS: {Resource.WOOD: 750, Resource.GOLD: 700},
+    Age2TechData.ELITE_JARL_VARANGIANS: {Resource.FOOD: 825, Resource.GOLD: 725},
+    Age2TechData.ELITE_JOMSVIKING_DANES: {Resource.FOOD: 825, Resource.GOLD: 825},
     Age2TechData.ELITE_COUSTILLIER_BURGUNDIANS: {Resource.FOOD: 1000, Resource.GOLD: 800},
     Age2TechData.ELITE_SERJEANT_SICILIANS: {Resource.FOOD: 800, Resource.GOLD: 675},
     Age2TechData.BURGUNDIAN_VINEYARDS_BURGUNDIANS: {Resource.FOOD: 400, Resource.GOLD: 300},
@@ -459,7 +471,7 @@ TECH_COSTS: dict[Age2TechData, dict[Resource, int]] = {
     Age2TechData.ELITE_HUSSITE_WAGON_BOHEMIANS: {Resource.GOLD: 600, Resource.WOOD: 800},
     Age2TechData.SZLACHTA_PRIVILEGES_POLES: {Resource.FOOD: 500, Resource.GOLD: 300},
     Age2TechData.LECHITIC_LEGACY_POLES: {Resource.FOOD: 750, Resource.GOLD: 550},
-    Age2TechData.EASTERN_SETTLEMENT_BOHEMIANS: {Resource.FOOD: 300, Resource.GOLD: 300},
+    Age2TechData.WAGENBURG_TACTICS_BOHEMIANS: {Resource.FOOD: 300, Resource.GOLD: 300},
     Age2TechData.HUSSITE_REFORMS_BOHEMIANS: {Resource.FOOD: 500, Resource.GOLD: 450},
     Age2TechData.WINGED_HUSSAR: {Resource.FOOD: 600, Resource.GOLD: 800},
     Age2TechData.HOUFNICE_BOHEMIANS: {Resource.FOOD: 1100, Resource.GOLD: 800},
@@ -563,14 +575,21 @@ UNITS_WITHOUT_COST: frozenset[Age2UnitData] = frozenset({
     Age2UnitData.ELITE_WAR_CHARIOT_ANTIQUITY,
 })
 """Units the dump does not carry, all of them Chronicles-era. No shipped civilisation trains one,
-and a unit with no cost on file is free rather than untrainable - see can_afford."""
+and a unit with no cost on file is free rather than untrainable - see can_pay."""
 
 TECHS_WITHOUT_COST: frozenset[Age2TechData] = frozenset({
-    Age2TechData.BEARDED_AXE_FRANKS,
     Age2TechData.DRAGON_SHIP_CHINESE,
     Age2TechData.CHAMPI_SCOUT,
 })
 """Technologies the dump does not carry."""
+
+AGE_COSTS: dict[Age2AgeData, dict[Resource, int]] = {
+    Age2AgeData.FEUDAL: {Resource.FOOD: 500},
+    Age2AgeData.CASTLE: {Resource.FOOD: 800, Resource.GOLD: 200},
+    Age2AgeData.IMPERIAL: {Resource.FOOD: 1000, Resource.GOLD: 800},
+}
+"""What advancing into each age costs. Dark Age is where every game starts, so it has no price.
+Neither shipped civilisation discounts an age-up."""
 
 
 for _unit, _cost in UNIT_COSTS.items():
@@ -579,9 +598,24 @@ for _unit, _cost in UNIT_COSTS.items():
 for _tech, _cost in TECH_COSTS.items():
     _tech.cost = _cost
 
+for _age, _cost in AGE_COSTS.items():
+    _age.cost = _cost
+
+for _building in Age2BuildingData:
+    # The building items already carry the price; the location reads the same numbers as whole
+    # amounts so every priced thing looks alike.
+    _building.cost = {resource: int(amount)
+                      for resource, amount in _building.item.type.needed_resources.items()}
+
 
 assert not [unit for unit in Age2UnitData
             if not unit.cost and unit not in UNITS_WITHOUT_COST],     "a unit has no cost and is not on the list of units known to have none"
 
 assert not [tech for tech in Age2TechData
             if not tech.cost and tech not in TECHS_WITHOUT_COST],     "a technology has no cost and is not on the list of those known to have none"
+
+assert not [age for age in Age2AgeData
+            if not age.cost and age is not Age2AgeData.DARK],     "an age past the Dark Age has no age-up cost"
+
+assert not [building for building in Age2BuildingData
+            if not building.cost],     "a building has no cost"

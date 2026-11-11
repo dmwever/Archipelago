@@ -9,7 +9,7 @@ from NetUtils import ClientStatus, JSONMessagePart, JSONtoTextParser, NetworkIte
 import Utils
 from ..generation import Identity, WorldVersion
 from .handlers.InstallHandler import InstallError
-from .handlers.StorageHandler import reconcile_spent
+from .handlers.StorageHandler import SpentPush
 from ..items import Items
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Campaigns import Age2CampaignData
@@ -104,6 +104,8 @@ class Age2CommandProcessor(ClientCommandProcessor):
             for path in written:
                 self.output(f"Wrote {path}")
             self.output(f"Installed slot {status.slot_id}, seed tag {status.tag}.")
+            if ctx.game_ctx.clear_spent_state():
+                self.output("Cleared this seed's spent mercenaries and item deliveries.")
         finally:
             handler.report = logger.info
             handler.installing = False
@@ -149,10 +151,13 @@ class Age2Context(CommonContext):
     items_handling = 0b111
     settings: ClassVar[Age2Settings] = Age2World.settings
     scenario_completion_key: str
-    mercenaries_used_key: str
+    spent_key: str
+    items_loaded: bool = False
+    pending_spent: int | None = None
     data_storage: DataStorage = None
     installed_seed_name: str = ''
     seed_world_version = WorldVersion.UNKNOWN
+    reported_unknown_items: frozenset[int] = frozenset()
     
     def __init__(self, server_address: Optional[str], password: Optional[str]):
         super().__init__(server_address, password)
@@ -189,7 +194,9 @@ class Age2Context(CommonContext):
 
     def _handle_connected(self, slot_data):
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
-        self.mercenaries_used_key = f"{self.team}_{self.slot}_mercenaries_used"
+        self.spent_key = f"{self.team}_{self.slot}_spent"
+        self.items_loaded = False
+        self.pending_spent = None
         self.seed_world_version = WorldVersion.parse(slot_data.get(WorldVersion.SLOT_DATA_KEY))
         if not self.seed_is_compatible():
             logger.warning(WorldVersion.describe(self.seed_world_version, Age2World.world_version))
@@ -210,20 +217,25 @@ class Age2Context(CommonContext):
             "operations": [
                 {"operation": "default", "value": 0}
             ]
-        },
-        {
-            "cmd": "Set",
-            "key": self.mercenaries_used_key,
-            "default": 0,
-            "want_reply": True,
-            "operations": [
-                {"operation": "default", "value": 0}
-            ]
         }
         ]))
+        self.fetch_spent()
 
         self.set_notify(self.scenario_completion_key)
-        self.set_notify(self.mercenaries_used_key)
+        self.set_notify(self.spent_key)
+
+    def fetch_spent(self) -> None:
+        Utils.async_start(self.send_msgs([
+            {
+                "cmd": "Set",
+                "key": self.spent_key,
+                "default": 0,
+                "want_reply": True,
+                "operations": [
+                    {"operation": "default", "value": 0}
+                ]
+            }
+        ]))
 
     def seed_is_compatible(self) -> bool:
         return WorldVersion.compatible(self.seed_world_version, Age2World.world_version)
@@ -234,21 +246,24 @@ class Age2Context(CommonContext):
             self.game_ctx.client_status.unlocked_items.clear()
         for received_item in received_items:
             if received_item.item not in Items.ID_TO_ITEM:
-                logger.warning("Ignoring unknown item id %s from the server.", received_item.item)
+                if received_item.item not in self.reported_unknown_items:
+                    logger.warning("Ignoring unknown item id %s from the server.", received_item.item)
+                    self.reported_unknown_items |= {received_item.item}
+                self.game_ctx.client_status.unlocked_items.append(Items.Age2ItemData.SKIP)
                 continue
             item_data = Items.ID_TO_ITEM[received_item.item]
             if item_data.item_name == "Victory":
                 Utils.async_start(self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
             self.game_ctx.client_status.unlocked_items.append(item_data)
-        status = self.game_ctx.client_status
-        if status.acked_items > len(status.unlocked_items):
-            status.acked_items = len(status.unlocked_items)
+        if args.get("index", -1) == 0:
+            self.items_loaded = True
+        self._try_reconcile_spent()
 
     def _handle_set_reply(self, args: dict) -> None:
         if args["key"] == self.scenario_completion_key:
             self._handle_scenario_completion_reply()
-        if args["key"] == self.mercenaries_used_key:
-            self._handle_mercenaries_used_reply()
+        if args["key"] == self.spent_key:
+            self._handle_spent_reply()
 
     def _handle_scenario_completion_reply(self) -> None:
         completed: int = self.stored_data.get(self.scenario_completion_key)
@@ -256,22 +271,19 @@ class Age2Context(CommonContext):
         for (scenario_data, managed_scenario) in self.game_ctx.campaign_handler.scenarios.items():
             managed_scenario.completed = scenario_data in finished
 
-    def _handle_mercenaries_used_reply(self) -> None:
-        used: int = self.stored_data.get(self.mercenaries_used_key) or 0
-        from_server = {mercenary.id
-                       for mercenary in self.data_storage.used_mercenaries(used)}
+    def _handle_spent_reply(self) -> None:
+        self.pending_spent = self.stored_data.get(self.spent_key) or 0
+        self._try_reconcile_spent()
 
-        spent_ids, push = reconcile_spent(self.game_ctx.storage_handler.try_load(), from_server)
-        spent = {mercenary for mercenary in self.data_storage.mercenaries
-                 if mercenary.id in spent_ids}
-        self.game_ctx.storage_handler.try_save(spent_ids)
+    def _try_reconcile_spent(self) -> None:
+        if not self.items_loaded or self.pending_spent is None:
+            return
+        server = self.pending_spent
+        self.pending_spent = None
+        push = self.game_ctx.reconcile_spent(server)
+        if push is not None:
+            self._push_spent(push)
 
-        for mercenary in self.data_storage.mercenaries:
-            self.game_ctx.mercenary_handler.set_used(mercenary, mercenary in spent)
-
-        if push:
-            self._push_mercenaries_used(spent)
-            
     def on_scenario_completion(self, scenario: Age2ScenarioData) -> None:
         Utils.async_start(self.send_msgs([
             {
@@ -285,23 +297,19 @@ class Age2Context(CommonContext):
             }
         ]))
 
-    def on_mercenary_used(self, mercenary: Items.Age2ItemData) -> None:
-        spent = {item for item in self.data_storage.mercenaries
-                 if self.game_ctx.mercenary_handler.is_used(item)}
-        spent.add(mercenary)
-        self.game_ctx.storage_handler.try_save({item.id for item in spent})
-        self._push_mercenaries_used(spent)
+    def on_item_spent(self, spent: int) -> None:
+        self._push_spent(SpentPush("or", spent))
 
-    def _push_mercenaries_used(self, spent) -> None:
+    def _push_spent(self, push: SpentPush) -> None:
+        """`or` lets the server do the union; `replace` only ever cuts a shorter stream."""
         Utils.async_start(self.send_msgs([
             {
                 "cmd": "Set",
-                "key": self.mercenaries_used_key,
+                "key": self.spent_key,
                 "default": 0,
                 "want_reply": True,
                 "operations": [
-                    {"operation": "replace",
-                     "value": self.data_storage.mercenary_field(spent)}
+                    {"operation": push.operation, "value": push.value}
                 ]
             }
         ]))

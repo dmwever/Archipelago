@@ -4,16 +4,19 @@ from typing import TYPE_CHECKING
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
+from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import False_, Has, Or, Rule, True_
 
 from ..items.Items import Age2ItemData, Resource
-from ..locations.Ages import Age2AgeData
+from .custom_logic.EconomyRoutes import Strength
+from .custom_logic.Named import Named
+from .custom_logic.ScenarioQuestions import ScenarioHasBuilding, a_or_an
+from ..locations.Players import Age2PlayerData
 
 if TYPE_CHECKING:
-    from .. import Age2World
     from ..locations.Scenarios import Age2ScenarioData
     from .Logic import Logic
 
@@ -21,44 +24,33 @@ if TYPE_CHECKING:
 class ScenarioStartingState:
     is_unlocked: Rule = field(default_factory=lambda: False_())
     has_vils: Rule = field(default_factory=lambda: True_())
-    has_base: Rule = field(default_factory=lambda: False_())
     # A base is no use where you cannot stand: some scenarios must first reach the ground
     # they are meant to settle. Kept free of the economy, since has_base feeds it.
     meets_additional_base_requirements: Rule = field(default_factory=lambda: True_())
-    max_age: Age2AgeData = Age2AgeData.IMPERIAL
-    age_playable: dict[Age2AgeData, Rule] = field(default_factory=dict)
     starts_with_building: dict[Age2BuildingData, Rule] = field(default_factory=lambda: { building: False_() for building in Age2BuildingData })
     obtains_unit: dict[Age2UnitData | Age2HeroData | Age2EscortUnitData, Rule] = field(default_factory=dict)
+    obtains_tech: dict[Age2TechData, Rule] = field(default_factory=dict)
     job_available: dict[Age2VillagerJobData, Rule] = field(
         default_factory=lambda: {job: True_() for job in Age2VillagerJobData})
-    has_water_access: Rule = field(default_factory=lambda: True_())
     must_steal_base: Rule = field(default_factory=lambda: False_())
-    fixed_force: bool = False
-    starting_gold_mine: Rule = field(default_factory=lambda: True_())
-    starting_stone_mine: Rule = field(default_factory=lambda: True_())
-    starting_trees: Rule = field(default_factory=lambda: True_())
-    starting_bushes: Rule = field(default_factory=lambda: True_())
-    starting_hunting: Rule = field(default_factory=lambda: True_())
-    starting_fish: Rule = field(default_factory=lambda: True_())
-    starting_sheep: Rule = field(default_factory=lambda: True_())
-    starting_oysters: Rule = field(default_factory=lambda: False_())
-    starting_whales: Rule = field(default_factory=lambda: False_())
-    starting_relics: Rule = field(default_factory=lambda: True_())
-    trading_ally: Rule = field(default_factory=lambda: False_())
-    resource_sources: dict[Resource, Rule] = field(
-        default_factory=lambda: {resource: False_() for resource in Resource})
     easy_resource_sources: dict[Resource, Rule] = field(
         default_factory=lambda: {resource: False_() for resource in Resource})
+    some_resource_sources: dict[Resource, Rule] = field(
+        default_factory=lambda: {resource: False_() for resource in Resource},
+    )
+    housing: dict[Strength, Rule] = field(
+        default_factory=lambda: {strength: False_() for strength in Strength},
+    )
 
-    def default_mercenary_grants(self, scenario: 'Age2ScenarioData') -> None:
-        from ..items.Items import Mercenary, SCENARIO_TO_ITEMS
-        for item in SCENARIO_TO_ITEMS[scenario]:
-            if item.type_data is not Mercenary:
-                continue
-            for soldier in item.type.units:
-                self.obtains_unit[soldier.unit] = (
-                    self.obtains_unit.get(soldier.unit, False_()) | Has(item.item_name))
-                
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
+        return {}
+
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        return {}
+
 class ScenarioLogic:
     starting_state: ScenarioStartingState
 
@@ -67,13 +59,14 @@ class ScenarioLogic:
         self.logic = logic
         self.scenario = scenario
         self.starting_state = data
-        data.default_mercenary_grants(scenario)
         from .scenarios.ScenarioAgeLogic import ScenarioAgeLogic
         from .scenarios.ScenarioBuildingLogic import ScenarioBuildingLogic
         from .scenarios.ScenarioCivilizationLogic import ScenarioCivilizationLogic
         from .scenarios.ScenarioMilitaryLogic import ScenarioMilitaryLogic
+        from .scenarios.ScenarioPlayerLogic import ScenarioPlayerLogic
         from .scenarios.ScenarioTechLogic import ScenarioTechLogic
         from .scenarios.ScenarioResourceLogic import ScenarioResourceLogic
+        from .scenarios.ScenarioRoutesLogic import ScenarioRoutesLogic
         from .scenarios.ScenarioUnitLogic import ScenarioUnitLogic
         self.civilization = ScenarioCivilizationLogic(self)
         self.ages = ScenarioAgeLogic(self)
@@ -82,19 +75,34 @@ class ScenarioLogic:
         self.techs = ScenarioTechLogic(self)
         self.units = ScenarioUnitLogic(self)
         self.economy = ScenarioResourceLogic(self)
-    
+        self.routes = ScenarioRoutesLogic(self)
+        self.player_logic = ScenarioPlayerLogic(self)
+
     def has_vils(self) -> Rule:
-        return self.starting_state.has_vils
-    
+        return self.named("has villagers", self.starting_state.has_vils)
+
+    def has_builders(self) -> Rule:
+        """Villagers who can put a building up. With professions shuffled, only once the Builder
+        profession arrives: without it a villager can never swap into a Builder."""
+        return self.has_vils() & self.logic.units.has_profession_item(Age2VillagerJobData.BUILDER_MALE)
+
     def has_base(self) -> Rule:
-        villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
-        starts_with_base = (self.starting_state.has_base
-                   & self.logic.resources.has_amount(villager_food.type, villager_food.amount))
-        return ((starts_with_base | self.buildings.can_build_base())
-                & self.starting_state.meets_additional_base_requirements)
+        """A base, paid for: a Town Center standing or built, the ground to stand it on, the
+        Villager Line and the villagers' food. Paid by the items that seed it, never by an easy
+        source - the easy sources ask for a base themselves."""
+        return self.named("has a base", self._has_base())
+
+    def _has_base(self) -> Rule:
+        return (self.has_building(Age2BuildingData.TOWN_CENTER)
+                & self.starting_state.meets_additional_base_requirements
+                & self.logic.units.has_villager_item()
+                & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name))
 
     def has_water_access(self) -> Rule:
-        return self.starting_state.has_water_access
+        return True_() if self.scenario.has_water_access else False_()
+
+    def starts_with_any_building(self) -> Rule:
+        return Or(*self.starting_state.starts_with_building.values())
 
     def job_available(self, job: Age2VillagerJobData) -> Rule:
         return self.starting_state.job_available[job]
@@ -105,9 +113,65 @@ class ScenarioLogic:
             return authored
         return False_()
 
-    def has_building(self, building: Age2BuildingData) -> Rule:
+    def named(self, asks: str, rule: Rule) -> Rule:
+        """A rule of this scenario under a name - `asks` is how it reads after the scenario's name,
+        "can hunt". It holds exactly when `rule` does; /explain shows it as one line."""
+        return Named(rule, label=f"{self.scenario.scenario_name} {asks}")
+
+    def obtains_tech(self, tech: Age2TechData) -> Rule:
+        authored = self.starting_state.obtains_tech.get(tech)
+        if authored is not None:
+            return authored
+        return False_()
+
+    def has_building_structurally(self, building: Age2BuildingData) -> Rule:
+        return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
+                          "standing or buildable",
+                          self._has_building_structurally(building))
+
+    def _has_building_structurally(self, building: Age2BuildingData) -> Rule:
         return (self.starting_state.starts_with_building[building]
-                | self.buildings.can_build_building(building))
-    
+                | self.buildings.can_build_structurally(building))
+
+    def is_seeded(self, building: Age2BuildingData) -> bool:
+        return building.seed_item in self.logic.world.pool.resources.seeds
+
+    def has_seeded_building(self, building: Age2BuildingData) -> Rule:
+        return self.named(f"has {a_or_an(building.building_name)} {building.building_name}, "
+                          "standing or seeded",
+                          self._has_seeded_building(building))
+
+    def _has_seeded_building(self, building: Age2BuildingData) -> Rule:
+        seed = building.seed_item
+        banked = {
+            resource: amount for resource, amount in building.cost.items()
+            if resource not in seed.type.resources
+        }
+        seeded = Has(seed.item_name) & self.logic.resources.has_amounts(banked)
+        return (
+            self.starting_state.starts_with_building[building]
+            | (self.buildings.can_build_structurally(building) & seeded)
+        )
+
+    def has_building(self, building: Age2BuildingData) -> Rule:
+        return ScenarioHasBuilding(scenario=self.scenario, building=building)
+
+    def has_building_paid_for_some(self, building: Age2BuildingData) -> Rule:
+        return self.named(
+            f"has {a_or_an(building.building_name)} {building.building_name}, "
+            "standing or paid for some",
+            self._has_building_paid_for_some(building),
+        )
+
+    def _has_building_paid_for_some(self, building: Age2BuildingData) -> Rule:
+        if building is Age2BuildingData.CASTLE:
+            paid = self.economy.has_ungated_easy_source(Resource.STONE)
+        else:
+            paid = self.economy.can_pay_some(building.cost)
+        return (
+            self.starting_state.starts_with_building[building]
+            | (self.buildings.can_build_structurally(building) & paid)
+        )
+
     def is_unlocked(self) -> Rule:
         return self.starting_state.is_unlocked

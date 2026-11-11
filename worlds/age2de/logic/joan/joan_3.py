@@ -1,30 +1,79 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import Has, True_
+from rule_builder.rules import Has, Rule, True_
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Buildings import Age2BuildingData
-from ...locations.Units import Age2UnitData as U
+from ...locations.Units import Age2UnitData
 from ...items.Items import Age2ItemData
 from ..ScenarioLogic import ScenarioStartingState
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
+    from ..ScenarioLogic import ScenarioLogic
 
 class Joan3StartingState(ScenarioStartingState):
+    has_boats: Rule = Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN2_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 2)
-        self.max_age = Age2AgeData.CASTLE
         self.has_vils = True_()
 
-        has_boats = Has(Age2ItemData.AP_JOAN_3_TRANSPORT.item_name)
-        self.obtains_unit[U.TRANSPORT_SHIP] = has_boats
-        self.obtains_unit[U.DEMOLITION_SHIP] = has_boats
-        self.meets_additional_base_requirements = has_boats | (
-            logic.buildings.has_building(Age2BuildingData.DOCK)
-            & logic.units.has_unit_items(U.TRANSPORT_SHIP))
+        self.obtains_unit[Age2UnitData.TRANSPORT_SHIP] = self.has_boats
+        self.obtains_unit[Age2UnitData.DEMOLITION_SHIP] = self.has_boats
+        self.restorable_boats = self.has_boats & logic.units.survives_caveman(
+            Age2UnitData.TRANSPORT_SHIP)
+        self.meets_additional_base_requirements = self.restorable_boats | (
+            logic.buildings.has_building_items(Age2BuildingData.DOCK)
+            & logic.units.has_unit_items(Age2UnitData.TRANSPORT_SHIP))
+
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
+        military = scenario_logic.military
+        transport = Age2UnitData.TRANSPORT_SHIP
+        can_cross_ocean: Rule = (
+            self.restorable_boats |
+            (
+                scenario_logic.units.can_train_structurally(transport) &
+                scenario_logic.economy.can_pay(transport.cost)
+            )
+        )
+        can_cross_ocean = scenario_logic.named("can cross the sea", can_cross_ocean)
+        return {
+            Age2PlayerData.JOAN3_BURGUNDY: (
+                can_cross_ocean &
+                military.counters_building() &
+                military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.CASTLE)
+            ),
+            # Every castle on the map is English: taking a castle is defeating the English.
+            Age2PlayerData.JOAN3_ENGLISH: (
+                can_cross_ocean &
+                military.has_siege() &
+                military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
+            ),
+            Age2PlayerData.JOAN3_FASTOLF: (
+                can_cross_ocean &
+                military.counters_building() &
+                military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.FEUDAL) &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE)
+            ),
+        }
+
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        military = scenario_logic.military
+        return {
+            (Age2PlayerData.JOAN3_ENGLISH, Age2BuildingData.DOCK): military.can_guard_boats(),
+        }

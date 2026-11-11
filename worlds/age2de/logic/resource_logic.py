@@ -17,8 +17,13 @@ class ResourceLogic:
         self.logic = logic
         self.world = world
 
-    def has_amount(self, resource: Resource, amount: float) -> Rule:
-        return HasResourceAmount(resource=resource, amount=ceil(amount))
+    def has_amount(
+        self,
+        resource: Resource,
+        amount: float,
+        excluding: frozenset[str] = frozenset(),
+    ) -> Rule:
+        return HasResourceAmount(resource=resource, amount=ceil(amount), excluding=excluding)
 
     def has_amounts(self, costs: Mapping[Resource, float]) -> Rule:
         priced = [resource for resource, amount in costs.items() if amount > 0]

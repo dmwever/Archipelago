@@ -30,6 +30,26 @@ CIVILIAN_LINES = (
 
 FAITH_LINES = (L.MONK_LINE, L.MISSIONARY_LINE)
 
+MONKS_ALWAYS_COUNTER = (L.BATTLE_ELEPHANT_LINE, L.WAR_ELEPHANT_LINE, L.ELEPHANT_ARCHER_LINE)
+
+ANTI_UNIT_SIEGE = (
+    L.MANGONEL_LINE,
+    L.BOMBARD_CANNON_LINE,
+    L.ROCKET_CART_LINE,
+)
+
+SIEGE_ALWAYS_COUNTERS = (
+    L.BATTERING_RAM_LINE,
+    L.ARMORED_ELEPHANT_LINE,
+    L.TREBUCHET_LINE,
+    L.TRACTION_TREBUCHET_LINE,
+    L.MOUNTED_TREBUCHET_LINE,
+    L.BOMBARD_CANNON_LINE,
+    L.MANGONEL_LINE,
+    L.SCORPION_LINE,
+    L.ROCKET_CART_LINE,
+)
+
 ANTI_BUILDING = (
     # Barracks
     L.MILITIA_LINE, L.SPEARMAN_LINE, L.EAGLE_SCOUT_LINE, L.CONDOTTIERO_LINE,
@@ -56,18 +76,23 @@ ANTI_BUILDING = (
     # Archery Range
     L.GRENADIER_LINE, L.HAND_CANNONEER_LINE,
     # Siege Workshop
-    L.MANGONEL_LINE, L.ROCKET_CART_LINE, L.HEAVY_ROCKET_CART_LINE, L.FLAMING_CAMEL_LINE,
+    L.MANGONEL_LINE, L.ROCKET_CART_LINE, L.FLAMING_CAMEL_LINE,
 )
 
 SIEGE = (
     L.BATTERING_RAM_LINE,
-    L.ARMORED_ELEPHANT_LINE,   # the ram of the civilisations that have elephants
+    L.ARMORED_ELEPHANT_LINE,
     L.TREBUCHET_LINE,
     L.TRACTION_TREBUCHET_LINE,
     L.MOUNTED_TREBUCHET_LINE,
-    L.BOMBARD_CANNON_LINE,     # the Houfnice is its Imperial tier
+    L.BOMBARD_CANNON_LINE,
     L.PETARD_LINE,
-    L.FIRE_ARCHER_LINE,        # shoots buildings alight, so it counts as siege
+    L.FIRE_ARCHER_LINE,
+)
+
+RAM_LINES = (
+    L.BATTERING_RAM_LINE,
+    L.ARMORED_ELEPHANT_LINE,
 )
 
 LONG_RANGE_SIEGE = (
@@ -78,13 +103,20 @@ LONG_RANGE_SIEGE = (
 NAVAL_BOMBARDMENT = (
     L.CANNON_GALLEON_LINE,
     L.CATAPULT_GALLEON_LINE,
-    L.DROMON_LINE,             # the Huns' only one - they have no Cannon Galleon
+    L.DROMON_LINE,
     L.LOU_CHUAN_LINE,
 )
 
-NAVY = tuple(line for line in SHIP_LINES if line not in CIVILIAN_LINES)
+SUICIDE_RAFT_LINES = (
+    L.DEMOLITION_RAFT_LINE,
+    L.INCENDIARY_RAFT_LINE,
+)
+
+NAVY = tuple(line for line in SHIP_LINES
+                   if line not in CIVILIAN_LINES + SUICIDE_RAFT_LINES)
+
 MILITARY = tuple(line for line in L if line not in CIVILIAN_LINES + SHIP_LINES
-                       + FAITH_LINES)
+                       + FAITH_LINES + SIEGE)
 
 BUILDING_COUNTER = tuple(line for line in L if line in ANTI_BUILDING
                                or line in SIEGE)
@@ -102,6 +134,8 @@ ROLE_TO_LINES: dict[str, tuple[Age2UnitLineData, ...]] = {
 
 assert not set(LONG_RANGE_SIEGE) - set(SIEGE), \
     "a long range siege line that is not siege"
+assert not set(RAM_LINES) - set(SIEGE), \
+    "a ram that is not siege"
 assert not set(NAVAL_BOMBARDMENT) - set(NAVY), \
     "a naval bombardment line that is not a warship"
 assert not set(BUILDING_COUNTER) & set(SHIP_LINES),     "a ship counting as a building counter - it is a land role, and naval bombardment is its own"

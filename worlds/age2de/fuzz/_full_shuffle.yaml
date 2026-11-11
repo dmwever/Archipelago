@@ -1,0 +1,180 @@
+# Benchmark profile: everything that can be a location is one. Every building group, every age,
+# techsanity all, unitsanity all, and villagers with professions. Everything else is fuzzed.
+# Built on age2de.yaml's constraints, which follow below unchanged.
+#
+#   PYTHONPATH=../../.. python fuzz.py -r 100 -j 6 -g age2de -n 1 -m _full_shuffle.yaml -t 90
+
+"Age Of Empires II: Definitive Edition":
+  shuffle_buildings: [Economy, Tech, Military, Defense, Unique, Wonder]
+  shuffle_ages: 'true'
+  techsanity: all
+  unitsanity: all
+  shuffle_villager: include_professions
+  fuzz_constraints:
+    # All three campaigns are in. Genghis Khan was held out of the retired seed set so that runs
+    # compared like with like; #30's fill gate is what showed the cost - Genghis 4 is the one
+    # scenario with a standing Mining Camp and Monastery, so the set could not see the very
+    # thing the ticket changed. Refuzzing this meta makes a new set, which retires every run
+    # stored against the old one: see bench/README.md.
+
+    # "starting_campaigns must include at least one enabled campaign."
+    #
+    # The dependency runs this way round: a campaign you start in has to be one you enabled.
+    # So starting_campaigns is left exactly as rolled and enabled_campaigns is widened to
+    # cover it, rather than the start being overwritten to match what happened to be enabled.
+    # A blank start stays blank - it is legal, and means "pick one of my enabled campaigns
+    # for me", so none of these fire and that path stays under test.
+    #
+    # if_value matches the whole list and the fuzzer does not promise a sorted OptionSet, so
+    # every ordering of every non-empty subset is spelt out: three singletons, six ordered
+    # pairs, six ordered triples. if_selected would be shorter but cannot reach another option
+    # - only if_value carries then_include.
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Joan of Arc
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+        - Joan of Arc
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+        - Genghis Khan
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Attila the Hun
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Genghis Khan
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Attila the Hun
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Joan of Arc
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+    # "enabled_campaigns needs at least one campaign." Only reachable once the above have had
+    # their say: a blank start cannot widen anything, so an empty enable list needs a floor.
+    # The fuzzer empties an OptionSet about half the time, which is the single largest source
+    # of discarded generations.
+    - option: enabled_campaigns
+      ensure_any:
+        - Attila the Hun
+        - Joan of Arc
+        - Genghis Khan

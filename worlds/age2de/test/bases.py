@@ -8,6 +8,18 @@ from test.bases import WorldTestBase
 from test.general import setup_solo_multiworld
 
 from .. import Age2World, AGE2_DE
+from ..items.Items import Resource
+from ..logic.custom_logic.EconomyRoutes import EconomyRoutesYield, Strength
+
+
+def own_easy_source(scenario_logic, resource: Resource):
+    routes = scenario_logic.routes
+    return EconomyRoutesYield(
+        economy=routes.economy_routes(),
+        resource=resource,
+        strength=Strength.AT_SCALE,
+        among=frozenset(route.name for route in routes.scenario_specific_routes()),
+    )
 
 
 class Age2TestBase(WorldTestBase):
@@ -61,6 +73,25 @@ class Age2RuleTestBase(unittest.TestCase):
         state.sweep_for_advancements()
         return state
 
+    def state_with(self, *item_names: str) -> CollectionState:
+        """The opposite of state_without: the precollected items and nothing but the ones named.
+        A name repeated collects that many copies, for progressive items. It does not sweep -
+        this is for asking what one short state reaches, not what a playthrough does.
+
+        A scenario unlock is an event item sitting on the previous chapter's victory rather than
+        anything in the pool, so the events count as available too."""
+        state = CollectionState(self.multiworld)
+        wanted = list(item_names)
+        events = [location.item for location
+                  in self.multiworld.get_filled_locations(self.world.player)]
+        for item in list(self.multiworld.itempool) + events:
+            if item.name in wanted:
+                wanted.remove(item.name)
+                state.collect(item, prevent_sweep=True)
+        if wanted:
+            raise AssertionError(f"no such item to collect: {wanted}")
+        return state
+
     def can_reach(self, location_name: str, state: CollectionState = None) -> bool:
         if state is None:
             state = self.state_without()
@@ -68,6 +99,11 @@ class Age2RuleTestBase(unittest.TestCase):
 
     def location_names(self) -> set[str]:
         return {location.name for location in self.multiworld.get_locations(self.world.player)}
+
+    def access_rule(self, location_name: str):
+        """A location's resolved rule, to ask on its own. `can_reach` answers for the whole
+        route to it, which hides what the location itself asks."""
+        return self.multiworld.get_location(location_name, self.world.player).access_rule
 
     def item_requirements(self, location_name: str) -> set[str]:
         """The item names a location's resolved rule asks for.

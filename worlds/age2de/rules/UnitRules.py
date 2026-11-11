@@ -58,15 +58,13 @@ class UnitRules:
         if isinstance(location, (Age2HeroData, Age2EscortUnitData)):
             return units.is_granted_anywhere(location)
         if self.world.pool.units.is_villager_location(location):
-            return True_()
+            return units.can_get_villager_anywhere()
         if isinstance(location, Age2UnitLineData):
             return units.can_own_line_anywhere(location)
         return units.can_own_anywhere(location)
 
     def entrance_rule(self, region: UnitRegion, entrance: UnitEntrance) -> Rule:
-        if entrance.kind == UnitEntranceKind.train:
-            return self.logic.can_build_building_anywhere(entrance.via)
-        if entrance.kind == UnitEntranceKind.startup:
+        if entrance.kind in (UnitEntranceKind.train, UnitEntranceKind.startup):
             return True_()
         if entrance.kind == UnitEntranceKind.trigger:
             return self.trigger_rule(entrance.via, region.target)

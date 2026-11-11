@@ -1,0 +1,49 @@
+description: 'Age Of Empires II: Definitive Edition Template, generated with https://github.com/Eijebong/Archipelago-fuzzer/tree/0.6.2'
+game: 'Age Of Empires II: Definitive Edition'
+requires:
+  version: 0.6.7
+'Age Of Empires II: Definitive Edition':
+  progression_balancing: 34
+  accessibility: full
+  scenario_branching: any
+  shuffle_buildings:
+  - Economy
+  - Tech
+  - Military
+  - Defense
+  - Unique
+  - Wonder
+  enabled_campaigns:
+  - Attila the Hun
+  starting_campaigns:
+  - Attila the Hun
+  shuffle_ages: 'true'
+  techsanity: all
+  tech_behavior: instant
+  shuffle_unique_techs: unshuffled
+  existing_techs: vanilla
+  unitsanity: all
+  unitsanity_items: upgrades
+  shuffle_villager: include_professions
+  include_unique_units: none
+  caveman: 'false'
+  goal: campaign_completion
+  partner_trade: allies_and_enemies
+  local_start: both
+  trap_difficulty: hard
+  trap_percentage: 77
+  trap_distribution:
+    Wololo Trap: 689
+    Theologians Trap: 593
+    Flemish Revolution Trap: 71
+    Ooh Ahh Trap: 47
+  local_items: []
+  non_local_items: []
+  start_inventory: {}
+  startInventoryPool: {}
+  start_hints: []
+  start_location_hints: []
+  exclude_locations: []
+  priority_locations: []
+  item_links: []
+  plando_items: []

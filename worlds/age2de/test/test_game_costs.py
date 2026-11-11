@@ -4,6 +4,8 @@ import unittest
 
 from . import bases
 from ..items.Items import Age2ItemData, Building, Resource
+from ..locations.Ages import Age2AgeData
+from ..locations.Buildings import Age2BuildingData
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.UnitLines import Age2UnitLineData
@@ -61,32 +63,69 @@ class TestSpotChecks(unittest.TestCase):
         self.assertEqual(gate.type.needed_resources, {Resource.WOOD: 20.0})
 
 
+class TestAgeAndBuildingCosts(unittest.TestCase):
+    """Ages and buildings were never priced: advancing an age and putting a building up both read
+    as free, so logic could ask for every one of them out of a single opening pile."""
+
+    def test_every_age_past_the_dark_age_costs_something(self):
+        self.assertEqual(Age2AgeData.DARK.cost, {})
+        for age in (Age2AgeData.FEUDAL, Age2AgeData.CASTLE, Age2AgeData.IMPERIAL):
+            with self.subTest(age.name):
+                self.assertTrue(age.cost)
+
+    def test_the_age_up_costs_are_the_game_s(self):
+        self.assertEqual(Age2AgeData.FEUDAL.cost, {Resource.FOOD: 500})
+        self.assertEqual(Age2AgeData.CASTLE.cost, {Resource.FOOD: 800, Resource.GOLD: 200})
+        self.assertEqual(Age2AgeData.IMPERIAL.cost, {Resource.FOOD: 1000, Resource.GOLD: 800})
+
+    def test_every_building_location_costs_what_its_item_says(self):
+        for building in Age2BuildingData:
+            with self.subTest(building.name):
+                expected = {resource: int(amount) for resource, amount
+                            in building.item.type.needed_resources.items()}
+                self.assertEqual(building.cost, expected)
+                self.assertTrue(building.cost)
+
+    def test_known_building_costs(self):
+        self.assertEqual(Age2BuildingData.TOWN_CENTER.cost,
+                         {Resource.WOOD: 275, Resource.STONE: 100})
+        self.assertEqual(Age2BuildingData.FARM.cost, {Resource.WOOD: 60})
+        self.assertEqual(Age2BuildingData.CASTLE.cost, {Resource.STONE: 650})
+
+    def test_age_and_building_costs_are_whole_positive_amounts(self):
+        for owner in (*Age2AgeData, *Age2BuildingData):
+            for resource, amount in owner.cost.items():
+                with self.subTest(f"{owner.name}.{resource}"):
+                    self.assertIsInstance(resource, Resource)
+                    self.assertIsInstance(amount, int)
+                    self.assertGreater(amount, 0)
+
+
 class TestCostsReachTheRules(bases.Age2RuleTestBase):
     campaigns = ["Attila the Hun", "Joan of Arc"]
 
     def deps(self, rule):
         return set(rule.resolve(self.world).item_dependencies())
 
-    def test_training_a_unit_asks_for_what_it_costs(self):
-        self.build()
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        wanted = self.deps(scenario.units.can_train(Age2UnitData.KNIGHT))
-        # A knight is food and gold: either banked, or a source on the map.
-        self.assertIn("+250 Starting Food", wanted)
-        self.assertIn("+250 Starting Gold", wanted)
-
-    def test_researching_a_tech_asks_for_what_it_costs(self):
+    def test_a_tech_is_paid_by_easy_sources_only(self):
+        """Loom used to be researchable on the opening pile in every scenario, which is how dozens
+        of techs came into logic at once. A tech's price asks an easy source of each resource it
+        costs, and nothing else."""
         self.build(techsanity=3)
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        wanted = self.deps(scenario.techs.can_research(Age2TechData.LOOM))
-        self.assertIn("+250 Starting Gold", wanted)
+        economy = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).economy
+        for tech in self.world.pool.techs.shuffled:
+            priced = [resource for resource, amount in tech.cost.items() if amount > 0]
+            with self.subTest(tech.name):
+                self.assertIs(economy.can_sustain(priced).resolve(self.world),
+                              economy.can_pay(tech.cost).resolve(self.world))
 
     def test_a_free_unit_is_free_rather_than_untrainable(self):
         """An empty And resolves to False_, so a unit with no cost on file has to be handled
         explicitly or it becomes untrainable."""
         self.build()
         economy = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).economy
-        self.assertTrue(economy.can_afford({}).resolve(self.world).always_true)
+        self.assertTrue(economy.can_pay({}).resolve(self.world)
+                        .always_true)
 
 
 class TestVillagersCostFood(bases.Age2RuleTestBase):
@@ -95,15 +134,9 @@ class TestVillagersCostFood(bases.Age2RuleTestBase):
 
     def test_a_shuffled_villager_wants_the_starting_food_item(self):
         self.build(shuffle_villager=ShuffleVillager.option_yes)
-        scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1)
-        wanted = set(scenario.units.can_train(Age2UnitData.VILLAGER_MALE)
+        wanted = set(self.world.rules.logic.units.can_get_villager_anywhere()
                      .resolve(self.world).item_dependencies())
         self.assertIn(Age2ItemData.STARTING_VILLAGER_FOOD.item_name, wanted)
-
-    def test_an_unshuffled_villager_does_not(self):
-        self.build(shuffle_villager=ShuffleVillager.option_no)
-        rule = self.world.rules.logic.units.villager_food()
-        self.assertTrue(rule.resolve(self.world).always_true)
 
 
 class TestABaseNeedsVillagers(bases.Age2RuleTestBase):
@@ -115,7 +148,8 @@ class TestABaseNeedsVillagers(bases.Age2RuleTestBase):
         is not a base, so the food is asked outside the granted-or-built choice."""
         self.build()
         scenario = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_3)
-        self.assertTrue(scenario.starting_state.has_base.resolve(self.world).always_true)
+        town_center = scenario.starting_state.starts_with_building[Age2BuildingData.TOWN_CENTER]
+        self.assertTrue(town_center.resolve(self.world).always_true)
         wanted = set(scenario.has_base().resolve(self.world).item_dependencies())
         self.assertIn(Age2ItemData.STARTING_VILLAGER_FOOD.item_name, wanted)
 

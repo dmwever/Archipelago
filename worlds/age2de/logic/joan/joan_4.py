@@ -1,17 +1,21 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, HasAny, Rule, True_
+from rule_builder.rules import Has, Rule
 from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
+    from ..ScenarioLogic import ScenarioLogic
 
 class Joan4StartingState(ScenarioStartingState):
 
@@ -22,6 +26,50 @@ class Joan4StartingState(ScenarioStartingState):
         self.has_vils = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
 
         camp = Has(Age2ItemData.AP_JOAN_4_FRENCH_CAMP.item_name)
+        # The French Camp comes over from Gaia whole: a Town Center, a Mill, a Lumber Camp and a
+        # Mining Camp, all standing. The Lumber Camp is the one that moves answers - a building
+        # already up asks for no seed item.
+        self.starts_with_building[Age2BuildingData.TOWN_CENTER] = camp
+        self.starts_with_building[Age2BuildingData.MILL] = camp
+        self.starts_with_building[Age2BuildingData.LUMBER_CAMP] = camp
+        self.starts_with_building[Age2BuildingData.MINING_CAMP] = camp
+        self.housing[Strength.SOME] = camp
+
         self.obtains_unit[U.CROSSBOWMAN] = camp
         self.obtains_unit[U.VILLAGER_MALE] = camp
         self.obtains_unit[U.VILLAGER_FEMALE] = camp
+
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
+        military = scenario_logic.military
+        # The Rising withholds the Cannon Galleon, and the Franks have no other ship that shoots
+        # buildings: Chalons and Troyes fall to a land army only.
+        return {
+            Age2PlayerData.JOAN4_TROYES: (
+                military.has_siege() &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
+            ),
+            Age2PlayerData.JOAN4_CHALONS: (
+                military.counters_building() &
+                military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.SCORPION_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL)
+            ),
+            Age2PlayerData.JOAN4_RHEIMS: (
+                military.has_siege() &
+                military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
+            ),
+        }
+
+    def trade_guard_rules(
+        self,
+        scenario_logic: 'ScenarioLogic',
+    ) -> dict[tuple[Age2PlayerData, Age2BuildingData], Rule]:
+        military = scenario_logic.military
+        return {
+            (Age2PlayerData.JOAN4_TROYES, Age2BuildingData.DOCK): military.can_guard_boats(),
+            (Age2PlayerData.JOAN4_CHALONS, Age2BuildingData.DOCK): military.can_guard_boats(),
+        }

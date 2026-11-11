@@ -3,6 +3,9 @@ from rule_builder.rules import Rule
 from ..Options import IncludeUniqueUnits, Techsanity, Unitsanity
 from ..locations.Ages import Age2AgeData
 from ..locations.Buildings import Age2BuildingData
+from ..locations.Techs import Age2TechData
+from ..locations.Units import Age2UnitData
+from ..items.Items import Resource
 from ..logic.custom_logic.ScenarioQuestions import ScenarioCanBuild, ScenarioHasReached
 from .bases import Age2RuleTestBase
 
@@ -43,7 +46,7 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
             for age in Age2AgeData:
                 with self.subTest(scenario=scenario.scenario.name, age=age.name):
                     asked = ScenarioHasReached(scenario=scenario.scenario, age=age).resolve(world)
-                    direct = (scenario.ages.can_reach(age)
+                    direct = (scenario.ages.can_reach_structurally(age)
                               | scenario.ages.start_past(age)).resolve(world)
                     self.assertIs(self.behind(asked), direct)
 
@@ -73,7 +76,7 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
         world = self.build(**EVERYTHING)
         huns = [s for s in world.rules.logic.scenarios if s.scenario.name == "AP_ATTILA_1"][0]
         # The Huns build no houses, so this is False before anything else is asked.
-        resolved = huns.buildings.can_build_building(Age2BuildingData.HOUSE).resolve(world)
+        resolved = huns.buildings.can_build_structurally(Age2BuildingData.HOUSE).resolve(world)
         self.assertTrue(resolved.always_false)
 
     def test_the_cache_belongs_to_the_world(self):
@@ -89,13 +92,18 @@ class TestScenarioQuestionsAnswerTheSameThing(Age2RuleTestBase):
 class TestTheAnswersAreActuallyShared(Age2RuleTestBase):
 
     def test_one_answer_per_question_asked(self):
-        """The point of the exercise: a few hundred answers, not a million resolutions."""
+        """The point of the exercise: one answer per question, not one per time it is asked. A
+        question is about one scenario and one thing - a tech, a unit, a building, an age, a
+        resource - so there can never be more answers than that."""
         world = self.build(**EVERYTHING)
-        self.assertTrue(world.rules.logic.scenario_answers)
-        self.assertLess(len(world.rules.logic.scenario_answers), 1000)
-        for answer in world.rules.logic.scenario_answers.values():
+        logic = world.rules.logic
+        subjects = (len(Age2TechData) + len(Age2UnitData) + len(Age2BuildingData)
+                    + len(Age2AgeData) + len(Resource))
+        self.assertTrue(logic.scenario_answers)
+        self.assertLessEqual(len(logic.scenario_answers), len(logic.scenarios) * subjects)
+        for answer in logic.scenario_answers.values():
             self.assertIsInstance(answer, Rule.Resolved)
-        self.assertFalse(world.rules.logic.scenario_answers_open, "a question was left part-way answered")
+        self.assertFalse(logic.scenario_answers_open, "a question was left part-way answered")
 
 
 class TestOneScenarioLogicPerScenario(Age2RuleTestBase):
@@ -120,3 +128,21 @@ class TestOneScenarioLogicPerScenario(Age2RuleTestBase):
         owned = {id(scenario_logic) for scenario_logic in world.rules.logic.scenarios}
         owned.update(id(rules.scenario_logic) for rules in world.rules.scenario_rules)
         self.assertEqual(len(owned), len(world.rules.logic.scenarios))
+
+
+class TestNamedRules(Age2RuleTestBase):
+    """A named rule only gives a rule a name: it holds exactly when that rule does, carries its
+    items for the cache, and prints as its name alone."""
+
+    def test_a_named_rule_is_its_rule(self):
+        from ..logic.custom_logic.Named import Named
+        world = self.build()
+        sl = world.rules.logic.for_scenario(world.pool.scenarios.included[0])
+        dropsite = sl.buildings.has_hunt_dropsite()
+        named = sl.economy.can_hunt(dropsite).resolve(world)
+        self.assertIsInstance(named, Named.Resolved)
+        self.assertIs(named.child, sl.economy._hunt(dropsite).resolve(world))
+        self.assertEqual(set(named.child.item_dependencies()), set(named.item_dependencies()))
+        state = self.multiworld.get_all_state(False)
+        self.assertEqual(named.child(state), named(state))
+        self.assertEqual(f"{sl.scenario.scenario_name} can hunt", named.explain_str(state))

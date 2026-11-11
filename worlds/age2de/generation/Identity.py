@@ -4,7 +4,6 @@ import zlib
 import Utils
 
 TAG_LENGTH = 8
-SOURCE_SUFFIX = " Template"
 
 TAGGED_XSDAT = re.compile(r"^AP[ _].*_([0-9a-f]{%d})\.xsdat$" % TAG_LENGTH)
 
@@ -59,17 +58,6 @@ def campaign_xsdat_name(stem: str, tag: str, player: str) -> str:
 
 def storage_file_name(stem: str, tag: str, player: str) -> str:
     return file_stem(stem, tag, player) + ".json"
-
-
-def source_campaign_stem(stem: str) -> str:
-    """The shipped bundle's stem. The suffix keeps the source apart from the player copies in the
-    same folder, and is dropped from every name the player sees or the engine writes."""
-    return stem + SOURCE_SUFFIX
-
-
-def source_campaign_file_name(stem: str) -> str:
-    """The untagged bundle shipped with the mod, which /install reads and never writes."""
-    return source_campaign_stem(stem) + ".aoe2campaign"
 
 
 def tag_of(file_name: str) -> str:

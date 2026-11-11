@@ -8,6 +8,7 @@ from . import bases
 from ..Options import Age2Options
 from ..locations.Buildings import Age2BuildingData, BuildingOption
 from ..locations.Campaigns import Age2CampaignData
+from ..locations.Civilizations import Age2CivData
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
@@ -70,7 +71,7 @@ class TestScenarioPool(bases.Age2RuleTestBase):
     def test_included_is_the_campaigns_expanded_in_order(self):
         world = self.build()
         expected = [scenario for campaign in world.pool.campaigns.enabled
-                    for scenario in world.pool.scenarios.of(campaign)]
+                    for scenario in world.pool.scenarios.in_campaign(campaign)]
         self.assertEqual(expected, world.pool.scenarios.included)
 
     def test_first_scenario_opens_its_campaign(self):
@@ -78,8 +79,8 @@ class TestScenarioPool(bases.Age2RuleTestBase):
         for campaign in world.pool.campaigns.enabled:
             with self.subTest(campaign.campaign_name):
                 first = world.pool.scenarios.first_scenario(campaign)
-                self.assertEqual(world.pool.scenarios.of(campaign)[0], first)
-                self.assertEqual(min(s.chapter for s in world.pool.scenarios.of(campaign)),
+                self.assertEqual(world.pool.scenarios.in_campaign(campaign)[0], first)
+                self.assertEqual(min(s.chapter for s in world.pool.scenarios.in_campaign(campaign)),
                                  first.chapter)
 
 
@@ -122,6 +123,53 @@ class TestBuildingPool(bases.Age2RuleTestBase):
             with self.subTest(building.name):
                 self.assertTrue(world.pool.civs.builds(building))
 
+    def test_base_is_the_town_center_and_the_house(self):
+        self.assertEqual(
+            [Age2BuildingData.TOWN_CENTER, Age2BuildingData.HOUSE],
+            self.shuffled(shuffle_buildings={BuildingOption.base}),
+        )
+
+    def test_castle_is_its_own_category(self):
+        self.assertEqual(
+            [Age2BuildingData.CASTLE],
+            self.shuffled(shuffle_buildings={BuildingOption.castle}),
+        )
+        self.assertNotIn(
+            Age2BuildingData.CASTLE,
+            self.shuffled(shuffle_buildings={BuildingOption.military, BuildingOption.defense}),
+        )
+
+    def test_a_building_can_be_named_on_its_own(self):
+        self.assertEqual(
+            [Age2BuildingData.MARKET, Age2BuildingData.BLACKSMITH],
+            self.shuffled(shuffle_buildings={"Market", "Blacksmith"}),
+        )
+
+    def test_naming_a_unique_building_gets_past_the_unique_gate(self):
+        """No shipped civ builds a unique building, so the Franks borrow a Settlement here."""
+        original_franks_buildings = Age2CivData.FRANKS.included_buildings
+        Age2CivData.FRANKS.included_buildings = (
+            original_franks_buildings + [Age2BuildingData.SETTLEMENT]
+        )
+        self.addCleanup(
+            setattr,
+            Age2CivData.FRANKS,
+            "included_buildings",
+            original_franks_buildings,
+        )
+
+        self.assertNotIn(
+            Age2BuildingData.SETTLEMENT,
+            self.shuffled(shuffle_buildings={BuildingOption.economy}),
+        )
+        self.assertIn(
+            Age2BuildingData.SETTLEMENT,
+            self.shuffled(shuffle_buildings={BuildingOption.economy, "Settlement"}),
+        )
+
+    def test_naming_a_building_nobody_builds_shuffles_nothing(self):
+        self.assertEqual([], self.shuffled(shuffle_buildings={"Folwark"}))
+
     def test_locations_and_shuffled_agree(self):
         """Buildings have no separate on/off toggle, so the two are the same list."""
         world = self.build()
@@ -161,6 +209,10 @@ class TestWhereTheOptionsLive(unittest.TestCase):
         "goal",            # which victory rule, not which scenarios exist
         "local_start",     # a placement policy, applied in pre_fill
         "tech_behavior",   # the game mod's business; slot data only
+        "monks_can_counter",   # which counters count, read where counters resolve
+        "siege_can_counter",   # which counters count, read where counters resolve
+        "market_trade",        # whether the market is an economy, read where it resolves
+        "partner_trade",       # whose markets and docks are an economy, read where it resolves
     }
 
     POOLS = pathlib.Path(__file__).parent.parent / "generation" / "pools"

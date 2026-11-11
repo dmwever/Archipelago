@@ -1,12 +1,13 @@
 # world/age2DE/__init__.py
 
-from math import ceil
+import functools
 import logging
 from Options import OptionError
 from rule_builder.cached_world import CachedRuleBuilderWorld
 import settings
 from typing import Any, ClassVar, Mapping
-from BaseClasses import Entrance, Item, ItemClassification, Location, MultiWorld, Region
+from BaseClasses import CollectionState, Entrance, Item, Location, MultiWorld, Region
+from NetUtils import JSONMessagePart
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, Type, components, icon_paths, launch as launch_subprocess
 from worlds.age2de.locations import Buildings
@@ -16,19 +17,46 @@ from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
 from .regions.UnitRegions import UnitRegions
-from .Options import TRAP_DEFAULT_WEIGHT, Age2Options, Goal, ScenarioBranching
+from .Options import (
+    Age2Options,
+    Caveman,
+    ExistingTechs,
+    ScenarioBranching,
+    ShuffleVillager,
+    Techsanity,
+    Unitsanity,
+)
 from .items import Items
-from .locations import (Campaigns, EscortUnits, Heroes, Locations, Scenarios,
-                        UnitLines, Units, VillagerJobs)
-from .locations.Techs import Age2TechData
-from .locations.connections import (CivilizationBuildings, CivilizationTechs,
-                                    CivilizationUnits, GameCosts, ScenarioResources,
-                                    ScenarioStartupUnits,
-                                    ScenarioTriggerUnits, UnitBuildings,
-                                    UnitCounters,
-                                    UnitLineUnits, UnitRoles, UnitTechs,
-                                    UnitUpgradeTokens, UnitVariants,
-                                    VillagerJobBuildings)
+from .locations import (
+    Campaigns,
+    Locations,
+    Scenarios,
+)
+from .locations.Players import TRADE_BUILDINGS
+from .locations.VillagerJobs import Age2VillagerJobData
+from .locations.connections import (
+    BuildingSeeds as BuildingSeeds,
+    CivilizationBuildings as CivilizationBuildings,
+    CivilizationTechs as CivilizationTechs,
+    CivilizationUnits as CivilizationUnits,
+    GameCosts as GameCosts,
+    ScenarioCavemanExemptions as ScenarioCavemanExemptions,
+    ScenarioExclusions as ScenarioExclusions,
+    ScenarioPlayers as ScenarioPlayers,
+    ScenarioResources as ScenarioResources,
+    ScenarioStartupUnits as ScenarioStartupUnits,
+    ScenarioTriggerUnits as ScenarioTriggerUnits,
+    TechCounters as TechCounters,
+    UnitBuildings as UnitBuildings,
+    UnitCounters as UnitCounters,
+    UnitLineUnits as UnitLineUnits,
+    UnitRoles as UnitRoles,
+    UnitTechs as UnitTechs,
+    UnitUpgradeTokens as UnitUpgradeTokens,
+    UnitVariants as UnitVariants,
+    VillagerJobBuildings as VillagerJobBuildings,
+)
+from .explain import Explainer
 from .rules.Rules import Rules
 
 logger = logging.getLogger(__name__)
@@ -44,6 +72,10 @@ class Age2Settings(settings.Group):
     
     user_folder: UserDirectory = UserDirectory(AGE2_DE)
         
+UT_SEED = "ut_seed"
+"""Slot data key: the world's own seed, for Universal Tracker to rebuild the same world."""
+
+
 class Age2World(CachedRuleBuilderWorld):
     """
     Age of Empires II: Definitive Edition is a Real-Time Strategy game centered around the medieval
@@ -55,7 +87,7 @@ class Age2World(CachedRuleBuilderWorld):
     options: Age2Options  # typing hints for option results
     topology_present = True  # show path to required location checks in spoiler
 
-    item_names = set(item.item_name for item in Items.Age2ItemData)
+    item_names = set(Items.item_name_to_id)
     location_names = set(LocationMapping.location_name_list)
     item_name_to_id = Items.item_name_to_id
     item_id_to_name = Items.item_id_to_name
@@ -93,11 +125,58 @@ class Age2World(CachedRuleBuilderWorld):
         for campaign in Campaigns.Age2CampaignData:
             if campaign.campaign_name in enabled and not CAMPAIGN_TO_SCENARIOS[campaign]:
                 raise OptionError(f"{player_name}: {campaign.campaign_name} has no scenarios.")
+        techsanity = options.techsanity.value
+        existing_techs = options.existing_techs
+        if (
+            techsanity == Techsanity.option_none
+            and existing_techs.value != ExistingTechs.option_vanilla
+        ):
+            existing_techs.value = ExistingTechs.option_vanilla
+            logger.warning(
+                f"{player_name}'s Existing Techs needs Techsanity. With Techsanity off, "
+                f"Existing Techs falls back to vanilla."
+            )
+        if (
+            techsanity == Techsanity.option_generic
+            and existing_techs.value == ExistingTechs.option_only_find_units
+        ):
+            existing_techs.value = ExistingTechs.option_vanilla
+            logger.warning(
+                f"{player_name}'s Existing Techs Only Find Units needs Techsanity units or all. "
+                f"With Techsanity {options.techsanity.current_key}, no upgrade tech is a "
+                f"location, so Existing Techs falls back to vanilla."
+            )
+        caveman = options.caveman
+        if not caveman.value:
+            return
+        if options.unitsanity.value == Unitsanity.option_none:
+            caveman.value = Caveman.option_false
+            logger.warning(
+                f"{player_name}'s Caveman needs Unitsanity. With Unitsanity off, "
+                f"Caveman is turned off."
+            )
+        elif techsanity in (Techsanity.option_none, Techsanity.option_generic):
+            caveman.value = Caveman.option_false
+            logger.warning(
+                f"{player_name}'s Caveman needs Techsanity units or all. With Techsanity "
+                f"{options.techsanity.current_key}, Caveman is turned off."
+            )
 
     def generate_early(self) -> None:
+        self.seed_for_tracker()
         self.inspect_options(self.options, self.player_name)
         self.check_installable_name()
         self.pool = Age2Pool(self)
+
+    def seed_for_tracker(self) -> None:
+        regen = getattr(self.multiworld, "re_gen_passthrough", {}).get(self.game, {})
+        self.ut_seed: int = regen.get(UT_SEED) if UT_SEED in regen else self.random.getrandbits(64)
+        self.random.seed(self.ut_seed)
+
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, Any]) -> dict[str, Any]:
+        """Universal Tracker: rebuild with the server's slot data, so seed_for_tracker can match it."""
+        return slot_data
 
     def check_installable_name(self) -> None:
         """/install names each campaign file after the slot, so the name has to survive a file
@@ -120,7 +199,7 @@ class Age2World(CachedRuleBuilderWorld):
         scenario_regions: dict[Scenarios.Age2ScenarioData, Region] = {}
         
         for campaign in self.pool.campaigns.enabled:
-            scenarios = self.pool.scenarios.of(campaign)
+            scenarios = self.pool.scenarios.in_campaign(campaign)
             prev_region: Region = regions[0]
             for scenario in scenarios:
                 region = self.add_scenario_region(scenario, prev_region)
@@ -141,6 +220,12 @@ class Age2World(CachedRuleBuilderWorld):
                 Location(self.player, age.location_name, age.id, buildings))
         regions.append(buildings)
 
+        standing = Region("Starts With Building", self.player, self.multiworld)
+        connection = Entrance(self.player, standing.name, source)
+        source.exits.append(connection)
+        connection.connect(standing)
+        regions.append(standing)
+
         building_regions: dict[Buildings.Age2BuildingData, Region] = {}
         for building in Age2BuildingData:
             if not self.pool.buildings.hosts_locations(building):
@@ -148,6 +233,9 @@ class Age2World(CachedRuleBuilderWorld):
             region = Region(building.item.item_name, self.player, self.multiworld)
             connection = Entrance(self.player, f"{region.name}", buildings)
             buildings.exits.append(connection)
+            connection.connect(region)
+            connection = Entrance(self.player, f"Standing {region.name}", standing)
+            standing.exits.append(connection)
             connection.connect(region)
             regions.append(region)
             building_regions[building] = region
@@ -204,6 +292,18 @@ class Age2World(CachedRuleBuilderWorld):
             new_region.add_event("Complete " + scenario.scenario_name,
                                  scenario.scenario_name + ": Unlock Next Scenario",
                                  show_in_spoiler=False)
+        for player in scenario.players:
+            if self.options.partner_trade.needs_defeat_event(player):
+                new_region.add_event(
+                    player.defeat_event(scenario.scenario_name),
+                    show_in_spoiler=False,
+                )
+            for building in TRADE_BUILDINGS:
+                if self.options.partner_trade.needs_guard_event(player, building):
+                    new_region.add_event(
+                        player.guard_event(scenario.scenario_name, building),
+                        show_in_spoiler=False,
+                    )
         return new_region
         
     
@@ -212,7 +312,16 @@ class Age2World(CachedRuleBuilderWorld):
         items: list[Item] = [self.create_item(data.item_name) for data in plan.pooled]
         for data in plan.precollected:
             self.multiworld.push_precollected(self.create_item(data.item_name))
-                
+
+        if Age2BuildingData.HOUSE in self.pool.buildings.locations:
+            # A civilisation that builds houses has no base without one, and no base means no easy
+            # source of anything. A late House left Joan 3 starving for most of a seed.
+            self.multiworld.early_items[self.player][Age2BuildingData.HOUSE.item.item_name] = 1
+
+        builder = Age2VillagerJobData.BUILDER_MALE
+        if (self.options.shuffle_villager == ShuffleVillager.option_include_professions
+                and self.pool.units.job_possible(builder)):
+            self.multiworld.early_items[self.player][builder.item.item_name] = 1
 
         self.multiworld.itempool += items
         
@@ -221,12 +330,14 @@ class Age2World(CachedRuleBuilderWorld):
         
         needed_number_of_filler_items = number_of_unfilled_locations - itempool
         
-        # Exclude filler locations from resource budget
+        # Starting resources come first, up to half the open locations, and stop once every
+        # target is met. Traps only roll over the locations left after that, so they never cost
+        # the player economy.
         filler_locations = len(self.pool.filler.locations)
-        plan = self.pool.resources.plan(needed_number_of_filler_items - filler_locations)
-        starting_items = [self.create_item(data.item_name) for data in plan.items]
-        traps = [self.create_item(data.item_name)
-                 for data in self.pool.traps.roll(plan.spare + filler_locations)]
+        planned = self.pool.resources.plan(needed_number_of_filler_items - filler_locations)
+        spare = needed_number_of_filler_items - len(planned)
+        starting_items = [self.create_item(data.item_name) for data in planned]
+        traps = [self.create_item(data.item_name) for data in self.pool.traps.roll(spare)]
 
         self.multiworld.itempool += starting_items
         self.multiworld.itempool += traps
@@ -241,23 +352,11 @@ class Age2World(CachedRuleBuilderWorld):
         item = Items.NAME_TO_ITEM[name]
         return Item(
             item.item_name,
-            self.classification_for(item),
+            Items.classification_for(item),
             item.id,
             self.player
         )
 
-    def classification_for(self, item: Items.Age2ItemData) -> ItemClassification:
-        if isinstance(item.type, Items.Mercenary) and self.needs_mercenary(item):
-            return ItemClassification.progression
-        return Items.classification_for(item)
-
-    def needs_mercenary(self, item: Items.Age2ItemData) -> bool:
-        if item.type.in_logic:
-            return True
-        return any(self.pool.units.mercenary_exclusive_location(soldier.unit)
-                   for soldier in item.type.units
-                   if isinstance(soldier.unit, Units.Age2UnitData))
-    
     def get_filler_item_name(self) -> str:
         filler = []
         for item in Items.filler_items:
@@ -272,6 +371,18 @@ class Age2World(CachedRuleBuilderWorld):
     def pre_fill(self) -> None:
         LocalStart.apply(self)
 
+    # -- Universal Tracker asks the world first, before its own /explain ---------------------
+
+    def explain_rule(self, dest_name: str, state: CollectionState) -> list[JSONMessagePart] | None:
+        return self.explainer.explain_rule(dest_name, state)
+
+    def explain_more(self, argument: str, state: CollectionState) -> list[JSONMessagePart]:
+        return self.explainer.explain_more(argument, state)
+
+    @functools.cached_property
+    def explainer(self) -> Explainer:
+        return Explainer(self)
+
     def fill_slot_data(self) -> Mapping[str, Any]:
         mapping: Mapping[str, Any] = {
             WorldVersion.SLOT_DATA_KEY: self.world_version.as_simple_string(),
@@ -281,6 +392,7 @@ class Age2World(CachedRuleBuilderWorld):
         for option_name in SlotData.OPTIONS.values():
             mapping[option_name] = int(getattr(self.options, option_name).value)
         mapping[ScenarioBranching.internal_name] = int(self.options.scenario_branching.value)
+        mapping[UT_SEED] = self.ut_seed
         return mapping
 
 

@@ -49,6 +49,34 @@ def rebase_to_dark(scenario: AoE2DEScenario) -> bool:
     player.starting_age = StartingAge.DARK_AGE
     return True
 
+def _object_classes() -> list[type]:
+    # The parser's own modules import it as the top-level AoE2ScenarioParser, which its vendored
+    # __init__ registers - so the classes it reads into are those, not this package's relative ones.
+    from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+    found, todo = [], [AoE2Object]
+    while todo:
+        cls = todo.pop()
+        found.append(cls)
+        todo += cls.__subclasses__()
+    return found
+
+def restore_unsupported_properties() -> None:
+    """The parser disables a property a scenario's version lacks by replacing it on the class, so
+    it stays disabled for every scenario read after (its own TODO in retriever_object_link): a 1.59
+    scenario read after a 1.58 one can't write its units' capture flags. Put each one back before
+    the next scenario is read; that scenario disables what it lacks again."""
+    from AoE2ScenarioParser.sections.retrievers.retriever_object_link import RetrieverObjectLink
+    from AoE2ScenarioParser.sections.retrievers.retriever_object_link_group import RetrieverObjectLinkGroup
+    for cls in _object_classes():
+        for link in cls.__dict__.get("_link_list", ()):
+            for each in (link.group if isinstance(link, RetrieverObjectLinkGroup) else [link]):
+                if not isinstance(each, RetrieverObjectLink) or not each.disabled:
+                    continue
+                target = each.destination_object or cls
+                if isinstance(target.__dict__.get(each.name), property):
+                    delattr(target, each.name)
+                each.disabled = False
+
 def apply(body: bytes, steps: Iterable[Step], name: str = "",
           progress: tuple[int, int] = (0, 0), report: Callable[[str], None] = None) -> bytes:
     steps = tuple(steps)
@@ -60,6 +88,7 @@ def apply(body: bytes, steps: Iterable[Step], name: str = "",
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder, "in.aoe2scenario")
         source.write_bytes(body)
+        restore_unsupported_properties()
         scenario: AoE2DEScenario = AoE2DEScenario.from_file(str(source))
         changed = [step(scenario) for step in steps]
         if not any(changed):

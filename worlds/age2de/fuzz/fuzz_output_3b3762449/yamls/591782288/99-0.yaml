@@ -1,0 +1,50 @@
+description: 'Age Of Empires II: Definitive Edition Template, generated with https://github.com/Eijebong/Archipelago-fuzzer/tree/0.6.2'
+game: 'Age Of Empires II: Definitive Edition'
+requires:
+  version: 0.6.7
+'Age Of Empires II: Definitive Edition':
+  progression_balancing: 14
+  accessibility: full
+  scenario_branching: all
+  shuffle_buildings:
+  - Economy
+  - Tech
+  - Military
+  - Defense
+  - Unique
+  - Wonder
+  enabled_campaigns:
+  - Joan of Arc
+  - Genghis Khan
+  starting_campaigns: []
+  shuffle_ages: 'true'
+  techsanity: all
+  tech_behavior: must_research
+  shuffle_unique_techs: shuffled_everywhere
+  existing_techs: find_items
+  unitsanity: all
+  unitsanity_items: upgrades
+  shuffle_villager: include_professions
+  include_unique_units: none
+  caveman: 'false'
+  monks_can_counter: 'true'
+  siege_can_counter: 'false'
+  market_trade: 'false'
+  partner_trade: allies_and_enemies
+  goal: campaign_completion
+  local_start: both
+  trap_difficulty: standard
+  trap_percentage: 50
+  trap_distribution:
+    I'd Really Like To See That Trap: 360
+    Flemish Revolution Trap: 696
+  local_items: []
+  non_local_items: []
+  start_inventory: {}
+  startInventoryPool: {}
+  start_hints: []
+  start_location_hints: []
+  exclude_locations: []
+  priority_locations: []
+  item_links: []
+  plando_items: []

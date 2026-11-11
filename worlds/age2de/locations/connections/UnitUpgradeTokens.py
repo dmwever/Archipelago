@@ -112,6 +112,10 @@ UNIT_TO_UPGRADE_TOKENS: dict[Age2UnitData, list[Age2ItemData]] = {
     Age2UnitData.GALLEY: [Age2ItemData.UPGRADE_BOW, Age2ItemData.UPGRADE_BOAT],
     Age2UnitData.WAR_GALLEY: [Age2ItemData.UPGRADE_BOW, Age2ItemData.UPGRADE_BOLT, Age2ItemData.UPGRADE_BOAT],
     Age2UnitData.GALLEON: [Age2ItemData.UPGRADE_BOW, Age2ItemData.UPGRADE_BOLT, Age2ItemData.UPGRADE_BOAT],
+    # The Hulk line is the same unit class (22) as the Galley line, so it carries the same kit.
+    Age2UnitData.HULK: [Age2ItemData.UPGRADE_BOW, Age2ItemData.UPGRADE_BOAT],
+    Age2UnitData.WAR_HULK: [Age2ItemData.UPGRADE_BOW, Age2ItemData.UPGRADE_BOLT, Age2ItemData.UPGRADE_BOAT],
+    Age2UnitData.CARRACK: [Age2ItemData.UPGRADE_BOW, Age2ItemData.UPGRADE_BOLT, Age2ItemData.UPGRADE_BOAT],
     # Transport Ship Line
     Age2UnitData.TRANSPORT_SHIP: [Age2ItemData.UPGRADE_BOAT],
     # Berserk Line

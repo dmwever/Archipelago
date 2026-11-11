@@ -109,6 +109,19 @@ UNIT_TO_UPGRADE_TECH: dict[Age2UnitData, Age2TechData] = {
     Age2UnitData.ELITE_BLACKWOOD_ARCHER: Age2TechData.ELITE_BLACKWOOD_ARCHER_TUPI,
     Age2UnitData.ELITE_IBIRAPEMA_WARRIOR: Age2TechData.ELITE_IBIRAPEMA_WARRIOR_TUPI,
     Age2UnitData.CHAMPI_RUNNER: Age2TechData.CHAMPI_RUNNER,
+    # These five had no tech in the catalogue, so their upgrades were ungated. Each pairing is
+    # the "Trigger Tech ID" the unit's own tech tree node names.
+    Age2UnitData.HEAVY_MOUNTED_CROSSBOWMAN: Age2TechData.HEAVY_MOUNTED_CROSSBOWMAN,
+    Age2UnitData.ELITE_VARANGIAN_GUARD: Age2TechData.ELITE_VARANGIAN_GUARD,
+    Age2UnitData.ELITE_HEARTH_TROOP: Age2TechData.ELITE_HEARTH_TROOP_SAXONS,
+    Age2UnitData.ELITE_JARL: Age2TechData.ELITE_JARL_VARANGIANS,
+    Age2UnitData.ELITE_JOMSVIKING: Age2TechData.ELITE_JOMSVIKING_DANES,
+    # The Hulk line rides the generic Warships upgrades, as the Galley and Fire Galley lines do.
+    # War Hulk's own trigger tech IS 34 (Warships). Carrack's is 904, which costs nothing and
+    # has no research location - a free consequence of researching 35 (Heavy Warships), so that
+    # is the tech that actually gates it.
+    Age2UnitData.WAR_HULK: Age2TechData.WARSHIPS,
+    Age2UnitData.CARRACK: Age2TechData.HEAVY_WARSHIPS,
 }
 
 

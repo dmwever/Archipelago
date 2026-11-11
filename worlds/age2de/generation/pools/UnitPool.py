@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from ...Options import (Age2Options, IncludeUniqueUnits, ShuffleVillager, Unitsanity,
-                        UnitsanityItems)
+                        UnitsanityItems, upgrade_techs_shuffled)
 from ...items.Items import Age2ItemData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Civilizations import Age2CivData
@@ -14,6 +14,7 @@ from ...locations.Units import Age2UnitData, UnitType
 from ...locations.VillagerJobs import Age2VillagerJobData
 from ...locations.connections.CivilizationUnits import CIV_TO_UNITS, UNTRAINABLE
 from ...locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from ...locations.connections.VillagerJobResources import JOB_TO_SCENARIOS
 from .CivilizationPool import CivilizationPool
 
 UNIT_TYPE_TO_OPTIONS: dict[str, tuple[int, ...]] = {
@@ -27,6 +28,7 @@ class UnitPool:
                  scenarios: Iterable[Age2ScenarioData]) -> None:
         self._unitsanity = options.unitsanity
         self._unitsanity_items = options.unitsanity_items
+        self._techsanity = options.techsanity
         self._include_unique_units = options.include_unique_units
         self._shuffle_villager = options.shuffle_villager
         self._caveman = options.caveman
@@ -111,7 +113,12 @@ class UnitPool:
         return [Age2UnitData.VILLAGER_MALE, Age2UnitData.VILLAGER_FEMALE] + [job for job in Age2VillagerJobData if self.job_possible(job)]
 
     def job_possible(self, job: Age2VillagerJobData) -> bool:
-        return job.building is None or self._civs.builds(job.building)
+        if job.building is not None and not self._civs.builds(job.building):
+            return False
+        scenarios = JOB_TO_SCENARIOS.get(job.job_name)
+        if scenarios is None:
+            return True
+        return any(scenario in scenarios for scenario in self._scenarios)
 
     @property
     def line_locations(self) -> dict[Age2UnitLineData, list[UnitLocation]]:
@@ -186,7 +193,9 @@ class UnitPool:
             chosen = [line.item for line in lines
                       if self.is_trainable(line) or self._caveman]
         elif self._unitsanity_items == UnitsanityItems.option_upgrades:
-            wanted = {token for unit in units for token in unit.upgrade_tokens}
+            heads_only = not upgrade_techs_shuffled(self._techsanity)
+            wanted = {token for unit in units if unit.tier == 0 or not heads_only
+                      for token in unit.upgrade_tokens}
             chosen = [token for token in Age2ItemData if token in wanted]
         else:
             producers = set(buildings)

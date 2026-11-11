@@ -31,6 +31,7 @@ from .install.UnitData import UnitData
 logger = logging.getLogger("Client")
 
 CAMPAIGN_SUBPATH = "resources/_common/campaign"
+SCENARIO_SUBPATH = "resources/_common/scenario"
 XS_SUBPATH = "resources/_common/xs"
 SLOT_DATA_FILE = "SlotData.xs"
 TECH_DATA_FILE = "TechData.xs"
@@ -44,7 +45,6 @@ class InstallError(Exception):
 class IncludedCampaign:
     data: Age2CampaignData
     display_name: str
-    file_name: str
     write_name: str
 
 class InstallHandler(FolderHandler):
@@ -73,7 +73,6 @@ class InstallHandler(FolderHandler):
             IncludedCampaign(
                 data=cpn,
                 display_name=Identity.file_stem(cpn.file_stem, tag, player_name),
-                file_name=Identity.source_campaign_file_name(cpn.file_stem),
                 write_name=Identity.campaign_file_name(cpn.file_stem, tag, player_name),
             )
             for cpn in campaigns
@@ -111,6 +110,9 @@ class InstallHandler(FolderHandler):
     def campaign_dir(self) -> Path:
         return Path(self._user_folder, CAMPAIGN_SUBPATH)
 
+    def scenario_dir(self) -> Path:
+        return Path(self._user_folder, SCENARIO_SUBPATH)
+
     def xs_dir(self) -> Path:
         return Path(self._user_folder, XS_SUBPATH)
 
@@ -145,8 +147,12 @@ class InstallHandler(FolderHandler):
         ages = [scenario.vanilla_age for scenario in self._scenarios]
         return max(ages) if ages else None
 
-    def source_path(self, campaign: IncludedCampaign) -> Path:
-        return self.campaign_dir() / campaign.file_name
+    def scenario_path(self, scenario: Age2ScenarioData) -> Path:
+        return self.scenario_dir() / f"{scenario.file_stem}.aoe2scenario"
+
+    def scenario_paths(self, campaign: IncludedCampaign) -> list[Path]:
+        return [self.scenario_path(scenario)
+                for scenario in CAMPAIGN_TO_SCENARIOS[campaign.data]]
 
     def install_path(self, campaign: IncludedCampaign) -> Path:
         return self.campaign_dir() / campaign.write_name
@@ -155,13 +161,12 @@ class InstallHandler(FolderHandler):
         if not self._user_folder:
             raise InstallError("No Age2 user folder is set.")
 
-        missing = [campaign for campaign in self._included_campaigns
-                   if not self.source_path(campaign).is_file()]
+        missing = [path for campaign in self._included_campaigns
+                   for path in self.scenario_paths(campaign) if not path.is_file()]
         if missing:
             raise InstallError(
-                "Could not find " +
-                ", ".join(campaign.file_name for campaign in missing) +
-                f" in {self.campaign_dir()}. Install the Ageipelago files into your "
+                "Could not find " + ", ".join(path.name for path in missing) +
+                f" in {self.scenario_dir()}. Install the Ageipelago files into your "
                 "Age2 user folder first.")
 
         if not self.xs_dir().is_dir():
@@ -202,7 +207,8 @@ class InstallHandler(FolderHandler):
         return steps
 
     def _install_campaign(self, included: IncludedCampaign) -> Path:
-        campaign = Campaign(str(self.source_path(included)))
+        campaign = Campaign.from_scenarios(included.display_name, [
+            (path.name, path.read_bytes()) for path in self.scenario_paths(included)])
         for scenario in campaign.scenarios:
             data = self.scenario_data(scenario.file_name)
             steps = self.steps_for(data)
@@ -229,7 +235,8 @@ class InstallHandler(FolderHandler):
             target.write_text(UnitData().render(), encoding="utf-8")
             return target
         data = UnitData(self._unit_places, self._civs, options[SlotData.US_MODE],
-                        options[SlotData.US_ITEMS], self._tag)
+                        options[SlotData.US_ITEMS], self._tag, options[SlotData.TS_MODE],
+                        bool(options[SlotData.US_CAVEMAN]), self._techs)
         target.write_text(data.render(), encoding="utf-8")
         return target
 

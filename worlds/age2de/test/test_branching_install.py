@@ -7,20 +7,12 @@ therefore showed five Attila 1 objectives that were never locations, next to the
 
 `trigger_call` is a hand-maintained mirror of the XS wrappers, so the checks that it is
 complete, unique and correct live here rather than as import-time asserts.
-
-The bundle-parsing cases at the bottom are the slowest in the suite and skip unless
-AGEIPELAGO_PATH points at the Ageipelago checkout.
 """
-import re
-import tempfile
 import unittest
-from pathlib import Path
 
-from .test_campaign_bundle import AGEIPELAGO_BUNDLES, SEED
+from .test_campaign_bundle import SEED
 from ..AoE2ScenarioParser.datasets.effects import EffectId
-from ..AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 from ..campaign import ScenarioParser
-from ..campaign.CampaignReader import Campaign
 from ..client.handlers.InstallHandler import InstallHandler
 from ..generation import Identity
 from ..locations.Campaigns import Age2CampaignData
@@ -29,19 +21,14 @@ from ..locations.Locations import (TYPE_TO_LOCATIONS, Age2LocationType,
 from ..locations.Scenarios import Age2ScenarioData
 from ..Options import ScenarioBranching
 
-AGEIPELAGO_XS = AGEIPELAGO_BUNDLES.parent / "xs"
-AGEIPELAGO_SCENARIOS = AGEIPELAGO_BUNDLES.parent / "scenario"
-BRANCHING_SCENARIOS = (Age2ScenarioData.AP_ATTILA_1, Age2ScenarioData.AP_ATTILA_4,
-                       Age2ScenarioData.AP_JOAN_2, Age2ScenarioData.AP_JOAN_3)
-WRAPPER = re.compile(r"void\s+(\w+)\s*\(\s*\)\s*\{(.*?)\}", re.DOTALL)
-CHECK = re.compile(r"AP_Check_Location\s*\(\s*(\d+)\s*\)")
-TRAILING_TAG = re.compile(r"\((?:Any|All)\)\s*$", re.IGNORECASE)
 NULL = chr(0)
 
 BRANCHING_TYPES = (Age2LocationType.OBJECTIVE_BRANCHING_ALL,
                    Age2LocationType.OBJECTIVE_BRANCHING_ANY)
 BRANCHING_LOCATIONS = [location for type in BRANCHING_TYPES
                        for location in TYPE_TO_LOCATIONS[type]]
+BRANCHING_SCENARIOS = tuple(dict.fromkeys(location.scenario
+                                          for location in BRANCHING_LOCATIONS))
 
 
 class FakeEffect:
@@ -60,18 +47,6 @@ class FakeTrigger:
 class FakeScenario:
     def __init__(self, triggers: list):
         self.trigger_manager = type("Manager", (), {"triggers": triggers})()
-
-
-def read(body: bytes) -> AoE2DEScenario:
-    with tempfile.TemporaryDirectory() as folder:
-        source = Path(folder, "in.aoe2scenario")
-        source.write_bytes(body)
-        return AoE2DEScenario.from_file(str(source))
-
-
-def bundle_bodies(campaign: Age2CampaignData) -> dict[str, bytes]:
-    path = AGEIPELAGO_BUNDLES / Identity.source_campaign_file_name(campaign.file_stem)
-    return {scenario.file_name: scenario.body for scenario in Campaign(str(path)).scenarios}
 
 
 def branching_locations(scenario: Age2ScenarioData) -> list[Age2ScenarioLocationData]:
@@ -222,64 +197,3 @@ class TestWhatTheInstallDecides(unittest.TestCase):
         handler = self.handler(ScenarioBranching.option_any)
         parsed = [scenario for scenario in Age2ScenarioData if handler.steps_for(scenario)]
         self.assertEqual(set(parsed), set(BRANCHING_SCENARIOS))
-
-
-@unittest.skipUnless(AGEIPELAGO_BUNDLES.is_dir(), "Set AGEIPELAGO_PATH to run this")
-class TestAgainstTheAgeipelagoCheckout(unittest.TestCase):
-    def test_every_trigger_call_resolves_to_its_recorded_location_id(self):
-        found = {}
-        for path in sorted(AGEIPELAGO_XS.glob("AP_*.xs")):
-            for name, body in WRAPPER.findall(path.read_text(encoding="utf-8")):
-                ids = CHECK.findall(body)
-                if len(ids) == 1:
-                    found[name] = int(ids[0])
-        for location in BRANCHING_LOCATIONS:
-            with self.subTest(location.name):
-                self.assertIn(location.trigger_call, found)
-                self.assertEqual(found[location.trigger_call], location.id)
-
-    def test_every_branching_location_has_exactly_one_trigger_in_the_bundles(self):
-        for campaign in Age2CampaignData:
-            bodies = bundle_bodies(campaign)
-            for scenario in BRANCHING_SCENARIOS:
-                file_name = f"{scenario.file_stem}.aoe2scenario"
-                if file_name not in bodies:
-                    continue
-                with self.subTest(scenario.file_stem):
-                    wanted = wrappers_of(branching_locations(scenario))
-                    counted = {name: 0 for name in wanted}
-                    for trigger in read(bodies[file_name]).trigger_manager.triggers:
-                        for name in ScenarioParser.trigger_calls_xs_script(trigger) & wanted:
-                            counted[name] += 1
-                    self.assertEqual(counted, {name: 1 for name in wanted})
-
-    def test_a_real_scenario_survives_a_branching_pass(self):
-        body = bundle_bodies(Age2CampaignData.ATTILA)["AP_Attila_1.aoe2scenario"]
-        before = read(body).trigger_manager.triggers
-        names = [trigger.name for trigger in before]
-        for type, turned_off in ((Age2LocationType.OBJECTIVE_BRANCHING_ALL, 5),
-                                 (Age2LocationType.OBJECTIVE_BRANCHING_ANY, 1)):
-            with self.subTest(type=type.name):
-                unused = [location for location
-                          in branching_locations(Age2ScenarioData.AP_ATTILA_1)
-                          if location.type == type]
-                after = read(ScenarioParser.apply(
-                    body, [ScenarioParser.disable_triggers(unused)]))
-                triggers = after.trigger_manager.triggers
-                self.assertEqual([trigger.name for trigger in triggers], names)
-                flipped = [trigger.name for trigger, was in zip(triggers, before)
-                           if trigger.enabled != was.enabled]
-                self.assertEqual(len(flipped), turned_off)
-
-    def test_the_branching_tags_are_gone_from_the_scenario_files(self):
-        for scenario in BRANCHING_SCENARIOS:
-            path = AGEIPELAGO_SCENARIOS / f"{scenario.file_stem}.aoe2scenario"
-            wanted = wrappers_of(branching_locations(scenario))
-            for trigger in AoE2DEScenario.from_file(str(path)).trigger_manager.triggers:
-                if not ScenarioParser.trigger_calls_xs_script(trigger) & wanted:
-                    continue
-                with self.subTest(trigger.name):
-                    self.assertNotIn("(Branching:", trigger.description)
-                    self.assertNotRegex(trigger.description, TRAILING_TAG)
-                    self.assertNotRegex(trigger.short_description, TRAILING_TAG)
-                    self.assertEqual(trigger.description_stid, 0)

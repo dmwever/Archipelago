@@ -1,27 +1,54 @@
 from typing import TYPE_CHECKING
 
-from rule_builder.rules import False_, Has, Rule, True_
+from rule_builder.rules import Has, Rule, True_
 from ...locations.Locations import Age2ScenarioLocationData
-from ...locations.Buildings import Age2BuildingData
-from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
+from ...locations.Ages import Age2AgeData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
 from ..ScenarioLogic import ScenarioStartingState
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
+    from ..ScenarioLogic import ScenarioLogic
 
 class Attila2StartingState(ScenarioStartingState):
     purple_vils: Rule = Has(Age2ItemData.AP_ATTILA_2_VILLAGERS.item_name)
+    prisoners: Rule = Has(Age2ItemData.AP_ATTILA_2_DYRRHACHIUMS_PRISONERS.item_name)
 
     def __init__(self, logic: 'Logic'):
         super().__init__()
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.ATT1_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Attila Scenario")
-        self.max_age = Age2AgeData.CASTLE
         self.has_vils = self.purple_vils
+
+        self.scythian_troop = (Has(Age2ItemData.AP_ATTILA_2_SCYTHIAN_TROOP.item_name)
+                               & self.purple_vils)
 
         self.obtains_unit[U.VILLAGER_MALE] = self.purple_vils
         self.obtains_unit[U.VILLAGER_FEMALE] = self.purple_vils
+        self.obtains_unit[U.TARKAN] = self.prisoners
+        self.obtains_unit[U.HUSSAR] = self.prisoners
+        self.obtains_unit[U.MANGUDAI] = self.scythian_troop
+        self.obtains_unit[U.CAPPED_RAM] = self.scythian_troop
+        self.obtains_unit[U.ONAGER] = self.scythian_troop
+
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
+        military = scenario_logic.military
+        return {
+            # Neither city offers any resistance.
+            Age2PlayerData.ATT2_DYRRHACHIUM: True_(),
+            Age2PlayerData.ATT2_THESSALONICA: True_(),
+            Age2PlayerData.ATT2_EASTERN_ROMAN_EMPIRE: (
+                (self.scythian_troop & self.logic.units.survives_caveman(U.CAPPED_RAM)) |
+                (
+                    military.has_siege() &
+                    military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.CASTLE) &
+                    military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.CASTLE) &
+                    military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.CASTLE)
+                )
+            ),
+        }

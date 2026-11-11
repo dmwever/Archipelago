@@ -1,66 +1,143 @@
 import json
 import logging
+from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from .FolderHandler import FolderHandler
 
 from ...generation import Identity
-from ...items.Items import Age2ItemData
 
 logger = logging.getLogger("Client")
 
 APDATA_SUBPATH = "APData"
-MERCENARY_STEM = "mercenaries"
+STATE_STEM = "state"
 
 
-def reconcile_spent(local: set[int] | None, server: set[int]) -> tuple[set[int], bool]:
-    if local is None:
-        return set(server), False
-    return set(local), local != server
+@dataclass(frozen=True)
+class SpentPush:
+    operation: Literal["or", "replace"]
+    value: int
+
 
 class StorageHandler(FolderHandler):
-    _tag: str = ''
-    _player_name: str = ''
+    _tag: str
+    _player_name: str
 
-    def __init__(self, mercenaries: list[Age2ItemData]):
-        self._mercenaries = list(mercenaries)
+    def __init__(self):
+        self._tag = ''
+        self._player_name = ''
+        self._spent: int | None = None
+        self._loaded: bool = False
+        self._up_to_date: bool = False
+        self._dirty: bool = False
+        self._warned: bool = False
         super().__init__()
 
     def set_tag(self, tag: str) -> None:
-        self._tag = tag
+        if tag != self._tag:
+            self._tag = tag
+            self._loaded = False
 
     def set_player_name(self, player_name: str) -> None:
-        self._player_name = player_name
+        if player_name != self._player_name:
+            self._player_name = player_name
+            self._loaded = False
 
     def apdata_dir(self) -> Path:
         return Path(self._user_folder, APDATA_SUBPATH)
 
-    def mercenary_path(self) -> Path:
+    def state_path(self) -> Path:
         return self.apdata_dir() / Identity.storage_file_name(
-            MERCENARY_STEM, self._tag, self._player_name)
+            STATE_STEM, self._tag, self._player_name)
 
-    def try_load(self) -> set[int] | None:
-        try:
-            return self._read()
-        except FileNotFoundError:
+    def is_up_to_date(self) -> bool:
+        return self._up_to_date
+
+    def try_load(self) -> int | None:
+        self._ensure_loaded()
+        return self._spent
+
+    def spent_mask(self) -> int:
+        return self.try_load() or 0
+
+    def spent_indices(self, received: int) -> set[int]:
+        spent = self.spent_mask()
+        return {index for index in range(received) if (spent >> index) & 1}
+
+    def try_save(self, spent: int) -> bool:
+        self._ensure_loaded()
+        self._spent = spent
+        return self._flush()
+
+    def mark_spent(self, indices: Iterable[int]) -> bool:
+        before = self.spent_mask()
+        spent = before
+        for index in indices:
+            spent |= 1 << index
+        if spent == before:
+            return False
+        self._spent = spent
+        self._flush()
+        return True
+
+    def reconcile(self, server: int, received: int) -> SpentPush | None:
+        spent = self.spent_mask() | server
+        spent &= (1 << received) - 1
+        self.try_save(spent)
+        self._up_to_date = True
+        if spent == server:
             return None
+        if server & ~spent:
+            return SpentPush("replace", spent)
+        return SpentPush("or", spent)
+
+    def try_clear(self) -> bool:
+        self._ensure_loaded()
+        self._up_to_date = False
+        if self._spent is None:
+            return False
+        self._spent = None
+        self._flush()
+        return True
+
+    def try_flush(self) -> None:
+        if self._dirty:
+            self._flush()
+
+    def _ensure_loaded(self) -> None:
+        if self._loaded:
+            return
+        self._loaded = True
+        try:
+            self._spent = self._read()
+        except FileNotFoundError:
+            self._spent = None
         except Exception:
             logger.exception("Could not read %s; treating it as a fresh playthrough.",
-                             self.mercenary_path())
-            return None
+                             self.state_path())
+            self._spent = None
 
-    def try_save(self, used: set[int]) -> None:
+    def _read(self) -> int | None:
+        state = json.loads(self.state_path().read_text(encoding="utf-8"))
+        spent = state["spent"]
+        return None if spent is None else int(spent)
+
+    def _flush(self) -> bool:
         try:
-            self._write(used)
-        except Exception:
-            logger.exception("Could not write %s.", self.mercenary_path())
-
-    def _read(self) -> set[int]:
-        records = json.loads(self.mercenary_path().read_text(encoding="utf-8"))
-        return {record["id"] for record in records if record["used"]}
-
-    def _write(self, used: set[int]) -> None:
-        records = [{"id": mercenary.id, "used": mercenary.id in used}
-                   for mercenary in sorted(self._mercenaries, key=lambda item: item.id)]
-        self.apdata_dir().mkdir(parents=True, exist_ok=True)
-        self.mercenary_path().write_text(json.dumps(records, indent=4), encoding="utf-8")
+            self.apdata_dir().mkdir(parents=True, exist_ok=True)
+            self.state_path().write_text(
+                json.dumps({"spent": self._spent}, indent=4), encoding="utf-8")
+        except Exception as ex:
+            self._dirty = True
+            if not self._warned:
+                self._warned = True
+                logger.warning("Could not write %s (%s). Spends are kept in memory and on the "
+                               "server; retrying every tick.", self.state_path(), ex)
+            return False
+        self._dirty = False
+        if self._warned:
+            self._warned = False
+            logger.info("Wrote %s; the spent record is back on disk.", self.state_path())
+        return True

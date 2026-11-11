@@ -8,6 +8,7 @@ from ..items.Items import (Age2ItemData, UnitBuilding, UnitLine, UnitUpgrade,
                            NAME_TO_ITEM)
 from ..locations.Buildings import Age2BuildingData
 from ..locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
+from ..locations.connections.VillagerJobResources import JOB_TO_SCENARIOS
 from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.EscortUnits import Age2EscortUnitData
@@ -50,7 +51,7 @@ class UnitPoolTestBase(unittest.TestCase):
 
 class TestUnitPool(UnitPoolTestBase):
     def test_unitsanity_off_makes_no_unit_locations(self):
-        world = self.build()
+        world = self.build(unitsanity=Unitsanity.option_none)
         self.assertEqual(self.own_locations(world), [])
         self.assertEqual(self.unit_items(world), [])
 
@@ -79,21 +80,25 @@ class TestUnitPool(UnitPoolTestBase):
         self.assertFalse(world.unit_regions.shuffled_villager)
 
     def test_yes_checks_the_line_and_professions_split_it_by_sex(self):
-        plain = self.build(shuffle_villager=ShuffleVillager.option_yes)
+        plain = self.build(shuffle_villager=ShuffleVillager.option_yes,
+                           unitsanity=Unitsanity.option_none)
         self.assertEqual(sorted(self.own_locations(plain)),
                          sorted([Age2UnitLineData.VILLAGER_MALE_LINE.location_name,
                                  Age2UnitLineData.VILLAGER_FEMALE_LINE.location_name]))
 
-        jobs = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        jobs = self.build(shuffle_villager=ShuffleVillager.option_include_professions,
+                          unitsanity=Unitsanity.option_none)
         placed = set(self.own_locations(jobs))
-        # Two idle villagers and eleven of the twelve jobs, twice. The Herder is the one left
-        # out: it works a Pasture, which is the Gurjaras' building and nobody else's.
-        self.assertEqual(len(placed), 24)
+        # Two idle villagers and ten of the twelve jobs, twice. The Herder works a Pasture,
+        # the Gurjaras' building and nobody else's; the Oyster Gatherer wants an oyster, and
+        # no Attila or Joan map holds one.
+        self.assertEqual(len(placed), 22)
         self.assertNotIn(Age2UnitLineData.VILLAGER_MALE_LINE.location_name, placed)
         self.assertIn(Age2UnitData.VILLAGER_MALE.location_name, placed)
         self.assertIn(Age2UnitData.VILLAGER_FEMALE.location_name, placed)
         self.assertTrue({job.location_name for job in Age2VillagerJobData
-                         if job.job_name != "Herder"} <= placed)
+                         if job.job_name not in ("Herder", "Oyster Gatherer")} <= placed)
+        self.assertNotIn(Age2VillagerJobData.OYSTER_GATHERER_MALE.location_name, placed)
         self.assertNotIn(Age2VillagerJobData.HERDER_MALE.location_name, placed)
 
     def test_professions_are_evenly_split_between_the_sexes(self):
@@ -143,6 +148,27 @@ class TestUnitPool(UnitPoolTestBase):
                          self.own_locations(world))
 
 
+class TestJobsNeedTheirResource(UnitPoolTestBase):
+    """A gathering job needs its resource on a map, not just a civilisation that can build."""
+
+    def test_the_oyster_gatherer_is_never_placed(self):
+        """No Attila or Joan map holds an oyster, so the location could never be completed."""
+        world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        placed = self.own_locations(world)
+        self.assertNotIn("Own Oyster Gatherer (Male)", placed)
+        self.assertNotIn("Own Oyster Gatherer (Female)", placed)
+
+    def test_a_job_whose_resource_exists_is_still_placed(self):
+        world = self.build(shuffle_villager=ShuffleVillager.option_include_professions)
+        placed = self.own_locations(world)
+        self.assertIn("Own Fisherman (Male)", placed)
+        self.assertIn("Own Gold Miner (Male)", placed)
+
+    def test_every_named_job_resource_matches_a_real_job(self):
+        names = {job.job_name for job in Age2VillagerJobData}
+        self.assertEqual([name for name in JOB_TO_SCENARIOS if name not in names], [])
+
+
 class TestUnitItems(UnitPoolTestBase):
     def test_each_mode_hands_out_its_own_kind_of_item(self):
         for mode, payload in ((UnitsanityItems.option_unit_line, UnitLine),
@@ -162,7 +188,8 @@ class TestUnitItems(UnitPoolTestBase):
                      UnitsanityItems.option_buildings):
             for villager in (ShuffleVillager.option_yes,
                              ShuffleVillager.option_include_professions):
-                world = self.build(shuffle_villager=villager, unitsanity_items=mode)
+                world = self.build(shuffle_villager=villager, unitsanity_items=mode,
+                                   unitsanity=Unitsanity.option_none)
                 expected = ([town_centre, villager_item]
                             if mode == UnitsanityItems.option_buildings else [villager_item])
                 self.assertEqual([item.item_name for item in self.unit_items(world)],
@@ -259,9 +286,11 @@ class TestUnitRegions(UnitPoolTestBase):
                   for line in (Age2UnitLineData.VILLAGER_MALE_LINE,
                                Age2UnitLineData.VILLAGER_FEMALE_LINE)
                   for location in world.multiworld.get_region(line.line_name, 1).locations]
-        self.assertEqual(len(placed), 24)   # the Herder needs a Pasture that neither civ builds
+        # the Herder needs a Pasture neither civ builds; the Oyster Gatherer needs an oyster
+        # and no map has one
+        self.assertEqual(len(placed), 22)
         for job in Age2VillagerJobData:
-            if job.job_name == "Herder":
+            if job.job_name in ("Herder", "Oyster Gatherer"):
                 continue
             self.assertIn(job.location_name, placed, job.name)
         self.assertIn(Age2UnitData.VILLAGER_FEMALE.location_name, placed)
@@ -289,13 +318,16 @@ class TestEscorts(UnitPoolTestBase):
 
     def test_an_escort_is_not_a_unit_and_never_an_item(self):
         """Its own enum, so no Age2UnitData invariant has to carve an exception for it - no
-        line, no upgrade token, no producing building, and nothing unlocks one."""
+        line, no upgrade token, no producing building, and nothing unlocks one. Asserted
+        structurally rather than by name: UPGRADE_HORSE and UPGRADE_CART carry the item names
+        "Horse" and "Cart", which are also the escort names, so a pooled-name scan reports the
+        upgrade token and not the escort."""
         self.assertNotIn("CART", Age2UnitData.__members__)
-        world = self.build(unitsanity=Unitsanity.option_all,
-                           include_unique_units=IncludeUniqueUnits.option_both)
-        names = {item.name for item in world.multiworld.itempool}
-        for escort in Age2EscortUnitData:
-            self.assertNotIn(escort.escort_name, names, escort.name)
+        self.assertNotIn("HORSE", Age2UnitData.__members__)
+        escorts = set(Age2EscortUnitData)
+        for item in Age2ItemData:
+            for attribute in ("escort", "unit", "line", "hero", "job"):
+                self.assertNotIn(getattr(item, attribute, None), escorts, item.name)
 
     def test_an_untrainable_line_gets_no_unlock_item(self):
         """The Mangudai has an item, since the Mongols train one, but no seed of these two
@@ -313,8 +345,31 @@ class TestHeroes(UnitPoolTestBase):
         self.assertFalse(self.build(unitsanity=Unitsanity.option_unit_line).pool.units.heroes)
         self.assertFalse(self.build(shuffle_villager=ShuffleVillager.option_yes)
                          .pool.units.heroes)
-        world = self.build(unitsanity=Unitsanity.option_all)
-        self.assertEqual(len(world.pool.units.heroes), len(list(Age2HeroData)))
+
+    def assert_every_granted_hero_is_a_check(self, *campaigns: str) -> None:
+        """Under unitsanity all, the heroes are exactly those some included scenario hands over -
+        at the start or by a trigger. It once counted every hero in the game, so a campaign that
+        was not in the seed still owed its heroes."""
+        world = self.build(unitsanity=Unitsanity.option_all, enabled_campaigns=set(campaigns),
+                           starting_campaigns={campaigns[0]})
+        granted = {grant for scenario in world.pool.scenarios.included
+                   for grant in scenario.startup_units + scenario.trigger_units
+                   if isinstance(grant, Age2HeroData)}
+        self.assertTrue(granted, f"{campaigns} hands over no hero")
+        self.assertEqual(granted, set(world.pool.units.heroes))
+
+    def test_attila_alone_has_its_own_heroes(self):
+        self.assert_every_granted_hero_is_a_check("Attila the Hun")
+
+    def test_joan_alone_has_her_own_heroes(self):
+        self.assert_every_granted_hero_is_a_check("Joan of Arc")
+
+    def test_genghis_alone_has_his_own_heroes(self):
+        self.assert_every_granted_hero_is_a_check("Genghis Khan")
+
+    def test_every_campaign_together_has_every_hero(self):
+        self.assert_every_granted_hero_is_a_check("Attila the Hun", "Joan of Arc", "Genghis Khan")
+        self.assertEqual(set(Age2HeroData), set(self.world.pool.units.heroes))
 
     def test_a_hero_has_one_region_and_an_entrance_per_granting_scenario(self):
         world = self.build(unitsanity=Unitsanity.option_all)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from rule_builder.rules import Has, Rule, True_
-from ..items.Items import Age2ItemData
 
 from ..locations.Buildings import BUILDING_PREREQUISITE, Age2BuildingData
 
@@ -18,7 +17,7 @@ class BuildingLogic:
         self.logic = logic
         self.world = world
 
-    def has_building(self, building: Age2BuildingData) -> Rule:
+    def has_building_items(self, building: Age2BuildingData) -> Rule:
         return self.has_prerequisites(building) & self.has_building_item(building)
 
     def has_building_item(self, building: Age2BuildingData) -> Rule:
@@ -35,11 +34,9 @@ class BuildingLogic:
         prerequisite = self.prerequisite(building)
         if prerequisite is None:
             return True_()
-        return self.has_building(prerequisite)
+        return self.has_building_items(prerequisite)
 
     def can_build_tc(self) -> Rule:
-        villager_food = Age2ItemData.STARTING_VILLAGER_FOOD.type
-        resources = self.logic.resources
-        return (self.has_building(Age2BuildingData.TOWN_CENTER)
-                & resources.has_amounts(Age2ItemData.TOWN_CENTER.type.needed_resources)
-                & resources.has_amount(villager_food.type, villager_food.amount))
+        """Putting one up, less paying for it: ages, dropsites and second Town Centers ask this
+        structurally, and the base pays for its own."""
+        return self.has_building_items(Age2BuildingData.TOWN_CENTER)

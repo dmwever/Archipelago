@@ -93,7 +93,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
     def test_a_scenario_is_in_the_age_it_opens_in_and_no_lower_one(self):
         world = self.build(shuffle_ages=True)
         for scenario_logic in world.rules.logic.scenarios:
-            if scenario_logic.starting_state.fixed_force:
+            if scenario_logic.scenario.fixed_force:
                 continue
             opens_in = scenario_logic.scenario.vanilla_age
             for age, rule in self.rows(world, scenario_logic).items():
@@ -106,7 +106,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
     def test_a_scenario_has_started_past_every_age_below_the_one_it_opens_in(self):
         world = self.build(shuffle_ages=True)
         for scenario_logic in world.rules.logic.scenarios:
-            if scenario_logic.starting_state.fixed_force:
+            if scenario_logic.scenario.fixed_force:
                 continue
             opens_in = scenario_logic.scenario.vanilla_age
             for age in Age2AgeData:
@@ -118,7 +118,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
         # Joan 1 and Joan 5 are set pieces fought with what they hand you. No
         # base means no age, not even the one they open in.
         world = self.build(shuffle_ages=True)
-        fixed = [s for s in world.rules.logic.scenarios if s.starting_state.fixed_force]
+        fixed = [s for s in world.rules.logic.scenarios if s.scenario.fixed_force]
         self.assertEqual(sorted(s.scenario.name for s in fixed),
                          ["AP_JOAN_1", "AP_JOAN_5"])
         for scenario_logic in fixed:
@@ -131,7 +131,7 @@ class TestAgeRowsMatchTheOpeningAge(Age2RuleTestBase):
         world = self.build(shuffle_ages=True, techsanity=Techsanity.option_all,
                            existing_techs=ExistingTechs.option_start_in_dark_age)
         for scenario_logic in world.rules.logic.scenarios:
-            if scenario_logic.starting_state.fixed_force:
+            if scenario_logic.scenario.fixed_force:
                 continue
             with self.subTest(scenario=scenario_logic.scenario.name):
                 dark = scenario_logic.ages.can_reach(Age2AgeData.DARK).resolve(world)
@@ -187,8 +187,8 @@ class TestAttila1(Age2RuleTestBase):
         # The alternate start -- Attila's Camp or the Roman villagers, then
         # build -- was dead for a while: it was asked for while the scenario
         # list was still being filled, so it resolved to nothing and was
-        # dropped from the disjunction.
-        world = self.build()
+        # dropped from the disjunction. Base is shuffled, or the Town Center is never asked for.
+        world = self.build(shuffle_buildings={"Base", "Economy", "Tech", "Military"})
         attila_1 = [s for s in world.rules.logic.scenarios
                     if s.scenario.name == "AP_ATTILA_1"][0]
         wanted = set(attila_1.has_base().resolve(world).item_dependencies())
@@ -226,7 +226,7 @@ class TestMultipleSlots(Age2RuleTestBase):
             set(alone.get_entrance("Mill").access_rule.item_dependencies()))
 
 
-class TestAgeEventsNeedAClimb(Age2RuleTestBase):
+class TestAgeEventsNeedAnAdvance(Age2RuleTestBase):
     """An age advancement location can only be sent by researching the age in game. A scenario
     that opens at or above it hands it to you instead, and counting that let a seed place
     progression behind an age the player never has to reach.
@@ -271,3 +271,19 @@ class TestAgeEventsNeedAClimb(Age2RuleTestBase):
             with self.subTest(age.name):
                 rule = self.world.rules.logic.can_reach_age_anywhere(age).resolve(self.world)
                 self.assertTrue(rule(state))
+
+
+class TestAnAgeAdvancesFromTheOneBefore(Age2RuleTestBase):
+    """The Castle Age is researched in the Feudal Age. Its age-up buildings usually imply that, but
+    a building standing at the start - Bleda's Camp's Archery Range and Blacksmith - does not, so
+    the advance asks for the age before itself."""
+
+    def test_no_castle_age_without_the_feudal_age(self):
+        world = self.build(shuffle_ages=True)
+        state = self.state_without(Age2AgeData.FEUDAL.item.item_name)
+        for scenario in world.pool.scenarios.included:
+            if world.pool.ages.starts_in(scenario) >= Age2AgeData.FEUDAL:
+                continue   # it opens in the Feudal Age or later: already there, no item asked
+            sl = world.rules.logic.for_scenario(scenario)
+            with self.subTest(scenario.name):
+                self.assertFalse(sl.ages.can_reach(Age2AgeData.CASTLE).resolve(world)(state))

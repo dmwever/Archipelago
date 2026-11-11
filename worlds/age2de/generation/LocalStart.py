@@ -10,10 +10,10 @@ from collections import Counter
 
 from BaseClasses import CollectionState, Item, Location
 from Fill import FillError, fill_restrictive, sweep_from_pool
-from rule_builder.rules import And, Rule, True_
+from rule_builder.rules import And, Has, Or, Rule, True_
 
 from ..Options import LocalStart
-from ..items.Items import NAME_TO_ITEM, Campaign, ProgressiveScenario
+from ..items.Items import NAME_TO_ITEM, Age2ItemData, Campaign, ProgressiveScenario
 from ..locations.Buildings import Age2BuildingData
 from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
 from ..locations.Scenarios import Age2ScenarioData
@@ -111,25 +111,33 @@ def scenario_logic(world: 'Age2World', scenario: Age2ScenarioData):
         raise KeyError(f"{scenario.scenario_name} is not in this playthrough") from None
 
 def scenario_base_rule(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
-    # The composed question, not the raw field: starting_state.has_base is a base **outright**
-    # now, so reading it directly forced Bleda's Camp rather than letting "or build one" count.
+    # The composed question, not the standing Town Center alone: reading that directly forced
+    # Bleda's Camp rather than letting "or build one" count.
     has_base = scenario_logic(world, scenario).has_base()
     return True_() if resolve(world, has_base).always_false else has_base
 
 def base_target(world: 'Age2World', scenario: Age2ScenarioData) -> Rule:
-    """The item half of a base: a town centre, and the houses to live in.
+    """The item half of a base: a town centre and the seed items that pay for it and its first
+    villagers, asked whether or not one already stands.
 
-    Not the scenario's own can_build_base, which also wants villagers and an age. For Joan 1 that
+    Not the scenario's own has_base, which also wants builders and the ground. For Joan 1 that
     is False_ outright and would fold the town centre items away with it - and Joan 1 is exactly
     what this is asked about, since local start is what makes the first scenario playable.
 
-    The House is asked of **this scenario's civilisation**: the Huns build none, so handing an
-    Attila player a House would be handing over something they can never place.
+    The House is the Houses route's item, not the base's, and is asked of **this scenario's
+    civilisation**: the Huns build none, so handing an Attila player a House would be handing over
+    something they can never place.
     """
     logic = world.rules.logic
-    target = logic.buildings.can_build_tc()
+    target = (logic.buildings.can_build_tc()
+              & Has(Age2ItemData.TOWN_CENTER_WOOD.item_name)
+              & Has(Age2ItemData.TOWN_CENTER_STONE.item_name)
+              & Has(Age2ItemData.STARTING_VILLAGER_FOOD.item_name))
     if scenario_logic(world, scenario).civilization.can_build(Age2BuildingData.HOUSE):
-        target = target & logic.can_build_building_anywhere(Age2BuildingData.HOUSE)
+        target = target & Or(*[
+            other.is_unlocked() & other.buildings.can_build_structurally(Age2BuildingData.HOUSE)
+            for other in logic.scenarios
+        ])
     return target & scenario_base_rule(world, scenario)
 
 def base_items(
@@ -215,7 +223,9 @@ def apply(world: 'Age2World') -> None:
     if not win_set and not base_set:
         return
 
-    base_only = list((Counter(base_set) - Counter(win_set)).elements())
+    # base_items already solves on top of the win set, so what it returns is only what the win set
+    # does not cover. Taking the win set away again would drop a second copy the base needs.
+    base_only = base_set
     logging.info("Local Start: %s placing win=%s base=%s",
                  world.player_name, sorted(win_set), sorted(base_only))
 

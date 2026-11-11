@@ -24,8 +24,9 @@
     # A blank start stays blank - it is legal, and means "pick one of my enabled campaigns
     # for me", so none of these fire and that path stays under test.
     #
-    # if_value matches the whole list, so both orderings of the two-campaign case are spelt
-    # out; the fuzzer does not promise a sorted OptionSet.
+    # if_value matches the whole list and the fuzzer does not promise a sorted OptionSet, so
+    # every ordering of every non-empty subset is spelt out: three singletons, six ordered
+    # pairs, six ordered triples.
     - option: starting_campaigns
       if_value:
         - Attila the Hun
@@ -42,6 +43,13 @@
 
     - option: starting_campaigns
       if_value:
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
         - Attila the Hun
         - Joan of Arc
       then_include:
@@ -51,12 +59,114 @@
 
     - option: starting_campaigns
       if_value:
+        - Attila the Hun
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
         - Joan of Arc
         - Attila the Hun
       then_include:
         enabled_campaigns:
           - Attila the Hun
           - Joan of Arc
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+        - Joan of Arc
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Attila the Hun
+        - Genghis Khan
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Attila the Hun
+        - Genghis Khan
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Joan of Arc
+        - Genghis Khan
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Attila the Hun
+        - Joan of Arc
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
+
+    - option: starting_campaigns
+      if_value:
+        - Genghis Khan
+        - Joan of Arc
+        - Attila the Hun
+      then_include:
+        enabled_campaigns:
+          - Attila the Hun
+          - Joan of Arc
+          - Genghis Khan
 
     # "enabled_campaigns needs at least one campaign." Only reachable once the above have had
     # their say: a blank start cannot widen anything, so an empty enable list needs a floor.
@@ -66,3 +176,4 @@
       ensure_any:
         - Attila the Hun
         - Joan of Arc
+        - Genghis Khan

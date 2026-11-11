@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 import typing
 
-from Options import (Choice, OptionCounter, OptionList, OptionSet, PerGameCommonOptions, Range,
-                     StartInventoryPool, Toggle)
+from Options import (Choice, DefaultOnToggle, OptionCounter, OptionError, OptionList, OptionSet, PerGameCommonOptions,
+                     Range, StartInventoryPool, Toggle)
 from worlds.age2de.locations.Campaigns import Age2CampaignData
-from .locations.Buildings import BuildingOption
+from .locations.Buildings import NAME_TO_BUILDING, Age2BuildingData, BuildingOption
+from .locations.Players import Age2PlayerData, TradeAccess
 from .items.Items import TRAP_NAMES
 
 class Goal(Choice):
@@ -48,24 +49,49 @@ class LocalStart(Choice):
 class ShuffleBuildings(OptionSet):
     """
     Determines which buildings to shuffle.
-        Economy: Shuffle houses, TC, market, resource buildings, farms. Includes dock.
-        Tech: Shuffle blacksmith, university, monastery.
-        Military: Shuffle military buildings. Includes dock and castle.
-        Defense: Shuffle defensive buildings. Includes castle.
+        All: Shuffle every building in every category below.
+        Base: Shuffle the town center and houses. Local Start's Base places these in your own world.
+        Economy: Shuffle the market, resource buildings and farms. Includes dock.
+        Tech: Shuffle the blacksmith and university.
+        Military: Shuffle the barracks, archery range, stable, siege workshop and monastery. Includes dock.
+        Castle: Shuffle the castle, and with Unique the krepost, fortified church and donjon.
+        Defense: Shuffle walls, gates and towers.
         Unique: Shuffle unique buildings, if applicable civilizations are in the pool. Other options apply to these buildings, e.g. if economy isn't shuffled, neither is folwark.
         Wonder: The wonder, the wonder, the... NO!
+    A building's own name also works and shuffles it whatever its category, e.g. [Military, Market].
+    Keys ignore case.
     """
     display_name = "Shuffle Buildings"
     valid_keys = frozenset({
+        BuildingOption.all,
+        BuildingOption.base,
         BuildingOption.economy,
         BuildingOption.tech,
         BuildingOption.military,
+        BuildingOption.castle,
         BuildingOption.defense,
         BuildingOption.unique,
         BuildingOption.wonder,
     })
+    canonical_keys_by_casefold = {
+        key.casefold(): key for key in [*valid_keys, *NAME_TO_BUILDING]
+    }
     default = set({BuildingOption.economy, BuildingOption.tech, BuildingOption.military})
     
+    def verify_keys(self) -> None:
+        """Matches each key without case, then stores its canonical spelling. The yaml is input
+        only, so the player's casing carries no meaning and nothing downstream folds case again."""
+        unknown = [
+            key for key in self.value
+                if key.casefold() not in self.canonical_keys_by_casefold
+        ]
+        if unknown:
+            raise OptionError(
+                f"Found unexpected key {', '.join(unknown)} in {self.display_name}. "
+                f"Allowed keys: {sorted(self.valid_keys)} or any building's name."
+            )
+        self.value = {self.canonical_keys_by_casefold[key.casefold()] for key in self.value}
+
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, OptionSet):
             return set(self.value) == other.value
@@ -79,29 +105,30 @@ class StartingCampaigns(OptionSet):
     Determines which vanilla campaigns will start unlocked for the player.
         Attila the Hun
         Joan of Arc
+        Genghis Khan
     Leave blank for a random start: one of your enabled campaigns is chosen for you.
     """
     display_name = "Starting Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
-    default = set((Age2CampaignData.ATTILA.campaign_name,))
+    default = set((Age2CampaignData.GENGHIS.campaign_name,))
 
 class EnabledCampaigns(OptionSet):
     """
     Determines which vanilla campaigns will be unlocked for the player.
         Attila the Hun
         Joan of Arc
+        Genghis Khan
     """
     display_name = "Enabled Campaigns"
     valid_keys = {campaign.campaign_name for campaign in Age2CampaignData}
-    default = set((Age2CampaignData.ATTILA.campaign_name,))
+    default = set((Age2CampaignData.GENGHIS.campaign_name,))
 
-class ShuffleAges(Toggle):
+class ShuffleAges(DefaultOnToggle):
     """
     Shuffles the ability to advance to the Feudal, Castle and Imperial Ages into the item pool.
     """
     internal_name = "shuffle_ages"
     display_name = "Shuffle Ages"
-
 
 class Techsanity(Choice):
     """
@@ -118,8 +145,12 @@ class Techsanity(Choice):
     option_units = 1
     option_generic = 2
     option_all = 3
-    default = option_none
+    default = option_all
 
+def upgrade_techs_shuffled(techsanity: int) -> bool:
+    """Whether unit-line upgrade technologies are items. Generic shuffles Loom and Fletching
+    and leaves the upgrades free, so it does not count."""
+    return techsanity in (Techsanity.option_units, Techsanity.option_all)
 
 class TechBehavior(Choice):
     """
@@ -136,7 +167,6 @@ class TechBehavior(Choice):
     option_instant = 1
     default = option_must_research
 
-
 class ShuffleUniqueTechs(Choice):
     """
     Whether civilization unique technologies join the pool. Requires Techsanity.
@@ -149,8 +179,7 @@ class ShuffleUniqueTechs(Choice):
     option_unshuffled = 0
     option_shuffled = 1
     option_shuffled_everywhere = 2
-    default = option_unshuffled
-
+    default = option_shuffled
 
 class ExistingTechs(Choice):
     """
@@ -169,7 +198,6 @@ class ExistingTechs(Choice):
     option_start_in_dark_age = 3
     default = option_vanilla
 
-
 class Unitsanity(Choice):
     """
     Shuffles units. Owning a unit sends its check, and items are what let you train one.
@@ -182,8 +210,7 @@ class Unitsanity(Choice):
     option_none = 0
     option_unit_line = 1
     option_all = 2
-    default = option_none
-
+    default = option_unit_line
 
 class UnitsanityItems(Choice):
     """
@@ -191,6 +218,7 @@ class UnitsanityItems(Choice):
     Unit Line: One item per line, e.g. Militia Line, Archer Line.
     Upgrades: Units need the equipment they are known for, so a Knight wants a Horse, a Sword and
     a Shield while an Archer only wants a Bow. A unit becomes trainable once it has all of its own.
+    Adapts to techsanity.
     Buildings: One item per producing building, e.g. Barracks Units, Archery Range Units.
     """
     internal_name = "unitsanity_items"
@@ -199,7 +227,6 @@ class UnitsanityItems(Choice):
     option_upgrades = 1
     option_buildings = 2
     default = option_unit_line
-
 
 class ShuffleVillager(Choice):
     """
@@ -214,7 +241,6 @@ class ShuffleVillager(Choice):
     option_yes = 1
     option_include_professions = 2
     default = option_no
-
 
 class IncludeUniqueUnits(Choice):
     """
@@ -232,8 +258,7 @@ class IncludeUniqueUnits(Choice):
     option_unique = 1
     option_regional = 2
     option_both = 3
-    default = option_none
-
+    default = option_both
 
 class Caveman(Toggle):
     """
@@ -243,7 +268,55 @@ class Caveman(Toggle):
     internal_name = "caveman"
     display_name = "Caveman"
 
-    
+class MonksCanCounter(Toggle):
+    """
+    Whether the logic may expect monks and missionaries to counter a unit.
+    Off: Monks are only considered a counter to elephants.
+    On: They can counter valuable unit-lines such as heavy cavalry and siege (with redemption).
+    """
+    internal_name = "monks_can_counter"
+    display_name = "Monks Can Counter"
+
+class SiegeCanCounter(Toggle):
+    """
+    Whether the logic may expect mangonels, bombard cannons and rocket carts to counter a unit.
+    Does not affect scorpions. 
+    Off: Mangonels, bombard cannons and rocket carts can only counter siege.
+    On: Mangonels, bombard cannons and rocket carts can counter all units they are typically strong against.
+    """
+    internal_name = "siege_can_counter"
+    display_name = "Siege Can Counter"
+
+class MarketTrade(Toggle):
+    """
+    Whether the logic may expect you to buy and sell resources at your own market.
+    Off: The market is never needed to afford anything.
+    On: A market with a steady supply of wood or food to sell can stand in for any resource.
+    """
+    internal_name = "market_trade"
+    display_name = "Market Trade"
+
+class PartnerTrade(Choice):
+    """
+    Whether the logic may expect you to run trade carts and trade cogs to another player's market or dock, and to whose.
+    None: Trade with other players is never needed to afford anything.
+    Allies: Only an ally's market or dock, and only where the scenario's ally keeps one usable.
+    Allies And Enemies: An enemy's too, once you can defeat its owner, straight away if it is undefended, or once you can guard the route to it.
+    """
+    internal_name = "partner_trade"
+    display_name = "Partner Trade"
+    option_none = 0
+    option_allies = 1
+    option_allies_and_enemies = 2
+    default = option_allies
+
+    def needs_defeat_event(self, player: Age2PlayerData) -> bool:
+        return self.value == self.option_allies_and_enemies and player.can_trade_once_defeated
+
+    def needs_guard_event(self, player: Age2PlayerData, building: Age2BuildingData) -> bool:
+        return (self.value == self.option_allies_and_enemies
+                and player.trade_access(building) is TradeAccess.GUARDED)
+
 class TrapDifficulty(Choice):
     """
     How punishing traps are when they are enabled. No Traps keeps them out of the item pool entirely.
@@ -256,11 +329,10 @@ class TrapDifficulty(Choice):
     option_medium = 3
     option_hard = 4
     option_legendary = 5
-    default = option_no_traps
+    default = option_standard
 
     def include_traps(self) -> bool:
         return self.value > 0
-
 
 class TrapPercentage(Range):
     """
@@ -296,7 +368,6 @@ class MinimumFillerLocations(Range):
 
 TRAP_DEFAULT_WEIGHT = 100
 
-
 class TrapDistribution(OptionCounter):
     """
     Relative chance of each trap whenever a trap slot is rolled. Every trap defaults to 100. A trap
@@ -309,7 +380,6 @@ class TrapDistribution(OptionCounter):
     max = 1000
     valid_keys = frozenset(TRAP_NAMES)
     default = {_trap_name: TRAP_DEFAULT_WEIGHT for _trap_name in TRAP_NAMES}
-
 
 @dataclass
 class Age2Options(PerGameCommonOptions):
@@ -332,6 +402,10 @@ class Age2Options(PerGameCommonOptions):
     shuffle_villager: ShuffleVillager
     include_unique_units: IncludeUniqueUnits
     caveman: Caveman
+    monks_can_counter: MonksCanCounter
+    siege_can_counter: SiegeCanCounter
+    market_trade: MarketTrade
+    partner_trade: PartnerTrade
     goal: Goal
     local_start: LocalStart
     minimum_filler_locations: MinimumFillerLocations

@@ -37,14 +37,11 @@ class Logic:
         self.world = world
         self.scenarios = []
 
-        self.scenario_answers: dict[tuple, object] = {}
+        self.scenario_answers: dict[tuple, Rule.Resolved] = {}
         """Resolved answers to the scenario questions, one per seed. See logic/custom_logic."""
-
         self.scenario_answers_open: set[tuple] = set()
-        """Questions part-way through being answered, so a cycle fails loudly rather than hanging."""
+        """Questions still being answered, so a cycle fails loudly rather than hanging."""
 
-        self._can_build: dict[Age2BuildingData, Or] = {building: Or()
-                                                       for building in Age2BuildingData}
         self._can_research: dict[Age2TechData, Or] = {}
 
         self.resources = ResourceLogic(self, world)
@@ -54,14 +51,9 @@ class Logic:
         self.filler = FillerLogic(self)
         
         for campaign in world.pool.campaigns.enabled:
-            for scenario in world.pool.scenarios.of(campaign):
+            for scenario in world.pool.scenarios.in_campaign(campaign):
                 self.scenarios.append(ScenarioLogic(self, scenario.logic(self), scenario))
     
-        for building in Age2BuildingData:
-            self._can_build[building].children = tuple(
-                scenario.is_unlocked() & scenario.buildings.can_build_building(building)
-                for scenario in self.scenarios)
-
         for tech in Age2TechData:
             self._can_research[tech] = Or(*[
                 scenario.is_unlocked() & scenario.techs.can_research(tech)
@@ -71,6 +63,10 @@ class Logic:
         self.ages.set_can_reach_age(self.scenarios)
         
         self.goal = GoalLogic(self, world)
+
+    def is_impossible(self, rule: Rule) -> bool:
+        """Whether the rule could never be true in this world."""
+        return rule.resolve(self.world).always_false
 
     def for_scenario(self, scenario) -> ScenarioLogic:
         return self._by_scenario[scenario]
@@ -88,5 +84,11 @@ class Logic:
     def can_research_anywhere(self, tech: Age2TechData) -> Rule:
         return self._can_research[tech]
 
-    def can_build_building_anywhere(self, building: Age2BuildingData) -> Rule:
-        return self._can_build[building]
+    def starts_with_building_anywhere(self, building: Age2BuildingData) -> Rule:
+        return Or(*[scenario.is_unlocked() & scenario.starting_state.starts_with_building[building]
+                    for scenario in self.scenarios])
+
+    def can_build_anywhere(self, building: Age2BuildingData) -> Rule:
+        """The Build location: putting it up, paid for."""
+        return Or(*[scenario.is_unlocked() & scenario.buildings.can_build(building)
+                    for scenario in self.scenarios])

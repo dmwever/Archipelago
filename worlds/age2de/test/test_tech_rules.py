@@ -10,7 +10,6 @@ from ..locations.Civilizations import Age2CivData
 from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
-from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
 from .bases import Age2RuleTestBase
 
 
@@ -42,7 +41,9 @@ class TestTechItemsDoNotGate(Age2RuleTestBase):
 
     def test_the_age_is_still_asked_for(self):
         # The item unlocks the effect, not the age. Crop Rotation is Imperial either way.
-        self.build(techsanity=Techsanity.option_generic)
+        # Castle is shuffled so that withholding it can hold the Imperial Age back.
+        self.build(techsanity=Techsanity.option_generic,
+                   shuffle_buildings={"Economy", "Tech", "Military", "Castle"})
         starved = self.state_without(*self.imperial_blockers())
         self.assertFalse(starved.can_reach_location(
             Age2TechData.CROP_ROTATION.location_name, self.world.player))
@@ -102,7 +103,7 @@ class TestUpgradesWaitOnTheirItem(Age2RuleTestBase):
             tech = unit.upgrade_tech
             if tech is None or not world.pool.techs.includes(tech):
                 continue
-            if world.pool.techs.locked_at_start(tech):
+            if world.pool.techs.withheld_at_start(tech):
                 continue
             for scenario in world.rules.logic.scenarios:
                 if tech.age >= scenario.scenario.vanilla_age:
@@ -215,7 +216,8 @@ class TestAgeGate(Age2RuleTestBase):
     def test_two_technologies_in_one_region_can_disagree(self):
         # Both live in the Mill. If the age ever migrates from the location to
         # the region entrance, these two stop being separable and this fails.
-        self.build(techsanity=Techsanity.option_generic)
+        self.build(techsanity=Techsanity.option_generic,
+                   shuffle_buildings={"Economy", "Tech", "Military", "Castle"})
         starved = self.state_without(
             *[building.item.item_name for building in
               (Age2BuildingData.MONASTERY, Age2BuildingData.UNIVERSITY,
@@ -249,7 +251,7 @@ class TestExistingTechs(Age2RuleTestBase):
         world = self.build(techsanity=Techsanity.option_all,
                            existing_techs=ExistingTechs.option_find_items)
         for tech in world.pool.techs.shuffled:
-            self.assertTrue(world.pool.techs.locked_at_start(tech), tech.name)
+            self.assertTrue(world.pool.techs.withheld_at_start(tech), tech.name)
 
 
 class TestReplacementBuildingReachesSharedTechs(Age2RuleTestBase):
@@ -270,6 +272,8 @@ class TestReplacementBuildingReachesSharedTechs(Age2RuleTestBase):
         self.build_with_uniques()
         mill = Age2ItemData.MILL.item_name
         settlement = Age2ItemData.SETTLEMENT.item_name
+        for door in self.world.get_region("Starts With Building").exits:
+            door.access_rule = lambda state: False
         location = Age2TechData.HORSE_COLLAR.location_name
         self.assertTrue(self.can_reach(location, self.state_without(settlement)))
         self.assertTrue(self.can_reach(location, self.state_without(mill)))

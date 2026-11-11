@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from .test_campaign_bundle import SEED, build_fixture
+from .test_campaign_bundle import SEED
 from ..campaign.CampaignReader import Campaign
 from ..client.handlers.CampaignHandler import CampaignHandler
 from ..client.handlers.InstallHandler import InstallError, InstallHandler
@@ -11,26 +11,27 @@ from ..generation import Identity, SlotData
 from ..locations.Ages import Age2AgeData
 from ..locations.Techs import Age2TechData
 from ..locations.Campaigns import Age2CampaignData
+from ..locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 
-SCENARIO_SUBPATH = "resources/_common/scenario"
 PLAYER = "Dave"
 
 
 def fake_user_folder(root: Path, campaigns=tuple(Age2CampaignData)) -> Path:
+    """A user folder holding the loose scenarios /install packs from.
+
+    There is no source bundle any more: the scenarios on disk are the only copy, so the fixture
+    writes them directly. Each body is a distinct pattern and length, which is what lets the
+    identity tests tell one chapter's bytes from another's.
+    """
     layout = InstallHandler()
     layout.set_user_folder(str(root))
     layout.campaign_dir().mkdir(parents=True)
     layout.xs_dir().mkdir(parents=True)
-    (root / SCENARIO_SUBPATH).mkdir(parents=True)
+    layout.scenario_dir().mkdir(parents=True)
 
     for campaign in campaigns:
-        bundle = build_fixture(Identity.source_campaign_stem(campaign.file_stem), [
-            (f"{campaign.file_stem}_{index}.aoe2scenario", bytes([index]) * (64 + index))
-            for index in range(1, 4)
-        ])
-        (layout.campaign_dir()
-         / Identity.source_campaign_file_name(campaign.file_stem)).write_bytes(bundle)
-        (root / SCENARIO_SUBPATH / f"{campaign.file_stem}_1.aoe2scenario").write_bytes(b"authoring")
+        for index, scenario in enumerate(CAMPAIGN_TO_SCENARIOS[campaign], start=1):
+            layout.scenario_path(scenario).write_bytes(bytes([index]) * (64 + index))
 
     layout.slot_data_path().write_text(SlotData.render(), encoding="utf-8")
     return root
@@ -50,9 +51,6 @@ class InstallerTestBase(unittest.TestCase):
         self.handler.setup(campaigns, slot, self.tag if tag is None else tag, player_name,
                            slot_data, location_ids)
         return self.handler.install(full)
-
-    def installed_name(self, stem, tag=None, player_name=PLAYER):
-        return Identity.campaign_file_name(stem, self.tag if tag is None else tag, player_name)
 
     def installed_name(self, stem, tag=None, player_name=PLAYER):
         return Identity.campaign_file_name(stem, self.tag if tag is None else tag, player_name)
@@ -90,22 +88,12 @@ class TestInstall(InstallerTestBase):
         self.assertIn(self.installed_name("AP Joan of Arc"), present)
         self.assertNotIn(self.installed_name("AP Attila the Hun"), present)
 
-    def test_source_bundles_are_left_alone(self):
-        before = {
-            campaign.file_stem: (self.campaign_dir()
-                                 / Identity.source_campaign_file_name(
-                                     campaign.file_stem)).read_bytes()
-            for campaign in Age2CampaignData
-        }
-        self.install(list(Age2CampaignData))
-        for campaign in Age2CampaignData:
-            path = self.campaign_dir() / Identity.source_campaign_file_name(campaign.file_stem)
-            self.assertEqual(path.read_bytes(), before[campaign.file_stem])
-
     def test_the_scenario_folder_is_untouched(self):
-        before = {p.name: p.read_bytes() for p in (self.root / SCENARIO_SUBPATH).iterdir()}
+        """Now the load-bearing one: the loose scenarios are the only copy /install packs from,
+        so writing to them would corrupt the source rather than just a rebuildable artifact."""
+        before = {p.name: p.read_bytes() for p in self.handler.scenario_dir().iterdir()}
         self.install(list(Age2CampaignData))
-        after = {p.name: p.read_bytes() for p in (self.root / SCENARIO_SUBPATH).iterdir()}
+        after = {p.name: p.read_bytes() for p in self.handler.scenario_dir().iterdir()}
         self.assertEqual(after, before)
 
     def test_installing_twice_is_identical(self):
@@ -165,14 +153,13 @@ class TestInstall(InstallerTestBase):
         self.assertEqual(campaign.header.name, path.name[:-len(".aoe2campaign")])
 
     def test_the_scenario_entries_are_not_tagged(self):
-        source = Campaign(str(self.campaign_dir() / "AP Attila the Hun Template.aoe2campaign"))
+        expected = [f"{scenario.file_stem}.aoe2scenario"
+                    for scenario in CAMPAIGN_TO_SCENARIOS[Age2CampaignData.ATTILA]]
         self.install([Age2CampaignData.ATTILA])
         installed = Campaign(str(
             self.campaign_dir() / self.installed_name("AP Attila the Hun")))
-        self.assertEqual([scn.file_name for scn in installed.scenarios],
-                         [scn.file_name for scn in source.scenarios])
-        self.assertEqual([scn.name for scn in installed.scenarios],
-                         [scn.name for scn in source.scenarios])
+        self.assertEqual([scn.file_name for scn in installed.scenarios], expected)
+        self.assertEqual([scn.name for scn in installed.scenarios], expected)
         for scn in installed.scenarios:
             self.assertNotIn(self.tag, scn.file_name)
 
@@ -215,11 +202,21 @@ class TestPlayerNameInTheFileName(InstallerTestBase):
 
 
 class TestInstallRefusals(InstallerTestBase):
-    def test_missing_source_bundle_is_reported(self):
-        (self.campaign_dir() / "AP Attila the Hun Template.aoe2campaign").unlink()
+    def test_a_missing_scenario_is_reported_by_name(self):
+        chapter = CAMPAIGN_TO_SCENARIOS[Age2CampaignData.ATTILA][2]
+        self.handler.scenario_path(chapter).unlink()
         with self.assertRaises(InstallError) as caught:
             self.install([Age2CampaignData.ATTILA])
-        self.assertIn("AP Attila the Hun Template.aoe2campaign", str(caught.exception))
+        self.assertIn(f"{chapter.file_stem}.aoe2scenario", str(caught.exception))
+
+    def test_every_missing_scenario_is_named_at_once(self):
+        """One report listing all of them, rather than one install attempt per missing file."""
+        for chapter in CAMPAIGN_TO_SCENARIOS[Age2CampaignData.ATTILA]:
+            self.handler.scenario_path(chapter).unlink()
+        with self.assertRaises(InstallError) as caught:
+            self.install([Age2CampaignData.ATTILA])
+        for chapter in CAMPAIGN_TO_SCENARIOS[Age2CampaignData.ATTILA]:
+            self.assertIn(f"{chapter.file_stem}.aoe2scenario", str(caught.exception))
 
     def test_missing_xs_folder_is_reported(self):
         for path in self.handler.xs_dir().iterdir():
@@ -244,10 +241,14 @@ class TestIncludedCampaigns(unittest.TestCase):
         self.assertEqual(handler.included_campaigns(), [Age2CampaignData.JOAN])
 
     def test_a_key_that_starts_locked_is_still_included(self):
+        """Inclusion follows which keys slot_data carries, not their value - a campaign the seed
+        starts with locked is still part of the seed. Named explicitly rather than compared to
+        the whole enum, so adding a campaign does not break this."""
         handler = CampaignHandler(list(Age2CampaignData))
         handler.setup_victory_requirements({
             "Joan of Arc_unlocked": True, "Attila the Hun_unlocked": False})
-        self.assertEqual(set(handler.included_campaigns()), set(Age2CampaignData))
+        self.assertEqual(set(handler.included_campaigns()),
+                         {Age2CampaignData.JOAN, Age2CampaignData.ATTILA})
 
 
 class TestTechInstall(InstallerTestBase):
@@ -307,7 +308,7 @@ class TestTechInstall(InstallerTestBase):
 
     def test_caveman_rebases_on_its_own(self):
         self.handler.setup([Age2CampaignData.ATTILA], 3, self.tag, PLAYER,
-                           slot_data=self.techsanity(techsanity=0, existing_techs=0,
+                           slot_data=self.techsanity(techsanity=1, existing_techs=0,
                                                      caveman=1))
         self.assertTrue(self.handler.scenario_needs_age_up())
 

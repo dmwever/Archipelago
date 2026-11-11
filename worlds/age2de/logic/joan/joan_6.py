@@ -5,14 +5,18 @@ from ...locations.Locations import Age2ScenarioLocationData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Ages import Age2AgeData
 from ...items.Items import Age2ItemData
+from ...locations.UnitLines import Age2UnitLineData
 
 from ...locations.Units import Age2UnitData as U
 from ...locations.Heroes import Age2HeroData as H
+from ..custom_logic.EconomyRoutes import Strength
 from ..ScenarioLogic import ScenarioStartingState
+from ...locations.Players import Age2PlayerData
 
 
 if TYPE_CHECKING:
     from ..Logic import Logic
+    from ..ScenarioLogic import ScenarioLogic
 
 class Joan6StartingState(ScenarioStartingState):
 
@@ -24,12 +28,43 @@ class Joan6StartingState(ScenarioStartingState):
 
         army = Has(Age2ItemData.AP_JOAN_6_ARMY.item_name)
         self.must_steal_base = army   # the French army is how you take the English camp
-        self.obtains_unit[U.ARCHER] = army
-        self.obtains_unit[U.MILITIA] = army
-        self.obtains_unit[U.SCOUT_CAVALRY] = army
-        self.obtains_unit[U.KNIGHT] = army
+        self.housing[Strength.SOME] = self.must_steal_base
+        artillery = Has(Age2ItemData.AP_JOAN_6_ARTILLERY.item_name)
+        lone_swordsman = Has(Age2ItemData.AP_JOAN_6_LONE_SWORDSMAN.item_name)
+        self.obtains_unit[U.ARBALESTER] = army
+        self.obtains_unit[U.CHAMPION] = army | lone_swordsman
+        self.obtains_unit[U.HUSSAR] = army
+        self.obtains_unit[U.PALADIN] = army
         self.obtains_unit[U.TREBUCHET_PACKED] = army
         self.obtains_unit[U.VILLAGER_MALE] = army
         self.obtains_unit[U.VILLAGER_FEMALE] = army
         self.obtains_unit[H.LA_HIRE] = army
         self.obtains_unit[H.CONSTABLE_RICHEMONT] = army
+        self.obtains_unit[U.HAND_CANNONEER] = artillery
+        self.obtains_unit[U.BOMBARD_CANNON] = artillery
+        self.obtains_unit[H.JEAN_BUREAU] = artillery
+
+    def defeat_rules(self, scenario_logic: 'ScenarioLogic') -> dict[Age2PlayerData, Rule]:
+        military = scenario_logic.military
+        return {
+            Age2PlayerData.JOAN6_BURGUNDY: (
+                military.has_siege() &
+                military.counters(Age2UnitLineData.MILITIA_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.SPEARMAN_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.MONK_LINE, Age2AgeData.CASTLE)
+            ),
+            Age2PlayerData.JOAN6_ENGLISH: (
+                military.has_siege() &
+                military.counters(Age2UnitLineData.LONGBOWMAN_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.MANGONEL_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
+            ),
+            Age2PlayerData.JOAN6_SHREWSBURY: (
+                military.has_siege() &
+                military.counters(Age2UnitLineData.KNIGHT_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.SCOUT_CAVALRY_LINE, Age2AgeData.IMPERIAL) &
+                military.counters(Age2UnitLineData.BATTERING_RAM_LINE, Age2AgeData.CASTLE) &
+                military.counters(Age2UnitLineData.TREBUCHET_LINE, Age2AgeData.IMPERIAL)
+            ),
+        }

@@ -45,6 +45,42 @@ class MercenaryHandlerTestBase(unittest.TestCase):
         return DataStorage(EVERY_CAMPAIGN if campaigns is None else campaigns).mercenaries
 
 
+class TestSpentStateAgainstWhatWasReceived(MercenaryHandlerTestBase):
+    """The handler is told which mercenaries are spent, in item terms, as it always has been.
+
+    Where that list comes from is not its business: Age2GameContext.spent_indices decodes the record and status_loop names the entries,
+    and test_item_delivery covers what a stale or oversized record decodes to.
+    """
+
+    def test_a_spent_mercenary_is_marked_and_withdrawn(self) -> None:
+        handler = self.handler()
+        roster = self.roster()
+        first, second = roster[0], roster[1]
+        handler.try_sync_mercenaries([first, second], spent=[second])
+        self.assertFalse(handler.is_used(first))
+        self.assertTrue(handler.is_used(second), "a genuinely spent mercenary was resurrected")
+        self.assertNotIn(second, handler.queued() + handler.seated())
+
+    def test_spends_that_are_not_mercenaries_are_ignored(self) -> None:
+        """The record covers traps and filler too, so the whole of it is handed over as-is."""
+        handler = self.handler()
+        held = self.roster()[1]
+        handler.try_sync_mercenaries([held], spent=[Age2ItemData.TRAP_WOLOLO,
+                                                    Age2ItemData.FILLER_WOOD_SMALL])
+        self.assertFalse(handler.is_used(held))
+        self.assertIn(held, handler.queued() + handler.seated())
+
+    def test_an_empty_received_list_changes_nothing(self) -> None:
+        """The used-reply can land before ReceivedItems; acting on an empty list would wipe",
+        real progress and push the wipe to the server."""
+        handler = self.handler()
+        spent = self.roster()[0]
+        handler.set_used(spent)
+        handler.try_sync_mercenaries([])
+        self.assertTrue(handler.is_used(spent),
+                        "an empty received list must not be read as proof of nothing received")
+
+
 class TestSeating(MercenaryHandlerTestBase):
 
     def test_arrival_order_fills_the_seats(self) -> None:
@@ -79,7 +115,7 @@ class TestSeating(MercenaryHandlerTestBase):
 
         handler.use_mercenary(spent)
         for _ in range(3):
-            handler.try_sync_mercenaries(found)
+            handler.try_sync_mercenaries(found, spent=[spent])
 
         self.assertNotIn(spent, handler.seated(), "a spent mercenary was seated again")
         self.assertNotIn(spent, handler.queued(), "a spent mercenary went back into the queue")
@@ -98,12 +134,11 @@ class TestSeating(MercenaryHandlerTestBase):
                           f"{mercenary.item_name} was queued but never granted")
 
     def test_handing_a_mercenary_back_returns_it_to_the_queue(self) -> None:
-        """The mechanism, not the policy: set_used(x, False) still has to re-offer.
+        """`used` follows the spent record both ways.
 
-        It used to be driven by the SetReply assigning from the server, which meant a spend the
-        server never stored came back. That rule is now inverted -- the local file decides, see
-        reconcile_spent in test_storage_handler -- but the hand-back path still runs, because a
-        cold start adopts the server wholesale and anything absent from it is un-spent.
+        The record is the union of every copy, see TestReconcilingTheSpentRecord in
+        test_item_delivery -- but a stream that gets shorter cuts the record and un-spends whatever
+        it cut, and the pavilion has to offer that mercenary again without a reconnect.
         """
         handler = self.handler()
         granted = self.roster()
@@ -111,12 +146,11 @@ class TestSeating(MercenaryHandlerTestBase):
         spent = handler.seated()[0]
 
         handler.use_mercenary(spent)
-        handler.try_sync_mercenaries(granted)
+        handler.try_sync_mercenaries(granted, spent=[spent])
         self.assertTrue(handler.is_used(spent))
         self.assertNotIn(spent, handler.seated() + handler.queued())
 
-        handler.set_used(spent, False)
-        handler.try_sync_mercenaries(granted)
+        handler.try_sync_mercenaries(granted, spent=[])
         self.assertFalse(handler.is_used(spent))
         self.assertIn(spent, handler.seated() + handler.queued(),
                       "a mercenary the server never recorded as spent must be offered again")

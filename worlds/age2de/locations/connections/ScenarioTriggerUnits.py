@@ -45,16 +45,35 @@ AUTHORED_TRIGGER_UNITS: dict[Age2ScenarioData, list[ScenarioUnit]] = {
         Age2UnitData.VILLAGER_FEMALE,
     ],
     Age2ScenarioData.AP_JOAN_6: [
-        Age2UnitData.ARCHER,
-        Age2UnitData.MILITIA,
-        Age2UnitData.SCOUT_CAVALRY,
-        Age2UnitData.KNIGHT,
+        Age2UnitData.ARBALESTER,
+        Age2UnitData.CHAMPION,
+        Age2UnitData.HUSSAR,
+        Age2UnitData.PALADIN,
         Age2UnitData.TREBUCHET_PACKED,
         Age2UnitData.VILLAGER_MALE,
         Age2UnitData.VILLAGER_FEMALE,
         Age2HeroData.LA_HIRE,
         Age2HeroData.CONSTABLE_RICHEMONT,
     ],
+    Age2ScenarioData.AP_GENGHIS_1: [
+        Age2UnitData.CAVALRY_ARCHER,
+        Age2UnitData.LIGHT_CAVALRY,
+    ],
+    Age2ScenarioData.AP_GENGHIS_2: [
+        Age2UnitData.VILLAGER_MALE,
+        Age2UnitData.VILLAGER_FEMALE,
+    ],
+    Age2ScenarioData.AP_GENGHIS_3: [
+        Age2UnitData.TRANSPORT_SHIP,
+    ],
+    # Champions from the assassination.
+    Age2ScenarioData.AP_GENGHIS_4: [
+        Age2UnitData.CHAMPION,
+    ],
+    Age2ScenarioData.AP_GENGHIS_5: [
+        Age2UnitData.SCOUT_CAVALRY,
+    ],
+    Age2ScenarioData.AP_GENGHIS_6: [],
 }
 
 

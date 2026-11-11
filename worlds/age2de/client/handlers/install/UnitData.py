@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from ....Options import Unitsanity, UnitsanityItems
+from ....Options import Techsanity, Unitsanity, UnitsanityItems, upgrade_techs_shuffled
 from ....generation import SlotData
 from ....locations.UnitLocations import VILLAGER_LINES, UnitLocation
 from ....locations.Ages import Age2AgeData
@@ -9,10 +9,12 @@ from ....locations.Buildings import Age2BuildingData
 from ....locations.Civilizations import Age2CivData
 from ....locations.EscortUnits import Age2EscortUnitData
 from ....locations.Heroes import Age2HeroData
+from ....locations.Techs import Age2TechData
 from ....locations.UnitLines import Age2UnitLineData
 from ....locations.Units import Age2UnitData
 from ....locations.VillagerJobs import Age2VillagerJobData
 from ....locations.connections.CivilizationUnits import CIV_TO_UNITS
+from ....locations.connections.ScenarioCavemanExemptions import SCENARIO_TO_CAVEMAN_EXEMPTIONS
 from ....locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
 
@@ -29,6 +31,7 @@ class Row:
     tier: int
     upgrade_item_id: int
     caveman_exempt: bool
+    untrainable_civs: tuple[int, ...]
     items: tuple[int, ...]
     variants: tuple[int, ...]
 
@@ -39,7 +42,7 @@ class UnitData:
     NO_LOCATION = -1
     NO_LINE = -1
     NO_UPGRADE_ITEM = -1
-    MAX_ITEMS = 3
+    MAX_ITEMS = 5
     MAX_VARIANTS = 16
 
     SEED_HIGH = "US_SEED_HIGH"
@@ -47,11 +50,16 @@ class UnitData:
 
     def __init__(self, locations: Iterable[UnitLocation] = (),
                  civs: Iterable[Age2CivData] = (), mode: int = Unitsanity.option_none,
-                 items_mode: int = UnitsanityItems.option_unit_line, tag: str = None):
+                 items_mode: int = UnitsanityItems.option_unit_line, tag: str = None,
+                 techsanity: int = Techsanity.option_none, caveman: bool = False,
+                 techs: Iterable[Age2TechData] = ()):
         self._locations = set(locations)
         self._civs = tuple(civs)
         self._mode = mode
         self._items_mode = items_mode
+        self._techsanity = techsanity
+        self._caveman = caveman
+        self._techs = set(techs)
         self._tag = tag
         self._trainable = {unit for civ in self._civs for unit in CIV_TO_UNITS[civ]}
         if Age2UnitData.VILLAGER_MALE in self._trainable:
@@ -67,9 +75,22 @@ class UnitData:
     def is_caveman_exempt(self, unit: Age2UnitData) -> bool:
         return unit.line in VILLAGER_LINES
 
+    def civ_trains(self, civ: Age2CivData, unit: Age2UnitData) -> bool:
+        if unit in CIV_TO_UNITS[civ]:
+            return True
+        if unit is Age2UnitData.VILLAGER_FEMALE:
+            return Age2UnitData.VILLAGER_MALE in CIV_TO_UNITS[civ]
+        return False
+
+    def untrainable_civs(self, unit: Age2UnitData) -> tuple[int, ...]:
+        return tuple(civ.game_id for civ in self._civs if not self.civ_trains(civ, unit))
+
+    def all_civs_untrainable(self) -> tuple[int, ...]:
+        return tuple(civ.game_id for civ in self._civs)
+
     def upgrade_item_for(self, unit: Age2UnitData) -> int:
         tech = unit.upgrade_tech
-        if tech is None or tech.item is None:
+        if tech is None or tech.item is None or tech not in self._techs:
             return self.NO_UPGRADE_ITEM
         return tech.item.id
 
@@ -82,27 +103,41 @@ class UnitData:
             item = unit.line.item
             return (item.id,) if item is not None else ()
         if self._items_mode == UnitsanityItems.option_upgrades:
-            return tuple(token.id for token in unit.upgrade_tokens or ())
+            gated_by = unit
+            if unit.tier > 0 and not upgrade_techs_shuffled(self._techsanity):
+                gated_by = unit.line.head
+            return tuple(token.id for token in gated_by.upgrade_tokens or ())
         return tuple(BUILDING_TO_UNITS_ITEM[building].id for building in unit.buildings or ()
                      if building in BUILDING_TO_UNITS_ITEM and self.civs_build(building))
 
+    def is_granted_only(self, unit: Age2UnitData) -> bool:
+        """No civilisation in the seed trains it, so only a scenario hands one over. The pool
+        holds its line item only under caveman, which takes a granted unit away until its
+        items arrive; otherwise it is owned when granted, the way a hero is."""
+        return unit not in self._trainable and not self._caveman
+
     def unit_row(self, unit: Age2UnitData, location_id: int) -> Row:
+        if self.is_granted_only(unit):
+            return Row(unit, location_id, self.NO_LINE, Age2AgeData.DARK.value, 0,
+                       self.NO_UPGRADE_ITEM, True, self.all_civs_untrainable(), (),
+                       tuple(unit.variant_game_ids or ()))
         items = self.items_for(unit)
         if len(items) > self.MAX_ITEMS:
             raise ValueError(
                 f"{unit.unit_name} needs {len(items)} items; raise MAX_ITEMS here and "
                 "UNIT_ITEM_CAPACITY in AP_Constants.xs to match")
         return Row(unit, location_id, unit.line.id, unit.age.value, unit.tier,
-                   self.upgrade_item_for(unit), self.is_caveman_exempt(unit), items,
+                   self.upgrade_item_for(unit), self.is_caveman_exempt(unit),
+                   self.untrainable_civs(unit), items,
                    tuple(unit.variant_game_ids or ()))
 
     def owned_type_row(self, place: UnitLocation) -> Row:
         if isinstance(place, Age2VillagerJobData):
             return Row(place, place.id, place.line.id, Age2AgeData.DARK.value, 1,
-                       self.NO_UPGRADE_ITEM, True, (place.item.id,), ())
+                       self.NO_UPGRADE_ITEM, True, (), (place.item.id,), ())
 
         return Row(place, place.id, self.NO_LINE, Age2AgeData.DARK.value, 0,
-                   self.NO_UPGRADE_ITEM, True, (), ())
+                   self.NO_UPGRADE_ITEM, True, self.all_civs_untrainable(), (), ())
 
     def rows_for(self, place: UnitLocation) -> list[Row]:
         if isinstance(place, Age2UnitLineData):
@@ -123,6 +158,25 @@ class UnitData:
                 "UNIT_CAPACITY in AP_Constants.xs to match")
         return list(out.values())
 
+    def scenario_exemptions(self) -> list[tuple[int, tuple[int, ...]]]:
+        if self._mode == Unitsanity.option_none:
+            return []
+        return [(scenario.id, tuple(unit.game_id for unit in units))
+                for scenario, units in SCENARIO_TO_CAVEMAN_EXEMPTIONS.items() if units]
+
+    def exemption_lines(self) -> list[str]:
+        lines = ["void CavemanExemption() {"]
+        body = len(lines)
+        for scenario_id, type_ids in self.scenario_exemptions():
+            lines.append(f"    if (scenarioId == {scenario_id}) {{")
+            for type_id in type_ids:
+                lines.append(f"        ExemptUnitTypeFromCaveman({type_id});")
+            lines.append("    }")
+        if len(lines) == body:
+            lines.append("    return;")
+        lines.append("}")
+        return lines
+
     def render(self) -> str:
         high, low = ((SlotData.UNSET, SlotData.UNSET) if self._tag is None
                      else SlotData.seed_halves(self._tag))
@@ -136,6 +190,8 @@ class UnitData:
                 f"    addUnit({row.location_id}, {row.unit.game_id}, {row.line_id}, "
                 f"{row.age}, {row.tier}, {row.upgrade_item_id}, "
                 f"{int(row.caveman_exempt)});")
+            for civ_id in row.untrainable_civs:
+                lines.append(f"    addUnitUntrainable({row.unit.game_id}, {civ_id});")
             for item_id in row.items:
                 lines.append(f"    addUnitItem({row.unit.game_id}, {item_id});")
             for variant in row.variants:
@@ -143,4 +199,6 @@ class UnitData:
         if len(lines) == body:
             lines.append("    return;")
         lines.append("}")
+        lines.append("")
+        lines.extend(self.exemption_lines())
         return "\n".join(lines) + "\n"

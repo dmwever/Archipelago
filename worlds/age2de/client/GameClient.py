@@ -15,22 +15,22 @@ from ..locations.Scenarios import Age2ScenarioData
 
 from .handlers.CampaignHandler import CampaignHandler
 from .handlers.InstallHandler import InstallHandler
+from .handlers.ItemHandler import ItemHandler
 from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
-from .handlers.StorageHandler import StorageHandler
+from .handlers.StorageHandler import SpentPush, StorageHandler
 from .handlers.TechHandler import TechHandler
 from .handlers.UnitHandler import UnitHandler
 
 from Utils import Version
 
 from .. import Age2World
-from ..generation import Identity, WorldVersion
+from ..generation import Identity, SlotData, WorldVersion
 from ..campaign import XsdatFile
 from ..items import Items
-from ..items.Items import Age2ItemData, Mercenary, ScenarioItem
+from ..items.Items import Age2ItemData, ScenarioItem
 from ..locations.Campaigns import Age2CampaignData
 from ..locations.Techs import Age2TechData
-from worlds.age2de.locations import Scenarios
 
 logger = logging.getLogger("Client")
 
@@ -56,8 +56,12 @@ class APClientInterface(Protocol):
         """Called when a new location is received"""
         pass
 
-    def on_mercenary_used(self, mercenary: Age2ItemData):
-        """Called when the game has finished spawning a mercenary, so it is spent for good"""
+    def on_item_spent(self, spent: int):
+        """Called when the spent record has moved past what the server has been told"""
+        pass
+
+    def fetch_spent(self):
+        """Called when the spent record is unknown again; the reply goes to reconcile_spent"""
         pass
 
 
@@ -76,7 +80,10 @@ class DefaultClientInterface:
         for k in location_status:
             location_status[k] = 0
 
-    def on_mercenary_used(self, mercenary: Age2ItemData) -> None:
+    def on_item_spent(self, spent: int) -> None:
+        pass
+
+    def fetch_spent(self) -> None:
         pass
 
 
@@ -91,12 +98,11 @@ class Age2Packet:
     scenario_id: int = 0
     completed_mercenary_id: int = -1
     acked_queue_serial: int = -1
-    item_ids: List[int]
+    applied_item_count: int = 0
     location_ids: List[int]
     
     def __init__(self, fp = None):
         self.location_ids = []
-        self.item_ids = [-1 for _ in range(12)]
         if not fp:
             return
         self.active = XsdatFile.read_bool(fp)
@@ -104,14 +110,14 @@ class Age2Packet:
         self.world_major = XsdatFile.read_int(fp)
         self.slot_id = XsdatFile.read_int(fp)
         self.latest_message_id = XsdatFile.read_int(fp)
-        for num in range(len(self.item_ids)):
-            self.item_ids[num] = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 12)  # the echo ring, retired; the ints hold ScenarioId's offset
         self.completed = XsdatFile.read_bool(fp)
         self.scenario_id = XsdatFile.read_int(fp)
         self.world_minor = XsdatFile.read_int(fp)
         self.completed_mercenary_id = XsdatFile.read_int(fp)
         self.acked_queue_serial = XsdatFile.read_int(fp)
-        XsdatFile.skip_int(fp, 27)
+        self.applied_item_count = XsdatFile.read_int(fp)
+        XsdatFile.skip_int(fp, 26)
         while True:
             data = fp.read(4)
             if not data:
@@ -137,14 +143,12 @@ class PacketStatus(Enum):
 class ClientStatus:
     unlocked_items: list[Age2ItemData] = field(default_factory=list[Age2ItemData])
     checked_locations: set[int] = None
-    acked_items: int = 0
     user_folder: str = ''
     finished_game: bool = False
     slot_id: int = -1
     tag: str = ''
     slot_data: dict = None
     player_name: str = ''
-    in_flight: list[int] = field(default_factory=list[int])
 
 class Age2GameContext:
     running: bool = False
@@ -160,6 +164,7 @@ class Age2GameContext:
     unit_handler: UnitHandler
     message_handler: MessageHandler
     install_handler: InstallHandler
+    item_handler: ItemHandler
     storage_handler: StorageHandler
     client_interface: APClientInterface
     missing_since: float = 0.0
@@ -177,7 +182,8 @@ class Age2GameContext:
         self.unit_handler = UnitHandler()
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
-        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
+        self.storage_handler = StorageHandler()
+        self.item_handler = ItemHandler()
 
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
                 player_name: str):
@@ -197,9 +203,6 @@ class Age2GameContext:
         self.running = False
         if self.game_loop != None:
             try:
-                # Bounded: status_loop can block on a file the game is holding, and without a
-                # timeout that stalls disconnect and everything queued behind it, reconnect
-                # included.
                 await asyncio.wait_for(self.game_loop, GAME_LOOP_SHUTDOWN_SECONDS)
             except asyncio.TimeoutError:
                 logger.warning("Game loop did not stop within %s seconds; cancelling it.",
@@ -221,7 +224,8 @@ class Age2GameContext:
         self.unit_handler = UnitHandler()
         self.message_handler = MessageHandler()
         self.install_handler = InstallHandler()
-        self.storage_handler = StorageHandler(Items.CATEGORY_TO_ITEMS[Items.Mercenary])
+        self.storage_handler = StorageHandler()
+        self.item_handler = ItemHandler()
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -241,6 +245,7 @@ class Age2GameContext:
         self.campaign_handler.set_tag(self.client_status.tag)
         self.campaign_handler.set_player_name(self.client_status.player_name)
         self.install_handler.set_user_folder(user_folder)
+        self.item_handler.set_user_folder(self.profile_folder())
         self.storage_handler.set_user_folder(user_folder)
         self.storage_handler.set_tag(self.client_status.tag)
         self.storage_handler.set_player_name(self.client_status.player_name)
@@ -281,90 +286,67 @@ class Age2GameContext:
         except Exception as ex:
             print(ex)
 
-    def ack_items(self) -> None:
-        if not self.client_status.in_flight:
-            return
-        echoed = [item for item in self.current_packet.item_ids if item != -1]
-        confirmed = 0
-        for item_id in self.client_status.in_flight:
-            if item_id not in echoed:
-                break
-            echoed.remove(item_id)
-            confirmed += 1
-        if confirmed > 0:
-            self.client_status.acked_items += confirmed
-            del self.client_status.in_flight[:confirmed]
+    def clear_spent_state(self) -> bool:
+        cleared = self.storage_handler.try_clear()
+        self.client_interface.fetch_spent()
+        if cleared:
+            self.mercenary_handler.reset_used()
+        return cleared
 
-    def send_items(self) -> None:
-        if any(item != -1 for item in self.current_packet.item_ids):
-            return
-        num_items = len(self.client_status.unlocked_items) - self.client_status.acked_items
-        if num_items > 12:
-            num_items = 12
-        if num_items <= 0:
-            self.client_status.in_flight = []
-            return
-        window = self.client_status.unlocked_items[self.client_status.acked_items:self.client_status.acked_items+num_items]
-        item_ids = [item.id for item in window]
-        if item_ids == self.client_status.in_flight:
-            return
-        try:
-            with open(self.profile_folder() + "items.xsdat", "wb") as fp:
-                for item_id in item_ids:
-                    XsdatFile.write_int(fp, item_id)
-            self.client_status.in_flight = item_ids
-        except Exception as ex:
-            print(ex)
+    def spent_items(self) -> set[int]:
+        return self.storage_handler.spent_indices(len(self.client_status.unlocked_items))
 
-    def sync_starting_resources(self) -> None:
-        item_ids: list[int] = []
-        for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.StartingResources], self.client_status.unlocked_items)):
-            item_ids.append(item.id)
-        for item in list(filter(lambda x: x in Items.CATEGORY_TO_ITEMS[Items.TCResources], self.client_status.unlocked_items)):
-            item_ids.append(item.id)
-        try:
-            with open(self.profile_folder() + "startup.xsdat", "wb") as fp:
-                for id in item_ids:
-                    XsdatFile.write_int(fp, id)
-        except Exception as ex:
-            print(ex)
+    def spent_mercenaries(self) -> list[Age2ItemData]:
+        unlocked = self.client_status.unlocked_items
+        return [unlocked[index] for index in self.spent_items()
+                if unlocked[index] in Items.SPENT_ON_USE_ITEMS]
+
+    def unspent_index(self, item: Age2ItemData) -> int:
+        spent = self.spent_items()
+        for index, unlocked in enumerate(self.client_status.unlocked_items):
+            if unlocked is item and index not in spent:
+                return index
+        return -1
+
+    def reconcile_spent(self, server: int) -> SpentPush | None:
+        return self.storage_handler.reconcile(
+            server, len(self.client_status.unlocked_items))
+
+    def sync_delivery(self, applied: int) -> None:
+        if not self.storage_handler.is_up_to_date():
+            return
+        unlocked = self.client_status.unlocked_items
+        self.storage_handler.try_flush()
+        self.mercenary_handler.try_sync_mercenaries(unlocked, self.spent_mercenaries())
+        delivered = self.item_handler.try_sync_delivered(unlocked, applied)
+        if self.storage_handler.mark_spent(delivered):
+            self.client_interface.on_item_spent(self.storage_handler.spent_mask())
+        self.item_handler.try_write_to_file(self.spent_items())
+
+    def sync_mercenary_completion(self, completed: int) -> None:
+        mercenary = self.mercenary_handler.read_completion(
+            completed, self.storage_handler.is_up_to_date())
+        if mercenary is None:
+            return
+        index = self.unspent_index(mercenary)
+        if index != -1 and self.storage_handler.mark_spent({index}):
+            self.mercenary_handler.use_mercenary(mercenary)
+            self.client_interface.on_item_spent(self.storage_handler.spent_mask())
 
     def profile_folder(self):
         return self.client_status.user_folder + AGE2_USER_PROFILE
-
-    def free_items(self) -> None:
-        pending = list(self.client_status.in_flight)
-        freeing: list[int] = []
-        for item in self.current_packet.item_ids:
-            if item == -1:
-                continue
-            if item in pending:
-                pending.remove(item)
-                continue
-            freeing.append(item)
-        try:
-            with open(self.profile_folder() + "free_items.xsdat", "wb") as fp:
-                for item in freeing:
-                    XsdatFile.write_int(fp, item)
-        except Exception as ex:
-            print(ex)
 
     def flush_files(self) -> None:
         try:
             self.message_handler.try_flush_from_folder()
             self.mercenary_handler.try_flush_from_folder()
             self.campaign_handler.try_flush_from_folder()
+            self.item_handler.try_flush_from_folder()
             
             if os.path.exists(self.profile_folder() + "AP.xsdat"):
                 os.remove(self.profile_folder() + "AP.xsdat")
-            if os.path.exists(self.profile_folder() + "items.xsdat"):
-                os.remove(self.profile_folder() + "items.xsdat")
-            if os.path.exists(self.profile_folder() + "free_items.xsdat"):
-                os.remove(self.profile_folder() + "free_items.xsdat")
             if os.path.exists(self.profile_folder() + "locations.xsdat"):
                 os.remove(self.profile_folder() + "locations.xsdat")
-            if os.path.exists(self.profile_folder() + "startup.xsdat"):
-                os.remove(self.profile_folder() + "startup.xsdat")
             if os.path.exists(self.profile_folder() + "buildings.xsdat"):
                 os.remove(self.profile_folder() + "buildings.xsdat")
             if os.path.exists(self.profile_folder() + "techs.xsdat"):
@@ -408,6 +390,12 @@ class Age2GameContext:
         self.reported_packet_mismatch = kind
         logger.error(message)
 
+    def seed_halves(self) -> tuple[int, int]:
+        tag = self.client_status.tag
+        if not tag:
+            return SlotData.UNSET, SlotData.UNSET
+        return SlotData.seed_halves(tag)
+
     def ping_game(self) -> None:
         try:
             with open(self.profile_folder() + "AP.xsdat", "wb") as fp:
@@ -416,14 +404,16 @@ class Age2GameContext:
                 XsdatFile.write_int(fp, AP_WORLD_VERSION.major)
                 XsdatFile.write_int(fp, AP_WORLD_VERSION.minor)
                 XsdatFile.write_int(fp, self.client_status.slot_id)
-                XsdatFile.write_bool(fp, len(self.client_status.in_flight) != 0) # Send Items
-                XsdatFile.write_bool(fp, not all(x == -1 for x in self.current_packet.item_ids)) # Free items
+                high, low = self.seed_halves()
+                XsdatFile.write_int(fp, high)
+                XsdatFile.write_int(fp, low)
+                XsdatFile.write_bool(fp, self.item_handler.in_flight()) # Send Items
                 XsdatFile.write_bool(fp, len(self.current_packet.location_ids) != 0) # Free Locations
                 XsdatFile.write_bool(fp, self.mercenary_handler.queue_serial()
                                      != self.current_packet.acked_queue_serial) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
-                XsdatFile.write_int(fp, self.current_packet.completed_mercenary_id) # Ack mercenary
+                XsdatFile.write_int(fp, self.mercenary_handler.ack()) # Ack mercenary
         except Exception as ex:
             print(ex)
 
@@ -437,131 +427,127 @@ async def long_sleep() -> None:
 
 async def status_loop(ctx: Age2GameContext):
     while ctx.running:
-        
-        # Sync files that are scenario-agnostic before connection.
-        ctx.sync_starting_resources()
-        ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
-        ctx.sync_checked_locations()
-        ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
-        ctx.mercenary_handler.try_sync_mercenaries(ctx.client_status.unlocked_items)
-        ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
-        ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
-        ctx.message_handler.try_write_to_folder()
-        
-        # Check all unlocked scenarios every 2 seconds to find active scenario.
-        if not ctx.campaign_handler.active_file:
-            ctx.campaign_handler.find_active_campaign()
+        try:
+            await status_tick(ctx)
+        except Exception as ex:
+            logger.exception("The game loop hit an error, continuing: %s", ex)
+            await long_sleep()
+
+
+async def status_tick(ctx: Age2GameContext) -> None:
+    # Sync files that are scenario-agnostic before connection.
+    ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
+    ctx.sync_checked_locations()
+    ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
+    ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
+    ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
+    ctx.message_handler.try_write_to_folder()
+    
+    # Check all unlocked scenarios every 2 seconds to find active scenario.
+    if not ctx.campaign_handler.active_file:
+        ctx.campaign_handler.find_active_campaign()
+        if not ctx.campaign_handler.has_active_scenario():
+            ctx.campaign_handler.find_active_scenario()
             if not ctx.campaign_handler.has_active_scenario():
-                ctx.campaign_handler.find_active_scenario()
-                if not ctx.campaign_handler.has_active_scenario():
-                    ctx.report_install_mismatch_once()
-                    await long_sleep()
-                    continue
-                else:
-                    ctx.note_scenario_found()
-                    logger.info("Connected!")
+                ctx.report_install_mismatch_once()
+                await long_sleep()
+                return
             else:
                 ctx.note_scenario_found()
                 logger.info("Connected!")
-        
-        # Check all unlocked scenarios every 2.5 seconds after scenario stops updating packet in case user has switched scenarios.
-        if ctx.paused and ctx.packet_repeat_count % 5 == 0:
-            ctx.campaign_handler.find_active_campaign()
-            if not ctx.campaign_handler.has_active_scenario():
-                ctx.campaign_handler.find_active_scenario()
-                if not ctx.campaign_handler.has_active_scenario():
-                    await short_sleep()
-                    continue
-        
-        packet: Age2Packet
-        try:
-            packet = ctx.read_packet()
-        except Exception as ex:
-            logger.exception(ex)
-            await long_sleep()
-            continue
-        
-        # Improper read. Ping is never -1
-        if packet.current_ping_id == -1:
-            await short_sleep()
-            continue
-        
-        packetStatus = ctx.update_packet(packet)
-        
-        if packet.scenario_id != ctx.campaign_handler.active_file.current_scenario.data.id:
-            logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
-            ctx.flush_files()
-            ctx.campaign_handler.deactivate_scenario()
-            continue
-        
-        if packetStatus == PacketStatus.REPEAT:
-            ctx.packet_repeat_count += 1
-        
-            if ctx.packet_repeat_count == 10:
-                logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
-                ctx.campaign_handler.deactivate_scenario()
-                ctx.paused = True
-            
-            await short_sleep()
-            continue
         else:
-            ctx.packet_repeat_count = 0
-            ctx.paused = False
-            ctx.reported_packet_mismatch = ''
-            
-        if packetStatus == PacketStatus.INACTIVE:
-            logger.info("The Current Scenario is no longer active.")
-            ctx.campaign_handler.deactivate_scenario()
-            await long_sleep()
-            continue
-        if packetStatus == PacketStatus.WRONG_VERSION:
-            ctx.report_packet_mismatch_once(
-                "version",
-                f"The Age2 files in your user folder are version "
-                f"{packet.installed_version().as_simple_string()}, but this client is "
-                f"{AP_WORLD_VERSION.as_simple_string()}. Reinstall the Ageipelago files.")
-            ctx.campaign_handler.deactivate_scenario()
-            await long_sleep()
-            continue
-        if packetStatus == PacketStatus.WRONG_SLOT:
-            ctx.report_packet_mismatch_once(
-                "slot",
-                f"This scenario was generated for slot {packet.slot_id}, but this client is slot "
-                f"{ctx.client_status.slot_id}. Those files belong to a different player -- they were "
-                "renamed or copied from another slot install.")
-            ctx.campaign_handler.deactivate_scenario()
-            await long_sleep()
-            continue
-        if packetStatus == PacketStatus.UPDATE:
-            ctx.client_interface.on_location_received(ctx.current_packet.location_ids)
-            for location_id in ctx.current_packet.location_ids:
-                ctx.client_status.checked_locations.add(location_id)
-            
-        if packetStatus == PacketStatus.ACTIVE:
-            pass
-        
-        if (any(x != -1 for x in ctx.current_packet.item_ids)):
-            ctx.ack_items()
-        
-        if (ctx.client_status.acked_items < len(ctx.client_status.unlocked_items)):
-            ctx.send_items()
-        
-        if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
-            ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
-        
-        if packet.completed == True and not ctx.campaign_handler.is_active_scenario_complete():
-            ctx.campaign_handler.complete_active_scenario()
-            ctx.client_interface.on_scenario_completion(Scenarios.scenario_from_id[packet.scenario_id])
-
-        if packet.completed_mercenary_id != -1:
-            mercenary_item = Items.ID_TO_ITEM[packet.completed_mercenary_id]
-            if mercenary_item in Items.CATEGORY_TO_ITEMS[Mercenary] and not ctx.mercenary_handler.is_used(mercenary_item):
-                ctx.mercenary_handler.use_mercenary(mercenary_item)
-                ctx.client_interface.on_mercenary_used(Items.ID_TO_ITEM[packet.completed_mercenary_id])
-        
-        ctx.free_items()
-        ctx.ping_game()
-        if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
-            ctx.client_interface.on_goal()
-            ctx.client_status.finished_game = True
+            ctx.note_scenario_found()
+            logger.info("Connected!")
+    
+    if ctx.packet_repeat_count > 0 and ctx.campaign_handler.find_live_scenario():
+        logger.info("The game is running %s now. Following it.",
+                    ctx.campaign_handler.active_file.current_scenario.data.scenario_name)
+        ctx.flush_files()
+        ctx.packet_repeat_count = 0
+        ctx.paused = False
+        return
+    
+    packet: Age2Packet
+    try:
+        packet = ctx.read_packet()
+    except Exception as ex:
+        logger.exception(ex)
+        await long_sleep()
+        return
+    
+    # Improper read. Ping is never -1
+    if packet.current_ping_id == -1:
         await short_sleep()
+        return
+    
+    packetStatus = ctx.update_packet(packet)
+    
+    if packet.scenario_id != ctx.campaign_handler.active_file.current_scenario.data.id:
+        logger.info("The game has switched scenarios. Deactivating connection to old scenario.")
+        ctx.flush_files()
+        ctx.campaign_handler.deactivate_scenario()
+        return
+    
+    if packetStatus == PacketStatus.REPEAT:
+        ctx.packet_repeat_count += 1
+    
+        if ctx.packet_repeat_count == 10:
+            logger.info("The current scenario has stopped sending signals for 5 seconds. The game may be paused.")
+            ctx.campaign_handler.deactivate_scenario()
+            ctx.paused = True
+        
+        await short_sleep()
+        return
+    else:
+        ctx.packet_repeat_count = 0
+        ctx.paused = False
+        ctx.reported_packet_mismatch = ''
+        
+    if packetStatus == PacketStatus.INACTIVE:
+        logger.info("The Current Scenario is no longer active.")
+        ctx.campaign_handler.deactivate_scenario()
+        await long_sleep()
+        return
+    if packetStatus == PacketStatus.WRONG_VERSION:
+        ctx.report_packet_mismatch_once(
+            "version",
+            f"The Age2 files in your user folder are version "
+            f"{packet.installed_version().as_simple_string()}, but this client is "
+            f"{AP_WORLD_VERSION.as_simple_string()}. Reinstall the Ageipelago files.")
+        ctx.campaign_handler.deactivate_scenario()
+        await long_sleep()
+        return
+    if packetStatus == PacketStatus.WRONG_SLOT:
+        ctx.report_packet_mismatch_once(
+            "slot",
+            f"This scenario was generated for slot {packet.slot_id}, but this client is slot "
+            f"{ctx.client_status.slot_id}. Those files belong to a different player -- they were "
+            "renamed or copied from another slot install.")
+        ctx.campaign_handler.deactivate_scenario()
+        await long_sleep()
+        return
+    if packetStatus == PacketStatus.UPDATE:
+        ctx.client_interface.on_location_received(ctx.current_packet.location_ids)
+        for location_id in ctx.current_packet.location_ids:
+            ctx.client_status.checked_locations.add(location_id)
+        
+    if packetStatus == PacketStatus.ACTIVE:
+        pass
+    
+    ctx.sync_delivery(packet.applied_item_count)
+
+    if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
+        ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
+    
+    if packet.completed == True and not ctx.campaign_handler.is_active_scenario_complete():
+        ctx.campaign_handler.complete_active_scenario()
+        ctx.client_interface.on_scenario_completion(
+            ctx.campaign_handler.active_file.current_scenario.data)
+
+    ctx.sync_mercenary_completion(packet.completed_mercenary_id)
+
+    ctx.ping_game()
+    if ctx.campaign_handler.check_victory() and not ctx.client_status.finished_game:
+        ctx.client_interface.on_goal()
+        ctx.client_status.finished_game = True
+    await short_sleep()

@@ -9,7 +9,7 @@ from NetUtils import JSONMessagePart
 
 from rule_builder.rules import False_, Rule, True_
 
-from ...items.Items import Age2ItemData, Resource, StartingResources, TCResources
+from ...items.Items import Age2ItemData, Resource, StartingResources, SeedResources
 
 
 if TYPE_CHECKING:
@@ -18,13 +18,19 @@ if TYPE_CHECKING:
 
 @cache
 def contributors(resource: Resource) -> tuple[tuple[str, int], ...]:
-    """Every item that adds to the pile a scenario opens with, and what each one adds. The three
-    town-centre items are the guaranteed floor: one of each is always pooled."""
-    return tuple(sorted(
+    """Every item that adds to the pile a scenario opens with, and what each one adds. The seed
+    items a seed pools are the guaranteed floor: one of each."""
+    starting = [
         (item.item_name, item.type.amount)
         for item in Age2ItemData
-        if isinstance(item.type, (StartingResources, TCResources)) and item.type.type is resource
-    ))
+        if isinstance(item.type, StartingResources) and item.type.type is resource
+    ]
+    seeded = [
+        (item.item_name, item.type.resources[resource])
+        for item in Age2ItemData
+        if isinstance(item.type, SeedResources) and resource in item.type.resources
+    ]
+    return tuple(sorted(starting + seeded))
 
 
 @dataclass
@@ -37,6 +43,7 @@ class HasResourceAmount(Rule["Age2World"], game="Age Of Empires II: Definitive E
 
     resource: Resource
     amount: int
+    excluding: frozenset[str] = frozenset()
 
     @override
     def _instantiate(self, world: "Age2World") -> Rule.Resolved:
@@ -45,7 +52,8 @@ class HasResourceAmount(Rule["Age2World"], game="Age Of Empires II: Definitive E
         if world.pool.resources.totals[self.resource] < self.amount:
             return False_().resolve(world)
         return self.Resolved(
-            contributors(self.resource),
+            tuple(contributor for contributor in contributors(self.resource)
+                  if contributor[0] not in self.excluding),
             self.amount,
             self.resource,
             player=world.player,
@@ -63,7 +71,7 @@ class HasResourceAmount(Rule["Age2World"], game="Age Of Empires II: Definitive E
 
         skip_cache: ClassVar[bool] = True
         """Cheaper to evaluate than to cache, and why item_dependencies hands back empty id sets
-        the way Has.Resolved does."""
+        as Has.Resolved does."""
 
         @override
         def _evaluate(self, state: CollectionState) -> bool:

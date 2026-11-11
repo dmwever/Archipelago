@@ -23,6 +23,9 @@ class Age2UnitLineData(enum.IntEnum):
         self.item = item
         # Bound by connections/UnitCounters, imported for its side effect.
         self.countered_by: list['Age2UnitLineData'] = []
+        # Bound by connections/TechCounters: a counter that answers this line only once the
+        # tech is researched.
+        self.counter_techs: dict['Age2UnitLineData', 'Age2TechData'] = {}
 
     @property
     def units(self) -> list[Age2UnitData]:
@@ -124,7 +127,6 @@ class Age2UnitLineData(enum.IntEnum):
     WARRIOR_PRIEST_LINE           = 890, "Own Warrior Priest Line", "Warrior Priest Line", Age2UnitData.WARRIOR_PRIEST, Age2ItemData.UNIT_LINE_WARRIOR_PRIEST
     FIRE_LANCER_LINE              = 891, "Own Fire Lancer Line", "Fire Lancer Line", Age2UnitData.FIRE_LANCER, Age2ItemData.UNIT_LINE_FIRE_LANCER
     ROCKET_CART_LINE              = 892, "Own Rocket Cart Line", "Rocket Cart Line", Age2UnitData.ROCKET_CART, Age2ItemData.UNIT_LINE_ROCKET_CART
-    HEAVY_ROCKET_CART_LINE        = 893, "Own Heavy Rocket Cart Line", "Heavy Rocket Cart Line", Age2UnitData.HEAVY_ROCKET_CART, Age2ItemData.UNIT_LINE_HEAVY_ROCKET_CART
     IRON_PAGODA_LINE              = 894, "Own Iron Pagoda Line", "Iron Pagoda Line", Age2UnitData.IRON_PAGODA, Age2ItemData.UNIT_LINE_IRON_PAGODA
     GRENADIER_LINE                = 895, "Own Grenadier Line", "Grenadier Line", Age2UnitData.GRENADIER, Age2ItemData.UNIT_LINE_GRENADIER
     LIAO_DAO_LINE                 = 896, "Own Liao Dao Line", "Liao Dao Line", Age2UnitData.LIAO_DAO, Age2ItemData.UNIT_LINE_LIAO_DAO
@@ -163,6 +165,7 @@ class Age2UnitLineData(enum.IntEnum):
     VARANGIAN_GUARD_LINE          = 929, "Own Varangian Guard Line", "Varangian Guard Line", Age2UnitData.VARANGIAN_GUARD, Age2ItemData.UNIT_LINE_VARANGIAN_GUARD
     HEARTH_TROOP_LINE             = 930, "Own Hearth Troop Line", "Hearth Troop Line", Age2UnitData.HEARTH_TROOP, Age2ItemData.UNIT_LINE_HEARTH_TROOP
     JARL_LINE                     = 931, "Own Jarl Line", "Jarl Line", Age2UnitData.JARL, Age2ItemData.UNIT_LINE_JARL
+    HULK_LINE                     = 934, "Own Hulk Line", "Hulk Line", Age2UnitData.HULK, Age2ItemData.UNIT_LINE_HULK
     JOMSVIKING_LINE               = 932, "Own Jomsviking Line", "Jomsviking Line", Age2UnitData.JOMSVIKING, Age2ItemData.UNIT_LINE_JOMSVIKING
 
 

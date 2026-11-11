@@ -20,7 +20,15 @@ class Joan5StartingState(ScenarioStartingState):
         self.logic = logic
         self.is_unlocked = Has(Age2ScenarioLocationData.JOAN4_VICTORY.scenario.scenario_name + ": Unlock Next Scenario") & Has("Progressive Joan of Arc Scenario", 4)
         self.has_vils = False_()
-        self.fixed_force = True
+
+        loyalists = Has(Age2ItemData.AP_JOAN_5_LOYALISTS.item_name)
+        kings_troop = Has(Age2ItemData.AP_JOAN_5_KINGS_REINFORCEMENTS.item_name)
+        self.obtains_unit[U.KNIGHT] = loyalists
+        self.obtains_unit[U.MAN_AT_ARMS] = loyalists
+        self.obtains_unit[U.HEAVY_SCORPION] = loyalists
+        self.obtains_unit[U.THROWING_AXEMAN] = loyalists
+        self.obtains_unit[U.SCOUT_CAVALRY] = kings_troop
+        self.obtains_unit[U.MILITIA] = kings_troop
         
         self.obtains_unit[U.VILLAGER_MALE] = HasAny(
             Age2ItemData.AP_JOAN_5_REFUGEE_1.item_name,

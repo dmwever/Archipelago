@@ -1,10 +1,14 @@
 import unittest
 
-from ..Options import Unitsanity, UnitsanityItems
+from ..Options import Techsanity, Unitsanity, UnitsanityItems
 from ..client.handlers.install.UnitData import UnitData
 from ..locations.Civilizations import Age2CivData
+from ..locations.EscortUnits import Age2EscortUnitData
+from ..locations.Heroes import Age2HeroData
+from ..locations.Scenarios import Age2ScenarioData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
+from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
 
 TAG = "a1b2c3d4"
@@ -12,8 +16,9 @@ FRANKS = (Age2CivData.FRANKS,)
 
 
 def table(places, mode=Unitsanity.option_all,
-          items=UnitsanityItems.option_unit_line, civs=FRANKS, tag=TAG):
-    return UnitData(places, civs, mode, items, tag)
+          items=UnitsanityItems.option_unit_line, civs=FRANKS, tag=TAG,
+          techsanity=Techsanity.option_none, caveman=False, techs=()):
+    return UnitData(places, civs, mode, items, tag, techsanity, caveman, techs)
 
 
 class TestWhichUnitsGetARow(unittest.TestCase):
@@ -61,12 +66,30 @@ class TestTheItemRequirementIsResolvedHere(unittest.TestCase):
                      items=UnitsanityItems.option_unit_line).rows()
         self.assertEqual(rows[0].items, (Age2UnitData.MAN_AT_ARMS.line.item.id,))
 
-    def test_upgrades_mode_gives_the_tokens(self):
-        rows = table([Age2UnitData.MAN_AT_ARMS],
-                     items=UnitsanityItems.option_upgrades).rows()
+    def test_upgrades_mode_gives_every_tier_its_tokens_when_techs_are_shuffled(self):
+        rows = table([Age2UnitData.MAN_AT_ARMS], items=UnitsanityItems.option_upgrades,
+                     techsanity=Techsanity.option_units).rows()
         self.assertEqual(set(rows[0].items),
                          {token.id for token in Age2UnitData.MAN_AT_ARMS.upgrade_tokens})
         self.assertGreater(len(rows[0].items), 1)
+
+    def test_upgrades_mode_gates_a_tier_by_its_head_when_techs_are_free(self):
+        """With the upgrade technology free to research, a tier's own extra tokens would gate
+        nothing - but emitting none would unlock the tier before its line head, so it takes the
+        head's set."""
+        head = Age2UnitData.MAN_AT_ARMS.line.head
+        rows = table([Age2UnitData.MAN_AT_ARMS],
+                     items=UnitsanityItems.option_upgrades).rows()
+        self.assertEqual(set(rows[0].items), {token.id for token in head.upgrade_tokens})
+        self.assertNotEqual(set(), set(rows[0].items),
+                            "a tier gated by nothing unlocks before its line head")
+
+    def test_generic_techsanity_does_not_count_as_shuffled(self):
+        """Generic shuffles Loom and Fletching and leaves the unit upgrades free."""
+        head = Age2UnitData.MAN_AT_ARMS.line.head
+        rows = table([Age2UnitData.MAN_AT_ARMS], items=UnitsanityItems.option_upgrades,
+                     techsanity=Techsanity.option_generic).rows()
+        self.assertEqual(set(rows[0].items), {token.id for token in head.upgrade_tokens})
 
     def test_buildings_mode_gives_the_building_item(self):
         rows = table([Age2UnitData.MAN_AT_ARMS],
@@ -79,10 +102,9 @@ class TestTheItemRequirementIsResolvedHere(unittest.TestCase):
 
     def test_no_unit_carries_more_items_than_xs_expects(self):
         data = table([], items=UnitsanityItems.option_upgrades, civs=tuple(Age2CivData))
-        for civ in Age2CivData:
-            for unit in CIV_TO_UNITS[civ]:
-                with self.subTest(unit=unit.unit_name):
-                    self.assertLessEqual(len(data.items_for(unit)), UnitData.MAX_ITEMS)
+        for unit in Age2UnitData:
+            with self.subTest(unit=unit.unit_name):
+                self.assertLessEqual(len(data.items_for(unit)), UnitData.MAX_ITEMS)
 
 
 class TestRender(unittest.TestCase):
@@ -94,8 +116,33 @@ class TestRender(unittest.TestCase):
                               "",
                               "void LoadUnitTable() {",
                               "    return;",
+                              "}",
+                              "",
+                              "void CavemanExemption() {",
+                              "    return;",
                               "}"]) + "\n"
         self.assertEqual(UnitData().render(), expected)
+
+    def test_the_scenario_caveman_exemptions_are_rendered(self):
+        """Joan 2 and Genghis 4 keep their Trade Carts; nothing else is exempted anywhere."""
+        rendered = table([Age2UnitData.TRADE_CART]).render()
+        exemption = rendered.split("void CavemanExemption() {")[1]
+        expected = "\n".join([
+            "",
+            f"    if (scenarioId == {Age2ScenarioData.AP_JOAN_2.id}) {{",
+            f"        ExemptUnitTypeFromCaveman({Age2UnitData.TRADE_CART.game_id});",
+            "    }",
+            f"    if (scenarioId == {Age2ScenarioData.AP_GENGHIS_4.id}) {{",
+            f"        ExemptUnitTypeFromCaveman({Age2UnitData.TRADE_CART.game_id});",
+            "    }",
+            "}",
+            ""])
+        self.assertEqual(exemption, expected)
+
+    def test_an_install_without_unitsanity_exempts_nothing(self):
+        """Caveman needs the unit table, so with no table there is nothing to exempt."""
+        rendered = table([Age2UnitData.TRADE_CART], mode=Unitsanity.option_none).render()
+        self.assertIn("void CavemanExemption() {\n    return;\n}", rendered)
 
     def test_the_seed_tag_is_rendered(self):
         """A table from another seed must be refusable, which is what the tag is for."""
@@ -110,6 +157,80 @@ class TestRender(unittest.TestCase):
         for variant in Age2UnitData.SPEARMAN.variant_game_ids:
             self.assertIn(f"addUnitVariant({Age2UnitData.SPEARMAN.game_id}, {variant});",
                           rendered)
+
+    def test_a_unit_the_civilisation_cannot_train_is_marked_per_civ(self):
+        rendered = table([Age2UnitData.MANGUDAI], caveman=True).render()
+        self.assertIn(f"addUnitUntrainable({Age2UnitData.MANGUDAI.game_id}, "
+                      f"{Age2CivData.FRANKS.game_id});", rendered)
+
+    def test_a_unit_no_civilisation_trains_is_held_like_a_hero(self):
+        """Only a scenario can hand the Franks a Mangudai, so the pool holds no Mangudai Line
+        item. Gating the row on it would have the game wait for an item the seed never
+        contains; like a hero, it is owned when granted."""
+        [row] = table([Age2UnitData.MANGUDAI]).rows()
+        self.assertEqual(row.items, ())
+        self.assertEqual(row.line_id, UnitData.NO_LINE)
+        self.assertEqual(row.untrainable_civs, (Age2CivData.FRANKS.game_id,))
+        self.assertTrue(row.caveman_exempt)
+        self.assertEqual(row.location_id, Age2UnitData.MANGUDAI.id)
+
+    def test_under_caveman_a_unit_no_civilisation_trains_keeps_its_gate(self):
+        """Caveman takes a granted unit away until its items arrive, so the pool carries the
+        line item for it and the row has to wait for that item."""
+        [row] = table([Age2UnitData.MANGUDAI], caveman=True).rows()
+        self.assertEqual(row.items, (Age2UnitLineData.MANGUDAI_LINE.item.id,))
+        self.assertFalse(row.caveman_exempt)
+
+    def test_a_unit_no_civilisation_trains_is_untrainable_for_every_civilisation(self):
+        """Such a row carries no items, so it unlocks on the first refresh. Left trainable the
+        mod enables the unit, and anything with a train button then takes that button's slot
+        from whatever was in it."""
+        both = (Age2CivData.HUNS, Age2CivData.FRANKS)
+        rendered = table([Age2UnitData.MANGUDAI], civs=both).render()
+        for civ in both:
+            self.assertIn(f"addUnitUntrainable({Age2UnitData.MANGUDAI.game_id}, "
+                          f"{civ.game_id});", rendered)
+
+    def test_a_hero_is_untrainable_for_every_civilisation(self):
+        """The Khan is a hero with a real Castle button in the game data, and the Castle's
+        first slot is where every civilisation keeps its unique unit. No civilisation trains a
+        hero, so every one of them has to say so."""
+        both = (Age2CivData.HUNS, Age2CivData.FRANKS)
+        rendered = table([Age2HeroData.KHAN], civs=both).render()
+        for civ in both:
+            self.assertIn(f"addUnitUntrainable({Age2HeroData.KHAN.game_id}, {civ.game_id});",
+                          rendered)
+
+    def test_an_escort_is_untrainable_for_every_civilisation(self):
+        """An escort arrives the same way a hero does, and gets the same answer."""
+        rendered = table([Age2EscortUnitData.CART]).render()
+        self.assertIn(f"addUnitUntrainable({Age2EscortUnitData.CART.game_id}, "
+                      f"{Age2CivData.FRANKS.game_id});", rendered)
+
+    def test_a_villager_job_is_not_marked(self):
+        """A profession is driven through the villager swap groups and never reads the
+        trainable flag, so marking it would be noise."""
+        job = Age2VillagerJobData.BUILDER_MALE
+        rendered = table([job]).render()
+        self.assertNotIn(f"addUnitUntrainable({job.game_id},", rendered)
+
+    def test_a_unit_the_civilisation_trains_is_not_marked(self):
+        rendered = table([Age2UnitData.THROWING_AXEMAN]).render()
+        self.assertNotIn(f"addUnitUntrainable({Age2UnitData.THROWING_AXEMAN.game_id},", rendered)
+
+    def test_each_civilisation_answers_for_itself(self):
+        both = (Age2CivData.HUNS, Age2CivData.FRANKS)
+        rendered = table([Age2UnitData.THROWING_AXEMAN, Age2UnitData.TARKAN],
+                         civs=both).render()
+        axeman, tarkan = Age2UnitData.THROWING_AXEMAN, Age2UnitData.TARKAN
+        self.assertIn(f"addUnitUntrainable({axeman.game_id}, {Age2CivData.HUNS.game_id});",
+                      rendered)
+        self.assertNotIn(f"addUnitUntrainable({axeman.game_id}, "
+                         f"{Age2CivData.FRANKS.game_id});", rendered)
+        self.assertIn(f"addUnitUntrainable({tarkan.game_id}, {Age2CivData.FRANKS.game_id});",
+                      rendered)
+        self.assertNotIn(f"addUnitUntrainable({tarkan.game_id}, "
+                         f"{Age2CivData.HUNS.game_id});", rendered)
 
     def test_every_row_is_one_addUnit_call(self):
         data = table([Age2UnitLineData.MILITIA_LINE, Age2UnitLineData.KNIGHT_LINE])

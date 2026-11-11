@@ -5,6 +5,7 @@ everything queued behind it - connection_closed calls disconnect from server_loo
 a stuck loop took reconnect with it.
 """
 import asyncio
+import tempfile
 import unittest
 from unittest import mock
 
@@ -58,3 +59,43 @@ class TestDisconnectBound(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDisconnectResetsDeliveryState(unittest.TestCase):
+    """disconnect rebuilds every handler, and the item handler has to go with them.
+
+    It holds the delivery index and the window it last wrote. Carrying either into a reconnect
+    means streaming from a position the new session never agreed to.
+    """
+
+    def context(self) -> Age2GameContext:
+        ctx = Age2GameContext(DefaultClientInterface())
+        ctx.client_status.user_folder = ''   # skip flush_files, which wants a real folder
+        return ctx
+
+    def test_the_item_handler_is_rebuilt(self) -> None:
+        async def scenario() -> tuple:
+            ctx = self.context()
+            before = ctx.item_handler
+            before._current_item = 7
+            await ctx.disconnect()
+            return before, ctx.item_handler
+
+        before, after = asyncio.run(scenario())
+        self.assertIsNot(before, after, "the old item handler survived the disconnect")
+        self.assertEqual(0, after._current_item)
+        self.assertFalse(after.in_flight())
+
+    def test_the_spent_record_is_not_assumed_on_a_new_connection(self) -> None:
+        """record_known gates both readers of the record; a reconnect has not heard back yet."""
+        async def scenario() -> bool:
+            ctx = self.context()
+            with tempfile.TemporaryDirectory() as folder:
+                ctx.storage_handler.set_user_folder(folder)
+                ctx.reconcile_spent(0)
+                await ctx.disconnect()
+            return ctx.storage_handler.is_up_to_date()
+
+        self.assertFalse(asyncio.run(scenario()),
+                         "the record gate was already open on a fresh connection")
+

@@ -1,0 +1,53 @@
+description: 'Age Of Empires II: Definitive Edition Template, generated with https://github.com/Eijebong/Archipelago-fuzzer/tree/0.6.2'
+game: 'Age Of Empires II: Definitive Edition'
+requires:
+  version: 0.6.7
+'Age Of Empires II: Definitive Edition':
+  progression_balancing: 90
+  accessibility: full
+  scenario_branching: all
+  shuffle_buildings:
+  - Economy
+  - Tech
+  - Military
+  - Defense
+  - Unique
+  - Wonder
+  enabled_campaigns:
+  - Attila the Hun
+  starting_campaigns: []
+  shuffle_ages: 'true'
+  techsanity: all
+  tech_behavior: must_research
+  shuffle_unique_techs: unshuffled
+  existing_techs: start_in_dark_age
+  unitsanity: all
+  unitsanity_items: buildings
+  shuffle_villager: include_professions
+  include_unique_units: unique
+  caveman: 'false'
+  monks_can_counter: 'false'
+  siege_can_counter: 'true'
+  market_trade: 'false'
+  partner_trade: none
+  goal: campaign_completion
+  local_start: both
+  trap_difficulty: easiest
+  trap_percentage: 60
+  trap_distribution:
+    Nobody Expects the Spanish Inquisition Trap: 269
+    I'd Really Like To See That Trap: 714
+    Ooh Ahh Trap: 337
+    Long Time, No Siege Trap: 890
+    Theologians Trap: 361
+    Raiding Party Trap: 128
+  local_items: []
+  non_local_items: []
+  start_inventory: {}
+  startInventoryPool: {}
+  start_hints: []
+  start_location_hints: []
+  exclude_locations: []
+  priority_locations: []
+  item_links: []
+  plando_items: []

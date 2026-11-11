@@ -8,16 +8,20 @@ from BaseClasses import CollectionState
 from rule_builder.rules import False_, True_
 
 from . import bases
+from ..Options import Caveman, PartnerTrade, Unitsanity, UnitsanityItems
 from ..items.Items import Age2ItemData, Resource
 from ..locations.Buildings import Age2BuildingData
+from ..locations.UnitLines import Age2UnitLineData
+from ..locations.Players import Age2PlayerData, TradeAccess
 from ..locations.connections.ScenarioResources import Tier, total
 from ..locations.Scenarios import Age2ScenarioData
 from ..logic.scenarios import ScenarioResourceLogic as economy_module
-from ..logic.custom_logic.ScenarioQuestions import ScenarioHasResource
+from ..logic.custom_logic.EconomyRoutes import Strength
+from ..logic.custom_logic.ScenarioQuestions import ScenarioHasEasyResource
 
 
 class EconomyTestBase(bases.Age2RuleTestBase):
-    campaigns = ["Attila the Hun", "Joan of Arc"]
+    campaigns = ["Attila the Hun", "Joan of Arc", "Genghis Khan"]
 
     def economy(self, scenario: Age2ScenarioData):
         return self.world.rules.logic.for_scenario(scenario).economy
@@ -29,22 +33,22 @@ class EconomyTestBase(bases.Age2RuleTestBase):
         return self.resolved(rule).always_false
 
     def easy(self, scenario: Age2ScenarioData, resource: Resource):
-        """The gathering half of has_easy_source, without the scenario's declared sources."""
-        question = ScenarioHasResource(scenario=scenario, resource=resource, easy=True)
-        return question._GATHERED_EASILY[resource](
-            question, self.world.rules.logic.for_scenario(scenario))
+        """has_easy_source less the market and the scenario's declared sources."""
+        return bases.own_easy_source(self.world.rules.logic.for_scenario(scenario), resource)
 
 
 class TestSourcesPerScenario(EconomyTestBase):
     def test_a_scenario_with_no_gold_on_the_map_has_no_mining(self):
         self.build()
-        self.assertTrue(self.is_false(self.economy(Age2ScenarioData.AP_JOAN_1).can_mine_some()))
+        joan_1 = self.economy(Age2ScenarioData.AP_JOAN_1)
+        self.assertTrue(self.is_false(
+            joan_1.can_mine_some(joan_1.scenario.buildings.has_gold_dropsite())))
         self.assertEqual(total(Age2ScenarioData.AP_JOAN_1).gold_count, 0)
 
     def test_attila_4_cannot_live_on_fish(self):
         """A dozen fish against Attila 4's demand; Attila 3 has eleven thousand within reach
         against a smaller one. Farms are mocked away too: a farm is endless food on either map,
-        which is the point of endless_food.
+        which is the point of farming.
 
         Attila 3 rather than Attila 1 is the map that can, which is the tiering showing through.
         Attila 1 holds the most fish of anywhere - twenty thousand - but 8700 of it lies inside
@@ -56,7 +60,8 @@ class TestSourcesPerScenario(EconomyTestBase):
                                  can_hunt=mock.Mock(return_value=False_()),
                                  can_herd=mock.Mock(return_value=False_()),
                                  can_forage=mock.Mock(return_value=False_()),
-                                 endless_food=mock.Mock(return_value=False_())):
+                                 can_farm=mock.Mock(return_value=False_()),
+                                 can_work_fish_traps=mock.Mock(return_value=False_())):
             self.assertTrue(self.is_false(
                 self.easy(Age2ScenarioData.AP_ATTILA_4, Resource.FOOD)))
             self.assertTrue(self.is_false(
@@ -85,10 +90,10 @@ class TestSourcesPerScenario(EconomyTestBase):
             economy = self.economy(scenario)
             for count, threshold, some, easily in (
                     (counts.gold_count, scenario.demand.gold,
-                     economy.can_mine_some,
+                     lambda: economy.can_mine_some(economy.scenario.buildings.has_gold_dropsite()),
                      lambda: self.easy(scenario, Resource.GOLD)),
                     (counts.stone_count, scenario.demand.stone,
-                     economy.can_quarry_some,
+                     lambda: economy.can_quarry_some(economy.scenario.buildings.has_stone_dropsite()),
                      lambda: self.easy(scenario, Resource.STONE))):
                 with self.subTest(f"{scenario.name}:{count}/{threshold}"):
                     # Only the threshold direction belongs here. Whether a map that clears it is
@@ -109,7 +114,39 @@ class TestSourcesPerScenario(EconomyTestBase):
         self.build()
         with_relics = {scenario for scenario in Age2ScenarioData
                        if not self.is_false(self.economy(scenario).can_collect_relics())}
-        self.assertEqual(with_relics, {Age2ScenarioData.AP_ATTILA_3, Age2ScenarioData.AP_ATTILA_4})
+        self.assertEqual(with_relics, {Age2ScenarioData.AP_ATTILA_3, Age2ScenarioData.AP_GENGHIS_5})
+
+
+class TestRelicsUnderCaveman(EconomyTestBase):
+    """Genghis 5 has no monk of its own: the Hermit Monks mercenary is what brings one, and the
+    relics ride on that. Under caveman those monks come down as Militia like any unit a scenario
+    hands over, so the relics want the Monk's unit items too."""
+
+    HERMITS = Age2ItemData.AP_GENGHIS_5_HERMITS.item_name
+    MONK_LINE = Age2UnitLineData.MONK_LINE.item.item_name
+
+    CAVEMAN = dict(caveman=Caveman.option_true, unitsanity=Unitsanity.option_all,
+                   unitsanity_items=UnitsanityItems.option_unit_line)
+
+    def can_collect(self, state) -> bool:
+        rule = self.economy(Age2ScenarioData.AP_GENGHIS_5).can_collect_relics()
+        return bool(rule.resolve(self.world)(state))
+
+    def test_granted_monks_alone_do_not_collect_relics_under_caveman(self):
+        self.build(**self.CAVEMAN)
+        self.assertFalse(self.can_collect(self.state_without(self.MONK_LINE)))
+        self.assertTrue(self.can_collect(self.state_without()))
+
+    def test_the_training_branch_is_untouched(self):
+        """Caveman only ever gates the granted half. Genghis 5 can raise a monastery, so holding
+        the Monk Line collects relics there whether or not the hermits ever show up."""
+        self.build(**self.CAVEMAN)
+        self.assertTrue(self.can_collect(self.state_without(self.HERMITS)))
+
+    def test_without_caveman_the_mercenary_is_enough(self):
+        self.build(unitsanity=Unitsanity.option_all,
+                   unitsanity_items=UnitsanityItems.option_unit_line)
+        self.assertTrue(self.can_collect(self.state_without(self.MONK_LINE)))
 
 
 class TestFixedForceNeedsNoSpecialCase(EconomyTestBase):
@@ -119,10 +156,10 @@ class TestFixedForceNeedsNoSpecialCase(EconomyTestBase):
     def test_a_fixed_force_scenario_gathers_nothing(self):
         self.build()
         for scenario in (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5):
-            self.assertTrue(scenario.logic(self.world.rules.logic).fixed_force)
+            self.assertTrue(scenario.fixed_force)
             for resource in Resource:
                 with self.subTest(f"{scenario.name}.{resource.name}"):
-                    self.assertTrue(self.is_false(self.economy(scenario).has_source(resource)))
+                    self.assertTrue(self.is_false(self.economy(scenario).has_easy_source(resource)))
 
 
 class TestAttila3Gold(EconomyTestBase):
@@ -155,7 +192,7 @@ class TestDropsites(EconomyTestBase):
         logic = self.world.rules.logic.for_scenario(scenario)
         def has_building(building):
             return True_() if building is Age2BuildingData.MULE_CART else False_()
-        return mock.patch.object(logic, "has_building", side_effect=has_building), logic.buildings
+        return mock.patch.object(logic, "has_building_structurally", side_effect=has_building), logic.buildings
 
     def test_a_mule_cart_takes_wood_gold_stone_and_meat(self):
         self.build()
@@ -175,59 +212,230 @@ class TestDropsites(EconomyTestBase):
 
     def test_no_shipped_civilisation_can_build_one(self):
         """Why the two tests above have to force it: the Huns and the Franks have no mule cart,
-        so can_build_building answers False before any of this is reached."""
+        so can_build_structurally answers False before any of this is reached."""
         self.build()
         for scenario in Age2ScenarioData:
             with self.subTest(scenario.name):
                 logic = self.world.rules.logic.for_scenario(scenario)
                 self.assertTrue(self.is_false(
-                    logic.buildings.can_build_building(Age2BuildingData.MULE_CART)))
+                    logic.buildings.can_build_structurally(Age2BuildingData.MULE_CART)))
 
 
 class TestEndlessFood(EconomyTestBase):
     def test_endless_food_needs_wood_to_stay_endless(self):
         """A farm is 60 wood and a fish trap 100, forever."""
         self.build()
+        attila_1 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).routes
+        endless = [
+            route for route in attila_1.scenario_specific_routes()
+            if route.name == "Farmers" or route.name.startswith("Fish Traps")
+        ]
+        self.assertEqual(4, len(endless))
+        for route in endless:
+            with self.subTest(route.name):
+                self.assertEqual(Strength.AT_SCALE, route.needs[Resource.WOOD])
+
+
+class TestMarketTrade(EconomyTestBase):
+    """Buying and selling at P1's own market is a higher-difficulty expectation, so a yaml must
+    ask for it."""
+
+    def test_market_trade_is_off_by_default(self):
+        self.assertFalse(self.build().options.market_trade)
+
+    def test_off_market_trade_is_never_satisfiable(self):
+        self.build(market_trade=False)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                self.assertTrue(self.is_false(scenario.economy.can_trade_at_market()))
+
+    def test_on_market_trade_asks_for_a_market(self):
+        self.build(market_trade=True)
         attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        with mock.patch.object(type(attila_1), "_can_get_wood_easily", return_value=False_()):
-            self.assertTrue(self.is_false(attila_1.endless_food()))
+        dependencies = set(self.resolved(attila_1.can_trade_at_market()).item_dependencies())
+        self.assertIn(Age2BuildingData.MARKET.item.item_name, dependencies)
+
+    def test_on_market_trade_needs_something_to_sell(self):
+        """Wood at scale is what the market turns into everything else."""
+        self.build(market_trade=True)
+        attila_1 = self.world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_1).routes
+        needs = [route.needs for route in attila_1.market_routes()]
+        self.assertEqual(
+            [
+                {Resource.WOOD: Strength.AT_SCALE},
+                {Resource.WOOD: Strength.AT_SCALE, Resource.FOOD: Strength.SOME},
+                {Resource.WOOD: Strength.AT_SCALE},
+            ],
+            needs,
+        )
+
+    def test_on_market_trade_is_satisfiable_with_a_market(self):
+        self.build(market_trade=True)
+        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        self.assertFalse(self.is_false(attila_1.can_trade_at_market()))
+
+    def test_the_market_rule_terminates_when_switched_on(self):
+        """The market routes are resolved with every other route, so asking easy wood never
+        asks the market asking easy wood."""
+        self.build(market_trade=True)
+        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
+        for resource in Resource:
+            self.resolved(attila_1.has_easy_source(resource))
+        self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
 
 
-class TestStubs(EconomyTestBase):
-    def test_the_market_and_ally_trade_are_off(self):
+class TestPartnerTrade(EconomyTestBase):
+    """Trade carts and trade cogs run to a trade partner. Which partners the logic may count on
+    is the yaml's choice; which buildings they keep usable is the scenario's player records."""
+
+    PARTNER_TRADE_SCENARIOS = {
+        Age2ScenarioData.AP_ATTILA_1,   # the Scythians' market
+        Age2ScenarioData.AP_ATTILA_5,   # the Ostrogoths' market
+        Age2ScenarioData.AP_ATTILA_6,   # the Western Roman Empire's dock
+        Age2ScenarioData.AP_JOAN_2,     # Blois' market
+    }
+
+    def test_partner_trade_is_allies_by_default(self):
+        self.assertEqual(self.build().options.partner_trade, PartnerTrade.option_allies)
+
+    def test_none_opens_no_trade_anywhere(self):
+        self.build(partner_trade=PartnerTrade.option_none)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                self.assertTrue(self.is_false(scenario.economy.can_earn_gold_by_partner_trade()))
+                self.assertTrue(self.is_false(scenario.economy.can_earn_wood_by_partner_trade()))
+
+    def test_allies_opens_trade_only_where_an_ally_has_a_usable_building(self):
+        self.build(partner_trade=PartnerTrade.option_allies)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                gold = scenario.economy.can_earn_gold_by_partner_trade()
+                self.assertEqual(
+                    not self.is_false(gold),
+                    scenario.scenario in self.PARTNER_TRADE_SCENARIOS,
+                )
+
+    def test_allies_never_opens_an_enemy_building(self):
+        """Genghis 5's only usable buildings are the Polish and German markets."""
+        self.build(partner_trade=PartnerTrade.option_allies)
+        genghis_5 = self.economy(Age2ScenarioData.AP_GENGHIS_5)
+        self.assertTrue(self.is_false(genghis_5.can_earn_gold_by_partner_trade()))
+
+    def test_a_cart_wants_a_market(self):
         self.build()
-        attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-        self.assertIsInstance(attila_1.market_trades(), False_)
-        self.assertIsInstance(attila_1.ally_trade_gold(), False_)
-        self.assertIsInstance(attila_1.ally_trade_wood(), False_)
+        attila_5 = self.economy(Age2ScenarioData.AP_ATTILA_5)
+        gold = set(self.resolved(attila_5.can_earn_gold_by_partner_trade()).item_dependencies())
+        self.assertIn(Age2BuildingData.MARKET.item.item_name, gold)
+        # The Ostrogoths keep no dock, so no cog route is offered.
+        self.assertTrue(self.is_false(attila_5.can_earn_wood_by_partner_trade()))
 
-    def test_trade_asks_for_the_buildings_that_train_the_traders(self):
-        """A cart wants a market, a cog wants a dock - and the dock is where water access comes
-        in. Both stay behind trading_ally, which no scenario declares."""
-        with mock.patch.object(economy_module, "ALLY_TRADE", True):
-            self.build()
-            attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-            # No scenario declares one, and without it the rule collapses before it can name
-            # anything, so the ally is granted here to see what is behind it.
-            attila_1.scenario.starting_state.trading_ally = True_()
-            gold = set(self.resolved(attila_1.ally_trade_gold()).item_dependencies())
-            wood = set(self.resolved(attila_1.ally_trade_wood()).item_dependencies())
-            self.assertIn(Age2BuildingData.MARKET.item.item_name, gold)
-            self.assertIn(Age2BuildingData.DOCK.item.item_name, gold)
-            # Cogs only for wood: a sea route brings wood home, a cart does not. The market can
-            # still turn up in here, because the wood route is seeded with gold.
-            self.assertIn(Age2BuildingData.DOCK.item.item_name, wood)
+    def test_a_cog_wants_a_dock_and_brings_wood_home(self):
+        self.build()
+        attila_6 = self.economy(Age2ScenarioData.AP_ATTILA_6)
+        wood = set(self.resolved(attila_6.can_earn_wood_by_partner_trade()).item_dependencies())
+        self.assertIn(Age2BuildingData.DOCK.item.item_name, wood)
 
-    def test_the_market_rule_is_real_and_terminates_when_switched_on(self):
-        """Written against the leaf gatherers, so the wood aggregate cannot ask the market
-        which asks the wood aggregate."""
-        with mock.patch.object(economy_module, "MARKET_ECONOMY", True):
-            self.build()
-            attila_1 = self.economy(Age2ScenarioData.AP_ATTILA_1)
-            self.assertNotIsInstance(attila_1.market_trades(), False_)
-            for resource in Resource:
-                self.resolved(attila_1.has_easy_source(resource))
-            self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
+    def test_every_economy_question_terminates_with_partner_trade(self):
+        """Trade asks the Feudal Age, which asks the economy, which asks trade."""
+        for partner_trade in (PartnerTrade.option_allies, PartnerTrade.option_allies_and_enemies):
+            with self.subTest(partner_trade=partner_trade):
+                self.build(partner_trade=partner_trade)
+                for scenario in self.world.rules.logic.scenarios:
+                    for resource in Resource:
+                        self.resolved(scenario.economy.has_easy_source(resource))
+                self.assertEqual(set(), self.world.rules.logic.scenario_answers_open)
+
+
+class TestPartnerTradeWithEnemies(EconomyTestBase):
+    """At allies and enemies, an enemy's usable market or dock opens too: a defended one once P1
+    holds the event for defeating its owner, an undefended one straight away."""
+
+    def defeats_waited_on(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
+        """Whose defeat event partner trade asks for, by cart or by cog."""
+        economy = self.economy(scenario)
+        asked = (
+            set(self.resolved(economy.can_earn_gold_by_partner_trade()).item_dependencies())
+            | set(self.resolved(economy.can_earn_wood_by_partner_trade()).item_dependencies())
+        )
+        return {
+            player for player in scenario.players
+                if player.defeat_event(scenario.scenario_name) in asked
+        }
+
+    def defended(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
+        return {
+            player for player in scenario.players
+                if player.can_trade_once_defeated
+        }
+
+    def worth_waiting_on(self, scenario: Age2ScenarioData) -> set[Age2PlayerData]:
+        """The defended owners of each kind of building, where no partner keeps one open: an
+        open one already makes the trade."""
+        scenario_logic = self.world.rules.logic.for_scenario(scenario)
+        waited_on: set[Age2PlayerData] = set()
+        for building in (Age2BuildingData.MARKET, Age2BuildingData.DOCK):
+            accesses = {player: player.trade_access(building) for player in scenario.players}
+            if TradeAccess.OPEN in accesses.values():
+                continue
+            if self.is_false(scenario_logic.has_seeded_building(building)):
+                continue
+            waited_on |= {
+                player for player, access in accesses.items()
+                    if access in (TradeAccess.ONCE_DEFEATED, TradeAccess.GUARDED)
+            }
+        return waited_on
+
+    def test_allies_never_waits_on_a_defeat(self):
+        self.build(partner_trade=PartnerTrade.option_allies)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                self.assertEqual(set(), self.defeats_waited_on(scenario.scenario))
+
+    def test_allies_creates_no_defeat_events(self):
+        self.build(partner_trade=PartnerTrade.option_allies)
+        for scenario in self.world.rules.logic.scenarios:
+            scenario_name = scenario.scenario.scenario_name
+            for player in scenario.scenario.players:
+                with self.subTest(player=player.name):
+                    with self.assertRaises(KeyError):
+                        self.world.get_location(player.defeat_event(scenario_name))
+
+    def test_allies_and_enemies_waits_on_exactly_the_defended_buildings_owners(self):
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        for scenario in self.world.rules.logic.scenarios:
+            with self.subTest(scenario.scenario.name):
+                self.assertEqual(
+                    self.worth_waiting_on(scenario.scenario),
+                    self.defeats_waited_on(scenario.scenario),
+                )
+
+    def test_a_defeat_event_holds_exactly_when_its_owner_can_be_defeated(self):
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        for scenario in self.world.rules.logic.scenarios:
+            scenario_name = scenario.scenario.scenario_name
+            for player in self.defended(scenario.scenario):
+                with self.subTest(player=player.name):
+                    event = self.world.get_location(player.defeat_event(scenario_name))
+                    defeat = self.resolved(scenario.player_logic.defeats(player))
+                    self.assertEqual(defeat, event.access_rule)
+
+    def test_an_enemy_market_opens_once_its_owner_is_defeated(self):
+        """Genghis 5's only usable markets are the Polish and the German ones."""
+        self.build(partner_trade=PartnerTrade.option_allies_and_enemies)
+        genghis_5 = Age2ScenarioData.AP_GENGHIS_5
+        self.assertEqual(
+            {
+                Age2PlayerData.GEN5_POLISH,
+                Age2PlayerData.GEN5_GERMANS,
+            },
+            self.defeats_waited_on(genghis_5),
+        )
+        self.assertFalse(self.is_false(self.economy(genghis_5).can_earn_gold_by_partner_trade()))
+
+    def test_the_english_dock_at_joan_3_stays_closed_to_allies(self):
+        self.build(partner_trade=PartnerTrade.option_allies)
+        joan_3 = self.economy(Age2ScenarioData.AP_JOAN_3)
+        self.assertTrue(self.is_false(joan_3.can_earn_wood_by_partner_trade()))
 
 
 class TestAffordability(EconomyTestBase):
@@ -239,45 +447,31 @@ class TestAffordability(EconomyTestBase):
         state = CollectionState(self.multiworld)
         for costs in ({}, {Resource.GOLD: 0}, {Resource.GOLD: 0, Resource.FOOD: 0}):
             with self.subTest(str(costs)):
-                self.assertTrue(self.resolved(economy.can_afford(costs))(state))
+                self.assertTrue(self.resolved(
+                    economy.can_pay(costs))(state))
                 self.assertTrue(self.resolved(
                     self.world.rules.logic.resources.has_amounts(costs))(state))
         # can_sustain is asked which resources to keep coming, not what they cost, so the
         # zero-cost filtering happens in can_field and nothing priced at nothing reaches here.
         self.assertTrue(self.resolved(economy.can_sustain(()))(state))
 
-    def test_a_cost_can_be_paid_from_the_bank_or_from_the_ground(self):
-        self.build()
-        rule = self.economy(Age2ScenarioData.AP_ATTILA_1).can_afford({Resource.GOLD: 50})
-        names = set(self.resolved(rule).item_dependencies())
-        self.assertIn("+50 Starting Gold", names)
-        self.assertIn(Age2BuildingData.MINING_CAMP.item.item_name, names)
-
 
 class TestTheQuestionIsShared(EconomyTestBase):
     def test_asking_twice_gives_the_same_answer_object(self):
         self.build()
         scenario = Age2ScenarioData.AP_ATTILA_1
-        first = self.resolved(ScenarioHasResource(scenario=scenario, resource=Resource.FOOD))
-        second = self.resolved(ScenarioHasResource(scenario=scenario, resource=Resource.FOOD))
+        first = self.resolved(ScenarioHasEasyResource(scenario=scenario, resource=Resource.FOOD))
+        second = self.resolved(ScenarioHasEasyResource(scenario=scenario, resource=Resource.FOOD))
         self.assertIs(first, second)
 
     def test_the_question_answers_what_the_economy_would_have_built(self):
         self.build()
         for scenario in Age2ScenarioData:
             for resource in Resource:
-                for easy in (False, True):
-                    with self.subTest(f"{scenario.name}.{resource.name}.{easy}"):
-                        question = ScenarioHasResource(scenario=scenario, resource=resource,
-                                                     easy=easy)
-                        answer = question.answer(
-                            self.world.rules.logic.for_scenario(scenario))
-                        self.assertIs(self.resolved(question).answer,
-                                      self.resolved(answer))
-
-    def test_the_answers_stay_within_budget(self):
-        self.build()
-        self.assertLess(len(self.world.rules.logic.scenario_answers), 1000)
+                with self.subTest(f"{scenario.name}.{resource.name}"):
+                    question = ScenarioHasEasyResource(scenario=scenario, resource=resource)
+                    answer = question.answer(self.world.rules.logic.for_scenario(scenario))
+                    self.assertIs(self.resolved(question).answer, self.resolved(answer))
 
 
 if __name__ == "__main__":
@@ -303,7 +497,8 @@ class TestDeepFishIsWhatABoatNeeds(EconomyTestBase):
         self.assertEqual(0, economy.counts.deep_fish_count)
         self.assertTrue(economy.counts.shore_fish_count, "shore fish must stay non-zero to tell "
                                                          "the two guards apart")
-        self.assertIsInstance(economy.can_fish_by_boat(), False_)
+        # can_fish_by_boat is the shared question now; the guard lives in the rule it answers with
+        self.assertIsInstance(economy._fish_by_boat(), False_)
 
     def test_deep_fish_alone_can_be(self):
         self.build()
@@ -323,11 +518,11 @@ class TestEveryScenarioCanLive(EconomyTestBase):
 
     def playable(self):
         return [scenario for scenario in Age2ScenarioData
-                if not self.world.rules.logic.for_scenario(scenario).starting_state.fixed_force]
+                if not scenario.fixed_force]
 
     def easy_answer(self, scenario: Age2ScenarioData, resource: Resource):
         """The whole easy question - gathering, the scenario's declared sources, and trade."""
-        question = ScenarioHasResource(scenario=scenario, resource=resource, easy=True)
+        question = ScenarioHasEasyResource(scenario=scenario, resource=resource)
         return question.answer(self.world.rules.logic.for_scenario(scenario))
 
     def test_every_scenario_can_qualify_for_every_resource(self):

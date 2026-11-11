@@ -11,9 +11,12 @@ from dataclasses import fields
 
 from ..locations.connections import ScenarioResources  # noqa: F401  - assigns on import
 from ..locations.connections.ScenarioResources import ScenarioResourceCount, Tier, total
+from ..locations.connections.VillagerJobResources import (JOB_TO_RESOURCE,
+                                                          JOB_TO_SCENARIOS)
 from ..locations.Scenarios import Age2ScenarioData
 
-FIXED_FORCE = (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5)
+FIXED_FORCE = (Age2ScenarioData.AP_JOAN_1, Age2ScenarioData.AP_JOAN_5,
+               Age2ScenarioData.AP_GENGHIS_1)
 """No villagers, so the yields are deliberately all zero however much the map holds."""
 
 COUNT_FIELDS = tuple(field.name for field in fields(ScenarioResourceCount))
@@ -121,7 +124,7 @@ class TestTheFactsLogicLeansOn(unittest.TestCase):
     def test_relics_are_where_we_think(self):
         with_relics = {scenario.name: total(scenario).relic_count
                        for scenario in Age2ScenarioData if total(scenario).relic_count}
-        self.assertEqual(with_relics, {"AP_ATTILA_3": 2, "AP_ATTILA_4": 4})
+        self.assertEqual(with_relics, {"AP_ATTILA_3": 2, "AP_ATTILA_4": 4, "AP_GENGHIS_5": 1})
 
     def test_no_map_has_an_oyster_or_a_whale_yet(self):
         """Both fields exist for scenarios not yet written. If this ever fails, a map gained
@@ -139,3 +142,28 @@ class TestTheFactsLogicLeansOn(unittest.TestCase):
                   if any(getattr(scenario.resources[Tier.ALLY], field)
                          for field in COUNT_FIELDS)}
         self.assertEqual(allied, {"AP_ATTILA_1", "AP_ATTILA_5"})
+
+
+class TestTheJobTableMatchesTheScan(unittest.TestCase):
+    """`JOB_TO_SCENARIOS` decides whether a villager job's locations exist at all, and it is
+    hand-written. The scan is what the rule that puts one in logic reads, so the two drifting
+    apart is a location that can never be done, or one that quietly goes missing."""
+
+    def scenarios_holding(self, field: str, tiers) -> set:
+        return {scenario for scenario in Age2ScenarioData
+                if not scenario.fixed_force
+                and any(getattr(scenario.resources[tier], field) for tier in tiers)}
+
+    def test_each_job_lists_exactly_the_scenarios_its_resource_is_on(self):
+        for name, (field, tiers) in JOB_TO_RESOURCE.items():
+            with self.subTest(name):
+                self.assertEqual(set(JOB_TO_SCENARIOS[name]),
+                                 self.scenarios_holding(field, tiers))
+
+    def test_every_resource_job_is_in_the_table(self):
+        self.assertEqual(set(JOB_TO_RESOURCE), set(JOB_TO_SCENARIOS))
+
+    def test_no_fixed_force_scenario_is_listed(self):
+        for name, scenarios in JOB_TO_SCENARIOS.items():
+            with self.subTest(name):
+                self.assertEqual([s.name for s in scenarios if s in FIXED_FORCE], [])

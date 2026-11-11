@@ -12,6 +12,13 @@ from ...logic.joan.joan_4 import Joan4StartingState
 from ...logic.joan.joan_5 import Joan5StartingState
 from ...logic.joan.joan_6 import Joan6StartingState
 
+from ...logic.genghis.genghis_1 import Genghis1StartingState
+from ...logic.genghis.genghis_2 import Genghis2StartingState
+from ...logic.genghis.genghis_3 import Genghis3StartingState
+from ...logic.genghis.genghis_4 import Genghis4StartingState
+from ...logic.genghis.genghis_5 import Genghis5StartingState
+from ...logic.genghis.genghis_6 import Genghis6StartingState
+
 from ..Scenarios import Age2ScenarioData
 
 Age2ScenarioData.AP_ATTILA_1.logic = Attila1StartingState
@@ -27,3 +34,10 @@ Age2ScenarioData.AP_JOAN_3.logic = Joan3StartingState
 Age2ScenarioData.AP_JOAN_4.logic = Joan4StartingState
 Age2ScenarioData.AP_JOAN_5.logic = Joan5StartingState
 Age2ScenarioData.AP_JOAN_6.logic = Joan6StartingState
+
+Age2ScenarioData.AP_GENGHIS_1.logic = Genghis1StartingState
+Age2ScenarioData.AP_GENGHIS_2.logic = Genghis2StartingState
+Age2ScenarioData.AP_GENGHIS_3.logic = Genghis3StartingState
+Age2ScenarioData.AP_GENGHIS_4.logic = Genghis4StartingState
+Age2ScenarioData.AP_GENGHIS_5.logic = Genghis5StartingState
+Age2ScenarioData.AP_GENGHIS_6.logic = Genghis6StartingState

@@ -45,7 +45,7 @@ class TestTechCatalogue(unittest.TestCase):
 class TestRowSelection(unittest.TestCase):
     def test_locations_only_when_nothing_was_rebased(self):
         table = TechData(
-            [Age2TechData.ELITE_TARKAN_HUNS, Age2TechData.BEARDED_AXE_FRANKS], civs=SEED_CIVS).rows()
+            [Age2TechData.ELITE_TARKAN_HUNS, Age2TechData.ORDONNANCE_COMPANIES_FRANKS], civs=SEED_CIVS).rows()
         self.assertEqual([row.item_id for row in table], [3600, 3649])
         self.assertTrue(all(row.is_location for row in table))
 
@@ -72,8 +72,12 @@ class TestRowSelection(unittest.TestCase):
         table = TechData(UPGRADES, grant_age=Age2AgeData.IMPERIAL, civs=SEED_CIVS).rows()
         locations = [row for row in table if row.is_location]
         grant_only = [row for row in table if not row.is_location]
-        self.assertEqual(len(locations), 23)
-        self.assertEqual(len(grant_only), 48)
+        # Measured, not chosen. Mongols moved these from 23/48 by admitting Arbalester,
+        # Shipwright, Siege Onager, Stone Shaft Mining and Elite Steppe Lancer, which neither
+        # Huns nor Franks reach; then Heavy Mounted Crossbowman joined when the Franks' regional
+        # swap was corrected.
+        self.assertEqual(len(locations), 29)
+        self.assertEqual(len(grant_only), 51)
 
     def test_a_location_no_civilization_can_research_is_refused(self):
         plumed = Age2TechData.ELITE_PLUMED_ARCHER_MAYANS

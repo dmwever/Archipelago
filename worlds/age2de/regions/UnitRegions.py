@@ -61,7 +61,7 @@ class UnitRegions:
     def add_line_region(self, line: Age2UnitLineData,
                         locations: list[UnitLocation]) -> UnitRegion | None:
         units = self.world.pool.units
-        trainable = [building for building in units.root_unit_data(line).buildings
+        trainable = [building for building in units.root_unit_data(line).logic_buildings
                      if building in self.building_regions] \
             if units.is_trainable(line) else []
         granting = [scenario for scenario in self.scenario_regions
