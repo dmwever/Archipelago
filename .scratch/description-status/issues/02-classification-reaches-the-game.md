@@ -13,25 +13,31 @@ game reads the file yet.
 
 **Blocked by:** 09 (the handler this channel is written on).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Connecting requests a scout of the world's own locations with hint creation suppressed
-- [ ] The handler writes one entry per scouted location and is tested the way the unit handler is:
+- [x] Connecting requests a scout of the world's own locations with hint creation suppressed.
+      `Age2GameContext.connect` asks `client_interface.scout_locations()`, the way it already asks
+      `fetch_spent()`; `Age2Context.scout_locations` sends `LocationScouts` for `server_locations`
+      with `create_as_hint` 0, and the `LocationInfo` reply goes straight to the channel
+- [x] The handler writes one entry per scouted location and is tested the way the unit handler is:
       construct it, point it at a temporary folder, hand it scouted locations, read the file back
-      as little-endian ints
-- [ ] A location of each classification, a trap, an empty reply, and locations the handler should
-      ignore are all covered
-- [ ] The same seed and location id yield the same trap class across repeated calls and across
-      fresh handler instances; no random source is reached for anywhere
-- [ ] The handler is handed its folder the way the other startup handlers are, and its file is
-      cleared alongside theirs when the client flushes or disconnects. **Needs a ruling first:**
-      `flush_files` also runs mid-session, on following a live scenario and on a scenario switch,
-      and a file written once at connect has nothing to rewrite it afterwards. See the comment
-      below
-- [ ] The classification channel is written once at connect and never from the per-tick path. It
+      as little-endian ints. `classification.xsdat` holds the id then its class, ordered by id,
+      with `PROGRESSION`, `USEFUL` and `FILLER` as 1, 2 and 3
+- [x] A location of each classification, a trap, an empty reply, and locations the handler should
+      ignore are all covered. An item carrying progression and useful at once reads as progression,
+      and a location id this apworld cannot name is left out rather than written
+- [x] The same seed and location id yield the same trap class across repeated calls and across
+      fresh handler instances; no random source is reached for anywhere. The disguise is sha256 over
+      the seed tag and the location id, and the test pins three literals so a process-salted hash
+      cannot creep in
+- [x] The handler is handed its folder the way the other startup handlers are, and takes the seed
+      tag in the same place. Its file is cleared on disconnect and left alone by a mid-session
+      flush; see the ruling below
+- [x] The classification channel is written once at connect and never from the per-tick path. It
       shares `LocationHandler` with the checked-locations writer but not its cadence or its file;
       see the amended ruling in 09
-- [ ] The pre-commit subset for the files touched passes
+- [x] The pre-commit subset for the files touched passes, plus the test files the change touches:
+      163 passed
 
 ## Comments
 
@@ -44,3 +50,15 @@ game reads the file yet.
   leaves the file alone, since it carries no per-scenario state, or the handler keeps the scout
   reply and rewrites the file after each flush. 09 clears only `locations.xsdat` and names no
   classification file, so the choice is open.
+
+- 2026-11-12: Ruled, and built. A mid-session flush leaves `classification.xsdat` alone and the
+  disconnect clears it, through `try_clear_classification` called from `Age2GameContext.disconnect`
+  rather than from `flush_files`. The file carries no per-scenario state, so the scenario switch has
+  nothing to rewrite and nothing to lose; clearing on disconnect is what keeps one seed's colours
+  out of the next one's profile folder. 09's sixth acceptance line is ticked to match, and the
+  spec's classification paragraph now carries the file layout and this cadence.
+- 2026-11-12: `/set_user_folder` re-syncs the channel. A player who connects before pointing the
+  client at their Age2 folder would otherwise have no colours for the whole session: every other
+  startup file is rewritten by the next tick, and a scout-once file is not. `Age2Context`'s
+  `sync_classification` is called from both the `LocationInfo` reply and the command, and does
+  nothing until the reply has landed.

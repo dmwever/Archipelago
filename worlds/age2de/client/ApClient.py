@@ -38,6 +38,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         set_user_folder(self.ctx.settings)
         if self.ctx.game_ctx != None:
             self.ctx.game_ctx.update_game_user_folder(self.ctx.settings.user_folder)
+            self.ctx.sync_classification()
         self.output(f"User folder now assigned to {self.ctx.settings.user_folder}")
 
     def _cmd_install(self, mode: str = "") -> None:
@@ -192,6 +193,9 @@ class Age2Context(CommonContext):
         if cmd == "SetReply":
             self._handle_set_reply(args)
 
+        if cmd == "LocationInfo":
+            self.sync_classification()
+
     def _handle_connected(self, slot_data):
         self.scenario_completion_key = f"{self.team}_{self.slot}_scenario_complete"
         self.spent_key = f"{self.team}_{self.slot}_spent"
@@ -236,6 +240,22 @@ class Age2Context(CommonContext):
                 ]
             }
         ]))
+
+    def scout_locations(self) -> None:
+        if not self.server_locations:
+            return
+        Utils.async_start(self.send_msgs([
+            {
+                "cmd": "LocationScouts",
+                "locations": sorted(self.server_locations),
+                "create_as_hint": 0,
+            }
+        ]))
+
+    def sync_classification(self) -> None:
+        if not self.locations_info:
+            return
+        self.game_ctx.location_handler.try_sync_classification(self.locations_info)
 
     def seed_is_compatible(self) -> bool:
         return WorldVersion.compatible(self.seed_world_version, Age2World.world_version)

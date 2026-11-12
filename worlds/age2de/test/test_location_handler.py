@@ -3,9 +3,21 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ..client.handlers.LocationHandler import CHECKED_FILE, LocationHandler
+from BaseClasses import ItemClassification
+from NetUtils import NetworkItem
+
+from ..client.handlers.LocationHandler import (CHECKED_FILE, CLASSIFICATION_FILE, FILLER,
+                                               LocationHandler, PROGRESSION, USEFUL)
 
 NOTHING_SENT: list[int] = []
+SEED_TAG = "deadbeef"
+RECEIVING_PLAYER = 1
+SOME_ITEM = 4242
+
+
+def scouted(flags_by_location: dict[int, ItemClassification]) -> dict[int, NetworkItem]:
+    return {location: NetworkItem(SOME_ITEM, location, RECEIVING_PLAYER, int(flags))
+            for location, flags in flags_by_location.items()}
 
 
 def read_ids(folder: str, name: str) -> list[int]:
@@ -23,9 +35,102 @@ class LocationHandlerTestBase(unittest.TestCase):
         self.folder = folder.name + "/"
         self.handler = LocationHandler()
         self.handler.set_user_folder(self.folder)
+        self.handler.set_tag(SEED_TAG)
 
     def checked_file(self) -> list[int]:
         return read_ids(self.folder, CHECKED_FILE)
+
+    def classification_file(self) -> list[int]:
+        return read_ids(self.folder, CLASSIFICATION_FILE)
+
+
+class TestTheScoutedClassesAreWritten(LocationHandlerTestBase):
+    def test_it_writes_a_class_beside_each_scouted_location(self):
+        self.handler.try_sync_classification(scouted({
+            10101: ItemClassification.progression,
+            10102: ItemClassification.useful,
+            10305: ItemClassification.filler,
+        }))
+        self.assertEqual([10101, PROGRESSION, 10102, USEFUL, 10305, FILLER],
+                         self.classification_file())
+
+    def test_an_especially_useful_progression_item_reads_as_progression(self):
+        self.handler.try_sync_classification(scouted({
+            10101: ItemClassification.progression | ItemClassification.useful,
+        }))
+        self.assertEqual([10101, PROGRESSION], self.classification_file())
+
+
+class TestTheReplyIsTheRecordOfWhatThisSeedHas(LocationHandlerTestBase):
+    def test_a_location_this_seed_never_made_is_absent_rather_than_defaulted(self):
+        self.handler.try_sync_classification(scouted({10101: ItemClassification.progression}))
+        self.assertEqual([10101, PROGRESSION], self.classification_file())
+
+    def test_an_empty_reply_writes_an_empty_file(self):
+        self.handler.try_sync_classification({})
+        self.assertEqual([], self.classification_file())
+
+    def test_a_location_this_apworld_does_not_know_is_left_out(self):
+        self.handler.try_sync_classification(scouted({
+            10101: ItemClassification.progression,
+            99999999: ItemClassification.progression,
+        }))
+        self.assertEqual([10101, PROGRESSION], self.classification_file(),
+                         "an id this client cannot name was written for the game to look up")
+
+    def test_a_second_scout_replaces_the_first(self):
+        self.handler.try_sync_classification(scouted({
+            10101: ItemClassification.progression,
+            10102: ItemClassification.useful,
+        }))
+        self.handler.try_sync_classification(scouted({10102: ItemClassification.useful}))
+        self.assertEqual([10102, USEFUL], self.classification_file())
+
+
+class TestATrapIsDisguised(LocationHandlerTestBase):
+    SPREAD = [10101, 10102, 10103, 10104, 10105, 10201, 10202, 10203, 10204, 10205,
+              10301, 10302, 10303, 10304, 10305, 10401, 10402, 10403, 10404, 10405]
+
+    def disguises(self, *location_ids: int) -> list[int]:
+        self.handler.try_sync_classification(
+            scouted({location: ItemClassification.trap for location in location_ids}))
+        return self.classification_file()[1::2]
+
+    def test_a_trap_wears_an_ordinary_class(self):
+        self.assertTrue(all(disguise in (PROGRESSION, USEFUL, FILLER)
+                            for disguise in self.disguises(*self.SPREAD)),
+                        "a trap was written as something no genuine item wears")
+
+    def test_the_disguise_does_not_move_between_scouts(self):
+        first = self.disguises(*self.SPREAD)
+        self.assertEqual(first, self.disguises(*self.SPREAD))
+
+    def test_a_fresh_handler_disguises_a_trap_the_same_way(self):
+        first = self.disguises(*self.SPREAD)
+
+        self.handler = LocationHandler()
+        self.handler.set_user_folder(self.folder)
+        self.handler.set_tag(SEED_TAG)
+
+        self.assertEqual(first, self.disguises(*self.SPREAD),
+                         "a reconnect repainted the traps, which identifies every one of them")
+
+    def test_the_disguise_is_pinned_so_another_session_reads_it_the_same(self):
+        self.assertEqual([USEFUL, FILLER, PROGRESSION],
+                         self.disguises(10101, 10105, 10201),
+                         "the disguise moved between runs; a per-process hash cannot carry it")
+
+    def test_another_seed_disguises_the_same_location_differently(self):
+        first = self.disguises(*self.SPREAD)
+
+        self.handler.set_tag("0ddba11d")
+
+        self.assertNotEqual(first, self.disguises(*self.SPREAD),
+                            "the disguise ignores the seed, so one seed's trap map fits them all")
+
+    def test_a_trap_is_spread_across_all_three_classes(self):
+        self.assertEqual({PROGRESSION, USEFUL, FILLER}, set(self.disguises(*self.SPREAD)),
+                         "the disguise collapses onto fewer than three colours")
 
 
 class TestTheCheckedLocationsAreWritten(LocationHandlerTestBase):
@@ -91,14 +196,24 @@ class TestFlushing(LocationHandlerTestBase):
         self.handler.try_flush_from_folder()
         self.assertFalse(os.path.exists(self.folder + CHECKED_FILE))
 
-    def test_a_flush_leaves_a_file_the_handler_does_not_write(self):
-        scouted = Path(self.folder + "classification.xsdat")
-        scouted.write_bytes(b"\x01\x00\x00\x00")
+    def test_a_flush_leaves_the_scouted_classes_alone(self):
+        self.handler.try_sync_classification(scouted({10101: ItemClassification.progression}))
 
         self.handler.try_flush_from_folder()
 
-        self.assertTrue(scouted.exists(),
-                        "a scout-once file was cleared by a mid-scenario flush that cannot rewrite it")
+        self.assertEqual([10101, PROGRESSION], self.classification_file(),
+                         "a scout-once file was cleared by a mid-scenario flush that cannot rewrite it")
+
+    def test_disconnecting_clears_the_scouted_classes(self):
+        self.handler.try_sync_classification(scouted({10101: ItemClassification.progression}))
+
+        self.handler.try_clear_classification()
+
+        self.assertFalse(os.path.exists(self.folder + CLASSIFICATION_FILE),
+                         "the last seed's colours were left in the profile folder")
+
+    def test_clearing_an_empty_folder_is_quiet(self):
+        self.handler.try_clear_classification()
 
     def test_a_flush_forgets_what_the_game_was_told(self):
         self.handler.try_sync_checked_locations({10101})

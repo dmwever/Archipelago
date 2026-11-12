@@ -17,7 +17,7 @@ linter rather than by tests.
 | # | Ticket | Status |
 | --- | --- | --- |
 | 01 | [The checked set is read when a scenario starts](issues/01-arm-the-checked-set-read.md) | done |
-| 02 | [Classification reaches the game](issues/02-classification-reaches-the-game.md) | ready-for-agent |
+| 02 | [Classification reaches the game](issues/02-classification-reaches-the-game.md) | done |
 | 03 | [The install bakes the extended tooltip id](issues/03-bake-the-extended-tooltip-id.md) | ready-for-agent |
 | 04 | [A technology's description says where it stands](issues/04-technologies-carry-a-status-line.md) | ready-for-agent |
 | 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | ready-for-agent |
@@ -54,3 +54,7 @@ linter rather than by tests.
 - 2026-11-11: Save and load is acceptance on 08, not a ticket of its own. A save carries the game's
   XS state and a reload brings the scenario triggers back as they were saved, so the gap is the
   player redoing an objective the server already holds, not a lost checked set.
+- 2026-11-12: A mid-session flush leaves `classification.xsdat` alone; only a disconnect clears it.
+  The file carries no per-scenario state and nothing else would rewrite it, so clearing it on a
+  scenario switch would strip the colour off every unchecked status line for the rest of the
+  session. Settled on 02, which also gave 09 its sixth acceptance line.

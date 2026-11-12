@@ -44,11 +44,12 @@ complete example and the model for the test.
       called armed; see the naming comment below
 - [x] `test_checked_set_read.py` still passes, updated in step with the move where it reaches into
       the context directly
-- [ ] The classification channel is a second method on the same handler, written once at connect
+- [x] The classification channel is a second method on the same handler, written once at connect
       and never from the per-tick path. Carried by 02, whose first three acceptance lines are the
       method itself; this ticket is the blocker for them and ships the class it lives on
-- [ ] A flush clears both files, the way the other handlers' files are cleared. Carried by 02 and
-      wants a ruling first: see the 2026-11-12 comment below. 09 clears only `locations.xsdat`
+- [x] A flush clears `locations.xsdat` alone. Ruled on 02: the classification file carries no
+      per-scenario state, so a mid-session flush leaves it and `try_clear_classification` takes it
+      on disconnect instead
 - [x] Tested the way `UnitHandler` is: construct it, point it at a temporary folder, hand it a
       checked set, read the file back as little-endian ints
 - [x] Ticket 02's sixth acceptance line and the spec's "not folded into the per-tick

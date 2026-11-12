@@ -118,7 +118,11 @@ folder is set, a sync method is handed what it needs, and it writes a flat file 
 channel is a second method on `LocationHandler` (09), which owns everything the client sends the
 game about locations. It shares that class with the checked-locations writer but neither its file
 nor its cadence: a scout-once table does not belong in a writer that runs every tick, and that
-file's layout is already pinned by tests.
+file's layout is already pinned by tests. `classification.xsdat` holds a pair of ints per scouted
+location, the id and then its class, ordered by id. It carries no per-scenario state, so a
+mid-session flush leaves it where it is and only a disconnect clears it; nothing else would rewrite
+it, and a scenario switch would otherwise take the colour off every unchecked line for the rest of
+the session.
 
 **The trap disguise colour is derived, never rolled.** It is a pure function of the seed and the
 location id, yielding one of the three non-trap colours. Any implementation that reaches for a

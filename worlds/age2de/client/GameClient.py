@@ -65,6 +65,9 @@ class APClientInterface(Protocol):
         """Called when the spent record is unknown again; the reply goes to reconcile_spent"""
         pass
 
+    def scout_locations(self):
+        pass
+
 
 class DefaultClientInterface:
     def on_scenario_completion(self, scenario_id: Age2ScenarioData) -> None:
@@ -85,6 +88,9 @@ class DefaultClientInterface:
         pass
 
     def fetch_spent(self) -> None:
+        pass
+
+    def scout_locations(self) -> None:
         pass
 
 
@@ -203,6 +209,7 @@ class Age2GameContext:
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
         self.location_handler.send_locations()
+        self.client_interface.scout_locations()
         self.campaign_handler.setup_victory_requirements(slot_data)
         self.try_startup_game_connection()
         self.message_handler.add_message("Client Connected!")
@@ -210,6 +217,7 @@ class Age2GameContext:
     async def disconnect(self):
         if self.client_status.user_folder != '':
             self.flush_files()
+            self.location_handler.try_clear_classification()
         self.running = False
         if self.game_loop != None:
             try:
@@ -258,6 +266,7 @@ class Age2GameContext:
         self.install_handler.set_user_folder(user_folder)
         self.item_handler.set_user_folder(self.profile_folder())
         self.location_handler.set_user_folder(self.profile_folder())
+        self.location_handler.set_tag(self.client_status.tag)
         self.storage_handler.set_user_folder(user_folder)
         self.storage_handler.set_tag(self.client_status.tag)
         self.storage_handler.set_player_name(self.client_status.player_name)
