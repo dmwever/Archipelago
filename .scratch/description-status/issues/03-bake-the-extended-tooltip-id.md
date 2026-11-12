@@ -14,8 +14,8 @@ thirty-five-building table carries one per building. Nothing reads the ids yet.
 
 **Status:** done
 
-- [x] A source module holds the ids and names its provenance; a tool beside the other maintainer
-      tools regenerates it from the game dat and says how to run it the way they do
+- [x] A source module holds the ids; a tool beside the other maintainer tools regenerates it from
+      the game dat and says how to run it the way they do
 - [x] Every decorated technology row and unit row carries the extended tooltip id, and a row the
       seed does not install carries none
 - [x] The ids the rows carry agree with the source module rather than being invented or computed
@@ -64,7 +64,8 @@ thirty-five-building table carries one per building. Nothing reads the ids yet.
   `AGE_UP_TECHS`, not on `Age2AgeData` - nothing on the apworld side reads a genie tech id, so the
   mapping is the tool's business. The XS side has no age table yet; #05 chooses how the three ids
   reach the game.
-- 2026-11-12: The provenance stamp the first acceptance line asks for is deliberately absent, at
-  the maintainer's instruction. `GameCosts.py`'s `GAME_DATA_SOURCE`, the precedent it named, was
-  removed in the same pass along with the test that asserted it was non-empty. Where the ids came
-  from is in the tool's module docstring, and when they were read is in the git history.
+- 2026-11-12: No provenance stamp. The first acceptance line asked for one and was amended to drop
+  it; `GameCosts.py`'s `GAME_DATA_SOURCE`, the precedent it named, was removed in the same pass
+  along with the test that asserted it was non-empty. Where the ids came from is in the tool's
+  module docstring, and when they were read is in the git history. The brief above still describes
+  the stamp.

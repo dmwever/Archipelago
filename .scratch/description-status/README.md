@@ -58,3 +58,12 @@ linter rather than by tests.
   The file carries no per-scenario state and nothing else would rewrite it, so clearing it on a
   scenario switch would strip the colour off every unchecked status line for the rest of the
   session. Settled on 02, which also gave 09 its sixth acceptance line.
+- 2026-11-12: Baked tables carry no provenance stamp. `GameStrings.py` was built with one and it
+  was removed, and `GameCosts.py`'s `GAME_DATA_SOURCE` went with it, along with the test that
+  asserted it was non-empty. The regenerating tool's docstring says where the data comes from and
+  git history says when it was read. 03's first acceptance line was amended to drop the clause.
+- 2026-11-12: Ages are baked in 03 alongside technologies, units and buildings, as
+  `AGE_NAME_STRINGS` over `SHUFFLED_AGES`. An age advance's description is the age-up technology's,
+  so 05 needs 28101 / 28102 / 28103, and the age-up techs are not `Age2TechData` members. The three
+  dat tech ids live in the maintainer tool, not on `Age2AgeData`: nothing on the apworld side reads
+  a genie tech id. How they reach the game is 05's to choose; there is no age table in XS yet.
