@@ -40,7 +40,8 @@ complete example and the model for the test.
       handed its profile folder alongside the other handlers
 - [x] `locations.xsdat` is written by the handler and `Age2GameContext` no longer opens it
 - [x] The armed flag and the `CheckedLocationsCount` ack live on the handler, and the ping still
-      asks for the read on exactly the occasions ticket 01 established
+      asks for the read on exactly the occasions ticket 01 established. The flag is no longer
+      called armed; see the naming comment below
 - [x] `test_checked_set_read.py` still passes, updated in step with the move where it reaches into
       the context directly
 - [ ] The classification channel is a second method on the same handler, written once at connect
@@ -86,3 +87,12 @@ complete example and the model for the test.
   The choices are a flush that leaves the file alone, or a cached scout reply the handler rewrites
   from after each flush. 02's fifth acceptance line ("cleared alongside theirs when the client
   flushes or disconnects") carries the same assumption and is flagged there.
+- 2026-11-12: Final names, after the move went in. `arm`/`armed` was not project vocabulary -- it
+  entered with 01's own commit `e9ab8bc02` and appears nowhere older, while the three sibling
+  client-to-game ping flags name the state and query it (`in_flight`, `is_message_sending`,
+  `queue_serial`). `add_locations` was dropped too: it added nothing, and `AddLocations` in
+  `ScenarioLocations.xs` already means registering a scenario's id range. The handler now reads
+  `send_locations`, `try_sync_checked_locations`, `confirm_checked_locations`,
+  `are_locations_sending`, `mark_locations_sent`, `try_flush_from_folder`, over
+  `_sending_locations` and `_written_location_count`. `CONTEXT.md` has no entry for any of this;
+  a ping-flag term may be worth one.
