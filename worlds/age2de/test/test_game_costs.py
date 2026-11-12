@@ -10,8 +10,7 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..locations.Techs import Age2TechData
 from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
-from ..locations.connections.GameCosts import (GAME_DATA_SOURCE, TECHS_WITHOUT_COST,
-                                               UNITS_WITHOUT_COST)
+from ..locations.connections.GameCosts import TECHS_WITHOUT_COST, UNITS_WITHOUT_COST
 from ..Options import ShuffleVillager
 
 
@@ -40,9 +39,6 @@ class TestEverythingIsPriced(unittest.TestCase):
         for unit in UNITS_WITHOUT_COST:
             with self.subTest(unit.name):
                 self.assertGreaterEqual(unit.game_id, 2101)
-
-    def test_the_source_is_recorded(self):
-        self.assertTrue(GAME_DATA_SOURCE.strip())
 
 
 class TestSpotChecks(unittest.TestCase):

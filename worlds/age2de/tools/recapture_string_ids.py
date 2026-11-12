@@ -18,9 +18,10 @@ the dat no longer carries, which is a bug in the catalogue rather than in the du
 Every technology costs its own `kit dat tech` call and each one parses the whole dat, so the run
 takes a few minutes even spread across cores. The objects come from one `kit dat units` call.
 
-A handful of make-available technologies carry no name string of their own and only an extended
-help id; those fall back to the help id less its own offset, which is the name string the game
-shows for them.
+One make-available technology, dat tech 1350, carries no name string of its own and only an
+extended help id. That falls back to the help id less its own offset, which is the name string the
+game shows for it. If a game patch adds more, the fallback picks them up silently, so check the
+diff for a technology whose id moved into the help band.
 
 The file it writes asserts at import that every technology, unit and building this world names
 has an id, so a half-written dump fails on any test run rather than in a seed.
@@ -32,14 +33,16 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
-import datetime
+import dataclasses
 import json
 import os
 import pathlib
 import shutil
 import subprocess
 import sys
+from typing import Callable
 
+from worlds.age2de.locations.Ages import SHUFFLED_AGES, Age2AgeData
 from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.EscortUnits import Age2EscortUnitData
 from worlds.age2de.locations.Heroes import Age2HeroData
@@ -58,22 +61,44 @@ READ_CIV = 1
 
 EXTENDED_TOOLTIP_OFFSET = 21000
 
+AGE_UP_TECHS: dict[Age2AgeData, int] = {
+    Age2AgeData.FEUDAL: 101,
+    Age2AgeData.CASTLE: 102,
+    Age2AgeData.IMPERIAL: 103,
+}
+
 HELP_OFFSET = 100000
 
-OBJECT_KINDS = (
-    ("UNIT_NAME_STRINGS", "Age2UnitData", Age2UnitData, lambda place: place.game_id),
-    ("VILLAGER_JOB_NAME_STRINGS", "Age2VillagerJobData", Age2VillagerJobData,
-     lambda place: place.game_id),
-    ("HERO_NAME_STRINGS", "Age2HeroData", Age2HeroData, lambda place: place.game_id),
-    ("ESCORT_NAME_STRINGS", "Age2EscortUnitData", Age2EscortUnitData,
-     lambda place: place.game_id),
-    ("BUILDING_NAME_STRINGS", "Age2BuildingData", Age2BuildingData,
-     lambda place: place.item.type.game_id),
+@dataclasses.dataclass(frozen=True)
+class Kind:
+    variable: str
+    annotation: str
+    places: tuple
+    name_of: Callable
+    dump: str
+
+
+KINDS = (
+    Kind("TECH_NAME_STRINGS", "Age2TechData", tuple(Age2TechData),
+         lambda place: place.item.type.game_id, "techs"),
+    Kind("AGE_NAME_STRINGS", "Age2AgeData", SHUFFLED_AGES,
+         lambda place: AGE_UP_TECHS[place], "techs"),
+    Kind("UNIT_NAME_STRINGS", "Age2UnitData", tuple(Age2UnitData),
+         lambda place: place.game_id, "objects"),
+    Kind("VILLAGER_JOB_NAME_STRINGS", "Age2VillagerJobData",
+         tuple(Age2VillagerJobData), lambda place: place.game_id, "objects"),
+    Kind("HERO_NAME_STRINGS", "Age2HeroData", tuple(Age2HeroData),
+         lambda place: place.game_id, "objects"),
+    Kind("ESCORT_NAME_STRINGS", "Age2EscortUnitData",
+         tuple(Age2EscortUnitData), lambda place: place.game_id, "objects"),
+    Kind("BUILDING_NAME_STRINGS", "Age2BuildingData",
+         tuple(Age2BuildingData), lambda place: place.item.type.game_id, "objects"),
 )
 
 TAIL = '''
 NAME_STRINGS_BY_KIND: dict[type, dict[DecoratedPlace, int]] = {
     Age2TechData: TECH_NAME_STRINGS,
+    Age2AgeData: AGE_NAME_STRINGS,
     Age2UnitData: UNIT_NAME_STRINGS,
     Age2VillagerJobData: VILLAGER_JOB_NAME_STRINGS,
     Age2HeroData: HERO_NAME_STRINGS,
@@ -81,14 +106,24 @@ NAME_STRINGS_BY_KIND: dict[type, dict[DecoratedPlace, int]] = {
     Age2BuildingData: BUILDING_NAME_STRINGS,
 }
 
+DECORATED_MEMBERS: dict[type, tuple] = {
+    Age2TechData: tuple(Age2TechData),
+    Age2AgeData: SHUFFLED_AGES,
+    Age2UnitData: tuple(Age2UnitData),
+    Age2VillagerJobData: tuple(Age2VillagerJobData),
+    Age2HeroData: tuple(Age2HeroData),
+    Age2EscortUnitData: tuple(Age2EscortUnitData),
+    Age2BuildingData: tuple(Age2BuildingData),
+}
+
 
 def extended_tooltip_id(place: DecoratedPlace) -> int:
     return NAME_STRINGS_BY_KIND[type(place)][place] + EXTENDED_TOOLTIP_OFFSET
 
 
-for _kind, _names in NAME_STRINGS_BY_KIND.items():
-    assert not [place for place in _kind if place not in _names], (
-        f"a {_kind.__name__} member has no name string id; rerun recapture_string_ids")
+for _kind, _members in DECORATED_MEMBERS.items():
+    assert set(NAME_STRINGS_BY_KIND[_kind]) == set(_members), (
+        f"{_kind.__name__} and its name string ids disagree; rerun recapture_string_ids")
 '''
 
 
@@ -121,7 +156,8 @@ def object_name_strings(kit: str, dat: pathlib.Path) -> dict[int, int]:
 
 
 def tech_name_strings(kit: str, dat: pathlib.Path, jobs: int) -> dict[int, int]:
-    wanted = sorted({tech.item.type.game_id for tech in Age2TechData})
+    wanted = sorted({tech.item.type.game_id for tech in Age2TechData}
+                    | set(AGE_UP_TECHS.values()))
 
     def one(game_id: int) -> tuple[int, int]:
         record = read_json(kit, ["dat", "tech", str(dat), str(game_id)])
@@ -134,25 +170,20 @@ def tech_name_strings(kit: str, dat: pathlib.Path, jobs: int) -> dict[int, int]:
         return dict(pool.map(one, wanted))
 
 
-def rows(kind, name_of, strings: dict[int, int]) -> list[tuple[str, int]]:
-    out = []
-    for place in kind:
-        name_string = strings.get(name_of(place))
+def render_table(kind: Kind, strings: dict[int, int]) -> str:
+    lines = [f"{kind.variable}: dict[{kind.annotation}, int] = {{"]
+    for place in kind.places:
+        name_string = strings.get(kind.name_of(place))
         if name_string is None or name_string < 1:
-            raise SystemExit(f"{kind.__name__}.{place.name} is not in the dat dump")
-        out.append((f"{kind.__name__}.{place.name}", name_string))
-    return out
-
-
-def render_table(variable: str, annotation: str, body: list[tuple[str, int]]) -> str:
-    lines = [f"{variable}: dict[{annotation}, int] = {{"]
-    lines += [f"    {key}: {value}," for key, value in body]
+            raise SystemExit(f"{kind.annotation}.{place.name} is not in the dat dump")
+        lines.append(f"    {kind.annotation}.{place.name}: {name_string},")
     lines.append("}")
     return "\n".join(lines)
 
 
-def render(source: str, techs: dict[int, int], objects: dict[int, int]) -> str:
+def render(techs: dict[int, int], objects: dict[int, int]) -> str:
     parts = [
+        "from ..Ages import SHUFFLED_AGES, Age2AgeData",
         "from ..Buildings import Age2BuildingData",
         "from ..EscortUnits import Age2EscortUnitData",
         "from ..Heroes import Age2HeroData",
@@ -160,21 +191,17 @@ def render(source: str, techs: dict[int, int], objects: dict[int, int]) -> str:
         "from ..Units import Age2UnitData",
         "from ..VillagerJobs import Age2VillagerJobData",
         "",
-        "DecoratedPlace = (Age2TechData | Age2UnitData | Age2VillagerJobData",
+        "DecoratedPlace = (Age2TechData | Age2AgeData | Age2UnitData | Age2VillagerJobData",
         "                  | Age2HeroData | Age2EscortUnitData | Age2BuildingData)",
-        "",
-        f'GAME_STRING_SOURCE = "{source}"',
         "",
         f"EXTENDED_TOOLTIP_OFFSET = {EXTENDED_TOOLTIP_OFFSET}",
         "",
         "NO_TOOLTIP = -1",
         "",
-        render_table("TECH_NAME_STRINGS", "Age2TechData",
-                     rows(Age2TechData, lambda tech: tech.item.type.game_id, techs)),
-        "",
     ]
-    for variable, annotation, kind, name_of in OBJECT_KINDS:
-        parts.append(render_table(variable, annotation, rows(kind, name_of, objects)))
+    dumps = {"techs": techs, "objects": objects}
+    for kind in KINDS:
+        parts.append(render_table(kind, dumps[kind.dump]))
         parts.append("")
     return "\n".join(parts) + TAIL
 
@@ -182,10 +209,8 @@ def render(source: str, techs: dict[int, int], objects: dict[int, int]) -> str:
 def recapture(kit: str, dat: pathlib.Path, jobs: int) -> dict:
     objects = object_name_strings(kit, dat)
     techs = tech_name_strings(kit, dat, jobs)
-    read_on = datetime.date.today().isoformat()
-    source = f"{dat.name}, read {read_on} through aoe2kit"
-    MODULE.write_text(render(source, techs, objects), encoding="utf-8", newline="\n")
-    return {"path": MODULE, "techs": len(techs), "objects": len(objects), "source": source}
+    MODULE.write_text(render(techs, objects), encoding="utf-8", newline="\n")
+    return {"path": MODULE, "techs": len(techs), "objects": len(objects), "dat": dat}
 
 
 def main(argv: list[str]) -> int:
@@ -196,7 +221,7 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     written = recapture(kit_path(args.kit), dat_path(args.dat), args.jobs)
     print(f"wrote {written['path']}")
-    print(f"source: {written['source']}")
+    print(f"read {written['dat']}")
     print(f"technologies: {written['techs']}")
     return 0
 

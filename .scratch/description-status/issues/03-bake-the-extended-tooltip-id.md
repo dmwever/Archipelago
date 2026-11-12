@@ -30,13 +30,17 @@ thirty-five-building table carries one per building. Nothing reads the ids yet.
 ## Comments
 
 - 2026-11-12: Built. `locations/connections/GameStrings.py` holds the name string id for every
-  technology, unit, villager job, hero, escort and building, keyed by the `Age2*` member, stamped
-  `GAME_STRING_SOURCE = "empires2_x2_p1.dat, read 2026-11-12 through aoe2kit"`, and asserts at
-  import that no catalogue member is missing one. `tools/recapture_string_ids.py` regenerates the
-  whole file from the dat through `kit dat units` and `kit dat tech`; the run takes about nine
-  minutes because every technology costs a full dat parse. `EXTENDED_TOOLTIP_OFFSET` is 21000.
-- 2026-11-12: Fifteen make-available technologies carry `language_dll_name` 0 and only an extended
-  help id, so the tool falls back to the help id less 100000. Checked afterwards against the game's
+  technology, age advance, unit, villager job, hero, escort and building, keyed by the `Age2*`
+  member, and asserts at import that each kind and its ids agree.
+  `tools/recapture_string_ids.py` regenerates the whole file from the dat through `kit dat units`
+  and `kit dat tech`; the run takes about nine minutes because every technology costs a full dat
+  parse. `EXTENDED_TOOLTIP_OFFSET` is 21000.
+- 2026-11-12: Exactly one technology carries `language_dll_name` 0 and only an extended help id:
+  `CHAMPI_SCOUT`, which is dat tech 1350, "Champi Scout (Make avail)", help 107487. The tool falls
+  back to the help id less 100000, giving 7487, whose tooltip 28487 reads "Upgrade to Champi
+  Runner" - the catalogue's name for that tech is the odd part, not the id. Measured by reading all
+  298 technology records; an earlier note here said fifteen, which confused this with the fifteen
+  technologies whose name string is legitimately six digits. Checked afterwards against the game's
   own `key-value-strings-utf8.txt`: all 298 technology ids and all 35 building ids resolve both as a
   name and, plus the offset, as an extended tooltip, so nothing in the table is invented. The 28
   units with no English name string are Chronicles-era; the jobs, heroes and escorts have no create
@@ -53,5 +57,14 @@ thirty-five-building table carries one per building. Nothing reads the ids yet.
   `FirstOprArith` warnings remain). `addTech`, `addUnit` and `createLocationLock` all gained a
   defaulted `tooltipId`, and the `mutable` stubs in `AP_Headers.xs` were moved with them — a stub
   left behind is a `NameError` from the linter, not a silent miss.
-- 2026-11-12: Ages carry no entry. They are not rows in either generator and the ticket names only
-  technologies, units and buildings; #05 adds them when it knows what the age writer needs.
+- 2026-11-12: Ages do carry an entry, as `AGE_NAME_STRINGS` over `SHUFFLED_AGES`. #05 writes the
+  first segment onto an age advance, whose description is the age-up technology's, so it needs
+  28101 / 28102 / 28103 and could not have reached them: the age-up techs are not `Age2TechData`
+  members and ages are not rows in either generator. The three dat tech ids live in the tool as
+  `AGE_UP_TECHS`, not on `Age2AgeData` - nothing on the apworld side reads a genie tech id, so the
+  mapping is the tool's business. The XS side has no age table yet; #05 chooses how the three ids
+  reach the game.
+- 2026-11-12: The provenance stamp the first acceptance line asks for is deliberately absent, at
+  the maintainer's instruction. `GameCosts.py`'s `GAME_DATA_SOURCE`, the precedent it named, was
+  removed in the same pass along with the test that asserted it was non-empty. Where the ids came
+  from is in the tool's module docstring, and when they were read is in the git history.

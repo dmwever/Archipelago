@@ -5,8 +5,6 @@ from ..Techs import Age2TechData
 from ..Units import Age2UnitData
 
 
-GAME_DATA_SOURCE = "aoe2techtree data/data.json, fetched 2026-09-29"
-
 UNIT_COSTS: dict[Age2UnitData, dict[Resource, int]] = {
     Age2UnitData.ARCHER: {Resource.GOLD: 45, Resource.WOOD: 25},
     Age2UnitData.HAND_CANNONEER: {Resource.FOOD: 45, Resource.GOLD: 50},

@@ -1,5 +1,6 @@
 import unittest
 
+from ..locations.Ages import SHUFFLED_AGES, Age2AgeData
 from ..locations.Buildings import Age2BuildingData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
@@ -7,10 +8,10 @@ from ..locations.Techs import Age2TechData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.connections.GameStrings import (
+    AGE_NAME_STRINGS,
     BUILDING_NAME_STRINGS,
     ESCORT_NAME_STRINGS,
     EXTENDED_TOOLTIP_OFFSET,
-    GAME_STRING_SOURCE,
     HERO_NAME_STRINGS,
     NAME_STRINGS_BY_KIND,
     TECH_NAME_STRINGS,
@@ -21,6 +22,7 @@ from ..locations.connections.GameStrings import (
 
 CATALOGUES = (
     (Age2TechData, TECH_NAME_STRINGS),
+    (Age2AgeData, AGE_NAME_STRINGS),
     (Age2UnitData, UNIT_NAME_STRINGS),
     (Age2VillagerJobData, VILLAGER_JOB_NAME_STRINGS),
     (Age2HeroData, HERO_NAME_STRINGS),
@@ -43,15 +45,12 @@ class TestTheDumpIsComplete(unittest.TestCase):
                     self.assertIsInstance(name_string, int)
                     self.assertGreater(name_string, 0)
 
+    def test_only_the_ages_a_seed_can_shuffle_carry_one(self):
+        self.assertEqual(set(AGE_NAME_STRINGS), set(SHUFFLED_AGES))
+
     def test_every_kind_is_reachable_by_its_type(self):
         for kind, names in CATALOGUES:
             self.assertIs(NAME_STRINGS_BY_KIND[kind], names, kind.__name__)
-
-
-class TestProvenance(unittest.TestCase):
-    def test_the_source_names_the_dat_it_was_read_from(self):
-        self.assertIn(".dat", GAME_STRING_SOURCE)
-        self.assertIn("aoe2kit", GAME_STRING_SOURCE)
 
 
 class TestTheExtendedTooltipId(unittest.TestCase):
@@ -63,6 +62,15 @@ class TestTheExtendedTooltipId(unittest.TestCase):
 
     def test_a_building_reads_its_measured_tooltip(self):
         self.assertEqual(extended_tooltip_id(Age2BuildingData.HOUSE), 26344)
+
+    def test_an_age_advance_reads_the_age_up_technology_tooltip(self):
+        self.assertEqual(extended_tooltip_id(Age2AgeData.FEUDAL), 28101)
+        self.assertEqual(extended_tooltip_id(Age2AgeData.CASTLE), 28102)
+        self.assertEqual(extended_tooltip_id(Age2AgeData.IMPERIAL), 28103)
+
+    def test_the_dark_age_has_no_tooltip_because_nothing_advances_into_it(self):
+        with self.assertRaises(KeyError):
+            extended_tooltip_id(Age2AgeData.DARK)
 
     def test_a_late_technology_outside_the_vanilla_band_reads_its_measured_tooltip(self):
         self.assertEqual(

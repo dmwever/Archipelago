@@ -1,3 +1,4 @@
+from ..Ages import SHUFFLED_AGES, Age2AgeData
 from ..Buildings import Age2BuildingData
 from ..EscortUnits import Age2EscortUnitData
 from ..Heroes import Age2HeroData
@@ -5,10 +6,8 @@ from ..Techs import Age2TechData
 from ..Units import Age2UnitData
 from ..VillagerJobs import Age2VillagerJobData
 
-DecoratedPlace = (Age2TechData | Age2UnitData | Age2VillagerJobData
+DecoratedPlace = (Age2TechData | Age2AgeData | Age2UnitData | Age2VillagerJobData
                   | Age2HeroData | Age2EscortUnitData | Age2BuildingData)
-
-GAME_STRING_SOURCE = "empires2_x2_p1.dat, read 2026-11-12 through aoe2kit"
 
 EXTENDED_TOOLTIP_OFFSET = 21000
 
@@ -313,6 +312,12 @@ TECH_NAME_STRINGS: dict[Age2TechData, int] = {
     Age2TechData.ELITE_HEARTH_TROOP_SAXONS: 507011,
     Age2TechData.ELITE_JARL_VARANGIANS: 507014,
     Age2TechData.ELITE_JOMSVIKING_DANES: 507017,
+}
+
+AGE_NAME_STRINGS: dict[Age2AgeData, int] = {
+    Age2AgeData.FEUDAL: 7101,
+    Age2AgeData.CASTLE: 7102,
+    Age2AgeData.IMPERIAL: 7103,
 }
 
 UNIT_NAME_STRINGS: dict[Age2UnitData, int] = {
@@ -671,6 +676,7 @@ BUILDING_NAME_STRINGS: dict[Age2BuildingData, int] = {
 
 NAME_STRINGS_BY_KIND: dict[type, dict[DecoratedPlace, int]] = {
     Age2TechData: TECH_NAME_STRINGS,
+    Age2AgeData: AGE_NAME_STRINGS,
     Age2UnitData: UNIT_NAME_STRINGS,
     Age2VillagerJobData: VILLAGER_JOB_NAME_STRINGS,
     Age2HeroData: HERO_NAME_STRINGS,
@@ -678,11 +684,21 @@ NAME_STRINGS_BY_KIND: dict[type, dict[DecoratedPlace, int]] = {
     Age2BuildingData: BUILDING_NAME_STRINGS,
 }
 
+DECORATED_MEMBERS: dict[type, tuple] = {
+    Age2TechData: tuple(Age2TechData),
+    Age2AgeData: SHUFFLED_AGES,
+    Age2UnitData: tuple(Age2UnitData),
+    Age2VillagerJobData: tuple(Age2VillagerJobData),
+    Age2HeroData: tuple(Age2HeroData),
+    Age2EscortUnitData: tuple(Age2EscortUnitData),
+    Age2BuildingData: tuple(Age2BuildingData),
+}
+
 
 def extended_tooltip_id(place: DecoratedPlace) -> int:
     return NAME_STRINGS_BY_KIND[type(place)][place] + EXTENDED_TOOLTIP_OFFSET
 
 
-for _kind, _names in NAME_STRINGS_BY_KIND.items():
-    assert not [place for place in _kind if place not in _names], (
-        f"a {_kind.__name__} member has no name string id; rerun recapture_string_ids")
+for _kind, _members in DECORATED_MEMBERS.items():
+    assert set(NAME_STRINGS_BY_KIND[_kind]) == set(_members), (
+        f"{_kind.__name__} and its name string ids disagree; rerun recapture_string_ids")
