@@ -37,7 +37,7 @@ game reads the file yet.
       shares `LocationHandler` with the checked-locations writer but not its cadence or its file;
       see the amended ruling in 09
 - [x] The pre-commit subset for the files touched passes, plus the test files the change touches:
-      163 passed
+      173 passed
 
 ## Comments
 
@@ -62,3 +62,11 @@ game reads the file yet.
   startup file is rewritten by the next tick, and a scout-once file is not. `Age2Context`'s
   `sync_classification` is called from both the `LocationInfo` reply and the command, and does
   nothing until the reply has landed.
+- 2026-11-12: Review findings. Two taken, one rejected. `/set_user_folder` now clears the old
+  profile folder before the handler is repointed, so a seed's class map is not left behind in an
+  install the player has walked away from; the ruling clears on disconnect, and that path would
+  otherwise never be cleared at all. The "absent rather than defaulted" test was a copy of the one
+  above it and now names a location the reply left out. The rejected one wanted the write staged
+  through a temp file and `os.replace`d, against a torn write this file cannot recover from the way
+  the per-tick files do: no other handler in the client does that, and it puts a foreign name in
+  the profile folder for a failure none of the sibling writers guard against either.

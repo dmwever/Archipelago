@@ -62,9 +62,14 @@ class TestTheScoutedClassesAreWritten(LocationHandlerTestBase):
 
 
 class TestTheReplyIsTheRecordOfWhatThisSeedHas(LocationHandlerTestBase):
-    def test_a_location_this_seed_never_made_is_absent_rather_than_defaulted(self):
-        self.handler.try_sync_classification(scouted({10101: ItemClassification.progression}))
-        self.assertEqual([10101, PROGRESSION], self.classification_file())
+    def test_a_location_the_server_did_not_report_is_absent_rather_than_defaulted(self):
+        self.handler.try_sync_classification(scouted({
+            10101: ItemClassification.progression,
+            10305: ItemClassification.useful,
+        }))
+        self.assertNotIn(10102, self.classification_file()[0::2],
+                         "a location this seed never made was written with a default class, so "
+                         "the game will decorate something Archipelago does not own")
 
     def test_an_empty_reply_writes_an_empty_file(self):
         self.handler.try_sync_classification({})

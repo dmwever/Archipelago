@@ -37,6 +37,7 @@ class Age2CommandProcessor(ClientCommandProcessor):
         """
         set_user_folder(self.ctx.settings)
         if self.ctx.game_ctx != None:
+            self.ctx.game_ctx.location_handler.try_clear_classification()
             self.ctx.game_ctx.update_game_user_folder(self.ctx.settings.user_folder)
             self.ctx.sync_classification()
         self.output(f"User folder now assigned to {self.ctx.settings.user_folder}")
