@@ -16,6 +16,7 @@ from ..locations.Scenarios import Age2ScenarioData
 from .handlers.CampaignHandler import CampaignHandler
 from .handlers.InstallHandler import InstallHandler
 from .handlers.ItemHandler import ItemHandler
+from .handlers.LocationHandler import LocationHandler
 from .handlers.MercenaryHandler import MercenaryHandler
 from .handlers.MessageHandler import MessageHandler
 from .handlers.StorageHandler import SpentPush, StorageHandler
@@ -171,12 +172,12 @@ class Age2GameContext:
     message_handler: MessageHandler
     install_handler: InstallHandler
     item_handler: ItemHandler
+    location_handler: LocationHandler
     storage_handler: StorageHandler
     client_interface: APClientInterface
     missing_since: float = 0.0
     reported_install_mismatch: bool = False
     reported_packet_mismatch: str = ''
-    checked_set_armed: bool = False
 
     def __init__(self, client_interface):
         self.client_interface = client_interface
@@ -191,6 +192,7 @@ class Age2GameContext:
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler()
         self.item_handler = ItemHandler()
+        self.location_handler = LocationHandler()
 
     def connect(self, checked_locations, slot_data, user_folder, slot: int, tag: str,
                 player_name: str):
@@ -200,7 +202,7 @@ class Age2GameContext:
         self.client_status.player_name = player_name
         self.update_game_user_folder(user_folder)
         self.client_status.checked_locations = checked_locations
-        self.checked_set_armed = True
+        self.location_handler.send_locations()
         self.campaign_handler.setup_victory_requirements(slot_data)
         self.try_startup_game_connection()
         self.message_handler.add_message("Client Connected!")
@@ -223,7 +225,6 @@ class Age2GameContext:
         self.missing_since = 0.0
         self.reported_install_mismatch = False
         self.reported_packet_mismatch = ''
-        self.checked_set_armed = False
         self.current_packet = Age2Packet()
         self.client_status = ClientStatus(unlocked_items=[])
         self.campaign_handler = CampaignHandler([campaign for campaign in Age2CampaignData])
@@ -235,6 +236,7 @@ class Age2GameContext:
         self.install_handler = InstallHandler()
         self.storage_handler = StorageHandler()
         self.item_handler = ItemHandler()
+        self.location_handler = LocationHandler()
 
     def try_startup_game_connection(self) -> bool:
         if self.game_loop is None or self.game_loop.done():
@@ -255,6 +257,7 @@ class Age2GameContext:
         self.campaign_handler.set_player_name(self.client_status.player_name)
         self.install_handler.set_user_folder(user_folder)
         self.item_handler.set_user_folder(self.profile_folder())
+        self.location_handler.set_user_folder(self.profile_folder())
         self.storage_handler.set_user_folder(user_folder)
         self.storage_handler.set_tag(self.client_status.tag)
         self.storage_handler.set_player_name(self.client_status.player_name)
@@ -286,14 +289,6 @@ class Age2GameContext:
             status = PacketStatus.ACTIVE
         self.current_packet = new_pkt
         return status
-
-    def sync_checked_locations(self) -> None:
-        try:
-            with open(self.profile_folder() + "locations.xsdat", "wb") as fp:
-                for location_id in self.client_status.checked_locations:
-                    XsdatFile.write_int(fp, location_id)
-        except Exception as ex:
-            print(ex)
 
     def clear_spent_state(self) -> bool:
         cleared = self.storage_handler.try_clear()
@@ -351,11 +346,10 @@ class Age2GameContext:
             self.mercenary_handler.try_flush_from_folder()
             self.campaign_handler.try_flush_from_folder()
             self.item_handler.try_flush_from_folder()
+            self.location_handler.try_flush_from_folder()
             
             if os.path.exists(self.profile_folder() + "AP.xsdat"):
                 os.remove(self.profile_folder() + "AP.xsdat")
-            if os.path.exists(self.profile_folder() + "locations.xsdat"):
-                os.remove(self.profile_folder() + "locations.xsdat")
             if os.path.exists(self.profile_folder() + "buildings.xsdat"):
                 os.remove(self.profile_folder() + "buildings.xsdat")
             if os.path.exists(self.profile_folder() + "techs.xsdat"):
@@ -405,13 +399,9 @@ class Age2GameContext:
             return SlotData.UNSET, SlotData.UNSET
         return SlotData.seed_halves(tag)
 
-    def confirm_checked_set(self, read_count: int) -> None:
-        if read_count != len(self.client_status.checked_locations or ()):
-            self.checked_set_armed = True
-
     def ping_game(self) -> None:
-        send_checked_set = (self.checked_set_armed
-                            or len(self.current_packet.location_ids) != 0)
+        send_locations = self.location_handler.are_locations_sending(
+            self.current_packet.location_ids)
         try:
             with open(self.profile_folder() + "AP.xsdat", "wb") as fp:
                 XsdatFile.write_int(fp, self.current_packet.scenario_id)
@@ -423,13 +413,13 @@ class Age2GameContext:
                 XsdatFile.write_int(fp, high)
                 XsdatFile.write_int(fp, low)
                 XsdatFile.write_bool(fp, self.item_handler.in_flight()) # Send Items
-                XsdatFile.write_bool(fp, send_checked_set) # Free Locations
+                XsdatFile.write_bool(fp, send_locations) # Free Locations
                 XsdatFile.write_bool(fp, self.mercenary_handler.queue_serial()
                                      != self.current_packet.acked_queue_serial) # Send Mercenaries
                 XsdatFile.write_bool(fp, self.message_handler.is_message_sending()) # Send Messages
                 XsdatFile.write_bool(fp, self.campaign_handler.active_file.current_scenario.completed)
                 XsdatFile.write_int(fp, self.mercenary_handler.ack()) # Ack mercenary
-            self.checked_set_armed = False
+            self.location_handler.mark_locations_sent()
         except Exception as ex:
             print(ex)
 
@@ -453,7 +443,7 @@ async def status_loop(ctx: Age2GameContext):
 async def status_tick(ctx: Age2GameContext) -> None:
     # Sync files that are scenario-agnostic before connection.
     ctx.campaign_handler.sync_unlocked(ctx.client_status.unlocked_items)
-    ctx.sync_checked_locations()
+    ctx.location_handler.try_sync_checked_locations(ctx.client_status.checked_locations)
     ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
     ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
     ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
@@ -551,7 +541,7 @@ async def status_tick(ctx: Age2GameContext) -> None:
         pass
     
     ctx.sync_delivery(packet.applied_item_count)
-    ctx.confirm_checked_set(packet.checked_locations_count)
+    ctx.location_handler.confirm_checked_locations(packet.checked_locations_count)
 
     if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
         ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)

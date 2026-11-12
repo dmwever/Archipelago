@@ -24,8 +24,23 @@ game reads the file yet.
 - [ ] The same seed and location id yield the same trap class across repeated calls and across
       fresh handler instances; no random source is reached for anywhere
 - [ ] The handler is handed its folder the way the other startup handlers are, and its file is
-      cleared alongside theirs when the client flushes or disconnects
+      cleared alongside theirs when the client flushes or disconnects. **Needs a ruling first:**
+      `flush_files` also runs mid-session, on following a live scenario and on a scenario switch,
+      and a file written once at connect has nothing to rewrite it afterwards. See the comment
+      below
 - [ ] The classification channel is written once at connect and never from the per-tick path. It
       shares `LocationHandler` with the checked-locations writer but not its cadence or its file;
       see the amended ruling in 09
 - [ ] The pre-commit subset for the files touched passes
+
+## Comments
+
+- 2026-11-12: Raised while building 09. `Age2GameContext.flush_files` is not disconnect-only:
+  `status_tick` calls it when it starts following a live scenario and again when the game switches
+  scenario. `locations.xsdat` survives that only because the top of the next tick rewrites it. A
+  classification file written once at connect has nothing to rewrite it, so clearing it on every
+  flush would strip the colour off every unchecked status line from the first scenario switch until
+  the player reconnects -- the later-scenario case stories 4 and 28 are about. Either the flush
+  leaves the file alone, since it carries no per-scenario state, or the handler keeps the scout
+  reply and rewrites the file after each flush. 09 clears only `locations.xsdat` and names no
+  classification file, so the choice is open.

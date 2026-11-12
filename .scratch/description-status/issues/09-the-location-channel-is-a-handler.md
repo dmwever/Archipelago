@@ -15,7 +15,7 @@ The two channels keep different cadences and different files:
 
 **Blocked by:** None. Ticket 02 builds its classification writer on this.
 
-**Status:** ready-for-agent
+**Status:** done (classification channel carried by #02)
 
 ## What moves
 
@@ -36,24 +36,26 @@ complete example and the model for the test.
 
 ## Acceptance
 
-- [ ] `LocationHandler` subclasses `FolderHandler`, and is constructed, rebuilt on disconnect and
+- [x] `LocationHandler` subclasses `FolderHandler`, and is constructed, rebuilt on disconnect and
       handed its profile folder alongside the other handlers
-- [ ] `locations.xsdat` is written by the handler and `Age2GameContext` no longer opens it
-- [ ] The armed flag and the `CheckedLocationsCount` ack live on the handler, and the ping still
+- [x] `locations.xsdat` is written by the handler and `Age2GameContext` no longer opens it
+- [x] The armed flag and the `CheckedLocationsCount` ack live on the handler, and the ping still
       asks for the read on exactly the occasions ticket 01 established
-- [ ] `test_checked_set_read.py` still passes, updated in step with the move where it reaches into
+- [x] `test_checked_set_read.py` still passes, updated in step with the move where it reaches into
       the context directly
 - [ ] The classification channel is a second method on the same handler, written once at connect
-      and never from the per-tick path
-- [ ] A flush clears both files, the way the other handlers' files are cleared
-- [ ] Tested the way `UnitHandler` is: construct it, point it at a temporary folder, hand it a
+      and never from the per-tick path. Carried by 02, whose first three acceptance lines are the
+      method itself; this ticket is the blocker for them and ships the class it lives on
+- [ ] A flush clears both files, the way the other handlers' files are cleared. Carried by 02 and
+      wants a ruling first: see the 2026-11-12 comment below. 09 clears only `locations.xsdat`
+- [x] Tested the way `UnitHandler` is: construct it, point it at a temporary folder, hand it a
       checked set, read the file back as little-endian ints
 - [x] Ticket 02's sixth acceptance line and the spec's "not folded into the per-tick
       checked-locations writer" paragraph are rewritten to the amended ruling below. Done during
       triage, 2026-11-11: 02's intro, Blocked by and sixth line now name this handler, and the
       spec's seam list, classification paragraph, handler test section and trap-derivation note
       point here
-- [ ] The pre-commit subset for the files touched passes
+- [x] The pre-commit subset for the files touched passes
 
 ## Rulings
 
@@ -67,3 +69,20 @@ complete example and the model for the test.
 
 - 2026-11-11: Raised in triage as "make LocationHelper to handle what locations/scouts/etc. we need
   to send to the game, mirroring the other helper classes".
+- 2026-11-12: Moved. `LocationHandler` holds the writer, the armed flag and the ack; the ack now
+  compares `CheckedLocationsCount` against the count the handler last wrote rather than against
+  `ClientStatus.checked_locations`, which is the same number on every path `status_tick` takes and
+  is honest when a write fails. `Age2GameContext` keeps no delegating wrapper: `status_tick` calls
+  the handler the way it calls the unit and tech handlers, and `ping_game` asks it.
+- 2026-11-12: The classification writer is left to 02, which owns the scout, the trap derivation and
+  the file's layout. 09 ships the class it lives on.
+- 2026-11-12: **A flush cannot clear a scout-once file, and this ticket's sixth acceptance line says
+  it should.** `flush_files` is not disconnect-only: `status_tick` calls it when it starts following a
+  live scenario and again when the game switches scenario. `locations.xsdat` survives that because the
+  top of the next tick rewrites it. A classification file written once at connect has nothing to
+  rewrite it, so the first scenario switch would strip the colour off every unchecked status line for
+  the rest of the session -- the later-scenario case stories 4 and 28 are about. 09 therefore clears
+  only its own file and names no classification file at all, so 02 is free to settle the cadence.
+  The choices are a flush that leaves the file alone, or a cached scout reply the handler rewrites
+  from after each flush. 02's fifth acceptance line ("cleared alongside theirs when the client
+  flushes or disconnects") carries the same assumption and is flagged there.

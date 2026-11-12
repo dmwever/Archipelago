@@ -24,7 +24,7 @@ linter rather than by tests.
 | 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | ready-for-agent |
 | 07 | [The Villager shows the profession row](issues/07-the-villager-shows-the-profession-row.md) | ready-for-agent |
 | 08 | [A checked location's trigger clears itself](issues/08-checked-triggers-clear-themselves.md) | ready-for-agent |
-| 09 | [The client's location channel is a handler](issues/09-the-location-channel-is-a-handler.md) | ready-for-agent |
+| 09 | [The client's location channel is a handler](issues/09-the-location-channel-is-a-handler.md) | done (classification channel carried by #02) |
 
 ## Rulings
 
