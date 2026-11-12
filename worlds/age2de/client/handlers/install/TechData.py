@@ -7,6 +7,7 @@ from ....locations.Ages import Age2AgeData
 from ....locations.Civilizations import Age2CivData
 from ....locations.Techs import Age2TechData
 from ....locations.connections.CivilizationTechs import CIV_TO_TECHS
+from ....locations.connections.GameStrings import NO_TOOLTIP, extended_tooltip_id
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,10 @@ class Row:
     def item_id(self) -> int:
         """The id XS unlocks against, which is an item id, not this location's."""
         return self.tech.item.id if self.is_location else TechData.NO_ITEM
+
+    @property
+    def tooltip_id(self) -> int:
+        return extended_tooltip_id(self.tech) if self.is_location else NO_TOOLTIP
 
 
 class TechData:
@@ -84,7 +89,7 @@ class TechData:
             lines.append(
                 f"    addTech({row.item_id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
                 f"{int(tech.is_upgrade)}, {int(tech.is_unique)}, {row.tech.age.value}, "
-                f"{int(row.is_location)}, {row.tech.prerequisiteId});")
+                f"{int(row.is_location)}, {row.tech.prerequisiteId}, {row.tooltip_id});")
         if len(lines) == body:
             lines.append("    return;")
         lines.append("}")

@@ -7,6 +7,11 @@ from ..locations.Ages import Age2AgeData
 from ..locations.Civilizations import Age2CivData
 from ..locations.Techs import Age2TechData, TechOption
 from ..locations.connections.CivilizationTechs import CIV_TO_TECHS
+from ..locations.connections.GameStrings import (
+    EXTENDED_TOOLTIP_OFFSET,
+    NO_TOOLTIP,
+    TECH_NAME_STRINGS,
+)
 
 # Genie civilization ids, the space Tech.civ is in.
 HUNS = Age2CivData.HUNS.game_id
@@ -94,6 +99,25 @@ class TestRowSelection(unittest.TestCase):
                          sorted(row.item_id for row in table))
 
 
+class TestTheTooltipId(unittest.TestCase):
+    def test_a_location_row_carries_the_extended_tooltip_the_dat_names(self):
+        rows = TechData([Age2TechData.LOOM], civs=SEED_CIVS).rows()
+        self.assertEqual([row.tooltip_id for row in rows], [28022])
+
+    def test_a_grant_only_row_carries_no_tooltip(self):
+        rows = TechData((), grant_age=Age2AgeData.CASTLE, civs=SEED_CIVS).rows()
+        self.assertTrue(rows)
+        self.assertEqual({row.tooltip_id for row in rows}, {NO_TOOLTIP})
+
+    def test_every_location_row_agrees_with_the_source_module(self):
+        rows = TechData(RESEARCHABLE, civs=SEED_CIVS).rows()
+        self.assertTrue(rows)
+        for row in rows:
+            self.assertEqual(row.tooltip_id,
+                             TECH_NAME_STRINGS[row.tech] + EXTENDED_TOOLTIP_OFFSET,
+                             row.tech.name)
+
+
 class TestRender(unittest.TestCase):
     def test_an_empty_table_still_has_a_body(self):
         # The game's parser rejects an empty body, though xs-check takes it.
@@ -105,7 +129,7 @@ class TestRender(unittest.TestCase):
         tech: Tech = tarkan.item.type
         self.assertIn(
             f"    addTech({tarkan.item.id}, {tech.game_id}, {tech.effect_id}, {tech.civ}, "
-            f"1, 1, {tarkan.age.value}, 1, {tarkan.prerequisiteId});", rendered)
+            f"1, 1, {tarkan.age.value}, 1, {tarkan.prerequisiteId}, 28418);", rendered)
 
     def test_a_grant_only_row_has_no_item_and_is_not_a_location(self):
         data = TechData((), grant_age=Age2AgeData.FEUDAL, civs=[Age2CivData.FRANKS])
@@ -116,7 +140,7 @@ class TestRender(unittest.TestCase):
             self.assertTrue(line.startswith("    addTech(-1, "), line)
             # isLocation is the eighth of eleven arguments, the requirements last
             fields = line.strip().removeprefix("addTech(").removesuffix(");").split(", ")
-            self.assertEqual(len(fields), 9, line)
+            self.assertEqual(len(fields), 10, line)
             self.assertEqual(fields[7], "0", line)
 
     def test_booleans_render_as_xs_ints(self):
@@ -232,14 +256,15 @@ class TestRequirements(unittest.TestCase):
         self.assertIsNone(loom.prerequisite)
         rendered = TechData([loom], civs=SEED_CIVS).render()
         row = [l for l in rendered.splitlines() if "addTech(" in l][0]
-        self.assertTrue(row.rstrip().endswith(f"{TechData.NO_PREREQUISITE});"), row)
+        self.assertTrue(row.rstrip().endswith(
+            f"{TechData.NO_PREREQUISITE}, 28022);"), row)
 
     def test_a_prerequisite_renders_as_its_game_id(self):
         swords = Age2TechData.LONG_SWORDSMAN
         self.assertIs(swords.prerequisite, Age2TechData.MAN_AT_ARMS)
         rendered = TechData([swords], civs=SEED_CIVS).render()
         row = [l for l in rendered.splitlines() if "addTech(" in l][0]
-        self.assertTrue(row.rstrip().endswith(f"{swords.prerequisiteId});"), row)
+        self.assertTrue(row.rstrip().endswith(f"{swords.prerequisiteId}, 28204);"), row)
 
     def test_every_prerequisite_names_a_real_tech(self):
         for tech in Age2TechData:

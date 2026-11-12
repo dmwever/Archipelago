@@ -22,7 +22,7 @@ Leave your work in the working tree for the maintainer to commit. These two rule
 
 ### Agent tools
 
-`worlds/age2de/tools/` holds `red_check.py` (prove a new test fails at HEAD), `route_catalog.py` (regenerate the pinned economy route list) and `recapture_easy_sources.py`. Each explains itself in its module docstring. The fill gate is defined in `worlds/age2de/fuzz/bench/README.md`.
+`worlds/age2de/tools/` holds `red_check.py` (prove a new test fails at HEAD), `route_catalog.py` (regenerate the pinned economy route list), `recapture_easy_sources.py` and `recapture_string_ids.py` (rebake the dat string ids from the game dat). Each explains itself in its module docstring. The fill gate is defined in `worlds/age2de/fuzz/bench/README.md`.
 
 ### Scenario files
 

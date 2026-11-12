@@ -18,7 +18,7 @@ linter rather than by tests.
 | --- | --- | --- |
 | 01 | [The checked set is read when a scenario starts](issues/01-arm-the-checked-set-read.md) | done |
 | 02 | [Classification reaches the game](issues/02-classification-reaches-the-game.md) | done |
-| 03 | [The install bakes the extended tooltip id](issues/03-bake-the-extended-tooltip-id.md) | ready-for-agent |
+| 03 | [The install bakes the extended tooltip id](issues/03-bake-the-extended-tooltip-id.md) | done |
 | 04 | [A technology's description says where it stands](issues/04-technologies-carry-a-status-line.md) | ready-for-agent |
 | 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | ready-for-agent |
 | 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | ready-for-agent |

@@ -14,6 +14,7 @@ from ....locations.UnitLines import Age2UnitLineData
 from ....locations.Units import Age2UnitData
 from ....locations.VillagerJobs import Age2VillagerJobData
 from ....locations.connections.CivilizationUnits import CIV_TO_UNITS
+from ....locations.connections.GameStrings import extended_tooltip_id
 from ....locations.connections.ScenarioCavemanExemptions import SCENARIO_TO_CAVEMAN_EXEMPTIONS
 from ....locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
@@ -34,6 +35,10 @@ class Row:
     untrainable_civs: tuple[int, ...]
     items: tuple[int, ...]
     variants: tuple[int, ...]
+
+    @property
+    def tooltip_id(self) -> int:
+        return extended_tooltip_id(self.unit)
 
 
 class UnitData:
@@ -189,7 +194,7 @@ class UnitData:
             lines.append(
                 f"    addUnit({row.location_id}, {row.unit.game_id}, {row.line_id}, "
                 f"{row.age}, {row.tier}, {row.upgrade_item_id}, "
-                f"{int(row.caveman_exempt)});")
+                f"{int(row.caveman_exempt)}, {row.tooltip_id});")
             for civ_id in row.untrainable_civs:
                 lines.append(f"    addUnitUntrainable({row.unit.game_id}, {civ_id});")
             for item_id in row.items:

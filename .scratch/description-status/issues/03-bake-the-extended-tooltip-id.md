@@ -12,17 +12,46 @@ thirty-five-building table carries one per building. Nothing reads the ids yet.
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A source module holds the ids and names its provenance; a tool beside the other maintainer
+- [x] A source module holds the ids and names its provenance; a tool beside the other maintainer
       tools regenerates it from the game dat and says how to run it the way they do
-- [ ] Every decorated technology row and unit row carries the extended tooltip id, and a row the
+- [x] Every decorated technology row and unit row carries the extended tooltip id, and a row the
       seed does not install carries none
-- [ ] The ids the rows carry agree with the source module rather than being invented or computed
+- [x] The ids the rows carry agree with the source module rather than being invented or computed
       from a runtime value
-- [ ] The building table carries one id per building, from the same source
-- [ ] The table loaders in the game accept the extra field, and the xs lints from the xs folder
+- [x] The building table carries one id per building, from the same source
+- [x] The table loaders in the game accept the extra field, and the xs lints from the xs folder
       against the entry point
-- [ ] Covered as the technology and unit catalogues already are: build the table, assert on the rows
-- [ ] The pre-commit subset for the files touched passes, plus the technology and unit catalogue
+- [x] Covered as the technology and unit catalogues already are: build the table, assert on the rows
+- [x] The pre-commit subset for the files touched passes, plus the technology and unit catalogue
       tests
+
+## Comments
+
+- 2026-11-12: Built. `locations/connections/GameStrings.py` holds the name string id for every
+  technology, unit, villager job, hero, escort and building, keyed by the `Age2*` member, stamped
+  `GAME_STRING_SOURCE = "empires2_x2_p1.dat, read 2026-11-12 through aoe2kit"`, and asserts at
+  import that no catalogue member is missing one. `tools/recapture_string_ids.py` regenerates the
+  whole file from the dat through `kit dat units` and `kit dat tech`; the run takes about nine
+  minutes because every technology costs a full dat parse. `EXTENDED_TOOLTIP_OFFSET` is 21000.
+- 2026-11-12: Fifteen make-available technologies carry `language_dll_name` 0 and only an extended
+  help id, so the tool falls back to the help id less 100000. Checked afterwards against the game's
+  own `key-value-strings-utf8.txt`: all 298 technology ids and all 35 building ids resolve both as a
+  name and, plus the offset, as an extended tooltip, so nothing in the table is invented. The 28
+  units with no English name string are Chronicles-era; the jobs, heroes and escorts have no create
+  tooltip, which is the game's own shape rather than a gap here.
+- 2026-11-12: The offset is pinned by test in all three bands the dat uses, each literal read out
+  of the strings file rather than recomputed: vanilla 5xxx/7xxx (Loom 28022, Archer 26083, House
+  26344), antiquity 405xxx (Hoplite 426007) and late-DLC 507xxx (Ordonnance Companies 528025).
+- 2026-11-12: "A row the seed does not install carries none" is the technology grant-only row,
+  which gets `NO_TOOLTIP`. Every unit row is a location, so the unit side has nothing to withhold.
+- 2026-11-12: The building table is the one hand-kept mirror. All 35 literals in `Buildsanity.xs`
+  were checked against `BUILDING_NAME_STRINGS` programmatically and agree, but per the no-cross-repo
+  tests rule nothing guards them; the XS half is covered by the linter, which is clean against
+  `AP_Attila_1.xs`, `AP_Joan_1.xs` and `AP_Genghis_1.xs` (only the pre-existing `DiscardedFn` and
+  `FirstOprArith` warnings remain). `addTech`, `addUnit` and `createLocationLock` all gained a
+  defaulted `tooltipId`, and the `mutable` stubs in `AP_Headers.xs` were moved with them — a stub
+  left behind is a `NameError` from the linter, not a silent miss.
+- 2026-11-12: Ages carry no entry. They are not rows in either generator and the ticket names only
+  technologies, units and buildings; #05 adds them when it knows what the age writer needs.

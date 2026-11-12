@@ -10,6 +10,10 @@ from ..locations.UnitLines import Age2UnitLineData
 from ..locations.Units import Age2UnitData
 from ..locations.VillagerJobs import Age2VillagerJobData
 from ..locations.connections.CivilizationUnits import CIV_TO_UNITS
+from ..locations.connections.GameStrings import (
+    EXTENDED_TOOLTIP_OFFSET,
+    NAME_STRINGS_BY_KIND,
+)
 
 TAG = "a1b2c3d4"
 FRANKS = (Age2CivData.FRANKS,)
@@ -235,3 +239,29 @@ class TestRender(unittest.TestCase):
     def test_every_row_is_one_addUnit_call(self):
         data = table([Age2UnitLineData.MILITIA_LINE, Age2UnitLineData.KNIGHT_LINE])
         self.assertEqual(data.render().count("    addUnit("), len(data.rows()))
+
+
+class TestTheTooltipId(unittest.TestCase):
+    def test_a_unit_row_carries_the_extended_tooltip_the_dat_names(self):
+        rows = table([Age2UnitData.MILITIA]).rows()
+        self.assertEqual([row.tooltip_id for row in rows], [26079])
+
+    def test_a_villager_job_row_carries_one_too(self):
+        rows = table([Age2VillagerJobData.FISHERMAN_MALE]).rows()
+        self.assertEqual([row.tooltip_id for row in rows], [26499])
+
+    def test_every_row_agrees_with_the_source_module(self):
+        rows = table([Age2UnitLineData.MILITIA_LINE, Age2UnitLineData.KNIGHT_LINE,
+                      Age2HeroData.JOAN_OF_ARC, Age2EscortUnitData.CART]).rows()
+        self.assertTrue(rows)
+        for row in rows:
+            names = NAME_STRINGS_BY_KIND[type(row.unit)]
+            self.assertEqual(row.tooltip_id, names[row.unit] + EXTENDED_TOOLTIP_OFFSET,
+                             row.unit.name)
+
+    def test_the_rendered_row_ends_with_the_tooltip_id(self):
+        militia = Age2UnitData.MILITIA
+        rendered = table([militia]).render()
+        self.assertIn(f"    addUnit({militia.id}, {militia.game_id}, {militia.line.id}, "
+                      f"{militia.age.value}, {militia.tier}, {UnitData.NO_UPGRADE_ITEM}, "
+                      f"0, 26079);", rendered)
