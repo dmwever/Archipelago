@@ -150,7 +150,7 @@ class TestTheClientWaitsForTheGameToListen(CheckedSetReadTestBase):
 
 
 class TestANewScenarioAsksAgain(CheckedSetReadTestBase):
-    def test_entering_the_next_scenario_reads_the_checked_set_without_a_reconnect(self) -> None:
+    def test_entering_the_next_scenario_reads_the_checked_locations_without_a_reconnect(self) -> None:
         self.connect()
         self.settle()
 
