@@ -21,10 +21,11 @@ linter rather than by tests.
 | 03 | [The install bakes the extended tooltip id](issues/03-bake-the-extended-tooltip-id.md) | done |
 | 04 | [A technology's description says where it stands](issues/04-technologies-carry-a-status-line.md) | done |
 | 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | done |
-| 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | ready-for-agent |
+| 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | done |
 | 07 | [The Villager shows the profession row](issues/07-the-villager-shows-the-profession-row.md) | ready-for-agent |
 | 08 | [A checked location's trigger clears itself](issues/08-checked-triggers-clear-themselves.md) | ready-for-agent |
 | 09 | [The client's location channel is a handler](issues/09-the-location-channel-is-a-handler.md) | done (classification channel carried by #02) |
+| 10 | [The Ratha's status line sits above queue-button text](issues/10-ratha-tooltip-id-collides.md) | needs-triage |
 
 ## Rulings
 
@@ -89,3 +90,8 @@ linter rather than by tests.
   so 05 needs 28101 / 28102 / 28103, and the age-up techs are not `Age2TechData` members. The three
   dat tech ids live in the maintainer tool, not on `Age2AgeData`: nothing on the apworld side reads
   a genie tech id. How they reach the game is 05's to choose; there is no age table in XS yet.
+- 2026-11-13: The age advance re-apply gets no rule of its own. `ShuffleAgesUpdate` is renamed
+  `AgesUpdate` and armed in every seed instead of only under `shuffle_ages`, and the sweep hangs off
+  the reached-age count it already keeps; any advance re-applies every line and nothing tracks which
+  ages have been decorated. Unshuffled seeds previously ran no age watcher at all while the engine
+  still cleared their descriptions. Settled on 06.
