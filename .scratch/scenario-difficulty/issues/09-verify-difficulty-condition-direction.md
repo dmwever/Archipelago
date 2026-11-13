@@ -22,6 +22,10 @@ Two more engine behaviours from the same audit, checked in the same scenario:
   `selected_object_ids` point at a unit another player owns, does the effect still apply? Attila 1
   (Change Object HP on Attila, Remove Object on a Watch Tower), Attila 2 (Remove Object on two
   Mangonels) and Genghis 2 (Remove Object on five units) depend on this.
+- **Research Technology on a withheld tech.** Does a trigger's Research Technology effect
+  research a tech the mod withholds until its AP item arrives (Loom, Murder Holes under
+  techsanity), and does it tick the matching *Research X* location? Logic assumes the item is still
+  needed ([Does the scenario difficulty touch logic or locations?](06-difficulty-logic-impact.md)).
 
 HITL: the agent builds a throwaway test scenario through `aoe2-modding` containing:
 - one trigger per `quantity` 4…-1, plain and inverted, each showing a chat message;

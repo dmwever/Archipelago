@@ -80,7 +80,7 @@ removals. Separator triggers ("--- Difficulties ---") carry no logic.
 | Genghis 5 | EASY MODE (24) | 201 | P3 `Mongols-scn5 player 3.ai` | `difficulty == normal` | P3 class-13 area removal | enemy |
 | Genghis 5 | HARD MODE (25) | 202 | P3 | `difficulty == hard` | activate 26, 27 (P? Imperial extra techs); P4 Crossbowman | enemy |
 
-## Map content P1 interacts with (feeds *Does the tier touch logic or locations?*)
+## Map content P1 interacts with (feeds *Does the scenario difficulty touch logic or locations?*)
 
 - **Genghis 1, hard:** the GAIA relic at (148,97) is removed. AP trigger 72 "AP Wolf Relic" checks
   a relic-carrying monk (286) in (146,96)–(148,98), the location *Pick Up the Relic Surrounded by
