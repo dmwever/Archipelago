@@ -1,6 +1,7 @@
 """Recapture locations/connections/GameStrings.py from the game's own dat.
 
-    python -m worlds.age2de.tools.recapture_string_ids        # from the repository root
+    python -m worlds.age2de.tools.recapture_string_ids           # from the repository root
+    python -m worlds.age2de.tools.recapture_string_ids --verify  # no dat, no aoe2kit, seconds
 
 Reading an object's vanilla description in game needs the extended tooltip string id, which is
 the dat's name string id plus a fixed offset. The runtime attribute that looks like that id is
@@ -14,6 +15,23 @@ the dat no longer carries, which is a bug in the catalogue rather than in the du
     --dat PATH    the empires dat to read; defaults to the Steam install
     --kit PATH    the aoe2kit binary; defaults to AOE2KIT, then `kit` on PATH
     --jobs N      how many dat reads to run at once
+
+`--verify` reads nothing but the baked table and the game's own `key-value-strings-utf8.txt`, and
+answers the one question the baked ids cannot answer themselves: does the extended tooltip each id
+derives actually belong to that object? Three verdicts. `ok` means the tooltip exists and names the
+object, so XS can write it. `absent` means the game ships no tooltip there, which is the honest shape
+for anything with no train button -- villager jobs, heroes and escorts are mostly absent and that is
+not a fault. `mismatch` is the one that bites: the id resolves to a real string belonging to another
+object, so writing it puts the wrong text under the status line. The Herder is the standing example,
+its name string being 5897 "Herder" while 26897 is the Chief's Yurt build tooltip. A presence check
+cannot see those, which is why this reads the name back out of the tooltip: a row passes when the
+object's own name, stripped of any parenthetical, turns up in the tooltip's bolded term.
+
+Two technologies answer `mismatch` and are fine: `WARSHIPS` and `HEAVY_WARSHIPS` upgrade three ships
+apiece, so their tooltips bold the three results rather than the technology. Any other mismatch is
+worth reading.
+
+    --strings PATH   the key-value strings file; defaults to the Steam install's English one
 
 Every technology costs its own `kit dat tech` call and each one parses the whole dat, so the run
 takes a few minutes even spread across cores. The objects come from one `kit dat units` call.
@@ -37,6 +55,7 @@ import dataclasses
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -56,6 +75,20 @@ MODULE = (pathlib.Path(__file__).resolve().parents[1] / "locations" / "connectio
 STEAM_DAT = pathlib.Path(
     "C:/Program Files (x86)/Steam/steamapps/common/AoE2DE/resources/_common/dat"
     "/empires2_x2_p1.dat")
+
+STEAM_STRINGS = pathlib.Path(
+    "C:/Program Files (x86)/Steam/steamapps/common/AoE2DE/resources/en/strings/key-value"
+    "/key-value-strings-utf8.txt")
+
+STRING_LINE = re.compile(r'(\d+)\s+"(.*?)"\s*$')
+
+PARENTHETICAL = re.compile(r"\s*\(.*?\)")
+
+BOLD = re.compile(r"<b>(.*?)<b>")
+
+VERDICT_OK = "ok"
+VERDICT_ABSENT = "absent"
+VERDICT_MISMATCH = "mismatch"
 
 READ_CIV = 1
 
@@ -213,12 +246,81 @@ def recapture(kit: str, dat: pathlib.Path, jobs: int) -> dict:
     return {"path": MODULE, "techs": len(techs), "objects": len(objects), "dat": dat}
 
 
+def strings_path(given: str | None) -> pathlib.Path:
+    path = pathlib.Path(given) if given else STEAM_STRINGS
+    if not path.is_file():
+        raise SystemExit(f"no strings file at {path}; pass --strings")
+    return path
+
+
+def read_strings(path: pathlib.Path) -> dict[int, str]:
+    found: dict[int, str] = {}
+    with path.open(encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            match = STRING_LINE.match(line)
+            if match:
+                found[int(match.group(1))] = match.group(2)
+    return found
+
+
+def names_match(name: str, tooltip: str) -> bool:
+    bare = PARENTHETICAL.sub("", name).casefold().strip()
+    if not bare:
+        return False
+    bolded = [found.casefold() for found in BOLD.findall(tooltip)]
+    return any(bare in target or target in bare for target in bolded or [tooltip.casefold()])
+
+
+def verdict_for(name_id: int, strings: dict[int, str]) -> str:
+    tooltip = strings.get(name_id + EXTENDED_TOOLTIP_OFFSET)
+    if tooltip is None:
+        return VERDICT_ABSENT
+    name = strings.get(name_id)
+    if not name or not names_match(name, tooltip):
+        return VERDICT_MISMATCH
+    return VERDICT_OK
+
+
+def verify(strings: dict[int, str]) -> int:
+    from worlds.age2de.locations.connections.GameStrings import NAME_STRINGS_BY_KIND
+
+    mismatched: list[tuple[str, int, str]] = []
+    print(f"{'kind':28} {'ok':>5} {'absent':>7} {'mismatch':>9}")
+    for kind in KINDS:
+        baked = NAME_STRINGS_BY_KIND[type(kind.places[0])]
+        tally = {VERDICT_OK: 0, VERDICT_ABSENT: 0, VERDICT_MISMATCH: 0}
+        for place in kind.places:
+            name_id = baked[place]
+            verdict = verdict_for(name_id, strings)
+            tally[verdict] += 1
+            if verdict == VERDICT_MISMATCH:
+                mismatched.append((place.name, name_id,
+                                   strings[name_id + EXTENDED_TOOLTIP_OFFSET]))
+        print(f"{kind.variable:28} {tally[VERDICT_OK]:>5} {tally[VERDICT_ABSENT]:>7} "
+              f"{tally[VERDICT_MISMATCH]:>9}")
+
+    if not mismatched:
+        print("\nno mismatched tooltips")
+        return 0
+    print(f"\n{len(mismatched)} tooltip ids resolve to another object's text:")
+    for name, name_id, tooltip in mismatched:
+        print(f"  {name:30} {name_id:>6} -> {name_id + EXTENDED_TOOLTIP_OFFSET:<6} "
+              f"{tooltip[:48]!r}")
+    return 1
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="recapture_string_ids")
     parser.add_argument("--dat")
     parser.add_argument("--kit")
     parser.add_argument("--jobs", type=int, default=os.cpu_count() or 4)
+    parser.add_argument("--strings")
+    parser.add_argument("--verify", action="store_true")
     args = parser.parse_args(argv)
+    if args.verify:
+        path = strings_path(args.strings)
+        print(f"read {path}")
+        return verify(read_strings(path))
     written = recapture(kit_path(args.kit), dat_path(args.dat), args.jobs)
     print(f"wrote {written['path']}")
     print(f"read {written['dat']}")
