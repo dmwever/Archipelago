@@ -40,10 +40,17 @@ and the install-time injection, ready to slice into implementation tickets.
   Level triggers plus 8 fired by AI difficulty signals; Genghis 1 hard removes the Wolf Relic
   location's relic, easy gives P1 free techs (Loom, Murder Holes) and Attila 6 buildings;
   condition direction (level N or easier) inferred, not verified.
+- [Does the scenario difficulty touch logic or locations?](issues/06-difficulty-logic-impact.md): yes, narrowly. P1
+  grants and the Genghis 1 relic removal are kept; logic sees the difficulty only via starting-state
+  grants and difficulty-dependent locations (Wolf Relic absent on hard/legendary, like branching),
+  both tabled in new `connections/ScenarioDifficulty.py`.
 
 ## Not yet specified
 
 - **Playtesting a tier.** How a tier gets verified in game (which scenarios, what counts as
   "harder"), and whether any automated check covers the built scripts.
+- **Option interactions.** Which yaml options (techsanity, building shuffle, branching, …) change
+  behaviour or logic under a given scenario difficulty; unknown until the trigger and AI tickets
+  settle.
 
 ## Out of scope

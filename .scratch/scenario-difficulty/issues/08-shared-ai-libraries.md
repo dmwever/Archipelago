@@ -1,7 +1,7 @@
 # Shared AI libraries and difficulty symbols
 
 Type: task
-Status: open
+Status: claimed
 Blocked by:
 
 ## Question
