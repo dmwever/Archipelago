@@ -19,7 +19,7 @@ linter rather than by tests.
 | 01 | [The checked set is read when a scenario starts](issues/01-arm-the-checked-set-read.md) | done |
 | 02 | [Classification reaches the game](issues/02-classification-reaches-the-game.md) | done |
 | 03 | [The install bakes the extended tooltip id](issues/03-bake-the-extended-tooltip-id.md) | done |
-| 04 | [A technology's description says where it stands](issues/04-technologies-carry-a-status-line.md) | ready-for-agent |
+| 04 | [A technology's description says where it stands](issues/04-technologies-carry-a-status-line.md) | done |
 | 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | ready-for-agent |
 | 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | ready-for-agent |
 | 07 | [The Villager shows the profession row](issues/07-the-villager-shows-the-profession-row.md) | ready-for-agent |
@@ -62,6 +62,19 @@ linter rather than by tests.
   was removed, and `GameCosts.py`'s `GAME_DATA_SOURCE` went with it, along with the test that
   asserted it was non-empty. The regenerating tool's docstring says where the data comes from and
   git history says when it was read. 03's first acceptance line was amended to drop the clause.
+- 2026-11-12: Filler is `<AQUA>`, not `<CYAN>`. The engine's colour tags are hard-coded and there is
+  no cyan among them; `<AQUA>` is it. Settled on 04, and it binds 05 and 07 too.
+- 2026-11-12: Icons are inlined by the material name in `AoE2DE/widgetui/materials.json`, which is a
+  different namespace from the `StaticResource` keys in `wpfg/*.xaml`. The checked and unchecked
+  marks are `<CheckBoxChecked>` and `<CheckBoxUnchecked>`. Settled on 04; 07's greyscale job icons
+  need names from the same registry.
+- 2026-11-13: Classification rides on the `Location` struct as a `classification` field, read exactly
+  once by `ConnectAP` and never retried. A tech decorated before the reply lands can lose its line
+  again, which is what the `hasStatusLine` flag on `Tech` is for. Settled on 04 and inherited by 05.
+- 2026-11-13: The status-line seam is `mutable void RefreshLocationDescription(vector location)` in
+  `AP_Headers.xs`, defined in `AP.xs` beside `AP_Check_Location`, which is the same shape of
+  location-level entry point. Everything passes the `Location` vector, never an id, so no caller and
+  callee look the ledger up twice. 05 adds units and buildings to that one body.
 - 2026-11-12: Ages are baked in 03 alongside technologies, units and buildings, as
   `AGE_NAME_STRINGS` over `SHUFFLED_AGES`. An age advance's description is the age-up technology's,
   so 05 needs 28101 / 28102 / 28103, and the age-up techs are not `Age2TechData` members. The three
