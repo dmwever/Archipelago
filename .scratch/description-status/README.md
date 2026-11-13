@@ -20,7 +20,7 @@ linter rather than by tests.
 | 02 | [Classification reaches the game](issues/02-classification-reaches-the-game.md) | done |
 | 03 | [The install bakes the extended tooltip id](issues/03-bake-the-extended-tooltip-id.md) | done |
 | 04 | [A technology's description says where it stands](issues/04-technologies-carry-a-status-line.md) | done |
-| 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | ready-for-agent |
+| 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | done |
 | 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | ready-for-agent |
 | 07 | [The Villager shows the profession row](issues/07-the-villager-shows-the-profession-row.md) | ready-for-agent |
 | 08 | [A checked location's trigger clears itself](issues/08-checked-triggers-clear-themselves.md) | ready-for-agent |
@@ -75,6 +75,15 @@ linter rather than by tests.
   `AP_Headers.xs`, defined in `AP.xs` beside `AP_Check_Location`, which is the same shape of
   location-level entry point. Everything passes the `Location` vector, never an id, so no caller and
   callee look the ledger up twice. 05 adds units and buildings to that one body.
+- 2026-11-13: Duplicate ledger entries for one location id are not a defect. Everything reaches a
+  location by id through `FindLocationById`, which returns the same first match, so read and write
+  stay consistent. Anything that caches a `Location` vector instead is what breaks, so the status
+  lines resolve by id rather than holding a reference. Settled on 05.
+- 2026-11-13: The three age tooltip ids reach the game as `extern const` in `AP_Constants.xs`, read
+  back out of the game's `key-value-strings-utf8.txt`, not derived from the age-up tech id at
+  runtime. 03's baking ruling stands and 05 chose the carrier.
+- 2026-11-13: An object whose extended tooltip string does not resolve gets no status line at all,
+  rather than a line with nothing beneath it. Settled on 05; jobs, heroes and escorts are the set.
 - 2026-11-12: Ages are baked in 03 alongside technologies, units and buildings, as
   `AGE_NAME_STRINGS` over `SHUFFLED_AGES`. An age advance's description is the age-up technology's,
   so 05 needs 28101 / 28102 / 28103, and the age-up techs are not `Age2TechData` members. The three
