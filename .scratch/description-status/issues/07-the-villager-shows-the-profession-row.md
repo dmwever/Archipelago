@@ -33,9 +33,9 @@ to the jobs still locked.
 - 2026-11-13: The vanilla material name is a column on `Age2VillagerJobData`; the greyscale name is
   derived as `ApGrey` plus the job name without spaces, which is how the UI mod already names them.
   No registry module and no lookup that can miss.
-- 2026-11-13: No new predicate. The Villager is spotted with the existing `isProfession` — a
-  caveman-exempt, lined row that is not itself a job — and the redraw rides the loop
-  `RefreshProfessions` already runs over professions.
+- 2026-11-13: No new predicate. The Villager is the tier-zero row of a caveman-exempt line, tested
+  inline at the one site that asks, and the redraw rides the loop `RefreshProfessions` already runs
+  over professions.
 
 ## Comments
 
@@ -77,9 +77,14 @@ to the jobs still locked.
   which is what keeps `CheckedStatusText` unchanged: `writeUnitStatusLine` appends it. The leading
   newline lives in the generated `ProfessionRow()`, so a seed with no jobs appends an empty string
   rather than a stray blank line.
-- 2026-11-13: `isProfession` is enough to find the Villager because jobs never reach the banner
-  check — their extended tooltips do not resolve, so 05's `vanilla == ""` guard returns first — and
-  because heroes, escorts and granted-only rows carry no line id. What is left is the base Villager.
+- 2026-11-13: The banner's owner is the Villager, not the jobs: a job variant is not trainable and
+  has no description to hang anything on, which is the ticket's premise. The test is therefore the
+  tier-zero row rather than a profession row, and it is written positively — a first pass said
+  `isProfession(unit) == false`, which was both redundant against the tier and read as though the
+  profession row were being drawn for everything that is not a profession.
+- 2026-11-13: Three terms are what it takes. `cavemanExempt` is only ever set on villager-line rows
+  and on the owned-type and granted-only rows; `lineId >= 0` drops heroes, escorts and granted-only
+  units, which carry `NO_LINE`; and `tier == 0` drops the jobs. What is left is the base Villager.
 - 2026-11-13: `hasItem` moved up `Unitsanity.xs` above `writeUnitStatusLine`; XS resolves in file
   order and `professionIcon` reads items.
 - 2026-11-13: Unverified in game, as 04, 05 and 06 still are. What a playtest settles: whether
