@@ -3,6 +3,7 @@ from typing import Iterable
 
 from ....Options import Techsanity, Unitsanity, UnitsanityItems, upgrade_techs_shuffled
 from ....generation import SlotData
+from ....items.Items import Age2ItemData
 from ....locations.UnitLocations import VILLAGER_LINES, UnitLocation
 from ....locations.Ages import Age2AgeData
 from ....locations.Buildings import Age2BuildingData
@@ -163,6 +164,25 @@ class UnitData:
                 "UNIT_CAPACITY in AP_Constants.xs to match")
         return list(out.values())
 
+    def jobs(self) -> list[Age2VillagerJobData]:
+        shown: dict[Age2ItemData, Age2VillagerJobData] = {}
+        for row in self.rows():
+            if isinstance(row.unit, Age2VillagerJobData):
+                shown.setdefault(row.unit.item, row.unit)
+        return list(shown.values())
+
+    def profession_row_lines(self) -> list[str]:
+        lines = ["string ProfessionRow() {"]
+        jobs = self.jobs()
+        if not jobs:
+            return lines + ['    return ("");', "}"]
+        lines.append('    string row = "\\n";')
+        for job in jobs:
+            lines.append(f'    row = row + professionIcon({job.item.id}, "{job.icon}", '
+                         f'"{job.grey_icon}");')
+        lines.extend(["    return (row);", "}"])
+        return lines
+
     def scenario_exemptions(self) -> list[tuple[int, tuple[int, ...]]]:
         if self._mode == Unitsanity.option_none:
             return []
@@ -204,6 +224,8 @@ class UnitData:
         if len(lines) == body:
             lines.append("    return;")
         lines.append("}")
+        lines.append("")
+        lines.extend(self.profession_row_lines())
         lines.append("")
         lines.extend(self.exemption_lines())
         return "\n".join(lines) + "\n"

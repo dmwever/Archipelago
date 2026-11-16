@@ -22,7 +22,7 @@ linter rather than by tests.
 | 04 | [A technology's description says where it stands](issues/04-technologies-carry-a-status-line.md) | done |
 | 05 | [Units, buildings and ages carry a status line](issues/05-units-buildings-and-ages.md) | done |
 | 06 | [Status lines survive an age advance](issues/06-status-lines-survive-an-age-advance.md) | done |
-| 07 | [The Villager shows the profession row](issues/07-the-villager-shows-the-profession-row.md) | ready-for-agent |
+| 07 | [The Villager shows the profession row](issues/07-the-villager-shows-the-profession-row.md) | done |
 | 08 | [A checked location's trigger clears itself](issues/08-checked-triggers-clear-themselves.md) | ready-for-agent |
 | 09 | [The client's location channel is a handler](issues/09-the-location-channel-is-a-handler.md) | done (classification channel carried by #02) |
 | 10 | [The Ratha's status line sits above queue-button text](issues/10-ratha-tooltip-id-collides.md) | needs-triage |
@@ -37,8 +37,10 @@ linter rather than by tests.
 - 2026-11-10: The baked string ids come from the game dat read through aoe2kit, by a maintainer-run
   tool, into a checked-in source module.
 - 2026-11-10: Professions show all twelve jobs always, colour when checked and greyscale when not.
-  No text, no outstanding-only filtering.
+  No text, no outstanding-only filtering. *(Amended 2026-11-13: the colour reads the item, not the
+  checked state; the rest stands.)*
 - 2026-11-10: A job counts as checked only when both its male and female locations are checked.
+  *(Retired 2026-11-13: the row no longer reads the checked set.)*
 - 2026-11-10: Mercenary seats and the resource hover panel are out of scope.
 - 2026-11-11: The checked-set read is acked by the game, not armed once at connect. `CheckedLocationsCount`
   joins the packet from the reserved block; the client asks while it disagrees with the set it writes.
@@ -90,8 +92,21 @@ linter rather than by tests.
   so 05 needs 28101 / 28102 / 28103, and the age-up techs are not `Age2TechData` members. The three
   dat tech ids live in the maintainer tool, not on `Age2AgeData`: nothing on the apworld side reads
   a genie tech id. How they reach the game is 05's to choose; there is no age table in XS yet.
+- 2026-11-13: The profession row is coloured by the profession item, not by the checked state, which
+  amends the first 2026-11-10 profession ruling and retires the second. A job's installed unit row
+  carries exactly one item and both sexes share it, so twelve items answer the row where
+  twenty-four locations needed pairing, `hasAllItems` on the row is the whole signal, and
+  `RefreshProfessions` — already called on every unit item and on the startup units — is the redraw
+  hook. 07 drops its dependency on the checked set and on the scouted classification; the generated
+  set is unchanged, since `job_possible` gates items and locations alike. A profession's checked
+  state is shown nowhere in game, which is accepted. Settled on 07.
 - 2026-11-13: The age advance re-apply gets no rule of its own. `ShuffleAgesUpdate` is renamed
   `AgesUpdate` and armed in every seed instead of only under `shuffle_ages`, and the sweep hangs off
   the reached-age count it already keeps; any advance re-applies every line and nothing tracks which
   ages have been decorated. Unshuffled seeds previously ran no age watcher at all while the engine
   still cleared their descriptions. Settled on 06.
+- 2026-11-13: The profession row is generated as a function, not loaded as a table. The install
+  writes `ProfessionRow()` into `UnitData.xs`, one `professionIcon(itemId, held, missing)` call per
+  job; the vanilla material is a column on `Age2VillagerJobData` and the greyscale name is derived
+  from the job name; and the Villager is recognised with the existing `isProfession`. XS gains no
+  table, no capacity and no new predicate. Settled on 07.

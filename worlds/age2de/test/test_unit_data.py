@@ -1,7 +1,9 @@
+import re
 import unittest
 
 from ..Options import Techsanity, Unitsanity, UnitsanityItems
 from ..client.handlers.install.UnitData import UnitData
+from ..items.Items import Age2ItemData
 from ..locations.Civilizations import Age2CivData
 from ..locations.EscortUnits import Age2EscortUnitData
 from ..locations.Heroes import Age2HeroData
@@ -120,6 +122,10 @@ class TestRender(unittest.TestCase):
                               "",
                               "void LoadUnitTable() {",
                               "    return;",
+                              "}",
+                              "",
+                              "string ProfessionRow() {",
+                              '    return ("");',
                               "}",
                               "",
                               "void CavemanExemption() {",
@@ -265,3 +271,31 @@ class TestTheTooltipId(unittest.TestCase):
         self.assertIn(f"    addUnit({militia.id}, {militia.game_id}, {militia.line.id}, "
                       f"{militia.age.value}, {militia.tier}, {UnitData.NO_UPGRADE_ITEM}, "
                       f"0, 26079);", rendered)
+
+
+class TestTheProfessionRow(unittest.TestCase):
+
+    def test_both_sexes_of_a_job_share_one_icon(self):
+        rendered = table([Age2VillagerJobData.BUILDER_MALE,
+                          Age2VillagerJobData.BUILDER_FEMALE]).render()
+        self.assertEqual(rendered.count("professionIcon("), 1)
+        self.assertIn(f'    row = row + professionIcon({Age2ItemData.PROFESSION_BUILDER.id}, '
+                      '"IconAction028", "ApGreyBuilder");', rendered)
+
+    def test_the_row_follows_the_job_table_order(self):
+        rendered = table(list(Age2VillagerJobData)).render()
+        greys = re.findall(r'"(ApGrey\w+)"', rendered)
+        self.assertEqual(greys,
+                         ["ApGreyFisherman", "ApGreyBuilder", "ApGreyForager", "ApGreyHunter",
+                          "ApGreyLumberjack", "ApGreyStoneMiner", "ApGreyRepairer",
+                          "ApGreyFarmer", "ApGreyGoldMiner", "ApGreyShepherd", "ApGreyHerder",
+                          "ApGreyOysterGatherer"])
+
+    def test_a_job_the_seed_never_generated_is_absent(self):
+        rendered = table([Age2VillagerJobData.BUILDER_MALE]).render()
+        self.assertNotIn(f"professionIcon({Age2ItemData.PROFESSION_FARMER.id},", rendered)
+
+    def test_a_seed_without_professions_draws_no_row(self):
+        rendered = table([Age2UnitData.MILITIA]).render()
+        self.assertIn('\n'.join(["string ProfessionRow() {", '    return ("");', "}"]),
+                      rendered)
