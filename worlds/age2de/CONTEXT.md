@@ -54,10 +54,14 @@ is the only sense in which a mercenary counts in logic.
 _Avoid_: muster (that is the pavilion spawn, below)
 
 **Muster**:
-The one-time spawn a mercenary's camp at the pavilion produces. It is never counted in logic, and
-the units it spawns are kept from being cavemanified.
+The one-time spawn a mercenary's **seat** at the pavilion produces. It is never counted in logic,
+and the units it spawns are kept from being cavemanified.
 _Avoid_: mercenary (when the spawn is meant), mercenary units (when counting what logic can rely
 on)
+
+**Seat**:
+One of the pavilion's four buttons that offers a mercenary; researching it musters that mercenary.
+_Avoid_: camp
 
 ### Economy
 
