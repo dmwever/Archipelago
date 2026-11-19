@@ -3,6 +3,7 @@ from typing import Iterable
 
 from ....Options import Techsanity, Unitsanity, UnitsanityItems, upgrade_techs_shuffled
 from ....generation import SlotData
+from ....items.Items import Age2ItemData
 from ....locations.UnitLocations import VILLAGER_LINES, UnitLocation
 from ....locations.Ages import Age2AgeData
 from ....locations.Buildings import Age2BuildingData
@@ -14,6 +15,7 @@ from ....locations.UnitLines import Age2UnitLineData
 from ....locations.Units import Age2UnitData
 from ....locations.VillagerJobs import Age2VillagerJobData
 from ....locations.connections.CivilizationUnits import CIV_TO_UNITS
+from ....locations.connections.GameStrings import extended_tooltip_id
 from ....locations.connections.ScenarioCavemanExemptions import SCENARIO_TO_CAVEMAN_EXEMPTIONS
 from ....locations.connections.UnitBuildings import BUILDING_TO_UNITS_ITEM
 
@@ -34,6 +36,10 @@ class Row:
     untrainable_civs: tuple[int, ...]
     items: tuple[int, ...]
     variants: tuple[int, ...]
+
+    @property
+    def tooltip_id(self) -> int:
+        return extended_tooltip_id(self.unit)
 
 
 class UnitData:
@@ -158,6 +164,25 @@ class UnitData:
                 "UNIT_CAPACITY in AP_Constants.xs to match")
         return list(out.values())
 
+    def jobs(self) -> list[Age2VillagerJobData]:
+        shown: dict[Age2ItemData, Age2VillagerJobData] = {}
+        for row in self.rows():
+            if isinstance(row.unit, Age2VillagerJobData):
+                shown.setdefault(row.unit.item, row.unit)
+        return list(shown.values())
+
+    def profession_row_lines(self) -> list[str]:
+        lines = ["string ProfessionRow() {"]
+        jobs = self.jobs()
+        if not jobs:
+            return lines + ['    return ("");', "}"]
+        lines.append('    string row = "\\n";')
+        for job in jobs:
+            lines.append(f'    row = row + professionIcon({job.item.id}, "{job.icon}", '
+                         f'"{job.grey_icon}");')
+        lines.extend(["    return (row);", "}"])
+        return lines
+
     def scenario_exemptions(self) -> list[tuple[int, tuple[int, ...]]]:
         if self._mode == Unitsanity.option_none:
             return []
@@ -189,7 +214,7 @@ class UnitData:
             lines.append(
                 f"    addUnit({row.location_id}, {row.unit.game_id}, {row.line_id}, "
                 f"{row.age}, {row.tier}, {row.upgrade_item_id}, "
-                f"{int(row.caveman_exempt)});")
+                f"{int(row.caveman_exempt)}, {row.tooltip_id});")
             for civ_id in row.untrainable_civs:
                 lines.append(f"    addUnitUntrainable({row.unit.game_id}, {civ_id});")
             for item_id in row.items:
@@ -199,6 +224,8 @@ class UnitData:
         if len(lines) == body:
             lines.append("    return;")
         lines.append("}")
+        lines.append("")
+        lines.extend(self.profession_row_lines())
         lines.append("")
         lines.extend(self.exemption_lines())
         return "\n".join(lines) + "\n"

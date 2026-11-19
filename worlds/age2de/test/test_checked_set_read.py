@@ -77,6 +77,10 @@ class CheckedSetReadTestBase(unittest.TestCase):
     def game_sent(self, *location_ids: int) -> None:
         self.ctx.current_packet.location_ids = list(location_ids)
 
+    def sync_checked_locations(self) -> None:
+        self.ctx.location_handler.try_sync_checked_locations(
+            self.ctx.client_status.checked_locations)
+
     def ping_asks(self) -> bool:
         self.ctx.ping_game()
         with open(self.ctx.profile_folder() + "AP.xsdat", "rb") as fp:
@@ -86,8 +90,8 @@ class CheckedSetReadTestBase(unittest.TestCase):
 
     def tick(self) -> bool:
         """The checked-set phase of status_tick, in the order status_tick runs it."""
-        self.ctx.sync_checked_locations()
-        self.ctx.confirm_checked_set(self.game.checked_locations_count)
+        self.sync_checked_locations()
+        self.ctx.location_handler.confirm_checked_locations(self.game.checked_locations_count)
         asked = self.ping_asks()
         self.game.read_ping(self.ctx.profile_folder(), asked)
         return asked
@@ -146,7 +150,7 @@ class TestTheClientWaitsForTheGameToListen(CheckedSetReadTestBase):
 
 
 class TestANewScenarioAsksAgain(CheckedSetReadTestBase):
-    def test_entering_the_next_scenario_reads_the_checked_set_without_a_reconnect(self) -> None:
+    def test_entering_the_next_scenario_reads_the_checked_locations_without_a_reconnect(self) -> None:
         self.connect()
         self.settle()
 
@@ -187,7 +191,7 @@ class TestANewCheckStillAsks(CheckedSetReadTestBase):
 class TestAnEarlierScenariosChecksReachTheNextOne(CheckedSetReadTestBase):
     def test_a_check_from_an_earlier_scenario_is_written_and_read(self) -> None:
         self.connect({self.EARLIER_CHECK})
-        self.ctx.sync_checked_locations()
+        self.sync_checked_locations()
 
         self.assertEqual([self.EARLIER_CHECK],
                          read_ints(self.ctx.profile_folder() + "locations.xsdat"))

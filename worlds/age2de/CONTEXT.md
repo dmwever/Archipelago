@@ -324,3 +324,17 @@ everywhere else. `connections/ScenarioCavemanExemptions.py` names them per scena
 own objective *is*, not one its army merely wants: Joan 2's and Genghis 4's Trade Carts are
 driven somewhere, and a Militia cannot be.
 _Avoid_: caveman-exempt (that is the unit table's per-row flag, the same word for a wider set)
+
+### Client
+
+**Ping flag**:
+One of the four booleans in the ping the client writes to `AP.xsdat`, each enabling a single XS
+rule for that tick: Send Items `ReadItems`, Free Locations `MarkServerLocations`, Send Mercenaries
+`ReadMercenaries`, Send Messages `ReadMessages`. All four rules end in `xsDisableSelf`, so a flag
+buys one run and no more, and the handler owning that channel raises it again while the game has
+not acknowledged the work. Three handlers derive theirs from outstanding state: `in_flight`,
+`is_message_sending`, and `queue_serial` against the packet's `acked_queue_serial`.
+`LocationHandler` stores a boolean instead, because what it wants back is a re-read of a file the
+game already holds rather than a transfer. The completion bool written beside them is not one: it
+calls `AnnounceVictory` and enables no rule.
+_Avoid_: armed flag, arming (that is what a flag does to a rule, not a name for the flag)

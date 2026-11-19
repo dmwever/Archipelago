@@ -66,7 +66,7 @@ class Age2UnitData(enum.IntEnum):
     VILLAGER_MALE               = 321, "Own Villager (Male)", "Villager (Male)", 83, Age2AgeData.DARK, UnitType.unit, 0
     SPEARMAN                    = 322, "Own Spearman", "Spearman", 93, Age2AgeData.FEUDAL, UnitType.unit, 0
     MONK                        = 323, "Own Monk", "Monk", 125, Age2AgeData.CASTLE, UnitType.unit, 0
-    TRADE_CART            = 324, "Own Trade Cart", "Trade Cart", 128, Age2AgeData.FEUDAL, UnitType.unit, 0
+    TRADE_CART                  = 324, "Own Trade Cart", "Trade Cart", 128, Age2AgeData.FEUDAL, UnitType.unit, 0
     SLINGER                     = 325, "Own Slinger", "Slinger", 185, Age2AgeData.CASTLE, UnitType.regional_unit, 0
     IMPERIAL_CAMEL_RIDER        = 326, "Own Imperial Camel Rider", "Imperial Camel Rider", 207, Age2AgeData.IMPERIAL, UnitType.unique_unit, 3
     WOAD_RAIDER                 = 327, "Own Woad Raider", "Woad Raider", 232, Age2AgeData.CASTLE, UnitType.unique_unit, 0
@@ -211,8 +211,8 @@ class Age2UnitData(enum.IntEnum):
     SHRIVAMSHA_RIDER            = 467, "Own Shrivamsha Rider", "Shrivamsha Rider", 1751, Age2AgeData.CASTLE, UnitType.unique_unit, 0
     ELITE_SHRIVAMSHA_RIDER      = 468, "Own Elite Shrivamsha Rider", "Elite Shrivamsha Rider", 1753, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
     CAMEL_SCOUT                 = 469, "Own Camel Scout", "Camel Scout", 1755, Age2AgeData.FEUDAL, UnitType.unique_unit, 0
-    RATHA                = 470, "Own Ratha", "Ratha", 1759, Age2AgeData.CASTLE, UnitType.unique_unit, 0
-    ELITE_RATHA          = 471, "Own Elite Ratha", "Elite Ratha", 1761, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
+    RATHA                       = 470, "Own Ratha", "Ratha", 1759, Age2AgeData.CASTLE, UnitType.unique_unit, 0
+    ELITE_RATHA                 = 471, "Own Elite Ratha", "Elite Ratha", 1761, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
     CENTURION                   = 472, "Own Centurion", "Centurion", 1790, Age2AgeData.CASTLE, UnitType.unique_unit, 0
     ELITE_CENTURION             = 473, "Own Elite Centurion", "Elite Centurion", 1792, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
     LEGIONARY                   = 474, "Own Legionary", "Legionary", 1793, Age2AgeData.IMPERIAL, UnitType.unique_unit, 3
@@ -301,10 +301,6 @@ class Age2UnitData(enum.IntEnum):
     ELITE_JARL                  = 557, "Own Elite Jarl", "Elite Jarl", 2709, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
     JOMSVIKING                  = 558, "Own Jomsviking", "Jomsviking", 2711, Age2AgeData.CASTLE, UnitType.unique_unit, 0
     ELITE_JOMSVIKING            = 559, "Own Elite Jomsviking", "Elite Jomsviking", 2712, Age2AgeData.IMPERIAL, UnitType.unique_unit, 1
-    # The Hulk line: a second Dock line alongside the Galley, available to 56 civilisations.
-    # Ids 596-598, not 560+: Age2UnitData shares one id space with Age2VillagerJobData (560+),
-    # Age2HeroData (584+) and Age2EscortUnitData (600+), and unit_location() resolves an id
-    # against all of them. 596-599 is the gap between the heroes and the escorts.
     HULK                        = 596, "Own Hulk", "Hulk", 2626, Age2AgeData.FEUDAL, UnitType.unit, 0
     WAR_HULK                    = 597, "Own War Hulk", "War Hulk", 2627, Age2AgeData.CASTLE, UnitType.unit_upgrade, 1
     CARRACK                     = 598, "Own Carrack", "Carrack", 2628, Age2AgeData.IMPERIAL, UnitType.unit_upgrade, 2

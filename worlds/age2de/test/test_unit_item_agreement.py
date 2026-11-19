@@ -198,7 +198,7 @@ class TestTheInstalledUpgradeItemIsInTheSeed(UnitTableAgreementBase):
             if not line.startswith("    addUnit("):
                 continue
             arguments = line.removeprefix("    addUnit(").removesuffix(");").split(", ")
-            self.assertEqual(len(arguments), 7, line)
+            self.assertEqual(len(arguments), 8, line)
             rows.append((int(arguments[1]), int(arguments[5])))
         return rows
 

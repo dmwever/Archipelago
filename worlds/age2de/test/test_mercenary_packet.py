@@ -124,7 +124,7 @@ class TestTheCheckedLocationsAck(unittest.TestCase):
     the two disagree, so a stale value here means the game never learns the checked set.
     """
 
-    def test_an_idle_packet_reports_an_empty_checked_set(self) -> None:
+    def test_an_idle_packet_reports_empty_checked_locations(self) -> None:
         self.assertEqual(0, Age2Packet(build_packet()).checked_locations_count)
 
     def test_the_ack_survives_the_reserved_block(self) -> None:

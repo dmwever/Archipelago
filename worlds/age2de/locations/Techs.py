@@ -336,9 +336,6 @@ class Age2TechData(enum.IntEnum):
     ELITE_TEMPLE_GUARD_MUISCA          = 3890, "Research Elite Temple Guard (Muisca)",           Age2ItemData.TECH_ELITE_TEMPLE_GUARD_MUISCA, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.unique], [Age2BuildingData.BARRACKS], ""
     CHAMPI_RUNNER                      = 3891, "Research Champi Runner",                         Age2ItemData.TECH_CHAMPI_RUNNER, Age2AgeData.FEUDAL, [TechOption.units, TechOption.regional], [Age2BuildingData.BARRACKS], "CHAMPI_SCOUT"
     CIRCUMNAVIGATION_PORTUGUESE        = 3892, "Research Circumnavigation (Portuguese)",         Age2ItemData.TECH_CIRCUMNAVIGATION_PORTUGUESE, Age2AgeData.CASTLE, [TechOption.generic, TechOption.unique], [Age2BuildingData.CASTLE], ""
-
-    # Line upgrades the catalogue was missing; see the note in Items.py. Research buildings are
-    # the research_locations the dat gives: 87 Archery Range, 12 Barracks, 82 Castle.
     HEAVY_MOUNTED_CROSSBOWMAN          = 3893, "Research Heavy Mounted Crossbowman",             Age2ItemData.TECH_HEAVY_MOUNTED_CROSSBOWMAN, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.regional], [Age2BuildingData.ARCHERY_RANGE], ""
     ELITE_VARANGIAN_GUARD              = 3894, "Research Elite Varangian Guard",                 Age2ItemData.TECH_ELITE_VARANGIAN_GUARD, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.regional], [Age2BuildingData.BARRACKS], ""
     ELITE_HEARTH_TROOP_SAXONS          = 3895, "Research Elite Hearth Troop (Saxons)",           Age2ItemData.TECH_ELITE_HEARTH_TROOP_SAXONS, Age2AgeData.IMPERIAL, [TechOption.units, TechOption.unique], [Age2BuildingData.CASTLE], ""
