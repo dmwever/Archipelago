@@ -6,8 +6,16 @@ The commands themselves only format, so these drive the handlers the way test_cl
 rather than standing up a whole context.
 """
 
+import asyncio
+import os
 import tempfile
+import types
 import unittest
+from unittest import mock
+
+from ..client import GameClient
+from ..client.ApClient import Age2CommandProcessor, Age2Context
+from ..client.GameClient import AGE2_USER_PROFILE, Age2GameContext, DefaultClientInterface
 
 from ..client.DataStorage import DataStorage
 from ..client.handlers.CampaignHandler import ActiveFile, CampaignHandler
@@ -147,6 +155,128 @@ class TestScenarioStatuses(unittest.TestCase):
         self.handler.active_file = ActiveFile(scn=managed, read_file_name="whatever.xsdat")
         self.assertEqual("Active", self.handler.status(first),
                          "replaying a finished scenario should surface that you are in it")
+
+
+class TestMercenaryStatusesOutsideAMatch(unittest.TestCase):
+    def setUp(self) -> None:
+        self._folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self._folder.cleanup)
+        os.makedirs(self._folder.name + AGE2_USER_PROFILE)
+        self.ctx = Age2GameContext(DefaultClientInterface())
+        self.ctx.client_status.tag = "T"
+        self.ctx.client_status.player_name = "P"
+        self.ctx.update_game_user_folder(self._folder.name)
+        self.held = CATEGORY_TO_ITEMS[Mercenary][:SEAT_COUNT + 2]
+        self.ctx.client_status.unlocked_items = list(self.held)
+
+    def run_one_tick(self) -> None:
+        async def no_sleep() -> None:
+            pass
+
+        with (
+            mock.patch.object(GameClient, "long_sleep", no_sleep),
+            mock.patch.object(GameClient, "short_sleep", no_sleep),
+        ):
+            asyncio.run(GameClient.status_tick(self.ctx))
+        self.assertFalse(self.ctx.campaign_handler.has_active_scenario())
+
+    def test_held_mercenaries_are_not_missing_with_no_scenario_running(self) -> None:
+        self.ctx.reconcile_spent(0)
+        self.run_one_tick()
+        statuses = [self.ctx.mercenary_handler.status(mercenary) for mercenary in self.held]
+        self.assertEqual(SEAT_COUNT, statuses.count("In-Pavilion"))
+        self.assertEqual(2, statuses.count("Unlocked"))
+
+    def test_a_spent_mercenary_reads_used_with_no_scenario_running(self) -> None:
+        self.ctx.reconcile_spent(1)
+        self.run_one_tick()
+        self.assertEqual("Used", self.ctx.mercenary_handler.status(self.held[0]))
+        self.assertNotIn(self.held[0], self.ctx.mercenary_handler.seated())
+
+    def test_nothing_is_seated_before_the_spent_state_arrives(self) -> None:
+        self.run_one_tick()
+        for mercenary in self.held:
+            self.assertEqual("Missing", self.ctx.mercenary_handler.status(mercenary))
+
+
+class TestMercenaryQueueTags(unittest.TestCase):
+    def setUp(self) -> None:
+        self._folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self._folder.cleanup)
+        self.handler = MercenaryHandler(CATEGORY_TO_ITEMS[Mercenary])
+        self.handler.set_user_folder(self._folder.name + "/")
+        self.storage = DataStorage(EVERY_CAMPAIGN)
+        self.unlock_order = list(reversed(self.storage.mercenaries[:SEAT_COUNT + 3]))
+        ctx = Age2Context.__new__(Age2Context)
+        ctx.ui = None
+        ctx.data_storage = self.storage
+        ctx.game_ctx = types.SimpleNamespace(mercenary_handler=self.handler)
+        self.processor = Age2CommandProcessor(ctx)
+
+    def printed_lines(self) -> list[str]:
+        with self.assertLogs("Client", "INFO") as logs:
+            self.processor._cmd_mercenaries()
+        return [record.getMessage() for record in logs.records]
+
+    def test_seated_mercenaries_show_their_seat_in_unlock_order(self) -> None:
+        self.handler.try_sync_mercenaries(self.unlock_order)
+        lines = self.printed_lines()
+        for seat, mercenary in enumerate(self.unlock_order[:SEAT_COUNT], start=1):
+            self.assertIn(f"{'In-Pavilion':<12}{mercenary.item_name} (seat {seat})", lines)
+
+    def test_queued_mercenaries_show_their_place_in_unlock_order(self) -> None:
+        self.handler.try_sync_mercenaries(self.unlock_order)
+        lines = self.printed_lines()
+        for place, mercenary in enumerate(self.unlock_order[SEAT_COUNT:], start=1):
+            self.assertIn(f"{'Unlocked':<12}{mercenary.item_name} (#{place} in queue)", lines)
+
+    def test_spending_a_seated_one_moves_the_queue_up(self) -> None:
+        self.handler.try_sync_mercenaries(self.unlock_order)
+        self.handler.use_mercenary(self.unlock_order[0])
+        self.handler.try_sync_mercenaries(self.unlock_order, spent=[self.unlock_order[0]])
+        lines = self.printed_lines()
+        self.assertIn(f"{'Used':<12}{self.unlock_order[0].item_name}", lines)
+        self.assertIn(
+            f"{'In-Pavilion':<12}{self.unlock_order[SEAT_COUNT].item_name} (seat 1)",
+            lines,
+        )
+        self.assertIn(
+            f"{'Unlocked':<12}{self.unlock_order[SEAT_COUNT + 1].item_name} (#1 in queue)",
+            lines,
+        )
+
+    def test_missing_mercenaries_carry_no_tag(self) -> None:
+        lines = self.printed_lines()
+        self.assertEqual(
+            [f"{'Missing':<12}{mercenary.item_name}" for mercenary in self.storage.mercenaries],
+            lines,
+        )
+
+    def test_the_list_runs_used_missing_queue_then_seats_each_descending(self) -> None:
+        spent = self.unlock_order[0]
+        self.handler.try_sync_mercenaries(self.unlock_order)
+        self.handler.use_mercenary(spent)
+        self.handler.try_sync_mercenaries(self.unlock_order, spent=[spent])
+        seated = self.handler.seated()
+        queued = self.handler.queued()
+        missing = [
+            mercenary for mercenary in self.storage.mercenaries
+            if mercenary not in self.unlock_order
+        ]
+        expected = (
+            [f"{'Used':<12}{spent.item_name}"]
+            + [f"{'Missing':<12}{mercenary.item_name}" for mercenary in missing]
+            + [
+                f"{'Unlocked':<12}{queued[place - 1].item_name} (#{place} in queue)"
+                for place in range(len(queued), 0, -1)
+            ]
+            + [
+                f"{'In-Pavilion':<12}{seated[seat - 1].item_name} (seat {seat})"
+                for seat in range(SEAT_COUNT, 0, -1)
+            ]
+        )
+        self.assertEqual(2, len(queued))
+        self.assertEqual(expected, self.printed_lines())
 
 
 if __name__ == "__main__":

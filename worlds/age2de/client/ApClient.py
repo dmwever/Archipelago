@@ -20,6 +20,23 @@ from .. import Age2Settings, Age2World
 
 logger = logging.getLogger("Client")
 
+SCENARIO_STATUS_COLOURS = {
+    "Active": "green",
+    "Available": "cyan",
+    "Unlocked": "white",
+    "Completed": "slateblue",
+    "Campaign Locked": "orange",
+    "Missing": "red",
+}
+
+MERCENARY_STATUS_COLOURS = {
+    "In-Pavilion": "green",
+    "Unlocked": "cyan",
+    "Used": "slateblue",
+    "Missing": "red",
+}
+
+MERCENARY_GROUP_ORDER = ["Used", "Missing", "Unlocked", "In-Pavilion"]
 
 def set_user_folder(settings: Age2Settings):
     settings.user_folder = settings.user_folder.browse()
@@ -124,8 +141,30 @@ class Age2CommandProcessor(ClientCommandProcessor):
             self.output("Connect to your multiworld first, so the client knows this seed.")
             return
         handler = ctx.game_ctx.mercenary_handler
-        for mercenary in ctx.data_storage.mercenaries:
-            self.output(f"{handler.status(mercenary):<12}{mercenary.item_name}")
+        seated = handler.seated()
+        queued = handler.queued()
+
+        def display_order(mercenary: Items.Age2ItemData) -> tuple[int, int]:
+            group = MERCENARY_GROUP_ORDER.index(handler.status(mercenary))
+            if mercenary in seated:
+                return group, -seated.index(mercenary)
+            if mercenary in queued:
+                return group, -queued.index(mercenary)
+            return group, 0
+
+        for mercenary in sorted(ctx.data_storage.mercenaries, key=display_order):
+            status = handler.status(mercenary)
+            rest = mercenary.item_name
+            if mercenary in seated:
+                rest += f" (seat {seated.index(mercenary) + 1})"
+            if mercenary in queued:
+                rest += f" (#{queued.index(mercenary) + 1} in queue)"
+            self.output_status_line(
+                status,
+                12,
+                MERCENARY_STATUS_COLOURS[status],
+                rest,
+            )
 
     def _cmd_scenarios(self) -> None:
         """
@@ -143,7 +182,24 @@ class Age2CommandProcessor(ClientCommandProcessor):
         handler = ctx.game_ctx.campaign_handler
         for scenario in ctx.data_storage.scenarios:
             status = handler.status(scenario)
-            self.output(f"{status:<16}{scenario.campaign.campaign_name}: {scenario.scenario_name}")
+            self.output_status_line(
+                status,
+                16,
+                SCENARIO_STATUS_COLOURS[status],
+                f"{scenario.campaign.campaign_name}: {scenario.scenario_name}",
+            )
+
+    def output_status_line(self, status: str, width: int, colour: str, rest: str) -> None:
+        if self.ctx.ui is None:
+            self.output(f"{status:<{width}}{rest}")
+            return
+        padding = " " * (width - len(status))
+        self.ctx.ui.print_json(
+            [
+                {"type": "color", "color": colour, "text": status},
+                {"type": "text", "text": padding + rest},
+            ],
+        )
 
 
 class Age2Context(CommonContext):

@@ -330,11 +330,19 @@ class Age2GameContext:
             return
         unlocked = self.client_status.unlocked_items
         self.storage_handler.try_flush()
-        self.mercenary_handler.try_sync_mercenaries(unlocked, self.spent_mercenaries())
+        self.sync_mercenaries()
         delivered = self.item_handler.try_sync_delivered(unlocked, applied)
         if self.storage_handler.mark_spent(delivered):
             self.client_interface.on_item_spent(self.storage_handler.spent_mask())
         self.item_handler.try_write_to_file(self.spent_items())
+
+    def sync_mercenaries(self) -> None:
+        if not self.storage_handler.is_up_to_date():
+            return
+        self.mercenary_handler.try_sync_mercenaries(
+            self.client_status.unlocked_items,
+            self.spent_mercenaries(),
+        )
 
     def sync_mercenary_completion(self, completed: int) -> None:
         mercenary = self.mercenary_handler.read_completion(
@@ -456,6 +464,7 @@ async def status_tick(ctx: Age2GameContext) -> None:
     ctx.building_handler.try_sync_buildings(ctx.client_status.unlocked_items)
     ctx.tech_handler.try_sync_techs(ctx.client_status.unlocked_items)
     ctx.unit_handler.try_sync_units(ctx.client_status.unlocked_items)
+    ctx.sync_mercenaries()
     ctx.message_handler.try_write_to_folder()
     
     # Check all unlocked scenarios every 2 seconds to find active scenario.
