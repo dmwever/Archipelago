@@ -408,6 +408,13 @@ class Age2GameContext:
             return SlotData.UNSET, SlotData.UNSET
         return SlotData.seed_halves(tag)
 
+    def refuse_scenario(self, scenario_id: int) -> None:
+        try:
+            with open(self.profile_folder() + "AP.xsdat", "wb") as fp:
+                XsdatFile.write_int(fp, -scenario_id)
+        except Exception as ex:
+            logger.warning("Could not tell the game its scenario is not unlocked: %s", ex)
+
     def ping_game(self) -> None:
         send_locations = self.location_handler.are_locations_sending(
             self.current_packet.location_ids)
@@ -464,7 +471,12 @@ async def status_tick(ctx: Age2GameContext) -> None:
         if not ctx.campaign_handler.has_active_scenario():
             ctx.campaign_handler.find_active_scenario()
             if not ctx.campaign_handler.has_active_scenario():
-                ctx.report_install_mismatch_once()
+                refused = ctx.campaign_handler.refused
+                if refused is not None:
+                    ctx.note_scenario_found()
+                    ctx.refuse_scenario(refused.data.id)
+                else:
+                    ctx.report_install_mismatch_once()
                 await long_sleep()
                 return
             else:
