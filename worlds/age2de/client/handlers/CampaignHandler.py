@@ -61,6 +61,7 @@ class CampaignHandler(FolderHandler):
         self._scenario_items = {}
         self.active_file = None
         self._reported_locked: set[Age2ScenarioData] = set()
+        self.refused: ManagedScenario | None = None
         self._last_pings: dict[str, int] = {}
         for cpn_data in data:
             scenarios_as_data: list[Age2ScenarioData] = []
@@ -163,25 +164,29 @@ class CampaignHandler(FolderHandler):
         )
 
     def find_active_campaign(self) -> bool:
+        self.refused = None
         for campaign in self._campaigns.values():
-            if campaign.unlocked:
-                read_name = self.campaign_read_name(campaign.data)
-                try:
-                    with open(self._user_folder + read_name, "rb") as fp:
-                        active = fp.peek(1)[:1]
-                        if (active == b'\x01'):
-                            XsdatFile.skip_int(fp, 18)
-                            scenario_id = XsdatFile.read_int(fp)
-                            scenario = self.scenarios[scenario_from_id[scenario_id]]
-                            if not scenario.unlocked:
-                                self._note_locked_scenario(scenario)
-                            else:
-                                self.active_file = ActiveFile(scn=scenario, read_file_name=read_name)
-                                return True
+            read_name = self.campaign_read_name(campaign.data)
+            try:
+                with open(self._user_folder + read_name, "rb") as fp:
+                    active = fp.peek(1)[:1]
+                    if (active == b'\x01'):
+                        XsdatFile.skip_int(fp, 18)
+                        scenario_id = XsdatFile.read_int(fp)
+                        scenario = self.scenarios[scenario_from_id[scenario_id]]
+                        if not scenario.unlocked:
+                            self._note_locked_scenario(scenario)
+                            self.refused = scenario
                         else:
-                            print("Not active")
-                except Exception as ex:
-                    print(ex)
+                            self.refused = None
+                            self.active_file = ActiveFile(scn=scenario, read_file_name=read_name)
+                            return True
+                    else:
+                        print("Not active")
+            except FileNotFoundError:
+                pass
+            except Exception as ex:
+                print(ex)
         self.active_file = None
         return False
     
