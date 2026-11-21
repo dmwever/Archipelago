@@ -10,7 +10,7 @@ The five default triage labels, recorded as a `Status:` line in each issue. See 
 
 ### Domain docs
 
-Single-context, kept in `worlds/age2de/` (`CONTEXT.md`, `docs/adr/`). See `docs/agents/domain.md`.
+Single-context, kept in `worlds/age2de/` (`GLOSSARY.md`, `docs/adr/`). See `docs/agents/domain.md`.
 
 ### Checks
 
