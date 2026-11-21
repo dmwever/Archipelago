@@ -212,7 +212,7 @@ class Age2GameContext:
         self.client_interface.scout_locations()
         self.campaign_handler.setup_victory_requirements(slot_data)
         self.try_startup_game_connection()
-        self.message_handler.add_message("Client Connected!")
+        self.message_handler.add_message("<GREEN>Client Connected!")
 
     async def disconnect(self):
         if self.client_status.user_folder != '':
@@ -573,8 +573,7 @@ async def status_tick(ctx: Age2GameContext) -> None:
     ctx.sync_delivery(packet.applied_item_count)
     ctx.location_handler.confirm_checked_locations(packet.checked_locations_count)
 
-    if ctx.message_handler.is_packet_up_to_date(packet.latest_message_id):
-        ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
+    ctx.message_handler.confirm_messages_recieved(packet.latest_message_id)
     
     if packet.completed == True and not ctx.campaign_handler.is_active_scenario_complete():
         ctx.campaign_handler.complete_active_scenario()

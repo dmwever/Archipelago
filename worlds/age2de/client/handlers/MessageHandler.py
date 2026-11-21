@@ -10,12 +10,14 @@ from ...campaign import XsdatFile
 type Age2Message = tuple[int, str]
 
 class MessageHandler(FolderHandler):
-    _last_sent_message_id: int = 0
-    _new_message_id: int = 0
+    _new_message_id: int
+    _game_message_id: int | None   # The id the game last showed; None until its first packet.
     _unsent_message_queue: Queue[Age2Message]
     _sending_messages: list[Age2Message]
     
     def __init__(self):
+        self._new_message_id = 0
+        self._game_message_id = None
         self._unsent_message_queue = Queue()
         self._sending_messages = []
         super().__init__()
@@ -26,6 +28,8 @@ class MessageHandler(FolderHandler):
         self._new_message_id += 1
     
     def try_write_to_folder(self):
+        if self._game_message_id is None:   # Ids can't be trusted until the game reports its own.
+            return
         if self.is_message_sending():   #Prevents overwrite
             return
         self.__dequeue_to_sending_messages()
@@ -47,6 +51,9 @@ class MessageHandler(FolderHandler):
                 os.remove(self._user_folder + "messages.xsdat")
         except Exception as ex:
             print(ex)
+        self._game_message_id = None
+        self.__requeue(self._sending_messages + list(self._drain_queue()))
+        self._sending_messages.clear()
     
     def is_message_waiting(self) -> bool:
         return not self._unsent_message_queue.empty()
@@ -54,24 +61,35 @@ class MessageHandler(FolderHandler):
     def is_message_sending(self) -> bool:
         return  os.path.exists(self._user_folder + "messages.xsdat") and len(self._sending_messages) > 0
     
-    def is_packet_up_to_date(self, packet_message_id) -> bool:
-        if self._last_sent_message_id <= packet_message_id:
-            return True
-        return False
+    def confirm_messages_recieved(self, packet_message_id: int) -> None:
+        self._game_message_id = packet_message_id
+        if self._sending_messages and self._sending_messages[-1][0] == packet_message_id:
+            self._sending_messages.clear()
+        self.__renumber_messages(packet_message_id)
     
-    def confirm_messages_recieved(self, packet_message_id):
-        # Ensure last sent message id is strictly the same or larger than last received message packet.
-        if self._last_sent_message_id < packet_message_id:
-            self._last_sent_message_id = packet_message_id
+    def __renumber_messages(self, game_message_id: int) -> None:
+        sending_count = len(self._sending_messages)
+        pending = self._sending_messages + list(self._drain_queue())
+        next_id = game_message_id + 1
+        renumbered: list[Age2Message] = []
+        for old_id, text in pending:
+            new_id = max(old_id, next_id)
+            renumbered.append((new_id, text))
+            next_id = new_id + 1
+        self._new_message_id = max(self._new_message_id, next_id)
         
-        # Ensure new message ids are strictly the same or larger than last sent message.
-        if self._new_message_id < self._last_sent_message_id:
-            self._new_message_id = self._last_sent_message_id
-        self._sending_messages.clear()
+        if renumbered[:sending_count] != self._sending_messages:
+            self._sending_messages.clear()   # Rewrite the whole batch under its new ids.
+            self.__requeue(renumbered)
+        else:
+            self.__requeue(renumbered[sending_count:])
+    
+    def __requeue(self, messages: list[Age2Message]) -> None:
+        for msg in messages:
+            self._unsent_message_queue.put(msg)
     
     def __dequeue_to_sending_messages(self):
         for msg in self._drain_queue():
-            self._last_sent_message_id = msg[0]
             self._sending_messages.append(msg)
 
     def _drain_queue(self):
