@@ -244,6 +244,14 @@ everything. A tech that is not a location is withheld only by Start In Dark Age;
 starts with it.
 _Avoid_: locked at start, held back
 
+**Bonus tech**:
+A tech a civ bonus researches for free, for example Horse Collar for Franks on reaching the Feudal
+Age. When the bonus fires on an age-up, P1 gets the tech in a run only by aging into that age
+during the run, or when the start state grants it with that age; a scenario that opens in or past
+that age never offers it. Civ bonuses that hand out buildings or units free raise the same
+question and are not named yet.
+_Avoid_: free tech, age-up bonus tech
+
 **Checked**:
 A location the AP server records as collected. Global and permanent: it outlives the scenario that
 checked it, and every later scenario sees it checked. The game holds it per **registered location**
@@ -266,7 +274,9 @@ _Avoid_: checked, learned
 **Active**:
 A tech's effect is applied in the run now playing. Per-run like **researched**. It needs the tech
 **unlocked**, and under Must Research or for any upgrade it needs it **researched** in this run as
-well. A tech with no effect counts as active, because there is nothing left to wait for.
+well. Under Unitsanity Items Upgrades, a shuffled upgrade also needs the **unit row** of the tier
+it upgrades into unlocked; until then it stays researchable and its effect waits (ADR 0007). A tech with no effect
+counts as active, because there is nothing left to wait for.
 _Avoid_: applied, granted, done
 
 ### Units
