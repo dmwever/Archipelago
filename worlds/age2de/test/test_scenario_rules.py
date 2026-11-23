@@ -17,6 +17,8 @@ from .bases import Age2RuleTestBase
 
 MONK_LINE = Age2UnitLineData.MONK_LINE.item.item_name
 KEREYID = Age2ItemData.AP_GENGHIS_1_KEREYID_TRIBE.item_name
+UIGHUR = Age2ItemData.AP_GENGHIS_1_UIGHUR_TRIBE.item_name
+THREE_TRIBES = L.GEN1_RECRUIT_THREE_TRIBES.global_name()
 
 # What the Kereyid gate covers, per branching mode. Victory and the Complete event are gated in
 # both: Victory wants four tribes joined, and the Ungirrads only join for a relic.
@@ -37,6 +39,7 @@ ORLEANS = Age2ItemData.AP_JOAN_2_ORLEANS.item_name
 BRIDGE = L.JOAN2_CONQUER_BRIDGE.global_name()
 JOAN_2_VICTORY = L.JOAN2_VICTORY.global_name()
 JOAN_2_COMPLETE = "Complete " + L.JOAN2_VICTORY.scenario.scenario_name
+CARTS_TO_ORLEANS = L.JOAN2_BRING_CARTS_TO_ORLEANS.global_name()
 
 
 class TestGenghis1Relics(Age2RuleTestBase):
@@ -87,6 +90,16 @@ class TestGenghis1Relics(Age2RuleTestBase):
         for name in self.gated_locations(ScenarioBranching.option_any):
             with self.subTest(location=name):
                 self.assertEqual(self.item_requirements(name), {KEREYID})
+
+    def test_caveman_kereyid_and_uighur_recruit_three_tribes_without_monks(self):
+        self.build(caveman=Caveman.option_true,
+                   scenario_branching=ScenarioBranching.option_any, **UNITSANITY)
+        self.assertTrue(self.can_reach(THREE_TRIBES, self.state_without(MONK_LINE)))
+
+    def test_caveman_kereyid_alone_does_not_recruit_three_tribes_without_monks(self):
+        self.build(caveman=Caveman.option_true,
+                   scenario_branching=ScenarioBranching.option_any, **UNITSANITY)
+        self.assertFalse(self.can_reach(THREE_TRIBES, self.state_without(MONK_LINE, UIGHUR)))
 
 
 
@@ -139,6 +152,11 @@ class TestJoan2Crossing(Age2RuleTestBase):
         for name in joan_2 + [JOAN_2_COMPLETE]:
             with self.subTest(location=name):
                 self.assertTrue(self.can_reach(name))
+
+    def test_the_carts_reach_orleans_only_with_the_orleans_item(self):
+        carts_to_orleans = self.access_rule(CARTS_TO_ORLEANS)
+        self.assertFalse(carts_to_orleans(self.state_with(CARTS)))
+        self.assertTrue(carts_to_orleans(self.state_with(CARTS, ORLEANS)))
 
     def test_the_bridge_names_both_routes(self):
         self.assertTrue({CARTS, DOCK} <= self.item_requirements(BRIDGE))
@@ -244,11 +262,10 @@ class TestJoan2Dock(Age2RuleTestBase):
         self.assertFalse(bridge(self.state_without(CARTS, TRANSPORTS)))
         self.assertTrue(bridge(self.state_without(CARTS)))
 
-    def test_bringing_the_carts_to_orleans_is_still_the_item_alone(self):
+    def test_bringing_the_carts_to_orleans_wants_no_transport_line(self):
         self.build(**CAVEMAN_ON)
-        name = L.JOAN2_BRING_CARTS_TO_ORLEANS.global_name()
-        self.assertEqual(self.item_requirements(name), {CARTS})
-        self.assertTrue(self.access_rule(name)(self.state_with(CARTS)))
+        self.assertEqual(self.item_requirements(CARTS_TO_ORLEANS), {CARTS, ORLEANS})
+        self.assertTrue(self.access_rule(CARTS_TO_ORLEANS)(self.state_with(CARTS, ORLEANS)))
 
     def test_without_caveman_the_dock_alone_is_a_crossing(self):
         self.build(**CAVEMAN_OFF)

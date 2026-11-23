@@ -54,6 +54,10 @@ class TestMercenaryStrings(unittest.TestCase):
         lines = render_strings_file().decode("utf-8").split("\r\n")
         self.assertIn('990003 "Dyrrhachium\'s Prisoners\\nTarkan ×5, Hussar ×2"', lines)
 
+    def test_joans_lone_swordsman_is_named_for_its_champion(self) -> None:
+        lines = render_strings_file().decode("utf-8").split("\r\n")
+        self.assertIn('990011 "A Single Champion\\nChampion ×1"', lines)
+
     def test_roman_villagers_list_male_and_female_apart(self) -> None:
         lines = render_strings_file().decode("utf-8").split("\r\n")
         self.assertIn(

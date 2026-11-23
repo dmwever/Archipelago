@@ -26,8 +26,11 @@ class Genghis1Rules(ScenarioRules):
                                 can_slay_ornlu)
         else:
             self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN1_ANY_RELIC], has_monk)
-            # Grey needs blue, purple and green are mutually exclusive, and cyan needs more units than the starting cavemen
-            self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN1_RECRUIT_THREE_TRIBES], NOT_CAVEMAN | has_monk)
+            # Grey needs a Monk; without one, Kereyid kills Ornlu for cyan and the Uighur camels take green or purple.
+            self.world.set_rule(
+                self.locations[Age2ScenarioLocationData.GEN1_RECRUIT_THREE_TRIBES],
+                NOT_CAVEMAN | has_monk | (state.kereyid & state.uighur),
+            )
 
         self.world.set_rule(self.locations[Age2ScenarioLocationData.GEN1_VICTORY], has_monk)
         self.world.set_rule(self.world.get_location("Complete " + Age2ScenarioLocationData.GEN1_VICTORY.scenario.scenario_name), has_monk)

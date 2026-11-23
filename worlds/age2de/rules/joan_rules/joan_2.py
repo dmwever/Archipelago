@@ -32,7 +32,13 @@ class Joan2Rules(ScenarioRules):
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_SOUTHWEST_CASTLE], can_defeat_southern_english)
             self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_SOUTHEAST_CASTLE], can_defeat_southern_english)
 
-        self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_BRING_CARTS_TO_ORLEANS], Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name))
+        self.world.set_rule(
+            self.locations[Age2ScenarioLocationData.JOAN2_BRING_CARTS_TO_ORLEANS],
+            (
+                Has(Age2ItemData.AP_JOAN_2_TRADE_CARTS.item_name)
+                & Has(Age2ItemData.AP_JOAN_2_ORLEANS.item_name)
+            ),
+        )
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_CONQUER_BRIDGE], can_conquer_bridge)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_BRING_JOAN_TO_ORLEANS], can_cross)
         self.world.set_rule(self.locations[Age2ScenarioLocationData.JOAN2_FIND_FARMING_VILLAGE], can_cross)
