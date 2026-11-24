@@ -22,6 +22,8 @@ class ScenarioTechLogic:
                 | (self.can_research_structurally(tech) & self.can_pay_for(tech)))
 
     def can_pay_for(self, tech: Age2TechData) -> Rule:
+        if self.world.pool.techs.is_bonus_tech(self.scenario.scenario, tech):
+            return self.scenario.ages.can_research(tech.age)
         rule = self.scenario.economy.can_pay(tech.cost) & self.scenario.ages.can_advance(tech.age)
         if tech.buildings:
             rule = rule & Or(*[self.scenario.has_building(building)
@@ -34,15 +36,12 @@ class ScenarioTechLogic:
             return False_()
         if tech in self.scenario.scenario.excluded_techs:
             return False_()   # the scenario forbids it
-        return ScenarioCanResearch(scenario=self.scenario.scenario, tech=tech)
-
-    def researched_at_start(self, tech: Age2TechData) -> bool:
-        if tech.age >= self.scenario.scenario.vanilla_age:
-            return False
         pool = self.world.pool
-        if not pool.techs.withheld_at_start(tech):
-            return True
-        return not pool.techs.includes(tech) and not pool.ages.dark_start
+        if pool.techs.is_bonus_tech(self.scenario.scenario, tech):
+            if pool.ages.starts_before(self.scenario.scenario, tech.age):
+                return self.scenario.ages.can_reach_structurally(tech.age)
+            return False_()
+        return ScenarioCanResearch(scenario=self.scenario.scenario, tech=tech)
 
     def has_researched(self, tech: Age2TechData) -> Rule:
         return self._has_researched(tech, paid=True)
@@ -55,7 +54,7 @@ class ScenarioTechLogic:
             return False_()
         if tech in self.scenario.scenario.excluded_techs:
             return False_()   # the scenario forbids it
-        if self.researched_at_start(tech):
+        if self.world.pool.techs.researched_at_start(self.scenario.scenario, tech):
             return True_()
         rule = (self.can_research(tech) if paid
                 else self.scenario.obtains_tech(tech) | self.can_research_structurally(tech))

@@ -51,7 +51,10 @@ class TestCavemanWithholdsUpgradesInJoan(Age2RuleTestBase):
     def test_without_caveman_joan_1_starts_upgraded(self):
         self.build_joan(Caveman.option_false)
         joan_1 = self.logic_for(Age2ScenarioData.AP_JOAN_1)
-        self.assertTrue(joan_1.techs.researched_at_start(Age2TechData.MAN_AT_ARMS))
+        self.assertTrue(self.world.pool.techs.researched_at_start(
+            joan_1.scenario,
+            Age2TechData.MAN_AT_ARMS,
+        ))
         self.assertTrue(joan_1.units.upgraded_away(Age2UnitData.MILITIA))
 
 
@@ -64,7 +67,7 @@ class TestCavemanWithholdsAtStart(Age2RuleTestBase):
                            existing_techs=ExistingTechs.option_vanilla)
         world.options.caveman.value = caveman
         world.options.unitsanity.value = unitsanity
-        pool = TechPool(world.options, world.pool.ages.earliest, world.pool.civs,
+        pool = TechPool(world.options, world.pool.ages, world.pool.civs,
                         world.pool.scenarios.included)
         return pool.withheld_at_start(Age2TechData.MAN_AT_ARMS)
 

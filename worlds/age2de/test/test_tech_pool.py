@@ -1,3 +1,4 @@
+import copy
 import unittest
 
 from BaseClasses import CollectionState
@@ -262,7 +263,9 @@ class TestScenarioReachability(TechPoolTestBase):
         self.pool(techsanity=Techsanity.option_all,
                   existing_techs=ExistingTechs.option_only_find_units,
                   enabled_campaigns={"Joan of Arc"})
-        pool = TechPool(self.world.options, above, self.world.pool.civs,
+        ages = copy.copy(self.world.pool.ages)
+        ages.earliest = above
+        pool = TechPool(self.world.options, ages, self.world.pool.civs,
                         self.world.pool.scenarios.included)
         self.assertTrue(pool.reachable(upgrade), upgrade.name)
         self.assertFalse(pool.reachable(generic), generic.name)

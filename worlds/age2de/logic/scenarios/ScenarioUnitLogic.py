@@ -71,7 +71,7 @@ class ScenarioUnitLogic:
             if (tech is None or not self.scenario.civilization.researches(tech)
                     or tech in self.scenario.scenario.excluded_techs):
                 continue  # none, not this civilisation's, or forbidden - it never fires
-            if self.scenario.techs.researched_at_start(tech):
+            if self.world.pool.techs.researched_at_start(self.scenario.scenario, tech):
                 return True   # strictly below the opening age, and not withheld
         return False
 
@@ -80,7 +80,7 @@ class ScenarioUnitLogic:
         if tech is None or not self.world.pool.techs.includes(tech):
             return True_()
         item = Has(tech.item.item_name)
-        if self.scenario.techs.researched_at_start(tech):
+        if self.world.pool.techs.researched_at_start(self.scenario.scenario, tech):
             return True_()   # the scenario researched it for itself, so the tier is upgraded
         if tech.age < self.scenario.scenario.vanilla_age:
             return item

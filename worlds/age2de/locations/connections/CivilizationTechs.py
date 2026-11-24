@@ -76,6 +76,12 @@ Age2CivData.FRANKS.excluded_techs = [
     Age2TechData.INCENDIARIES,
 ]
 
+Age2CivData.FRANKS.bonus_techs = [
+    Age2TechData.HORSE_COLLAR,
+    Age2TechData.HEAVY_PLOW,
+    Age2TechData.CROP_ROTATION,
+]
+
 Age2CivData.MONGOLS.excluded_techs = [
     Age2TechData.ARCHITECTURE, Age2TechData.ARROWSLITS, Age2TechData.BLOCK_PRINTING,
     Age2TechData.BOMBARD_TOWER_TECH, Age2TechData.CROP_ROTATION, Age2TechData.DRY_DOCK,

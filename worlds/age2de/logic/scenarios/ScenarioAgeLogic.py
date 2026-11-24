@@ -43,8 +43,7 @@ class ScenarioAgeLogic:
     def start_age(self) -> Age2AgeData:
         """The age the scenario starts paying its advance from: the Dark Age when every scenario
         starts there."""
-        ages = self.world.pool.ages
-        return Age2AgeData.DARK if ages.dark_start else ages.starts_in(self.scenario.scenario)
+        return self.world.pool.ages.start_age(self.scenario.scenario)
 
     def can_advance_in_economy(self, age: Age2AgeData) -> Rule:
         if age <= self.start_age:

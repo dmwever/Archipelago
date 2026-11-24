@@ -244,6 +244,13 @@ everything. A tech that is not a location is withheld only by Start In Dark Age;
 starts with it.
 _Avoid_: locked at start, held back
 
+**Bonus tech**:
+A tech a civ bonus researches for free when P1 completes its age, on a real advance or one XS sets.
+The civ cannot research it at a building. A scenario offers it only if the run advances into that
+age; one that opens in it under Vanilla never obtains it, and one whose start state advances
+through it starts with it researched. Only the Franks farm techs are bonus techs so far.
+_Avoid_: free tech
+
 **Checked**:
 A location the AP server records as collected. Global and permanent: it outlives the scenario that
 checked it, and every later scenario sees it checked. The game holds it per **registered location**

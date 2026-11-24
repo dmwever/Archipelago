@@ -23,7 +23,10 @@ class TestFindItemsWithholdsOnlyLocations(Age2RuleTestBase):
         self.assertFalse(world.pool.techs.includes(Age2TechData.LOOM))
         for scenario in self.researching(Age2TechData.LOOM, Age2AgeData.DARK):
             with self.subTest(scenario=scenario.scenario.name):
-                self.assertTrue(scenario.techs.researched_at_start(Age2TechData.LOOM))
+                self.assertTrue(self.world.pool.techs.researched_at_start(
+                    scenario.scenario,
+                    Age2TechData.LOOM,
+                ))
 
     def test_man_at_arms_is_granted_when_it_is_not_a_location(self):
         world = self.build(existing_techs=ExistingTechs.option_find_items,
@@ -32,7 +35,10 @@ class TestFindItemsWithholdsOnlyLocations(Age2RuleTestBase):
         self.assertFalse(world.pool.techs.includes(Age2TechData.MAN_AT_ARMS))
         for scenario in self.researching(Age2TechData.MAN_AT_ARMS, Age2AgeData.FEUDAL):
             with self.subTest(scenario=scenario.scenario.name):
-                self.assertTrue(scenario.techs.researched_at_start(Age2TechData.MAN_AT_ARMS))
+                self.assertTrue(self.world.pool.techs.researched_at_start(
+                    scenario.scenario,
+                    Age2TechData.MAN_AT_ARMS,
+                ))
                 self.assertTrue(scenario.units.upgraded_away(Age2UnitData.MILITIA))
 
     def test_unshuffled_marauders_is_granted_in_attila_6(self):
@@ -40,7 +46,10 @@ class TestFindItemsWithholdsOnlyLocations(Age2RuleTestBase):
                            techsanity=Techsanity.option_all,
                            shuffle_unique_techs=ShuffleUniqueTechs.option_unshuffled)
         attila_6 = world.rules.logic.for_scenario(Age2ScenarioData.AP_ATTILA_6)
-        self.assertTrue(attila_6.techs.researched_at_start(Age2TechData.MARAUDERS_HUNS))
+        self.assertTrue(self.world.pool.techs.researched_at_start(
+            attila_6.scenario,
+            Age2TechData.MARAUDERS_HUNS,
+        ))
 
     def test_a_location_is_still_withheld(self):
         world = self.build(existing_techs=ExistingTechs.option_find_items,
@@ -48,7 +57,10 @@ class TestFindItemsWithholdsOnlyLocations(Age2RuleTestBase):
         self.assertTrue(world.pool.techs.includes(Age2TechData.LOOM))
         for scenario in world.rules.logic.scenarios:
             with self.subTest(scenario=scenario.scenario.name):
-                self.assertFalse(scenario.techs.researched_at_start(Age2TechData.LOOM))
+                self.assertFalse(self.world.pool.techs.researched_at_start(
+                    scenario.scenario,
+                    Age2TechData.LOOM,
+                ))
                 self.assertFalse(scenario.units.upgraded_away(Age2UnitData.MILITIA))
 
     def test_start_in_dark_age_withholds_loom_that_is_not_a_location(self):
@@ -57,4 +69,7 @@ class TestFindItemsWithholdsOnlyLocations(Age2RuleTestBase):
         self.assertFalse(world.pool.techs.includes(Age2TechData.LOOM))
         for scenario in world.rules.logic.scenarios:
             with self.subTest(scenario=scenario.scenario.name):
-                self.assertFalse(scenario.techs.researched_at_start(Age2TechData.LOOM))
+                self.assertFalse(self.world.pool.techs.researched_at_start(
+                    scenario.scenario,
+                    Age2TechData.LOOM,
+                ))

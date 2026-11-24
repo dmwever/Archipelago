@@ -2,11 +2,11 @@ from functools import cached_property
 from typing import Iterable
 
 from ...Options import Age2Options, ExistingTechs, ShuffleUniqueTechs, Techsanity
-from ...locations.Ages import Age2AgeData
 from ...locations.Buildings import Age2BuildingData
 from ...locations.Scenarios import Age2ScenarioData
 from ...locations.Techs import Age2TechData, TechOption, BUILDING_TO_TECHS
 from ...locations.connections.CivilizationTechs import CIV_TO_TECHS
+from .AgePool import AgePool
 from .CivilizationPool import CivilizationPool
 
 MODE_TO_OPTION = {
@@ -18,21 +18,47 @@ MODE_TO_OPTION = {
 
 class TechPool:
 
-    def __init__(self, options: Age2Options, earliest_age: Age2AgeData,
+    def __init__(self, options: Age2Options, ages: AgePool,
                  civs: CivilizationPool, scenarios: Iterable[Age2ScenarioData]):
         self._techsanity = options.techsanity
         self._shuffle_uniques = options.shuffle_unique_techs
         self._existing_techs_mode = options.existing_techs
         self._caveman = options.caveman
-        self._earliest_age = earliest_age
+        self._ages = ages
         self._civs = civs
         # A technology some included scenario can research: its civilisation has it, the scenario
         # does not withhold it, and the scenario reaches its age. A fixed force researches nothing.
         self._researchable = {
             tech for scenario in scenarios if not scenario.fixed_force
                 for tech in CIV_TO_TECHS[scenario.civ]
-                    if tech not in scenario.excluded_techs and tech.age <= scenario.max_age
+                    if self._researchable_in(scenario, tech)
         }
+
+    def _researchable_in(self, scenario: Age2ScenarioData, tech: Age2TechData) -> bool:
+        if tech in scenario.excluded_techs or tech.age > scenario.max_age:
+            return False
+        if self.is_bonus_tech(scenario, tech):
+            return self._ages.starts_before(scenario, tech.age)
+        return True
+
+    def is_bonus_tech(self, scenario: Age2ScenarioData, tech: Age2TechData) -> bool:
+        return not scenario.fixed_force and tech in scenario.civ.bonus_techs
+
+    def researched_at_start(self, scenario: Age2ScenarioData, tech: Age2TechData) -> bool:
+        if self.is_bonus_tech(scenario, tech):
+            return self._starts_with_bonus_tech(scenario, tech)
+        if tech.age >= scenario.vanilla_age:
+            return False
+        if not self.withheld_at_start(tech):
+            return True
+        return not self.includes(tech) and not self._ages.dark_start
+
+    def _starts_with_bonus_tech(self, scenario: Age2ScenarioData, tech: Age2TechData) -> bool:
+        if self._ages.starts_before(scenario, tech.age):
+            return False
+        if tech.age < scenario.vanilla_age:
+            return True
+        return self._existing_techs_mode != ExistingTechs.option_vanilla
     
     def in_mode(self, tech: Age2TechData) -> bool:
         """Techsanity. Units and Generic are disjoint halves of All."""
@@ -64,7 +90,7 @@ class TechPool:
         below is granted on load and never becomes a location the game can check."""
         if self.withheld_at_start(tech):
             return True
-        return self._earliest_age <= tech.age
+        return self._ages.earliest <= tech.age
 
 
     def includes(self, tech: Age2TechData) -> bool:

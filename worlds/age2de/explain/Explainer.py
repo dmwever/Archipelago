@@ -699,8 +699,8 @@ class Explainer:
         if upgrade is not None:
             for campaign, chapters in campaigns:
                 chapters = [chapter for chapter, _ in chapters
-                            if self.world.rules.logic.for_scenario(self._scenario(campaign, chapter))
-                            .techs.researched_at_start(route.upgrade)]
+                            if self.world.pool.techs.researched_at_start(
+                                self._scenario(campaign, chapter), route.upgrade)]
                 if chapters:
                     started.append(f"{campaign.campaign_name} {_ranges(chapters)}: Starts Researched")
 

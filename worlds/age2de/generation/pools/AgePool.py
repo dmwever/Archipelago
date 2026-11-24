@@ -34,3 +34,9 @@ class AgePool:
 
     def starts_in(self, scenario: 'Age2ScenarioData') -> Age2AgeData:
         return scenario.vanilla_age
+
+    def start_age(self, scenario: 'Age2ScenarioData') -> Age2AgeData:
+        return Age2AgeData.DARK if self.dark_start else self.starts_in(scenario)
+
+    def starts_before(self, scenario: 'Age2ScenarioData', age: Age2AgeData) -> bool:
+        return self.start_age(scenario) < age
