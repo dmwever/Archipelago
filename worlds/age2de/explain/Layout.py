@@ -46,8 +46,8 @@ class Lines:
         self._lines.append((depth, list(parts[:says_at])))
         self._lines.append((depth + 1, [text(SAYS.lstrip()), *parts[says_at + 1:]]))
 
-    def extend(self, other: Lines) -> None:
-        self._lines += other._lines
+    def extend(self, other: Lines, deeper: int = 0) -> None:
+        self._lines += [(depth + deeper, line) for depth, line in other._lines]
 
     def add_segments(self, depth: int, head: str, segments: list[list[JSONMessagePart]],
                      separator: str = " · ", tail: tuple[JSONMessagePart, ...] = ()) -> None:

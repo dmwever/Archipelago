@@ -4,7 +4,7 @@ from __future__ import annotations
 import enum
 import functools
 import re
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, NamedTuple
 
 from BaseClasses import CollectionState
 from NetUtils import JSONMessagePart
@@ -16,11 +16,12 @@ from ..locations.Scenarios import Age2ScenarioData
 from ..logic.custom_logic.AgeUpRequirement import AgeUpRequirement
 from ..logic.custom_logic.EconomyRoutes import EconomyRouteRunning
 from ..logic.custom_logic.Named import Named
+from ..logic.custom_logic.ScenarioCompleted import ScenarioCompleted
 from ..logic.custom_logic.ScenarioQuestions import ScenarioQuestion
 from ..logic.custom_logic.SufficientRawResources import SufficientRawResources
 from .Layout import INDENT, SAYS, WIDTH, Lines, _ranges, colored, text, truth
 from .Lookup import find, find_objective
-from ..locations.Locations import Age2ScenarioLocationData
+from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS, Age2ScenarioLocationData
 from .Routes import Route, age_name, any_building_item, building_names, routes_for
 
 if TYPE_CHECKING:
@@ -90,6 +91,15 @@ def _joined(groups: list[list[JSONMessagePart]], word: str) -> list[JSONMessageP
     return parts
 
 
+class Item(NamedTuple):
+    parts: list[JSONMessagePart]
+    held: bool
+    marker: tuple[JSONMessagePart, ...] = ()
+
+    def draw(self, lines: Lines, depth: int) -> None:
+        lines.add(depth, *self.parts, *_says(self.held), *self.marker)
+
+
 class Status(enum.IntEnum):
     """Where a chapter stands on a route, best first; the first part that fails decides it."""
     AVAILABLE = 0
@@ -112,6 +122,10 @@ class Explainer:
         """Each resolved part's depth, by identity: resolved rules live as long as the world."""
 
     def explain_rule(self, typed: str, state: CollectionState) -> list[JSONMessagePart] | None:
+        door = self._typed_door(typed)
+        if door is not None:
+            self._entries = []
+            return self._completed_view(door, state).parts()
         scoped = self._scoped(typed)
         if scoped is not None:
             return scoped(state)
@@ -130,6 +144,48 @@ class Explainer:
         for route in routes_for(self.world, data):
             self._route(lines, name, route, state)
         return lines.parts()
+
+    # -- the door to the next scenario: completed, in the tracker -------------------------------
+
+    @functools.cached_property
+    def _doors(self) -> dict[str, Age2ScenarioData]:
+        if not self.world.tracks_completion:
+            return {}
+        return {door: scenario for scenario, door in self.world.rules.doors().items()}
+
+    def _door(self, item_name: str) -> Age2ScenarioData | None:
+        if item_name not in self._doors:
+            return None
+        return self._doors[item_name]
+
+    def _typed_door(self, typed: str) -> Age2ScenarioData | None:
+        wanted = typed.strip().lower()
+        for door, scenario in self._doors.items():
+            if wanted in (door.lower(), f"complete {scenario.scenario_name}".lower()):
+                return scenario
+        return None
+
+    def _door_line(self, scenario: Age2ScenarioData, held: bool) -> Item:
+        completed = str(ScenarioCompleted(scenario))
+        if held:
+            return Item([colored(completed, True)], True)
+        marker = self._entry(completed, lambda st: self._completed_view(scenario, st))
+        return Item([colored(completed, False)], False, (marker,))
+
+    def _completed_view(self, scenario: Age2ScenarioData, state: CollectionState) -> Lines:
+        held = state.has(self.world.rules.doors()[scenario], self.world.player)
+        lines = Lines()
+        lines.add(0, colored(str(ScenarioCompleted(scenario)), held), *_says(held))
+        if held:
+            return lines
+        if scenario in self.world.completed_scenarios:
+            lines.add(1, text("Completed, but its scenario is not yet open in logic."))
+        else:
+            lines.add(1, text("The server has no win recorded; winning it in game opens the next."))
+        victory = VICTORY_SCENARIO_LOCATIONS[scenario.scenario_name]
+        lines.add(1, text("To complete it,"))
+        lines.extend(self._branch(victory.location_name, victory, scenario.campaign, scenario, state), deeper=2)
+        return lines
 
     # -- moving straight to a branch ------------------------------------------------------------
 
@@ -399,15 +455,15 @@ class Explainer:
         if items is not None:
             every, each = items
             if len(each) == 1:
-                lines.add(depth, text("Has "), *each[0][0], *_says(each[0][1]))
+                each[0].draw(lines, depth)
                 return
             if every and not choice:
-                for parts, has in each:
-                    lines.add(depth, text("Has "), *parts, *_says(has))
+                for one in each:
+                    one.draw(lines, depth)
                 return
             lines.add(depth, colored("All of" if every else "Any of", held), *_says(held))
-            for parts, has in each:
-                lines.add(depth + 1, text("Has "), *parts, *_says(has))
+            for one in each:
+                one.draw(lines, depth + 1)
             return
         if isinstance(resolved, And.Resolved):
             if choice:
@@ -420,7 +476,7 @@ class Explainer:
             lines.add(depth, colored("Any of", held), *_says(held))
             for _, item, child in self._choices(resolved, own, state):
                 if item is not None:
-                    lines.add(depth + 1, text("Has "), *item[0], *_says(item[1]))
+                    item.draw(lines, depth + 1)
                 else:
                     self._breakdown(lines, child, depth + 1, sl, state, opening, choice=True)
             return
@@ -580,7 +636,7 @@ class Explainer:
             items = self._items(each, own, state)
             if items is not None and (not items[0] or len(items[1]) == 1):
                 for item in items[1]:
-                    key = "".join(part["text"] for part in item[0])
+                    key = "".join(part["text"] for part in item.parts)
                     if key not in seen:
                         seen.add(key)
                         found.append((0, item, None))
@@ -633,18 +689,21 @@ class Explainer:
         return depth, looped
 
     def _items(self, rule: Rule.Resolved, own: str, state: CollectionState | None
-               ) -> tuple[bool, list[tuple[list[JSONMessagePart], bool]]] | None:
+               ) -> tuple[bool, list[Item]] | None:
         """An item rule as its items, each with whether it is held: whether all are asked or any
         will do, and each one's parts - green where held, a counted one with how many are held,
         "Progressive Attila Scenario x2 Has x1". None for anything else. A scenario's own items
         lose its name."""
-        def item(name: str, count: int = 1) -> tuple[list[JSONMessagePart], bool]:
+        def item(name: str, count: int = 1) -> Item:
             have = state.count(name, self.world.player) if state is not None else 0
+            door = self._door(name) if state is not None else None
+            if door is not None:
+                return self._door_line(door, have > 0)
             shown = (name.split(own, 1)[-1] if own else name) + (f" x{count}" if count > 1 else "")
-            parts = [colored(shown, have >= count)]
+            parts = [text("Has "), colored(shown, have >= count)]
             if count > 1:
                 parts += [text(" ("), colored(f"x{have}", have > 0), text(")")]
-            return parts, have >= count
+            return Item(parts, have >= count)
         if isinstance(rule, Has.Resolved):
             return True, [item(rule.item_name, rule.count)]
         if isinstance(rule, HasAll.Resolved):

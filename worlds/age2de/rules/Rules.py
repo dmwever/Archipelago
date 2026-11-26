@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, Entrance, Location
 from ..logic.Logic import Logic
+from ..logic.custom_logic.ScenarioCompleted import ScenarioCompleted
+from ..locations.Locations import VICTORY_SCENARIO_LOCATIONS
+from ..locations.Scenarios import Age2ScenarioData
 from .ScenarioRules import ScenarioRules
 from .AgeRules import AgeRules
 from .BuildingRules import BuildingRules
@@ -50,9 +53,21 @@ class Rules:
             scenario.set_rules()
             scenario.set_defeat_event_rules()
             scenario.set_guard_event_rules()
+        if self.world.tracks_completion:
+            self.set_completed_doors()
                 
         self.age_rules.set_rules()
         self.building_rules.set_rules()
         self.tech_rules.set_rules()
         # After the scenario rules, which is where the per-scenario logic it reads is built.
         self.unit_rules.set_rules()
+
+    def doors(self) -> dict[Age2ScenarioData, str]:
+        return {scenario: f"{scenario.scenario_name}: Unlock Next Scenario"
+                for scenario in self.world.pool.scenarios.included
+                if scenario.scenario_name in VICTORY_SCENARIO_LOCATIONS}
+
+    def set_completed_doors(self) -> None:
+        for scenario in self.doors():
+            self.set_rule(self.world.get_location(f"Complete {scenario.scenario_name}"),
+                          ScenarioCompleted(scenario))

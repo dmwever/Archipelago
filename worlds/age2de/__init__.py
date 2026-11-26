@@ -22,6 +22,7 @@ from worlds.age2de.locations.Buildings import Age2BuildingData
 from worlds.age2de.locations.Scenarios import CAMPAIGN_TO_SCENARIOS
 from .generation import Identity, LocalStart, SlotData, WorldVersion
 from .generation.Age2Pool import Age2Pool
+from .client.DataStorage import DataStorage
 from .regions.UnitRegions import UnitRegions
 from .Options import (
     Age2Options,
@@ -106,8 +107,24 @@ class Age2World(CachedRuleBuilderWorld):
     unit_regions: UnitRegions
     rules: Rules
 
+    # Universal Tracker's deferred-entrance hook. UT documents it for watching data storage for
+    # what the player has done in place of a logical event, which is what this is: the client ORs
+    # a bit per completed scenario into this key, and UT calls reconnect_found_entrances with it.
+    found_entrances_datastorage_key = "{team}_{player}_scenario_complete"
+
+    completed_scenarios: set[Scenarios.Age2ScenarioData]
+
     def __init__(self, multiworld: 'MultiWorld', player: int) -> None:
         super().__init__(multiworld, player)
+        self.completed_scenarios = set()
+
+    @property
+    def tracks_completion(self) -> bool:
+        return (getattr(self.multiworld, "generation_is_fake", False)
+                and getattr(self.multiworld, "enforce_deferred_connections", None) != "off")
+
+    def reconnect_found_entrances(self, key: str, value: int | None) -> None:
+        self.completed_scenarios = DataStorage(self.pool.campaigns.enabled).completed_scenarios(value or 0)
 
     @classmethod
     def create_group(cls, multiworld: 'MultiWorld', new_player_id: int, players: set[int]) -> World:
